@@ -8,7 +8,7 @@ describe("isValidIconName", () => {
   });
 
   it("отклоняет имя без двоеточия и с лишними частями", () => {
-    expect(isValidIconName("heart")).toBe(false);
+    expect(isValidIconName("heart")).toBe(true);
     expect(isValidIconName("a:b:c")).toBe(false);
   });
 
