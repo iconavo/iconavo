@@ -33,6 +33,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - Пакеты — semver, до запуска 0.x, публикация в npm только из CI с provenance, тег `next` до запуска.
 - Первые наборы: Lucide, Tabler, Material Symbols, Phosphor, Fluent Emoji Flat — только с разрешительными лицензиями.
 
+## Формат набора (ADR-0003)
+
+Схемы — в `packages/schema` (zod 4, сообщения об ошибках по-русски). Набор состоит из четырёх файлов: `icons.json` (формат IconifyJSON, **единственный файл, который идёт в рантайм**), `info.json` (название, автор, лицензия полностью, сетка, признак цветного набора), `metadata.json` (категории и карта суффиксов вариантов) и `search.json` (теги, описания и синонимы ru/en, отпечатки; поля сверх IconifyJSON живут только здесь). В `icons.json` лишние поля допустимы (совместимость), в наших файлах запрещены. Правило имён одно на всё: `^[a-z0-9]+(-[a-z0-9]+)*$`. Ядро `packages/core` не должно зависеть от zod.
+
 ## Стек (ADR-0007)
 
 Монорепозиторий на TypeScript с pnpm workspaces; Biome (линтер и форматирование), Vitest, Playwright, size-limit; Next.js; Cloudflare R2/Workers; Meilisearch; эмбеддинги через Polza AI — `openai/text-embedding-3-large`, `google/gemini-embedding-001` или `qwen/qwen3-embedding-8b` (вместо BGE-M3; выбор по замеру в фазе 1). Перед выбором моделей и цен перепроверяй актуальные версии.
@@ -64,6 +68,8 @@ pnpm size                    # size-limit: бюджеты размера пак�
 ```
 
 Эталон поиска (`docs/eval/queries.csv`, описание в `docs/eval/README.md`) генерируется скриптом `node --env-file=.env tools/eval/generate-queries.mjs` через Polza AI; повторный запуск меняет запросы и разбиение work/holdout — не запускай без просьбы.
+
+Проверка файла набора по схеме: `pnpm validate <файл>` (вид по имени `icons|info|metadata|search.json` или `--kind`). Код выхода 0 — ошибок нет, 1 — есть ошибки, 2 — неверный вызов. Примеры: `packages/schema/examples/{valid,broken}/`.
 
 `size-limit` читает собранные файлы из `dist/`, поэтому перед `pnpm size` запускай `pnpm typecheck`.
 
