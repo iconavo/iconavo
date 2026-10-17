@@ -58,6 +58,11 @@ export const sourceConfigSchema = z.strictObject({
   }),
   /** Файл с тегами авторов внутри источника (используется при импорте метаданных). */
   tagsFile: relativePath.optional(),
+  /**
+   * json — рядом с каждой иконкой лежит `{имя}.json` с её метаданными (теги, категории, алиасы),
+   * как в репозитории Lucide. Такие файлы скачиваются вместе с SVG.
+   */
+  iconMetadata: z.literal("json").optional(),
 });
 
 export type SourceConfigInput = z.input<typeof sourceConfigSchema>;
@@ -72,4 +77,15 @@ export function extraFiles(config: SourceConfig): string[] {
       ),
     ),
   ];
+}
+
+/** Нужен ли файл с таким путём (относительно корня источника): SVG, метаданные иконок, служебные файлы. */
+export function wantedPath(config: SourceConfig): (path: string) => boolean {
+  const extras = new Set(extraFiles(config));
+  const inIcons = (path: string, ext: string) =>
+    path.startsWith(`${config.svgPath}/`) && path.endsWith(ext);
+  return (path) =>
+    extras.has(path) ||
+    inIcons(path, ".svg") ||
+    (config.iconMetadata === "json" && inIcons(path, ".json"));
 }

@@ -9,7 +9,7 @@ import {
   writeFile,
 } from "node:fs/promises";
 import { join } from "node:path";
-import { extraFiles, type SourceConfig } from "./config.js";
+import { extraFiles, type SourceConfig, wantedPath } from "./config.js";
 import { assertCommitHash, fetchGit, resolveGitHead } from "./git.js";
 import type { LockEntry, LockFile } from "./lock.js";
 import { checkNames, type NameCheck } from "./names.js";
@@ -32,6 +32,8 @@ export interface FetchReport {
   pinned: "new" | "lock";
   dir: string;
   svgCount: number;
+  /** Сколько SVG имеют рядом JSON с метаданными (только если набор их хранит). */
+  metadataPairs?: number;
   extraFiles: string[];
   missingExtraFiles: string[];
   bytes: number;
@@ -108,10 +110,7 @@ async function download(
   tmp: string,
   fetchFn: FetchFn,
 ): Promise<{ fileCount: number; bytes: number }> {
-  const extras = new Set(extraFiles(config));
-  const wanted = (path: string) =>
-    extras.has(path) ||
-    (path.startsWith(`${config.svgPath}/`) && path.endsWith(".svg"));
+  const wanted = wantedPath(config);
 
   if (config.source.type === "npm" && entry.type === "npm") {
     // Адрес архива берём из реестра, но верим только integrity из sources.lock.json.
@@ -191,6 +190,11 @@ export async function fetchSource(
   const svgs = all.filter(
     (f) => f.startsWith(`${config.svgPath}/`) && f.endsWith(".svg"),
   );
+  const jsonOf = (svg: string) => svg.replace(/\.svg$/, ".json");
+  const metadataPairs =
+    config.iconMetadata === "json"
+      ? svgs.filter((f) => all.includes(jsonOf(f))).length
+      : undefined;
   const extras = extraFiles(config);
   const found = extras.filter((f) => all.includes(f));
   const marker = await readMarker(dir);
@@ -202,6 +206,7 @@ export async function fetchSource(
     pinned,
     dir,
     svgCount: svgs.length,
+    metadataPairs,
     extraFiles: found,
     missingExtraFiles: extras.filter((f) => !found.includes(f)),
     bytes: marker?.bytes ?? (await sizeOf(dir, all)),

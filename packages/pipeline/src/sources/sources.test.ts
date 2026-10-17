@@ -14,6 +14,7 @@ import {
   type SourceConfig,
   type SourceConfigInput,
   sourceConfigSchema,
+  wantedPath,
 } from "./config.js";
 import { fetchSource, pinEntry } from "./fetch.js";
 import { assertCommitHash, fetchGit } from "./git.js";
@@ -74,6 +75,44 @@ describe("конфиг набора", () => {
     ["нет лицензии", { ...baseConfig, license: undefined }],
   ])("отклоняет: %s", (_name, config) => {
     expect(sourceConfigSchema.safeParse(config).success).toBe(false);
+  });
+});
+
+describe("выбор нужных файлов", () => {
+  const paths = [
+    "icons/a.svg",
+    "icons/a.json",
+    "icons/readme.md",
+    "dist/b.svg",
+    "LICENSE",
+    "package.json",
+    "tags.json",
+  ];
+  const pick = (c: SourceConfigInput) => paths.filter(wantedPath(parse(c)));
+
+  it("по умолчанию — SVG из svgPath и служебные файлы", () => {
+    expect(pick({ ...baseConfig, tagsFile: "tags.json" })).toEqual([
+      "icons/a.svg",
+      "LICENSE",
+      "package.json",
+      "tags.json",
+    ]);
+  });
+
+  it("iconMetadata: json добавляет JSON рядом с иконками, но не чужие", () => {
+    expect(pick({ ...baseConfig, iconMetadata: "json" })).toEqual([
+      "icons/a.svg",
+      "icons/a.json",
+      "LICENSE",
+      "package.json",
+    ]);
+  });
+
+  it("неизвестное значение iconMetadata отклоняется", () => {
+    expect(
+      sourceConfigSchema.safeParse({ ...baseConfig, iconMetadata: "yaml" })
+        .success,
+    ).toBe(false);
   });
 });
 
