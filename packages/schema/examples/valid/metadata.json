@@ -1,0 +1,10 @@
+{
+  "categories": {
+    "Стрелки": ["arrow-left", "arrow-right"]
+  },
+  "suffixes": {
+    "": "Regular",
+    "-bold": "Bold",
+    "-outline-rounded": "Outline Rounded"
+  }
+}

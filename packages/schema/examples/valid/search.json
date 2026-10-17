@@ -1,0 +1,28 @@
+{
+  "prefix": "demo",
+  "icons": {
+    "arrow-left": {
+      "fingerprint": "3f9a1c07be52",
+      "tags": ["arrow", "left", "back"],
+      "ru": {
+        "description": "Стрелка, направленная влево, для возврата на предыдущий экран.",
+        "synonyms": [
+          "назад",
+          "влево",
+          "вернуться",
+          "предыдущий",
+          "стрелка назад"
+        ]
+      },
+      "en": {
+        "description": "A left-pointing arrow used to go back to the previous screen.",
+        "synonyms": ["back", "left", "previous", "return", "go back"]
+      },
+      "promptVersion": 1
+    },
+    "arrow-right": {
+      "fingerprint": "9c04d2e1a7b3",
+      "tags": ["arrow", "right", "next"]
+    }
+  }
+}
