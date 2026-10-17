@@ -35,7 +35,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Стек (ADR-0007)
 
-Монорепозиторий на TypeScript с pnpm workspaces; Biome (линтер и форматирование), Vitest, Playwright, size-limit; Next.js; Cloudflare R2/Workers; Meilisearch; эмбеддинги — OpenAI text-embedding-3-large, Gemini Embedding или BGE-M3 (выбор по замеру в фазе 1). Перед выбором моделей и цен перепроверяй актуальные версии.
+Монорепозиторий на TypeScript с pnpm workspaces; Biome (линтер и форматирование), Vitest, Playwright, size-limit; Next.js; Cloudflare R2/Workers; Meilisearch; эмбеддинги через Polza AI — `openai/text-embedding-3-large`, `google/gemini-embedding-001` или `qwen/qwen3-embedding-8b` (вместо BGE-M3; выбор по замеру в фазе 1). Перед выбором моделей и цен перепроверяй актуальные версии.
 
 ## Имена и ресурсы
 
