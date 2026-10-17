@@ -67,6 +67,8 @@ pnpm vitest run packages/core/src/index.test.ts -t "часть названия 
 pnpm size                    # size-limit: бюджеты размера пакетов (ADR-0034); нужен dist/ после typecheck
 ```
 
+Источники наборов (ADR-0012): конфиг на набор — `sources/{id}.ts` (экспорт по умолчанию, `satisfies SourceConfigInput`), версии закреплены в `sources.lock.json`, скачанное лежит в `.cache/sources/{id}/{версия}/` (не в git). `pnpm sources fetch [id…]` скачивает по lock (при первом запуске набора закрепляет последнюю версию), повторный запуск без изменений не использует сеть; `pnpm sources pin <id> [версия|коммит]` меняет версию — `sources.lock.json` правь только этой командой. Для git в lock нужен полный хэш коммита, не ветка. Код — `packages/pipeline/src/sources/`.
+
 Эталон поиска (`docs/eval/queries.csv`, описание в `docs/eval/README.md`) генерируется скриптом `node --env-file=.env tools/eval/generate-queries.mjs` через Polza AI; повторный запуск меняет запросы и разбиение work/holdout — не запускай без просьбы.
 
 Проверка файла набора по схеме: `pnpm validate <файл>` (вид по имени `icons|info|metadata|search.json` или `--kind`). Код выхода 0 — ошибок нет, 1 — есть ошибки, 2 — неверный вызов. Примеры: `packages/schema/examples/{valid,broken}/`.

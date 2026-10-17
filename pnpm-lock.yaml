@@ -184,6 +184,19 @@ importers:
 
   packages/core: {}
 
+  packages/pipeline:
+    dependencies:
+      '@iconavo-ui/schema':
+        specifier: workspace:*
+        version: link:../schema
+      zod:
+        specifier: ^4.6.7
+        version: 4.6.7
+    devDependencies:
+      '@types/node':
+        specifier: ^26.6.5
+        version: 26.6.5
+
   packages/schema:
     dependencies:
       zod:
@@ -193,6 +206,12 @@ importers:
       '@types/node':
         specifier: ^26.6.5
         version: 26.6.5
+
+  sources:
+    devDependencies:
+      '@iconavo-ui/pipeline':
+        specifier: workspace:*
+        version: link:../packages/pipeline
 
 packages:
 

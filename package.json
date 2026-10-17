@@ -12,6 +12,7 @@
     "typecheck": "tsc -b",
     "test": "tsc -b && vitest run",
     "size": "size-limit",
+    "sources": "tsc -b && node packages/pipeline/dist/cli.js",
     "validate": "tsc -b && node packages/schema/dist/cli.js",
     "check": "pnpm lint && pnpm typecheck && pnpm test && pnpm size"
   },
