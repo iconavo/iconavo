@@ -1,0 +1,8 @@
+[
+  {
+    "name": "@iconavo-ui/core",
+    "path": "packages/core/dist/index.js",
+    "limit": "5 kB",
+    "gzip": true
+  }
+]

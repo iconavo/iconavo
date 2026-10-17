@@ -1,0 +1,24 @@
+{
+  "name": "iconavo",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@12.14.0",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "lint": "biome check .",
+    "format": "biome format --write .",
+    "typecheck": "tsc -b",
+    "test": "vitest run",
+    "size": "size-limit",
+    "check": "pnpm lint && pnpm typecheck && pnpm test && pnpm size"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.5.15",
+    "@size-limit/preset-small-lib": "^14.2.0",
+    "size-limit": "^14.2.0",
+    "typescript": "^7.0.2",
+    "vitest": "^5.0.5"
+  }
+}
