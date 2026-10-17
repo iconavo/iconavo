@@ -63,6 +63,8 @@ pnpm vitest run packages/core/src/index.test.ts -t "часть названия 
 pnpm size                    # size-limit: бюджеты размера пакетов (ADR-0034); нужен dist/ после typecheck
 ```
 
+Эталон поиска (`docs/eval/queries.csv`, описание в `docs/eval/README.md`) генерируется скриптом `node --env-file=.env tools/eval/generate-queries.mjs` через Polza AI; повторный запуск меняет запросы и разбиение work/holdout — не запускай без просьбы.
+
 `size-limit` читает собранные файлы из `dist/`, поэтому перед `pnpm size` запускай `pnpm typecheck`.
 
 ## Ветка main
