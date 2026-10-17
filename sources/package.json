@@ -1,0 +1,9 @@
+{
+  "name": "@iconavo-ui/sources",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "devDependencies": {
+    "@iconavo-ui/pipeline": "workspace:*"
+  }
+}
