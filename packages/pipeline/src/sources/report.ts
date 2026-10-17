@@ -16,6 +16,11 @@ export function formatReport(r: FetchReport): string {
       ? `  Скачано: ${r.svgCount} SVG и ${r.extraFiles.length} служебных файлов (${r.extraFiles.join(", ") || "нет"}), всего ${formatBytes(r.bytes)}`
       : `  Без изменений: ${r.svgCount} SVG уже в кэше, ничего не скачано`,
   );
+  if (r.metadataPairs !== undefined) {
+    lines.push(
+      `  Метаданные иконок: у ${r.metadataPairs} из ${r.svgCount} SVG есть JSON-файл рядом`,
+    );
+  }
   lines.push(
     r.pinned === "new"
       ? "  Версия: закреплена впервые и записана в sources.lock.json"
