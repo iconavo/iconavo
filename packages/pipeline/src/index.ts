@@ -2,6 +2,7 @@ export {
   extraFiles,
   type SourceConfig,
   type SourceConfigInput,
+  type SvgFolder,
   sourceConfigSchema,
 } from "./sources/config.js";
 export { type FetchReport, fetchSource, pinEntry } from "./sources/fetch.js";

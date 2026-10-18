@@ -1,10 +1,10 @@
 import { NAME_PATTERN } from "@iconavo-ui/schema";
-import type { SourceConfig } from "./config.js";
+import { folderMatcher, type SourceConfig, type SvgFolder } from "./config.js";
 
 /** Имя иконки из пути к SVG: имя файла без `.svg`, затем правила из конфига набора. */
 export function iconNameFromFile(
   file: string,
-  naming: SourceConfig["naming"],
+  naming: SvgFolder["naming"],
 ): string {
   let name = file.split("/").at(-1) ?? file;
   name = name.replace(/\.svg$/i, "");
@@ -23,14 +23,16 @@ export interface NameCheck {
   conflicts: { name: string; files: string[] }[];
 }
 
-export function checkNames(
-  files: string[],
-  naming: SourceConfig["naming"],
-): NameCheck {
+/** Проверяет имена всех SVG набора; правила имён берутся из папки, в которой лежит файл. */
+export function checkNames(files: string[], config: SourceConfig): NameCheck {
+  const folderOf = folderMatcher(config);
   const byName = new Map<string, string[]>();
   const invalid: NameCheck["invalid"] = [];
   for (const file of files) {
-    const name = iconNameFromFile(file, naming);
+    const folder = folderOf(file);
+    if (!folder)
+      throw new Error(`«${file}» не лежит ни в одной папке из svgFolders`);
+    const name = iconNameFromFile(file, folder.naming);
     byName.set(name, [...(byName.get(name) ?? []), file]);
     if (!NAME_PATTERN.test(name)) invalid.push({ file, name });
   }

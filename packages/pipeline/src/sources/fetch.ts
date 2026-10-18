@@ -9,7 +9,12 @@ import {
   writeFile,
 } from "node:fs/promises";
 import { join } from "node:path";
-import { extraFiles, type SourceConfig, wantedPath } from "./config.js";
+import {
+  extraFiles,
+  folderMatcher,
+  type SourceConfig,
+  wantedPath,
+} from "./config.js";
 import { assertCommitHash, fetchGit, resolveGitHead } from "./git.js";
 import type { LockEntry, LockFile } from "./lock.js";
 import { checkNames, type NameCheck } from "./names.js";
@@ -32,6 +37,8 @@ export interface FetchReport {
   pinned: "new" | "lock";
   dir: string;
   svgCount: number;
+  /** Сколько SVG в каждой папке набора (варианты считаются отдельно). */
+  folders: { path: string; count: number }[];
   /** Сколько SVG имеют рядом JSON с метаданными (только если набор их хранит). */
   metadataPairs?: number;
   extraFiles: string[];
@@ -187,9 +194,8 @@ export async function fetchSource(
   }
 
   const all = await listFiles(dir);
-  const svgs = all.filter(
-    (f) => f.startsWith(`${config.svgPath}/`) && f.endsWith(".svg"),
-  );
+  const folderOf = folderMatcher(config);
+  const svgs = all.filter((f) => f.endsWith(".svg") && folderOf(f));
   const jsonOf = (svg: string) => svg.replace(/\.svg$/, ".json");
   const metadataPairs =
     config.iconMetadata === "json"
@@ -206,6 +212,10 @@ export async function fetchSource(
     pinned,
     dir,
     svgCount: svgs.length,
+    folders: config.svgFolders.map((folder) => ({
+      path: folder.path,
+      count: svgs.filter((f) => folderOf(f) === folder).length,
+    })),
     metadataPairs,
     extraFiles: found,
     missingExtraFiles: extras.filter((f) => !found.includes(f)),
@@ -214,7 +224,7 @@ export async function fetchSource(
       spdx: config.license.spdx,
       fileFound: all.includes(config.license.file),
     },
-    names: checkNames(svgs, config.naming),
+    names: checkNames(svgs, config),
   };
   return { report, lock: { ...lock, [config.id]: entry } };
 }

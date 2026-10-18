@@ -24,6 +24,21 @@ const regexString = z.string().refine((p) => {
   }
 }, "это не регулярное выражение");
 
+/** Как из имени файла получить имя иконки. Правила применяются по порядку. */
+const namingSchema = z
+  .strictObject({
+    lowercase: z.boolean().default(true),
+    replace: z
+      .array(z.strictObject({ pattern: regexString, with: z.string() }))
+      .default([]),
+  })
+  .default({ lowercase: true, replace: [] });
+
+const folderSchema = z.strictObject({
+  path: relativePath,
+  naming: namingSchema,
+});
+
 /** Конфиг одного набора: `sources/{id}.ts` (ADR-0012). */
 export const sourceConfigSchema = z.strictObject({
   /** Префикс набора, он же имя файла конфига (ADR-0001). */
@@ -38,17 +53,12 @@ export const sourceConfigSchema = z.strictObject({
         .refine((u) => u.startsWith("https://"), "репозиторий — адрес https"),
     }),
   ]),
-  /** Папка с SVG внутри источника. */
-  svgPath: relativePath,
-  /** Как из имени файла получить имя иконки. */
-  naming: z
-    .strictObject({
-      lowercase: z.boolean().default(true),
-      replace: z
-        .array(z.strictObject({ pattern: regexString, with: z.string() }))
-        .default([]),
-    })
-    .default({ lowercase: true, replace: [] }),
+  /**
+   * Папки с SVG внутри источника. Варианты одного набора (контур и заливка, начертания)
+   * лежат в разных папках, и у каждой свои правила имён и суффикс. В пути `*` заменяет
+   * ровно одну часть пути (так задана папка Flat у каждого эмодзи в Fluent).
+   */
+  svgFolders: z.array(folderSchema).min(1),
   /** monochrome — цвета заменяются на currentColor; color — цветной набор. */
   palette: z.enum(["monochrome", "color"]),
   license: z.strictObject({
@@ -67,14 +77,37 @@ export const sourceConfigSchema = z.strictObject({
 
 export type SourceConfigInput = z.input<typeof sourceConfigSchema>;
 export type SourceConfig = z.output<typeof sourceConfigSchema>;
+export type SvgFolder = SourceConfig["svgFolders"][number];
+
+/** Находит папку набора, в которой лежит файл: папка файла должна совпасть с путём целиком. */
+export function folderMatcher(
+  config: SourceConfig,
+): (file: string) => SvgFolder | undefined {
+  const escapePart = (part: string) =>
+    part.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const folders = config.svgFolders.map((folder) => {
+    const parts = folder.path.split("/");
+    const source = parts
+      .map((p) => (p === "*" ? "[^/]+" : escapePart(p)))
+      .join("/");
+    return { folder, pattern: new RegExp(`^${source}$`) };
+  });
+  return (file) => {
+    const dir = file.slice(0, Math.max(0, file.lastIndexOf("/")));
+    return folders.find((f) => f.pattern.test(dir))?.folder;
+  };
+}
 
 /** Служебные файлы, которые нужны помимо SVG. */
 export function extraFiles(config: SourceConfig): string[] {
   return [
     ...new Set(
-      [config.license.file, config.tagsFile, "package.json"].filter(
-        (f): f is string => Boolean(f),
-      ),
+      [
+        config.license.file,
+        config.tagsFile,
+        // package.json есть только у пакетов npm
+        config.source.type === "npm" ? "package.json" : undefined,
+      ].filter((f): f is string => Boolean(f)),
     ),
   ];
 }
@@ -82,8 +115,9 @@ export function extraFiles(config: SourceConfig): string[] {
 /** Нужен ли файл с таким путём (относительно корня источника): SVG, метаданные иконок, служебные файлы. */
 export function wantedPath(config: SourceConfig): (path: string) => boolean {
   const extras = new Set(extraFiles(config));
+  const folderOf = folderMatcher(config);
   const inIcons = (path: string, ext: string) =>
-    path.startsWith(`${config.svgPath}/`) && path.endsWith(ext);
+    path.endsWith(ext) && folderOf(path) !== undefined;
   return (path) =>
     extras.has(path) ||
     inIcons(path, ".svg") ||

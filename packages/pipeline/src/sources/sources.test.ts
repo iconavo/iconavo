@@ -11,6 +11,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import {
+  extraFiles,
   type SourceConfig,
   type SourceConfigInput,
   sourceConfigSchema,
@@ -43,7 +44,7 @@ const baseConfig: SourceConfigInput = {
   id: "demo",
   name: "Demo",
   source: { type: "npm", package: "demo-icons" },
-  svgPath: "icons",
+  svgFolders: [{ path: "icons" }],
   palette: "monochrome",
   license: { spdx: "MIT", file: "LICENSE" },
 };
@@ -53,15 +54,22 @@ const parse = (c: unknown): SourceConfig => sourceConfigSchema.parse(c);
 describe("конфиг набора", () => {
   it("принимает правильный и подставляет правила имён по умолчанию", () => {
     const c = parse(baseConfig);
-    expect(c.naming).toEqual({ lowercase: true, replace: [] });
+    expect(c.svgFolders).toEqual([
+      { path: "icons", naming: { lowercase: true, replace: [] } },
+    ]);
   });
 
   it.each([
     ["лишнее поле", { ...baseConfig, extra: 1 }],
     ["id не по правилу", { ...baseConfig, id: "Demo_1" }],
-    ["пустой svgPath", { ...baseConfig, svgPath: "" }],
-    ["svgPath с ..", { ...baseConfig, svgPath: "../icons" }],
-    ["абсолютный svgPath", { ...baseConfig, svgPath: "/icons" }],
+    ["нет папок", { ...baseConfig, svgFolders: [] }],
+    ["пустой путь папки", { ...baseConfig, svgFolders: [{ path: "" }] }],
+    ["путь папки с ..", { ...baseConfig, svgFolders: [{ path: "../icons" }] }],
+    [
+      "абсолютный путь папки",
+      { ...baseConfig, svgFolders: [{ path: "/icons" }] },
+    ],
+    ["старое поле svgPath", { ...baseConfig, svgPath: "icons" }],
     ["git без repo", { ...baseConfig, source: { type: "git" } }],
     [
       "git по http",
@@ -70,7 +78,12 @@ describe("конфиг набора", () => {
     ["неизвестная палитра", { ...baseConfig, palette: "gray" }],
     [
       "кривая регулярка",
-      { ...baseConfig, naming: { replace: [{ pattern: "(", with: "" }] } },
+      {
+        ...baseConfig,
+        svgFolders: [
+          { path: "icons", naming: { replace: [{ pattern: "(", with: "" }] } },
+        ],
+      },
     ],
     ["нет лицензии", { ...baseConfig, license: undefined }],
   ])("отклоняет: %s", (_name, config) => {
@@ -90,7 +103,7 @@ describe("выбор нужных файлов", () => {
   ];
   const pick = (c: SourceConfigInput) => paths.filter(wantedPath(parse(c)));
 
-  it("по умолчанию — SVG из svgPath и служебные файлы", () => {
+  it("по умолчанию — SVG из svgFolders и служебные файлы", () => {
     expect(pick({ ...baseConfig, tagsFile: "tags.json" })).toEqual([
       "icons/a.svg",
       "LICENSE",
@@ -108,6 +121,34 @@ describe("выбор нужных файлов", () => {
     ]);
   });
 
+  it("package.json нужен только наборам из npm", () => {
+    const git = parse({
+      ...baseConfig,
+      source: { type: "git", repo: "https://x.test/a.git" },
+    });
+    expect(extraFiles(git)).toEqual(["LICENSE"]);
+    expect(extraFiles(parse(baseConfig))).toEqual(["LICENSE", "package.json"]);
+  });
+
+  it("несколько папок и * вместо одной части пути", () => {
+    const c: SourceConfigInput = {
+      ...baseConfig,
+      svgFolders: [{ path: "assets/*/Flat" }, { path: "extra" }],
+    };
+    const files = [
+      "assets/Cat/Flat/cat_flat.svg",
+      "assets/Cat/Dark/Flat/cat_dark.svg",
+      "assets/Cat/3D/cat.svg",
+      "extra/x.svg",
+      "LICENSE",
+    ];
+    expect(files.filter(wantedPath(parse(c)))).toEqual([
+      "assets/Cat/Flat/cat_flat.svg",
+      "extra/x.svg",
+      "LICENSE",
+    ]);
+  });
+
   it("неизвестное значение iconMetadata отклоняется", () => {
     expect(
       sourceConfigSchema.safeParse({ ...baseConfig, iconMetadata: "yaml" })
@@ -117,7 +158,9 @@ describe("выбор нужных файлов", () => {
 });
 
 describe("правило имён", () => {
-  const naming = parse(baseConfig).naming;
+  const config = parse(baseConfig);
+  const naming = config.svgFolders[0]
+    ?.naming as SourceConfig["svgFolders"][number]["naming"];
 
   it("берёт имя файла без .svg и приводит к нижнему регистру", () => {
     expect(iconNameFromFile("icons/Arrow-Left.svg", naming)).toBe("arrow-left");
@@ -126,21 +169,55 @@ describe("правило имён", () => {
   it("применяет замены из конфига", () => {
     const n = parse({
       ...baseConfig,
-      naming: { replace: [{ pattern: "_", with: "-" }] },
-    }).naming;
+      svgFolders: [
+        { path: "icons", naming: { replace: [{ pattern: "_", with: "-" }] } },
+      ],
+    }).svgFolders[0]?.naming as typeof naming;
     expect(iconNameFromFile("icons/arrow_left.svg", n)).toBe("arrow-left");
   });
 
   it("находит нарушения и конфликты (оба файла видны)", () => {
     const r = checkNames(
       ["icons/ok.svg", "icons/bad_name.svg", "icons/A.svg", "icons/a.svg"],
-      naming,
+      config,
     );
     expect(r.total).toBe(4);
     expect(r.invalid.map((x) => x.file)).toEqual(["icons/bad_name.svg"]);
     expect(r.conflicts).toEqual([
       { name: "a", files: ["icons/A.svg", "icons/a.svg"] },
     ]);
+  });
+});
+
+describe("варианты в разных папках", () => {
+  const config = parse({
+    ...baseConfig,
+    svgFolders: [
+      { path: "outline" },
+      {
+        path: "filled",
+        naming: { replace: [{ pattern: "$", with: "-filled" }] },
+      },
+    ],
+  });
+
+  it("суффикс папки отличает одноимённые иконки", () => {
+    const r = checkNames(["outline/heart.svg", "filled/heart.svg"], config);
+    expect(r.conflicts).toEqual([]);
+    expect(r.valid).toBe(2);
+  });
+
+  it("без суффикса одноимённые иконки из разных папок — конфликт", () => {
+    const same = parse({
+      ...baseConfig,
+      svgFolders: [{ path: "outline" }, { path: "filled" }],
+    });
+    const r = checkNames(["outline/heart.svg", "filled/heart.svg"], same);
+    expect(r.conflicts).toHaveLength(1);
+  });
+
+  it("файл вне папок набора — ошибка", () => {
+    expect(() => checkNames(["other/heart.svg"], config)).toThrow(/svgFolders/);
   });
 });
 
@@ -193,6 +270,14 @@ describe("распаковка tar", () => {
     ]);
     expect(await readFile(join(tmp, "icons/a.svg"), "utf8")).toBe("<svg/>");
     await expect(readdir(join(tmp, "dist"))).rejects.toThrow();
+  });
+
+  it("пропускает нейтральные сегменты «.» в пути", async () => {
+    await run([
+      { name: "package/./dist/skip.js", data: "x" },
+      { name: "package/./icons/a.svg", data: "<svg/>" },
+    ]);
+    expect(await readFile(join(tmp, "icons/a.svg"), "utf8")).toBe("<svg/>");
   });
 
   it("читает файлы, длиннее одного блока и не кратные 512", async () => {
@@ -497,8 +582,8 @@ describe("реестр конфигов", () => {
     await mkdir(dir);
     await writeFile(
       join(dir, "demo.ts"),
-      `export default ${JSON.stringify({ ...baseConfig, svgPath: "../x" })};\n`,
+      `export default ${JSON.stringify({ ...baseConfig, svgFolders: [{ path: "../x" }] })};\n`,
     );
-    await expect(loadRegistry(dir)).rejects.toThrow(/svgPath/);
+    await expect(loadRegistry(dir)).rejects.toThrow(/svgFolders/);
   });
 });

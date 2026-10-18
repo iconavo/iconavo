@@ -8,7 +8,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Состояние проекта
 
-Монорепозиторий создан (фаза 0, шаг 9): pnpm workspaces, TypeScript, Biome, Vitest, size-limit, CI в `.github/workflows/ci.yml`. Реального кода пока мало — только заготовка `packages/core` (проверка имени иконки по ADR-0001); `apps/`, `sources/` и `data/` пусты. Конвейер появится в фазе 1.
+Монорепозиторий создан (фаза 0, шаг 9): pnpm workspaces, TypeScript, Biome, Vitest, size-limit, CI в `.github/workflows/ci.yml`. Код пока ранний: заготовка `packages/core` (проверка имени иконки по ADR-0001), `packages/schema` (схемы набора, фаза 1 шаг 1) и начало `packages/pipeline` (реестр источников и загрузчик, шаг 2; конфиги пяти наборов в `sources/`); `apps/` и `data/` пусты. Остальной конвейер — в фазе 1.
 
 План и решения — в `docs/`, ADR — в `docs/adr/`. Начинай с `docs/README.md`: там оглавление, а `docs/roadmap.md` даёт фазы и сроки (запуск 1 июня 2027). Фазы 0–3 подробно расписаны в `docs/phase-0.md` … `docs/phase-3.md` вместе с готовыми промптами. Если нужного решения в ADR нет — спроси, не придумывай.
 
@@ -67,7 +67,7 @@ pnpm vitest run packages/core/src/index.test.ts -t "часть названия 
 pnpm size                    # size-limit: бюджеты размера пакетов (ADR-0034); нужен dist/ после typecheck
 ```
 
-Источники наборов (ADR-0012): конфиг на набор — `sources/{id}.ts` (экспорт по умолчанию, `satisfies SourceConfigInput`), версии закреплены в `sources.lock.json`, скачанное лежит в `.cache/sources/{id}/{версия}/` (не в git). `pnpm sources fetch [id…]` скачивает по lock (при первом запуске набора закрепляет последнюю версию), повторный запуск без изменений не использует сеть; `pnpm sources pin <id> [версия|коммит]` меняет версию — `sources.lock.json` правь только этой командой. Для git в lock нужен полный хэш коммита, не ветка. Код — `packages/pipeline/src/sources/`.
+Источники наборов (ADR-0012): конфиг на набор — `sources/{id}.ts` (экспорт по умолчанию, `satisfies SourceConfigInput`, имя файла = префикс набора; папки с SVG и правила имён вариантов — список `svgFolders`), версии закреплены в `sources.lock.json`, скачанное лежит в `.cache/sources/{id}/{версия}/` (не в git). `pnpm sources fetch [id…]` скачивает по lock (при первом запуске набора закрепляет последнюю версию), повторный запуск без изменений не использует сеть; `pnpm sources pin <id> [версия|коммит]` меняет версию — `sources.lock.json` правь только этой командой. Для git в lock нужен полный хэш коммита, не ветка. Код — `packages/pipeline/src/sources/`.
 
 Эталон поиска (`docs/eval/queries.csv`, описание в `docs/eval/README.md`) генерируется скриптом `node --env-file=.env tools/eval/generate-queries.mjs` через Polza AI; повторный запуск меняет запросы и разбиение work/holdout — не запускай без просьбы.
 
