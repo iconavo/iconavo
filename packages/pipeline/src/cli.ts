@@ -1,7 +1,10 @@
 // Команды конвейера: pnpm sources fetch [id…] | pnpm sources pin <id> [версия|коммит] | pnpm sanitize [id…]
-import { mkdir, writeFile } from "node:fs/promises";
+// | pnpm normalize [id…]
+import { mkdir, rm, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { formatNormalizeReport, renderGallery } from "./normalize/gallery.js";
+import { normalizeSet, type SetNormalizeReport } from "./normalize/run.js";
 import {
   formatFixtures,
   formatSanitizeReport,
@@ -25,7 +28,8 @@ import { formatReport } from "./sources/report.js";
 const USAGE = `Использование:
   pnpm sources fetch [id…]            скачать все наборы или указанные
   pnpm sources pin <id> [версия|коммит]   закрепить версию (по умолчанию последнюю)
-  pnpm sanitize [id…]                 очистить SVG скачанных наборов и показать отчёт`;
+  pnpm sanitize [id…]                 очистить SVG скачанных наборов и показать отчёт
+  pnpm normalize [id…]                нормализовать иконки и собрать галерею`;
 
 // packages/pipeline/dist/cli.js -> корень репозитория
 const root = fileURLToPath(new URL("../../../", import.meta.url));
@@ -119,6 +123,44 @@ try {
     const htmlPath = join(reportsDir, "sanitize.html");
     await writeFile(htmlPath, renderSanitizeHtml(reports, fixtures), "utf8");
     console.log(`Отчёт с картинками: ${htmlPath}`);
+    process.exit(failed > 0 ? 1 : 0);
+  } else if (command === "normalize") {
+    const lock = await readLock(lockPath);
+    const reports: SetNormalizeReport[] = [];
+    let failed = 0;
+    for (const config of pick(args)) {
+      try {
+        const { dir, entry } = await cachedSourceDir(config, lock, cacheDir);
+        const report = await normalizeSet(
+          config,
+          dir,
+          sourceLabel(config, entry),
+        );
+        reports.push(report);
+        if (report.stop.length > 0) failed++;
+        console.log(`${formatNormalizeReport(report)}\n`);
+      } catch (e) {
+        failed++;
+        console.error(`${config.id}: ошибка — ${(e as Error).message}\n`);
+      }
+    }
+    const total = reports.reduce((n, r) => n + r.total, 0);
+    const excluded = reports.reduce((n, r) => n + r.excluded.length, 0);
+    console.log(
+      `Итого: ${total} иконок · нормализовано ${total - excluded} · исключено ${excluded} · остановлено наборов: ${failed}`,
+    );
+    // Старые страницы удаляются: число страниц могло измениться.
+    const galleryDir = join(reportsDir, "normalize");
+    await rm(galleryDir, { recursive: true, force: true });
+    await mkdir(galleryDir, { recursive: true });
+    let files = 0;
+    for (const file of renderGallery(reports)) {
+      await writeFile(join(galleryDir, file.name), file.html, "utf8");
+      files++;
+    }
+    console.log(
+      `Галерея (файлов: ${files}): ${join(galleryDir, "index.html")}`,
+    );
     process.exit(failed > 0 ? 1 : 0);
   } else {
     usageError(

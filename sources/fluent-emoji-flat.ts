@@ -22,5 +22,6 @@ export default {
     },
   })),
   palette: "color",
+  grid: 32,
   license: { spdx: "MIT", file: "LICENSE" },
 } satisfies SourceConfigInput;

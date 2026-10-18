@@ -61,6 +61,13 @@ export const sourceConfigSchema = z.strictObject({
   svgFolders: z.array(folderSchema).min(1),
   /** monochrome — цвета заменяются на currentColor; color — цветной набор. */
   palette: z.enum(["monochrome", "color"]),
+  /** Сетка набора после нормализации: 24 для интерфейсных наборов, 32 для Fluent Emoji (ADR-0014). */
+  grid: z.number().int().positive(),
+  /**
+   * Высота холста в источнике, если она не равна сетке: у Material Symbols — 960, у Phosphor — 256.
+   * Иконки масштабируются с коэффициентом grid / sourceGrid.
+   */
+  sourceGrid: z.number().positive().optional(),
   license: z.strictObject({
     spdx: z.string().min(1),
     /** Файл лицензии внутри источника. */

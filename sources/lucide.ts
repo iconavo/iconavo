@@ -8,6 +8,7 @@ export default {
   source: { type: "git", repo: "https://github.com/lucide-icons/lucide" },
   svgFolders: [{ path: "icons" }],
   palette: "monochrome",
+  grid: 24,
   license: { spdx: "ISC", file: "LICENSE" },
   iconMetadata: "json",
 } satisfies SourceConfigInput;

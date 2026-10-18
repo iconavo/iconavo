@@ -1,3 +1,38 @@
+export {
+  type Canvas,
+  cleanNumber,
+  formatNumber,
+  placeOnGrid,
+  readCanvas,
+} from "./normalize/canvas.js";
+export {
+  formatNormalizeReport,
+  type GalleryFile,
+  PAGE_SIZE,
+  renderGallery,
+} from "./normalize/gallery.js";
+export { type IdsResult, renameIds } from "./normalize/ids.js";
+export {
+  iconToSvg,
+  type NormalizedIcon,
+  type NormalizeOptions,
+  type NormalizeResult,
+  type NormalizeStats,
+  normalizeSvg,
+} from "./normalize/normalize.js";
+export {
+  FOREGROUND,
+  normalizePaint,
+  type PaintStats,
+  parseColor,
+  type Rgba,
+} from "./normalize/paint.js";
+export {
+  type NormalizeCounts,
+  type NormalizedEntry,
+  normalizeSet,
+  type SetNormalizeReport,
+} from "./normalize/run.js";
 export { checkSafeSvg } from "./sanitize/check.js";
 export {
   formatFixtures,
@@ -13,6 +48,7 @@ export {
   sanitizeSet,
 } from "./sanitize/run.js";
 export {
+  countShapes,
   type Removal,
   type RemovalKind,
   type SanitizeOptions,
@@ -47,7 +83,8 @@ export {
 } from "./sources/names.js";
 export { loadRegistry } from "./sources/registry.js";
 export { formatReport } from "./sources/report.js";
-export { type SvgElement, serializeSvg } from "./svg/serialize.js";
+export { elements, idMap, refsOf, renameRefs } from "./svg/refs.js";
+export { escapeAttr, type SvgElement, serializeSvg } from "./svg/serialize.js";
 export {
   decodeSvg,
   parseXml,

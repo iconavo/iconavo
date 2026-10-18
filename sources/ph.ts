@@ -10,5 +10,8 @@ export default {
     (weight) => ({ path: `assets/${weight}` }),
   ),
   palette: "monochrome",
+  // Холст источника — 256, сетка набора — 24 (ADR-0014; Iconify оставляет 256).
+  grid: 24,
+  sourceGrid: 256,
   license: { spdx: "MIT", file: "LICENSE" },
 } satisfies SourceConfigInput;

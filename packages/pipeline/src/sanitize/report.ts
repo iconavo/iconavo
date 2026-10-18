@@ -1,5 +1,6 @@
 // Отчёт санитайзера: короткий текст для терминала и HTML-страница с картинками «до/после».
 
+import { esc, htmlPage, inIcons, percent, svgDataUri } from "../report/html.js";
 import type { FixtureOutcome, IconPreview, SetSanitizeReport } from "./run.js";
 import type { RemovalKind } from "./sanitize.js";
 
@@ -11,13 +12,6 @@ const KIND_TITLES: Readonly<Record<RemovalKind, string>> = {
   style: "Стили → атрибуты",
   unknown: "Неизвестное (удалено)",
 };
-
-const percent = (part: number, total: number) =>
-  `${(total === 0 ? 0 : (part / total) * 100).toFixed(1).replace(".", ",")}%`;
-
-/** «в 1 иконке», «в 21 иконке», «в 5 иконках». */
-const inIcons = (n: number) =>
-  `в ${n} ${n % 10 === 1 && n % 100 !== 11 ? "иконке" : "иконках"}`;
 
 const kept = (r: SetSanitizeReport) => r.total - r.excluded.length;
 
@@ -85,17 +79,9 @@ export function formatFixtures(fixtures: readonly FixtureOutcome[]): string {
   return lines.join("\n");
 }
 
-const esc = (text: string) =>
-  text
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#39;");
-
 /** SVG как картинка: в <img> он не выполняет скриптов и ничего не загружает. */
 const img = (svg: string, label: string) =>
-  `<img src="data:image/svg+xml;base64,${Buffer.from(svg, "utf8").toString("base64")}" width="64" height="64" alt="${esc(label)}">`;
+  `<img src="${svgDataUri(svg)}" width="64" height="64" alt="${esc(label)}">`;
 
 const code = (text: string, limit = 2000) =>
   `<pre><code>${esc(text.length > limit ? `${text.slice(0, limit)}\n…` : text)}</code></pre>`;
@@ -165,18 +151,10 @@ ${removalList(f.result.removals)}
 }
 
 const STYLE = `
-:root { color-scheme: light dark; --bg: #ffffff; --fg: #1c1c1e; --muted: #6b6b70; --line: #dcdce0; --ok: #1a7f37; --stop: #c62828; --code: #f4f4f6; }
-@media (prefers-color-scheme: dark) { :root { --bg: #141416; --fg: #ececf0; --muted: #9a9aa2; --line: #34343a; --ok: #4ac26b; --stop: #ff6b6b; --code: #1e1e22; } }
-body { margin: 0 auto; max-width: 1100px; padding: 24px 16px 64px; background: var(--bg); color: var(--fg); font: 15px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; }
-h1 { font-size: 28px; margin: 0 0 8px; } h2 { margin-top: 40px; border-bottom: 1px solid var(--line); padding-bottom: 6px; } h3 { margin: 28px 0 8px; } h4 { margin: 16px 0 8px; }
-.muted { color: var(--muted); font-weight: normal; font-size: 0.9em; } .ok { color: var(--ok); font-weight: 600; } .stop { color: var(--stop); font-weight: 600; }
-table { border-collapse: collapse; width: 100%; margin: 8px 0; display: block; overflow-x: auto; } th, td { border-bottom: 1px solid var(--line); padding: 6px 10px; text-align: left; vertical-align: top; } .num { text-align: right; font-variant-numeric: tabular-nums; }
 .cards { display: flex; flex-wrap: wrap; gap: 12px; } .card { margin: 0; border: 1px solid var(--line); border-radius: 10px; padding: 12px; width: 230px; } .card figcaption { font-weight: 600; margin-bottom: 8px; overflow-wrap: anywhere; }
 .pair { display: flex; gap: 12px; } .tile { display: inline-flex; flex-direction: column; align-items: center; gap: 4px; font-size: 12px; color: var(--muted); } .tile img { background: #ffffff; border: 1px solid var(--line); border-radius: 8px; padding: 8px; }
-ul { margin: 6px 0; padding-left: 20px; } pre { background: var(--code); border-radius: 8px; padding: 10px; overflow-x: auto; font-size: 12px; white-space: pre-wrap; overflow-wrap: anywhere; }
 .columns { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; } @media (max-width: 720px) { .columns { grid-template-columns: 1fr; } }
 .fixture { border-top: 1px solid var(--line); }
-a { color: inherit; } nav { margin: 12px 0; }
 `;
 
 /** HTML-отчёт. Без отметок времени и с фиксированным порядком: одинаковый вход — одинаковый файл. */
@@ -194,17 +172,10 @@ export function renderSanitizeHtml(
   const fixturesExcluded = fixtures.filter(
     (f) => f.result.status === "excluded",
   ).length;
-  return `<!doctype html>
-<html lang="ru">
-<head>
-<meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src data:; style-src 'unsafe-inline'">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Очистка SVG — отчёт</title>
-<style>${STYLE}</style>
-</head>
-<body>
-<h1>Очистка SVG</h1>
+  return htmlPage(
+    "Очистка SVG — отчёт",
+    STYLE,
+    `<h1>Очистка SVG</h1>
 <p class="muted">Санитайзер по белому списку (ADR-0013): опасное и лишнее удаляется, непонятное исключает иконку. Набор останавливается, если исключено больше 1% иконок или найдено опасное.</p>
 <nav><a href="#summary">Сводка</a> · <a href="#sets">Наборы</a> · <a href="#fixtures">Вредные SVG</a></nav>
 <h2 id="summary">Сводка</h2>
@@ -215,8 +186,6 @@ export function renderSanitizeHtml(
 ${sets.map(setSection).join("\n")}
 <h2 id="fixtures">Вредные SVG</h2>
 <p>Проверочные файлы из <code>packages/pipeline/fixtures/harmful-svg/</code>: ${fixtures.length} шт., очищено ${fixtures.length - fixturesExcluded}, исключено ${fixturesExcluded}. «Было» показано текстом и не выполняется.</p>
-${fixtures.map(fixtureSection).join("\n")}
-</body>
-</html>
-`;
+${fixtures.map(fixtureSection).join("\n")}`,
+  );
 }
