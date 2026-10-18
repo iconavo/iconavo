@@ -3,5 +3,12 @@
   "vcs": { "enabled": true, "clientKind": "git", "useIgnoreFile": true },
   "formatter": { "indentStyle": "space", "indentWidth": 2 },
   "linter": { "enabled": true, "rules": { "preset": "recommended" } },
-  "files": { "includes": ["**", "!docs", "!pnpm-lock.yaml"] }
+  "files": {
+    "includes": [
+      "**",
+      "!docs",
+      "!pnpm-lock.yaml",
+      "!packages/pipeline/fixtures"
+    ]
+  }
 }

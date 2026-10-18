@@ -14,6 +14,7 @@
     "size": "size-limit",
     "sources": "tsc -b && node packages/pipeline/dist/cli.js",
     "validate": "tsc -b && node packages/schema/dist/cli.js",
+    "sanitize": "tsc -b && node packages/pipeline/dist/cli.js sanitize",
     "check": "pnpm lint && pnpm typecheck && pnpm test && pnpm size"
   },
   "devDependencies": {

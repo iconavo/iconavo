@@ -1,0 +1,11 @@
+<!-- Ссылки javascript: и data:, в том числе спрятанные за &#106; и табуляцией. Ссылка на #dot должна остаться -->
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 24 24">
+  <defs>
+    <circle id="dot" cx="12" cy="12" r="4"/>
+    <linearGradient id="g" href="data:image/svg+xml;base64,PHN2Zy8+"><stop offset="0" stop-color="red"/></linearGradient>
+  </defs>
+  <use href="javascript:alert(1)"/>
+  <use xlink:href="&#106;avascript:alert(1)"/>
+  <use href="java&#9;script:alert(1)"/>
+  <use href="#dot"/>
+</svg>

@@ -1,0 +1,12 @@
+<?xml-stylesheet type="text/css" href="https://evil.example/style.css"?>
+<!-- Внешние ресурсы: таблица стилей, xml:base, адреса в use и url(). Локальная ссылка url(#g) должна остаться -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" xml:base="https://evil.example/">
+  <defs>
+    <linearGradient id="g"><stop offset="0" stop-color="#f00"/><stop offset="1" stop-color="#00f"/></linearGradient>
+  </defs>
+  <use href="https://evil.example/sprite.svg#icon"/>
+  <path d="M2 2h20v4H2z" fill="url(https://evil.example/paint.svg#p)"/>
+  <path d="M2 8h20v4H2z" filter="url('//evil.example/f.svg#f')"/>
+  <path d="M2 14h20v4H2z" mask="url(m.svg#m)"/>
+  <path d="M2 20h20v2H2z" fill="url(#g)"/>
+</svg>

@@ -17,7 +17,7 @@ import {
   sourceConfigSchema,
   wantedPath,
 } from "./config.js";
-import { fetchSource, pinEntry } from "./fetch.js";
+import { cachedSourceDir, fetchSource, pinEntry } from "./fetch.js";
 import { assertCommitHash, fetchGit } from "./git.js";
 import { type LockFile, lockFileSchema, readLock, writeLock } from "./lock.js";
 import { checkNames, iconNameFromFile } from "./names.js";
@@ -436,6 +436,24 @@ describe("загрузка из npm", () => {
         pinned: "lock",
         svgCount: 2,
       });
+    });
+
+    it("cachedSourceDir находит скачанный набор без сети, иначе подсказывает команду", async () => {
+      await expect(cachedSourceDir(config, {}, cacheDir())).rejects.toThrow(
+        /не закреплён.*pnpm sources fetch demo/,
+      );
+      const f = fakeFetch(routes());
+      const { lock, report } = await fetchSource(
+        config,
+        {},
+        { cacheDir: cacheDir(), fetch: f.fetch },
+      );
+      const found = await cachedSourceDir(config, lock, cacheDir());
+      expect(found).toEqual({ dir: report.dir, entry: lock.demo });
+      await rm(join(report.dir, "icons/a.svg"));
+      await expect(cachedSourceDir(config, lock, cacheDir())).rejects.toThrow(
+        /не скачан.*pnpm sources fetch demo/,
+      );
     });
 
     it("удалённый файл в кэше приводит к повторной загрузке", async () => {

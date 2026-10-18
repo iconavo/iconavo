@@ -1,0 +1,6 @@
+<!-- Обработчики событий on*: в любом регистре и на любом элементе -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" onload="alert(1)">
+  <g onclick="alert(1)" ONCLICK="alert(1)">
+    <path d="M4 4h16v16H4z" onBegin="alert(1)" onmouseover="alert(1)"/>
+  </g>
+</svg>

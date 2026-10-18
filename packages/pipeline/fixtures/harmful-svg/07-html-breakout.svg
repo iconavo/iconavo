@@ -1,0 +1,7 @@
+<!-- Трюки «прорыва» в HTML: безобидное для XML может стать тегом после вставки в страницу -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+  <desc><![CDATA[</desc><img src=x onerror=alert(1)>]]></desc>
+  <!--><img src=x onerror=alert(1)>-->
+  <g><![CDATA[<img src=x onerror=alert(1)>]]></g>
+  <path d="M4 4h16v16H4z" fill='red" onload="alert(1)'/>
+</svg>
