@@ -115,8 +115,9 @@ function relativeEntryPath(name: string): string {
   ) {
     throw new Error(`небезопасный путь в архиве: ${JSON.stringify(name)}`);
   }
-  const parts = name.split("/").filter((s) => s !== "");
-  if (parts.some((s) => s === ".." || s === ".")) {
+  // Сегмент «.» ничего не меняет (так упаковано, например, в @phosphor-icons/core), «..» опасен.
+  const parts = name.split("/").filter((s) => s !== "" && s !== ".");
+  if (parts.some((s) => s === "..")) {
     throw new Error(`небезопасный путь в архиве: ${JSON.stringify(name)}`);
   }
   return parts.slice(1).join("/");
