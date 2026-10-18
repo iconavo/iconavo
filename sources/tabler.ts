@@ -14,5 +14,6 @@ export default {
     },
   ],
   palette: "monochrome",
+  grid: 24,
   license: { spdx: "MIT", file: "LICENSE" },
 } satisfies SourceConfigInput;

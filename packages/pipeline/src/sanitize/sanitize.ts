@@ -2,6 +2,7 @@
 // и сущностей, перевод style и <style> в атрибуты, чистка корня, проверка тегов и атрибутов.
 // Результат собирается заново из того, что разрешено, поэтому всё непонятое в него не попадает.
 
+import { refsOf } from "../svg/refs.js";
 import type { SvgElement } from "../svg/serialize.js";
 import {
   decodeSvg,
@@ -115,7 +116,8 @@ function reasonOf(e: Excluded | XmlParseError | CssError): string {
   return e.message;
 }
 
-const countShapes = (el: SvgElement): number =>
+/** Сколько фигур в дереве (вместе с теми, что рисуются только по ссылке). */
+export const countShapes = (el: SvgElement): number =>
   (ELEMENTS.get(el.tag)?.shape ? 1 : 0) +
   el.children.reduce((n, child) => n + countShapes(child), 0);
 
@@ -489,11 +491,7 @@ class Sanitizer {
     for (const el of all) {
       const targets: SvgElement[] = [];
       for (const [name, value] of Object.entries(el.attrs)) {
-        const ids =
-          name === "href"
-            ? [value.slice(1)]
-            : [...value.matchAll(/url\(#([^)]+)\)/g)].map((m) => m[1] ?? "");
-        for (const id of ids) {
+        for (const id of refsOf(name, value)) {
           const target = byId.get(id);
           if (target) targets.push(target);
           else this.warnings.add(`ссылка на несуществующий #${id}`);

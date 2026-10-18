@@ -46,6 +46,7 @@ const baseConfig: SourceConfigInput = {
   source: { type: "npm", package: "demo-icons" },
   svgFolders: [{ path: "icons" }],
   palette: "monochrome",
+  grid: 24,
   license: { spdx: "MIT", file: "LICENSE" },
 };
 
@@ -86,6 +87,9 @@ describe("конфиг набора", () => {
       },
     ],
     ["нет лицензии", { ...baseConfig, license: undefined }],
+    ["нет сетки", { ...baseConfig, grid: undefined }],
+    ["дробная сетка", { ...baseConfig, grid: 24.5 }],
+    ["сетка источника не больше нуля", { ...baseConfig, sourceGrid: 0 }],
   ])("отклоняет: %s", (_name, config) => {
     expect(sourceConfigSchema.safeParse(config).success).toBe(false);
   });

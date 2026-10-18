@@ -32,5 +32,8 @@ export default {
     },
   ],
   palette: "monochrome",
+  // Холст источника — 960 со сдвигом (viewBox="0 -960 960 960"), сетка набора — 24.
+  grid: 24,
+  sourceGrid: 960,
   license: { spdx: "Apache-2.0", file: "LICENSE" },
 } satisfies SourceConfigInput;

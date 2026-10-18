@@ -11,7 +11,8 @@ export interface SvgElement {
   children: SvgElement[];
 }
 
-const escapeAttr = (value: string) =>
+/** Значение атрибута для записи в кавычках. */
+export const escapeAttr = (value: string) =>
   value
     .replace(/&/g, "&amp;")
     .replace(/"/g, "&quot;")
