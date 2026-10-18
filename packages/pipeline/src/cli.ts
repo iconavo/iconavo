@@ -1,19 +1,44 @@
-// Команды конвейера: pnpm sources fetch [id…] | pnpm sources pin <id> [версия|коммит]
+// Команды конвейера: pnpm sources fetch [id…] | pnpm sources pin <id> [версия|коммит] | pnpm sanitize [id…]
+import { mkdir, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { fetchSource, pinEntry } from "./sources/fetch.js";
+import {
+  formatFixtures,
+  formatSanitizeReport,
+  renderSanitizeHtml,
+} from "./sanitize/report.js";
+import {
+  type SetSanitizeReport,
+  sanitizeFixtures,
+  sanitizeSet,
+} from "./sanitize/run.js";
+import {
+  cachedSourceDir,
+  fetchSource,
+  pinEntry,
+  sourceLabel,
+} from "./sources/fetch.js";
 import { readLock, writeLock } from "./sources/lock.js";
 import { loadRegistry } from "./sources/registry.js";
 import { formatReport } from "./sources/report.js";
 
 const USAGE = `Использование:
   pnpm sources fetch [id…]            скачать все наборы или указанные
-  pnpm sources pin <id> [версия|коммит]   закрепить версию (по умолчанию последнюю)`;
+  pnpm sources pin <id> [версия|коммит]   закрепить версию (по умолчанию последнюю)
+  pnpm sanitize [id…]                 очистить SVG скачанных наборов и показать отчёт`;
 
 // packages/pipeline/dist/cli.js -> корень репозитория
 const root = fileURLToPath(new URL("../../../", import.meta.url));
 const lockPath = join(root, "sources.lock.json");
 const cacheDir = join(root, ".cache", "sources");
+const reportsDir = join(root, ".cache", "reports");
+const fixturesDir = join(
+  root,
+  "packages",
+  "pipeline",
+  "fixtures",
+  "harmful-svg",
+);
 
 const [command, ...args] = process.argv.slice(2);
 
@@ -62,6 +87,39 @@ try {
     console.log(
       `${config.id}: закреплено ${value}. Скачайте: pnpm sources fetch ${config.id}`,
     );
+  } else if (command === "sanitize") {
+    const lock = await readLock(lockPath);
+    const reports: SetSanitizeReport[] = [];
+    let failed = 0;
+    for (const config of pick(args)) {
+      try {
+        const { dir, entry } = await cachedSourceDir(config, lock, cacheDir);
+        const report = await sanitizeSet(
+          config,
+          dir,
+          sourceLabel(config, entry),
+        );
+        reports.push(report);
+        if (report.stop.length > 0) failed++;
+        console.log(`${formatSanitizeReport(report)}\n`);
+      } catch (e) {
+        failed++;
+        console.error(`${config.id}: ошибка — ${(e as Error).message}\n`);
+      }
+    }
+    const fixtures = await sanitizeFixtures(fixturesDir);
+    console.log(`${formatFixtures(fixtures)}\n`);
+    const total = reports.reduce((n, r) => n + r.total, 0);
+    const cleaned = reports.reduce((n, r) => n + r.cleaned, 0);
+    const excluded = reports.reduce((n, r) => n + r.excluded.length, 0);
+    console.log(
+      `Итого: ${total} иконок · очищено ${cleaned} · исключено ${excluded} · остановлено наборов: ${failed}`,
+    );
+    await mkdir(reportsDir, { recursive: true });
+    const htmlPath = join(reportsDir, "sanitize.html");
+    await writeFile(htmlPath, renderSanitizeHtml(reports, fixtures), "utf8");
+    console.log(`Отчёт с картинками: ${htmlPath}`);
+    process.exit(failed > 0 ? 1 : 0);
   } else {
     usageError(
       command ? `Неизвестная команда «${command}».` : "Нужна команда.",

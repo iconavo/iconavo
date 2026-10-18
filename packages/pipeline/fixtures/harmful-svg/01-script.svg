@@ -1,0 +1,9 @@
+<!-- Скрипты: обычный, в CDATA, заглавными буквами, под чужой приставкой и внешний -->
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:s="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+  <script>alert(1)</script>
+  <script type="text/javascript"><![CDATA[alert(1)]]></script>
+  <SCRIPT>alert(1)</SCRIPT>
+  <s:script>alert(1)</s:script>
+  <g><script href="https://evil.example/x.js"/></g>
+  <path d="M4 4h16v16H4z"/>
+</svg>

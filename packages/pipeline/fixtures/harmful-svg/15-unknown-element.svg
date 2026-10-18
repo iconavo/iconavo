@@ -1,0 +1,5 @@
+<!-- Неизвестный элемент: обработчик событий из SVG Tiny -->
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:ev="http://www.w3.org/2001/xml-events" viewBox="0 0 24 24">
+  <handler type="application/ecmascript" ev:event="load">alert(1)</handler>
+  <path d="M4 4h16v16H4z"/>
+</svg>

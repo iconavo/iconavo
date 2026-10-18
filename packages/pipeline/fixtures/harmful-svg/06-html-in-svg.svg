@@ -1,0 +1,9 @@
+<!-- HTML внутри SVG: foreignObject с iframe и img onerror, элементы и script из пространства имён XHTML -->
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:h="http://www.w3.org/1999/xhtml" viewBox="0 0 24 24">
+  <foreignObject width="24" height="24">
+    <h:div><h:iframe src="javascript:alert(1)"/><h:img src="x" onerror="alert(1)"/></h:div>
+  </foreignObject>
+  <h:p>Текст из HTML</h:p>
+  <h:script>alert(1)</h:script>
+  <path d="M4 4h16v16H4z"/>
+</svg>

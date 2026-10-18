@@ -1,0 +1,7 @@
+<!-- Растровые картинки: пиксель слежки, картинка data: и feImage в фильтре -->
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 24 24">
+  <image href="https://evil.example/pixel.png" width="1" height="1"/>
+  <image xlink:href="data:image/png;base64,iVBORw0KGgo=" width="24" height="24"/>
+  <filter id="f"><feImage href="https://evil.example/x.png"/><feOffset dx="1"/></filter>
+  <path d="M4 4h16v16H4z" filter="url(#f)"/>
+</svg>

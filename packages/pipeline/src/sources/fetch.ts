@@ -58,7 +58,8 @@ const MARKER = ".fetched.json";
 
 const key = (e: LockEntry) => (e.type === "npm" ? e.version : e.commit);
 
-const label = (config: SourceConfig, e: LockEntry) =>
+/** Подпись источника для отчётов: `lucide-static@1.59.0` или `https://github.com/x/y@abcdef0`. */
+export const sourceLabel = (config: SourceConfig, e: LockEntry) =>
   config.source.type === "npm" && e.type === "npm"
     ? `${config.source.package}@${e.version}`
     : `${config.source.type === "git" ? config.source.repo : ""}@${key(e).slice(0, 7)}`;
@@ -82,14 +83,19 @@ export async function pinEntry(
   return { type: "git", commit };
 }
 
-async function listFiles(dir: string, rel = ""): Promise<string[]> {
+async function walkFiles(dir: string, rel = ""): Promise<string[]> {
   const out: string[] = [];
   for (const e of await readdir(join(dir, rel), { withFileTypes: true })) {
     const path = rel ? `${rel}/${e.name}` : e.name;
-    if (e.isDirectory()) out.push(...(await listFiles(dir, path)));
+    if (e.isDirectory()) out.push(...(await walkFiles(dir, path)));
     else if (e.isFile() && path !== MARKER) out.push(path);
   }
   return out;
+}
+
+/** Все файлы скачанного набора (пути через «/» относительно папки), по порядку кодов символов. */
+export async function listFiles(dir: string): Promise<string[]> {
+  return (await walkFiles(dir)).sort((a, b) => (a < b ? -1 : a > b ? 1 : 0));
 }
 
 async function readMarker(dir: string): Promise<Marker | undefined> {
@@ -109,6 +115,30 @@ async function isCached(dir: string, entry: LockEntry): Promise<boolean> {
   } catch {
     return false;
   }
+}
+
+/**
+ * Папка уже скачанного набора по записи в sources.lock.json. Сеть не используется:
+ * если набора нет в кэше — ошибка с подсказкой, что запустить.
+ */
+export async function cachedSourceDir(
+  config: SourceConfig,
+  lock: LockFile,
+  cacheDir: string,
+): Promise<{ dir: string; entry: LockEntry }> {
+  const entry = lock[config.id];
+  if (!entry) {
+    throw new Error(
+      `набор не закреплён в sources.lock.json — запустите pnpm sources fetch ${config.id}`,
+    );
+  }
+  const dir = join(cacheDir, config.id, key(entry));
+  if (!(await isCached(dir, entry))) {
+    throw new Error(
+      `набор не скачан — запустите pnpm sources fetch ${config.id}`,
+    );
+  }
+  return { dir, entry };
 }
 
 async function download(
@@ -207,7 +237,7 @@ export async function fetchSource(
   const report: FetchReport = {
     id: config.id,
     name: config.name,
-    sourceLabel: label(config, entry),
+    sourceLabel: sourceLabel(config, entry),
     status,
     pinned,
     dir,

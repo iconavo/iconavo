@@ -8,7 +8,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Состояние проекта
 
-Монорепозиторий создан (фаза 0, шаг 9): pnpm workspaces, TypeScript, Biome, Vitest, size-limit, CI в `.github/workflows/ci.yml`. Код пока ранний: заготовка `packages/core` (проверка имени иконки по ADR-0001), `packages/schema` (схемы набора, фаза 1 шаг 1) и начало `packages/pipeline` (реестр источников и загрузчик, шаг 2; конфиги пяти наборов в `sources/`); `apps/` и `data/` пусты. Остальной конвейер — в фазе 1.
+Монорепозиторий создан (фаза 0, шаг 9): pnpm workspaces, TypeScript, Biome, Vitest, size-limit, CI в `.github/workflows/ci.yml`. Код пока ранний: заготовка `packages/core` (проверка имени иконки по ADR-0001), `packages/schema` (схемы набора, фаза 1 шаг 1) и начало `packages/pipeline` (реестр источников и загрузчик, шаг 2; конфиги пяти наборов в `sources/`; санитайзер SVG, шаг 3); `apps/` и `data/` пусты. Остальной конвейер — в фазе 1.
 
 План и решения — в `docs/`, ADR — в `docs/adr/`. Начинай с `docs/README.md`: там оглавление, а `docs/roadmap.md` даёт фазы и сроки (запуск 1 июня 2027). Фазы 0–3 подробно расписаны в `docs/phase-0.md` … `docs/phase-3.md` вместе с готовыми промптами. Если нужного решения в ADR нет — спроси, не придумывай.
 
@@ -70,6 +70,8 @@ pnpm size                    # size-limit: бюджеты размера пак�
 Источники наборов (ADR-0012): конфиг на набор — `sources/{id}.ts` (экспорт по умолчанию, `satisfies SourceConfigInput`, имя файла = префикс набора; папки с SVG и правила имён вариантов — список `svgFolders`), версии закреплены в `sources.lock.json`, скачанное лежит в `.cache/sources/{id}/{версия}/` (не в git). `pnpm sources fetch [id…]` скачивает по lock (при первом запуске набора закрепляет последнюю версию), повторный запуск без изменений не использует сеть; `pnpm sources pin <id> [версия|коммит]` меняет версию — `sources.lock.json` правь только этой командой. Для git в lock нужен полный хэш коммита, не ветка. Код — `packages/pipeline/src/sources/`.
 
 Эталон поиска (`docs/eval/queries.csv`, описание в `docs/eval/README.md`) генерируется скриптом `node --env-file=.env tools/eval/generate-queries.mjs` через Polza AI; повторный запуск меняет запросы и разбиение work/holdout — не запускай без просьбы.
+
+Очистка SVG (ADR-0013): `pnpm sanitize [id…]` прогоняет скачанные наборы (из `.cache/sources`, сеть не использует) через санитайзер по белому списку, печатает сводку и пишет HTML-отчёт `.cache/reports/sanitize.html`. Код выхода 1 — набор остановлен: исключено больше 1% иконок, найдено опасное (признак подмены источника), потеряны фигуры или атрибуты рисунка. Код — `packages/pipeline/src/sanitize/` (разбор XML — `src/svg/xml.ts`, без зависимостей); «вредные» SVG для тестов — `packages/pipeline/fixtures/harmful-svg/` (исключены из Biome). Санитайзер должен идти раньше SVGO: парсер SVGO читает сущности из DOCTYPE.
 
 Проверка файла набора по схеме: `pnpm validate <файл>` (вид по имени `icons|info|metadata|search.json` или `--kind`). Код выхода 0 — ошибок нет, 1 — есть ошибки, 2 — неверный вызов. Примеры: `packages/schema/examples/{valid,broken}/`.
 
