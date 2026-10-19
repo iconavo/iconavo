@@ -36,4 +36,13 @@ export default {
   grid: 24,
   sourceGrid: 960,
   license: { spdx: "Apache-2.0", file: "LICENSE" },
+  // Одинаковые варианты одной иконки — алиасы старшего, как у Iconify (ADR-0002): 360-sharp → 360.
+  variantAliases: [
+    "",
+    "-sharp",
+    "-rounded",
+    "-outline",
+    "-outline-sharp",
+    "-outline-rounded",
+  ],
 } satisfies SourceConfigInput;

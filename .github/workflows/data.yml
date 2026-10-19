@@ -1,0 +1,64 @@
+name: Данные
+
+# Пересобирает data/ из закреплённых источников и сверяет с тем, что лежит в git (ADR-0015):
+# одинаковые источники должны давать побайтно одинаковые файлы — в том числе на Linux, когда data/
+# собрана на Windows. Фильтр по путям задаётся только на весь файл, поэтому проверка отдельная.
+
+on:
+  pull_request:
+    paths:
+      - "packages/pipeline/**"
+      - "packages/schema/**"
+      - "sources/**"
+      - "sources.lock.json"
+      - "data/**"
+      - "package.json"
+      - "pnpm-lock.yaml"
+      - ".github/workflows/data.yml"
+  push:
+    branches: [main]
+    paths:
+      - "packages/pipeline/**"
+      - "packages/schema/**"
+      - "sources/**"
+      - "sources.lock.json"
+      - "data/**"
+      - "package.json"
+      - "pnpm-lock.yaml"
+      - ".github/workflows/data.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: data-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  data:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      # Скачанные наборы — по версиям из lock и конфигам. Без restore-keys: чужой кэш с другими
+      # папками набора загрузчик принял бы за свой.
+      - uses: actions/cache@v4
+        with:
+          path: .cache/sources
+          key: sources-${{ hashFiles('sources.lock.json', 'sources/*.ts') }}
+      - run: pnpm sources fetch
+      - run: pnpm data
+      - name: data/ совпадает со сборкой
+        run: |
+          git status --porcelain
+          if [ -n "$(git status --porcelain)" ]; then
+            git diff --stat
+            echo "::error::Сборка на Linux дала не те файлы, что лежат в git. Запустите pnpm data и закоммитьте data/; если у вас файлы не меняются — ищите, что в сборке зависит от системы."
+            exit 1
+          fi

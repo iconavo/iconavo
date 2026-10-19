@@ -1,8 +1,10 @@
 // Команды конвейера: pnpm sources fetch [id…] | pnpm sources pin <id> [версия|коммит] | pnpm sanitize [id…]
-// | pnpm normalize [id…]
+// | pnpm normalize [id…] | pnpm data [id…]
 import { mkdir, rm, writeFile } from "node:fs/promises";
-import { join } from "node:path";
+import { join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
+import { formatBuildReport, renderBuildGallery } from "./build/report.js";
+import { buildSet, type SetBuildReport, writeSetData } from "./build/run.js";
 import { formatNormalizeReport, renderGallery } from "./normalize/gallery.js";
 import { normalizeSet, type SetNormalizeReport } from "./normalize/run.js";
 import {
@@ -29,12 +31,14 @@ const USAGE = `Использование:
   pnpm sources fetch [id…]            скачать все наборы или указанные
   pnpm sources pin <id> [версия|коммит]   закрепить версию (по умолчанию последнюю)
   pnpm sanitize [id…]                 очистить SVG скачанных наборов и показать отчёт
-  pnpm normalize [id…]                нормализовать иконки и собрать галерею`;
+  pnpm normalize [id…]                нормализовать иконки и собрать галерею
+  pnpm data [id…]                     собрать наборы в data/{набор}/icons.json: SVGO, алиасы, галерея`;
 
 // packages/pipeline/dist/cli.js -> корень репозитория
 const root = fileURLToPath(new URL("../../../", import.meta.url));
 const lockPath = join(root, "sources.lock.json");
 const cacheDir = join(root, ".cache", "sources");
+const dataDir = join(root, "data");
 const reportsDir = join(root, ".cache", "reports");
 const fixturesDir = join(
   root,
@@ -155,6 +159,49 @@ try {
     await mkdir(galleryDir, { recursive: true });
     let files = 0;
     for (const file of renderGallery(reports)) {
+      await writeFile(join(galleryDir, file.name), file.html, "utf8");
+      files++;
+    }
+    console.log(
+      `Галерея (файлов: ${files}): ${join(galleryDir, "index.html")}`,
+    );
+    process.exit(failed > 0 ? 1 : 0);
+  } else if (command === "data") {
+    const lock = await readLock(lockPath);
+    const reports: SetBuildReport[] = [];
+    let failed = 0;
+    for (const config of pick(args)) {
+      try {
+        const { dir, entry } = await cachedSourceDir(config, lock, cacheDir);
+        const started = performance.now();
+        const report = await buildSet(config, dir, sourceLabel(config, entry));
+        reports.push(report);
+        // Набор со «СТОП» свой файл не перезаписывает.
+        const written = await writeSetData(dataDir, report);
+        if (written === undefined) failed++;
+        const seconds = ((performance.now() - started) / 1000).toFixed(1);
+        const result =
+          written === undefined
+            ? "файл не записан"
+            : `записано ${relative(root, written).replaceAll("\\", "/")}`;
+        console.log(
+          `${formatBuildReport(report)}\n  ${result} · ${seconds} с\n`,
+        );
+      } catch (e) {
+        failed++;
+        console.error(`${config.id}: ошибка — ${(e as Error).message}\n`);
+      }
+    }
+    const sum = (value: (r: SetBuildReport) => number) =>
+      reports.reduce((n, r) => n + value(r), 0);
+    console.log(
+      `Итого: ${sum((r) => r.normalize.total)} иконок · в наборах ${sum((r) => r.icons.length)} · алиасов ${sum((r) => r.aliases.length)} · остановлено наборов: ${failed}`,
+    );
+    const galleryDir = join(reportsDir, "data");
+    await rm(galleryDir, { recursive: true, force: true });
+    await mkdir(galleryDir, { recursive: true });
+    let files = 0;
+    for (const file of renderBuildGallery(reports)) {
       await writeFile(join(galleryDir, file.name), file.html, "utf8");
       files++;
     }
