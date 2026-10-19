@@ -78,6 +78,9 @@ const NORMALIZE_PAGE: PageKind = {
 export const pageFile = (id: string, page: number) => `${id}-${page}.html`;
 const pageCount = (count: number) => Math.ceil(count / PAGE_SIZE);
 const anchor = (name: string) => `i-${name}`;
+/** Ссылка на карточку иконки: страница набора по номеру иконки и якорь. */
+export const cardLink = (id: string, index: number, name: string) =>
+  `${pageFile(id, Math.floor(index / PAGE_SIZE) + 1)}#${anchor(name)}`;
 const viewBoxOf = (icon: NormalizedIcon) =>
   `0 0 ${formatNumber(icon.width)} ${formatNumber(icon.height)}`;
 /** Ширина плитки при заданной высоте: неквадратные иконки сохраняют пропорции. */
@@ -241,7 +244,7 @@ export function attentionItems(
   );
   items.forEach((item, index) => {
     if (item.attention.length === 0) return;
-    const href = `${pageFile(r.id, Math.floor(index / PAGE_SIZE) + 1)}#${anchor(item.entry.name)}`;
+    const href = cardLink(r.id, index, item.entry.name);
     out.push(
       `<li><a href="${href}">${esc(r.id)}:${esc(item.entry.name)}</a> — ${esc(item.attention.join("; "))}</li>`,
     );

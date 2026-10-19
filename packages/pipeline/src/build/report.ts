@@ -1,5 +1,6 @@
 // Отчёт сборки (шаг 5): сводка в терминале, таблица размеров и галерея, где у каждой иконки три
 // строки — было, до SVGO (после нормализации) и после SVGO. Страницы наборов общие с галереей шага 4.
+// Контроль качества (шаг 6) добавляет раздел в сводку, страницу qc.html и значки на карточках.
 
 import {
   attentionItems,
@@ -12,6 +13,14 @@ import {
   renderSetPages,
   stopsSection,
 } from "../normalize/gallery.js";
+import {
+  findingsByName,
+  formatQc,
+  qcBadges,
+  qcSection,
+  renderQcPage,
+} from "../qc/report.js";
+import type { QcFinding } from "../qc/run.js";
 import { esc, htmlPage, percent } from "../report/html.js";
 import { formatBytes } from "../sources/report.js";
 import type { BuildSizes, BuiltIcon, SetBuildReport } from "./run.js";
@@ -23,6 +32,7 @@ const BUILD_PAGE: PageKind = {
 };
 
 const CHECKLIST = [
+  "Иконки из отчёта контроля качества (qc.html) разобраны: ошибка или так задумано автором.",
   "Строки «до SVGO» и «SVGO» совпадают по форме — особенно на 16 px.",
   "У Tabler нигде нет квадратной рамки.",
   "Тонкие линии и мелкие детали на месте: Phosphor *-thin, точки и круги Lucide.",
@@ -45,8 +55,15 @@ export function sizeChange(before: number, after: number): string {
   return `${after <= before ? "−" : "+"}${percent(Math.abs(before - after), before)}`;
 }
 
-/** Почему иконку стоит посмотреть первой: замечания нормализации и то, что заметила сборка. */
-function attentionOf(r: SetBuildReport, b: BuiltIcon): string[] {
+/**
+ * Почему иконку стоит посмотреть первой: замечания нормализации, то, что заметила сборка, и находки
+ * контроля качества.
+ */
+function attentionOf(
+  r: SetBuildReport,
+  b: BuiltIcon,
+  findings: readonly QcFinding[],
+): string[] {
   const out = [...b.entry.attention];
   if (b.transformsLeft > 0) out.push(`transform остался: ${b.transformsLeft}`);
   if (r.normalize.palette === "color") {
@@ -55,18 +72,23 @@ function attentionOf(r: SetBuildReport, b: BuiltIcon): string[] {
       out.push(`сложная цветная: ${found.map(([, what]) => what).join(", ")}`);
     }
   }
-  return out;
+  return [...out, ...qcBadges(findings)];
 }
 
-const itemsOf = (r: SetBuildReport): GalleryItem[] =>
-  r.icons.map((b) => ({
+function itemsOf(r: SetBuildReport): GalleryItem[] {
+  const findings = findingsByName(r.qc);
+  return r.icons.map((b) => ({
     entry: b.entry,
     optimized: b.icon,
     aliases: b.aliases,
-    attention: attentionOf(r, b),
+    attention: attentionOf(r, b, findings.get(b.entry.name) ?? []),
   }));
+}
 
-/** Иконки без карточки: исключённые, не прошедшие SVGO, с одним именем на несколько файлов. */
+/**
+ * Иконки без карточки: исключённые, не прошедшие SVGO, с одним именем на несколько файлов,
+ * пропавшие с прошлой версии.
+ */
 const problemsOf = (r: SetBuildReport) => [
   ...r.normalize.excluded.map((e) => ({
     name: e.name,
@@ -79,6 +101,10 @@ const problemsOf = (r: SetBuildReport) => [
   ...r.conflicts.map((c) => ({
     name: c.name,
     reason: `одно имя у файлов: ${c.files.join(", ")}`,
+  })),
+  ...r.qc.missing.map((name) => ({
+    name,
+    reason: "пропала: была в прошлой версии",
   })),
 ];
 
@@ -133,6 +159,7 @@ function renderIndex(
 <table><thead><tr><th>Набор</th><th>Иконок</th><th>В наборе</th><th>Алиасов</th><th>Исключено</th><th>Исходные SVG</th><th>До SVGO</th><th>После SVGO</th><th>icons.json</th><th>transform: было → осталось</th><th>Итог</th></tr></thead>
 <tbody>${sets.map(sizeRow).join("")}${totalRow(sets)}</tbody></table>
 ${stopsSection(sets.map((r) => ({ name: r.normalize.name, stop: r.stop })))}
+${qcSection(sets)}
 <h2>Сначала посмотрите</h2>
 ${attention}
 <h2>Все иконки</h2>
@@ -140,12 +167,13 @@ ${pagesSection(sets.map((r, i) => ({ set: r.normalize, count: items[i]?.length ?
   );
 }
 
-/** Файлы галереи сборки: сводка index.html и страницы наборов. */
+/** Файлы галереи сборки: сводка index.html, контроль качества qc.html и страницы наборов. */
 export function* renderBuildGallery(
   sets: readonly SetBuildReport[],
 ): Generator<GalleryFile> {
   const items = sets.map(itemsOf);
   yield { name: "index.html", html: renderIndex(sets, items) };
+  yield { name: "qc.html", html: renderQcPage(sets) };
   for (const [i, r] of sets.entries()) {
     yield* renderSetPages(r.normalize, items[i] ?? [], BUILD_PAGE);
   }
@@ -183,6 +211,15 @@ export function formatBuildReport(r: SetBuildReport): string {
     "Одно имя у нескольких файлов",
     r.conflicts.map((c) => `${c.name}: ${c.files.join(", ")}`),
   );
+  lines.push(...formatQc(r.qc));
+  for (const kind of ["failed", "empty"] as const) {
+    list(
+      kind === "failed" ? "Не нарисовались" : "Пустые",
+      r.qc.findings
+        .filter((f) => f.kind === kind)
+        .map((f) => `${f.name} — ${f.text}`),
+    );
+  }
   if (r.stop.length === 0) lines.push("  Итог: можно записывать");
   else for (const x of r.stop) lines.push(`  СТОП: ${x}`);
   return lines.join("\n");

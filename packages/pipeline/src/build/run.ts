@@ -1,6 +1,7 @@
 // Сборка набора (шаг 5, ADR-0015): очистка и нормализация (шаг 4) → SVGO → алиасы одинаковых
-// вариантов (ADR-0002) → icons.json в формате IconifyJSON (ADR-0003). Одинаковые источники дают
-// побайтно одинаковый файл, а набор со «СТОП» свой файл не перезаписывает.
+// вариантов (ADR-0002) → контроль качества (шаг 6, ADR-0016) → icons.json в формате IconifyJSON
+// (ADR-0003). Одинаковые источники дают побайтно одинаковый файл, а набор со «СТОП» свой файл
+// не перезаписывает.
 
 import { randomBytes } from "node:crypto";
 import { mkdir, rename, rm, writeFile } from "node:fs/promises";
@@ -14,6 +15,8 @@ import {
 } from "../normalize/run.js";
 import { SUPPORTED_GRIDS } from "../optimize/config.js";
 import { optimizeIcon } from "../optimize/optimize.js";
+import type { Baseline } from "../qc/baseline.js";
+import { checkSet, type SetQcReport } from "../qc/run.js";
 import type { SourceConfig } from "../sources/config.js";
 import { variantAliases } from "./aliases.js";
 import { canonicalJson, type Json } from "./json.js";
@@ -51,10 +54,21 @@ export interface SetBuildReport {
   sizes: BuildSizes;
   /** Элементов с transform до SVGO и после. */
   transforms: { before: number; left: number };
+  /** Контроль качества (ADR-0016). */
+  qc: SetQcReport;
   /** Содержимое icons.json; нет — набор остановлен. */
   json?: string;
   /** Почему набор нельзя обновлять; пусто — можно. */
   stop: string[];
+}
+
+export interface BuildOptions {
+  /** Прошлая версия набора для сравнения (ADR-0016). */
+  baseline?: Baseline;
+  /** Почему сравнивать не с чем — для отчёта. */
+  baselineNote?: string;
+  /** Изменения проверены в отчёте: правило 2% набор не останавливает (pnpm data --accept-changes). */
+  acceptChanges?: boolean;
 }
 
 const TRANSFORM = /\stransform="/g;
@@ -66,6 +80,7 @@ export async function buildSet(
   config: SourceConfig,
   dir: string,
   source: string,
+  options: BuildOptions = {},
 ): Promise<SetBuildReport> {
   const normalize = await normalizeSet(config, dir, source);
   const stop = [...normalize.stop];
@@ -128,6 +143,22 @@ export async function buildSet(
   for (const [alias, parent] of aliases)
     byName.get(parent)?.aliases.push(alias);
 
+  // Контроль качества идёт и у остановленного набора: отчёт должен быть полным.
+  const qc = await checkSet({
+    palette: config.palette,
+    grid: config.grid,
+    icons: icons.map((b) => ({
+      name: b.entry.name,
+      icon: b.icon,
+      source: b.entry.source,
+    })),
+    aliases,
+    // Если санитайзер нашёл опасное, исходники не рисуем: набор и так остановлен.
+    compareOriginals: normalize.dangerous === 0,
+    ...options,
+  });
+  stop.push(...qc.stop);
+
   const report: SetBuildReport = {
     normalize,
     icons,
@@ -136,6 +167,7 @@ export async function buildSet(
     conflicts,
     sizes,
     transforms,
+    qc,
     stop,
   };
   if (stop.length > 0) return report;
