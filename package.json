@@ -16,6 +16,7 @@
     "validate": "tsc -b && node packages/schema/dist/cli.js",
     "sanitize": "tsc -b && node packages/pipeline/dist/cli.js sanitize",
     "normalize": "tsc -b && node packages/pipeline/dist/cli.js normalize",
+    "data": "tsc -b && node packages/pipeline/dist/cli.js data",
     "check": "pnpm lint && pnpm typecheck && pnpm test && pnpm size"
   },
   "devDependencies": {

@@ -1,9 +1,11 @@
 // Галерея нормализации: каждая иконка «было» и «стало» — на светлом и тёмном фоне, в красном цвете,
 // в размерах 48, 24 и 16 px. Без скриптов. Результат встраивается в страницу, а не картинкой:
 // так видно, что цвет действительно берётся от текста вокруг — как будет в пакете.
+// Страницы наборов общие с галереей сборки (шаг 5): там у иконки третья строка — после SVGO.
 
 import { esc, htmlPage, inIcons, percent, svgDataUri } from "../report/html.js";
 import { formatNumber } from "./canvas.js";
+import type { NormalizedIcon } from "./normalize.js";
 import type { NormalizedEntry, SetNormalizeReport } from "./run.js";
 
 /** Иконок на странице галереи. */
@@ -19,6 +21,29 @@ export interface GalleryFile {
   html: string;
 }
 
+/** Что странице галереи нужно знать о наборе. */
+export type GallerySet = Pick<
+  SetNormalizeReport,
+  "id" | "name" | "source" | "palette" | "grid" | "sourceGrid"
+>;
+
+/** Иконка в галерее. */
+export interface GalleryItem {
+  entry: NormalizedEntry;
+  /** Иконка после SVGO — третья строка в галерее сборки. */
+  optimized?: NormalizedIcon;
+  /** Варианты, ставшие алиасами этой иконки (ADR-0002). */
+  aliases?: readonly string[];
+  /** Почему иконку стоит посмотреть первой; пусто — не нужно. */
+  attention: readonly string[];
+}
+
+/** Заголовок и пояснение страниц набора. */
+export interface PageKind {
+  title: string;
+  legend: string;
+}
+
 const CHECKLIST = [
   "Результат совпадает с оригиналом по форме.",
   "В красном цвете перекрашена вся монохромная иконка, а не её часть.",
@@ -27,14 +52,15 @@ const CHECKLIST = [
   "Fluent Emoji сохранили свои цвета.",
 ];
 
-const STYLE = `
+export const GALLERY_STYLE = `
 body { max-width: 1440px; }
-.cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(430px, 1fr)); gap: 10px; }
+.cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(450px, 1fr)); gap: 10px; }
 .card { border: 1px solid var(--line); border-radius: 10px; padding: 8px 10px; content-visibility: auto; contain-intrinsic-size: auto 150px; }
 .card h3 { margin: 0 0 6px; font-size: 14px; overflow-wrap: anywhere; }
 .badge { display: inline-block; margin: 2px 0 0 6px; padding: 0 6px; border-radius: 6px; background: var(--code); color: var(--stop); font-size: 12px; font-weight: 600; }
+.badge.alias { color: var(--muted); font-weight: normal; }
 .row { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin: 4px 0; }
-.lbl { width: 40px; font-size: 12px; color: var(--muted); }
+.lbl { width: 56px; font-size: 12px; color: var(--muted); }
 .t { display: inline-flex; align-items: center; gap: 6px; padding: 6px; border-radius: 8px; border: 1px solid var(--line); }
 .t > * { display: block; flex: none; }
 .light { background: #ffffff; color: #1c1c1e; } .dark { background: #141416; color: #ececf0; } .red { background: #ffffff; color: #e5484d; }
@@ -43,73 +69,91 @@ body { max-width: 1440px; }
 .sprite { position: absolute; width: 0; height: 0; overflow: hidden; }
 `;
 
-const pageFile = (id: string, page: number) => `${id}-${page}.html`;
-const pageCount = (r: SetNormalizeReport) =>
-  Math.ceil(r.icons.length / PAGE_SIZE);
-const anchor = (name: string) => `i-${name}`;
-const viewBoxOf = (e: NormalizedEntry) =>
-  `0 0 ${formatNumber(e.icon.width)} ${formatNumber(e.icon.height)}`;
-/** Ширина плитки при заданной высоте: неквадратные иконки сохраняют пропорции. */
-const widthAt = (e: NormalizedEntry, size: number) =>
-  formatNumber((size * e.icon.width) / e.icon.height);
+const NORMALIZE_PAGE: PageKind = {
+  title: "нормализация",
+  legend:
+    "Было — исходный файл картинкой: он не знает цвета текста вокруг. Стало — результат прямо в странице: на светлом фоне, на тёмном и в красном цвете; 48, 24 и 16 px.",
+};
 
-const canvasLabel = (r: SetNormalizeReport) =>
+export const pageFile = (id: string, page: number) => `${id}-${page}.html`;
+const pageCount = (count: number) => Math.ceil(count / PAGE_SIZE);
+const anchor = (name: string) => `i-${name}`;
+const viewBoxOf = (icon: NormalizedIcon) =>
+  `0 0 ${formatNumber(icon.width)} ${formatNumber(icon.height)}`;
+/** Ширина плитки при заданной высоте: неквадратные иконки сохраняют пропорции. */
+const widthAt = (icon: NormalizedIcon, size: number) =>
+  formatNumber((size * icon.width) / icon.height);
+/** Иконке с ID нужна своя копия на каждую плитку, остальным хватает общего <symbol>. */
+const hasIds = (icon: NormalizedIcon) => icon.body.includes(' id="');
+
+export const canvasLabel = (r: GallerySet) =>
   r.sourceGrid === r.grid
     ? `сетка ${r.grid}`
     : `источник ${formatNumber(r.sourceGrid)} → сетка ${r.grid}`;
 
 /** Исходный файл картинкой: данные — в стилях страницы, один раз на иконку. */
-function originalTiles(e: NormalizedEntry, n: number): string {
+function originalTiles(icon: NormalizedIcon, n: number): string {
   return SIZES.map((size) => {
-    const width = widthAt(e, size);
+    const width = widthAt(icon, size);
     const style = width === String(size) ? "" : ` style="width:${width}px"`;
     return `<i class="o o${n} s${size}"${style}></i>`;
   }).join("");
 }
 
 /**
- * Результат прямо в странице. Иконка без ID — ссылкой на общий <symbol>; иконка с ID — своей
- * копией на каждую плитку с уникальными ID, как будет рисовать пакет (ADR-0031).
+ * Иконка прямо в странице: три тона по три размера. Без ID — ссылкой на общий <symbol>; с ID — своей
+ * копией на каждую плитку с уникальными ID, как будет рисовать пакет (ADR-0031). first — номер первой
+ * плитки строки: у строки «после SVGO» номера свои.
  */
-function resultTiles(
-  e: NormalizedEntry,
-  n: number,
+function resultRow(
+  icon: NormalizedIcon,
+  symbol: string,
   base: string,
-  tone: number,
+  first: number,
 ): string {
-  return SIZES.map((size, k) => {
-    const attrs = `width="${widthAt(e, size)}" height="${size}"`;
-    if (e.stats.ids.renamed === 0) {
-      return `<svg ${attrs}><use href="#s${n}"/></svg>`;
-    }
-    const copy = e.icon.body.replaceAll(
-      `${base}-`,
-      `${base}-t${tone * SIZES.length + k}-`,
-    );
-    return `<svg ${attrs} viewBox="${viewBoxOf(e)}">${copy}</svg>`;
+  return TONES.map((tone, i) => {
+    const tiles = SIZES.map((size, k) => {
+      const attrs = `width="${widthAt(icon, size)}" height="${size}"`;
+      if (!hasIds(icon)) return `<svg ${attrs}><use href="#${symbol}"/></svg>`;
+      const copy = icon.body.replaceAll(
+        `${base}-`,
+        `${base}-t${first + i * SIZES.length + k}-`,
+      );
+      return `<svg ${attrs} viewBox="${viewBoxOf(icon)}">${copy}</svg>`;
+    }).join("");
+    return `<span class="t ${tone}">${tiles}</span>`;
   }).join("");
 }
 
-function card(r: SetNormalizeReport, e: NormalizedEntry, n: number): string {
-  const badges = e.attention
+function card(r: GallerySet, item: GalleryItem, n: number): string {
+  const e = item.entry;
+  const badges = item.attention
     .map((a) => `<span class="badge">${esc(a)}</span>`)
     .join("");
+  const aliases =
+    item.aliases && item.aliases.length > 0
+      ? `<span class="badge alias">алиасы: ${esc(item.aliases.join(", "))}</span>`
+      : "";
   const before =
-    `<span class="t light">${originalTiles(e, n)}</span>` +
+    `<span class="t light">${originalTiles(e.icon, n)}</span>` +
     (r.palette === "color"
-      ? `<span class="t dark">${originalTiles(e, n)}</span>`
+      ? `<span class="t dark">${originalTiles(e.icon, n)}</span>`
       : "");
   const base = `${r.id}--${e.name}`;
-  const after = TONES.map(
-    (tone, i) => `<span class="t ${tone}">${resultTiles(e, n, base, i)}</span>`,
-  ).join("");
-  return `<article class="card" id="${anchor(e.name)}"><h3>${esc(e.name)}${badges}</h3>
-<div class="row"><span class="lbl">было</span>${before}</div>
-<div class="row"><span class="lbl">стало</span>${after}</div></article>`;
+  const rows = [
+    `<div class="row"><span class="lbl">было</span>${before}</div>`,
+    `<div class="row"><span class="lbl">${item.optimized ? "до SVGO" : "стало"}</span>${resultRow(e.icon, `s${n}`, base, 0)}</div>`,
+  ];
+  if (item.optimized) {
+    rows.push(
+      `<div class="row"><span class="lbl">SVGO</span>${resultRow(item.optimized, `p${n}`, base, TONES.length * SIZES.length)}</div>`,
+    );
+  }
+  return `<article class="card" id="${anchor(e.name)}"><h3>${esc(e.name)}${badges}${aliases}</h3>
+${rows.join("\n")}</article>`;
 }
 
-function pageNav(r: SetNormalizeReport, page: number): string {
-  const pages = pageCount(r);
+function pageNav(r: GallerySet, page: number, pages: number): string {
   const links: string[] = [];
   for (let p = 1; p <= pages; p++) {
     links.push(
@@ -127,37 +171,128 @@ function pageNav(r: SetNormalizeReport, page: number): string {
   return `<nav><a href="index.html">Сводка</a> · ${prev} · ${links.join(" ")} · ${next}</nav>`;
 }
 
-function renderPage(r: SetNormalizeReport, page: number): string {
-  const pages = pageCount(r);
+function renderPage(
+  r: GallerySet,
+  items: readonly GalleryItem[],
+  page: number,
+  kind: PageKind,
+): string {
+  const pages = pageCount(items.length);
   const from = (page - 1) * PAGE_SIZE;
-  const entries = r.icons.slice(from, from + PAGE_SIZE);
-  const originals = entries
+  const shown = items.slice(from, from + PAGE_SIZE);
+  const originals = shown
     .map(
-      (e, n) => `.o${n} { background-image: url("${svgDataUri(e.source)}"); }`,
+      (item, n) =>
+        `.o${n} { background-image: url("${svgDataUri(item.entry.source)}"); }`,
     )
     .join("\n");
-  const symbols = entries
-    .map((e, n) =>
-      e.stats.ids.renamed > 0
-        ? ""
-        : `<symbol id="s${n}" viewBox="${viewBoxOf(e)}">${e.icon.body}</symbol>`,
+  const symbol = (icon: NormalizedIcon, id: string) =>
+    hasIds(icon)
+      ? ""
+      : `<symbol id="${id}" viewBox="${viewBoxOf(icon)}">${icon.body}</symbol>`;
+  const symbols = shown
+    .map(
+      (item, n) =>
+        symbol(item.entry.icon, `s${n}`) +
+        (item.optimized ? symbol(item.optimized, `p${n}`) : ""),
     )
     .join("");
-  const nav = pageNav(r, page);
+  const nav = pageNav(r, page, pages);
   return htmlPage(
-    `${r.name} — нормализация, ${page} из ${pages}`,
-    `${STYLE}${originals}\n`,
+    `${r.name} — ${kind.title}, ${page} из ${pages}`,
+    `${GALLERY_STYLE}${originals}\n`,
     `<h1>${esc(r.name)} <span class="muted">страница ${page} из ${pages}</span></h1>
-<p class="muted">${esc(r.id)} · ${esc(r.source)} · ${canvasLabel(r)} · иконки ${from + 1}–${from + entries.length} из ${r.icons.length}</p>
+<p class="muted">${esc(r.id)} · ${esc(r.source)} · ${canvasLabel(r)} · иконки ${from + 1}–${from + shown.length} из ${items.length}</p>
 ${nav}
-<p class="muted">Было — исходный файл картинкой: он не знает цвета текста вокруг. Стало — результат прямо в странице: на светлом фоне, на тёмном и в красном цвете; 48, 24 и 16 px.</p>
+<p class="muted">${kind.legend}</p>
 <svg class="sprite" aria-hidden="true">${symbols}</svg>
 <div class="cards">
-${entries.map((e, n) => card(r, e, n)).join("\n")}
+${shown.map((item, n) => card(r, item, n)).join("\n")}
 </div>
 ${nav}`,
   );
 }
+
+/** Страницы набора по PAGE_SIZE иконок. По одной — чтобы не держать всё в памяти. */
+export function* renderSetPages(
+  r: GallerySet,
+  items: readonly GalleryItem[],
+  kind: PageKind,
+): Generator<GalleryFile> {
+  for (let page = 1; page <= pageCount(items.length); page++) {
+    yield {
+      name: pageFile(r.id, page),
+      html: renderPage(r, items, page, kind),
+    };
+  }
+}
+
+/**
+ * Пункты «Сначала посмотрите» набора: сначала иконки без карточки (исключённые и т. п.) с причиной,
+ * затем иконки со ссылкой на карточку.
+ */
+export function attentionItems(
+  r: GallerySet,
+  items: readonly GalleryItem[],
+  problems: readonly { name: string; reason: string }[],
+): string[] {
+  const out = problems.map(
+    (p) => `<li><b>${esc(r.id)}:${esc(p.name)}</b> — ${esc(p.reason)}</li>`,
+  );
+  items.forEach((item, index) => {
+    if (item.attention.length === 0) return;
+    const href = `${pageFile(r.id, Math.floor(index / PAGE_SIZE) + 1)}#${anchor(item.entry.name)}`;
+    out.push(
+      `<li><a href="${href}">${esc(r.id)}:${esc(item.entry.name)}</a> — ${esc(item.attention.join("; "))}</li>`,
+    );
+  });
+  return out;
+}
+
+/** Раздел «Сначала посмотрите»: не больше ATTENTION_LIMIT пунктов на набор. */
+export function attentionSection(
+  sets: readonly { id: string; items: readonly string[] }[],
+): string {
+  const shown = sets.flatMap(({ id, items }) => {
+    const list = items.slice(0, ATTENTION_LIMIT);
+    if (items.length > ATTENTION_LIMIT) {
+      list.push(
+        `<li class="muted">… и ещё ${items.length - ATTENTION_LIMIT} в наборе ${esc(id)}</li>`,
+      );
+    }
+    return list;
+  });
+  return shown.length === 0
+    ? `<p>Ничего необычного не найдено.</p>`
+    : `<ul>${shown.join("")}</ul>`;
+}
+
+/** Ссылки на страницы всех наборов. */
+export function pagesSection(
+  sets: readonly { set: GallerySet; count: number }[],
+): string {
+  const items = sets.map(({ set, count }) => {
+    const links: string[] = [];
+    for (let p = 1; p <= pageCount(count); p++) {
+      links.push(`<a href="${pageFile(set.id, p)}">${p}</a>`);
+    }
+    return `<li><b>${esc(set.name)}</b> (${count}): ${links.join(" ") || `<span class="muted">нет иконок</span>`}</li>`;
+  });
+  return `<ul>${items.join("")}</ul>`;
+}
+
+/** Причины, по которым наборы нельзя обновлять. */
+export const stopsSection = (
+  sets: readonly { name: string; stop: readonly string[] }[],
+) =>
+  sets
+    .flatMap((r) =>
+      r.stop.map((s) => `<p class="stop">${esc(r.name)}: СТОП — ${esc(s)}</p>`),
+    )
+    .join("");
+
+const itemsOf = (r: SetNormalizeReport): GalleryItem[] =>
+  r.icons.map((entry) => ({ entry, attention: entry.attention }));
 
 function summaryRow(r: SetNormalizeReport): string {
   const c = r.counts;
@@ -168,61 +303,35 @@ function summaryRow(r: SetNormalizeReport): string {
   return `<tr><td><b>${esc(r.name)}</b><br><span class="muted">${esc(r.id)} · ${esc(r.source)}</span></td><td class="num">${r.total}</td><td>${canvasLabel(r)}</td><td class="num">${c.moved}</td><td class="num">${r.palette === "color" ? "—" : c.defaults}</td><td class="num">${r.palette === "color" ? "—" : c.recolored}</td><td class="num">${c.withIds}</td><td class="num">${r.offGrid.length}</td><td class="num">${r.excluded.length} (${percent(r.excluded.length, r.total)})</td><td>${verdict}</td></tr>`;
 }
 
-function attentionItems(r: SetNormalizeReport): string[] {
-  const items: string[] = r.excluded.map(
-    (e) =>
-      `<li><b>${esc(r.id)}:${esc(e.name)}</b> — исключена: ${esc(e.reason)}</li>`,
-  );
-  r.icons.forEach((e, index) => {
-    if (e.attention.length === 0) return;
-    const href = `${pageFile(r.id, Math.floor(index / PAGE_SIZE) + 1)}#${anchor(e.name)}`;
-    items.push(
-      `<li><a href="${href}">${esc(r.id)}:${esc(e.name)}</a> — ${esc(e.attention.join("; "))}</li>`,
-    );
-  });
-  return items;
-}
-
 function renderIndex(sets: readonly SetNormalizeReport[]): string {
-  const attention = sets.flatMap((r) => {
-    const items = attentionItems(r);
-    const shown = items.slice(0, ATTENTION_LIMIT);
-    if (items.length > ATTENTION_LIMIT) {
-      shown.push(
-        `<li class="muted">… и ещё ${items.length - ATTENTION_LIMIT} в наборе ${esc(r.id)}</li>`,
-      );
-    }
-    return shown;
-  });
-  const pages = sets
-    .map((r) => {
-      const links: string[] = [];
-      for (let p = 1; p <= pageCount(r); p++) {
-        links.push(`<a href="${pageFile(r.id, p)}">${p}</a>`);
-      }
-      return `<li><b>${esc(r.name)}</b> (${r.icons.length}): ${links.join(" ") || `<span class="muted">нет иконок</span>`}</li>`;
-    })
-    .join("");
-  const stops = sets
-    .flatMap((r) =>
-      r.stop.map((s) => `<p class="stop">${esc(r.name)}: СТОП — ${esc(s)}</p>`),
-    )
-    .join("");
+  const attention = attentionSection(
+    sets.map((r) => ({
+      id: r.id,
+      items: attentionItems(
+        r,
+        itemsOf(r),
+        r.excluded.map((e) => ({
+          name: e.name,
+          reason: `исключена: ${e.reason}`,
+        })),
+      ),
+    })),
+  );
   return htmlPage(
     "Нормализация иконок — галерея",
-    STYLE,
+    GALLERY_STYLE,
     `<h1>Нормализация иконок</h1>
-<p class="muted">ADR-0014: холст набора, атрибуты корня во внешнем &lt;g&gt;, цвет «как у текста» в монохромных наборах, ID без конфликтов. Масштаб пока записан атрибутом transform — в координаты его «впечатает» SVGO на шаге 5.</p>
+<p class="muted">ADR-0014: холст набора, атрибуты корня во внешнем &lt;g&gt;, цвет «как у текста» в монохромных наборах, ID без конфликтов. Масштаб здесь ещё записан атрибутом transform — в координаты его «впечатывает» SVGO при сборке (pnpm data).</p>
 <h2>Что проверить</h2>
 <ul>${CHECKLIST.map((item) => `<li>${esc(item)}</li>`).join("")}</ul>
 <h2>Сводка</h2>
 <table><thead><tr><th>Набор</th><th>Иконок</th><th>Холст</th><th>Атрибуты корня → &lt;g&gt;</th><th>Цвет по умолчанию</th><th>Цвета → currentColor</th><th>С ID</th><th>Вне сетки</th><th>Исключено</th><th>Итог</th></tr></thead>
 <tbody>${sets.map(summaryRow).join("")}</tbody></table>
-${stops}
+${stopsSection(sets)}
 <h2>Сначала посмотрите</h2>
-${attention.length === 0 ? `<p>Ничего необычного не найдено.</p>` : `<ul>${attention.join("")}</ul>`}
+${attention}
 <h2>Все иконки</h2>
-<ul>${pages}</ul>`,
+${pagesSection(sets.map((r) => ({ set: r, count: r.icons.length })))}`,
   );
 }
 
@@ -231,11 +340,7 @@ export function* renderGallery(
   sets: readonly SetNormalizeReport[],
 ): Generator<GalleryFile> {
   yield { name: "index.html", html: renderIndex(sets) };
-  for (const r of sets) {
-    for (let page = 1; page <= pageCount(r); page++) {
-      yield { name: pageFile(r.id, page), html: renderPage(r, page) };
-    }
-  }
+  for (const r of sets) yield* renderSetPages(r, itemsOf(r), NORMALIZE_PAGE);
 }
 
 /** Сводка по набору для терминала. */

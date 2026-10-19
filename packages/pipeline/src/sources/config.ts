@@ -80,6 +80,29 @@ export const sourceConfigSchema = z.strictObject({
    * как в репозитории Lucide. Такие файлы скачиваются вместе с SVG.
    */
   iconMetadata: z.literal("json").optional(),
+  /**
+   * Суффиксы вариантов от старшего к младшему, первый — "" (основной вариант). Вариант, нарисованный
+   * так же, как более старший вариант той же иконки, становится его алиасом — как у Iconify (ADR-0002).
+   */
+  variantAliases: z
+    .array(
+      z
+        .string()
+        .regex(
+          /^(-[a-z0-9]+)*$/,
+          "суффикс — части имени через дефис, например -outline-rounded",
+        ),
+    )
+    .min(2)
+    .refine(
+      (list) => list[0] === "",
+      "первым идёт пустой суффикс — основной вариант",
+    )
+    .refine(
+      (list) => new Set(list).size === list.length,
+      "суффиксы не должны повторяться",
+    )
+    .optional(),
 });
 
 export type SourceConfigInput = z.input<typeof sourceConfigSchema>;

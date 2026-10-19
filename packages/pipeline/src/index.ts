@@ -1,3 +1,17 @@
+export { variantAliases } from "./build/aliases.js";
+export { canonicalJson, type Json } from "./build/json.js";
+export {
+  formatBuildReport,
+  renderBuildGallery,
+  sizeChange,
+} from "./build/report.js";
+export {
+  type BuildSizes,
+  type BuiltIcon,
+  buildSet,
+  type SetBuildReport,
+  writeSetData,
+} from "./build/run.js";
 export {
   type Canvas,
   cleanNumber,
@@ -8,7 +22,10 @@ export {
 export {
   formatNormalizeReport,
   type GalleryFile,
+  type GalleryItem,
+  type GallerySet,
   PAGE_SIZE,
+  type PageKind,
   renderGallery,
 } from "./normalize/gallery.js";
 export { type IdsResult, renameIds } from "./normalize/ids.js";
@@ -33,6 +50,12 @@ export {
   normalizeSet,
   type SetNormalizeReport,
 } from "./normalize/run.js";
+export { PRECISION, SUPPORTED_GRIDS, SVGO_CONFIG } from "./optimize/config.js";
+export {
+  type OptimizeResult,
+  optimizeIcon,
+  roundSize,
+} from "./optimize/optimize.js";
 export { checkSafeSvg } from "./sanitize/check.js";
 export {
   formatFixtures,
