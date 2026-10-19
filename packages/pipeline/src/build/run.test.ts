@@ -3,6 +3,7 @@ import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { validate } from "@iconavo-ui/schema";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { type Baseline, iconsByName } from "../qc/baseline.js";
 import {
   type SourceConfigInput,
   sourceConfigSchema,
@@ -234,8 +235,12 @@ describe("отчёт и галерея сборки", () => {
     await makeSet({ "icons/a.svg": SQUARE, "icons/b.svg": WITH_IDS });
     const r = await build();
     const files = [...renderBuildGallery([r])];
-    expect(files.map((f) => f.name)).toEqual(["index.html", "demo-1.html"]);
-    const page = files[1]?.html ?? "";
+    expect(files.map((f) => f.name)).toEqual([
+      "index.html",
+      "qc.html",
+      "demo-1.html",
+    ]);
+    const page = files[2]?.html ?? "";
     expect(page.match(/<span class="lbl">SVGO<\/span>/g)).toHaveLength(2);
     expect(page.match(/<span class="lbl">до SVGO<\/span>/g)).toHaveLength(2);
     expect(page).toContain(`<symbol id="p0" viewBox="0 0 24 24">`);
@@ -255,12 +260,135 @@ describe("отчёт и галерея сборки", () => {
   it("сводка галереи: таблица размеров и значки алиасов на карточке старшего варианта", async () => {
     await makeSet({ "icons/add.svg": SQUARE, "icons/add-outline.svg": SQUARE });
     const r = await build(config({ variantAliases: ["", "-outline"] }));
-    const [index, page] = [...renderBuildGallery([r])].map((f) => f.html);
+    const [index, , page] = [...renderBuildGallery([r])].map((f) => f.html);
     expect(index).toContain("<th>transform: было → осталось</th>");
     expect(index).toContain(`<span class="ok">можно записывать</span>`);
     expect(page).toContain(
       `<span class="badge alias">алиасы: add-outline</span>`,
     );
     expect(page?.match(/<article /g)).toHaveLength(1);
+  });
+});
+
+describe("контроль качества при сборке", () => {
+  const DOT = svg(`<circle cx="12" cy="12" r=".75"/>`);
+  const EDGE = svg(`<circle cx="22" cy="12" r="6"/>`);
+  const EMPTY = svg(`<circle cx="12" cy="12" r=".1"/>`);
+
+  /** Прошлая версия из собранного icons.json. */
+  const baselineOf = (json: string, sourceChanged = false): Baseline => ({
+    label: "коммит ccccccc, demo-icons@1.0.0",
+    sourceChanged,
+    icons: iconsByName(JSON.parse(json)),
+  });
+
+  it("пустая иконка останавливает набор и старый файл не трогает", async () => {
+    await makeSet({ "icons/a.svg": SQUARE, "icons/empty.svg": EMPTY });
+    await mkdir(join(dataDir, "demo"));
+    await writeFile(join(dataDir, "demo", "icons.json"), "старый", "utf8");
+    const r = await build();
+    expect(r.qc.findings.map((f) => [f.kind, f.name])).toEqual([
+      ["empty", "empty"],
+    ]);
+    expect(r.stop).toEqual([
+      "пустые иконки: 1 — закрашено меньше 0,05% холста",
+    ]);
+    expect(r.json).toBeUndefined();
+    expect(await writeSetData(dataDir, r)).toBeUndefined();
+    expect(await readFile(join(dataDir, "demo", "icons.json"), "utf8")).toBe(
+      "старый",
+    );
+  });
+
+  it("почти пустая и обрезанная — только в отчёте, набор записывается", async () => {
+    await makeSet({ "icons/dot.svg": DOT, "icons/edge.svg": EDGE });
+    const r = await build();
+    expect(r.qc.findings.map((f) => [f.kind, f.name])).toEqual([
+      ["sparse", "dot"],
+      ["cropped", "edge"],
+    ]);
+    expect(r.stop).toEqual([]);
+    expect(parsed(r).icons.dot).toBeDefined();
+  });
+
+  it("больше 2% изменений при том же источнике — «СТОП»; с acceptChanges или новым источником — запись того же файла", async () => {
+    await makeSet({
+      "icons/a.svg": SQUARE,
+      "icons/b.svg": SQUARE,
+      "icons/c.svg": SQUARE,
+    });
+    const before = (await build()).json as string;
+    await makeSet({ "icons/c.svg": CIRCLE });
+    // Без прошлой версии сравнивать не с чем — файл записывается.
+    expect((await build()).json).toBeDefined();
+
+    const opts = (extra: object) =>
+      buildSet(config(), dir, "demo-icons@1.0.0", {
+        baseline: baselineOf(before),
+        ...extra,
+      });
+    const stopped = await opts({});
+    expect(stopped.json).toBeUndefined();
+    expect(stopped.stop.join("\n")).toMatch(
+      /изменилось или пропало 33,3% имён/,
+    );
+    expect(stopped.qc.findings.map((f) => [f.kind, f.name])).toEqual([
+      ["changed", "c"],
+    ]);
+    const accepted = await opts({ acceptChanges: true });
+    const updated = await buildSet(config(), dir, "demo-icons@2.0.0", {
+      baseline: baselineOf(before, true),
+    });
+    const fresh = await buildSet(config(), dir, "demo-icons@2.0.0");
+    expect(accepted.json).toBeDefined();
+    expect(accepted.json).toBe(fresh.json);
+    expect(updated.json).toBe(fresh.json);
+    expect(fresh.json).not.toBe(before);
+  });
+
+  it("с прошлой версией и без неё icons.json побайтно одинаков", async () => {
+    await makeSet({ "icons/a.svg": SQUARE, "icons/b.svg": CIRCLE });
+    const first = await build();
+    const second = await buildSet(config(), dir, "demo-icons@1.0.0", {
+      baseline: baselineOf(first.json as string),
+    });
+    expect(second.json).toBe(first.json);
+    expect([second.qc.changed, second.qc.added, second.qc.missing]).toEqual([
+      0,
+      [],
+      [],
+    ]);
+  });
+
+  it("отчёт: строки в терминале, раздел в сводке, qc.html, значки на карточках", async () => {
+    await makeSet({ "icons/dot.svg": DOT, "icons/edge.svg": EDGE });
+    const r = await buildSet(config(), dir, "demo-icons@1.0.0", {
+      baselineNote: "data/demo/icons.json ещё нет в истории git",
+    });
+    const text = formatBuildReport(r);
+    expect(text).toContain(
+      "Контроль: нарисовано 2 · пустых 0 · почти пустых 1 · обрезанных 1 · отличаются от оригинала 0",
+    );
+    expect(text).toContain(
+      "Прошлая версия: сравнивать не с чем — data/demo/icons.json ещё нет в истории git",
+    );
+    const files = [...renderBuildGallery([r])];
+    const [index, qc, page] = files.map((f) => f.html);
+    expect(index).toContain("<h2>Контроль качества</h2>");
+    expect(index).toContain(`<a href="qc.html">qc.html</a>`);
+    expect(qc).toContain("<h3>Почти пустые (1)</h3>");
+    expect(qc).toContain("<h3>Обрезанные (1)</h3>");
+    expect(qc).toContain(`<a href="demo-1.html#i-dot">demo:dot</a>`);
+    expect(qc?.match(/src="data:image\/png;base64,/g)).toHaveLength(2);
+    expect(qc?.match(/src="data:image\/svg\+xml;base64,/g)).toHaveLength(2);
+    expect(page).toMatch(/<span class="badge">почти пустая: закрашено \d/);
+    for (const f of files) {
+      expect(f.html).toContain(
+        `content="default-src 'none'; img-src data:; style-src 'unsafe-inline'"`,
+      );
+      expect(f.html).not.toMatch(/<script|<iframe|<foreignObject|\son\w+=/i);
+      expect(f.html).toContain("Demo &lt;b&gt;");
+    }
+    expect([...renderBuildGallery([r])]).toEqual(files);
   });
 });

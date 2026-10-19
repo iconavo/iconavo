@@ -6,6 +6,7 @@ export {
   sizeChange,
 } from "./build/report.js";
 export {
+  type BuildOptions,
   type BuildSizes,
   type BuiltIcon,
   buildSet,
@@ -20,6 +21,7 @@ export {
   readCanvas,
 } from "./normalize/canvas.js";
 export {
+  cardLink,
   formatNormalizeReport,
   type GalleryFile,
   type GalleryItem,
@@ -56,6 +58,58 @@ export {
   optimizeIcon,
   roundSize,
 } from "./optimize/optimize.js";
+export {
+  type Baseline,
+  gitHistory,
+  type History,
+  iconsByName,
+  loadBaseline,
+} from "./qc/baseline.js";
+export {
+  CHANGED_NAMES_LIMIT,
+  CHANGED_PIXELS,
+  CROP_LIMIT,
+  EMPTY_LIMIT,
+  MARGIN,
+  RENDER_SIZE,
+  REPORT_LIMIT,
+  SPARSE_LIMIT,
+} from "./qc/config.js";
+export {
+  coverage,
+  crop,
+  difference,
+  type Image,
+  inkOnly,
+  overflow,
+  overlay,
+  type Rect,
+  unpremultiply,
+} from "./qc/pixels.js";
+export { encodePng, pngDataUri } from "./qc/png.js";
+export {
+  canvasRect,
+  type IconRender,
+  initRenderer,
+  paddedSvg,
+  renderIcon,
+  renderSource,
+} from "./qc/render.js";
+export {
+  formatQc,
+  qcSection,
+  renderQcPage,
+} from "./qc/report.js";
+export {
+  checkSet,
+  QC_KINDS,
+  type QcFinding,
+  type QcImage,
+  type QcInput,
+  type QcKind,
+  type SetQcReport,
+  share,
+} from "./qc/run.js";
 export { checkSafeSvg } from "./sanitize/check.js";
 export {
   formatFixtures,

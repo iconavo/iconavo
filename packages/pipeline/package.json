@@ -10,6 +10,8 @@
   },
   "dependencies": {
     "@iconavo-ui/schema": "workspace:*",
+    "@resvg/resvg-wasm": "2.6.2",
+    "pixelmatch": "7.2.0",
     "svgo": "4.1.0",
     "zod": "^4.6.7"
   },

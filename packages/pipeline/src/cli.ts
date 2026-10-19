@@ -1,5 +1,5 @@
 // Команды конвейера: pnpm sources fetch [id…] | pnpm sources pin <id> [версия|коммит] | pnpm sanitize [id…]
-// | pnpm normalize [id…] | pnpm data [id…]
+// | pnpm normalize [id…] | pnpm data [id…] [--accept-changes]
 import { mkdir, rm, writeFile } from "node:fs/promises";
 import { join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -7,6 +7,7 @@ import { formatBuildReport, renderBuildGallery } from "./build/report.js";
 import { buildSet, type SetBuildReport, writeSetData } from "./build/run.js";
 import { formatNormalizeReport, renderGallery } from "./normalize/gallery.js";
 import { normalizeSet, type SetNormalizeReport } from "./normalize/run.js";
+import { gitHistory, loadBaseline } from "./qc/baseline.js";
 import {
   formatFixtures,
   formatSanitizeReport,
@@ -32,7 +33,10 @@ const USAGE = `Использование:
   pnpm sources pin <id> [версия|коммит]   закрепить версию (по умолчанию последнюю)
   pnpm sanitize [id…]                 очистить SVG скачанных наборов и показать отчёт
   pnpm normalize [id…]                нормализовать иконки и собрать галерею
-  pnpm data [id…]                     собрать наборы в data/{набор}/icons.json: SVGO, алиасы, галерея`;
+  pnpm data [id…]                     собрать наборы в data/{набор}/icons.json: SVGO, алиасы,
+                                      контроль качества, галерея
+  pnpm data [id…] --accept-changes    то же, но изменения иконок без новой версии источника
+                                      приняты: вы проверили их в отчёте qc.html`;
 
 // packages/pipeline/dist/cli.js -> корень репозитория
 const root = fileURLToPath(new URL("../../../", import.meta.url));
@@ -48,12 +52,22 @@ const fixturesDir = join(
   "harmful-svg",
 );
 
-const [command, ...args] = process.argv.slice(2);
+const [command, ...params] = process.argv.slice(2);
+// Флаги отдельно от имён наборов, иначе «--accept-changes» искали бы как набор.
+const flags = params.filter((a) => a.startsWith("--"));
+const args = params.filter((a) => !a.startsWith("--"));
 
 function usageError(message: string): never {
   console.error(`${message}\n\n${USAGE}`);
   process.exit(2);
 }
+
+for (const flag of flags) {
+  if (command !== "data" || flag !== "--accept-changes") {
+    usageError(`Неизвестный флаг «${flag}».`);
+  }
+}
+const acceptChanges = flags.includes("--accept-changes");
 
 try {
   const configs = await loadRegistry(join(root, "sources"));
@@ -174,7 +188,12 @@ try {
       try {
         const { dir, entry } = await cachedSourceDir(config, lock, cacheDir);
         const started = performance.now();
-        const report = await buildSet(config, dir, sourceLabel(config, entry));
+        // Прошлая версия — из git: последний коммит, где менялся data/{набор}/icons.json (ADR-0016).
+        const previous = await loadBaseline(gitHistory(root), config, entry);
+        const report = await buildSet(config, dir, sourceLabel(config, entry), {
+          ...previous,
+          acceptChanges,
+        });
         reports.push(report);
         // Набор со «СТОП» свой файл не перезаписывает.
         const written = await writeSetData(dataDir, report);
@@ -208,6 +227,7 @@ try {
     console.log(
       `Галерея (файлов: ${files}): ${join(galleryDir, "index.html")}`,
     );
+    console.log(`Контроль качества: ${join(galleryDir, "qc.html")}`);
     process.exit(failed > 0 ? 1 : 0);
   } else {
     usageError(

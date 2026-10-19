@@ -8,12 +8,16 @@ const run = promisify(execFile);
 
 const FULL_HASH = /^[0-9a-f]{40}$/;
 
-async function git(args: string[], cwd?: string): Promise<string> {
+async function git(
+  args: string[],
+  cwd?: string,
+  maxBuffer = 16 * 1024 * 1024,
+): Promise<string> {
   try {
     const { stdout } = await run("git", args, {
       cwd,
       env: { ...process.env, GIT_TERMINAL_PROMPT: "0" },
-      maxBuffer: 16 * 1024 * 1024,
+      maxBuffer,
     });
     return stdout;
   } catch (e) {
@@ -27,6 +31,40 @@ export function assertCommitHash(value: string): void {
     throw new Error(
       `«${value}» — не хэш коммита. Нужен полный хэш (40 символов), ветка или тег не подходят`,
     );
+  }
+}
+
+/**
+ * Последний коммит, в котором менялся файл; путь — от корня репозитория, через «/». Файла нет
+ * в истории — undefined.
+ */
+export async function lastCommit(
+  path: string,
+  cwd: string,
+): Promise<string | undefined> {
+  const out = (await git(["log", "-1", "--format=%H", "--", path], cwd)).trim();
+  return out === "" ? undefined : out;
+}
+
+/**
+ * Файл в коммите как есть, без перевода строк под систему; в коммите его нет — undefined.
+ * Буфер с запасом: icons.json Material Symbols весит больше 9 МБ.
+ */
+export async function gitShow(
+  commit: string,
+  path: string,
+  cwd: string,
+): Promise<string | undefined> {
+  assertCommitHash(commit);
+  try {
+    return await git(["show", `${commit}:${path}`], cwd, 256 * 1024 * 1024);
+  } catch (e) {
+    if (
+      /does not exist|exists on disk, but not in/.test((e as Error).message)
+    ) {
+      return undefined;
+    }
+    throw e;
   }
 }
 
