@@ -7,7 +7,9 @@ import {
   canvasRect,
   initRenderer,
   paddedSvg,
+  previewSvg,
   renderIcon,
+  renderPreview,
   renderSource,
 } from "./render.js";
 
@@ -112,5 +114,54 @@ describe("рисунок через resvg", () => {
   it("если resvg не справился — исключение", () => {
     expect(() => renderSource("<svg", 64)).toThrow();
     expect(() => renderIcon(icon("<path"), 24)).toThrow();
+  });
+});
+
+describe("картинка для модели обогащения", () => {
+  /** PNG обратно в пиксели — через настоящий декодер resvg. */
+  const decode = (png: Buffer, size: number) =>
+    renderSource(
+      `<svg xmlns="${SVG_NS}" width="${size}" height="${size}"><image width="${size}" height="${size}" href="data:image/png;base64,${png.toString("base64")}"/></svg>`,
+      size,
+    );
+  const pixel = (
+    image: { width: number; data: Uint8Array },
+    x: number,
+    y: number,
+  ) => [
+    ...image.data.subarray(
+      (y * image.width + x) * 4,
+      (y * image.width + x) * 4 + 4,
+    ),
+  ];
+
+  it("квадрат size×size на белом фоне: углы белые и непрозрачные, рисунок чёрный", () => {
+    const png = renderPreview(
+      icon(`<path fill="currentColor" d="M4 4h16v16H4z"/>`),
+      64,
+    );
+    expect([...png.subarray(0, 4)]).toEqual([0x89, 0x50, 0x4e, 0x47]);
+    const back = decode(png, 64);
+    expect([back.width, back.height]).toEqual([64, 64]);
+    expect(pixel(back, 0, 0)).toEqual([255, 255, 255, 255]);
+    expect(pixel(back, 63, 63)).toEqual([255, 255, 255, 255]);
+    expect(pixel(back, 32, 32)).toEqual([0, 0, 0, 255]);
+  });
+
+  it("несимметричный холст: картинка всё равно квадратная, рисунок по центру", () => {
+    const png = renderPreview(
+      icon(`<path fill="currentColor" d="M0 0h32v16H0z"/>`, 32, 16),
+      64,
+    );
+    const back = decode(png, 64);
+    expect([back.width, back.height]).toEqual([64, 64]);
+    expect(pixel(back, 32, 2)).toEqual([255, 255, 255, 255]);
+    expect(pixel(back, 32, 32)).toEqual([0, 0, 0, 255]);
+  });
+
+  it("отступ — 1/16 холста, цвет чёрный, без preserveAspectRatio=none", () => {
+    expect(previewSvg(icon("<g/>"), 256)).toBe(
+      `<svg xmlns="${SVG_NS}" viewBox="-1.5 -1.5 27 27" width="256" height="256" color="#000"><g/></svg>`,
+    );
   });
 });

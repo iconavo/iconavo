@@ -771,3 +771,83 @@ describe("журнал при сборке", () => {
     expect(text).toContain("алиасов: 1");
   });
 });
+
+describe("описания из search.json на диске (ADR-0046)", () => {
+  const lang = (p: string) => ({
+    description: `${p} описание`,
+    synonyms: [`${p}1`, `${p}2`, `${p}3`, `${p}4`, `${p}5`],
+  });
+  const searchOf = (r: SetBuildReport) =>
+    JSON.parse(
+      r.metadata.files?.find((f) => f.name === "search.json")?.text ?? "{}",
+    ) as {
+      prefix: string;
+      icons: Record<string, Record<string, unknown>>;
+    };
+
+  it("переходят к базовой иконке с тем же отпечатком, а не к варианту и не к изменённому рисунку", async () => {
+    await makeSet({
+      "icons/a.svg": SQUARE,
+      "icons/a-outline.svg": CIRCLE,
+      "icons/b.svg": CIRCLE,
+    });
+    const cfg = config({ suffixes: OUTLINE });
+    const first = await build(cfg);
+    expect(first.stop).toEqual([]);
+    const previous = searchOf(first);
+    const enrich = (name: string) => {
+      previous.icons[name] = {
+        ...previous.icons[name],
+        ru: lang(`${name}-ru`),
+        en: lang(`${name}-en`),
+        promptVersion: 1,
+      };
+    };
+    enrich("a");
+    enrich("a-outline");
+    enrich("b");
+    // У b рисунок «изменился»: другой отпечаток на диске.
+    previous.icons.b = { ...previous.icons.b, fingerprint: "000000000000" };
+
+    const second = await buildSet(cfg, dir, entry(), {
+      now: NOW,
+      previousSearch: previous,
+    });
+    expect(second.stop).toEqual([]);
+    expect(second.metadata.enrichment).toEqual({
+      kept: ["a"],
+      dropped: ["a-outline", "b"],
+    });
+    const search = searchOf(second);
+    expect(search.icons.a).toMatchObject({
+      ru: lang("a-ru"),
+      promptVersion: 1,
+    });
+    expect(search.icons["a-outline"]).not.toHaveProperty("ru");
+    expect(search.icons.b).not.toHaveProperty("ru");
+    expect(validate("search", search)).toEqual([]);
+    expect(formatBuildReport(second)).toContain(
+      "перешли к 1 базовым иконкам · отброшено 2 (a-outline, b)",
+    );
+
+    // Повторная сборка со своим search.json на входе — те же байты.
+    const third = await buildSet(cfg, dir, entry(), {
+      now: NOW,
+      previousSearch: search,
+    });
+    expect(third.metadata.files).toEqual(second.metadata.files);
+    expect(third.metadata.enrichment).toEqual({ kept: ["a"], dropped: [] });
+  });
+
+  it("файл на диске не по схеме — «СТОП», файлы не записаны", async () => {
+    await makeSet({ "icons/a.svg": SQUARE });
+    const r = await buildSet(config(), dir, entry(), {
+      now: NOW,
+      previousSearch: { prefix: "demo", icons: { a: { tagz: [] } } },
+    });
+    expect(r.stop).toEqual([
+      expect.stringMatching(/^search\.json на диске не проходит схему/),
+    ]);
+    expect(await writeSetData(dataDir, r)).toBeUndefined();
+  });
+});

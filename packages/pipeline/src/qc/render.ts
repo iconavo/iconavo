@@ -10,6 +10,7 @@ import type { NormalizedIcon } from "../normalize/normalize.js";
 import { SVG_NS } from "../svg/xml.js";
 import { MARGIN, RENDER_SIZE } from "./config.js";
 import { type Image, type Rect, unpremultiply } from "./pixels.js";
+import { encodePng } from "./png.js";
 
 let ready: Promise<void> | undefined;
 
@@ -33,8 +34,8 @@ export function initRenderer(): Promise<void> {
 const OPTIONS: ResvgRenderOptions = { font: { loadSystemFonts: false } };
 
 /** Рисует SVG. resvg отдаёт цвет, умноженный на прозрачность, — переводим в обычный. */
-function draw(svg: string, fitTo?: ResvgRenderOptions["fitTo"]): Image {
-  const resvg = new Resvg(svg, fitTo ? { ...OPTIONS, fitTo } : OPTIONS);
+function draw(svg: string, extra: ResvgRenderOptions = {}): Image {
+  const resvg = new Resvg(svg, { ...OPTIONS, ...extra });
   try {
     const rendered = resvg.render();
     try {
@@ -99,5 +100,25 @@ export function renderIcon(icon: NormalizedIcon, grid: number): IconRender {
  * холста иконки — так его пиксели совпадают с пикселями результата.
  */
 export function renderSource(source: string, width: number): Image {
-  return draw(source.replace(/^﻿/, ""), { mode: "width", value: width });
+  return draw(source.replace(/^﻿/, ""), {
+    fitTo: { mode: "width", value: width },
+  });
+}
+
+/**
+ * Иконка для модели обогащения (ADR-0020): квадрат size×size, рисунок чёрным, отступ 1/16 холста.
+ * Холст не квадратный — рисунок по центру (preserveAspectRatio по умолчанию).
+ */
+export function previewSvg(icon: NormalizedIcon, size: number): string {
+  const pad = Math.max(icon.width, icon.height) / 16;
+  const box = [-pad, -pad, icon.width + 2 * pad, icon.height + 2 * pad]
+    .map(formatNumber)
+    .join(" ");
+  return `<svg xmlns="${SVG_NS}" viewBox="${box}" width="${size}" height="${size}" color="#000">${icon.body}</svg>`;
+}
+
+/** PNG size×size на белом фоне — то, что видит модель. */
+export function renderPreview(icon: NormalizedIcon, size: number): Buffer {
+  const image = draw(previewSvg(icon, size), { background: "#fff" });
+  return encodePng(image.data, image.width, image.height);
 }

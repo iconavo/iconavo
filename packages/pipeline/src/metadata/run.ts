@@ -3,8 +3,13 @@
 // любая причина «СТОП» не даёт записать ни одного файла набора.
 
 import { createHash } from "node:crypto";
-import { validate } from "@iconavo-ui/schema";
+import {
+  type SearchEntry,
+  type SearchFile,
+  validate,
+} from "@iconavo-ui/schema";
 import { canonicalJson, type Json } from "../build/json.js";
+import { carryEnrichment } from "../enrich/apply.js";
 import type { NormalizedIcon } from "../normalize/normalize.js";
 import { percent } from "../report/html.js";
 import type { MetadataFormat, SourceConfig } from "../sources/config.js";
@@ -69,6 +74,8 @@ export interface SetMetadata {
   suffixes?: Record<string, string>;
   /** Иконки без тегов автора в наборе, у которого метаданные автора есть. */
   withoutAuthor: string[];
+  /** Описания из search.json на диске (ADR-0046): к каким базовым иконкам перешли, а чьи отброшены. */
+  enrichment?: { kept: string[]; dropped: string[] };
   /** Файлы набора, кроме icons.json; нет — набор остановлен. */
   files?: SetFile[];
   stop: string[];
@@ -127,6 +134,10 @@ export interface MetadataOptions {
   author?: AuthorRead;
   /** Версия набора для info.json (ADR-0018). */
   version?: string;
+  /** search.json, который сейчас лежит в data/{набор}/, — разобранный JSON: из него переходят описания (ADR-0046). */
+  previousSearch?: unknown;
+  /** Переименования этой сборки: старое имя → новое (ADR-0018). */
+  renamed?: ReadonlyMap<string, string>;
 }
 
 /**
@@ -219,15 +230,12 @@ export async function setMetadata(
   };
   if (stop.length > 0 || !license) return report;
 
-  const files = setFiles(
-    config,
-    report,
-    license,
-    iconNames.length,
-    options.version,
-  );
+  const files = setFiles(config, report, license, iconNames.length, options);
   if (files.stop.length > 0) stop.push(...files.stop);
-  else report.files = files.files;
+  else {
+    report.files = files.files;
+    report.enrichment = files.enrichment;
+  }
   return report;
 }
 
@@ -237,8 +245,13 @@ function setFiles(
   r: SetMetadata,
   license: SetLicense,
   total: number,
-  version: string | undefined,
-): { files: SetFile[]; stop: string[] } {
+  options: MetadataOptions,
+): {
+  files: SetFile[];
+  enrichment?: { kept: string[]; dropped: string[] };
+  stop: string[];
+} {
+  const version = options.version;
   const author: { [key: string]: Json } = { name: config.author.name };
   if (config.author.url !== undefined) author.url = config.author.url;
   const licenseJson: { [key: string]: Json } = {
@@ -268,14 +281,21 @@ function setFiles(
   }
   if (r.suffixes) metadata.suffixes = { ...r.suffixes };
 
-  const icons: { [key: string]: Json } = {};
+  const icons: Record<string, SearchEntry> = {};
   for (const [name, m] of r.icons) {
     icons[name] = { fingerprint: m.fingerprint, tags: m.tags };
   }
-  const search: { [key: string]: Json } = { prefix: config.id, icons };
+  // Описания переходят из search.json на диске к базовым иконкам с тем же отпечатком (ADR-0046).
+  const carried = carryEnrichment(
+    { prefix: config.id, icons } satisfies SearchFile,
+    options.previousSearch,
+    options.renamed ?? new Map(),
+    Object.keys(config.suffixes ?? {}),
+  );
+  const search = carried.search as unknown as { [key: string]: Json };
 
   const files: SetFile[] = [];
-  const stop: string[] = [];
+  const stop: string[] = [...carried.stop];
   for (const [kind, data] of [
     ["info", info],
     ["metadata", metadata],
@@ -297,5 +317,9 @@ function setFiles(
   if (license.notice !== undefined) {
     files.push({ name: "NOTICE", text: license.notice });
   }
-  return { files, stop };
+  return {
+    files,
+    enrichment: { kept: carried.kept, dropped: carried.dropped },
+    stop,
+  };
 }

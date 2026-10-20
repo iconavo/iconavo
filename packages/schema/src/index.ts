@@ -25,6 +25,8 @@ export {
 export { type MetadataFile, metadataFileSchema } from "./metadata.js";
 export { NAME_PATTERN, nameSchema } from "./name.js";
 export {
+  type Language,
+  languageSchema,
   type SearchEntry,
   type SearchFile,
   searchEntrySchema,

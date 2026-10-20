@@ -1,10 +1,18 @@
 // Команды конвейера: pnpm sources fetch [id…] | pnpm sources pin <id> [версия|коммит] | pnpm sanitize [id…]
 // | pnpm normalize [id…] | pnpm data [id…] [--accept-changes] | pnpm pr <id> [--run-url=… …] [--no-auto-merge]
+// | pnpm enrich [id…] [--limit=N] [--max-cost=USD] [--dry-run] [--no-wait]
 import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import { basename, join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
 import { formatBuildReport, renderBuildGallery } from "./build/report.js";
 import { buildSet, type SetBuildReport, writeSetData } from "./build/run.js";
+import { DEFAULT_MAX_COST } from "./enrich/config.js";
+import {
+  formatEnrichReport,
+  formatEnrichTable,
+  renderEnrichPage,
+} from "./enrich/report.js";
+import { countBases, enrichSets } from "./enrich/run.js";
 import { formatMetadataTable } from "./metadata/report.js";
 import { formatNormalizeReport, renderGallery } from "./normalize/gallery.js";
 import { normalizeSet, type SetNormalizeReport } from "./normalize/run.js";
@@ -59,7 +67,16 @@ const USAGE = `Использование:
                                       сборки (summary.json): .cache/update/{id}/pr.json и body.md
       --run-url=… --changelog-url=… --qc-url=… --metadata-url=… --reports-url=…
                                       ссылки на запуск и отчёты в описании PR (https://)
-      --no-auto-merge                 не включать автослияние: PR ждёт владельца`;
+      --no-auto-merge                 не включать автослияние: PR ждёт владельца
+  pnpm enrich [id…]                   описания и синонимы ru/en для базовых иконок без описаний:
+                                      PNG → Claude (Message Batches) → data/{набор}/search.json;
+                                      нужен ANTHROPIC_API_KEY в .env; отчёт .cache/reports/enrich/
+      --limit=N                       постоянная случайная выборка из N базовых иконок: повторный
+                                      запуск с тем же N ничего не отправляет
+      --max-cost=USD                  лимит стоимости прогона (по умолчанию $${DEFAULT_MAX_COST}): оценка выше —
+                                      ничего не отправляется
+      --dry-run                       только посчитать и оценить стоимость, ничего не отправлять
+      --no-wait                       отправить пакет и выйти; результаты заберёт следующий запуск`;
 
 /** Флаги pnpm pr со ссылками: флаг → поле PrLinks. */
 const LINK_FLAGS: Record<string, keyof PrLinks> = {
@@ -105,6 +122,8 @@ function usageError(message: string): never {
 
 // У каждой команды свои флаги; ссылки pnpm pr — в виде --флаг=https://…
 const links: PrLinks = {};
+let limit: number | undefined;
+let maxCost = DEFAULT_MAX_COST;
 for (const flag of flags) {
   const eq = flag.indexOf("=");
   const name = eq === -1 ? flag : flag.slice(0, eq);
@@ -115,6 +134,17 @@ for (const flag of flags) {
   if (command === "pr" && link && value?.startsWith("https://")) {
     links[link] = value;
     continue;
+  }
+  if (command === "enrich") {
+    if (flag === "--dry-run" || flag === "--no-wait") continue;
+    if (name === "--limit" && /^[1-9][0-9]*$/.test(value ?? "")) {
+      limit = Number(value);
+      continue;
+    }
+    if (name === "--max-cost" && /^[0-9]+(\.[0-9]+)?$/.test(value ?? "")) {
+      maxCost = Number(value);
+      continue;
+    }
   }
   usageError(`Неизвестный флаг «${flag}».`);
 }
@@ -261,6 +291,10 @@ try {
           acceptChanges,
           now,
           pending: await readJson(join(dataDir, config.id, "changelog.json")),
+          // Описания переходят из search.json на диске (ADR-0046); нет файла — набор новый.
+          previousSearch: await readJson(
+            join(dataDir, config.id, "search.json"),
+          ),
         });
         reports.push(report);
         // Набор со «СТОП» свои файлы не перезаписывает.
@@ -376,6 +410,43 @@ try {
     console.log(`${id}: ${pr.verdict} — ${pr.title}`);
     for (const reason of pr.reasons) console.log(`  ${reason}`);
     console.log(`Описание PR: ${join(outDir, "body.md")}`);
+  } else if (command === "enrich") {
+    const dryRun = flags.includes("--dry-run");
+    const picked = pick(args);
+    // Ключ — только из окружения (pnpm enrich подхватывает .env); в вывод он не попадает.
+    const key = process.env.ANTHROPIC_API_KEY;
+    if (!dryRun && !key) {
+      throw new Error(
+        "нет ключа ANTHROPIC_API_KEY: впишите его в .env (имена ключей — в .env.example) или запустите с --dry-run",
+      );
+    }
+    // SDK загружается только здесь: остальным командам он не нужен.
+    const client =
+      key && !dryRun
+        ? (await import("./enrich/client.js")).anthropicBatchClient(key)
+        : undefined;
+    const reports = await enrichSets(picked, dataDir, {
+      ...(client ? { client } : {}),
+      stateDir: join(root, ".cache", "enrich"),
+      ...(limit === undefined ? {} : { limit }),
+      maxCost,
+      dryRun,
+      wait: !flags.includes("--no-wait"),
+      log: (line) => console.log(line),
+    });
+    console.log("");
+    for (const r of reports) console.log(`${formatEnrichReport(r)}\n`);
+    console.log(formatEnrichTable(reports));
+    const catalog = await countBases(configs, dataDir);
+    console.log(
+      `В каталоге описания есть у ${catalog.enriched} из ${catalog.bases} базовых иконок.`,
+    );
+    const reportDir = join(reportsDir, "enrich");
+    await mkdir(reportDir, { recursive: true });
+    const htmlPath = join(reportDir, "index.html");
+    await writeFile(htmlPath, renderEnrichPage(reports, catalog), "utf8");
+    console.log(`Отчёт: ${htmlPath}`);
+    process.exit(reports.some((r) => r.stop.length > 0) ? 1 : 0);
   } else {
     usageError(
       command ? `Неизвестная команда «${command}».` : "Нужна команда.",
