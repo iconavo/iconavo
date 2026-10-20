@@ -17,8 +17,11 @@ export const licenseSchema = z.strictObject({
   confirmed: z.boolean().default(false),
 });
 
-/** `info.json` — сведения о наборе для сайта и MCP, в рантайм не идёт. */
-export const infoFileSchema = z.looseObject({
+/**
+ * `info.json` — сведения о наборе для сайта и MCP, в рантайм не идёт. Лишние поля запрещены:
+ * файл наш, совместимость с IconifyJSON нужна только icons.json.
+ */
+export const infoFileSchema = z.strictObject({
   name: z.string().min(1),
   total: z.number().int().nonnegative(),
   author: z.strictObject({

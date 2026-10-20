@@ -217,6 +217,12 @@ describe("info.json", () => {
     const { palette: _removed, ...rest } = valid;
     expect(paths("info", rest)).toContain("palette");
   });
+
+  it("запрещает лишние поля (опечатки должны ловиться)", () => {
+    expect(validate("info", { ...valid, sample: ["arrow-left"] })).toEqual([
+      { path: "(файл)", message: expect.stringContaining("sample") },
+    ]);
+  });
 });
 
 describe("changelog.json", () => {
