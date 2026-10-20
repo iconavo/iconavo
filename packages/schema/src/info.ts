@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { versionSchema } from "./changelog.js";
 import { nameSchema } from "./name.js";
 
 /** Лицензия набора хранится полностью (ADR-0017). */
@@ -32,10 +33,7 @@ export const infoFileSchema = z.looseObject({
   /** true — набор цветной, цвет не заменяется на currentColor. */
   palette: z.boolean(),
   /** Версия набора: отпечаток списка иконок, 8 символов (ADR-0018). */
-  version: z
-    .string()
-    .regex(/^[0-9a-f]{8}$/, "версия — 8 символов 0-9 и a-f")
-    .optional(),
+  version: versionSchema.optional(),
 });
 
 export type License = z.infer<typeof licenseSchema>;

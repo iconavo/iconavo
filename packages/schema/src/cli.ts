@@ -1,10 +1,10 @@
-// Проверка файла набора: pnpm validate <файл> [--kind icons|info|metadata|search]
+// Проверка файла набора: pnpm validate <файл> [--kind icons|info|metadata|search|changelog]
 import { readFile } from "node:fs/promises";
 import { basename } from "node:path";
 import { FILE_KINDS, type FileKind, validate } from "./index.js";
 
 const USAGE = `Использование: pnpm validate <файл> [--kind ${FILE_KINDS.join("|")}]
-Вид файла определяется по имени (icons.json, info.json, metadata.json, search.json).`;
+Вид файла определяется по имени (icons.json, info.json, metadata.json, search.json, changelog.json).`;
 
 const args = process.argv.slice(2);
 const kindFlag = args.indexOf("--kind");

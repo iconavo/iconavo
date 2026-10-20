@@ -2,7 +2,8 @@ import type { SourceConfigInput } from "@iconavo-ui/pipeline";
 
 // Только стиль Flat (ADR-0008). Пакета npm нет, берём git. Файлы лежат на двух уровнях:
 // assets/Cat/Flat/cat_flat.svg и с оттенком кожи assets/Waving hand/Dark/Flat/waving_hand_flat_dark.svg.
-// Имена как у Iconify: waving-hand (оттенок «default» — без суффикса) и waving-hand-dark.
+// Имена как у Iconify: waving-hand (оттенок «default» — без суффикса) и waving-hand-dark, а «ñ»
+// пропадает: piñata → piata. Прежнее имя pinata стало алиасом при переименовании (ADR-0018).
 export default {
   id: "fluent-emoji-flat",
   name: "Fluent Emoji Flat",
@@ -17,7 +18,7 @@ export default {
       lowercase: true,
       replace: [
         { pattern: "[()!]", with: "" },
-        { pattern: "ñ", with: "n" },
+        { pattern: "ñ", with: "" },
         { pattern: "_flat_default$", with: "" },
         { pattern: "_flat_", with: "-" },
         { pattern: "_flat$", with: "" },

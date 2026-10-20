@@ -97,9 +97,41 @@ export function pickSamples(names: readonly string[]): string[] {
   return [...out, ...rest].slice(0, SAMPLE_COUNT);
 }
 
+/** Метаданные автора по пути SVG в источнике; stop не пуст — формат изменился, метаданных нет. */
+export interface AuthorRead {
+  author: Map<string, AuthorMetadata>;
+  stop: string[];
+}
+
+/** Метаданные автора для файлов набора: теги, категории и прежние имена (ADR-0017, ADR-0018). */
+export async function readAuthorMetadata(
+  config: SourceConfig,
+  dir: string,
+  files: readonly string[],
+): Promise<AuthorRead> {
+  if (!config.metadata) return { author: new Map(), stop: [] };
+  try {
+    return { author: await READERS[config.metadata](dir, files), stop: [] };
+  } catch (e) {
+    return {
+      author: new Map(),
+      stop: [
+        `формат метаданных автора изменился (${config.metadata}): ${(e as Error).message}`,
+      ],
+    };
+  }
+}
+
+export interface MetadataOptions {
+  /** Метаданные автора, прочитанные заранее; нет — читаются здесь. */
+  author?: AuthorRead;
+  /** Версия набора для info.json (ADR-0018). */
+  version?: string;
+}
+
 /**
- * Метаданные набора. icons — иконки набора без алиасов (как в icons.json); names — все имена набора
- * вместе с алиасами: по ним ищется основа имени для тегов из частей имени.
+ * Метаданные набора. icons — видимые иконки набора без алиасов; names — все имена набора вместе
+ * с алиасами: по ним ищется основа имени для тегов из частей имени.
  */
 export async function setMetadata(
   config: SourceConfig,
@@ -107,24 +139,20 @@ export async function setMetadata(
   entry: LockEntry,
   icons: readonly MetadataIcon[],
   names: ReadonlySet<string>,
+  options: MetadataOptions = {},
 ): Promise<SetMetadata> {
   const { license, stop } = await readLicense(config, dir, entry);
 
-  let author = new Map<string, AuthorMetadata>();
-  let readerFailed = false;
-  if (config.metadata) {
-    try {
-      author = await READERS[config.metadata](
-        dir,
-        icons.map((i) => i.file),
-      );
-    } catch (e) {
-      readerFailed = true;
-      stop.push(
-        `формат метаданных автора изменился (${config.metadata}): ${(e as Error).message}`,
-      );
-    }
-  }
+  const read =
+    options.author ??
+    (await readAuthorMetadata(
+      config,
+      dir,
+      icons.map((i) => i.file),
+    ));
+  const author = read.author;
+  const readerFailed = read.stop.length > 0;
+  stop.push(...read.stop);
 
   const suffixes = Object.keys(config.suffixes ?? {});
   const has = (n: string) => names.has(n);
@@ -191,7 +219,13 @@ export async function setMetadata(
   };
   if (stop.length > 0 || !license) return report;
 
-  const files = setFiles(config, report, license, iconNames.length);
+  const files = setFiles(
+    config,
+    report,
+    license,
+    iconNames.length,
+    options.version,
+  );
   if (files.stop.length > 0) stop.push(...files.stop);
   else report.files = files.files;
   return report;
@@ -203,6 +237,7 @@ function setFiles(
   r: SetMetadata,
   license: SetLicense,
   total: number,
+  version: string | undefined,
 ): { files: SetFile[]; stop: string[] } {
   const author: { [key: string]: Json } = { name: config.author.name };
   if (config.author.url !== undefined) author.url = config.author.url;
@@ -225,6 +260,7 @@ function setFiles(
     samples: r.samples,
     palette: config.palette === "color",
   };
+  if (version !== undefined) info.version = version;
 
   const metadata: { [key: string]: Json } = {};
   if (r.categories.length > 0) {

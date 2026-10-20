@@ -1,5 +1,12 @@
 import "./locale.js";
 
+export {
+  type ChangelogFile,
+  changelogFileSchema,
+  type Release,
+  releaseSchema,
+  versionSchema,
+} from "./changelog.js";
 export type { Issue } from "./cross.js";
 export {
   type Alias,

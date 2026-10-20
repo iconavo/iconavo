@@ -1,4 +1,5 @@
 import type { z } from "zod";
+import { changelogFileSchema } from "./changelog.js";
 import { checkNamesAndAliases, type Issue } from "./cross.js";
 import { iconsFileSchema } from "./icons.js";
 import { infoFileSchema } from "./info.js";
@@ -6,13 +7,14 @@ import { metadataFileSchema } from "./metadata.js";
 import "./locale.js";
 import { searchFileSchema } from "./search.js";
 
-export type FileKind = "icons" | "info" | "metadata" | "search";
+export type FileKind = "icons" | "info" | "metadata" | "search" | "changelog";
 
 export const FILE_KINDS: readonly FileKind[] = [
   "icons",
   "info",
   "metadata",
   "search",
+  "changelog",
 ];
 
 const schemas: Record<FileKind, z.ZodType> = {
@@ -20,6 +22,7 @@ const schemas: Record<FileKind, z.ZodType> = {
   info: infoFileSchema,
   metadata: metadataFileSchema,
   search: searchFileSchema,
+  changelog: changelogFileSchema,
 };
 
 const pathOf = (path: ReadonlyArray<PropertyKey>) => path.map(String).join(".");

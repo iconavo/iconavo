@@ -1,8 +1,10 @@
-// Прошлая версия набора для сравнения (ADR-0016): последний коммит, в котором менялся
-// data/{набор}/icons.json, и запись о наборе в sources.lock.json того же коммита. Так обновление
-// версии источника, закоммиченное до пересборки, не примут за поломку сборки.
+// Прошлая версия набора (ADR-0016, ADR-0018): последний коммит, в котором менялись
+// data/{набор}/icons.json или changelog.json, не новее версии в main (см. baseRevision), и запись о
+// наборе в sources.lock.json того же коммита. Так обновление версии источника, закоммиченное до
+// пересборки, не примут за поломку сборки, а все изменения ветки попадут в один выпуск журнала.
 
-import { iconsFileSchema } from "@iconavo-ui/schema";
+import { type ChangelogFile, changelogFileSchema } from "@iconavo-ui/schema";
+import { flatten, type SetState, stateOf } from "../changelog/state.js";
 import type { NormalizedIcon } from "../normalize/normalize.js";
 import type { SourceConfig } from "../sources/config.js";
 import { sourceLabel } from "../sources/fetch.js";
@@ -16,19 +18,23 @@ export interface Baseline {
   sourceChanged: boolean;
   /** Все имена прошлой версии; у алиаса — тело и размер родителя. */
   icons: ReadonlyMap<string, NormalizedIcon>;
+  /** Иконки с пометкой hidden и алиасы — для журнала (ADR-0018); нет — сравнивает только контроль. */
+  state?: SetState;
+  /** Журнал прошлой версии; нет — журнал начинается с этой сборки. */
+  changelog?: ChangelogFile;
 }
 
 /** История файлов проекта: в CLI — git, в тестах — подстановка. */
 export interface History {
-  /** Последний коммит, в котором менялся файл; файла нет в истории — undefined. */
-  lastCommit(path: string): Promise<string | undefined>;
+  /** Последний коммит, в котором менялся хотя бы один из файлов; файлов нет в истории — undefined. */
+  lastCommit(paths: readonly string[]): Promise<string | undefined>;
   /** Файл в коммите; в коммите его нет — undefined. */
   show(commit: string, path: string): Promise<string | undefined>;
 }
 
-/** История репозитория через git; пути — от его корня. */
-export const gitHistory = (root: string): History => ({
-  lastCommit: (path) => lastCommit(path, root),
+/** История репозитория через git: пути — от его корня, коммиты — не новее from. */
+export const gitHistory = (root: string, from = "HEAD"): History => ({
+  lastCommit: (paths) => lastCommit(paths, root, from),
   show: (commit, path) => gitShow(commit, path, root),
 });
 
@@ -37,57 +43,62 @@ export const gitHistory = (root: string): History => ({
  * у алиасов не учитываются — наши алиасы их не используют.
  */
 export function iconsByName(data: unknown): Map<string, NormalizedIcon> {
-  const file = iconsFileSchema.parse(data);
-  // По умолчанию у IconifyJSON размер 16.
-  const width = file.width ?? 16;
-  const height = file.height ?? 16;
-  const out = new Map<string, NormalizedIcon>();
-  for (const [name, icon] of Object.entries(file.icons)) {
-    out.set(name, {
-      body: icon.body,
-      width: icon.width ?? width,
-      height: icon.height ?? height,
-    });
-  }
-  for (const name of Object.keys(file.aliases ?? {})) {
-    // В IconifyJSON алиас может ссылаться на алиас; у нас цепочек нет, но идём до 10 шагов.
-    let target = name;
-    for (let step = 0; step < 10; step++) {
-      const alias = file.aliases?.[target];
-      if (!alias) break;
-      target = alias.parent;
-    }
-    const icon = out.get(target);
-    if (icon) out.set(name, icon);
-  }
-  return out;
+  return flatten(stateOf(data));
 }
 
-/** Прошлая версия набора или причина, почему сравнивать не с чем. */
+/** Прошлая версия из текстов файлов: icons.json и, если он уже был, changelog.json. */
+export function baselineFromTexts(input: {
+  label: string;
+  sourceChanged: boolean;
+  icons: string;
+  changelog?: string;
+}): Baseline {
+  const state = stateOf(JSON.parse(input.icons));
+  return {
+    label: input.label,
+    sourceChanged: input.sourceChanged,
+    icons: flatten(state),
+    state,
+    ...(input.changelog === undefined
+      ? {}
+      : { changelog: changelogFileSchema.parse(JSON.parse(input.changelog)) }),
+  };
+}
+
+/**
+ * Прошлая версия набора. baselineNote — сравнивать не с чем: набора ещё нет в истории. baselineError —
+ * прошлая версия есть, но не читается: набор останавливается, иначе пропали бы скрытые иконки и
+ * алиасы (ADR-0005).
+ */
 export async function loadBaseline(
   history: History,
   config: SourceConfig,
   current: LockEntry,
-): Promise<{ baseline?: Baseline; baselineNote?: string }> {
-  const path = `data/${config.id}/icons.json`;
+): Promise<{
+  baseline?: Baseline;
+  baselineNote?: string;
+  baselineError?: string;
+}> {
+  const iconsPath = `data/${config.id}/icons.json`;
+  const changelogPath = `data/${config.id}/changelog.json`;
   let commit: string | undefined;
   try {
-    commit = await history.lastCommit(path);
+    commit = await history.lastCommit([iconsPath, changelogPath]);
   } catch (e) {
     return {
-      baselineNote: `история git недоступна — ${(e as Error).message}`,
+      baselineError: `история git недоступна — ${(e as Error).message}`,
     };
   }
   if (commit === undefined) {
-    return { baselineNote: `${path} ещё нет в истории git` };
+    return { baselineNote: `${iconsPath} ещё нет в истории git` };
   }
   const short = commit.slice(0, 7);
   try {
-    const text = await history.show(commit, path);
-    if (text === undefined) {
-      return { baselineNote: `в коммите ${short} нет ${path}` };
+    const icons = await history.show(commit, iconsPath);
+    if (icons === undefined) {
+      return { baselineError: `в коммите ${short} нет ${iconsPath}` };
     }
-    const icons = iconsByName(JSON.parse(text));
+    const changelog = await history.show(commit, changelogPath);
     // Lock того же коммита; не читается — считаем, что источник обновился.
     const lockText = await history.show(commit, "sources.lock.json");
     const lock =
@@ -96,7 +107,7 @@ export async function loadBaseline(
         : lockFileSchema.safeParse(JSON.parse(lockText));
     const previous = lock?.success ? lock.data[config.id] : undefined;
     return {
-      baseline: {
+      baseline: baselineFromTexts({
         label:
           previous === undefined
             ? `коммит ${short}`
@@ -105,11 +116,12 @@ export async function loadBaseline(
           previous === undefined ||
           JSON.stringify(previous) !== JSON.stringify(current),
         icons,
-      },
+        ...(changelog === undefined ? {} : { changelog }),
+      }),
     };
   } catch (e) {
     return {
-      baselineNote: `прошлая версия из коммита ${short} не читается — ${(e as Error).message}`,
+      baselineError: `прошлая версия из коммита ${short} не читается — ${(e as Error).message}`,
     };
   }
 }

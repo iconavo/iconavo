@@ -11,12 +11,15 @@ export interface PhosphorEntry {
   categories: string[];
   /** Теги как у автора, со служебными *new* и *updated*. */
   tags: unknown[];
+  /** Прежнее имя иконки без начертания: activity у pulse. */
+  alias?: string;
 }
 
 const entrySchema = z.looseObject({
   name: z.string().min(1),
   categories: z.array(z.string()).default([]),
   tags: z.array(z.unknown()).default([]),
+  alias: z.looseObject({ name: z.string().min(1) }).optional(),
 });
 
 const IDENT = "[A-Za-z_$][\\w$]*";
@@ -178,5 +181,6 @@ export function parsePhosphorModule(text: string): PhosphorEntry[] {
     name: e.name,
     categories: e.categories,
     tags: e.tags,
+    ...(e.alias === undefined ? {} : { alias: e.alias.name }),
   }));
 }

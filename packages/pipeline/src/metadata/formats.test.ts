@@ -43,8 +43,28 @@ describe("Lucide", () => {
       "icons/a.svg": {
         tags: ["Arrow", "left"],
         categories: ["Arrows", "Text formatting"],
+        aliases: ["icons/old-a.svg"],
       },
     });
+  });
+
+  it("прежние имена — объектом с причиной или строкой; путь в имени — ошибка формата", async () => {
+    await makeSource({
+      "icons/a.json": { tags: ["a"], aliases: ["a-old", { name: "a-typo" }] },
+      "icons/b.json": { tags: ["b"] },
+    });
+    expect(await read("lucide", ["icons/a.svg", "icons/b.svg"])).toEqual({
+      "icons/a.svg": {
+        tags: ["a"],
+        categories: [],
+        aliases: ["icons/a-old.svg", "icons/a-typo.svg"],
+      },
+      "icons/b.svg": { tags: ["b"], categories: [] },
+    });
+    await makeSource({ "icons/a.json": { aliases: ["../x"] } });
+    await expect(read("lucide", ["icons/a.svg"])).rejects.toThrow(
+      /прежнее имя «\.\.\/x» — не имя файла/,
+    );
   });
 
   it.each([
@@ -125,6 +145,20 @@ describe("Phosphor", () => {
       "assets/regular/acorn.svg": acorn,
       "assets/bold/acorn-bold.svg": acorn,
     });
+  });
+
+  it("прежнее имя — у каждого начертания со своим суффиксом", async () => {
+    await makeSource({ "dist/index.mjs": PHOSPHOR_MODULE });
+    const read2 = await read("phosphor", [
+      "assets/regular/asclepius.svg",
+      "assets/bold/asclepius-bold.svg",
+    ]);
+    expect(read2["assets/regular/asclepius.svg"]?.aliases).toEqual([
+      "assets/regular/caduceus.svg",
+    ]);
+    expect(read2["assets/bold/asclepius-bold.svg"]?.aliases).toEqual([
+      "assets/bold/caduceus-bold.svg",
+    ]);
   });
 
   it("нет модуля или он в другом формате — ошибка с путём", async () => {
