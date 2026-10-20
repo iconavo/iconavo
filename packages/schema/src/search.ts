@@ -7,6 +7,8 @@ export const languageSchema = z.strictObject({
   synonyms: z.array(z.string().min(1)).min(5).max(10),
 });
 
+export type Language = z.infer<typeof languageSchema>;
+
 export const searchEntrySchema = z
   .strictObject({
     /** Отпечаток иконки: первые 12 символов SHA-256 (ADR-0018). */

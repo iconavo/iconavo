@@ -9,6 +9,7 @@
     "build": "tsc -b"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "0.135.0",
     "@iconavo-ui/schema": "workspace:*",
     "@resvg/resvg-wasm": "2.6.2",
     "pixelmatch": "7.2.0",

@@ -13,6 +13,7 @@ export {
   type SetBuildReport,
   writeSetData,
 } from "./build/run.js";
+export { writeFileAtomic } from "./build/write.js";
 export {
   type ChangelogInput,
   changelogMarkdown,
@@ -58,6 +59,86 @@ export {
   versionOf,
   visibleCount,
 } from "./changelog/state.js";
+export {
+  applyEnrichment,
+  type CarryResult,
+  carryEnrichment,
+  type Enrichment,
+  enrichmentBases,
+  isEnriched,
+} from "./enrich/apply.js";
+export {
+  type BatchClient,
+  type BatchMessage,
+  type BatchRequest,
+  type BatchResponse,
+  type BatchResult,
+  type BatchState,
+  type BatchStatus,
+  batchStateSchema,
+  readState,
+  removeState,
+  STATE_FILE,
+  writeState,
+} from "./enrich/batch.js";
+export { anthropicBatchClient } from "./enrich/client.js";
+export {
+  BATCH_LIMIT,
+  BATCH_PRICES,
+  CUSTOM_ID_LIMIT,
+  DEFAULT_MAX_COST,
+  EFFORT,
+  EST_INPUT_TOKENS,
+  EST_OUTPUT_TOKENS,
+  IMAGE_TOKENS,
+  MAX_TOKENS,
+  MODEL,
+  POLL_INTERVAL_MS,
+  PREVIEW_SIZE,
+  PROMPT_VERSION,
+  REPORT_CARDS,
+} from "./enrich/config.js";
+export {
+  type CostTotal,
+  estimateCost,
+  formatUsd,
+  sumCost,
+  type TokenUsage,
+} from "./enrich/cost.js";
+export {
+  normalizeSynonyms,
+  type ParseOutcome,
+  parseAnswer,
+  resultOutcome,
+  SYNONYMS_MAX,
+  SYNONYMS_MIN,
+} from "./enrich/parse.js";
+export {
+  answerFormat,
+  answerSchema,
+  buildRequest,
+  customId,
+  type EnrichInput,
+  SYSTEM_PROMPT,
+  userText,
+} from "./enrich/prompt.js";
+export {
+  ENRICH_STYLE,
+  formatEnrichReport,
+  formatEnrichTable,
+  renderEnrichPage,
+} from "./enrich/report.js";
+export {
+  type CardStatus,
+  countBases,
+  type EnrichCard,
+  type EnrichOptions,
+  enrichSets,
+  type LoadedSet,
+  loadSet,
+  type SetEnrichReport,
+} from "./enrich/run.js";
+export { type Selection, selectIcons } from "./enrich/select.js";
 export { fingerprint } from "./metadata/fingerprint.js";
 export {
   type AuthorMetadata,
@@ -177,7 +258,9 @@ export {
   type IconRender,
   initRenderer,
   paddedSvg,
+  previewSvg,
   renderIcon,
+  renderPreview,
   renderSource,
 } from "./qc/render.js";
 export {

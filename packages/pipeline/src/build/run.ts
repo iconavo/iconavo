@@ -5,8 +5,7 @@
 // info.json, metadata.json, search.json, LICENSE, NOTICE, changelog.json и CHANGELOG.md. Одинаковые
 // источники дают побайтно одинаковые файлы, а набор со «СТОП» свои файлы не перезаписывает.
 
-import { randomBytes } from "node:crypto";
-import { mkdir, rename, rm, writeFile } from "node:fs/promises";
+import { mkdir, rm } from "node:fs/promises";
 import { join } from "node:path";
 import { validate } from "@iconavo-ui/schema";
 import {
@@ -34,6 +33,7 @@ import { sourceLabel } from "../sources/fetch.js";
 import type { LockEntry } from "../sources/lock.js";
 import { variantAliases } from "./aliases.js";
 import { canonicalJson } from "./json.js";
+import { writeFileAtomic } from "./write.js";
 
 export interface BuiltIcon {
   entry: NormalizedEntry;
@@ -93,6 +93,8 @@ export interface BuildOptions {
   now?: number;
   /** Журнал, который сейчас лежит в data/{набор}/changelog.json, — разобранный JSON. */
   pending?: unknown;
+  /** search.json, который сейчас лежит в data/{набор}/, — из него переходят описания (ADR-0046). */
+  previousSearch?: unknown;
 }
 
 const TRANSFORM = /\stransform="/g;
@@ -231,7 +233,12 @@ export async function buildSet(
       icon: b.icon,
     })),
     new Set(built.map((b) => b.entry.name)),
-    { author, version: changelog.version },
+    {
+      author,
+      version: changelog.version,
+      previousSearch: options.previousSearch,
+      renamed: changelog.changes.renamed,
+    },
   );
   stop.push(...metadata.stop);
 
@@ -289,17 +296,7 @@ export async function writeSetData(
     ...journal,
   ]) {
     const path = join(dir, file.name);
-    const tmp = join(
-      dir,
-      `.${file.name}-${randomBytes(6).toString("hex")}.tmp`,
-    );
-    try {
-      await writeFile(tmp, file.text, "utf8");
-      await rename(tmp, path);
-    } catch (e) {
-      await rm(tmp, { force: true });
-      throw e;
-    }
+    await writeFileAtomic(path, file.text);
     written.push(path);
   }
   if (!files.some((f) => f.name === "NOTICE")) {

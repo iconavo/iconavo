@@ -225,7 +225,36 @@
       ]
     },
     "align-horizontal-justify-center": {
+      "en": {
+        "description": "Two rounded rectangles flank a vertical center line, representing horizontal center alignment of items in layouts.",
+        "synonyms": [
+          "align center",
+          "center",
+          "horizontal align",
+          "justify",
+          "flex",
+          "alignment",
+          "distribute",
+          "center items",
+          "layout"
+        ]
+      },
       "fingerprint": "89565190cf4d",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Изображены два скруглённых прямоугольника по бокам и вертикальная линия по центру, обозначающие выравнивание элементов по центру по горизонтали.",
+        "synonyms": [
+          "выравнивание",
+          "по центру",
+          "центрировать",
+          "выровнять по центру",
+          "горизонтальное выравнивание",
+          "флекс",
+          "распределение",
+          "расположение элементов",
+          "justify"
+        ]
+      },
       "tags": [
         "center",
         "items",
@@ -390,7 +419,37 @@
       ]
     },
     "ampersand": {
+      "en": {
+        "description": "Draws the ampersand symbol \"&\", which usually means \"and\" or joining things together.",
+        "synonyms": [
+          "and sign",
+          "join",
+          "combine",
+          "conjunction",
+          "typography",
+          "operator",
+          "concatenate",
+          "symbol",
+          "merge"
+        ]
+      },
       "fingerprint": "b8fec7c3b631",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Рисует символ амперсанда «&», который означает союз «и» или объединение.",
+        "synonyms": [
+          "амперсанд",
+          "знак и",
+          "символ и",
+          "соединение",
+          "объединить",
+          "союз",
+          "текст",
+          "типографика",
+          "оператор",
+          "логическое и"
+        ]
+      },
       "tags": [
         "and",
         "typography",
@@ -476,7 +535,38 @@
       ]
     },
     "anvil": {
+      "en": {
+        "description": "Drawing shows a cup-like vessel with a side handle on a stem and base, usually representing metal, forging, or heavy weight.",
+        "synonyms": [
+          "forge",
+          "blacksmith",
+          "metal",
+          "iron",
+          "alloy",
+          "materials",
+          "heavy",
+          "weight",
+          "smithing",
+          "chalice"
+        ]
+      },
       "fingerprint": "f21160f1a2e6",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Рисунок показывает сосуд с боковой ручкой на ножке и основании, в интерфейсе означает металл, кузнечное дело или тяжесть.",
+        "synonyms": [
+          "кузница",
+          "кузнец",
+          "металл",
+          "железо",
+          "сплав",
+          "тяжелый",
+          "вес",
+          "ковка",
+          "материалы",
+          "кубок"
+        ]
+      },
       "tags": [
         "metal",
         "iron",
@@ -509,7 +599,34 @@
       ]
     },
     "app-window-mac": {
+      "en": {
+        "description": "A rounded rectangular window with three dots near the top, representing an application window or pane.",
+        "synonyms": [
+          "window",
+          "application",
+          "app",
+          "pane",
+          "macos",
+          "menu bar",
+          "preferences",
+          "executable"
+        ]
+      },
       "fingerprint": "a55cad2ca4c8",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Прямоугольное окно приложения с тремя точками в верхней части; обозначает окно программы или панель настроек.",
+        "synonyms": [
+          "окно",
+          "приложение",
+          "программа",
+          "панель",
+          "макос",
+          "меню",
+          "настройки",
+          "окно программы"
+        ]
+      },
       "tags": [
         "application",
         "menu bar",
@@ -548,7 +665,37 @@
       ]
     },
     "archive": {
+      "en": {
+        "description": "A box with a lid and a handle slot; it usually means archive, storage, or archiving content.",
+        "synonyms": [
+          "box",
+          "storage",
+          "container",
+          "bin",
+          "stash",
+          "store",
+          "backup",
+          "lid",
+          "drawer",
+          "save"
+        ]
+      },
       "fingerprint": "f2d3550cb60d",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Изображена коробка с крышкой и ручкой-прорезью; обозначает архив, хранение или архивирование.",
+        "synonyms": [
+          "архив",
+          "коробка",
+          "ящик",
+          "хранилище",
+          "бэкап",
+          "резервная копия",
+          "убрать",
+          "короб",
+          "складировать"
+        ]
+      },
       "tags": [
         "index",
         "backup",
@@ -780,7 +927,35 @@
       ]
     },
     "arrow-down-right": {
+      "en": {
+        "description": "A diagonal arrow pointing down and to the right, usually meaning southeast direction or moving downward-right.",
+        "synonyms": [
+          "down right arrow",
+          "diagonal arrow",
+          "southeast",
+          "direction",
+          "south-east",
+          "downward",
+          "pointer",
+          "navigation"
+        ]
+      },
       "fingerprint": "6de0c22c73bd",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Стрелка, направленная вниз и вправо по диагонали; обозначает движение на юго-восток или переход вниз-вправо.",
+        "synonyms": [
+          "стрелка вниз вправо",
+          "диагональ",
+          "юго-восток",
+          "направление",
+          "стрелка по диагонали",
+          "вниз вправо",
+          "указатель",
+          "навигация",
+          "движение вниз"
+        ]
+      },
       "tags": [
         "direction",
         "south-east",
@@ -815,7 +990,34 @@
       ]
     },
     "arrow-down-up": {
+      "en": {
+        "description": "Two arrows pointing down and up side by side, commonly representing swap, two-way transfer, or sorting.",
+        "synonyms": [
+          "up down arrows",
+          "swap",
+          "switch",
+          "two way",
+          "bidirectional",
+          "data transfer",
+          "traffic",
+          "reorder"
+        ]
+      },
       "fingerprint": "d1050c1c8567",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Две стрелки, одна вниз и одна вверх, обозначают обмен, переключение или двусторонний поток данных.",
+        "synonyms": [
+          "стрелки вверх вниз",
+          "обмен",
+          "переключить",
+          "сортировка",
+          "двусторонняя стрелка",
+          "трафик",
+          "передача данных",
+          "поменять местами"
+        ]
+      },
       "tags": [
         "bidirectional",
         "two-way",
@@ -1498,7 +1700,38 @@
       ]
     },
     "badge-dollar-sign": {
+      "en": {
+        "description": "A scalloped badge enclosing a dollar sign, usually signaling a discount, offer, sale, or paid pricing.",
+        "synonyms": [
+          "discount",
+          "sale",
+          "offer",
+          "voucher",
+          "price tag",
+          "coupon",
+          "money",
+          "finance",
+          "payment",
+          "promo"
+        ]
+      },
       "fingerprint": "414f27e760df",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Рисунок изображает значок в виде рваной печати или розетки с символом доллара внутри, обозначающий скидку, выгодное предложение или денежную операцию.",
+        "synonyms": [
+          "скидка",
+          "распродажа",
+          "акция",
+          "ценник",
+          "купон",
+          "предложение",
+          "доллар",
+          "деньги",
+          "финансы",
+          "оплата"
+        ]
+      },
       "tags": [
         "discount",
         "offer",
@@ -3377,7 +3610,34 @@
       ]
     },
     "bookmark-off": {
+      "en": {
+        "description": "An outlined bookmark crossed out by a diagonal line, meaning the item is unbookmarked or unsaved.",
+        "synonyms": [
+          "remove bookmark",
+          "unbookmark",
+          "unsave",
+          "not saved",
+          "disable bookmark",
+          "unmark",
+          "delete bookmark",
+          "untag"
+        ]
+      },
       "fingerprint": "05a4638fec58",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Контур закладки, перечёркнутый диагональной линией; означает отмену закладки или удаление из сохранённых.",
+        "synonyms": [
+          "закладка выключена",
+          "убрать закладку",
+          "удалить закладку",
+          "не сохранено",
+          "снять метку",
+          "отменить сохранение",
+          "без закладки",
+          "убрать из избранного"
+        ]
+      },
       "tags": [
         "unsaved",
         "unfavorite",
@@ -3812,7 +4072,38 @@
       ]
     },
     "broom": {
+      "en": {
+        "description": "Shows a slanted broom with a long handle and a wide bristle head; it usually means sweeping, cleaning, or housekeeping.",
+        "synonyms": [
+          "sweep",
+          "sweeping",
+          "cleaning",
+          "dust",
+          "debris",
+          "housekeeping",
+          "chores",
+          "tidy",
+          "janitor",
+          "floor"
+        ]
+      },
       "fingerprint": "1240aed56dad",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Изображена метла с длинной ручкой и широкой щетиной под углом; обозначает уборку, подметание и чистоту.",
+        "synonyms": [
+          "метла",
+          "веник",
+          "подметать",
+          "уборка",
+          "чистка",
+          "мести",
+          "пол",
+          "мусор",
+          "клининг",
+          "хозяйство"
+        ]
+      },
       "tags": [
         "broomstick",
         "brush",
@@ -5060,7 +5351,36 @@
       ]
     },
     "chart-no-axes-combined": {
+      "en": {
+        "description": "Shows vertical bars of varying heights with a rising trend line; the icon represents statistics, analytics, and growth.",
+        "synonyms": [
+          "chart",
+          "graph",
+          "statistics",
+          "analytics",
+          "trend",
+          "growth",
+          "bars",
+          "diagram",
+          "report"
+        ]
+      },
       "fingerprint": "ac6a6da887d7",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Изображены вертикальные столбцы разной высоты и растущая линия тренда; значок обозначает статистику и рост показателей.",
+        "synonyms": [
+          "график",
+          "диаграмма",
+          "статистика",
+          "аналитика",
+          "рост",
+          "тренд",
+          "столбцы",
+          "отчет",
+          "динамика"
+        ]
+      },
       "tags": [
         "statistics",
         "analytics",
@@ -5524,7 +5844,38 @@
       ]
     },
     "circle-check-big": {
+      "en": {
+        "description": "A checkmark inside an open circle, usually meaning a task is completed, approved, or successfully done.",
+        "synonyms": [
+          "checkmark",
+          "tick",
+          "done",
+          "complete",
+          "task",
+          "success",
+          "approve",
+          "confirmed",
+          "checkbox",
+          "verified"
+        ]
+      },
       "fingerprint": "e61f001edb45",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Изображена галочка внутри незамкнутого круга; обозначает выполненное задание, успешное завершение или подтверждение.",
+        "synonyms": [
+          "галочка",
+          "готово",
+          "выполнено",
+          "задача",
+          "подтвердить",
+          "успех",
+          "чекбокс",
+          "завершено",
+          "отметка",
+          "ок"
+        ]
+      },
       "tags": [
         "done",
         "todo",
@@ -6687,7 +7038,38 @@
       ]
     },
     "code-xml": {
+      "en": {
+        "description": "Shows angle brackets enclosing a forward slash, representing source code, markup, or programming in an interface.",
+        "synonyms": [
+          "code",
+          "programming",
+          "markup",
+          "html",
+          "xml",
+          "source code",
+          "developer",
+          "tag",
+          "script",
+          "coding"
+        ]
+      },
       "fingerprint": "eda0b3102a36",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Изображает угловые скобки с косой чертой между ними; обозначает код, исходный текст или разработку.",
+        "synonyms": [
+          "код",
+          "программирование",
+          "разметка",
+          "html",
+          "xml",
+          "исходный код",
+          "вёрстка",
+          "скрипт",
+          "тег",
+          "разработка"
+        ]
+      },
       "tags": [
         "source",
         "programming",
@@ -6696,7 +7078,38 @@
       ]
     },
     "coffee": {
+      "en": {
+        "description": "An outlined mug with a handle and three steam wisps, representing a hot drink such as coffee or tea.",
+        "synonyms": [
+          "mug",
+          "cup",
+          "tea",
+          "hot drink",
+          "beverage",
+          "cafe",
+          "steam",
+          "espresso",
+          "drink",
+          "breakfast"
+        ]
+      },
       "fingerprint": "23a4f411ea71",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Контур кружки с ручкой и тремя струйками пара, обозначает горячий напиток, кофе или чай.",
+        "synonyms": [
+          "кофе",
+          "чашка",
+          "кружка",
+          "чай",
+          "кафе",
+          "напиток",
+          "горячий напиток",
+          "пар",
+          "кофейня",
+          "какао"
+        ]
+      },
       "tags": [
         "drink",
         "cup",
@@ -7913,7 +8326,35 @@
       ]
     },
     "dna": {
+      "en": {
+        "description": "A twisted double helix strand with base-pair rungs, representing DNA, genetics, and biology in an interface.",
+        "synonyms": [
+          "gene",
+          "genetics",
+          "helix",
+          "heredity",
+          "chromosome",
+          "biology",
+          "genome",
+          "molecule"
+        ]
+      },
       "fingerprint": "1d8f51429c34",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Изображена двойная спираль ДНК с парами оснований; значок обозначает генетику, наследственность и биологию.",
+        "synonyms": [
+          "днк",
+          "ген",
+          "генетика",
+          "спираль",
+          "наследственность",
+          "хромосома",
+          "биология",
+          "генетический код",
+          "молекула"
+        ]
+      },
       "tags": [
         "gene",
         "gmo",
@@ -8166,7 +8607,36 @@
       ]
     },
     "drone": {
+      "en": {
+        "description": "Shows a quadcopter drone with four rotors at the corners and a central body, representing an unmanned aerial vehicle.",
+        "synonyms": [
+          "quadcopter",
+          "uav",
+          "unmanned aircraft",
+          "multicopter",
+          "aerial vehicle",
+          "flying robot",
+          "propeller",
+          "airborne",
+          "flight"
+        ]
+      },
       "fingerprint": "e5fd6a8e201c",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Изображена квадрокоптер-дрон с четырьмя роторами по углам и центральным корпусом; обозначает беспилотный летательный аппарат.",
+        "synonyms": [
+          "дрон",
+          "квадрокоптер",
+          "беспилотник",
+          "коптер",
+          "полет",
+          "авиация",
+          "летающий робот",
+          "воздушный аппарат",
+          "квадрик"
+        ]
+      },
       "tags": [
         "quadcopter",
         "uav",
@@ -8464,7 +8934,37 @@
       ]
     },
     "engine": {
+      "en": {
+        "description": "Outline of a car engine with an intake on top and a mounting bracket on the side; usually means engine, motor or vehicle diagnostics.",
+        "synonyms": [
+          "motor",
+          "car engine",
+          "vehicle",
+          "repair",
+          "diagnostics",
+          "maintenance",
+          "check engine",
+          "mechanical",
+          "auto parts"
+        ]
+      },
       "fingerprint": "141872cd4251",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Контур автомобильного двигателя с воздухозаборником сверху и креплением слева; обычно обозначает двигатель, мотор или диагностику автомобиля.",
+        "synonyms": [
+          "двигатель",
+          "мотор",
+          "движок",
+          "автомобиль",
+          "машина",
+          "ремонт",
+          "диагностика",
+          "неисправность",
+          "запчасти",
+          "техобслуживание"
+        ]
+      },
       "tags": [
         "vehicle",
         "power",
@@ -8841,7 +9341,38 @@
       ]
     },
     "fence": {
+      "en": {
+        "description": "Draws a picket fence with three pointed vertical sections and horizontal rails, representing a fence, enclosure, or property boundary.",
+        "synonyms": [
+          "picket fence",
+          "barrier",
+          "enclosure",
+          "railing",
+          "boundary",
+          "yard",
+          "garden",
+          "property line",
+          "paling",
+          "perimeter"
+        ]
+      },
       "fingerprint": "1ec1672edc93",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Изображен деревянный штакетный забор из трёх вертикальных секций с заострёнными верхушками; обозначает ограждение, забор или границу участка.",
+        "synonyms": [
+          "забор",
+          "штакетник",
+          "ограда",
+          "изгородь",
+          "палисадник",
+          "огород",
+          "участок",
+          "ограждение",
+          "дача",
+          "периметр"
+        ]
+      },
       "tags": [
         "picket",
         "panels",
@@ -8944,7 +9475,36 @@
       ]
     },
     "file-chart-column": {
+      "en": {
+        "description": "A document with a folded corner and three bar chart columns inside, meaning a statistical report or analytics file.",
+        "synonyms": [
+          "report",
+          "statistics",
+          "analytics",
+          "bar chart",
+          "graph",
+          "document",
+          "file",
+          "presentation",
+          "data"
+        ]
+      },
       "fingerprint": "263620c0fe5b",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Документ с загнутым углом и тремя столбцами диаграммы внутри; обозначает отчёт или статистику в файле.",
+        "synonyms": [
+          "отчет",
+          "статистика",
+          "аналитика",
+          "диаграмма",
+          "график",
+          "документ файл",
+          "столбчатая диаграмма",
+          "презентация",
+          "данные"
+        ]
+      },
       "tags": [
         "statistics",
         "analytics",
@@ -9412,7 +9972,38 @@
       ]
     },
     "fingerprint-pattern": {
+      "en": {
+        "description": "A fingerprint drawn as curved ridge lines with a dot, usually meaning biometric authentication or secure identity verification.",
+        "synonyms": [
+          "fingerprint",
+          "biometric",
+          "authentication",
+          "security",
+          "login",
+          "identity",
+          "touch id",
+          "2fa",
+          "verification",
+          "unlock"
+        ]
+      },
       "fingerprint": "9bfb5273676b",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Изображение отпечатка пальца из набора линий и точки; обозначает биометрическую аутентификацию и безопасность входа.",
+        "synonyms": [
+          "отпечаток пальца",
+          "биометрия",
+          "аутентификация",
+          "безопасность",
+          "вход",
+          "идентификация",
+          "двухфакторная аутентификация",
+          "подпись",
+          "защита",
+          "распознавание"
+        ]
+      },
       "tags": [
         "2fa",
         "authentication",
@@ -9937,7 +10528,38 @@
       ]
     },
     "folder-plus": {
+      "en": {
+        "description": "Outlined folder with a plus sign inside, usually meaning create a new folder or add a directory.",
+        "synonyms": [
+          "new folder",
+          "create folder",
+          "add folder",
+          "folder with plus",
+          "make directory",
+          "add directory",
+          "new directory",
+          "folder add",
+          "create",
+          "mkdir"
+        ]
+      },
       "fingerprint": "dc9ce450a7b9",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Контурная папка с плюсом внутри обозначает создание новой папки или добавление директории.",
+        "synonyms": [
+          "новая папка",
+          "создать папку",
+          "добавить папку",
+          "папка с плюсом",
+          "создать директорию",
+          "добавить каталог",
+          "папка",
+          "плюс",
+          "новый каталог",
+          "создание"
+        ]
+      },
       "tags": [
         "directory",
         "add",
@@ -10243,7 +10865,36 @@
       ]
     },
     "gallery-vertical-end": {
+      "en": {
+        "description": "A rounded rectangle with two horizontal bars above it, usually representing a gallery or carousel of slides.",
+        "synonyms": [
+          "carousel",
+          "gallery",
+          "images",
+          "slideshow",
+          "album",
+          "portfolio",
+          "swipe",
+          "version history",
+          "backup"
+        ]
+      },
       "fingerprint": "3e43ded48475",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Скруглённый прямоугольник с двумя полосками сверху; обозначает галерею или карусель слайдов.",
+        "synonyms": [
+          "карусель",
+          "галерея",
+          "изображения",
+          "фото",
+          "альбом",
+          "портфолио",
+          "слайды",
+          "история версий",
+          "резервная копия"
+        ]
+      },
       "tags": [
         "carousel",
         "pictures",
@@ -10701,7 +11352,36 @@
       ]
     },
     "globe-lock": {
+      "en": {
+        "description": "A globe with a padlock at upper right, meaning a secure, private, or encrypted network connection.",
+        "synonyms": [
+          "lock",
+          "globe",
+          "security",
+          "privacy",
+          "vpn",
+          "protection",
+          "internet",
+          "encryption",
+          "network"
+        ]
+      },
       "fingerprint": "bf942c364ec8",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Изображён глобус с замком справа вверху; значит защищённое, приватное или безопасное сетевое соединение.",
+        "synonyms": [
+          "замок",
+          "глобус",
+          "безопасность",
+          "приватность",
+          "впн",
+          "защита",
+          "интернет",
+          "шифрование",
+          "сеть"
+        ]
+      },
       "tags": [
         "vpn",
         "private",
@@ -10808,7 +11488,38 @@
       ]
     },
     "graph-hub": {
+      "en": {
+        "description": "Shows a large top node branching lines down to three endpoints, representing load distribution, routing, or a network hub.",
+        "synonyms": [
+          "load balancer",
+          "distribute",
+          "traffic",
+          "network",
+          "nodes",
+          "routing",
+          "hub",
+          "cluster",
+          "branch",
+          "fan-out"
+        ]
+      },
       "fingerprint": "d406cc2551fd",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Рисунок показывает большой круг сверху, от которого расходятся линии к трём узлам внизу; обозначает распределение, маршрутизацию или сетевой хаб.",
+        "synonyms": [
+          "балансировщик",
+          "распределение",
+          "трафик",
+          "сеть",
+          "узлы",
+          "маршрутизация",
+          "хаб",
+          "кластер",
+          "разветвление",
+          "иерархия"
+        ]
+      },
       "tags": [
         "load balancer",
         "distribute",
@@ -11461,7 +12172,36 @@
       ]
     },
     "headphone-off": {
+      "en": {
+        "description": "Headphones crossed out with a diagonal line, indicating audio is off, muted, or unavailable.",
+        "synonyms": [
+          "headphones off",
+          "no sound",
+          "disable audio",
+          "mute headphones",
+          "silent",
+          "audio disabled",
+          "no audio",
+          "sound off",
+          "music off"
+        ]
+      },
       "fingerprint": "23a358d923be",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Изображены наушники, перечёркнутые диагональной линией; обозначает отключение звука или выключение аудио.",
+        "synonyms": [
+          "наушники выкл",
+          "без звука",
+          "выключить наушники",
+          "беззвучно",
+          "отключить звук",
+          "наушники перечеркнуты",
+          "музыка выкл",
+          "тихо",
+          "аудио выкл"
+        ]
+      },
       "tags": [
         "music",
         "audio",
@@ -11620,7 +12360,38 @@
       ]
     },
     "highlighter": {
+      "en": {
+        "description": "Shows a highlighter marker with a slanted tip; it usually means highlighting text or marking important content.",
+        "synonyms": [
+          "marker",
+          "highlight",
+          "highlighter pen",
+          "mark text",
+          "emphasize",
+          "underline",
+          "annotate",
+          "pen",
+          "felt tip",
+          "selection"
+        ]
+      },
       "fingerprint": "64f1ec2b73a2",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Изображён маркер-хайлайтер с наконечником и скошенным корпусом; обозначает выделение текста или отметку важного.",
+        "synonyms": [
+          "маркер",
+          "хайлайтер",
+          "выделить",
+          "выделение",
+          "подсветка",
+          "текст",
+          "пометка",
+          "отметить",
+          "фломастер",
+          "закладка"
+        ]
+      },
       "tags": [
         "mark",
         "text"
@@ -11721,7 +12492,38 @@
       ]
     },
     "house-cog": {
+      "en": {
+        "description": "Outline of a house with a gear in the lower right corner, representing home or property settings.",
+        "synonyms": [
+          "house",
+          "home",
+          "home settings",
+          "gear",
+          "settings",
+          "configuration",
+          "smart home",
+          "property",
+          "residence",
+          "automation"
+        ]
+      },
       "fingerprint": "c8d630180ebe",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Контур дома с шестерёнкой в правом нижнем углу; обозначает настройки жилья или умного дома.",
+        "synonyms": [
+          "домик",
+          "дом",
+          "настройки дома",
+          "шестерёнка",
+          "настройки",
+          "параметры",
+          "конфигурация",
+          "умный дом",
+          "недвижимость",
+          "жильё"
+        ]
+      },
       "tags": [
         "home",
         "building",
@@ -12898,7 +13700,38 @@
       ]
     },
     "line-dot-top-vertical": {
+      "en": {
+        "description": "A vertical line with a circle at the top, indicating a waypoint, pointer, or endpoint on a route.",
+        "synonyms": [
+          "waypoint",
+          "pointer",
+          "marker",
+          "stop",
+          "station",
+          "endpoint",
+          "direction",
+          "indicator",
+          "route",
+          "pin"
+        ]
+      },
       "fingerprint": "70eae27501be",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Вертикальная линия с кружком вверху, обозначающая точку, указатель или конечную станцию на маршруте.",
+        "synonyms": [
+          "точка",
+          "указатель",
+          "маршрут",
+          "остановка",
+          "станция",
+          "конец",
+          "направление",
+          "индикатор",
+          "стрелка",
+          "метка"
+        ]
+      },
       "tags": [
         "arrow",
         "pointer",
@@ -14041,7 +14874,34 @@
       ]
     },
     "message-circle-off": {
+      "en": {
+        "description": "An outlined speech bubble crossed by a diagonal line, meaning chat is disabled, messages are off, or comments are blocked.",
+        "synonyms": [
+          "chat disabled",
+          "messages off",
+          "no comments",
+          "disable chat",
+          "mute chat",
+          "block messages",
+          "comments off",
+          "no conversation"
+        ]
+      },
       "fingerprint": "ddbdc8d06f46",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Контур круглого облачка сообщения с диагональной чертой поперек, означает отключение чата, отсутствие сообщений или запрет переписки.",
+        "synonyms": [
+          "чат выключен",
+          "сообщения отключены",
+          "без комментариев",
+          "отключить чат",
+          "заглушить",
+          "выключить диалог",
+          "запрет сообщений",
+          "нет переписки"
+        ]
+      },
       "tags": [
         "comment",
         "chat",
@@ -14711,7 +15571,36 @@
       ]
     },
     "mirror-round": {
+      "en": {
+        "description": "The drawing shows a round mirror on a stand with a percent-like symbol inside. It usually represents a vanity or makeup mirror.",
+        "synonyms": [
+          "vanity",
+          "makeup",
+          "reflection",
+          "looking glass",
+          "bathroom",
+          "cosmetic",
+          "table glass",
+          "vanity table",
+          "shiny"
+        ]
+      },
       "fingerprint": "43af78a25ffd",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Рисунок показывает круглое зеркало на подставке с символом процента внутри. Обычно это значок туалетного или косметического зеркала.",
+        "synonyms": [
+          "зеркало",
+          "зеркальце",
+          "туалетное зеркало",
+          "косметическое зеркало",
+          "макияж",
+          "отражение",
+          "ванная",
+          "настольное зеркало",
+          "стекло"
+        ]
+      },
       "tags": [
         "reflection",
         "optics",
@@ -15137,7 +16026,38 @@
       ]
     },
     "mouse-left": {
+      "en": {
+        "description": "Outline of a computer mouse with a dot and vertical line on the upper left, meaning a left-click.",
+        "synonyms": [
+          "mouse",
+          "computer mouse",
+          "left button",
+          "left click",
+          "click",
+          "press",
+          "input device",
+          "cursor",
+          "pointer",
+          "scroll"
+        ]
+      },
       "fingerprint": "ed4767661e3c",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Контур компьютерной мыши с точкой и вертикальной линией сверху слева; обозначает нажатие левой кнопки мыши.",
+        "synonyms": [
+          "мышка",
+          "компьютерная мышь",
+          "левая кнопка",
+          "клик",
+          "щелчок",
+          "нажатие",
+          "устройство ввода",
+          "курсор",
+          "кнопка мыши",
+          "прокрутка"
+        ]
+      },
       "tags": [
         "device",
         "scroll",
@@ -15533,7 +16453,38 @@
       ]
     },
     "notebook-text": {
+      "en": {
+        "description": "A spiral notebook with text lines on its page, usually representing notes, a journal, or written content.",
+        "synonyms": [
+          "notepad",
+          "notebook",
+          "memo",
+          "jotter",
+          "diary",
+          "journal",
+          "planner",
+          "logbook",
+          "scratch pad",
+          "text document"
+        ]
+      },
       "fingerprint": "b1643ffe9f41",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Изображена спиральная тетрадь с текстовыми строками на странице; обозначает заметки, записи или текстовый документ.",
+        "synonyms": [
+          "блокнот",
+          "тетрадь",
+          "заметки",
+          "записная книжка",
+          "дневник",
+          "конспект",
+          "ежедневник",
+          "школьная тетрадь",
+          "записи",
+          "текст"
+        ]
+      },
       "tags": [
         "notepad",
         "notes",
@@ -15887,7 +16838,36 @@
       ]
     },
     "panel-bottom-close": {
+      "en": {
+        "description": "Draws a rounded panel with a bottom section and a downward chevron, meaning hide or collapse the bottom panel.",
+        "synonyms": [
+          "hide panel",
+          "collapse panel",
+          "bottom panel",
+          "close drawer",
+          "arrow down",
+          "chevron down",
+          "dock",
+          "minimize",
+          "slide down"
+        ]
+      },
       "fingerprint": "afe8c19bb40a",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Рисует квадратную панель с нижним отсеком и стрелку вниз, что означает скрыть нижнюю панель или свернуть её.",
+        "synonyms": [
+          "скрыть панель",
+          "свернуть панель",
+          "нижняя панель",
+          "выдвижная панель",
+          "стрелка вниз",
+          "свернуть вниз",
+          "док",
+          "шторка",
+          "убрать панель"
+        ]
+      },
       "tags": [
         "drawer",
         "dock",
@@ -16016,7 +16996,34 @@
       ]
     },
     "panel-right-open": {
+      "en": {
+        "description": "A rounded square with a vertical divider on the right and a left-pointing chevron, usually toggling a side panel.",
+        "synonyms": [
+          "sidebar",
+          "side panel",
+          "drawer",
+          "collapse",
+          "expand",
+          "toggle",
+          "chevron left",
+          "layout"
+        ]
+      },
       "fingerprint": "69fe9e7218b1",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Квадрат с вертикальной линией справа и стрелкой влево внутри, означает переключение боковой панели.",
+        "synonyms": [
+          "сайдбар",
+          "боковая панель",
+          "выдвижная панель",
+          "шторка",
+          "скрыть панель",
+          "показать панель",
+          "стрелка влево",
+          "переключить"
+        ]
+      },
       "tags": [
         "sidebar",
         "secondary",
@@ -16541,7 +17548,36 @@
       ]
     },
     "phone-missed": {
+      "en": {
+        "description": "A phone handset with a cross in the corner, usually meaning a missed or declined call.",
+        "synonyms": [
+          "missed call",
+          "declined call",
+          "phone",
+          "call",
+          "handset",
+          "cancel call",
+          "no answer",
+          "telephone",
+          "rejected call"
+        ]
+      },
       "fingerprint": "33ffa49e713f",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Изображена телефонная трубка с крестиком в углу, что обычно означает пропущенный или отклонённый звонок.",
+        "synonyms": [
+          "пропущенный звонок",
+          "отклонённый вызов",
+          "телефон",
+          "звонок",
+          "трубка",
+          "отмена звонка",
+          "нет ответа",
+          "вызов",
+          "связь"
+        ]
+      },
       "tags": [
         "call"
       ]
@@ -16742,7 +17778,37 @@
       ]
     },
     "pizza": {
+      "en": {
+        "description": "A slice of pizza with crust, cheese and pepperoni-like toppings, usually meaning pizza or food delivery.",
+        "synonyms": [
+          "pizza slice",
+          "fast food",
+          "food",
+          "takeout",
+          "pie",
+          "quiche",
+          "restaurant",
+          "cheese",
+          "snack"
+        ]
+      },
       "fingerprint": "3b01ead7fe71",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Изображён треугольный кусок пиццы с корочкой, сыром и кружочками-начинкой; обозначает пиццу, еду или доставку.",
+        "synonyms": [
+          "пицца",
+          "кусок пиццы",
+          "фастфуд",
+          "еда",
+          "доставка еды",
+          "пирог",
+          "киш",
+          "ресторан",
+          "сыр",
+          "перекус"
+        ]
+      },
       "tags": [
         "pie",
         "quiche",
@@ -17489,7 +18555,38 @@
       ]
     },
     "receipt-turkish-lira": {
+      "en": {
+        "description": "Shows a receipt with wavy edges and the Turkish lira symbol ₺, indicating a bill or payment in Turkish currency.",
+        "synonyms": [
+          "receipt",
+          "bill",
+          "invoice",
+          "lira",
+          "turkish lira",
+          "currency",
+          "payment",
+          "voucher",
+          "slip",
+          "counterfoil"
+        ]
+      },
       "fingerprint": "3e0720512be1",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Изображён чек или квитанция с волнистыми краями и символом турецкой лиры ₺; обозначает счёт или оплату в турецкой валюте.",
+        "synonyms": [
+          "чек",
+          "квитанция",
+          "счёт",
+          "лира",
+          "турецкая лира",
+          "валюта",
+          "оплата",
+          "ваучер",
+          "талон",
+          "кассовый чек"
+        ]
+      },
       "tags": [
         "bill",
         "voucher",
@@ -17744,7 +18841,35 @@
       ]
     },
     "replace-all": {
+      "en": {
+        "description": "Shows a bent arrow pointing down-left, a rounded square, and dotted marks with curved brackets, meaning replace all or substitute.",
+        "synonyms": [
+          "replace",
+          "substitute",
+          "swap",
+          "change",
+          "find and replace",
+          "exchange",
+          "modify",
+          "switch"
+        ]
+      },
       "fingerprint": "70ec31cfb08c",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Изображены стрелка, поворачивающая влево вверх, квадрат и точки с дугами; значок обозначает замену или подстановку всех значений.",
+        "synonyms": [
+          "заменить",
+          "заменить все",
+          "замена",
+          "подстановка",
+          "поменять",
+          "поиск и замена",
+          "обмен",
+          "изменить",
+          "переключить"
+        ]
+      },
       "tags": [
         "search",
         "substitute",
@@ -18396,7 +19521,38 @@
       ]
     },
     "scan-box": {
+      "en": {
+        "description": "It shows a cube inside four corner brackets, indicating 3D object scanning, detection, or recognition in augmented reality.",
+        "synonyms": [
+          "scan",
+          "object scan",
+          "3d object",
+          "cube",
+          "box",
+          "bounding box",
+          "augmented reality",
+          "object detection",
+          "capture",
+          "viewfinder"
+        ]
+      },
       "fingerprint": "e7df5ae02721",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Изображение показывает кубик внутри рамки с четырьмя угловыми скобками, что обозначает сканирование или распознавание 3D-объекта.",
+        "synonyms": [
+          "сканирование",
+          "распознавание объекта",
+          "3d объект",
+          "куб",
+          "кубик",
+          "рамка",
+          "дополненная реальность",
+          "захват объекта",
+          "отслеживание",
+          "камера"
+        ]
+      },
       "tags": [
         "ar",
         "augmented reality",
@@ -18672,7 +19828,38 @@
       ]
     },
     "scroll-text": {
+      "en": {
+        "description": "A scroll of paper with two lines of text, usually representing a document, notes, a log or a list.",
+        "synonyms": [
+          "scroll",
+          "parchment",
+          "document",
+          "notes",
+          "list",
+          "log",
+          "script",
+          "text",
+          "record",
+          "manuscript"
+        ]
+      },
       "fingerprint": "5c0f815d9ff7",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Изображён свиток пергамента с двумя строками текста; обычно означает документ, заметки, список или записи.",
+        "synonyms": [
+          "свиток",
+          "пергамент",
+          "документ",
+          "заметки",
+          "список",
+          "текст",
+          "записи",
+          "рукопись",
+          "журнал",
+          "лог"
+        ]
+      },
       "tags": [
         "paper",
         "log",
@@ -21277,7 +22464,36 @@
       ]
     },
     "square-minus": {
+      "en": {
+        "description": "A rounded square button with a horizontal line inside, usually meaning subtract, remove, or collapse.",
+        "synonyms": [
+          "minus",
+          "subtract",
+          "remove",
+          "decrease",
+          "reduce",
+          "collapse",
+          "delete",
+          "minus button",
+          "negative"
+        ]
+      },
       "fingerprint": "0f0d07493391",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Квадратная кнопка с горизонтальной линией внутри, обозначает уменьшение, удаление или вычитание.",
+        "synonyms": [
+          "минус",
+          "вычесть",
+          "убрать",
+          "уменьшить",
+          "удалить",
+          "свернуть",
+          "разделитель",
+          "кнопка минус",
+          "меньше"
+        ]
+      },
       "tags": [
         "subtract",
         "remove",
@@ -21412,7 +22628,34 @@
       ]
     },
     "square-pilcrow": {
+      "en": {
+        "description": "A pilcrow paragraph mark inside a rounded square; it usually signals paragraph formatting or text editing.",
+        "synonyms": [
+          "paragraph",
+          "pilcrow",
+          "paragraph mark",
+          "typography",
+          "text",
+          "formatting",
+          "prose",
+          "symbol"
+        ]
+      },
       "fingerprint": "19e75388e12d",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Пилькроу (знак абзаца «¶») внутри квадратной рамки; обозначает абзац или форматирование текста.",
+        "synonyms": [
+          "абзац",
+          "знак абзаца",
+          "пилкроу",
+          "типографика",
+          "текст",
+          "символ",
+          "форматирование текста",
+          "параграф"
+        ]
+      },
       "tags": [
         "paragraph",
         "mark",
@@ -22081,7 +23324,38 @@
       ]
     },
     "store": {
+      "en": {
+        "description": "A storefront with a scalloped awning above a doorway, representing a shop, retail store, or marketplace location.",
+        "synonyms": [
+          "shop",
+          "storefront",
+          "retail",
+          "market",
+          "boutique",
+          "awning",
+          "kiosk",
+          "buy",
+          "commerce",
+          "mall"
+        ]
+      },
       "fingerprint": "08fa02886184",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Изображён магазин с навесом с волнистым краем и дверью; обозначает магазин, торговую точку или витрину.",
+        "synonyms": [
+          "магазин",
+          "лавка",
+          "торговля",
+          "витрина",
+          "бутик",
+          "киоск",
+          "здание магазина",
+          "покупки",
+          "торговая точка",
+          "маркет"
+        ]
+      },
       "tags": [
         "shop",
         "supermarket",
@@ -22296,7 +23570,38 @@
       ]
     },
     "syringe": {
+      "en": {
+        "description": "Draws a diagonal syringe with a needle, plunger and barrel, commonly representing injections, medication or medical treatment.",
+        "synonyms": [
+          "injection",
+          "needle",
+          "medicine",
+          "vaccine",
+          "shot",
+          "medical",
+          "drug",
+          "plunger",
+          "vaccination",
+          "blood test"
+        ]
+      },
       "fingerprint": "d18637aa4fc9",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Изображён шприц с иглой, поршнем и цилиндром под диагональю; обозначает инъекции, лекарства и медицину.",
+        "synonyms": [
+          "шприц",
+          "укол",
+          "инъекция",
+          "игла",
+          "медицина",
+          "лекарство",
+          "поршень",
+          "прививка",
+          "вакцина",
+          "анализ крови"
+        ]
+      },
       "tags": [
         "medicine",
         "medical",
@@ -23007,7 +24312,38 @@
       ]
     },
     "ticket-x": {
+      "en": {
+        "description": "A ticket outline with side notches and a central cross, meaning a cancelled, void, or invalid ticket.",
+        "synonyms": [
+          "ticket",
+          "cancelled ticket",
+          "void ticket",
+          "voucher",
+          "entry pass",
+          "refund",
+          "invalid",
+          "event admission",
+          "denied entry",
+          "remove ticket"
+        ]
+      },
       "fingerprint": "d0329e90c44a",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Изображение билета с вырезами по бокам и крестиком посередине; обозначает отменённый, недействительный или аннулированный билет.",
+        "synonyms": [
+          "билет",
+          "отмена билета",
+          "недействительный билет",
+          "аннулирован",
+          "возврат билета",
+          "перечеркнутый билет",
+          "ваучер",
+          "пропуск",
+          "вход на мероприятие",
+          "удалить билет"
+        ]
+      },
       "tags": [
         "entry",
         "pass",
@@ -23108,7 +24444,36 @@
       ]
     },
     "toggle-right": {
+      "en": {
+        "description": "Shows a toggle switch in the on position, with the knob on the right, meaning an option is enabled.",
+        "synonyms": [
+          "toggle",
+          "switch",
+          "on",
+          "enable",
+          "slider",
+          "boolean",
+          "setting",
+          "option",
+          "activate"
+        ]
+      },
       "fingerprint": "044074d193bb",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Рисунок изображает переключатель в положении «включено»: круглый ползунок справа внутри овальной рамки, означает включение опции.",
+        "synonyms": [
+          "тумблер",
+          "переключатель",
+          "вкл",
+          "включить",
+          "выключатель",
+          "бегунок",
+          "опция",
+          "статус",
+          "режим"
+        ]
+      },
       "tags": [
         "on",
         "off",
@@ -23209,7 +24574,36 @@
       ]
     },
     "toothbrush-sparkles": {
+      "en": {
+        "description": "Drawing of a toothbrush surrounded by sparkles, meaning teeth cleaning and oral hygiene.",
+        "synonyms": [
+          "toothbrush",
+          "brushing teeth",
+          "oral care",
+          "dental care",
+          "dentist",
+          "sparkle",
+          "clean teeth",
+          "fresh breath",
+          "toothpaste"
+        ]
+      },
       "fingerprint": "2132b2def557",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Изображена зубная щётка с блёстками вокруг, означает чистку зубов и гигиену полости рта.",
+        "synonyms": [
+          "зубная щётка",
+          "чистка зубов",
+          "гигиена полости рта",
+          "уход за зубами",
+          "стоматолог",
+          "блеск",
+          "чистота",
+          "свежесть",
+          "зубная паста"
+        ]
+      },
       "tags": [
         "dental care",
         "oral hygiene",
@@ -23852,7 +25246,33 @@
       ]
     },
     "ungroup": {
+      "en": {
+        "description": "Two rounded rectangles offset diagonally from each other, representing ungrouping or separating grouped elements.",
+        "synonyms": [
+          "separate",
+          "split",
+          "detach",
+          "break apart",
+          "group",
+          "elements",
+          "parts"
+        ]
+      },
       "fingerprint": "7d5d1919529b",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Два скруглённых прямоугольника, смещённых по диагонали друг от друга; обозначает разгруппировку или разделение элементов.",
+        "synonyms": [
+          "разгруппировать",
+          "разделить",
+          "разъединить",
+          "группа",
+          "отделить",
+          "выделить",
+          "элементы",
+          "части"
+        ]
+      },
       "tags": [
         "cubes",
         "packages",
@@ -24043,7 +25463,38 @@
       ]
     },
     "user-round": {
+      "en": {
+        "description": "A simple person silhouette with a round head and shoulders, commonly representing a user, profile, or account.",
+        "synonyms": [
+          "user",
+          "profile",
+          "account",
+          "person",
+          "contact",
+          "avatar",
+          "member",
+          "people",
+          "login",
+          "human"
+        ]
+      },
       "fingerprint": "833fdc3a85dd",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Силуэт человека: круглая голова и плечи над ними, обозначает пользователя, профиль или учётную запись.",
+        "synonyms": [
+          "пользователь",
+          "профиль",
+          "аккаунт",
+          "человек",
+          "контакт",
+          "личный кабинет",
+          "аватар",
+          "юзер",
+          "учётная запись",
+          "персона"
+        ]
+      },
       "tags": [
         "person",
         "account",
@@ -24522,7 +25973,37 @@
       ]
     },
     "video-off": {
+      "en": {
+        "description": "A crossed-out video camera, meaning video is turned off or the camera is disabled.",
+        "synonyms": [
+          "camera off",
+          "disable camera",
+          "no video",
+          "turn off video",
+          "video camera",
+          "movie",
+          "film",
+          "recording off",
+          "crossed camera"
+        ]
+      },
       "fingerprint": "dfadb3826fcd",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Изображена перечёркнутая видеокамера, что означает выключенное видео или отключение камеры.",
+        "synonyms": [
+          "видео выкл",
+          "камера выкл",
+          "выключить камеру",
+          "без видео",
+          "отключить видео",
+          "видеокамера",
+          "кино",
+          "фильм",
+          "запись выключена",
+          "перечёркнутая камера"
+        ]
+      },
       "tags": [
         "camera",
         "movie",

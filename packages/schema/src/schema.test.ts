@@ -2,7 +2,12 @@ import { spawnSync } from "node:child_process";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
-import { type FileKind, NAME_PATTERN, validate } from "./index.js";
+import {
+  type FileKind,
+  languageSchema,
+  NAME_PATTERN,
+  validate,
+} from "./index.js";
 
 const examples = new URL("../examples/", import.meta.url);
 const load = (path: string): unknown =>
@@ -179,6 +184,16 @@ describe("search.json", () => {
 
   it("запрещает лишние поля (опечатки должны ловиться)", () => {
     expect(validate("search", file({ tagz: [] })).length).toBeGreaterThan(0);
+  });
+
+  it("languageSchema экспортируется для обогащения: 5–10 синонимов, лишние поля запрещены", () => {
+    const ok = { description: "д", synonyms: ["1", "2", "3", "4", "5"] };
+    expect(languageSchema.safeParse(ok).success).toBe(true);
+    expect(
+      languageSchema.safeParse({ ...ok, synonyms: ok.synonyms.slice(0, 4) })
+        .success,
+    ).toBe(false);
+    expect(languageSchema.safeParse({ ...ok, model: "x" }).success).toBe(false);
   });
 
   it("теги — только строчными буквами", () => {

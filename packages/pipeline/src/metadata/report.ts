@@ -78,6 +78,11 @@ export function formatMetadata(m: SetMetadata): string[] {
       : "  Лицензия: текст не прочитан",
     `  Метаданные ${m.format ? `автора (${m.format})` : "автора: нет"} · теги автора у ${c.author} из ${c.total} · из имени ${c.name} · категорий ${c.categories}`,
     `  Витрина: ${m.samples.join(", ")}`,
+    ...(m.enrichment
+      ? [
+          `  Описания (ADR-0046): перешли к ${m.enrichment.kept.length} базовым иконкам · отброшено ${m.enrichment.dropped.length}${m.enrichment.dropped.length > 0 ? ` (${m.enrichment.dropped.slice(0, 5).join(", ")}${m.enrichment.dropped.length > 5 ? ", …" : ""})` : ""}`,
+        ]
+      : []),
   ];
 }
 
