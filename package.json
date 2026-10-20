@@ -17,6 +17,7 @@
     "sanitize": "tsc -b && node packages/pipeline/dist/cli.js sanitize",
     "normalize": "tsc -b && node packages/pipeline/dist/cli.js normalize",
     "data": "tsc -b && node packages/pipeline/dist/cli.js data",
+    "pr": "tsc -b && node packages/pipeline/dist/cli.js pr",
     "check": "pnpm lint && pnpm typecheck && pnpm test && pnpm size"
   },
   "devDependencies": {

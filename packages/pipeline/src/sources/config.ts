@@ -101,6 +101,11 @@ export const sourceConfigSchema = z
         repo: z
           .url()
           .refine((u) => u.startsWith("https://"), "репозиторий — адрес https"),
+        /**
+         * Что считать последней версией (ADR-0012): head (по умолчанию) — последний коммит основной
+         * ветки автора; tag — самый свежий тег выпуска вида 1.60.0. В sources.lock.json — всегда коммит.
+         */
+        latest: z.enum(["head", "tag"]).optional(),
       }),
     ]),
     /**

@@ -22,6 +22,7 @@ export {
   type NextChangelog,
   needsApproval,
   nextChangelog,
+  releaseSection,
   secondsOf,
 } from "./changelog/journal.js";
 export {
@@ -242,7 +243,17 @@ export {
   pinEntry,
   sourceLabel,
 } from "./sources/fetch.js";
-export { baseRevision, lastCommit } from "./sources/git.js";
+export {
+  baseRevision,
+  isReleaseTag,
+  lastCommit,
+  latestReleaseTag,
+  parseRemoteTags,
+  type RemoteTag,
+  releaseTagsByCommit,
+  remoteTags,
+  resolveGitTag,
+} from "./sources/git.js";
 export {
   type LockEntry,
   type LockFile,
@@ -256,6 +267,7 @@ export {
 } from "./sources/names.js";
 export { loadRegistry } from "./sources/registry.js";
 export { formatReport } from "./sources/report.js";
+export { compareVersions, parseVersion } from "./sources/version.js";
 export { elements, idMap, refsOf, renameRefs } from "./svg/refs.js";
 export { escapeAttr, type SvgElement, serializeSvg } from "./svg/serialize.js";
 export {
@@ -265,3 +277,31 @@ export {
   type XmlElement,
   XmlParseError,
 } from "./svg/xml.js";
+export {
+  type Decision,
+  decide,
+  isDowngrade,
+  type Verdict,
+} from "./update/decide.js";
+export {
+  ATTENTION_LIMIT,
+  BODY_LIMIT,
+  PR_LABELS,
+  type PrInput,
+  type PrLinks,
+  type PrText,
+  prMarker,
+  prText,
+  revisionName,
+} from "./update/pr.js";
+export {
+  ATTENTION_KINDS,
+  type AttentionKind,
+  type BuildSummary,
+  buildSummarySchema,
+  type SetSummary,
+  SUMMARY_FILE,
+  setSummary,
+  setSummarySchema,
+  summaryText,
+} from "./update/summary.js";

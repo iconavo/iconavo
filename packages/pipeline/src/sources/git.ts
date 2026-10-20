@@ -3,6 +3,7 @@ import { copyFile, lstat, mkdir, mkdtemp, readdir, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { promisify } from "node:util";
+import { compareVersions, parseVersion } from "./version.js";
 
 const run = promisify(execFile);
 
@@ -113,6 +114,82 @@ export async function resolveGitHead(repo: string): Promise<string> {
   const hash = out.split(/\s/)[0] ?? "";
   assertCommitHash(hash);
   return hash;
+}
+
+/** Тег удалённого репозитория и коммит, на который он указывает. */
+export interface RemoteTag {
+  name: string;
+  commit: string;
+}
+
+/**
+ * Теги из вывода `git ls-remote --tags`. У аннотированного тега две строки: объект тега и `^{}` —
+ * сам коммит; берётся коммит.
+ */
+export function parseRemoteTags(output: string): RemoteTag[] {
+  const tags = new Map<string, string>();
+  const peeled = new Set<string>();
+  for (const line of output.split("\n")) {
+    const [hash, ref] = line.trim().split(/\s+/);
+    if (!hash || !ref?.startsWith("refs/tags/")) continue;
+    const name = ref.slice("refs/tags/".length);
+    if (name.endsWith("^{}")) {
+      tags.set(name.slice(0, -3), hash);
+      peeled.add(name.slice(0, -3));
+    } else if (!peeled.has(name)) {
+      tags.set(name, hash);
+    }
+  }
+  return [...tags].map(([name, commit]) => ({ name, commit }));
+}
+
+/** Тег выпуска — номер из трёх частей: 1.60.0 или v0.15.0. Не выпуск: 1.0.0-rc.1, @lucide/lab@1.0.0. */
+export const isReleaseTag = (name: string) => /^v?\d+\.\d+\.\d+$/.test(name);
+
+/** Теги выпусков от свежих к старым; при равных номерах (v1.0.0 и 1.0.0) — по имени. */
+function releases(tags: readonly RemoteTag[]): RemoteTag[] {
+  return tags
+    .filter((t) => isReleaseTag(t.name))
+    .map((t) => ({ tag: t, version: parseVersion(t.name) ?? [] }))
+    .sort(
+      (a, b) =>
+        compareVersions(b.version, a.version) ||
+        (a.tag.name < b.tag.name ? -1 : a.tag.name > b.tag.name ? 1 : 0),
+    )
+    .map((t) => t.tag);
+}
+
+/** Самый свежий выпуск: номера сравниваются по частям, 1.10.0 свежее 1.9.0. */
+export const latestReleaseTag = (
+  tags: readonly RemoteTag[],
+): RemoteTag | undefined => releases(tags)[0];
+
+/** Коммит → тег выпуска на нём (самый свежий, если их несколько): имена версий в PR робота. */
+export function releaseTagsByCommit(
+  tags: readonly RemoteTag[],
+): Map<string, string> {
+  const out = new Map<string, string>();
+  for (const t of releases(tags)) {
+    if (!out.has(t.commit)) out.set(t.commit, t.name);
+  }
+  return out;
+}
+
+/** Все теги удалённого репозитория. */
+export async function remoteTags(repo: string): Promise<RemoteTag[]> {
+  return parseRemoteTags(await git(["ls-remote", "--tags", repo]));
+}
+
+/** Самый свежий выпуск удалённого репозитория (latest: "tag" в конфиге набора, ADR-0012). */
+export async function resolveGitTag(repo: string): Promise<RemoteTag> {
+  const latest = latestReleaseTag(await remoteTags(repo));
+  if (!latest) {
+    throw new Error(
+      `в ${repo} нет тегов выпусков вида 1.2.3: уберите latest: "tag" из конфига набора или закрепите коммит вручную`,
+    );
+  }
+  assertCommitHash(latest.commit);
+  return latest;
 }
 
 async function* walk(

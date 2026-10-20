@@ -148,7 +148,8 @@ const pairs = (record: Record<string, string> | undefined) =>
     .sort(([a], [b]) => order(a, b))
     .map(([from, to]) => `${code(from)} → ${code(to)}`);
 
-function releaseSection(r: Release): string {
+/** Раздел одного выпуска в CHANGELOG.md; его же робот обновления кладёт в описание PR (ADR-0019). */
+export function releaseSection(r: Release): string {
   const lines = [`## ${humanDate(r.date)} · версия ${r.version}`, ""];
   const source = `источник: ${shortRevision(r.revision)} · иконок: ${groupDigits(r.total)}`;
   lines.push(
