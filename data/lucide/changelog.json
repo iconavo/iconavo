@@ -2,6 +2,28 @@
   "prefix": "lucide",
   "releases": [
     {
+      "added": [
+        "avocado",
+        "bacon",
+        "brain-off",
+        "graph-hub",
+        "letter-spacing",
+        "line-height",
+        "smartphone-user-round",
+        "tombstone"
+      ],
+      "changed": [
+        "brain",
+        "brain-circuit",
+        "brain-cog"
+      ],
+      "date": "2026-10-20T12:49:02Z",
+      "previous": "bf94bc18",
+      "revision": "02eb9161b57917ccaa262f1bf070507cddde3b08",
+      "total": 1899,
+      "version": "ebb52e13"
+    },
+    {
       "aliases": {
         "activity-square": "square-activity",
         "alarm-check": "alarm-clock-check",
