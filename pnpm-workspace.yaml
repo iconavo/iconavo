@@ -2,3 +2,7 @@ packages:
   - packages/*
   - apps/*
   - sources
+
+# Версия Node не из engines в package.json останавливает pnpm install понятной ошибкой:
+# без этой настройки pnpm 12 поле не проверяет.
+engineStrict: true
