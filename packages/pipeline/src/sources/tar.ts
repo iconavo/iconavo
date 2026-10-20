@@ -11,6 +11,7 @@ export interface ExtractOptions {
 }
 
 export interface Extracted {
+  /** Сохранённые файлы, каждый путь — один раз. */
   files: { path: string; size: number }[];
   bytes: number;
 }
@@ -136,6 +137,8 @@ export async function extractTar(
   const dest = resolve(options.dest);
   const reader = new Reader(source[Symbol.asyncIterator]());
   const result: Extracted = { files: [], bytes: 0 };
+  // Номер записи в result.files по пути: повтор в архиве заменяет запись, как tar — файл на диске.
+  const seen = new Map<string, number>();
   let pendingPath: string | undefined;
 
   for (;;) {
@@ -175,9 +178,11 @@ export async function extractTar(
     }
     if (!isFile)
       throw new Error(`«${rel}» — не обычный файл (ссылки не поддерживаются)`);
+    const at = seen.get(rel);
+    const replaced = at === undefined ? 0 : (result.files[at]?.size ?? 0);
     if (size > maxFile)
       throw new Error(`файл «${rel}» больше лимита ${maxFile} байт`);
-    if (result.bytes + size > maxTotal)
+    if (result.bytes - replaced + size > maxTotal)
       throw new Error("распакованные файлы больше общего лимита");
 
     const target = resolve(join(dest, rel));
@@ -188,8 +193,13 @@ export async function extractTar(
     await reader.skip(padded - size);
     await mkdir(dirname(target), { recursive: true });
     await writeFile(target, data);
-    result.files.push({ path: rel, size });
-    result.bytes += size;
+    if (at === undefined) {
+      seen.set(rel, result.files.length);
+      result.files.push({ path: rel, size });
+    } else {
+      result.files[at] = { path: rel, size };
+    }
+    result.bytes += size - replaced;
   }
 
   await reader.drain();

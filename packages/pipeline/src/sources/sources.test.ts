@@ -467,6 +467,23 @@ describe("распаковка tar", () => {
     expect(await readFile(join(tmp, "icons/long.svg"), "utf8")).toBe(data);
   });
 
+  it("повтор файла в архиве — один файл: побеждает последняя копия, как у tar", async () => {
+    const r = await run([
+      { name: "package/icons/a.svg", data: "<svg>1</svg>" },
+      { name: "package/LICENSE", data: "ISC" },
+      { name: "package/./icons/a.svg", data: "<svg>два</svg>" },
+    ]);
+    const size = Buffer.byteLength("<svg>два</svg>");
+    expect(r.files).toEqual([
+      { path: "icons/a.svg", size },
+      { path: "LICENSE", size: 3 },
+    ]);
+    expect(r.bytes).toBe(size + 3);
+    expect(await readFile(join(tmp, "icons/a.svg"), "utf8")).toBe(
+      "<svg>два</svg>",
+    );
+  });
+
   it.each([
     ["выход через ..", "package/../evil.txt"],
     ["выход вглубь через ..", "package/icons/../../evil.txt"],
@@ -685,6 +702,33 @@ describe("загрузка из npm", () => {
         pinned: "lock",
         svgCount: 2,
       });
+    });
+
+    it("повтор нужного файла в архиве не мешает найти набор в кэше", async () => {
+      // Как у Phosphor: в архиве дважды лежит package/./dist/index.umd.js.
+      const repeated = makeTgz([
+        ...entries,
+        { name: "package/./icons/a.svg", data: "<svg>a</svg>" },
+      ]);
+      const own = integrityOf(repeated);
+      const f1 = fakeFetch({
+        "https://registry.npmjs.org/demo-icons/latest": meta("1.0.0", own),
+        "https://registry.npmjs.org/demo-icons/1.0.0": meta("1.0.0", own),
+        [tarballUrl]: repeated,
+      });
+      const first = await fetchSource(
+        config,
+        {},
+        { cacheDir: cacheDir(), fetch: f1.fetch },
+      );
+      expect(first.report.svgCount).toBe(2);
+      const f2 = fakeFetch({});
+      const second = await fetchSource(config, first.lock, {
+        cacheDir: cacheDir(),
+        fetch: f2.fetch,
+      });
+      expect(f2.calls).toEqual([]);
+      expect(second.report.status).toBe("unchanged");
     });
 
     it("cachedSourceDir находит скачанный набор без сети, иначе подсказывает команду", async () => {
