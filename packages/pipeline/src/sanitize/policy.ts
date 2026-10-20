@@ -342,7 +342,10 @@ const FETCHING_FUNCTIONS = list(`
   src expression paint
 `);
 
-/** Есть ли символы ниже пробела (управляющие); проверка по кодам, без регулярных выражений. */
+/**
+ * Есть ли символы ниже пробела (управляющие); проверка по кодам, без регулярных выражений.
+ * Табуляция и переводы строк сюда не доходят: checkValue заменяет их пробелами.
+ */
 const hasControlChars = (value: string) => {
   for (let i = 0; i < value.length; i++) {
     const c = value.charCodeAt(i);
@@ -366,7 +369,9 @@ const compact = (value: string) => {
  * url() — только в атрибутах оформления, функции — только цветовые и функции transform.
  */
 export function checkValue(name: string, raw: string): ValueCheck {
-  const value = raw.trim();
+  // Табуляция и переводы строк — пробелы, как их читает браузер: в атрибут они попадают ссылками
+  // &#9; &#10; &#13;, в CSS из <style> — как есть. Схему ссылки это не прячет: compact их убирает.
+  const value = raw.replace(/[\t\n\r]/g, " ").trim();
   // Схема — в начале значения или после разделителя: `url(data:…)`, но не `id="metadata:1"`.
   if (/(?:^|[^a-z0-9+.-])(?:javascript|vbscript|data):/.test(compact(value))) {
     return { ok: false, dangerous: true, why: "опасная ссылка" };

@@ -441,7 +441,7 @@ describe("значения", () => {
     ["image-set(x 1x)", "dangerous"],
     ["paint(worklet)", "dangerous"],
     ["u\\72 l(https://evil.example/)", "dangerous"],
-    ["re&#9;d", "dangerous"],
+    ["red&#127;", "dangerous"],
     ["red&lt;", "dangerous"],
     ["var(--brand)", "unknown"],
     ["color-mix(in srgb, red, blue)", "unknown"],
@@ -487,6 +487,15 @@ describe("значения", () => {
   it("id с «metadata:» — не опасная ссылка", () => {
     expect(kept(svg(`<g id="metadata:1">${SQUARE}</g>`)).changed).toBe(false);
   });
+
+  it.each(["&#10;", "&#13;", "&#9;"])(
+    "%s внутри значения — пробел, а не признак подмены",
+    (ref) => {
+      const r = kept(svg(`<path d="M4 4h16${ref}v16H4z"/>`));
+      expect(r.out).toBe(svg(`<path d="M4 4h16 v16H4z"/>`));
+      expect(r.removals).toEqual([]);
+    },
+  );
 });
 
 describe("стили в атрибуты", () => {
@@ -506,6 +515,21 @@ describe("стили в атрибуты", () => {
     expect(r.out).toBe(
       svg(`<path d="M0 0" fill="red" opacity=".5" stroke-width="2"/>`),
     );
+  });
+
+  it("перевод строки внутри CSS-значения — тоже пробел", () => {
+    const sheet = kept(
+      svg(
+        `<style>.a { fill: rgb(0,\n0,\n0) }</style><path class="a" d="M0 0"/>`,
+      ),
+    );
+    expect(sheet.out).toBe(svg(`<path d="M0 0" fill="rgb(0, 0, 0)"/>`));
+    expect(dangerous(sheet)).toBe(0);
+    const inline = kept(
+      svg(`<path d="M0 0" style="fill: rgb(0,&#10;0,&#10;0)"/>`),
+    );
+    expect(inline.out).toBe(svg(`<path d="M0 0" fill="rgb(0, 0, 0)"/>`));
+    expect(dangerous(inline)).toBe(0);
   });
 
   it("свойство, которое не действует на элемент, отбрасывается", () => {
