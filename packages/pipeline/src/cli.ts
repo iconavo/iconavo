@@ -28,7 +28,7 @@ import {
 import { baseRevision } from "./sources/git.js";
 import { readLock, writeLock } from "./sources/lock.js";
 import { loadRegistry } from "./sources/registry.js";
-import { formatReport } from "./sources/report.js";
+import { fetchStop, formatReport } from "./sources/report.js";
 
 const USAGE = `Использование:
   pnpm sources fetch [id…]            скачать все наборы или указанные
@@ -105,6 +105,8 @@ try {
         lock = result.lock;
         await writeLock(lockPath, lock); // сохраняем сразу: следующий набор может упасть
         console.log(`${formatReport(result.report)}\n`);
+        // Имена не по правилу или конфликт имён: собирать набор нельзя (ADR-0001) — код выхода 1.
+        if (fetchStop(result.report).length > 0) failed++;
       } catch (e) {
         failed++;
         console.error(`${config.id}: ошибка — ${(e as Error).message}\n`);

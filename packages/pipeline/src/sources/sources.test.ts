@@ -19,12 +19,18 @@ import {
   sourceConfigSchema,
   wantedPath,
 } from "./config.js";
-import { cachedSourceDir, fetchSource, pinEntry } from "./fetch.js";
+import {
+  cachedSourceDir,
+  type FetchReport,
+  fetchSource,
+  pinEntry,
+} from "./fetch.js";
 import { assertCommitHash, fetchGit } from "./git.js";
 import { type LockFile, lockFileSchema, readLock, writeLock } from "./lock.js";
 import { checkNames, iconNameFromFile } from "./names.js";
 import { downloadAndExtract } from "./npm.js";
 import { loadRegistry } from "./registry.js";
+import { fetchStop, formatReport } from "./report.js";
 import { extractTar } from "./tar.js";
 import {
   chunked,
@@ -283,6 +289,46 @@ describe("правило имён", () => {
     expect(r.conflicts).toEqual([
       { name: "a", files: ["icons/A.svg", "icons/a.svg"] },
     ]);
+  });
+});
+
+describe("отчёт загрузки", () => {
+  const report = (files: string[]): FetchReport => ({
+    id: "demo",
+    name: "Demo",
+    sourceLabel: "demo-icons@1.0.0",
+    status: "unchanged",
+    pinned: "lock",
+    dir: "cache/demo/1.0.0",
+    svgCount: files.length,
+    folders: [{ path: "icons", count: files.length }],
+    extraFiles: ["LICENSE"],
+    missingExtraFiles: [],
+    bytes: 0,
+    license: { spdx: "MIT", fileFound: true },
+    names: checkNames(files, parse(baseConfig)),
+  });
+
+  it("имена по правилу — «СТОП» нет", () => {
+    const r = report(["icons/a.svg", "icons/b.svg"]);
+    expect(fetchStop(r)).toEqual([]);
+    expect(formatReport(r)).not.toContain("СТОП");
+  });
+
+  it("нарушение правила и конфликт имён — «СТОП»: набор нельзя собирать (ADR-0001)", () => {
+    const r = report([
+      "icons/ok.svg",
+      "icons/bad_name.svg",
+      "icons/A.svg",
+      "icons/a.svg",
+    ]);
+    expect(fetchStop(r)).toEqual([
+      "имена не по правилу ADR-0001: 1 — нужно правило переименования в sources/demo.ts",
+      "одно имя у нескольких файлов: 1 — нужно правило переименования в sources/demo.ts (ADR-0001)",
+    ]);
+    const text = formatReport(r);
+    expect(text).toContain("  СТОП: имена не по правилу ADR-0001: 1");
+    expect(text).toContain("  СТОП: одно имя у нескольких файлов: 1");
   });
 });
 
