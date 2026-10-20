@@ -8,6 +8,7 @@ import {
   MARKDOWN_LIMIT,
   needsApproval,
   nextChangelog,
+  releaseSection,
   secondsOf,
 } from "./journal.js";
 import { type HistoryChanges, noChanges } from "./merge.js";
@@ -154,6 +155,18 @@ describe("CHANGELOG.md", () => {
 Начало журнала · источник: 1.0.0 · иконок: 2.
 `);
     expect(changelogMarkdown("Demo", second.file)).toBe(md);
+  });
+
+  it("раздел одного выпуска — тот же, что в CHANGELOG.md: его берёт описание PR робота", () => {
+    const [top] = second.file.releases;
+    if (!top) throw new Error("нет выпуска");
+    const section = releaseSection(top);
+    expect(section.startsWith("## 20 октября 2026 · версия 22222222\n")).toBe(
+      true,
+    );
+    expect(changelogMarkdown("Demo", second.file)).toContain(
+      `\n\n${section}\n\n## `,
+    );
   });
 
   it("выпуск без перечисленных изменений объяснён; коммит — 7 символов", () => {

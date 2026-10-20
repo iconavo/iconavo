@@ -10,7 +10,13 @@ export default {
     name: "Lucide Contributors",
     url: "https://github.com/lucide-icons/lucide",
   },
-  source: { type: "git", repo: "https://github.com/lucide-icons/lucide" },
+  // Последняя версия — свежий выпуск (тег вида 1.60.0), как у Iconify, а не коммит в main автора:
+  // там бывают иконки, которые до выпуска ещё переименуют, а имена у нас не пропадают (ADR-0005).
+  source: {
+    type: "git",
+    repo: "https://github.com/lucide-icons/lucide",
+    latest: "tag",
+  },
   svgFolders: [{ path: "icons" }],
   palette: "monochrome",
   grid: 24,

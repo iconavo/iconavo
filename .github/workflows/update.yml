@@ -1,0 +1,434 @@
+name: Обновление наборов
+
+# Автообновление наборов (ADR-0019). Раз в сутки для каждого набора из sources/: закрепить последнюю
+# версию источника (pnpm sources pin) и, если она не та, что в main, скачать, собрать (pnpm data) и
+# открыть или обновить свой pull request из ветки auto/{набор}: sources.lock.json и data/{набор}/,
+# в описании — журнал, контроль качества и ссылки на отчёты. Решение — pnpm pr:
+# - «сольётся сам»: иконки только добавлены или изменены — автослияние, когда «CI» и «Данные» зелёные;
+# - «нужно одобрение»: скрытия, переименования, новые находки контроля, новая лицензия — ждёт владельца;
+# - «проблема»: сборка остановилась («СТОП»), например пустые иконки, — в PR только lock, слить нельзя.
+# PR открывает приложение GitHub организации iconavo: PR от стандартного токена ждут ручного
+# разрешения на проверки. Без приложения, вне main и на PR, которые меняют робота, — только показ.
+# Робот не трогает открытый PR, в ветке которого последний коммит — человека (её правят руками,
+# например подтверждают лицензию), и не предлагает снова версию, PR которой закрыли без слияния
+# (передумали — Reopen). Итог — на странице запуска, по строке на набор; отчёты — в артефактах.
+
+on:
+  schedule:
+    # 03:17 UTC: в начале часа очередь расписаний GitHub перегружена.
+    - cron: "17 3 * * *"
+  workflow_dispatch:
+    inputs:
+      sets:
+        description: Наборы через пробел; пусто — все
+        type: string
+        default: ""
+      revision:
+        description: Версия пакета или полный хэш коммита вместо последней — только для одного набора
+        type: string
+        default: ""
+      dry_run:
+        description: Только показать, что сделал бы робот
+        type: boolean
+        default: false
+      no_auto_merge:
+        description: Не включать автослияние — PR ждёт вас
+        type: boolean
+        default: false
+      refresh:
+        description: Переписать описание, метки и автослияние PR, даже если данные те же
+        type: boolean
+        default: false
+  # Проверка самого робота на PR, который его меняет: только показ.
+  pull_request:
+    paths:
+      - ".github/workflows/update.yml"
+      - "packages/pipeline/src/update/**"
+      - "packages/pipeline/src/cli.ts"
+
+permissions: {}
+
+# Запуски на одной ветке не пересекаются: следующий ждёт текущий.
+concurrency:
+  group: update-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  sets:
+    name: Наборы
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+    outputs:
+      sets: ${{ steps.list.outputs.sets }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - id: list
+        env:
+          REQUESTED: ${{ inputs.sets }}
+          REVISION: ${{ inputs.revision }}
+        run: |
+          set -f
+          # Наборы — конфиги sources/{id}.ts (ADR-0012).
+          all=$(find sources -maxdepth 1 -name '*.ts' ! -name '*.d.ts' -printf '%f\n' | sed 's/\.ts$//' | sort)
+          picked=${REQUESTED:-$all}
+          for id in $picked; do
+            if ! grep -qxF -- "$id" <<< "$all"; then
+              echo "::error::Набора «$id» нет. Есть: $(echo $all)"
+              exit 1
+            fi
+          done
+          if [ -n "$REVISION" ] && [ "$(wc -w <<< "$picked")" -ne 1 ]; then
+            echo "::error::Версию можно указать только для одного набора"
+            exit 1
+          fi
+          echo "sets=$(printf '%s\n' $picked | jq -Rcs 'split("\n") | map(select(. != ""))')" >> "$GITHUB_OUTPUT"
+
+  update:
+    name: Набор ${{ matrix.set }}
+    needs: sets
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      pull-requests: read
+      checks: read
+      statuses: read
+    strategy:
+      fail-fast: false
+      matrix:
+        set: ${{ fromJSON(needs.sets.outputs.sets) }}
+    defaults:
+      run:
+        shell: bash
+    env:
+      SET: ${{ matrix.set }}
+      BRANCH: auto/${{ matrix.set }}
+      # Владелец: ему — запросы на ревью PR, которые ждут человека.
+      REVIEWER: kyanakhmetov-cpu
+      REPORTS: .cache/reports/data
+      OUT: .cache/update/${{ matrix.set }}
+      RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+      GH_REPO: ${{ github.repository }}
+      # Чтение PR — токеном задачи; ветку и PR пишет только приложение (шаги ниже).
+      GH_TOKEN: ${{ github.token }}
+      APP_READY: ${{ secrets.UPDATE_APP_CLIENT_ID != '' && secrets.UPDATE_APP_PRIVATE_KEY != '' }}
+      # Только показать: так попросили, запуск не из main (PR, другая ветка) или приложения ещё нет.
+      DRY_RUN: ${{ inputs.dry_run == true || github.ref != 'refs/heads/main' || secrets.UPDATE_APP_CLIENT_ID == '' || secrets.UPDATE_APP_PRIVATE_KEY == '' }}
+      # Повторный запуск задачи или refresh: описание, метки и автослияние переписываются и без новых данных.
+      FORCE: ${{ inputs.refresh == true || github.run_attempt != '1' }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # В git не остаётся токена задачи: ветку отправляет приложение.
+          persist-credentials: false
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+
+      - name: Последняя версия источника
+        id: pin
+        env:
+          REVISION: ${{ inputs.revision }}
+        run: |
+          entry() { jq -c --arg s "$SET" '.[$s] // empty' sources.lock.json; }
+          main=$(entry)
+          # Без версии — последняя: npm — latest, git — HEAD или свежий тег выпуска (ADR-0012).
+          pnpm sources pin "$SET" ${REVISION:+"$REVISION"}
+          latest=$(entry)
+          echo "revision=$(jq -r --arg s "$SET" '.[$s] | .version // .commit' sources.lock.json)" >> "$GITHUB_OUTPUT"
+          if [ "$main" = "$latest" ]; then echo "changed=false"; else echo "changed=true"; fi >> "$GITHUB_OUTPUT"
+
+      - name: PR набора
+        id: state
+        env:
+          CHANGED: ${{ steps.pin.outputs.changed }}
+          # Как prMarker в packages/pipeline/src/update/pr.ts.
+          MARKER: iconavo-bot:${{ matrix.set }}@${{ steps.pin.outputs.revision }}
+        run: |
+          # Только PR из веток этого репозитория: одноимённая ветка форка — не наша.
+          prs=$(gh pr list --head "$BRANCH" --state all --limit 30 \
+            --json number,state,body,isCrossRepository,labels,statusCheckRollup \
+            --jq '[.[] | select(.isCrossRepository | not)]')
+          pr=$(jq -c '[.[] | select(.state == "OPEN")][0] // {}' <<< "$prs")
+          open=$(jq -r '.number // empty' <<< "$pr")
+          rejected=$(jq -r --arg m "$MARKER" \
+            '[.[] | select(.state == "CLOSED" and (.body | contains($m)))][0].number // empty' <<< "$prs")
+          red=$(jq -r '[.statusCheckRollup[]? | select(.conclusion == "FAILURE" or .conclusion == "TIMED_OUT" or .conclusion == "STARTUP_FAILURE")] | length > 0' <<< "$pr")
+          flagged=$(jq -r 'any(.labels[]?; .name == "проблема")' <<< "$pr")
+          remote=$(git ls-remote origin "refs/heads/$BRANCH" | cut -f1)
+          own=false
+          if [ -n "$open" ] && [ -n "$remote" ]; then
+            git fetch --quiet --no-tags --depth=1 origin "+refs/heads/$BRANCH:refs/remotes/origin/$BRANCH"
+            # Последний коммит не робота — ветку правят руками: робот её не трогает.
+            case "$(git log -1 --format=%an "origin/$BRANCH")" in *"[bot]") own=true ;; esac
+          fi
+          if [ "$CHANGED" = true ]; then
+            if [ -n "$open" ] && [ "$own" = false ]; then action=hands-off
+            elif [ -z "$open" ] && [ -n "$rejected" ]; then action=rejected
+            else action=build
+            fi
+          elif [ -n "$open" ] && [ "$own" = true ]; then action=close
+          else action=none
+          fi
+          {
+            echo "action=$action"; echo "open=$open"; echo "rejected=$rejected"
+            echo "remote=$remote"; echo "red=$red"; echo "flagged=$flagged"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Скачать и собрать
+        id: build
+        if: steps.state.outputs.action == 'build'
+        env:
+          PENDING: ${{ steps.state.outputs.open != '' }}
+        run: |
+          journal="data/$SET/changelog.json"
+          if [ "$PENDING" = true ] && git cat-file -e "origin/$BRANCH:$journal" 2> /dev/null; then
+            # Ожидающий выпуск сохраняет дату (ADR-0018): pnpm data берёт её из журнала на диске.
+            git show "origin/$BRANCH:$journal" > "$journal"
+          fi
+          # «СТОП» загрузки или сборки — не сбой робота: решение и PR — ниже.
+          pnpm sources fetch "$SET" || echo "::warning::pnpm sources fetch $SET — код $?"
+          pnpm data "$SET" || echo "::warning::pnpm data $SET — код $?"
+          summary="$REPORTS/summary.json"
+          if ! jq -e --arg s "$SET" 'any(.sets[]; .id == $s)' "$summary" > /dev/null 2>&1; then
+            echo "::error::$SET не собрался — сбой робота или сети, PR не трогаем; подробности выше"
+            exit 1
+          fi
+          if [ "$(jq -r --arg s "$SET" '.sets[] | select(.id == $s) | .written' "$summary")" != true ] \
+            && git cat-file -e "HEAD:data/$SET" 2> /dev/null; then
+            # Набор со «СТОП» файлы не пишет: в PR только lock, журнал возвращается к версии main.
+            git checkout HEAD -- "data/$SET"
+          fi
+          git add -- sources.lock.json
+          # У нового набора папки ещё нет, если его сборка остановилась.
+          if [ -e "data/$SET" ]; then git add -- "data/$SET"; fi
+          same=false
+          if [ "$PENDING" = true ] \
+            && [ "$(git show "origin/$BRANCH:sources.lock.json" | jq -c --arg s "$SET" '.[$s]')" = "$(jq -c --arg s "$SET" '.[$s]' sources.lock.json)" ] \
+            && git diff --cached --quiet "origin/$BRANCH" -- "data/$SET"; then
+            same=true
+          fi
+          publish=false
+          if [ "$same" = false ] || [ "$FORCE" = true ]; then publish=true; fi
+          echo "same=$same" >> "$GITHUB_OUTPUT"
+          echo "publish=$publish" >> "$GITHUB_OUTPUT"
+
+      - name: Отчёты для PR
+        id: pages
+        if: steps.build.outputs.publish == 'true'
+        run: |
+          # Страница без архива открывается в браузере, её имя — имя артефакта: набор в начале.
+          # Копии — вне .cache: скрытые папки upload-artifact пропускает.
+          pages="$RUNNER_TEMP/pages"
+          all="$RUNNER_TEMP/reports/$SET"
+          mkdir -p "$pages" "$all"
+          for page in changelog qc metadata; do cp "$REPORTS/$page.html" "$pages/$SET-$page.html"; done
+          cp -R "$REPORTS/." "$all/"
+          echo "pages=$pages" >> "$GITHUB_OUTPUT"
+          echo "all=$all" >> "$GITHUB_OUTPUT"
+      - name: Отчёт — что изменилось
+        id: changelog
+        if: steps.build.outputs.publish == 'true'
+        uses: actions/upload-artifact@v7
+        with:
+          path: ${{ steps.pages.outputs.pages }}/${{ matrix.set }}-changelog.html
+          archive: false
+          overwrite: true
+      - name: Отчёт — контроль качества
+        id: qc
+        if: steps.build.outputs.publish == 'true'
+        uses: actions/upload-artifact@v7
+        with:
+          path: ${{ steps.pages.outputs.pages }}/${{ matrix.set }}-qc.html
+          archive: false
+          overwrite: true
+      - name: Отчёт — лицензия и теги
+        id: metadata
+        if: steps.build.outputs.publish == 'true'
+        uses: actions/upload-artifact@v7
+        with:
+          path: ${{ steps.pages.outputs.pages }}/${{ matrix.set }}-metadata.html
+          archive: false
+          overwrite: true
+      - name: Отчёт — все страницы
+        id: reports
+        if: steps.build.outputs.publish == 'true'
+        uses: actions/upload-artifact@v7
+        with:
+          name: ${{ matrix.set }}-reports
+          path: ${{ steps.pages.outputs.all }}
+          overwrite: true
+
+      - name: Решение и текст PR
+        if: steps.state.outputs.action == 'build'
+        env:
+          CHANGELOG_URL: ${{ steps.changelog.outputs.artifact-url }}
+          QC_URL: ${{ steps.qc.outputs.artifact-url }}
+          METADATA_URL: ${{ steps.metadata.outputs.artifact-url }}
+          REPORTS_URL: ${{ steps.reports.outputs.artifact-url }}
+          NO_AUTO_MERGE: ${{ inputs.no_auto_merge == true }}
+        run: |
+          args=(--run-url="$RUN_URL")
+          if [ -n "$CHANGELOG_URL" ]; then args+=(--changelog-url="$CHANGELOG_URL"); fi
+          if [ -n "$QC_URL" ]; then args+=(--qc-url="$QC_URL"); fi
+          if [ -n "$METADATA_URL" ]; then args+=(--metadata-url="$METADATA_URL"); fi
+          if [ -n "$REPORTS_URL" ]; then args+=(--reports-url="$REPORTS_URL"); fi
+          if [ "$NO_AUTO_MERGE" = true ]; then args+=(--no-auto-merge); fi
+          pnpm pr "$SET" "${args[@]}"
+
+      - name: Что сделал бы робот
+        if: env.DRY_RUN == 'true' && steps.state.outputs.action == 'build'
+        run: |
+          {
+            echo "#### $SET — только показ"
+            jq -r '"\(.verdict): \(.title)"' "$OUT/pr.json"
+            echo; echo '```'; git diff --cached --stat; echo '```'
+            echo; echo "<details><summary>Описание PR</summary>"; echo
+            cat "$OUT/body.md"
+            echo; echo "</details>"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Токен приложения
+        id: app
+        if: >-
+          env.DRY_RUN != 'true' && (steps.state.outputs.action == 'close'
+          || steps.build.outputs.publish == 'true'
+          || (steps.build.outputs.same == 'true' && steps.state.outputs.red == 'true' && steps.state.outputs.flagged != 'true'))
+        uses: actions/create-github-app-token@v3
+        with:
+          client-id: ${{ secrets.UPDATE_APP_CLIENT_ID }}
+          private-key: ${{ secrets.UPDATE_APP_PRIVATE_KEY }}
+          # Только нужное: ветка, PR и метки. workflows — ветка от свежего main может нести изменения
+          # .github/workflows, без этого права GitHub отклонит её отправку.
+          permission-contents: write
+          permission-pull-requests: write
+          permission-issues: write
+          permission-workflows: write
+
+      - name: Закрыть ненужный PR
+        if: steps.app.outcome == 'success' && steps.state.outputs.action == 'close'
+        env:
+          GH_TOKEN: ${{ steps.app.outputs.token }}
+          OPEN: ${{ steps.state.outputs.open }}
+        run: gh pr close "$OPEN" --delete-branch --comment "В main уже последняя версия источника — этот PR больше не нужен."
+
+      - name: Ветка и PR
+        id: publish
+        if: steps.app.outcome == 'success' && steps.build.outputs.publish == 'true'
+        env:
+          GH_TOKEN: ${{ steps.app.outputs.token }}
+          SLUG: ${{ steps.app.outputs.app-slug }}
+          OPEN: ${{ steps.state.outputs.open }}
+          REMOTE: ${{ steps.state.outputs.remote }}
+          SAME: ${{ steps.build.outputs.same }}
+        run: |
+          title=$(jq -r .title "$OUT/pr.json")
+          labels=$(jq -r '.labels | join(",")' "$OUT/pr.json")
+          auto=$(jq -r .autoMerge "$OUT/pr.json")
+
+          # Метки одни на все наборы; --force обновляет цвет и описание, если метка уже есть.
+          gh label create "автообновление" --force --color 1D76DB --description "PR робота обновления наборов (ADR-0019)"
+          gh label create "нужно одобрение" --force --color FBCA04 --description "Ждёт владельца: скрытия, переименования, новые находки, лицензия"
+          gh label create "проблема" --force --color D93F0B --description "Сборка остановилась или проверки не прошли: нужен человек"
+
+          number=$OPEN
+          sha=$REMOTE
+          if [ "$SAME" != true ]; then
+            # Автослияние — выключить до отправки: GitHub его не снимает, а новый коммит может требовать одобрения.
+            if [ -n "$OPEN" ]; then gh pr merge "$OPEN" --disable-auto > /dev/null 2>&1 || true; fi
+            bot="$SLUG[bot]"
+            id=$(gh api "/users/$bot" --jq .id)
+            git switch --quiet -c "$BRANCH"
+            git -c user.name="$bot" -c user.email="$id+$bot@users.noreply.github.com" commit --quiet -m "$title"
+            # Ветка — свежий main и один коммит робота. Lease — с тем, что видели выше: если кто-то
+            # успел отправить в ветку своё, отправка не пройдёт и ничего не затрёт.
+            git push --quiet --force-with-lease="refs/heads/$BRANCH:$REMOTE" \
+              "https://x-access-token:$GH_TOKEN@github.com/$GITHUB_REPOSITORY.git" "HEAD:refs/heads/$BRANCH"
+            sha=$(git rev-parse HEAD)
+          fi
+
+          if [ -z "$number" ]; then
+            url=$(gh pr create --base main --head "$BRANCH" --title "$title" --body-file "$OUT/body.md" --label "$labels")
+            number=${url##*/}
+          else
+            gh pr edit "$number" --title "$title" --body-file "$OUT/body.md" --add-label "$labels"
+            for label in "нужно одобрение" "проблема"; do
+              case ",$labels," in
+                *",$label,"*) ;;
+                *) gh pr edit "$number" --remove-label "$label" > /dev/null 2>&1 || true ;;
+              esac
+            done
+          fi
+          echo "number=$number" >> "$GITHUB_OUTPUT"
+
+          if [ "$auto" = true ]; then
+            # Сольётся сам, когда пройдут обязательные «CI» и «Данные». Сразу после создания PR GitHub
+            # иногда ещё не готов принять автослияние — тогда повтор.
+            for attempt in 1 2 3; do
+              if gh pr merge "$number" --auto --squash --match-head-commit "$sha" \
+                --subject "$title (#$number)" --body "$(jq -r .commitBody "$OUT/pr.json")"; then
+                break
+              fi
+              if [ "$attempt" = 3 ]; then
+                echo "::error::Автослияние PR #$number не включилось"
+                exit 1
+              fi
+              sleep 20
+            done
+          else
+            # PR ждёт человека: автослияния нет, владельцу — запрос на ревью.
+            gh pr merge "$number" --disable-auto > /dev/null 2>&1 || true
+            gh pr edit "$number" --add-reviewer "$REVIEWER"
+          fi
+
+      - name: Проверки PR не прошли
+        if: steps.app.outcome == 'success' && steps.build.outputs.same == 'true' && steps.state.outputs.red == 'true' && steps.state.outputs.flagged != 'true'
+        env:
+          GH_TOKEN: ${{ steps.app.outputs.token }}
+          OPEN: ${{ steps.state.outputs.open }}
+        run: |
+          # С красными проверками автослияние ждёт вечно, а писем о проверках PR робота никто не получает.
+          gh pr edit "$OPEN" --add-label "проблема" --add-reviewer "$REVIEWER"
+          gh pr comment "$OPEN" --body "Проверки этого PR не прошли — сам он не сольётся. Откройте вкладку Checks или попросите Claude разобраться."
+
+      - name: Итог
+        if: always()
+        env:
+          ACTION: ${{ steps.state.outputs.action }}
+          REVISION: ${{ steps.pin.outputs.revision }}
+          OPEN: ${{ steps.state.outputs.open }}
+          REJECTED: ${{ steps.state.outputs.rejected }}
+          SAME: ${{ steps.build.outputs.same }}
+          NUMBER: ${{ steps.publish.outputs.number }}
+          STATUS: ${{ job.status }}
+        run: |
+          link() { echo "[PR #$1]($GITHUB_SERVER_URL/$GITHUB_REPOSITORY/pull/$1)"; }
+          short=$REVISION
+          if [[ $short =~ ^[0-9a-f]{40}$ ]]; then short=${short:0:7}; fi
+          what=""
+          if [ -f "$OUT/pr.json" ]; then what=$(jq -r '"\(.verdict) — \(.title)"' "$OUT/pr.json"); fi
+          case "$ACTION" in
+            none) line="новой версии нет, в main последняя ($short)" ;;
+            close) line="$(link "$OPEN") больше не нужен: в main уже последняя версия" ;;
+            hands-off) line="$(link "$OPEN") правят руками — робот его не трогает" ;;
+            rejected) line="версия $short отклонена: $(link "$REJECTED") закрыт без слияния (предложить снова — Reopen)" ;;
+            build)
+              if [ -n "$NUMBER" ]; then line="$(link "$NUMBER"): $what"
+              elif [ "$SAME" = true ]; then line="$(link "$OPEN") без изменений"
+              else line="$what"
+              fi ;;
+            *) line="до решения не дошло" ;;
+          esac
+          if [ "$DRY_RUN" = true ] && [ "$ACTION" != none ]; then line="только показ — $line"; fi
+          if [ "$STATUS" != success ]; then line="**сбой** — $line; подробности в шагах выше"; fi
+          echo "- **$SET**: $line" >> "$GITHUB_STEP_SUMMARY"
+          if [ "$APP_READY" != true ]; then
+            echo "::warning::Приложение GitHub для робота не настроено (секреты UPDATE_APP_CLIENT_ID и UPDATE_APP_PRIVATE_KEY): только показ"
+          fi

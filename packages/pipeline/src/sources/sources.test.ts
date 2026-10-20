@@ -25,7 +25,16 @@ import {
   fetchSource,
   pinEntry,
 } from "./fetch.js";
-import { assertCommitHash, fetchGit } from "./git.js";
+import {
+  assertCommitHash,
+  fetchGit,
+  isReleaseTag,
+  latestReleaseTag,
+  parseRemoteTags,
+  releaseTagsByCommit,
+  remoteTags,
+  resolveGitTag,
+} from "./git.js";
 import { type LockFile, lockFileSchema, readLock, writeLock } from "./lock.js";
 import { checkNames, iconNameFromFile } from "./names.js";
 import { downloadAndExtract } from "./npm.js";
@@ -39,6 +48,7 @@ import {
   makeTar,
   makeTgz,
 } from "./tar-builder.testing.js";
+import { compareVersions, parseVersion } from "./version.js";
 
 let tmp: string;
 beforeEach(async () => {
@@ -128,8 +138,36 @@ describe("конфиг набора", () => {
       "витрина больше шести",
       { ...baseConfig, samples: ["a", "b", "c", "d", "e", "f", "g"] },
     ],
+    [
+      "latest у пакета npm",
+      {
+        ...baseConfig,
+        source: { type: "npm", package: "demo-icons", latest: "tag" },
+      },
+    ],
+    [
+      "неизвестный latest у git",
+      {
+        ...baseConfig,
+        source: { type: "git", repo: "https://x.test/a", latest: "branch" },
+      },
+    ],
   ])("отклоняет: %s", (_name, config) => {
     expect(sourceConfigSchema.safeParse(config).success).toBe(false);
+  });
+
+  it("git-источник: последняя версия — по тегам выпусков или по HEAD (по умолчанию)", () => {
+    const git = (extra: object) =>
+      parse({
+        ...baseConfig,
+        source: { type: "git", repo: "https://x.test/a", ...extra },
+      }).source;
+    expect(git({ latest: "tag" })).toEqual({
+      type: "git",
+      repo: "https://x.test/a",
+      latest: "tag",
+    });
+    expect(git({})).toEqual({ type: "git", repo: "https://x.test/a" });
   });
 
   it("принимает метаданные, подтверждённую лицензию, варианты и витрину", () => {
@@ -810,6 +848,42 @@ describe("загрузка из git", () => {
     );
   });
 
+  it("последний выпуск — свежий тег вида 1.2.3: коммит аннотированного тега, а не объект тега", async () => {
+    const { dir, commit: first } = await makeRepo();
+    await writeFile(join(dir, "icons/b.svg"), "<svg>b</svg>");
+    sh(dir, "add", ".");
+    sh(dir, "commit", "-q", "-m", "second");
+    const second = sh(dir, "rev-parse", "HEAD");
+    await writeFile(join(dir, "icons/c.svg"), "<svg>c</svg>");
+    sh(dir, "add", ".");
+    sh(dir, "commit", "-q", "-m", "third");
+    const third = sh(dir, "rev-parse", "HEAD");
+    sh(dir, "tag", "1.9.0", first);
+    // Аннотированный тег: у него свой объект, ls-remote показывает и его, и коммит (^{}).
+    sh(dir, "tag", "-a", "-m", "release", "v1.10.0", second);
+    // Не выпуски: тег другого пакета, предварительная версия.
+    sh(dir, "tag", "@lucide/lab@9.9.9", third);
+    sh(dir, "tag", "2.0.0-rc.1", third);
+    const tags = await remoteTags(dir);
+    expect(tags.find((t) => t.name === "v1.10.0")?.commit).toBe(second);
+    const latest = await resolveGitTag(dir);
+    expect(latest).toEqual({ name: "v1.10.0", commit: second });
+    expect(releaseTagsByCommit(tags)).toEqual(
+      new Map([
+        [second, "v1.10.0"],
+        [first, "1.9.0"],
+      ]),
+    );
+  });
+
+  it("репозиторий без тегов выпусков — понятная ошибка", async () => {
+    const { dir } = await makeRepo();
+    sh(dir, "tag", "nightly");
+    await expect(resolveGitTag(dir)).rejects.toThrow(
+      /нет тегов выпусков вида 1\.2\.3/,
+    );
+  });
+
   it("ветка или короткий хэш вместо коммита отклоняются", () => {
     expect(() => assertCommitHash("main")).toThrow(/не хэш коммита/);
     expect(() => assertCommitHash("abc1234")).toThrow(/не хэш коммита/);
@@ -824,6 +898,59 @@ describe("загрузка из git", () => {
         wanted: () => true,
       }),
     ).rejects.toThrow(/git fetch/);
+  });
+});
+
+describe("версии и теги выпусков", () => {
+  it("номер версии разбирается по частям и сравнивается как числа", () => {
+    expect(parseVersion("v1.60.0")).toEqual([1, 60, 0]);
+    expect(parseVersion("3.49.0")).toEqual([3, 49, 0]);
+    expect(parseVersion("1.0.0-rc.1")).toBeUndefined();
+    expect(parseVersion("@lucide/lab@1.0.0")).toBeUndefined();
+    const cmp = (a: string, b: string) =>
+      compareVersions(parseVersion(a) ?? [], parseVersion(b) ?? []);
+    expect(cmp("1.10.0", "1.9.0")).toBe(1);
+    expect(cmp("3.49.0", "3.50.0")).toBe(-1);
+    expect(cmp("1.0", "1.0.0")).toBe(0);
+  });
+
+  it("вывод ls-remote: строка ^{} аннотированного тега побеждает, выпуски — только X.Y.Z", () => {
+    const a = "a".repeat(40);
+    const b = "b".repeat(40);
+    const c = "c".repeat(40);
+    const object = "d".repeat(40);
+    const tags = parseRemoteTags(
+      [
+        `${a}\trefs/tags/1.9.0`,
+        `${object}\trefs/tags/v1.10.0`,
+        `${b}\trefs/tags/v1.10.0^{}`,
+        `${c}\trefs/tags/@lucide/lab@9.9.9`,
+        `${c}\trefs/tags/2.0.0-rc.1`,
+        `${c}\trefs/heads/main`,
+        "",
+      ].join("\n"),
+    );
+    expect(tags).toEqual([
+      { name: "1.9.0", commit: a },
+      { name: "v1.10.0", commit: b },
+      { name: "@lucide/lab@9.9.9", commit: c },
+      { name: "2.0.0-rc.1", commit: c },
+    ]);
+    expect(tags.filter((t) => isReleaseTag(t.name)).map((t) => t.name)).toEqual(
+      ["1.9.0", "v1.10.0"],
+    );
+    expect(latestReleaseTag(tags)).toEqual({ name: "v1.10.0", commit: b });
+    expect(latestReleaseTag([])).toBeUndefined();
+  });
+
+  it("у коммита с двумя тегами выпуска имя — у свежего", () => {
+    const a = "a".repeat(40);
+    expect(
+      releaseTagsByCommit([
+        { name: "1.0.0", commit: a },
+        { name: "1.0.1", commit: a },
+      ]),
+    ).toEqual(new Map([[a, "1.0.1"]]));
   });
 });
 

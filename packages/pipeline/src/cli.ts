@@ -1,5 +1,5 @@
 // Команды конвейера: pnpm sources fetch [id…] | pnpm sources pin <id> [версия|коммит] | pnpm sanitize [id…]
-// | pnpm normalize [id…] | pnpm data [id…] [--accept-changes]
+// | pnpm normalize [id…] | pnpm data [id…] [--accept-changes] | pnpm pr <id> [--run-url=… …] [--no-auto-merge]
 import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import { basename, join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -25,10 +25,23 @@ import {
   pinEntry,
   sourceLabel,
 } from "./sources/fetch.js";
-import { baseRevision } from "./sources/git.js";
-import { readLock, writeLock } from "./sources/lock.js";
+import {
+  baseRevision,
+  gitShow,
+  releaseTagsByCommit,
+  remoteTags,
+} from "./sources/git.js";
+import { lockFileSchema, readLock, writeLock } from "./sources/lock.js";
 import { loadRegistry } from "./sources/registry.js";
 import { fetchStop, formatReport } from "./sources/report.js";
+import { type PrLinks, prText } from "./update/pr.js";
+import {
+  buildSummarySchema,
+  type SetSummary,
+  SUMMARY_FILE,
+  setSummary,
+  summaryText,
+} from "./update/summary.js";
 
 const USAGE = `Использование:
   pnpm sources fetch [id…]            скачать все наборы или указанные
@@ -41,7 +54,21 @@ const USAGE = `Использование:
                                       страницы qc.html, metadata.html и changelog.html
   pnpm data [id…] --accept-changes    то же, но изменения иконок без новой версии источника
                                       приняты: вы проверили их в отчёте qc.html. Сравнение идёт
-                                      с версией в main: на ветке флаг нужен до слияния`;
+                                      с версией в main: на ветке флаг нужен до слияния
+  pnpm pr <id>                        решение и текст PR робота обновления по сводке последней
+                                      сборки (summary.json): .cache/update/{id}/pr.json и body.md
+      --run-url=… --changelog-url=… --qc-url=… --metadata-url=… --reports-url=…
+                                      ссылки на запуск и отчёты в описании PR (https://)
+      --no-auto-merge                 не включать автослияние: PR ждёт владельца`;
+
+/** Флаги pnpm pr со ссылками: флаг → поле PrLinks. */
+const LINK_FLAGS: Record<string, keyof PrLinks> = {
+  "--run-url": "run",
+  "--changelog-url": "changelog",
+  "--qc-url": "qc",
+  "--metadata-url": "metadata",
+  "--reports-url": "reports",
+};
 
 // packages/pipeline/dist/cli.js -> корень репозитория
 const root = fileURLToPath(new URL("../../../", import.meta.url));
@@ -76,10 +103,20 @@ function usageError(message: string): never {
   process.exit(2);
 }
 
+// У каждой команды свои флаги; ссылки pnpm pr — в виде --флаг=https://…
+const links: PrLinks = {};
 for (const flag of flags) {
-  if (command !== "data" || flag !== "--accept-changes") {
-    usageError(`Неизвестный флаг «${flag}».`);
+  const eq = flag.indexOf("=");
+  const name = eq === -1 ? flag : flag.slice(0, eq);
+  const value = eq === -1 ? undefined : flag.slice(eq + 1);
+  const link = LINK_FLAGS[name];
+  if (command === "data" && flag === "--accept-changes") continue;
+  if (command === "pr" && flag === "--no-auto-merge") continue;
+  if (command === "pr" && link && value?.startsWith("https://")) {
+    links[link] = value;
+    continue;
   }
+  usageError(`Неизвестный флаг «${flag}».`);
 }
 const acceptChanges = flags.includes("--accept-changes");
 
@@ -210,6 +247,9 @@ try {
     // Одно время на весь запуск — дата новых выпусков журнала.
     const now = Math.floor(Date.now() / 1000);
     const reports: SetBuildReport[] = [];
+    // Сводка для робота обновления (ADR-0019); наборы, которые не собрались вовсе, — отдельно.
+    const summaries: SetSummary[] = [];
+    const errors: { id: string; message: string }[] = [];
     let failed = 0;
     for (const config of pick(args)) {
       try {
@@ -226,6 +266,9 @@ try {
         // Набор со «СТОП» свои файлы не перезаписывает.
         const written = await writeSetData(dataDir, report);
         if (written === undefined) failed++;
+        summaries.push(
+          setSummary(config, report, entry, written !== undefined),
+        );
         const seconds = ((performance.now() - started) / 1000).toFixed(1);
         const result =
           written === undefined
@@ -238,6 +281,7 @@ try {
         );
       } catch (e) {
         failed++;
+        errors.push({ id: config.id, message: (e as Error).message });
         console.error(`${config.id}: ошибка — ${(e as Error).message}\n`);
       }
     }
@@ -257,13 +301,81 @@ try {
       await writeFile(join(galleryDir, file.name), file.html, "utf8");
       files++;
     }
+    await writeFile(
+      join(galleryDir, SUMMARY_FILE),
+      summaryText({ base: base.label, sets: summaries, errors }),
+      "utf8",
+    );
     console.log(
       `Галерея (файлов: ${files}): ${join(galleryDir, "index.html")}`,
     );
     console.log(`Контроль качества: ${join(galleryDir, "qc.html")}`);
     console.log(`Метаданные и лицензии: ${join(galleryDir, "metadata.html")}`);
     console.log(`Журнал изменений: ${join(galleryDir, "changelog.html")}`);
+    console.log(
+      `Сводка для робота обновления: ${join(galleryDir, SUMMARY_FILE)}`,
+    );
     process.exit(failed > 0 ? 1 : 0);
+  } else if (command === "pr") {
+    const [id, ...rest] = args;
+    if (!id || rest.length > 0) usageError("Нужно указать один набор.");
+    const [config] = pick([id]);
+    if (!config) usageError(`Набор «${id}» не найден.`);
+    const summaryPath = join(reportsDir, "data", SUMMARY_FILE);
+    const text = await readFile(summaryPath, "utf8").catch(() => {
+      throw new Error(`нет сводки ${summaryPath} — запустите pnpm data ${id}`);
+    });
+    const summary = buildSummarySchema.parse(JSON.parse(text));
+    const error = summary.errors.find((e) => e.id === id);
+    if (error) throw new Error(`${id} не собрался: ${error.message}`);
+    const set = summary.sets.find((s) => s.id === id);
+    if (!set) {
+      throw new Error(`в сводке нет набора ${id} — запустите pnpm data ${id}`);
+    }
+    const lock = await readLock(lockPath);
+    if (JSON.stringify(lock[id]) !== JSON.stringify(set.entry)) {
+      throw new Error(
+        `сводка собрана не для той версии ${id}, что в sources.lock.json, — запустите pnpm data ${id}`,
+      );
+    }
+    // Версия до обновления — запись в sources.lock.json в main (ADR-0018).
+    const base = await baseRevision(root);
+    const mainLock = await gitShow(base.commit, "sources.lock.json", root);
+    const before =
+      mainLock === undefined
+        ? undefined
+        : lockFileSchema.parse(JSON.parse(mainLock))[id];
+    // Имена выпусков git-источника на тегах; сеть недоступна — версии останутся хэшами.
+    let tags: Map<string, string> | undefined;
+    if (config.source.type === "git" && config.source.latest === "tag") {
+      try {
+        tags = releaseTagsByCommit(await remoteTags(config.source.repo));
+      } catch (e) {
+        console.warn(
+          `${id}: теги не прочитаны, версии будут хэшами — ${(e as Error).message}`,
+        );
+      }
+    }
+    const pr = prText({
+      config,
+      summary: set,
+      before,
+      tags,
+      links,
+      autoMerge: !flags.includes("--no-auto-merge"),
+    });
+    const outDir = join(root, ".cache", "update", id);
+    await mkdir(outDir, { recursive: true });
+    const { body, ...meta } = pr;
+    await writeFile(
+      join(outDir, "pr.json"),
+      `${JSON.stringify(meta, null, 2)}\n`,
+      "utf8",
+    );
+    await writeFile(join(outDir, "body.md"), body, "utf8");
+    console.log(`${id}: ${pr.verdict} — ${pr.title}`);
+    for (const reason of pr.reasons) console.log(`  ${reason}`);
+    console.log(`Описание PR: ${join(outDir, "body.md")}`);
   } else {
     usageError(
       command ? `Неизвестная команда «${command}».` : "Нужна команда.",

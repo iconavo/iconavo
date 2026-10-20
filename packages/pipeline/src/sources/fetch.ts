@@ -20,7 +20,12 @@ import {
   type SourceConfig,
   wantedPath,
 } from "./config.js";
-import { assertCommitHash, fetchGit, resolveGitHead } from "./git.js";
+import {
+  assertCommitHash,
+  fetchGit,
+  resolveGitHead,
+  resolveGitTag,
+} from "./git.js";
 import type { LockEntry, LockFile } from "./lock.js";
 import { checkNames, type NameCheck } from "./names.js";
 import { downloadAndExtract, type FetchFn, resolveNpm } from "./npm.js";
@@ -87,7 +92,11 @@ export async function pinEntry(
     );
     return { type: "npm", version: v.version, integrity: v.integrity };
   }
-  const commit = requested ?? (await resolveGitHead(config.source.repo));
+  const commit =
+    requested ??
+    (config.source.latest === "tag"
+      ? (await resolveGitTag(config.source.repo)).commit
+      : await resolveGitHead(config.source.repo));
   assertCommitHash(commit);
   return { type: "git", commit };
 }
