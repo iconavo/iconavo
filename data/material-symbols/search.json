@@ -42294,13 +42294,6 @@
         "clear"
       ]
     },
-    "format-color": {
-      "fingerprint": "82e28d7cef63",
-      "tags": [
-        "format",
-        "color"
-      ]
-    },
     "format-color-fill": {
       "fingerprint": "82e28d7cef63",
       "tags": [
@@ -42355,20 +42348,6 @@
         "format",
         "color",
         "reset"
-      ]
-    },
-    "format-color-rounded": {
-      "fingerprint": "a0c7657793b4",
-      "tags": [
-        "format",
-        "color"
-      ]
-    },
-    "format-color-sharp": {
-      "fingerprint": "bd7f714278e7",
-      "tags": [
-        "format",
-        "color"
       ]
     },
     "format-color-text": {
