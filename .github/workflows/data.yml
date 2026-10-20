@@ -40,14 +40,30 @@ jobs:
           node-version: 24
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      # Скачанные наборы — по версиям из lock, конфигам и коду загрузчика (правила скачивания живут
-      # в нём: иначе кэш со старыми правилами качался бы заново при каждом запуске, но не сохранялся).
-      # Без restore-keys: чужой кэш с другими папками набора не нужен.
+      # Скачанные наборы — по коду загрузчика, версиям из lock и конфигам (правила скачивания живут
+      # в них: иначе кэш со старыми правилами качался бы заново при каждом запуске, но не сохранялся).
+      # Точного кэша нет — берётся последний с тем же кодом загрузчика: загрузчик сам скачает заново
+      # только наборы, у которых сменились версия или правила, а остальные не перекачиваются.
+      # Сменился код загрузчика — старый кэш не берётся: файлы могли лечь по-другому.
       - uses: actions/cache@v6
         with:
           path: .cache/sources
-          key: sources-${{ hashFiles('sources.lock.json', 'sources/*.ts', 'packages/pipeline/src/sources/*.ts') }}
+          key: sources-${{ hashFiles('packages/pipeline/src/sources/*.ts') }}-${{ hashFiles('sources.lock.json', 'sources/*.ts') }}
+          restore-keys: sources-${{ hashFiles('packages/pipeline/src/sources/*.ts') }}-
       - run: pnpm sources fetch
+      # В кэше остаются только версии из lock: иначе он растёт с каждым обновлением набора.
+      - name: Старые версии наборов — из кэша
+        run: |
+          shopt -s nullglob
+          for dir in .cache/sources/*/*/ .cache/sources/*/.tmp-*/; do
+            dir=${dir%/}
+            id=$(basename "$(dirname "$dir")")
+            keep=$(jq -r --arg id "$id" '.[$id] | .version // .commit // empty' sources.lock.json)
+            if [ "${dir##*/}" != "$keep" ]; then
+              echo "удалено из кэша: $dir"
+              rm -rf -- "$dir"
+            fi
+          done
       - run: pnpm data
       - name: data/ совпадает со сборкой
         run: |
