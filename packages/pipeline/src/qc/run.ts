@@ -74,10 +74,14 @@ export interface SetQcReport {
   findings: QcFinding[];
   /** Сколько имён прошлой версии изменилось (с алиасами); в находках — без повторов. */
   changed: number;
-  /** Имена, которых не было в прошлой версии, и пропавшие из неё — по алфавиту. */
+  /** Имена, которых не было в прошлой версии, — по алфавиту. */
   added: string[];
+  /**
+   * Видимые иконки прошлой версии, которых нет в источнике, — по алфавиту. Журнал их скрывает или
+   * делает алиасами (ADR-0018); скрытые раньше иконки и алиасы прошлой версии сюда не входят.
+   */
   missing: string[];
-  /** Доля изменившихся и пропавших среди имён прошлой версии. */
+  /** Доля изменившихся и пропавших среди имён прошлой версии без скрытых. */
   changedShare: number;
   /** Правило 2% сработало, но изменения приняты флагом --accept-changes. */
   accepted: boolean;
@@ -224,7 +228,13 @@ export async function checkSet(input: QcInput): Promise<SetQcReport> {
       shown.add(key);
       add("changed", name, diff, text);
     }
-    for (const name of baseline.icons.keys()) {
+    // Скрытые иконки и алиасы прошлой версии журнал переносит сам: правило 2% их не касается.
+    const visible = baseline.state
+      ? [...baseline.state.icons]
+          .filter(([, i]) => !i.hidden)
+          .map(([name]) => name)
+      : [...baseline.icons.keys()];
+    for (const name of visible) {
       if (!current.has(name)) missing.push(name);
     }
     added.sort(order);
@@ -294,7 +304,9 @@ export async function checkSet(input: QcInput): Promise<SetQcReport> {
       `пустые иконки: ${count("empty")} — закрашено меньше ${share(EMPTY_LIMIT)} холста`,
     );
   }
-  const names = baseline?.icons.size ?? 0;
+  let hidden = 0;
+  for (const i of baseline?.state?.icons.values() ?? []) if (i.hidden) hidden++;
+  const names = (baseline?.icons.size ?? 0) - hidden;
   const changedShare = names === 0 ? 0 : (changed + missing.length) / names;
   let accepted = false;
   if (
@@ -306,7 +318,7 @@ export async function checkSet(input: QcInput): Promise<SetQcReport> {
       accepted = true;
     } else {
       stop.push(
-        `источник тот же, а изменилось или пропало ${share(changedShare)} имён (изменились ${changed}, пропали ${missing.length}) — больше ${share(CHANGED_NAMES_LIMIT)}: похоже, сломалась сборка. Посмотрите qc.html; если изменения задуманы — pnpm data --accept-changes, затем закоммитьте data/, иначе следующая сборка снова остановится`,
+        `источник тот же, а изменилось или пропало ${share(changedShare)} имён (изменились ${changed}, нет в источнике ${missing.length}) — больше ${share(CHANGED_NAMES_LIMIT)}: похоже, сломалась сборка. Посмотрите qc.html; если изменения задуманы — pnpm data --accept-changes. Сравнение идёт с версией в main, поэтому флаг нужен при каждой сборке, пока изменения не попадут в main`,
       );
     }
   }

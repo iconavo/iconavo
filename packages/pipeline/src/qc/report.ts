@@ -97,7 +97,7 @@ export function formatQc(qc: SetQcReport): string[] {
   const b = qc.baseline;
   lines.push(
     b
-      ? `  Прошлая версия: ${b.label} (${b.sourceChanged ? "источник обновлён" : "источник тот же"}) — изменились ${qc.changed} · пропали ${qc.missing.length} · новых ${qc.added.length} (${share(qc.changedShare)} имён, порог ${share(CHANGED_NAMES_LIMIT)})${qc.accepted ? " · приняты флагом --accept-changes" : ""}`
+      ? `  Прошлая версия: ${b.label} (${b.sourceChanged ? "источник обновлён" : "источник тот же"}) — изменились ${qc.changed} · нет в источнике ${qc.missing.length} · новых ${qc.added.length} (${share(qc.changedShare)} имён, порог ${share(CHANGED_NAMES_LIMIT)})${qc.accepted ? " · приняты флагом --accept-changes" : ""}`
       : `  Прошлая версия: сравнивать не с чем — ${qc.baselineNote ?? "нет данных"}`,
   );
   return lines;
@@ -126,7 +126,7 @@ function summaryTable(sets: readonly SetBuildReport[]): string {
       : `<td class="num">—</td><td class="num">—</td><td class="num">—</td>`;
     return `<tr><td><b>${esc(r.normalize.name)}</b><br><span class="muted">${esc(r.normalize.id)}</span></td><td class="num">${qc.checked}</td>${cell("empty")}${cell("sparse")}${cell("cropped")}${changed}${cell("original")}<td>${baselineCell(qc)}</td><td>${verdict(qc)}</td></tr>`;
   });
-  return `<table><thead><tr><th>Набор</th><th>Нарисовано</th><th>Пустые</th><th>Почти пустые</th><th>Обрезанные</th><th>Изменились</th><th>Пропали</th><th>Новые</th><th>Отличаются от оригинала</th><th>Прошлая версия</th><th>Итог</th></tr></thead>
+  return `<table><thead><tr><th>Набор</th><th>Нарисовано</th><th>Пустые</th><th>Почти пустые</th><th>Обрезанные</th><th>Изменились</th><th>Нет в источнике</th><th>Новые</th><th>Отличаются от оригинала</th><th>Прошлая версия</th><th>Итог</th></tr></thead>
 <tbody>${rows.join("")}</tbody></table>`;
 }
 
@@ -245,7 +245,12 @@ ${list
       `<p class="muted">Всего изменилось имён: ${qc.changed} — алиасы показаны вместе с родителем.</p>`,
     );
   }
-  parts.push(namesList("Пропали с прошлой версии", qc.missing));
+  parts.push(
+    namesList(
+      "Нет в источнике — скрыты или стали алиасами, подробно в changelog.html",
+      qc.missing,
+    ),
+  );
   parts.push(namesList("Новые", qc.added));
   const stops = qc.stop
     .map((s) => `<p class="stop">СТОП — ${esc(s)}</p>`)

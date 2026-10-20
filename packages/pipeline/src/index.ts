@@ -13,6 +13,50 @@ export {
   type SetBuildReport,
   writeSetData,
 } from "./build/run.js";
+export {
+  type ChangelogInput,
+  changelogMarkdown,
+  humanDate,
+  isoDate,
+  MARKDOWN_LIMIT,
+  type NextChangelog,
+  needsApproval,
+  nextChangelog,
+  secondsOf,
+} from "./changelog/journal.js";
+export {
+  type AuthorAlias,
+  type FreshSet,
+  type HistoryChanges,
+  hasChanges,
+  type MergeResult,
+  mergeHistory,
+  noChanges,
+  type SkippedAlias,
+} from "./changelog/merge.js";
+export {
+  CARD_LIMIT,
+  changelogSection,
+  formatChangelog,
+  renderChangelogPage,
+} from "./changelog/report.js";
+export {
+  authorAliases,
+  type ChangelogOptions,
+  type SetChangelog,
+  setChangelog,
+} from "./changelog/run.js";
+export {
+  flatten,
+  iconsFileOf,
+  resolve,
+  type SetState,
+  type StateIcon,
+  sameState,
+  stateOf,
+  versionOf,
+  visibleCount,
+} from "./changelog/state.js";
 export { fingerprint } from "./metadata/fingerprint.js";
 export {
   type AuthorMetadata,
@@ -38,10 +82,13 @@ export {
   TAG_SAMPLE,
 } from "./metadata/report.js";
 export {
+  type AuthorRead,
   type IconMetadata,
   type MetadataIcon,
+  type MetadataOptions,
   MISSING_METADATA_LIMIT,
   pickSamples,
+  readAuthorMetadata,
   SAMPLE_CONCEPTS,
   SAMPLE_COUNT,
   type SetFile,
@@ -96,6 +143,7 @@ export {
 } from "./optimize/optimize.js";
 export {
   type Baseline,
+  baselineFromTexts,
   gitHistory,
   type History,
   iconsByName,
@@ -194,6 +242,7 @@ export {
   pinEntry,
   sourceLabel,
 } from "./sources/fetch.js";
+export { baseRevision, lastCommit } from "./sources/git.js";
 export {
   type LockEntry,
   type LockFile,

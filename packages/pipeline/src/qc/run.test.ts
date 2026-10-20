@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { SVG_NS } from "../svg/xml.js";
-import type { Baseline } from "./baseline.js";
+import { type Baseline, baselineFromTexts } from "./baseline.js";
 import { checkSet, type QcInput, share } from "./run.js";
 
 const SQUARE = `<path fill="currentColor" d="M4 4h16v16H4z"/>`;
@@ -159,7 +159,7 @@ describe("контроль набора", () => {
     expect([qc.changed, qc.missing, qc.added]).toEqual([1, ["gone"], []]);
     expect(qc.changedShare).toBe(0.5);
     expect(qc.stop.join("\n")).toMatch(
-      /источник тот же, а изменилось или пропало 50% имён \(изменились 1, пропали 1\).*--accept-changes, затем закоммитьте data\//,
+      /источник тот же, а изменилось или пропало 50% имён \(изменились 1, нет в источнике 1\).*--accept-changes\. Сравнение идёт с версией в main/,
     );
     const changed = qc.findings.find((f) => f.kind === "changed");
     expect(changed?.name).toBe("c");
@@ -242,6 +242,42 @@ describe("контроль набора", () => {
     expect(resized.findings.find((f) => f.kind === "changed")?.text).toBe(
       "размер был 24×24, стал 24×25",
     );
+  });
+
+  it("скрытые иконки и алиасы прошлой версии правило 2% не трогают; пропавшая видимая — считается", async () => {
+    const file = (extra: Record<string, { body: string }> = {}) =>
+      JSON.stringify({
+        prefix: "demo",
+        width: 24,
+        height: 24,
+        icons: {
+          a: { body: SQUARE },
+          h1: { body: CIRCLE, hidden: true },
+          h2: { body: CIRCLE, hidden: true },
+          ...extra,
+        },
+        aliases: { old: { parent: "a" } },
+      });
+    const past = (icons: string) =>
+      baselineFromTexts({
+        label: "коммит ccccccc, demo-icons@1.0.0",
+        sourceChanged: false,
+        icons,
+      });
+    const quiet = await checkSet(
+      input([item("a", SQUARE)], { baseline: past(file()) }),
+    );
+    expect([quiet.changed, quiet.missing, quiet.added]).toEqual([0, [], []]);
+    expect(quiet.baseline?.names).toBe(2);
+    expect(quiet.stop).toEqual([]);
+    const lost = await checkSet(
+      input([item("a", SQUARE)], {
+        baseline: past(file({ b: { body: CIRCLE } })),
+      }),
+    );
+    expect(lost.missing).toEqual(["b"]);
+    expect(lost.changedShare).toBeCloseTo(1 / 3);
+    expect(lost.stop.join("\n")).toMatch(/изменилось или пропало 33,3% имён/);
   });
 
   it("без прошлой версии — причина вместо сравнения", async () => {

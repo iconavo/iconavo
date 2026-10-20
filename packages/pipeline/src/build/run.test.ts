@@ -3,6 +3,7 @@ import {
   mkdtemp,
   readdir,
   readFile,
+  rename,
   rm,
   writeFile,
 } from "node:fs/promises";
@@ -10,8 +11,10 @@ import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { validate } from "@iconavo-ui/schema";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { needsApproval } from "../changelog/journal.js";
+import { versionOf } from "../changelog/state.js";
 import { licenseHash } from "../metadata/license.js";
-import { type Baseline, iconsByName } from "../qc/baseline.js";
+import { type Baseline, baselineFromTexts } from "../qc/baseline.js";
 import {
   type SourceConfigInput,
   sourceConfigSchema,
@@ -19,7 +22,7 @@ import {
 import type { LockEntry } from "../sources/lock.js";
 import { SVG_NS } from "../svg/xml.js";
 import { formatBuildReport, renderBuildGallery } from "./report.js";
-import { buildSet, writeSetData } from "./run.js";
+import { buildSet, type SetBuildReport, writeSetData } from "./run.js";
 
 const LICENSE_TEXT = "MIT License\n\nCopyright (c) Demo\n";
 const base: SourceConfigInput = {
@@ -80,7 +83,11 @@ async function makeSet(files: Record<string, string>, root = dir) {
   }
 }
 
-const build = (cfg = config(), root = dir) => buildSet(cfg, root, entry());
+/** Время сборки в тестах — постоянное: 20 октября 2026, 09:00 UTC. */
+const NOW = Date.UTC(2026, 9, 20, 9) / 1000;
+
+const build = (cfg = config(), root = dir) =>
+  buildSet(cfg, root, entry(), { now: NOW });
 
 /** Содержимое icons.json как объект; если набор остановлен — ошибка теста с причинами. */
 function parsed(r: Awaited<ReturnType<typeof build>>) {
@@ -89,21 +96,24 @@ function parsed(r: Awaited<ReturnType<typeof build>>) {
     prefix: string;
     width: number;
     height: number;
-    icons: Record<string, { body: string; width?: number; height?: number }>;
+    icons: Record<
+      string,
+      { body: string; width?: number; height?: number; hidden?: boolean }
+    >;
     aliases?: Record<string, { parent: string }>;
     lastModified?: number;
   };
 }
 
 describe("сборка набора", () => {
-  it("icons.json проходит схему; размер набора общий, времени сборки нет", async () => {
+  it("icons.json проходит схему; размер набора общий; lastModified — дата первого выпуска", async () => {
     await makeSet({ "icons/square.svg": SQUARE, "icons/circle.svg": CIRCLE });
     const r = await build();
     const data = parsed(r);
     expect(validate("icons", data)).toEqual([]);
     expect(data.prefix).toBe("demo");
     expect([data.width, data.height]).toEqual([24, 24]);
-    expect(data.lastModified).toBeUndefined();
+    expect(data.lastModified).toBe(NOW);
     expect(Object.keys(data.icons)).toEqual(["circle", "square"]);
     expect(data.icons.square).toEqual({
       body: `<path fill="currentColor" d="M4 4h16v16H4z"/>`,
@@ -154,6 +164,8 @@ describe("сборка набора", () => {
         "metadata.json",
         "search.json",
         "LICENSE",
+        "changelog.json",
+        "CHANGELOG.md",
       ].map((name) => join(dataDir, "demo", name)),
     );
     // Ключи-числа — по кодам символов, а не впереди всех.
@@ -324,7 +336,9 @@ describe("метаданные и лицензия при сборке", () => {
     expect(r.metadata.files).toBeUndefined();
     expect(await writeSetData(dataDir, r)).toBeUndefined();
     expect(await readdir(join(dataDir, "demo"))).toEqual(["icons.json"]);
-    const page = [...renderBuildGallery([r])].at(-1)?.html ?? "";
+    const page =
+      [...renderBuildGallery([r])].find((f) => f.name === "metadata.html")
+        ?.html ?? "";
     expect(page).toContain(`<pre>MIT License`);
     expect(page).toContain(licenseHash("MIT", LICENSE_TEXT));
   });
@@ -362,7 +376,7 @@ describe("метаданные и лицензия при сборке", () => {
       },
     });
     const first = (await writeSetData(dataDir, await build(cfg))) as string[];
-    expect(first.at(-1)).toBe(join(dataDir, "demo", "NOTICE"));
+    expect(first).toContain(join(dataDir, "demo", "NOTICE"));
     expect(await readFile(join(dataDir, "demo", "NOTICE"), "utf8")).toBe(
       notice,
     );
@@ -372,7 +386,9 @@ describe("метаданные и лицензия при сборке", () => {
     expect(again.stop).toEqual([]);
     await writeSetData(dataDir, again);
     expect((await readdir(join(dataDir, "demo"))).sort()).toEqual([
+      "CHANGELOG.md",
       "LICENSE",
+      "changelog.json",
       "icons.json",
       "info.json",
       "metadata.json",
@@ -404,6 +420,7 @@ describe("отчёт и галерея сборки", () => {
       "qc.html",
       "demo-1.html",
       "metadata.html",
+      "changelog.html",
     ]);
     const page = files[2]?.html ?? "";
     expect(page.match(/<span class="lbl">SVGO<\/span>/g)).toHaveLength(2);
@@ -443,11 +460,12 @@ describe("контроль качества при сборке", () => {
   const EMPTY = svg(`<circle cx="12" cy="12" r=".1"/>`);
 
   /** Прошлая версия из собранного icons.json. */
-  const baselineOf = (json: string, sourceChanged = false): Baseline => ({
-    label: "коммит ccccccc, demo-icons@1.0.0",
-    sourceChanged,
-    icons: iconsByName(JSON.parse(json)),
-  });
+  const baselineOf = (json: string, sourceChanged = false): Baseline =>
+    baselineFromTexts({
+      label: "коммит ccccccc, demo-icons@1.0.0",
+      sourceChanged,
+      icons: json,
+    });
 
   it("пустая иконка останавливает набор и старый файл не трогает", async () => {
     await makeSet({ "icons/a.svg": SQUARE, "icons/empty.svg": EMPTY });
@@ -492,6 +510,7 @@ describe("контроль качества при сборке", () => {
     const opts = (extra: object) =>
       buildSet(config(), dir, entry(), {
         baseline: baselineOf(before),
+        now: NOW,
         ...extra,
       });
     const stopped = await opts({});
@@ -505,8 +524,9 @@ describe("контроль качества при сборке", () => {
     const accepted = await opts({ acceptChanges: true });
     const updated = await buildSet(config(), dir, entry("2.0.0"), {
       baseline: baselineOf(before, true),
+      now: NOW,
     });
-    const fresh = await buildSet(config(), dir, entry("2.0.0"));
+    const fresh = await buildSet(config(), dir, entry("2.0.0"), { now: NOW });
     expect(accepted.json).toBeDefined();
     expect(accepted.json).toBe(fresh.json);
     expect(updated.json).toBe(fresh.json);
@@ -518,6 +538,7 @@ describe("контроль качества при сборке", () => {
     const first = await build();
     const second = await buildSet(config(), dir, entry(), {
       baseline: baselineOf(first.json as string),
+      now: NOW,
     });
     expect(second.json).toBe(first.json);
     expect([second.qc.changed, second.qc.added, second.qc.missing]).toEqual([
@@ -557,5 +578,196 @@ describe("контроль качества при сборке", () => {
       expect(f.html).toContain("Demo &lt;b&gt;");
     }
     expect([...renderBuildGallery([r])]).toEqual(files);
+  });
+});
+
+describe("журнал при сборке", () => {
+  const fileOf = (r: SetBuildReport, name: string) =>
+    [...(r.metadata.files ?? []), ...(r.changelog.files ?? [])].find(
+      (f) => f.name === name,
+    )?.text;
+  const json = (r: SetBuildReport, name: string) =>
+    JSON.parse(fileOf(r, name) ?? "null");
+  /** Прошлая версия — то, что записала сборка r, как будто её слили в main. */
+  const baselineFrom = (r: SetBuildReport, sourceChanged = true): Baseline =>
+    baselineFromTexts({
+      label: "коммит ccccccc, demo-icons@1.0.0",
+      sourceChanged,
+      icons: r.json as string,
+      changelog: fileOf(r, "changelog.json"),
+    });
+
+  /** Выпуск 1 — три иконки; выпуск 2 — автор удалил b и переименовал clip в clip-new. */
+  async function twoReleases() {
+    await makeSet({
+      "icons/a.svg": SQUARE,
+      "icons/b.svg": CIRCLE,
+      "icons/clip.svg": WITH_IDS,
+    });
+    const first = await build();
+    await rm(join(dir, "icons", "b.svg"));
+    await rename(
+      join(dir, "icons", "clip.svg"),
+      join(dir, "icons", "clip-new.svg"),
+    );
+    const second = await buildSet(config(), dir, entry(), {
+      baseline: baselineFrom(first),
+      now: NOW + 3600,
+    });
+    return { first, second };
+  }
+
+  it("первая запись: версия в info.json и в журнале, lastModified, файлы проходят схему", async () => {
+    await makeSet({ "icons/a.svg": SQUARE, "icons/b.svg": CIRCLE });
+    const r = await build();
+    const info = json(r, "info.json");
+    const log = json(r, "changelog.json");
+    expect(validate("changelog", log)).toEqual([]);
+    expect(validate("info", info)).toEqual([]);
+    expect(info.version).toBe(versionOf(JSON.parse(r.json as string)));
+    expect(log).toEqual({
+      prefix: "demo",
+      releases: [
+        {
+          version: info.version,
+          date: "2026-10-20T09:00:00Z",
+          revision: "1.0.0",
+          total: 2,
+        },
+      ],
+    });
+    expect(parsed(r).lastModified).toBe(NOW);
+    expect(fileOf(r, "CHANGELOG.md")).toContain(
+      "Начало журнала · источник: 1.0.0 · иконок: 2.",
+    );
+  });
+
+  it("смоделированное обновление: удалённая скрыта со старым рисунком, переименованная стала алиасом", async () => {
+    const { first, second } = await twoReleases();
+    expect(second.stop).toEqual([]);
+    const data = parsed(second);
+    expect(data.icons.b).toEqual({ ...parsed(first).icons.b, hidden: true });
+    expect(data.aliases).toEqual({ clip: { parent: "clip-new" } });
+    expect(data.lastModified).toBe(NOW + 3600);
+    expect(validate("icons", data)).toEqual([]);
+
+    const log = json(second, "changelog.json");
+    expect(log.releases).toEqual([
+      {
+        version: second.changelog.version,
+        previous: first.changelog.version,
+        date: "2026-10-20T10:00:00Z",
+        revision: "1.0.0",
+        total: 2,
+        hidden: ["b"],
+        renamed: { clip: "clip-new" },
+      },
+      json(first, "changelog.json").releases[0],
+    ]);
+    expect(needsApproval(log.releases[0])).toBe(true);
+    expect(json(second, "info.json")).toMatchObject({
+      total: 2,
+      version: second.changelog.version,
+    });
+    // В поиске — только видимые иконки.
+    expect(Object.keys(json(second, "search.json").icons)).toEqual([
+      "a",
+      "clip-new",
+    ]);
+    const md = fileOf(second, "CHANGELOG.md") ?? "";
+    expect(md).toContain("**Требуют вашего одобрения**");
+    expect(md).toContain(
+      "- Скрыты — автор удалил, имя продолжает работать (1): `b`",
+    );
+    expect(md).toContain("`clip` → `clip-new`");
+    // Контроль качества видит, чего нет в источнике, а отчёт объясняет, что с ними стало.
+    expect(second.qc.missing).toEqual(["b", "clip"]);
+    const files = [...renderBuildGallery([second])];
+    const index = files.find((f) => f.name === "index.html")?.html ?? "";
+    expect(index).toContain("стала алиасом clip-new");
+    expect(index).toContain("скрыта: нет в источнике, имя работает");
+    expect(index).toContain("<h2>Журнал изменений</h2>");
+    const page = files.find((f) => f.name === "changelog.html")?.html ?? "";
+    expect(page).toContain("<h3>Требуют вашего одобрения</h3>");
+    expect(page).toContain(
+      `<code>clip</code> <span class="arrow">→</span> <code>clip-new</code>`,
+    );
+    expect(page.match(/src="data:image\/svg\+xml;base64,/g)).toHaveLength(3);
+    for (const f of files) {
+      expect(f.html).not.toMatch(/<script|<iframe|<foreignObject|\son\w+=/i);
+    }
+    const text = formatBuildReport(second);
+    expect(text).toContain(
+      `Журнал: новый выпуск · версия ${second.changelog.version} (была ${first.changelog.version}) · иконок 2 · скрытых 1 · алиасов 1`,
+    );
+    expect(text).toContain("Изменения: скрыто 1 · переименовано 1");
+    expect(text).toContain("Требуют вашего одобрения");
+  });
+
+  it("повторная сборка выпуска даёт те же файлы — и в CI, и на ветке", async () => {
+    const { first, second } = await twoReleases();
+    const same = (r: SetBuildReport) => {
+      expect(r.stop).toEqual([]);
+      expect(r.json).toBe(second.json);
+      expect(r.metadata.files).toEqual(second.metadata.files);
+      expect(r.changelog.files).toEqual(second.changelog.files);
+    };
+    // CI: прошлая версия — сами закоммиченные данные, версия совпала.
+    const ci = await buildSet(config(), dir, entry(), {
+      baseline: baselineFrom(second),
+      now: NOW + 7200,
+    });
+    expect(ci.changelog.release).toBe("same");
+    same(ci);
+    // Ветка: прошлая версия — main, а журнал на диске — тот же ожидающий выпуск.
+    same(
+      await buildSet(config(), dir, entry(), {
+        baseline: baselineFrom(first),
+        pending: json(second, "changelog.json"),
+        now: NOW + 7200,
+      }),
+    );
+    // Без журнала на диске дата выпуска — время новой сборки.
+    const later = await buildSet(config(), dir, entry(), {
+      baseline: baselineFrom(first),
+      now: NOW + 7200,
+    });
+    expect(parsed(later).lastModified).toBe(NOW + 7200);
+  });
+
+  it("прошлая версия не читается — «СТОП», файлы не записаны", async () => {
+    await makeSet({ "icons/a.svg": SQUARE });
+    const r = await buildSet(config(), dir, entry(), {
+      baselineError: "история git недоступна — not a git repository",
+      now: NOW,
+    });
+    expect(r.stop).toEqual([
+      "прошлая версия не читается — история git недоступна — not a git repository. Без неё пропали бы скрытые иконки и алиасы (ADR-0005)",
+    ]);
+    expect(r.qc.baselineNote).toBe(
+      "история git недоступна — not a git repository",
+    );
+    expect(await writeSetData(dataDir, r)).toBeUndefined();
+  });
+
+  it("прежние имена от автора (формат Lucide) — алиасы; занятое имя пропущено", async () => {
+    await makeSet({
+      "icons/a.svg": SQUARE,
+      "icons/a.json": JSON.stringify({
+        tags: ["a"],
+        aliases: [{ name: "a-old", deprecated: true }, "b"],
+      }),
+      "icons/b.svg": CIRCLE,
+      "icons/b.json": JSON.stringify({ tags: ["b"] }),
+    });
+    const r = await build(config({ metadata: "lucide" }));
+    expect(r.stop).toEqual([]);
+    expect(parsed(r).aliases).toEqual({ "a-old": { parent: "a" } });
+    expect(r.changelog.skipped).toEqual([
+      { name: "b", parent: "a", reason: "имя занято иконкой" },
+    ]);
+    const text = formatBuildReport(r);
+    expect(text).toContain("Прежние имена от автора пропущены: 1");
+    expect(text).toContain("алиасов: 1");
   });
 });

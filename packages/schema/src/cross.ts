@@ -32,7 +32,7 @@ export function checkNamesAndAliases(data: unknown): Issue[] {
   }
 
   for (const name of Object.keys(aliases)) {
-    if (name in icons) {
+    if (Object.hasOwn(icons, name)) {
       issues.push({
         path: `aliases.${name}`,
         message: "алиас совпадает с именем иконки",
@@ -43,7 +43,7 @@ export function checkNamesAndAliases(data: unknown): Issue[] {
   for (const [name, alias] of Object.entries(aliases)) {
     const parent = isRecord(alias) ? alias.parent : undefined;
     if (typeof parent !== "string") continue; // нет parent — это ошибка схемы
-    if (!(parent in icons) && !(parent in aliases)) {
+    if (!Object.hasOwn(icons, parent) && !Object.hasOwn(aliases, parent)) {
       issues.push({
         path: `aliases.${name}.parent`,
         message: `родитель «${parent}» не найден среди иконок и алиасов`,
@@ -53,7 +53,7 @@ export function checkNamesAndAliases(data: unknown): Issue[] {
     // Идём по цепочке родителей: если вернулись в уже виденное имя — цикл.
     const seen = new Set([name]);
     let current: unknown = parent;
-    while (typeof current === "string" && current in aliases) {
+    while (typeof current === "string" && Object.hasOwn(aliases, current)) {
       if (seen.has(current)) {
         issues.push({
           path: `aliases.${name}.parent`,

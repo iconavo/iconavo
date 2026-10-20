@@ -1,4 +1,330 @@
 {
+  "aliases": {
+    "activity": {
+      "parent": "pulse"
+    },
+    "activity-bold": {
+      "parent": "pulse-bold"
+    },
+    "activity-duotone": {
+      "parent": "pulse-duotone"
+    },
+    "activity-fill": {
+      "parent": "pulse-fill"
+    },
+    "activity-light": {
+      "parent": "pulse-light"
+    },
+    "activity-thin": {
+      "parent": "pulse-thin"
+    },
+    "archive-box": {
+      "parent": "box-arrow-down"
+    },
+    "archive-box-bold": {
+      "parent": "box-arrow-down-bold"
+    },
+    "archive-box-duotone": {
+      "parent": "box-arrow-down-duotone"
+    },
+    "archive-box-fill": {
+      "parent": "box-arrow-down-fill"
+    },
+    "archive-box-light": {
+      "parent": "box-arrow-down-light"
+    },
+    "archive-box-thin": {
+      "parent": "box-arrow-down-thin"
+    },
+    "archive-tray": {
+      "parent": "tray-arrow-down"
+    },
+    "archive-tray-bold": {
+      "parent": "tray-arrow-down-bold"
+    },
+    "archive-tray-duotone": {
+      "parent": "tray-arrow-down-duotone"
+    },
+    "archive-tray-fill": {
+      "parent": "tray-arrow-down-fill"
+    },
+    "archive-tray-light": {
+      "parent": "tray-arrow-down-light"
+    },
+    "archive-tray-thin": {
+      "parent": "tray-arrow-down-thin"
+    },
+    "caduceus": {
+      "parent": "asclepius"
+    },
+    "caduceus-bold": {
+      "parent": "asclepius-bold"
+    },
+    "caduceus-duotone": {
+      "parent": "asclepius-duotone"
+    },
+    "caduceus-fill": {
+      "parent": "asclepius-fill"
+    },
+    "caduceus-light": {
+      "parent": "asclepius-light"
+    },
+    "caduceus-thin": {
+      "parent": "asclepius-thin"
+    },
+    "circle-wavy": {
+      "parent": "seal"
+    },
+    "circle-wavy-bold": {
+      "parent": "seal-bold"
+    },
+    "circle-wavy-check": {
+      "parent": "seal-check"
+    },
+    "circle-wavy-check-bold": {
+      "parent": "seal-check-bold"
+    },
+    "circle-wavy-check-duotone": {
+      "parent": "seal-check-duotone"
+    },
+    "circle-wavy-check-fill": {
+      "parent": "seal-check-fill"
+    },
+    "circle-wavy-check-light": {
+      "parent": "seal-check-light"
+    },
+    "circle-wavy-check-thin": {
+      "parent": "seal-check-thin"
+    },
+    "circle-wavy-duotone": {
+      "parent": "seal-duotone"
+    },
+    "circle-wavy-fill": {
+      "parent": "seal-fill"
+    },
+    "circle-wavy-light": {
+      "parent": "seal-light"
+    },
+    "circle-wavy-question": {
+      "parent": "seal-question"
+    },
+    "circle-wavy-question-bold": {
+      "parent": "seal-question-bold"
+    },
+    "circle-wavy-question-duotone": {
+      "parent": "seal-question-duotone"
+    },
+    "circle-wavy-question-fill": {
+      "parent": "seal-question-fill"
+    },
+    "circle-wavy-question-light": {
+      "parent": "seal-question-light"
+    },
+    "circle-wavy-question-thin": {
+      "parent": "seal-question-thin"
+    },
+    "circle-wavy-thin": {
+      "parent": "seal-thin"
+    },
+    "circle-wavy-warning": {
+      "parent": "seal-warning"
+    },
+    "circle-wavy-warning-bold": {
+      "parent": "seal-warning-bold"
+    },
+    "circle-wavy-warning-duotone": {
+      "parent": "seal-warning-duotone"
+    },
+    "circle-wavy-warning-fill": {
+      "parent": "seal-warning-fill"
+    },
+    "circle-wavy-warning-light": {
+      "parent": "seal-warning-light"
+    },
+    "circle-wavy-warning-thin": {
+      "parent": "seal-warning-thin"
+    },
+    "file-dotted": {
+      "parent": "file-dashed"
+    },
+    "file-dotted-bold": {
+      "parent": "file-dashed-bold"
+    },
+    "file-dotted-duotone": {
+      "parent": "file-dashed-duotone"
+    },
+    "file-dotted-fill": {
+      "parent": "file-dashed-fill"
+    },
+    "file-dotted-light": {
+      "parent": "file-dashed-light"
+    },
+    "file-dotted-thin": {
+      "parent": "file-dashed-thin"
+    },
+    "file-search": {
+      "parent": "file-magnifying-glass"
+    },
+    "file-search-bold": {
+      "parent": "file-magnifying-glass-bold"
+    },
+    "file-search-duotone": {
+      "parent": "file-magnifying-glass-duotone"
+    },
+    "file-search-fill": {
+      "parent": "file-magnifying-glass-fill"
+    },
+    "file-search-light": {
+      "parent": "file-magnifying-glass-light"
+    },
+    "file-search-thin": {
+      "parent": "file-magnifying-glass-thin"
+    },
+    "folder-dotted": {
+      "parent": "folder-dashed"
+    },
+    "folder-dotted-bold": {
+      "parent": "folder-dashed-bold"
+    },
+    "folder-dotted-duotone": {
+      "parent": "folder-dashed-duotone"
+    },
+    "folder-dotted-fill": {
+      "parent": "folder-dashed-fill"
+    },
+    "folder-dotted-light": {
+      "parent": "folder-dashed-light"
+    },
+    "folder-dotted-thin": {
+      "parent": "folder-dashed-thin"
+    },
+    "folder-notch": {
+      "parent": "folder"
+    },
+    "folder-notch-bold": {
+      "parent": "folder-bold"
+    },
+    "folder-notch-duotone": {
+      "parent": "folder-duotone"
+    },
+    "folder-notch-fill": {
+      "parent": "folder-fill"
+    },
+    "folder-notch-light": {
+      "parent": "folder-light"
+    },
+    "folder-notch-minus": {
+      "parent": "folder-minus"
+    },
+    "folder-notch-minus-bold": {
+      "parent": "folder-minus-bold"
+    },
+    "folder-notch-minus-duotone": {
+      "parent": "folder-minus-duotone"
+    },
+    "folder-notch-minus-fill": {
+      "parent": "folder-minus-fill"
+    },
+    "folder-notch-minus-light": {
+      "parent": "folder-minus-light"
+    },
+    "folder-notch-minus-thin": {
+      "parent": "folder-minus-thin"
+    },
+    "folder-notch-open": {
+      "parent": "folder-open"
+    },
+    "folder-notch-open-bold": {
+      "parent": "folder-open-bold"
+    },
+    "folder-notch-open-duotone": {
+      "parent": "folder-open-duotone"
+    },
+    "folder-notch-open-fill": {
+      "parent": "folder-open-fill"
+    },
+    "folder-notch-open-light": {
+      "parent": "folder-open-light"
+    },
+    "folder-notch-open-thin": {
+      "parent": "folder-open-thin"
+    },
+    "folder-notch-plus": {
+      "parent": "folder-plus"
+    },
+    "folder-notch-plus-bold": {
+      "parent": "folder-plus-bold"
+    },
+    "folder-notch-plus-duotone": {
+      "parent": "folder-plus-duotone"
+    },
+    "folder-notch-plus-fill": {
+      "parent": "folder-plus-fill"
+    },
+    "folder-notch-plus-light": {
+      "parent": "folder-plus-light"
+    },
+    "folder-notch-plus-thin": {
+      "parent": "folder-plus-thin"
+    },
+    "folder-notch-thin": {
+      "parent": "folder-thin"
+    },
+    "folder-simple-dotted": {
+      "parent": "folder-simple-dashed"
+    },
+    "folder-simple-dotted-bold": {
+      "parent": "folder-simple-dashed-bold"
+    },
+    "folder-simple-dotted-duotone": {
+      "parent": "folder-simple-dashed-duotone"
+    },
+    "folder-simple-dotted-fill": {
+      "parent": "folder-simple-dashed-fill"
+    },
+    "folder-simple-dotted-light": {
+      "parent": "folder-simple-dashed-light"
+    },
+    "folder-simple-dotted-thin": {
+      "parent": "folder-simple-dashed-thin"
+    },
+    "lemniscate": {
+      "parent": "infinity"
+    },
+    "lemniscate-bold": {
+      "parent": "infinity-bold"
+    },
+    "lemniscate-duotone": {
+      "parent": "infinity-duotone"
+    },
+    "lemniscate-fill": {
+      "parent": "infinity-fill"
+    },
+    "lemniscate-light": {
+      "parent": "infinity-light"
+    },
+    "lemniscate-thin": {
+      "parent": "infinity-thin"
+    },
+    "text-bolder": {
+      "parent": "text-b"
+    },
+    "text-bolder-bold": {
+      "parent": "text-b-bold"
+    },
+    "text-bolder-duotone": {
+      "parent": "text-b-duotone"
+    },
+    "text-bolder-fill": {
+      "parent": "text-b-fill"
+    },
+    "text-bolder-light": {
+      "parent": "text-b-light"
+    },
+    "text-bolder-thin": {
+      "parent": "text-b-thin"
+    }
+  },
   "height": 24,
   "icons": {
     "acorn": {
@@ -27218,6 +27544,7 @@
       "body": "<path fill=\"currentColor\" d=\"m15.208 11.688-4.5-3a.375.375 0 00-.583.312v6a.38.38 0 00.198.33.38.38 0 00.385-.018l4.5-3a.375.375 0 000-.624M10.875 14.3V9.7l3.45 2.3Zm10.73-7.688a1.88 1.88 0 00-1.13-1.282C17.306 4.105 12.213 4.125 12 4.125s-5.306-.02-8.475 1.205a1.88 1.88 0 00-1.13 1.281c-.239.914-.52 2.592-.52 5.389s.281 4.475.52 5.389a1.88 1.88 0 001.13 1.281c3.169 1.225 8.262 1.205 8.475 1.205h.067c.645 0 5.398-.04 8.41-1.205a1.88 1.88 0 001.131-1.281c.236-.915.517-2.591.517-5.389s-.281-4.475-.52-5.389Zm-.725 10.594a1.13 1.13 0 01-.676.77c-3.035 1.167-8.15 1.149-8.204 1.149s-5.167.018-8.201-1.154a1.13 1.13 0 01-.676-.77c-.229-.873-.498-2.482-.498-5.201s.27-4.328.495-5.2a1.13 1.13 0 01.676-.77C6.83 4.856 11.946 4.874 12 4.874s5.167-.019 8.201 1.154a1.13 1.13 0 01.676.77c.229.873.498 2.482.498 5.201s-.27 4.328-.495 5.2Z\"/>"
     }
   },
+  "lastModified": 1792490457,
   "prefix": "ph",
   "width": 24
 }

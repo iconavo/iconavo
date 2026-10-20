@@ -10,7 +10,12 @@ describe("метаданные Phosphor из dist/index.mjs", () => {
         categories: ["arrows", "technology & development"],
         tags: ["*new*", "savings", 911],
       },
-      { name: "asclepius", categories: ["arrows"], tags: ["medicine"] },
+      {
+        name: "asclepius",
+        categories: ["arrows"],
+        tags: ["medicine"],
+        alias: "caduceus",
+      },
     ]);
   });
 

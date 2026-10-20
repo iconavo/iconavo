@@ -13,7 +13,7 @@ const paths = (kind: FileKind, data: unknown) =>
   validate(kind, data).map((i) => i.path);
 
 describe("правильный пример", () => {
-  it.each(["icons", "info", "metadata", "search"] as const)(
+  it.each(["icons", "info", "metadata", "search", "changelog"] as const)(
     "%s.json проходит без ошибок",
     (kind) => {
       expect(validate(kind, load(`valid/${kind}.json`))).toEqual([]);
@@ -116,6 +116,18 @@ describe("icons.json", () => {
     expect(issues.some((i) => /по кругу/.test(i.message))).toBe(true);
   });
 
+  it("встроенные свойства объекта — не имена: constructor не родитель и не иконка", () => {
+    expect(
+      paths("icons", { ...base, aliases: { x: { parent: "constructor" } } }),
+    ).toContain("aliases.x.parent");
+    expect(
+      validate("icons", {
+        ...base,
+        aliases: { constructor: { parent: "a" }, tostring: { parent: "a" } },
+      }),
+    ).toEqual([]);
+  });
+
   it("принимает цепочку алиасов", () => {
     const data = {
       ...base,
@@ -207,6 +219,76 @@ describe("info.json", () => {
   });
 });
 
+describe("changelog.json", () => {
+  const valid = load("valid/changelog.json") as {
+    prefix: string;
+    releases: Record<string, unknown>[];
+  };
+  const [newest, oldest] = valid.releases as [
+    Record<string, unknown>,
+    Record<string, unknown>,
+  ];
+  const withNewest = (patch: Record<string, unknown>) => ({
+    ...valid,
+    releases: [{ ...newest, ...patch }, oldest],
+  });
+
+  it("отклоняет неверную версию, лишнее поле и неверное имя", () => {
+    expect(paths("changelog", withNewest({ version: "XYZ" }))).toEqual(
+      expect.arrayContaining(["releases.0.version"]),
+    );
+    expect(paths("changelog", withNewest({ removed: ["a"] }))).toContain(
+      "releases.0",
+    );
+    expect(paths("changelog", withNewest({ added: ["Arrow_Up"] }))).toContain(
+      "releases.0.added.0",
+    );
+    expect(
+      paths("changelog", withNewest({ renamed: { "Old-Name": "a" } })),
+    ).toContain("releases.0.renamed.Old-Name");
+  });
+
+  it("пустые списки и повторы не пишутся", () => {
+    expect(paths("changelog", withNewest({ changed: [] }))).toContain(
+      "releases.0.changed",
+    );
+    expect(paths("changelog", withNewest({ aliases: {} }))).toContain(
+      "releases.0.aliases",
+    );
+    expect(paths("changelog", withNewest({ hidden: ["a", "a"] }))).toContain(
+      "releases.0.hidden",
+    );
+  });
+
+  it("цепочка версий: previous — версия следующего выпуска, у первой записи её нет", () => {
+    expect(validate("changelog", withNewest({ previous: "00000000" }))).toEqual(
+      [
+        {
+          path: "releases.0.previous",
+          message:
+            "прошлая версия должна быть 9b8c7d6e — версия следующего выпуска в списке",
+        },
+      ],
+    );
+    const firstWithPrevious = {
+      ...valid,
+      releases: [newest, { ...oldest, previous: "00000000" }],
+    };
+    expect(paths("changelog", firstWithPrevious)).toEqual([
+      "releases.1.previous",
+    ]);
+  });
+
+  it("даты идут от свежих к старым, формат — ISO по UTC", () => {
+    expect(
+      paths("changelog", withNewest({ date: "2026-10-19T00:00:00Z" })),
+    ).toEqual(["releases.0.date"]);
+    expect(paths("changelog", withNewest({ date: "22.10.2026" }))).toContain(
+      "releases.0.date",
+    );
+  });
+});
+
 describe("metadata.json", () => {
   it("принимает суффиксы -bold и пустой", () => {
     const data = { suffixes: { "": "Regular", "-bold": "Bold" } };
@@ -248,6 +330,12 @@ describe("команда проверки", () => {
   it("код 2 без аргументов и на неизвестном виде", () => {
     expect(run().status).toBe(2);
     expect(run(example("valid/icons.json"), "--kind", "nope").status).toBe(2);
+  });
+
+  it("журнал определяется по имени changelog.json", () => {
+    const r = run(example("valid/changelog.json"));
+    expect(r.status).toBe(0);
+    expect(r.stdout).toMatch(/ошибок нет/);
   });
 
   it("--kind переопределяет вид по имени файла", () => {

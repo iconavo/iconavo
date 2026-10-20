@@ -1,0 +1,13 @@
+# Журнал изменений — Phosphor
+
+Выпуск — новая версия набора: она меняется, когда в `icons.json` меняется хоть что-то (ADR-0018).
+Имена не пропадают: иконка, которую удалил автор, скрыта, но работает по имени, а старое имя переименованной ведёт на новое (ADR-0005).
+Скрытия и переименования вы одобряете лично в pull request (ADR-0019). Полные списки — в `changelog.json`.
+
+## 20 октября 2026 · версия 2070c023
+
+Начало журнала · источник: 2.1.1 · иконок: 9 072.
+
+**Изменения**
+
+- Новые алиасы (108): `activity` → `pulse`, `activity-bold` → `pulse-bold`, `activity-duotone` → `pulse-duotone`, `activity-fill` → `pulse-fill`, `activity-light` → `pulse-light`, `activity-thin` → `pulse-thin`, `archive-box` → `box-arrow-down`, `archive-box-bold` → `box-arrow-down-bold`, `archive-box-duotone` → `box-arrow-down-duotone`, `archive-box-fill` → `box-arrow-down-fill`, `archive-box-light` → `box-arrow-down-light`, `archive-box-thin` → `box-arrow-down-thin`, `archive-tray` → `tray-arrow-down`, `archive-tray-bold` → `tray-arrow-down-bold`, `archive-tray-duotone` → `tray-arrow-down-duotone`, `archive-tray-fill` → `tray-arrow-down-fill`, `archive-tray-light` → `tray-arrow-down-light`, `archive-tray-thin` → `tray-arrow-down-thin`, `caduceus` → `asclepius`, `caduceus-bold` → `asclepius-bold`, `caduceus-duotone` → `asclepius-duotone`, `caduceus-fill` → `asclepius-fill`, `caduceus-light` → `asclepius-light`, `caduceus-thin` → `asclepius-thin`, `circle-wavy` → `seal`, `circle-wavy-bold` → `seal-bold`, `circle-wavy-check` → `seal-check`, `circle-wavy-check-bold` → `seal-check-bold`, `circle-wavy-check-duotone` → `seal-check-duotone`, `circle-wavy-check-fill` → `seal-check-fill`, `circle-wavy-check-light` → `seal-check-light`, `circle-wavy-check-thin` → `seal-check-thin`, `circle-wavy-duotone` → `seal-duotone`, `circle-wavy-fill` → `seal-fill`, `circle-wavy-light` → `seal-light`, `circle-wavy-question` → `seal-question`, `circle-wavy-question-bold` → `seal-question-bold`, `circle-wavy-question-duotone` → `seal-question-duotone`, `circle-wavy-question-fill` → `seal-question-fill`, `circle-wavy-question-light` → `seal-question-light`, `circle-wavy-question-thin` → `seal-question-thin`, `circle-wavy-thin` → `seal-thin`, `circle-wavy-warning` → `seal-warning`, `circle-wavy-warning-bold` → `seal-warning-bold`, `circle-wavy-warning-duotone` → `seal-warning-duotone`, `circle-wavy-warning-fill` → `seal-warning-fill`, `circle-wavy-warning-light` → `seal-warning-light`, `circle-wavy-warning-thin` → `seal-warning-thin`, `file-dotted` → `file-dashed`, `file-dotted-bold` → `file-dashed-bold` … и ещё 58 — полный список в changelog.json

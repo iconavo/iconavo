@@ -1,0 +1,21 @@
+{
+  "prefix": "demo",
+  "releases": [
+    {
+      "version": "3f2a9c1e",
+      "previous": "9b8c7d6e",
+      "date": "2026-10-22T09:15:00Z",
+      "revision": "1.2.3",
+      "total": 2,
+      "added": ["arrow-right"],
+      "hidden": ["eye-old"],
+      "renamed": { "arrow-back": "arrow-left" }
+    },
+    {
+      "version": "9b8c7d6e",
+      "date": "2026-10-20T08:00:00Z",
+      "revision": "1.2.0",
+      "total": 2
+    }
+  ]
+}

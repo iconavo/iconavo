@@ -1,6 +1,6 @@
 // Команды конвейера: pnpm sources fetch [id…] | pnpm sources pin <id> [версия|коммит] | pnpm sanitize [id…]
 // | pnpm normalize [id…] | pnpm data [id…] [--accept-changes]
-import { mkdir, rm, writeFile } from "node:fs/promises";
+import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import { basename, join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
 import { formatBuildReport, renderBuildGallery } from "./build/report.js";
@@ -25,6 +25,7 @@ import {
   pinEntry,
   sourceLabel,
 } from "./sources/fetch.js";
+import { baseRevision } from "./sources/git.js";
 import { readLock, writeLock } from "./sources/lock.js";
 import { loadRegistry } from "./sources/registry.js";
 import { formatReport } from "./sources/report.js";
@@ -35,10 +36,12 @@ const USAGE = `Использование:
   pnpm sanitize [id…]                 очистить SVG скачанных наборов и показать отчёт
   pnpm normalize [id…]                нормализовать иконки и собрать галерею
   pnpm data [id…]                     собрать наборы в data/{набор}/: icons.json (SVGO, алиасы,
-                                      контроль качества), info.json, metadata.json, search.json,
-                                      LICENSE; галерея и страница metadata.html
+                                      контроль качества, скрытые иконки), info.json, metadata.json,
+                                      search.json, LICENSE, changelog.json и CHANGELOG.md; галерея,
+                                      страницы qc.html, metadata.html и changelog.html
   pnpm data [id…] --accept-changes    то же, но изменения иконок без новой версии источника
-                                      приняты: вы проверили их в отчёте qc.html`;
+                                      приняты: вы проверили их в отчёте qc.html. Сравнение идёт
+                                      с версией в main: на ветке флаг нужен до слияния`;
 
 // packages/pipeline/dist/cli.js -> корень репозитория
 const root = fileURLToPath(new URL("../../../", import.meta.url));
@@ -58,6 +61,15 @@ const [command, ...params] = process.argv.slice(2);
 // Флаги отдельно от имён наборов, иначе «--accept-changes» искали бы как набор.
 const flags = params.filter((a) => a.startsWith("--"));
 const args = params.filter((a) => !a.startsWith("--"));
+
+/** JSON-файл или undefined, если файла нет или он не читается: так берётся журнал из data/. */
+async function readJson(path: string): Promise<unknown> {
+  try {
+    return JSON.parse(await readFile(path, "utf8"));
+  } catch {
+    return undefined;
+  }
+}
 
 function usageError(message: string): never {
   console.error(`${message}\n\n${USAGE}`);
@@ -184,17 +196,29 @@ try {
     process.exit(failed > 0 ? 1 : 0);
   } else if (command === "data") {
     const lock = await readLock(lockPath);
+    // Прошлая версия — версия набора в main (ADR-0016, ADR-0018): все изменения ветки попадают в один
+    // выпуск журнала. Git недоступен — прошлая версия не прочитается, и наборы остановятся.
+    const base = await baseRevision(root).catch((e: Error) => ({
+      commit: "HEAD",
+      label: `git недоступен — ${e.message}`,
+    }));
+    console.log(`Прошлая версия наборов: ${base.label}
+`);
+    const history = gitHistory(root, base.commit);
+    // Одно время на весь запуск — дата новых выпусков журнала.
+    const now = Math.floor(Date.now() / 1000);
     const reports: SetBuildReport[] = [];
     let failed = 0;
     for (const config of pick(args)) {
       try {
         const { dir, entry } = await cachedSourceDir(config, lock, cacheDir);
         const started = performance.now();
-        // Прошлая версия — из git: последний коммит, где менялся data/{набор}/icons.json (ADR-0016).
-        const previous = await loadBaseline(gitHistory(root), config, entry);
+        const previous = await loadBaseline(history, config, entry);
         const report = await buildSet(config, dir, entry, {
           ...previous,
           acceptChanges,
+          now,
+          pending: await readJson(join(dataDir, config.id, "changelog.json")),
         });
         reports.push(report);
         // Набор со «СТОП» свои файлы не перезаписывает.
@@ -218,7 +242,7 @@ try {
     const sum = (value: (r: SetBuildReport) => number) =>
       reports.reduce((n, r) => n + value(r), 0);
     console.log(
-      `Итого: ${sum((r) => r.normalize.total)} иконок · в наборах ${sum((r) => r.icons.length)} · алиасов ${sum((r) => r.aliases.length)} · остановлено наборов: ${failed}`,
+      `Итого: ${sum((r) => r.normalize.total)} иконок · в наборах ${sum((r) => r.icons.length)} · скрытых ${sum((r) => r.changelog.state.icons.size - r.icons.length)} · алиасов ${sum((r) => r.changelog.state.aliases.size)} · остановлено наборов: ${failed}`,
     );
     if (reports.length > 0) {
       console.log(`\nМетаданные и лицензии:\n${formatMetadataTable(reports)}`);
@@ -236,6 +260,7 @@ try {
     );
     console.log(`Контроль качества: ${join(galleryDir, "qc.html")}`);
     console.log(`Метаданные и лицензии: ${join(galleryDir, "metadata.html")}`);
+    console.log(`Журнал изменений: ${join(galleryDir, "changelog.html")}`);
     process.exit(failed > 0 ? 1 : 0);
   } else {
     usageError(

@@ -1,0 +1,13 @@
+# Журнал изменений — Lucide
+
+Выпуск — новая версия набора: она меняется, когда в `icons.json` меняется хоть что-то (ADR-0018).
+Имена не пропадают: иконка, которую удалил автор, скрыта, но работает по имени, а старое имя переименованной ведёт на новое (ADR-0005).
+Скрытия и переименования вы одобряете лично в pull request (ADR-0019). Полные списки — в `changelog.json`.
+
+## 20 октября 2026 · версия bf94bc18
+
+Начало журнала · источник: 1ef60af · иконок: 1 891.
+
+**Изменения**
+
+- Новые алиасы (268): `activity-square` → `square-activity`, `alarm-check` → `alarm-clock-check`, `alarm-minus` → `alarm-clock-minus`, `alarm-plus` → `alarm-clock-plus`, `album` → `square-bookmark`, `alert-circle` → `circle-alert`, `alert-octagon` → `octagon-alert`, `alert-triangle` → `triangle-alert`, `align-center` → `text-align-center`, `align-justify` → `text-align-justify`, `align-left` → `text-align-start`, `align-right` → `text-align-end`, `angry` → `face-angry`, `annoyed` → `face-expressionless`, `area-chart` → `chart-area`, `arrow-down-01` → `arrow-down-0-1`, `arrow-down-10` → `arrow-down-1-0`, `arrow-down-az` → `arrow-down-a-z`, `arrow-down-circle` → `circle-arrow-down`, `arrow-down-left-from-circle` → `circle-arrow-out-down-left`, `arrow-down-left-from-square` → `square-arrow-out-down-left`, `arrow-down-left-square` → `square-arrow-down-left`, `arrow-down-right-from-circle` → `circle-arrow-out-down-right`, `arrow-down-right-from-square` → `square-arrow-out-down-right`, `arrow-down-right-square` → `square-arrow-down-right`, `arrow-down-square` → `square-arrow-down`, `arrow-down-za` → `arrow-down-z-a`, `arrow-left-circle` → `circle-arrow-left`, `arrow-left-square` → `square-arrow-left`, `arrow-right-circle` → `circle-arrow-right`, `arrow-right-square` → `square-arrow-right`, `arrow-up-01` → `arrow-up-0-1`, `arrow-up-10` → `arrow-up-1-0`, `arrow-up-az` → `arrow-up-a-z`, `arrow-up-circle` → `circle-arrow-up`, `arrow-up-left-from-circle` → `circle-arrow-out-up-left`, `arrow-up-left-from-square` → `square-arrow-out-up-left`, `arrow-up-left-square` → `square-arrow-up-left`, `arrow-up-right-from-circle` → `circle-arrow-out-up-right`, `arrow-up-right-from-square` → `square-arrow-out-up-right`, `arrow-up-right-square` → `square-arrow-up-right`, `arrow-up-square` → `square-arrow-up`, `arrow-up-za` → `arrow-up-z-a`, `asterisk-square` → `square-asterisk`, `axis-3-d` → `axis-3d`, `badge-help` → `badge-question-mark`, `bar-chart` → `chart-no-axes-column-increasing`, `bar-chart-2` → `chart-no-axes-column`, `bar-chart-3` → `chart-column`, `bar-chart-4` → `chart-column-increasing` … и ещё 218 — полный список в changelog.json

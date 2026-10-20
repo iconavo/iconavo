@@ -46,15 +46,43 @@ export function assertCommitHash(value: string): void {
 }
 
 /**
- * Последний коммит, в котором менялся файл; путь — от корня репозитория, через «/». Файла нет
- * в истории — undefined.
+ * Последний коммит не новее from, в котором менялся хотя бы один из файлов; пути — от корня
+ * репозитория, через «/». Файлов нет в истории — undefined.
  */
 export async function lastCommit(
-  path: string,
+  paths: readonly string[],
   cwd: string,
+  from = "HEAD",
 ): Promise<string | undefined> {
-  const out = (await git(["log", "-1", "--format=%H", "--", path], cwd)).trim();
+  const out = (
+    await git(["log", "-1", "--format=%H", from, "--", ...paths], cwd)
+  ).trim();
   return out === "" ? undefined : out;
+}
+
+/**
+ * С какого коммита искать прошлую версию набора (ADR-0018): общий предок HEAD и origin/main —
+ * версия в main. Коммиты ветки, ещё не слитые в main, журнал не видит, поэтому все изменения ветки
+ * попадают в один выпуск. Нет origin/main или общего предка (CI на PR берёт коммит слияния с
+ * глубиной 1) — HEAD: тогда прошлая версия — сами закоммиченные данные.
+ */
+export async function baseRevision(
+  cwd: string,
+): Promise<{ commit: string; label: string }> {
+  try {
+    const commit = (
+      await git(["merge-base", "HEAD", "origin/main"], cwd)
+    ).trim();
+    assertCommitHash(commit);
+    return { commit, label: `версия в main (коммит ${commit.slice(0, 7)})` };
+  } catch {
+    const commit = (await git(["rev-parse", "HEAD"], cwd)).trim();
+    assertCommitHash(commit);
+    return {
+      commit,
+      label: `HEAD (коммит ${commit.slice(0, 7)}): origin/main не найден`,
+    };
+  }
 }
 
 /**

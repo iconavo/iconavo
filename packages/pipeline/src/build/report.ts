@@ -1,8 +1,14 @@
 // Отчёт сборки (шаг 5): сводка в терминале, таблица размеров и галерея, где у каждой иконки три
 // строки — было, до SVGO (после нормализации) и после SVGO. Страницы наборов общие с галереей шага 4.
 // Контроль качества (шаг 6) добавляет раздел в сводку, страницу qc.html и значки на карточках;
-// метаданные (шаг 7) — раздел в сводку и страницу metadata.html.
+// метаданные (шаг 7) — раздел в сводку и страницу metadata.html; журнал (шаг 8) — раздел в сводку и
+// страницу changelog.html.
 
+import {
+  changelogSection,
+  formatChangelog,
+  renderChangelogPage,
+} from "../changelog/report.js";
 import {
   formatMetadata,
   metadataSection,
@@ -91,9 +97,12 @@ function itemsOf(r: SetBuildReport): GalleryItem[] {
   }));
 }
 
+/** Сколько алиасов в icons.json: одинаковые варианты, переименования и прежние имена от автора. */
+const aliasCount = (r: SetBuildReport) => r.changelog.state.aliases.size;
+
 /**
- * Иконки без карточки: исключённые, не прошедшие SVGO, с одним именем на несколько файлов,
- * пропавшие с прошлой версии.
+ * Иконки без карточки: исключённые, не прошедшие SVGO, с одним именем на несколько файлов и те,
+ * которых больше нет в источнике, — журнал их скрыл или сделал алиасами.
  */
 const problemsOf = (r: SetBuildReport) => [
   ...r.normalize.excluded.map((e) => ({
@@ -108,10 +117,16 @@ const problemsOf = (r: SetBuildReport) => [
     name: c.name,
     reason: `одно имя у файлов: ${c.files.join(", ")}`,
   })),
-  ...r.qc.missing.map((name) => ({
-    name,
-    reason: "пропала: была в прошлой версии",
-  })),
+  ...r.qc.missing.map((name) => {
+    const to = r.changelog.changes.renamed.get(name);
+    return {
+      name,
+      reason:
+        to === undefined
+          ? "скрыта: нет в источнике, имя работает"
+          : `стала алиасом ${to}: тот же рисунок под новым именем`,
+    };
+  }),
 ];
 
 function sizeCells(s: BuildSizes): string {
@@ -124,7 +139,7 @@ function sizeRow(r: SetBuildReport): string {
     r.stop.length === 0
       ? `<span class="ok">можно записывать</span>`
       : `<span class="stop">СТОП</span>`;
-  return `<tr><td><b>${esc(n.name)}</b><br><span class="muted">${esc(n.id)} · ${esc(n.source)}</span></td><td class="num">${n.total}</td><td class="num">${r.icons.length}</td><td class="num">${r.aliases.length}</td><td class="num">${n.excluded.length}</td>${sizeCells(r.sizes)}<td class="num">${r.transforms.before} → ${r.transforms.left}</td><td>${verdict}</td></tr>`;
+  return `<tr><td><b>${esc(n.name)}</b><br><span class="muted">${esc(n.id)} · ${esc(n.source)}</span></td><td class="num">${n.total}</td><td class="num">${r.icons.length}</td><td class="num">${aliasCount(r)}</td><td class="num">${n.excluded.length}</td>${sizeCells(r.sizes)}<td class="num">${r.transforms.before} → ${r.transforms.left}</td><td>${verdict}</td></tr>`;
 }
 
 function totalRow(sets: readonly SetBuildReport[]): string {
@@ -140,7 +155,7 @@ function totalRow(sets: readonly SetBuildReport[]): string {
         ? sum((r) => r.sizes.json ?? 0)
         : undefined,
   };
-  return `<tr><td><b>Всего</b></td><td class="num">${sum((r) => r.normalize.total)}</td><td class="num">${sum((r) => r.icons.length)}</td><td class="num">${sum((r) => r.aliases.length)}</td><td class="num">${sum((r) => r.normalize.excluded.length)}</td>${sizeCells(sizes)}<td class="num">${sum((r) => r.transforms.before)} → ${sum((r) => r.transforms.left)}</td><td></td></tr>`;
+  return `<tr><td><b>Всего</b></td><td class="num">${sum((r) => r.normalize.total)}</td><td class="num">${sum((r) => r.icons.length)}</td><td class="num">${sum(aliasCount)}</td><td class="num">${sum((r) => r.normalize.excluded.length)}</td>${sizeCells(sizes)}<td class="num">${sum((r) => r.transforms.before)} → ${sum((r) => r.transforms.left)}</td><td></td></tr>`;
 }
 
 function renderIndex(
@@ -167,6 +182,7 @@ function renderIndex(
 ${stopsSection(sets.map((r) => ({ name: r.normalize.name, stop: r.stop })))}
 ${qcSection(sets)}
 ${metadataSection(sets)}
+${changelogSection(sets)}
 <h2>Сначала посмотрите</h2>
 ${attention}
 <h2>Все иконки</h2>
@@ -175,8 +191,8 @@ ${pagesSection(sets.map((r, i) => ({ set: r.normalize, count: items[i]?.length ?
 }
 
 /**
- * Файлы галереи сборки: сводка index.html, контроль качества qc.html, страницы наборов и метаданные
- * metadata.html.
+ * Файлы галереи сборки: сводка index.html, контроль качества qc.html, страницы наборов, метаданные
+ * metadata.html и журнал changelog.html.
  */
 export function* renderBuildGallery(
   sets: readonly SetBuildReport[],
@@ -188,6 +204,7 @@ export function* renderBuildGallery(
     yield* renderSetPages(r.normalize, items[i] ?? [], BUILD_PAGE);
   }
   yield { name: "metadata.html", html: renderMetadataPage(sets) };
+  yield { name: "changelog.html", html: renderChangelogPage(sets) };
 }
 
 /** Сводка сборки набора для терминала. */
@@ -196,7 +213,7 @@ export function formatBuildReport(r: SetBuildReport): string {
   const s = r.sizes;
   const lines = [`${n.id} (${n.name}) — ${n.source}`];
   lines.push(
-    `  Иконок: ${n.total} · в наборе: ${r.icons.length} · алиасов: ${r.aliases.length} · исключено: ${n.excluded.length} (${percent(n.excluded.length, n.total)}, порог 1%)`,
+    `  Иконок: ${n.total} · в наборе: ${r.icons.length} · алиасов: ${aliasCount(r)} · исключено: ${n.excluded.length} (${percent(n.excluded.length, n.total)}, порог 1%)`,
   );
   lines.push(
     `  Размер: исходные SVG ${formatBytes(s.source)} → до SVGO ${formatBytes(s.normalized)} → после SVGO ${formatBytes(s.optimized)} (${sizeChange(s.normalized, s.optimized)})${s.json === undefined ? "" : ` · icons.json ${formatBytes(s.json)}`}`,
@@ -231,6 +248,7 @@ export function formatBuildReport(r: SetBuildReport): string {
         .map((f) => `${f.name} — ${f.text}`),
     );
   }
+  lines.push(...formatChangelog(r.changelog));
   lines.push(...formatMetadata(r.metadata));
   if (r.stop.length === 0) lines.push("  Итог: можно записывать");
   else for (const x of r.stop) lines.push(`  СТОП: ${x}`);

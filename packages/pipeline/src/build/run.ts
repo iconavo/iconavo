@@ -1,14 +1,24 @@
 // Сборка набора (шаг 5, ADR-0015): очистка и нормализация (шаг 4) → SVGO → алиасы одинаковых
-// вариантов (ADR-0002) → контроль качества (шаг 6, ADR-0016) → метаданные и лицензия (шаг 7,
-// ADR-0017) → файлы набора (ADR-0003): icons.json в формате IconifyJSON, info.json, metadata.json,
-// search.json, LICENSE и NOTICE. Одинаковые источники дают побайтно одинаковые файлы, а набор со
-// «СТОП» свои файлы не перезаписывает.
+// вариантов (ADR-0002) → метаданные автора → контроль качества (шаг 6, ADR-0016) → журнал (шаг 8,
+// ADR-0018): прошлая версия, скрытые иконки, переименования, прежние имена от автора, версия набора →
+// метаданные и лицензия (шаг 7, ADR-0017) → файлы набора (ADR-0003): icons.json в формате IconifyJSON,
+// info.json, metadata.json, search.json, LICENSE, NOTICE, changelog.json и CHANGELOG.md. Одинаковые
+// источники дают побайтно одинаковые файлы, а набор со «СТОП» свои файлы не перезаписывает.
 
 import { randomBytes } from "node:crypto";
 import { mkdir, rename, rm, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { validate } from "@iconavo-ui/schema";
-import { type SetMetadata, setMetadata } from "../metadata/run.js";
+import {
+  authorAliases,
+  type SetChangelog,
+  setChangelog,
+} from "../changelog/run.js";
+import {
+  readAuthorMetadata,
+  type SetMetadata,
+  setMetadata,
+} from "../metadata/run.js";
 import type { NormalizedIcon } from "../normalize/normalize.js";
 import {
   type NormalizedEntry,
@@ -23,7 +33,7 @@ import type { SourceConfig } from "../sources/config.js";
 import { sourceLabel } from "../sources/fetch.js";
 import type { LockEntry } from "../sources/lock.js";
 import { variantAliases } from "./aliases.js";
-import { canonicalJson, type Json } from "./json.js";
+import { canonicalJson } from "./json.js";
 
 export interface BuiltIcon {
   entry: NormalizedEntry;
@@ -60,6 +70,8 @@ export interface SetBuildReport {
   transforms: { before: number; left: number };
   /** Контроль качества (ADR-0016). */
   qc: SetQcReport;
+  /** Журнал: итог слияния с прошлой версией, версия набора и выпуск (ADR-0018). */
+  changelog: SetChangelog;
   /** Лицензия, теги и категории, витрина, отпечатки и тексты остальных файлов набора (ADR-0017). */
   metadata: SetMetadata;
   /** Содержимое icons.json; нет — набор остановлен. */
@@ -69,12 +81,18 @@ export interface SetBuildReport {
 }
 
 export interface BuildOptions {
-  /** Прошлая версия набора для сравнения (ADR-0016). */
+  /** Прошлая версия набора для сравнения (ADR-0016) и журнала (ADR-0018). */
   baseline?: Baseline;
-  /** Почему сравнивать не с чем — для отчёта. */
+  /** Почему сравнивать не с чем: набора ещё нет в истории — для отчёта. */
   baselineNote?: string;
+  /** Прошлая версия есть, но не читается: набор останавливается (ADR-0018). */
+  baselineError?: string;
   /** Изменения проверены в отчёте: правило 2% набор не останавливает (pnpm data --accept-changes). */
   acceptChanges?: boolean;
+  /** Сейчас — секунды Unix: дата нового выпуска. Нет — время на часах компьютера. */
+  now?: number;
+  /** Журнал, который сейчас лежит в data/{набор}/changelog.json, — разобранный JSON. */
+  pending?: unknown;
 }
 
 const TRANSFORM = /\stransform="/g;
@@ -152,6 +170,14 @@ export async function buildSet(
   for (const [alias, parent] of aliases)
     byName.get(parent)?.aliases.push(alias);
 
+  // Метаданные автора — один раз на все файлы: теги и категории для search.json, прежние имена для
+  // журнала.
+  const author = await readAuthorMetadata(
+    config,
+    dir,
+    built.map((b) => b.entry.file),
+  );
+
   // Контроль качества идёт и у остановленного набора: отчёт должен быть полным.
   const qc = await checkSet({
     palette: config.palette,
@@ -164,11 +190,37 @@ export async function buildSet(
     aliases,
     // Если санитайзер нашёл опасное, исходники не рисуем: набор и так остановлен.
     compareOriginals: normalize.dangerous === 0,
-    ...options,
+    baseline: options.baseline,
+    baselineNote: options.baselineNote ?? options.baselineError,
+    acceptChanges: options.acceptChanges,
   });
   stop.push(...qc.stop);
 
+  // Журнал (ADR-0018): имена прошлой версии не пропадают, переименования становятся алиасами, у набора
+  // появляется версия. Считается и у остановленного набора — для отчёта.
+  const changelog = setChangelog(
+    config,
+    entry,
+    {
+      icons: new Map(icons.map((b) => [b.entry.name, b.icon])),
+      aliases: aliasOf,
+    },
+    authorAliases(
+      config,
+      built.map((b) => ({ name: b.entry.name, file: b.entry.file })),
+      author.author,
+    ),
+    {
+      baseline: options.baseline,
+      baselineError: options.baselineError,
+      now: options.now ?? Math.floor(Date.now() / 1000),
+      pending: options.pending,
+    },
+  );
+  stop.push(...changelog.stop);
+
   // Метаданные тоже собираются у остановленного набора: отчёт показывает лицензию для подтверждения.
+  // В search.json и metadata.json — только видимые иконки свежей сборки: скрытых там нет.
   const metadata = await setMetadata(
     config,
     dir,
@@ -179,6 +231,7 @@ export async function buildSet(
       icon: b.icon,
     })),
     new Set(built.map((b) => b.entry.name)),
+    { author, version: changelog.version },
   );
   stop.push(...metadata.stop);
 
@@ -191,12 +244,13 @@ export async function buildSet(
     sizes,
     transforms,
     qc,
+    changelog,
     metadata,
     stop,
   };
   if (stop.length > 0) return report;
 
-  const data = iconsFile(config, icons, aliases);
+  const data = changelog.data;
   const issues = validate("icons", data);
   if (issues.length > 0) {
     stop.push(
@@ -212,33 +266,6 @@ export async function buildSet(
   return report;
 }
 
-/** IconifyJSON: размер набора общий, у иконки — только если он другой; времени сборки нет. */
-function iconsFile(
-  config: SourceConfig,
-  icons: readonly BuiltIcon[],
-  aliases: readonly [string, string][],
-): { [key: string]: Json } {
-  const list: { [key: string]: Json } = {};
-  for (const b of icons) {
-    const item: { [key: string]: Json } = { body: b.icon.body };
-    if (b.icon.width !== config.grid) item.width = b.icon.width;
-    if (b.icon.height !== config.grid) item.height = b.icon.height;
-    list[b.entry.name] = item;
-  }
-  const data: { [key: string]: Json } = {
-    prefix: config.id,
-    icons: list,
-    width: config.grid,
-    height: config.grid,
-  };
-  if (aliases.length > 0) {
-    data.aliases = Object.fromEntries(
-      aliases.map(([alias, parent]) => [alias, { parent }]),
-    );
-  }
-  return data;
-}
-
 /**
  * Записывает файлы набора в `data/{набор}/`, каждый через временный файл: оборванная запись не
  * оставит половину файла. NOTICE, которого больше нет в источнике, удаляется. Набор со «СТОП» не
@@ -249,11 +276,18 @@ export async function writeSetData(
   r: SetBuildReport,
 ): Promise<string[] | undefined> {
   const files = r.metadata.files;
-  if (r.json === undefined || files === undefined) return undefined;
+  const journal = r.changelog.files;
+  if (r.json === undefined || files === undefined || journal === undefined) {
+    return undefined;
+  }
   const dir = join(dataDir, r.normalize.id);
   await mkdir(dir, { recursive: true });
   const written: string[] = [];
-  for (const file of [{ name: "icons.json", text: r.json }, ...files]) {
+  for (const file of [
+    { name: "icons.json", text: r.json },
+    ...files,
+    ...journal,
+  ]) {
     const path = join(dir, file.name);
     const tmp = join(
       dir,

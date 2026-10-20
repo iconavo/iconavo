@@ -14,6 +14,11 @@ export interface AuthorMetadata {
   tags: readonly unknown[];
   /** Названия категорий как у автора. */
   categories: readonly string[];
+  /**
+   * Прежние имена иконки у автора — путями SVG, как если бы файл лежал под старым именем: имя
+   * получается по правилам папки набора и становится алиасом (ADR-0018). Нет — прежних имён нет.
+   */
+  aliases?: readonly string[];
 }
 
 /** Читатель формата: путь SVG в источнике → теги и категории. Иконки без метаданных в ответ не попадают. */
@@ -62,13 +67,28 @@ async function readJson<T>(
 const stem = (file: string) =>
   (file.split("/").at(-1) ?? file).replace(/\.svg$/i, "");
 
+/** Путь SVG с другим именем файла в той же папке: прежнее имя иконки. */
+function sibling(file: string, name: string): string {
+  if (name === "" || /[/\\]/.test(name)) {
+    throw new Error(`прежнее имя «${name}» — не имя файла`);
+  }
+  return `${file.slice(0, file.lastIndexOf("/") + 1)}${name}.svg`;
+}
+
 const lucideIcon = z.looseObject({
   tags: z.array(z.unknown()).default([]),
   categories: z.array(z.string()).default([]),
+  // Прежние имена: строкой или объектом с причиной (alias.name, alias.typo, alias.duplicate).
+  aliases: z
+    .array(z.union([z.string(), z.looseObject({ name: z.string() })]))
+    .default([]),
 });
 const lucideCategory = z.looseObject({ title: z.string().min(1) });
 
-/** Lucide: `icons/{имя}.json` рядом с иконкой; слаг категории → название из `categories/{слаг}.json`. */
+/**
+ * Lucide: `icons/{имя}.json` рядом с иконкой; слаг категории → название из `categories/{слаг}.json`;
+ * прежние имена — поле aliases.
+ */
 const lucide: MetadataReader = async (dir, svgFiles) => {
   const titles = new Map<string, string>();
   const title = async (slug: string) => {
@@ -94,7 +114,14 @@ const lucide: MetadataReader = async (dir, svgFiles) => {
     if (!meta) continue;
     const categories: string[] = [];
     for (const slug of meta.categories) categories.push(await title(slug));
-    out.set(file, { tags: meta.tags, categories });
+    const aliases = meta.aliases.map((a) =>
+      sibling(file, typeof a === "string" ? a : a.name),
+    );
+    out.set(file, {
+      tags: meta.tags,
+      categories,
+      ...(aliases.length > 0 ? { aliases } : {}),
+    });
   }
   return out;
 };
@@ -125,7 +152,10 @@ const tabler: MetadataReader = async (dir, svgFiles) => {
   return out;
 };
 
-/** Phosphor: массив иконок в `dist/index.mjs`; файл `assets/{начертание}/{имя}-{начертание}.svg`. */
+/**
+ * Phosphor: массив иконок в `dist/index.mjs`; файл `assets/{начертание}/{имя}-{начертание}.svg`.
+ * Прежнее имя (поле alias) у автора одно на иконку — оно получает тот же суффикс начертания.
+ */
 const phosphor: MetadataReader = async (dir, svgFiles) => {
   const path = "dist/index.mjs";
   const text = await readSource(dir, path);
@@ -146,8 +176,16 @@ const phosphor: MetadataReader = async (dir, svgFiles) => {
         ? s.slice(0, -(weight.length + 1))
         : s;
     const entry = byName.get(name);
-    if (entry)
-      out.set(file, { tags: entry.tags, categories: entry.categories });
+    if (!entry) continue;
+    out.set(file, {
+      tags: entry.tags,
+      categories: entry.categories,
+      ...(entry.alias === undefined
+        ? {}
+        : {
+            aliases: [sibling(file, `${entry.alias}${s.slice(name.length)}`)],
+          }),
+    });
   }
   return out;
 };
