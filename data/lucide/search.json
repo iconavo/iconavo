@@ -1328,6 +1328,39 @@
         "song"
       ]
     },
+    "avocado": {
+      "fingerprint": "69397471ff83",
+      "tags": [
+        "fruit",
+        "snack",
+        "meal",
+        "lunch",
+        "ingredient",
+        "cooking",
+        "cookery",
+        "kitchen",
+        "cuisine",
+        "eating",
+        "healthy",
+        "nutrition",
+        "diet",
+        "guacamole",
+        "mexican",
+        "green",
+        "pit",
+        "seed",
+        "half",
+        "produce",
+        "vegetarian",
+        "vegan",
+        "grocery",
+        "supermarket",
+        "toast",
+        "superfood",
+        "plant based",
+        "ripe"
+      ]
+    },
     "award": {
       "fingerprint": "c49793056182",
       "tags": [
@@ -1379,6 +1412,41 @@
         "camping",
         "school",
         "childhood"
+      ]
+    },
+    "bacon": {
+      "fingerprint": "4845273413b8",
+      "tags": [
+        "rashers",
+        "smoked",
+        "streaky",
+        "crispy",
+        "meat",
+        "fast food",
+        "junk food",
+        "snack",
+        "dish",
+        "restaurant",
+        "brunch",
+        "lunch",
+        "meal",
+        "savory",
+        "savoury",
+        "cookery",
+        "cooking",
+        "grilled",
+        "barbecue",
+        "barbeque",
+        "bbq",
+        "pig",
+        "pork",
+        "breakfast",
+        "cured",
+        "butcher",
+        "sandwich",
+        "protein",
+        "grocery",
+        "kitchen"
       ]
     },
     "badge": {
@@ -3469,7 +3537,7 @@
       ]
     },
     "brain": {
-      "fingerprint": "2b859ce486b7",
+      "fingerprint": "769bb852aec2",
       "tags": [
         "medical",
         "mind",
@@ -3488,7 +3556,7 @@
       ]
     },
     "brain-circuit": {
-      "fingerprint": "e7dbe35bdb6b",
+      "fingerprint": "00d1fe9eada7",
       "tags": [
         "mind",
         "intellect",
@@ -3500,12 +3568,30 @@
       ]
     },
     "brain-cog": {
-      "fingerprint": "4604805e96c9",
+      "fingerprint": "b06d43333c9b",
       "tags": [
         "mind",
         "intellect",
         "artificial intelligence",
         "ai",
+        "deep learning",
+        "machine learning",
+        "computing"
+      ]
+    },
+    "brain-off": {
+      "fingerprint": "92944532ace9",
+      "tags": [
+        "medical",
+        "mind",
+        "mental",
+        "intellect",
+        "cerebral",
+        "consciousness",
+        "genius",
+        "artificial intelligence",
+        "ai",
+        "think",
         "deep learning",
         "machine learning",
         "computing"
@@ -10721,6 +10807,26 @@
         "food"
       ]
     },
+    "graph-hub": {
+      "fingerprint": "d406cc2551fd",
+      "tags": [
+        "load balancer",
+        "distribute",
+        "traffic",
+        "network",
+        "nodes",
+        "parallel",
+        "branch",
+        "hierarchy",
+        "routing",
+        "dispatcher",
+        "cluster",
+        "backend",
+        "fan-out",
+        "topology",
+        "orchestration"
+      ]
+    },
     "graph-star": {
       "fingerprint": "37c226827515",
       "tags": [
@@ -12591,6 +12697,21 @@
         "science"
       ]
     },
+    "letter-spacing": {
+      "fingerprint": "9985ad538ef6",
+      "tags": [
+        "tracking",
+        "kerning",
+        "design",
+        "lettering",
+        "text",
+        "letters",
+        "characters",
+        "font",
+        "typography",
+        "formatting"
+      ]
+    },
     "letters": {
       "fingerprint": "a954f27bae67",
       "tags": [
@@ -12791,6 +12912,23 @@
         "station",
         "last",
         "end"
+      ]
+    },
+    "line-height": {
+      "fingerprint": "57235992692e",
+      "tags": [
+        "leading",
+        "text",
+        "letters",
+        "characters",
+        "font",
+        "typography",
+        "spacing",
+        "paragraph",
+        "formatting",
+        "editor",
+        "readability",
+        "typesetting"
       ]
     },
     "line-squiggle": {
@@ -20172,6 +20310,23 @@
         "screen"
       ]
     },
+    "smartphone-user-round": {
+      "fingerprint": "acb7769e4a53",
+      "tags": [
+        "phone",
+        "cellphone",
+        "device",
+        "mobile",
+        "person",
+        "profile",
+        "account",
+        "avatar",
+        "contact",
+        "identity",
+        "owner",
+        "authentication"
+      ]
+    },
     "snail": {
       "fingerprint": "8c479a3b99fc",
       "tags": [
@@ -22968,6 +23123,31 @@
         "potty",
         "bathroom",
         "washroom"
+      ]
+    },
+    "tombstone": {
+      "fingerprint": "2a1484c2ac82",
+      "tags": [
+        "grave",
+        "gravestone",
+        "headstone",
+        "cemetery",
+        "graveyard",
+        "death",
+        "memorial",
+        "funeral",
+        "halloween",
+        "rip",
+        "obituary",
+        "deceased",
+        "epitaph",
+        "mourning",
+        "bereavement",
+        "condolence",
+        "deprecated",
+        "retired",
+        "archived",
+        "decommissioned"
       ]
     },
     "tool-case": {
