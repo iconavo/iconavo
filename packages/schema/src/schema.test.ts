@@ -168,6 +168,19 @@ describe("search.json", () => {
   it("запрещает лишние поля (опечатки должны ловиться)", () => {
     expect(validate("search", file({ tagz: [] })).length).toBeGreaterThan(0);
   });
+
+  it("теги — только строчными буквами", () => {
+    expect(validate("search", file({ tags: ["дом", "home"] }))).toEqual([]);
+    expect(validate("search", file({ tags: ["Home"] }))).toEqual([
+      { path: "icons.a.tags", message: "теги — только строчными буквами" },
+    ]);
+  });
+
+  it("теги не повторяются", () => {
+    expect(validate("search", file({ tags: ["home", "home"] }))).toEqual([
+      { path: "icons.a.tags", message: "теги не должны повторяться" },
+    ]);
+  });
 });
 
 describe("info.json", () => {

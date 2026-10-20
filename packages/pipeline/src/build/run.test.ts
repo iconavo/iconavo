@@ -1,28 +1,52 @@
-import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
+import {
+  mkdir,
+  mkdtemp,
+  readdir,
+  readFile,
+  rm,
+  writeFile,
+} from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { validate } from "@iconavo-ui/schema";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { licenseHash } from "../metadata/license.js";
 import { type Baseline, iconsByName } from "../qc/baseline.js";
 import {
   type SourceConfigInput,
   sourceConfigSchema,
 } from "../sources/config.js";
+import type { LockEntry } from "../sources/lock.js";
 import { SVG_NS } from "../svg/xml.js";
 import { formatBuildReport, renderBuildGallery } from "./report.js";
 import { buildSet, writeSetData } from "./run.js";
 
+const LICENSE_TEXT = "MIT License\n\nCopyright (c) Demo\n";
 const base: SourceConfigInput = {
   id: "demo",
   name: "Demo <b>",
+  author: { name: "Demo", url: "https://example.com/demo" },
   source: { type: "npm", package: "demo-icons" },
   svgFolders: [{ path: "icons" }],
   palette: "monochrome",
   grid: 24,
-  license: { spdx: "MIT", file: "LICENSE" },
+  license: {
+    spdx: "MIT",
+    file: "LICENSE",
+    confirmed: licenseHash("MIT", LICENSE_TEXT),
+  },
 };
 const config = (extra: Partial<SourceConfigInput> = {}) =>
   sourceConfigSchema.parse({ ...base, ...extra });
+
+/** Названия вариантов для тестов с variantAliases: без них конфиг не принимается. */
+const OUTLINE = { "": "Regular", "-outline": "Outline" };
+
+const entry = (version = "1.0.0"): LockEntry => ({
+  type: "npm",
+  version,
+  integrity: "sha512-AAAA",
+});
 
 const svg = (body: string, attrs = `viewBox="0 0 24 24"`) =>
   `<svg xmlns="${SVG_NS}" ${attrs}>${body}</svg>`;
@@ -43,15 +67,20 @@ afterEach(async () => {
   await rm(dataDir, { recursive: true, force: true });
 });
 
+/** Файлы источника; LICENSE и package.json пакета npm — по умолчанию, их можно заменить. */
 async function makeSet(files: Record<string, string>, root = dir) {
-  for (const [path, content] of Object.entries(files)) {
+  const all = {
+    LICENSE: LICENSE_TEXT,
+    "package.json": JSON.stringify({ name: "demo-icons", license: "MIT" }),
+    ...files,
+  };
+  for (const [path, content] of Object.entries(all)) {
     await mkdir(dirname(join(root, path)), { recursive: true });
     await writeFile(join(root, path), content, "utf8");
   }
 }
 
-const build = (cfg = config(), root = dir) =>
-  buildSet(cfg, root, "demo-icons@1.0.0");
+const build = (cfg = config(), root = dir) => buildSet(cfg, root, entry());
 
 /** Содержимое icons.json как объект; если набор остановлен — ошибка теста с причинами. */
 function parsed(r: Awaited<ReturnType<typeof build>>) {
@@ -107,14 +136,26 @@ describe("сборка набора", () => {
       "icons/360.svg": CIRCLE,
     });
     const first = await build();
-    const path = (await writeSetData(dataDir, first)) as string;
-    const before = await readFile(path);
+    const written = (await writeSetData(dataDir, first)) as string[];
+    const read = () => Promise.all(written.map((p) => readFile(p)));
+    const before = await read();
     const second = await build();
     await writeSetData(dataDir, second);
-    const after = await readFile(path);
+    const after = await read();
     expect(second.json).toBe(first.json);
-    expect(after.equals(before)).toBe(true);
-    expect(path).toBe(join(dataDir, "demo", "icons.json"));
+    expect(second.metadata.files).toEqual(first.metadata.files);
+    after.forEach((bytes, i) => {
+      expect(bytes.equals(before[i] as Buffer)).toBe(true);
+    });
+    expect(written).toEqual(
+      [
+        "icons.json",
+        "info.json",
+        "metadata.json",
+        "search.json",
+        "LICENSE",
+      ].map((name) => join(dataDir, "demo", name)),
+    );
     // Ключи-числа — по кодам символов, а не впереди всех.
     expect(Object.keys(parsed(first).icons)).toEqual([
       "123",
@@ -170,7 +211,9 @@ describe("сборка набора", () => {
       "icons/home.svg": SQUARE,
       "icons/home-outline.svg": CIRCLE,
     });
-    const r = await build(config({ variantAliases: ["", "-outline"] }));
+    const r = await build(
+      config({ variantAliases: ["", "-outline"], suffixes: OUTLINE }),
+    );
     const data = parsed(r);
     expect(data.aliases).toEqual({ "add-outline": { parent: "add" } });
     expect(Object.keys(data.icons)).toEqual(["add", "home", "home-outline"]);
@@ -217,6 +260,127 @@ describe("сборка набора", () => {
   });
 });
 
+describe("метаданные и лицензия при сборке", () => {
+  it("все файлы набора проходят схему и согласованы с icons.json", async () => {
+    await makeSet({
+      "icons/home.svg": SQUARE,
+      "icons/home-outline.svg": CIRCLE,
+      "icons/clip.svg": WITH_IDS,
+    });
+    const r = await build(
+      config({ variantAliases: ["", "-outline"], suffixes: OUTLINE }),
+    );
+    const icons = parsed(r);
+    const files = new Map(
+      (r.metadata.files ?? []).map((f) => [f.name, f.text]),
+    );
+    expect([...files.keys()]).toEqual([
+      "info.json",
+      "metadata.json",
+      "search.json",
+      "LICENSE",
+    ]);
+    const json = (name: string) => JSON.parse(files.get(name) ?? "null");
+    expect(validate("info", json("info.json"))).toEqual([]);
+    expect(validate("metadata", json("metadata.json"))).toEqual([]);
+    expect(validate("search", json("search.json"))).toEqual([]);
+    expect(json("info.json")).toMatchObject({
+      name: "Demo <b>",
+      total: 3,
+      author: { name: "Demo", url: "https://example.com/demo" },
+      license: {
+        spdx: "MIT",
+        title: "MIT",
+        text: LICENSE_TEXT,
+        source: "https://www.npmjs.com/package/demo-icons",
+        revision: "1.0.0",
+        confirmed: true,
+      },
+      height: 24,
+      samples: ["home", "clip", "home-outline"],
+      palette: false,
+    });
+    expect(json("metadata.json")).toEqual({
+      suffixes: { "": "Regular", "-outline": "Outline" },
+    });
+    expect(Object.keys(json("search.json").icons)).toEqual(
+      Object.keys(icons.icons),
+    );
+    expect(json("search.json").icons["home-outline"].tags).toEqual(["home"]);
+    expect(files.get("LICENSE")).toBe(LICENSE_TEXT);
+  });
+
+  it("лицензия не подтверждена — «СТОП», старые файлы не тронуты, отчёт полный", async () => {
+    await makeSet({ "icons/a.svg": SQUARE });
+    await mkdir(join(dataDir, "demo"));
+    await writeFile(join(dataDir, "demo", "icons.json"), "старый", "utf8");
+    const r = await build(
+      config({ license: { spdx: "MIT", file: "LICENSE" } }),
+    );
+    expect(r.stop).toEqual([
+      `лицензия не подтверждена (ADR-0017): прочитайте текст в metadata.html; после подтверждения в sources/demo.ts вписывается license.confirmed: "${licenseHash("MIT", LICENSE_TEXT)}"`,
+    ]);
+    expect(r.metadata.license?.status).toBe("unconfirmed");
+    expect(r.metadata.files).toBeUndefined();
+    expect(await writeSetData(dataDir, r)).toBeUndefined();
+    expect(await readdir(join(dataDir, "demo"))).toEqual(["icons.json"]);
+    const page = [...renderBuildGallery([r])].at(-1)?.html ?? "";
+    expect(page).toContain(`<pre>MIT License`);
+    expect(page).toContain(licenseHash("MIT", LICENSE_TEXT));
+  });
+
+  it("текст лицензии у автора изменился — «СТОП»", async () => {
+    await makeSet({
+      "icons/a.svg": SQUARE,
+      LICENSE: "MIT License\n\nCopyright (c) Другой автор\n",
+    });
+    const r = await build();
+    expect(r.stop.join("\n")).toMatch(/лицензия изменилась у автора/);
+    expect(r.json).toBeUndefined();
+  });
+
+  it("CRLF в тексте лицензии не меняет отпечаток, в data/ — LF", async () => {
+    await makeSet({
+      "icons/a.svg": SQUARE,
+      LICENSE: LICENSE_TEXT.replaceAll("\n", "\r\n"),
+    });
+    const r = await build();
+    expect(r.stop).toEqual([]);
+    expect(r.metadata.files?.find((f) => f.name === "LICENSE")?.text).toBe(
+      LICENSE_TEXT,
+    );
+  });
+
+  it("NOTICE записывается, а пропавший у автора — удаляется", async () => {
+    const notice = "Demo icons\nCopyright Demo\n";
+    await makeSet({ "icons/a.svg": SQUARE, NOTICE: notice });
+    const cfg = config({
+      license: {
+        spdx: "MIT",
+        file: "LICENSE",
+        confirmed: licenseHash("MIT", LICENSE_TEXT, notice),
+      },
+    });
+    const first = (await writeSetData(dataDir, await build(cfg))) as string[];
+    expect(first.at(-1)).toBe(join(dataDir, "demo", "NOTICE"));
+    expect(await readFile(join(dataDir, "demo", "NOTICE"), "utf8")).toBe(
+      notice,
+    );
+
+    await rm(join(dir, "NOTICE"));
+    const again = await build();
+    expect(again.stop).toEqual([]);
+    await writeSetData(dataDir, again);
+    expect((await readdir(join(dataDir, "demo"))).sort()).toEqual([
+      "LICENSE",
+      "icons.json",
+      "info.json",
+      "metadata.json",
+      "search.json",
+    ]);
+  });
+});
+
 describe("отчёт и галерея сборки", () => {
   it("сводка в терминале", async () => {
     await makeSet({ "icons/a.svg": SQUARE, "icons/b.svg": CIRCLE });
@@ -239,6 +403,7 @@ describe("отчёт и галерея сборки", () => {
       "index.html",
       "qc.html",
       "demo-1.html",
+      "metadata.html",
     ]);
     const page = files[2]?.html ?? "";
     expect(page.match(/<span class="lbl">SVGO<\/span>/g)).toHaveLength(2);
@@ -259,7 +424,9 @@ describe("отчёт и галерея сборки", () => {
 
   it("сводка галереи: таблица размеров и значки алиасов на карточке старшего варианта", async () => {
     await makeSet({ "icons/add.svg": SQUARE, "icons/add-outline.svg": SQUARE });
-    const r = await build(config({ variantAliases: ["", "-outline"] }));
+    const r = await build(
+      config({ variantAliases: ["", "-outline"], suffixes: OUTLINE }),
+    );
     const [index, , page] = [...renderBuildGallery([r])].map((f) => f.html);
     expect(index).toContain("<th>transform: было → осталось</th>");
     expect(index).toContain(`<span class="ok">можно записывать</span>`);
@@ -323,7 +490,7 @@ describe("контроль качества при сборке", () => {
     expect((await build()).json).toBeDefined();
 
     const opts = (extra: object) =>
-      buildSet(config(), dir, "demo-icons@1.0.0", {
+      buildSet(config(), dir, entry(), {
         baseline: baselineOf(before),
         ...extra,
       });
@@ -336,10 +503,10 @@ describe("контроль качества при сборке", () => {
       ["changed", "c"],
     ]);
     const accepted = await opts({ acceptChanges: true });
-    const updated = await buildSet(config(), dir, "demo-icons@2.0.0", {
+    const updated = await buildSet(config(), dir, entry("2.0.0"), {
       baseline: baselineOf(before, true),
     });
-    const fresh = await buildSet(config(), dir, "demo-icons@2.0.0");
+    const fresh = await buildSet(config(), dir, entry("2.0.0"));
     expect(accepted.json).toBeDefined();
     expect(accepted.json).toBe(fresh.json);
     expect(updated.json).toBe(fresh.json);
@@ -349,7 +516,7 @@ describe("контроль качества при сборке", () => {
   it("с прошлой версией и без неё icons.json побайтно одинаков", async () => {
     await makeSet({ "icons/a.svg": SQUARE, "icons/b.svg": CIRCLE });
     const first = await build();
-    const second = await buildSet(config(), dir, "demo-icons@1.0.0", {
+    const second = await buildSet(config(), dir, entry(), {
       baseline: baselineOf(first.json as string),
     });
     expect(second.json).toBe(first.json);
@@ -362,7 +529,7 @@ describe("контроль качества при сборке", () => {
 
   it("отчёт: строки в терминале, раздел в сводке, qc.html, значки на карточках", async () => {
     await makeSet({ "icons/dot.svg": DOT, "icons/edge.svg": EDGE });
-    const r = await buildSet(config(), dir, "demo-icons@1.0.0", {
+    const r = await buildSet(config(), dir, entry(), {
       baselineNote: "data/demo/icons.json ещё нет в истории git",
     });
     const text = formatBuildReport(r);

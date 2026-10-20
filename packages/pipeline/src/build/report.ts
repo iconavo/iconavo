@@ -1,7 +1,13 @@
 // Отчёт сборки (шаг 5): сводка в терминале, таблица размеров и галерея, где у каждой иконки три
 // строки — было, до SVGO (после нормализации) и после SVGO. Страницы наборов общие с галереей шага 4.
-// Контроль качества (шаг 6) добавляет раздел в сводку, страницу qc.html и значки на карточках.
+// Контроль качества (шаг 6) добавляет раздел в сводку, страницу qc.html и значки на карточках;
+// метаданные (шаг 7) — раздел в сводку и страницу metadata.html.
 
+import {
+  formatMetadata,
+  metadataSection,
+  renderMetadataPage,
+} from "../metadata/report.js";
 import {
   attentionItems,
   attentionSection,
@@ -160,6 +166,7 @@ function renderIndex(
 <tbody>${sets.map(sizeRow).join("")}${totalRow(sets)}</tbody></table>
 ${stopsSection(sets.map((r) => ({ name: r.normalize.name, stop: r.stop })))}
 ${qcSection(sets)}
+${metadataSection(sets)}
 <h2>Сначала посмотрите</h2>
 ${attention}
 <h2>Все иконки</h2>
@@ -167,7 +174,10 @@ ${pagesSection(sets.map((r, i) => ({ set: r.normalize, count: items[i]?.length ?
   );
 }
 
-/** Файлы галереи сборки: сводка index.html, контроль качества qc.html и страницы наборов. */
+/**
+ * Файлы галереи сборки: сводка index.html, контроль качества qc.html, страницы наборов и метаданные
+ * metadata.html.
+ */
 export function* renderBuildGallery(
   sets: readonly SetBuildReport[],
 ): Generator<GalleryFile> {
@@ -177,6 +187,7 @@ export function* renderBuildGallery(
   for (const [i, r] of sets.entries()) {
     yield* renderSetPages(r.normalize, items[i] ?? [], BUILD_PAGE);
   }
+  yield { name: "metadata.html", html: renderMetadataPage(sets) };
 }
 
 /** Сводка сборки набора для терминала. */
@@ -220,6 +231,7 @@ export function formatBuildReport(r: SetBuildReport): string {
         .map((f) => `${f.name} — ${f.text}`),
     );
   }
+  lines.push(...formatMetadata(r.metadata));
   if (r.stop.length === 0) lines.push("  Итог: можно записывать");
   else for (const x of r.stop) lines.push(`  СТОП: ${x}`);
   return lines.join("\n");

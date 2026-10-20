@@ -11,7 +11,9 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import {
+  downloadRules,
   extraFiles,
+  pathPattern,
   type SourceConfig,
   type SourceConfigInput,
   sourceConfigSchema,
@@ -43,6 +45,7 @@ afterEach(async () => {
 const baseConfig: SourceConfigInput = {
   id: "demo",
   name: "Demo",
+  author: { name: "Demo", url: "https://example.com/demo" },
   source: { type: "npm", package: "demo-icons" },
   svgFolders: [{ path: "icons" }],
   palette: "monochrome",
@@ -90,8 +93,68 @@ describe("конфиг набора", () => {
     ["нет сетки", { ...baseConfig, grid: undefined }],
     ["дробная сетка", { ...baseConfig, grid: 24.5 }],
     ["сетка источника не больше нуля", { ...baseConfig, sourceGrid: 0 }],
+    ["нет автора", { ...baseConfig, author: undefined }],
+    [
+      "лицензия не из разрешённых",
+      { ...baseConfig, license: { spdx: "GPL-3.0", file: "LICENSE" } },
+    ],
+    [
+      "отпечаток лицензии не той длины",
+      {
+        ...baseConfig,
+        license: { spdx: "MIT", file: "LICENSE", confirmed: "abc" },
+      },
+    ],
+    ["неизвестный формат метаданных", { ...baseConfig, metadata: "yaml" }],
+    ["старое поле iconMetadata", { ...baseConfig, iconMetadata: "json" }],
+    ["старое поле tagsFile", { ...baseConfig, tagsFile: "tags.json" }],
+    ["неверный суффикс", { ...baseConfig, suffixes: { bold: "Bold" } }],
+    [
+      "суффикс из variantAliases без названия",
+      {
+        ...baseConfig,
+        variantAliases: ["", "-outline"],
+        suffixes: { "": "Regular" },
+      },
+    ],
+    ["повтор в витрине", { ...baseConfig, samples: ["a", "a"] }],
+    [
+      "витрина больше шести",
+      { ...baseConfig, samples: ["a", "b", "c", "d", "e", "f", "g"] },
+    ],
   ])("отклоняет: %s", (_name, config) => {
     expect(sourceConfigSchema.safeParse(config).success).toBe(false);
+  });
+
+  it("принимает метаданные, подтверждённую лицензию, варианты и витрину", () => {
+    const c = parse({
+      ...baseConfig,
+      license: {
+        spdx: "Apache-2.0",
+        file: "LICENSE",
+        confirmed: "a".repeat(64),
+      },
+      metadata: "lucide",
+      suffixes: { "": "Regular", "-outline": "Outline" },
+      variantAliases: ["", "-outline"],
+      samples: ["home", "star"],
+    });
+    expect(c.license.confirmed).toBe("a".repeat(64));
+    expect(c.suffixes).toEqual({ "": "Regular", "-outline": "Outline" });
+  });
+
+  it("называет суффиксы без названия", () => {
+    const r = sourceConfigSchema.safeParse({
+      ...baseConfig,
+      variantAliases: ["", "-outline", "-sharp"],
+      suffixes: { "": "Regular" },
+    });
+    expect(r.error?.issues.map((i) => [i.path.join("."), i.message])).toEqual([
+      [
+        "suffixes",
+        "нет названий для суффиксов из variantAliases: «-outline», «-sharp»",
+      ],
+    ]);
   });
 });
 
@@ -99,30 +162,67 @@ describe("выбор нужных файлов", () => {
   const paths = [
     "icons/a.svg",
     "icons/a.json",
+    "icons/sub/b.json",
     "icons/readme.md",
+    "categories/text.json",
     "dist/b.svg",
+    "dist/index.mjs",
+    "dist/index.umd.js",
+    "assets/Cat/metadata.json",
+    "assets/Cat/Dark/metadata.json",
+    "icons.json",
     "LICENSE",
+    "NOTICE",
+    "NOTICE.txt",
+    "docs/NOTICE",
     "package.json",
     "tags.json",
   ];
   const pick = (c: SourceConfigInput) => paths.filter(wantedPath(parse(c)));
 
-  it("по умолчанию — SVG из svgFolders и служебные файлы", () => {
-    expect(pick({ ...baseConfig, tagsFile: "tags.json" })).toEqual([
+  it("по умолчанию — SVG из svgFolders, служебные файлы и NOTICE в корне", () => {
+    expect(pick(baseConfig)).toEqual([
       "icons/a.svg",
       "LICENSE",
+      "NOTICE",
+      "NOTICE.txt",
       "package.json",
-      "tags.json",
     ]);
   });
 
-  it("iconMetadata: json добавляет JSON рядом с иконками, но не чужие", () => {
-    expect(pick({ ...baseConfig, iconMetadata: "json" })).toEqual([
-      "icons/a.svg",
-      "icons/a.json",
-      "LICENSE",
-      "package.json",
-    ]);
+  it.each([
+    ["lucide", ["icons/a.json", "categories/text.json"]],
+    ["tabler", ["icons.json"]],
+    ["phosphor", ["dist/index.mjs"]],
+    ["fluent-emoji", ["assets/Cat/metadata.json"]],
+  ] as const)("метаданные %s — только свои файлы", (metadata, files) => {
+    const extra = pick({ ...baseConfig, metadata }).filter(
+      (p) => !pick(baseConfig).includes(p),
+    );
+    expect(extra).toEqual(files);
+  });
+
+  it("звёздочка в шаблоне — любые символы внутри одной части пути", () => {
+    expect(pathPattern("icons/*.json").test("icons/a-b.json")).toBe(true);
+    expect(pathPattern("icons/*.json").test("icons/sub/b.json")).toBe(false);
+    expect(pathPattern("icons/*.json").test("icons/a.json.bak")).toBe(false);
+    expect(pathPattern("assets/*/Flat").test("assets/Waving hand/Flat")).toBe(
+      true,
+    );
+    expect(pathPattern("a.b").test("axb")).toBe(false);
+  });
+
+  it("правила скачивания меняются вместе с тем, что нужно набору", () => {
+    const rules = downloadRules(parse(baseConfig));
+    expect(downloadRules(parse(baseConfig))).toBe(rules);
+    expect(
+      downloadRules(parse({ ...baseConfig, metadata: "tabler" })),
+    ).not.toBe(rules);
+    expect(
+      downloadRules(parse({ ...baseConfig, svgFolders: [{ path: "x" }] })),
+    ).not.toBe(rules);
+    // Название набора и сетка на скачивание не влияют.
+    expect(downloadRules(parse({ ...baseConfig, name: "Другое" }))).toBe(rules);
   });
 
   it("package.json нужен только наборам из npm", () => {
@@ -151,13 +251,6 @@ describe("выбор нужных файлов", () => {
       "extra/x.svg",
       "LICENSE",
     ]);
-  });
-
-  it("неизвестное значение iconMetadata отклоняется", () => {
-    expect(
-      sourceConfigSchema.safeParse({ ...baseConfig, iconMetadata: "yaml" })
-        .success,
-    ).toBe(false);
   });
 });
 
@@ -420,6 +513,74 @@ describe("загрузка из npm", () => {
       });
       expect(report.names).toMatchObject({ total: 2, valid: 2 });
       expect(lock.demo).toEqual({ type: "npm", version: "1.0.0", integrity });
+      // NOTICE необязателен: его нет — это не пропажа.
+      expect(report.notice).toBeUndefined();
+      expect(report.missingExtraFiles).toEqual([]);
+    });
+
+    it("находит NOTICE в корне источника", async () => {
+      const withNotice = makeTgz([
+        ...entries,
+        { name: "package/NOTICE", data: "Notice text" },
+      ]);
+      const own = integrityOf(withNotice);
+      const f = fakeFetch({
+        "https://registry.npmjs.org/demo-icons/latest": meta("1.0.0", own),
+        "https://registry.npmjs.org/demo-icons/1.0.0": meta("1.0.0", own),
+        [tarballUrl]: withNotice,
+      });
+      const { report } = await fetchSource(
+        config,
+        {},
+        { cacheDir: cacheDir(), fetch: f.fetch },
+      );
+      expect(report.notice).toBe("NOTICE");
+      expect(report.extraFiles).toEqual(["LICENSE", "package.json"]);
+    });
+
+    it("изменились правила скачивания — без новой загрузки набор не находится, fetch качает заново", async () => {
+      const f1 = fakeFetch(routes());
+      const first = await fetchSource(
+        config,
+        {},
+        { cacheDir: cacheDir(), fetch: f1.fetch },
+      );
+      const changed = parse({ ...baseConfig, metadata: "tabler" });
+      await expect(
+        cachedSourceDir(changed, first.lock, cacheDir()),
+      ).rejects.toThrow(/старым правилам.*pnpm sources fetch demo/);
+      const f2 = fakeFetch(routes());
+      const again = await fetchSource(changed, first.lock, {
+        cacheDir: cacheDir(),
+        fetch: f2.fetch,
+      });
+      expect(again.report.status).toBe("downloaded");
+      expect(f2.calls.length).toBeGreaterThan(0);
+      expect(again.report.metadata).toEqual({ format: "tabler", files: 0 });
+      expect(await cachedSourceDir(changed, again.lock, cacheDir())).toEqual({
+        dir: again.report.dir,
+        entry: again.lock.demo,
+      });
+    });
+
+    it("метка без правил (скачано до шага 7) — набор скачивается заново", async () => {
+      const f1 = fakeFetch(routes());
+      const first = await fetchSource(
+        config,
+        {},
+        { cacheDir: cacheDir(), fetch: f1.fetch },
+      );
+      const markerPath = join(first.report.dir, ".fetched.json");
+      const { rules: _, ...old } = JSON.parse(
+        await readFile(markerPath, "utf8"),
+      ) as { rules?: string };
+      await writeFile(markerPath, JSON.stringify(old));
+      const f2 = fakeFetch(routes());
+      const again = await fetchSource(config, first.lock, {
+        cacheDir: cacheDir(),
+        fetch: f2.fetch,
+      });
+      expect(again.report.status).toBe("downloaded");
     });
 
     it("повторный запуск не использует сеть", async () => {
@@ -556,6 +717,51 @@ describe("загрузка из git", () => {
       "icons/a.svg",
     ]);
     await expect(readFile(join(dest, "README.md"))).rejects.toThrow();
+  });
+
+  it("файлы приходят как в репозитории, даже если git настроен на CRLF", async () => {
+    const dir = join(tmp, "origin-eol");
+    await mkdir(join(dir, "icons"), { recursive: true });
+    sh(tmp, "init", "-q", dir);
+    sh(dir, "config", "user.email", "t@example.com");
+    sh(dir, "config", "user.name", "t");
+    sh(dir, "config", "uploadpack.allowAnySHA1InWant", "true");
+    // Коммит — как есть, без предупреждений о переводах строк.
+    sh(dir, "config", "core.autocrlf", "false");
+    sh(dir, "config", "core.eol", "lf");
+    // LICENSE без атрибутов, SVG — с text=auto: обе настройки переноса строк должны быть сняты.
+    await writeFile(join(dir, ".gitattributes"), "*.svg text=auto\n");
+    await writeFile(join(dir, "LICENSE"), "MIT License\n\nText\n");
+    await writeFile(join(dir, "icons/a.svg"), "<svg>\n</svg>\n");
+    sh(dir, "add", ".");
+    sh(dir, "commit", "-q", "-m", "init");
+    const commit = sh(dir, "rev-parse", "HEAD");
+
+    const saved = { ...process.env };
+    // Как на Windows с настройками по умолчанию: git переводит строки в CRLF при checkout.
+    process.env.GIT_CONFIG_COUNT = "2";
+    process.env.GIT_CONFIG_KEY_0 = "core.autocrlf";
+    process.env.GIT_CONFIG_VALUE_0 = "true";
+    process.env.GIT_CONFIG_KEY_1 = "core.eol";
+    process.env.GIT_CONFIG_VALUE_1 = "crlf";
+    const dest = join(tmp, "out-eol");
+    try {
+      await fetchGit(dir, commit, {
+        dest,
+        wanted: (p) => p === "LICENSE" || p.startsWith("icons/"),
+      });
+    } finally {
+      for (const key of Object.keys(process.env)) {
+        if (!(key in saved)) Reflect.deleteProperty(process.env, key);
+      }
+      Object.assign(process.env, saved);
+    }
+    expect(await readFile(join(dest, "LICENSE"), "utf8")).toBe(
+      "MIT License\n\nText\n",
+    );
+    expect(await readFile(join(dest, "icons/a.svg"), "utf8")).toBe(
+      "<svg>\n</svg>\n",
+    );
   });
 
   it("ветка или короткий хэш вместо коммита отклоняются", () => {

@@ -1,12 +1,14 @@
 // Сборка набора (шаг 5, ADR-0015): очистка и нормализация (шаг 4) → SVGO → алиасы одинаковых
-// вариантов (ADR-0002) → контроль качества (шаг 6, ADR-0016) → icons.json в формате IconifyJSON
-// (ADR-0003). Одинаковые источники дают побайтно одинаковый файл, а набор со «СТОП» свой файл
-// не перезаписывает.
+// вариантов (ADR-0002) → контроль качества (шаг 6, ADR-0016) → метаданные и лицензия (шаг 7,
+// ADR-0017) → файлы набора (ADR-0003): icons.json в формате IconifyJSON, info.json, metadata.json,
+// search.json, LICENSE и NOTICE. Одинаковые источники дают побайтно одинаковые файлы, а набор со
+// «СТОП» свои файлы не перезаписывает.
 
 import { randomBytes } from "node:crypto";
 import { mkdir, rename, rm, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { validate } from "@iconavo-ui/schema";
+import { type SetMetadata, setMetadata } from "../metadata/run.js";
 import type { NormalizedIcon } from "../normalize/normalize.js";
 import {
   type NormalizedEntry,
@@ -18,6 +20,8 @@ import { optimizeIcon } from "../optimize/optimize.js";
 import type { Baseline } from "../qc/baseline.js";
 import { checkSet, type SetQcReport } from "../qc/run.js";
 import type { SourceConfig } from "../sources/config.js";
+import { sourceLabel } from "../sources/fetch.js";
+import type { LockEntry } from "../sources/lock.js";
 import { variantAliases } from "./aliases.js";
 import { canonicalJson, type Json } from "./json.js";
 
@@ -56,6 +60,8 @@ export interface SetBuildReport {
   transforms: { before: number; left: number };
   /** Контроль качества (ADR-0016). */
   qc: SetQcReport;
+  /** Лицензия, теги и категории, витрина, отпечатки и тексты остальных файлов набора (ADR-0017). */
+  metadata: SetMetadata;
   /** Содержимое icons.json; нет — набор остановлен. */
   json?: string;
   /** Почему набор нельзя обновлять; пусто — можно. */
@@ -75,14 +81,17 @@ const TRANSFORM = /\stransform="/g;
 const bytes = (text: string) => Buffer.byteLength(text, "utf8");
 const order = (a: string, b: string) => (a < b ? -1 : a > b ? 1 : 0);
 
-/** Собирает набор: результат — отчёт и, если набор не остановлен, содержимое icons.json. */
+/**
+ * Собирает набор из скачанного источника (entry — его запись в sources.lock.json): результат — отчёт
+ * и, если набор не остановлен, тексты файлов набора.
+ */
 export async function buildSet(
   config: SourceConfig,
   dir: string,
-  source: string,
+  entry: LockEntry,
   options: BuildOptions = {},
 ): Promise<SetBuildReport> {
-  const normalize = await normalizeSet(config, dir, source);
+  const normalize = await normalizeSet(config, dir, sourceLabel(config, entry));
   const stop = [...normalize.stop];
   if (!SUPPORTED_GRIDS.has(config.grid)) {
     stop.push(
@@ -159,6 +168,20 @@ export async function buildSet(
   });
   stop.push(...qc.stop);
 
+  // Метаданные тоже собираются у остановленного набора: отчёт показывает лицензию для подтверждения.
+  const metadata = await setMetadata(
+    config,
+    dir,
+    entry,
+    icons.map((b) => ({
+      name: b.entry.name,
+      file: b.entry.file,
+      icon: b.icon,
+    })),
+    new Set(built.map((b) => b.entry.name)),
+  );
+  stop.push(...metadata.stop);
+
   const report: SetBuildReport = {
     normalize,
     icons,
@@ -168,6 +191,7 @@ export async function buildSet(
     sizes,
     transforms,
     qc,
+    metadata,
     stop,
   };
   if (stop.length > 0) return report;
@@ -216,24 +240,36 @@ function iconsFile(
 }
 
 /**
- * Записывает `data/{набор}/icons.json` через временный файл: оборванная запись не оставит половину
- * файла. Набор со «СТОП» не трогает; возвращает путь к записанному файлу.
+ * Записывает файлы набора в `data/{набор}/`, каждый через временный файл: оборванная запись не
+ * оставит половину файла. NOTICE, которого больше нет в источнике, удаляется. Набор со «СТОП» не
+ * трогает; возвращает пути записанных файлов.
  */
 export async function writeSetData(
   dataDir: string,
   r: SetBuildReport,
-): Promise<string | undefined> {
-  if (r.json === undefined) return undefined;
+): Promise<string[] | undefined> {
+  const files = r.metadata.files;
+  if (r.json === undefined || files === undefined) return undefined;
   const dir = join(dataDir, r.normalize.id);
   await mkdir(dir, { recursive: true });
-  const path = join(dir, "icons.json");
-  const tmp = join(dir, `.icons-${randomBytes(6).toString("hex")}.tmp`);
-  try {
-    await writeFile(tmp, r.json, "utf8");
-    await rename(tmp, path);
-  } catch (e) {
-    await rm(tmp, { force: true });
-    throw e;
+  const written: string[] = [];
+  for (const file of [{ name: "icons.json", text: r.json }, ...files]) {
+    const path = join(dir, file.name);
+    const tmp = join(
+      dir,
+      `.${file.name}-${randomBytes(6).toString("hex")}.tmp`,
+    );
+    try {
+      await writeFile(tmp, file.text, "utf8");
+      await rename(tmp, path);
+    } catch (e) {
+      await rm(tmp, { force: true });
+      throw e;
+    }
+    written.push(path);
   }
-  return path;
+  if (!files.some((f) => f.name === "NOTICE")) {
+    await rm(join(dir, "NOTICE"), { force: true });
+  }
+  return written;
 }

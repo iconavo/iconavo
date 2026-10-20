@@ -10,8 +10,13 @@ import {
 } from "node:fs/promises";
 import { join } from "node:path";
 import {
+  downloadRules,
   extraFiles,
   folderMatcher,
+  type MetadataFormat,
+  metadataFiles,
+  NOTICE_FILES,
+  pathPattern,
   type SourceConfig,
   wantedPath,
 } from "./config.js";
@@ -39,8 +44,10 @@ export interface FetchReport {
   svgCount: number;
   /** Сколько SVG в каждой папке набора (варианты считаются отдельно). */
   folders: { path: string; count: number }[];
-  /** Сколько SVG имеют рядом JSON с метаданными (только если набор их хранит). */
-  metadataPairs?: number;
+  /** Файлы метаданных автора: формат и сколько файлов скачано (только если набор их хранит). */
+  metadata?: { format: MetadataFormat; files: number };
+  /** Файл NOTICE в источнике, если он есть. */
+  notice?: string;
   extraFiles: string[];
   missingExtraFiles: string[];
   bytes: number;
@@ -50,6 +57,8 @@ export interface FetchReport {
 
 interface Marker {
   entry: LockEntry;
+  /** Правила скачивания (downloadRules): изменились — набор скачивается заново. */
+  rules?: string;
   fileCount: number;
   bytes: number;
 }
@@ -106,9 +115,17 @@ async function readMarker(dir: string): Promise<Marker | undefined> {
   }
 }
 
-async function isCached(dir: string, entry: LockEntry): Promise<boolean> {
+async function isCached(
+  dir: string,
+  entry: LockEntry,
+  rules: string,
+): Promise<boolean> {
   const marker = await readMarker(dir);
-  if (!marker || JSON.stringify(marker.entry) !== JSON.stringify(entry))
+  if (
+    !marker ||
+    JSON.stringify(marker.entry) !== JSON.stringify(entry) ||
+    marker.rules !== rules
+  )
     return false;
   try {
     return (await listFiles(dir)).length === marker.fileCount;
@@ -133,9 +150,9 @@ export async function cachedSourceDir(
     );
   }
   const dir = join(cacheDir, config.id, key(entry));
-  if (!(await isCached(dir, entry))) {
+  if (!(await isCached(dir, entry, downloadRules(config)))) {
     throw new Error(
-      `набор не скачан — запустите pnpm sources fetch ${config.id}`,
+      `набор не скачан или скачан по старым правилам — запустите pnpm sources fetch ${config.id}`,
     );
   }
   return { dir, entry };
@@ -200,16 +217,17 @@ export async function fetchSource(
 
   const setDir = join(options.cacheDir, config.id);
   const dir = join(setDir, key(entry));
+  const rules = downloadRules(config);
   let status: FetchReport["status"] = "unchanged";
 
-  if (!(await isCached(dir, entry))) {
+  if (!(await isCached(dir, entry, rules))) {
     status = "downloaded";
     await mkdir(setDir, { recursive: true });
     const tmp = join(setDir, `.tmp-${randomBytes(6).toString("hex")}`);
     try {
       await mkdir(tmp, { recursive: true });
       const { fileCount, bytes } = await download(config, entry, tmp, fetchFn);
-      const marker: Marker = { entry, fileCount, bytes };
+      const marker: Marker = { entry, rules, fileCount, bytes };
       await writeFile(
         join(tmp, MARKER),
         JSON.stringify(marker, null, 2),
@@ -226,11 +244,12 @@ export async function fetchSource(
   const all = await listFiles(dir);
   const folderOf = folderMatcher(config);
   const svgs = all.filter((f) => f.endsWith(".svg") && folderOf(f));
-  const jsonOf = (svg: string) => svg.replace(/\.svg$/, ".json");
-  const metadataPairs =
-    config.iconMetadata === "json"
-      ? svgs.filter((f) => all.includes(jsonOf(f))).length
-      : undefined;
+  const patterns = metadataFiles(config).map(pathPattern);
+  const metadata = config.metadata && {
+    format: config.metadata,
+    files: all.filter((f) => patterns.some((re) => re.test(f))).length,
+  };
+  const notice = NOTICE_FILES.find((f) => all.includes(f));
   const extras = extraFiles(config);
   const found = extras.filter((f) => all.includes(f));
   const marker = await readMarker(dir);
@@ -246,7 +265,8 @@ export async function fetchSource(
       path: folder.path,
       count: svgs.filter((f) => folderOf(f) === folder).length,
     })),
-    metadataPairs,
+    metadata,
+    notice,
     extraFiles: found,
     missingExtraFiles: extras.filter((f) => !found.includes(f)),
     bytes: marker?.bytes ?? (await sizeOf(dir, all)),

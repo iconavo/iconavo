@@ -6,6 +6,10 @@ import type { SourceConfigInput } from "@iconavo-ui/pipeline";
 export default {
   id: "fluent-emoji-flat",
   name: "Fluent Emoji Flat",
+  author: {
+    name: "Microsoft Corporation",
+    url: "https://github.com/microsoft/fluentui-emoji",
+  },
   source: { type: "git", repo: "https://github.com/microsoft/fluentui-emoji" },
   svgFolders: ["assets/*/Flat", "assets/*/*/Flat"].map((path) => ({
     path,
@@ -23,5 +27,14 @@ export default {
   })),
   palette: "color",
   grid: 32,
-  license: { spdx: "MIT", file: "LICENSE" },
+  // Текст лицензии прочитан и подтверждён владельцем 20 октября 2026 (ADR-0017).
+  license: {
+    spdx: "MIT",
+    file: "LICENSE",
+    confirmed:
+      "1e54e3ddbfa0546869ea8b8736208b780c1db12bd2abc5a916f23d0dcd1f83f9",
+  },
+  // Ключевые слова и группа — в assets/{эмодзи}/metadata.json, общем для всех оттенков кожи.
+  // Оттенки не группируются в варианты — как у Iconify, поэтому карты вариантов нет.
+  metadata: "fluent-emoji",
 } satisfies SourceConfigInput;
