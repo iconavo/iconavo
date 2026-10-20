@@ -6,6 +6,25 @@ export function formatBytes(n: number): string {
   return `${(n / 1024 / 1024).toFixed(1)} МБ`;
 }
 
+/**
+ * Почему скачанный набор нельзя собирать (ADR-0001): имена не по правилу или одно имя у нескольких
+ * файлов. Скачанное остаётся в кэше, а команда завершается с ошибкой — так же, как сборка.
+ */
+export function fetchStop(r: FetchReport): string[] {
+  const out: string[] = [];
+  if (r.names.invalid.length > 0) {
+    out.push(
+      `имена не по правилу ADR-0001: ${r.names.invalid.length} — нужно правило переименования в sources/${r.id}.ts`,
+    );
+  }
+  if (r.names.conflicts.length > 0) {
+    out.push(
+      `одно имя у нескольких файлов: ${r.names.conflicts.length} — нужно правило переименования в sources/${r.id}.ts (ADR-0001)`,
+    );
+  }
+  return out;
+}
+
 /** Отчёт о загрузке набора простым языком. */
 export function formatReport(r: FetchReport): string {
   const lines: string[] = [];
@@ -49,6 +68,7 @@ export function formatReport(r: FetchReport): string {
   for (const c of n.conflicts.slice(0, 10)) {
     lines.push(`    конфликт «${c.name}»: ${c.files.join(", ")}`);
   }
+  for (const reason of fetchStop(r)) lines.push(`  СТОП: ${reason}`);
   lines.push(`  Папка: ${r.dir}`);
   return lines.join("\n");
 }
