@@ -33,9 +33,9 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
         with:
           node-version: 24
           cache: pnpm
@@ -43,7 +43,7 @@ jobs:
       # Скачанные наборы — по версиям из lock, конфигам и коду загрузчика (правила скачивания живут
       # в нём: иначе кэш со старыми правилами качался бы заново при каждом запуске, но не сохранялся).
       # Без restore-keys: чужой кэш с другими папками набора не нужен.
-      - uses: actions/cache@v4
+      - uses: actions/cache@v6
         with:
           path: .cache/sources
           key: sources-${{ hashFiles('sources.lock.json', 'sources/*.ts', 'packages/pipeline/src/sources/*.ts') }}

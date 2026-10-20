@@ -63,7 +63,7 @@ jobs:
     outputs:
       sets: ${{ steps.list.outputs.sets }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           persist-credentials: false
       - id: list
@@ -121,12 +121,12 @@ jobs:
       # Повторный запуск задачи или refresh: описание, метки и автослияние переписываются и без новых данных.
       FORCE: ${{ inputs.refresh == true || github.run_attempt != '1' }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           # В git не остаётся токена задачи: ветку отправляет приложение.
           persist-credentials: false
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v4
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
         with:
           node-version: 24
           cache: pnpm

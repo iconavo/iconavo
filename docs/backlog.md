@@ -58,9 +58,9 @@
 - [x] **Минимальная версия Node указана неточно.** Исправлено 20 октября 2026: в `package.json` — `^22.19.0 || ^24.5.0 || >=26.0.0`.
   - Конвейеру для чтения `sources/*.ts` нужен Node 22.18 и новее, а size-limit из `pnpm check` требует 22.19+, 24.5+ или 26+.
   - Сам pnpm 12 это поле не проверяет, поэтому в `pnpm-workspace.yaml` включён `engineStrict`: на другой версии Node `pnpm install` останавливается с понятной ошибкой.
-- [ ] **Версии GitHub Actions устарели.**
-  - `actions/checkout`, `actions/setup-node`, `actions/cache` и `pnpm/action-setup` в версии v4 рассчитаны на Node 20. GitHub убрал его 23 сентября 2026: запуски идут на Node 24 с предупреждением.
-  - Исправление — обновить все workflow вместе отдельным шагом: checkout v7, setup-node v7, cache v6, pnpm/action-setup v6.
+- [x] **Версии GitHub Actions устарели.** Исправлено 20 октября 2026: во всех workflow — checkout v7, setup-node v7, cache v6, pnpm/action-setup v6, все рассчитаны на Node 24.
+  - Ломающих изменений для нас нет: робот отправляет ветку токеном приложения (`persist-credentials: false`), так что новое хранение доступа в checkout его не касается.
+  - pnpm 12 официально поддерживается с pnpm/action-setup 6.1.
 - [ ] **Кэш скачанных наборов в «Данных» один на все наборы.**
   - Ключ кэша — весь `sources.lock.json`. Поэтому обновление одного набора перекачивает все пять, в том числе Fluent (≈254 МБ).
   - Исправление: ключ на набор или restore-keys.
