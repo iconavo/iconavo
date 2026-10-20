@@ -1,0 +1,10 @@
+{
+  "suffixes": {
+    "": "Regular",
+    "-outline": "Outline",
+    "-outline-rounded": "Outline Rounded",
+    "-outline-sharp": "Outline Sharp",
+    "-rounded": "Rounded",
+    "-sharp": "Sharp"
+  }
+}

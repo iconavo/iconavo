@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { NormalizedIcon } from "../normalize/normalize.js";
-import { variantAliases } from "./aliases.js";
+import { baseName, variantAliases } from "./aliases.js";
 
 const ORDER = [
   "",
@@ -106,5 +106,33 @@ describe("алиасы одинаковых вариантов", () => {
         variantAliases(set({ a: icon("A"), "a-outline": icon("A") }), [""]),
       ),
     ).toEqual({});
+  });
+});
+
+describe("основа имени варианта", () => {
+  const names = new Set([
+    "home",
+    "home-outline",
+    "home-outline-rounded",
+    "done-outline",
+    "done-outline-rounded",
+    "traffic-light",
+  ]);
+  const base = (name: string, suffixes: readonly string[] = ORDER) =>
+    baseName(name, suffixes, (n) => names.has(n));
+
+  it("снимает самый длинный суффикс, после которого основа есть в наборе", () => {
+    expect(base("home-outline-rounded")).toBe("home");
+    expect(base("home-outline")).toBe("home");
+    expect(base("home")).toBe("home");
+  });
+
+  it("основы нет в наборе — суффикс остаётся частью имени", () => {
+    expect(base("done-outline-rounded")).toBe("done-outline");
+    expect(base("done-outline")).toBe("done-outline");
+  });
+
+  it("суффикс-совпадение без основы не снимается: traffic-light — не light", () => {
+    expect(base("traffic-light", ["", "-light"])).toBe("traffic-light");
   });
 });

@@ -7,10 +7,28 @@ const same = (a: NormalizedIcon, b: NormalizedIcon) =>
   a.body === b.body && a.width === b.width && a.height === b.height;
 
 /**
+ * Основа имени варианта (ADR-0002): самое короткое имя, которое получается, если снять суффикс
+ * варианта, и которое само есть в наборе. У `done-outline-rounded` это `done-outline`, если иконки
+ * `done` нет. Ни один суффикс не подошёл — имя и есть основа.
+ */
+export function baseName(
+  name: string,
+  suffixes: readonly string[],
+  has: (name: string) => boolean,
+): string {
+  let base = name;
+  for (const suffix of suffixes) {
+    if (suffix === "" || !name.endsWith(suffix)) continue;
+    const candidate = name.slice(0, -suffix.length);
+    if (candidate.length < base.length && has(candidate)) base = candidate;
+  }
+  return base;
+}
+
+/**
  * Имя варианта → имя родителя. order — суффиксы вариантов от старшего к младшему, первый — "".
- * Основа имени — самая короткая, которая сама есть среди иконок: у `done-outline-rounded` это
- * `done-outline`, если иконки `done` нет. Алиас появляется только при побайтно одинаковых теле и
- * размере, поэтому ошибка в группе не может показать чужую картинку.
+ * Варианты группируются по основе имени (baseName). Алиас появляется только при побайтно одинаковых
+ * теле и размере, поэтому ошибка в группе не может показать чужую картинку.
  */
 export function variantAliases(
   icons: ReadonlyMap<string, NormalizedIcon>,
@@ -18,16 +36,8 @@ export function variantAliases(
 ): Map<string, string> {
   const groups = new Map<string, { name: string; rank: number }[]>();
   for (const name of icons.keys()) {
-    let base = name;
-    let rank = order.indexOf("");
-    order.forEach((suffix, i) => {
-      if (suffix === "" || !name.endsWith(suffix)) return;
-      const candidate = name.slice(0, -suffix.length);
-      if (candidate.length < base.length && icons.has(candidate)) {
-        base = candidate;
-        rank = i;
-      }
-    });
+    const base = baseName(name, order, (n) => icons.has(n));
+    const rank = order.indexOf(name.slice(base.length));
     const group = groups.get(base) ?? [];
     group.push({ name, rank });
     groups.set(base, group);

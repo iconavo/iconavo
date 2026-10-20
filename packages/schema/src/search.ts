@@ -13,8 +13,17 @@ export const searchEntrySchema = z
     fingerprint: z
       .string()
       .regex(/^[0-9a-f]{12}$/, "отпечаток — ровно 12 символов 0-9 и a-f"),
-    /** Теги в нижнем регистре, без повторов. */
-    tags: z.array(z.string().min(1)),
+    /** Теги в нижнем регистре, без повторов (ADR-0017). */
+    tags: z
+      .array(z.string().min(1))
+      .refine(
+        (tags) => tags.every((t) => t === t.toLowerCase()),
+        "теги — только строчными буквами",
+      )
+      .refine(
+        (tags) => new Set(tags).size === tags.length,
+        "теги не должны повторяться",
+      ),
     /** Результат обогащения ИИ; пока иконка не обогащена, полей нет. */
     ru: languageSchema.optional(),
     en: languageSchema.optional(),

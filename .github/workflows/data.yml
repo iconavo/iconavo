@@ -46,12 +46,13 @@ jobs:
           node-version: 24
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      # Скачанные наборы — по версиям из lock и конфигам. Без restore-keys: чужой кэш с другими
-      # папками набора загрузчик принял бы за свой.
+      # Скачанные наборы — по версиям из lock, конфигам и коду загрузчика (правила скачивания живут
+      # в нём: иначе кэш со старыми правилами качался бы заново при каждом запуске, но не сохранялся).
+      # Без restore-keys: чужой кэш с другими папками набора не нужен.
       - uses: actions/cache@v4
         with:
           path: .cache/sources
-          key: sources-${{ hashFiles('sources.lock.json', 'sources/*.ts') }}
+          key: sources-${{ hashFiles('sources.lock.json', 'sources/*.ts', 'packages/pipeline/src/sources/*.ts') }}
       - run: pnpm sources fetch
       - run: pnpm data
       - name: data/ совпадает со сборкой

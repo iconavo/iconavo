@@ -19,6 +19,7 @@ const config = sourceConfigSchema.parse({
   svgFolders: [{ path: "icons" }],
   palette: "monochrome",
   grid: 24,
+  author: { name: "Demo" },
   license: { spdx: "MIT", file: "LICENSE" },
 });
 const entry = (version: string): LockEntry => ({

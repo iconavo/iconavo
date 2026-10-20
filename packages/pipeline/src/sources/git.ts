@@ -22,9 +22,20 @@ async function git(
     return stdout;
   } catch (e) {
     const err = e as { stderr?: string; message: string };
-    throw new Error(`git ${args[0]}: ${(err.stderr || err.message).trim()}`);
+    // Подкоманда — первый аргумент, который не настройка «-c имя=значение».
+    const command =
+      args.find((a, i) => !a.startsWith("-") && args[i - 1] !== "-c") ??
+      args[0];
+    throw new Error(`git ${command}: ${(err.stderr || err.message).trim()}`);
   }
 }
+
+/**
+ * Файлы как в репозитории, без перевода строк под систему: иначе на Windows с core.autocrlf=true
+ * тексты лицензий и JSON пришли бы с CRLF. Настройки — флагами команды: они сильнее и конфигов git,
+ * и переменных окружения GIT_CONFIG_*.
+ */
+const AS_COMMITTED = ["-c", "core.autocrlf=false", "-c", "core.eol=lf"];
 
 export function assertCommitHash(value: string): void {
   if (!FULL_HASH.test(value)) {
@@ -117,7 +128,10 @@ export async function fetchGit(
   try {
     await git(["init", "-q"], work);
     await git(["fetch", "-q", "--depth", "1", repo, commit], work);
-    await git(["checkout", "-q", "--detach", "FETCH_HEAD"], work);
+    await git(
+      [...AS_COMMITTED, "checkout", "-q", "--detach", "FETCH_HEAD"],
+      work,
+    );
     const files: { path: string; size: number }[] = [];
     let bytes = 0;
     for await (const path of walk(work, options.wanted)) {

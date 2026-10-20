@@ -21,9 +21,9 @@ export function formatReport(r: FetchReport): string {
       lines.push(`    папка ${f.path}: ${f.count} SVG`);
     }
   }
-  if (r.metadataPairs !== undefined) {
+  if (r.metadata !== undefined) {
     lines.push(
-      `  Метаданные иконок: у ${r.metadataPairs} из ${r.svgCount} SVG есть JSON-файл рядом`,
+      `  Метаданные автора (${r.metadata.format}): файлов ${r.metadata.files}`,
     );
   }
   lines.push(
@@ -32,7 +32,7 @@ export function formatReport(r: FetchReport): string {
       : "  Версия: взята из sources.lock.json",
   );
   lines.push(
-    `  Лицензия: ${r.license.spdx}, файл ${r.license.fileFound ? "найден" : "НЕ НАЙДЕН"}`,
+    `  Лицензия: ${r.license.spdx}, файл ${r.license.fileFound ? "найден" : "НЕ НАЙДЕН"} · NOTICE: ${r.notice ?? "нет"}`,
   );
   if (r.missingExtraFiles.length > 0) {
     lines.push(

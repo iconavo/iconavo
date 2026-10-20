@@ -29,6 +29,7 @@ const config = sourceConfigSchema.parse({
   ],
   palette: "monochrome",
   grid: 24,
+  author: { name: "Demo" },
   license: { spdx: "MIT", file: "LICENSE" },
 });
 

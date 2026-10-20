@@ -1,4 +1,4 @@
-export { variantAliases } from "./build/aliases.js";
+export { baseName, variantAliases } from "./build/aliases.js";
 export { canonicalJson, type Json } from "./build/json.js";
 export {
   formatBuildReport,
@@ -13,6 +13,42 @@ export {
   type SetBuildReport,
   writeSetData,
 } from "./build/run.js";
+export { fingerprint } from "./metadata/fingerprint.js";
+export {
+  type AuthorMetadata,
+  type MetadataReader,
+  READERS,
+} from "./metadata/formats.js";
+export {
+  type LicenseStatus,
+  licenseHash,
+  normalizeText,
+  readLicense,
+  type SetLicense,
+} from "./metadata/license.js";
+export {
+  type PhosphorEntry,
+  parsePhosphorModule,
+} from "./metadata/phosphor.js";
+export {
+  formatMetadata,
+  formatMetadataTable,
+  metadataSection,
+  renderMetadataPage,
+  TAG_SAMPLE,
+} from "./metadata/report.js";
+export {
+  type IconMetadata,
+  type MetadataIcon,
+  MISSING_METADATA_LIMIT,
+  pickSamples,
+  SAMPLE_CONCEPTS,
+  SAMPLE_COUNT,
+  type SetFile,
+  type SetMetadata,
+  setMetadata,
+} from "./metadata/run.js";
+export { authorTags, nameTags } from "./metadata/tags.js";
 export {
   type Canvas,
   cleanNumber,
@@ -133,11 +169,22 @@ export {
   sanitizeSvg,
 } from "./sanitize/sanitize.js";
 export {
+  downloadRules,
   extraFiles,
+  LICENSE_IDS,
+  LICENSE_TITLES,
+  type LicenseId,
+  METADATA_FILES,
+  METADATA_FORMATS,
+  type MetadataFormat,
+  metadataFiles,
+  NOTICE_FILES,
+  pathPattern,
   type SourceConfig,
   type SourceConfigInput,
   type SvgFolder,
   sourceConfigSchema,
+  wantedPath,
 } from "./sources/config.js";
 export {
   cachedSourceDir,

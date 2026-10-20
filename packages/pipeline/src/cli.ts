@@ -1,10 +1,11 @@
 // Команды конвейера: pnpm sources fetch [id…] | pnpm sources pin <id> [версия|коммит] | pnpm sanitize [id…]
 // | pnpm normalize [id…] | pnpm data [id…] [--accept-changes]
 import { mkdir, rm, writeFile } from "node:fs/promises";
-import { join, relative } from "node:path";
+import { basename, join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
 import { formatBuildReport, renderBuildGallery } from "./build/report.js";
 import { buildSet, type SetBuildReport, writeSetData } from "./build/run.js";
+import { formatMetadataTable } from "./metadata/report.js";
 import { formatNormalizeReport, renderGallery } from "./normalize/gallery.js";
 import { normalizeSet, type SetNormalizeReport } from "./normalize/run.js";
 import { gitHistory, loadBaseline } from "./qc/baseline.js";
@@ -33,8 +34,9 @@ const USAGE = `Использование:
   pnpm sources pin <id> [версия|коммит]   закрепить версию (по умолчанию последнюю)
   pnpm sanitize [id…]                 очистить SVG скачанных наборов и показать отчёт
   pnpm normalize [id…]                нормализовать иконки и собрать галерею
-  pnpm data [id…]                     собрать наборы в data/{набор}/icons.json: SVGO, алиасы,
-                                      контроль качества, галерея
+  pnpm data [id…]                     собрать наборы в data/{набор}/: icons.json (SVGO, алиасы,
+                                      контроль качества), info.json, metadata.json, search.json,
+                                      LICENSE; галерея и страница metadata.html
   pnpm data [id…] --accept-changes    то же, но изменения иконок без новой версии источника
                                       приняты: вы проверили их в отчёте qc.html`;
 
@@ -190,19 +192,21 @@ try {
         const started = performance.now();
         // Прошлая версия — из git: последний коммит, где менялся data/{набор}/icons.json (ADR-0016).
         const previous = await loadBaseline(gitHistory(root), config, entry);
-        const report = await buildSet(config, dir, sourceLabel(config, entry), {
+        const report = await buildSet(config, dir, entry, {
           ...previous,
           acceptChanges,
         });
         reports.push(report);
-        // Набор со «СТОП» свой файл не перезаписывает.
+        // Набор со «СТОП» свои файлы не перезаписывает.
         const written = await writeSetData(dataDir, report);
         if (written === undefined) failed++;
         const seconds = ((performance.now() - started) / 1000).toFixed(1);
         const result =
           written === undefined
-            ? "файл не записан"
-            : `записано ${relative(root, written).replaceAll("\\", "/")}`;
+            ? "файлы не записаны"
+            : `записано в ${relative(root, join(dataDir, config.id)).replaceAll("\\", "/")}/: ${written
+                .map((path) => basename(path))
+                .join(", ")}`;
         console.log(
           `${formatBuildReport(report)}\n  ${result} · ${seconds} с\n`,
         );
@@ -216,6 +220,9 @@ try {
     console.log(
       `Итого: ${sum((r) => r.normalize.total)} иконок · в наборах ${sum((r) => r.icons.length)} · алиасов ${sum((r) => r.aliases.length)} · остановлено наборов: ${failed}`,
     );
+    if (reports.length > 0) {
+      console.log(`\nМетаданные и лицензии:\n${formatMetadataTable(reports)}`);
+    }
     const galleryDir = join(reportsDir, "data");
     await rm(galleryDir, { recursive: true, force: true });
     await mkdir(galleryDir, { recursive: true });
@@ -228,6 +235,7 @@ try {
       `Галерея (файлов: ${files}): ${join(galleryDir, "index.html")}`,
     );
     console.log(`Контроль качества: ${join(galleryDir, "qc.html")}`);
+    console.log(`Метаданные и лицензии: ${join(galleryDir, "metadata.html")}`);
     process.exit(failed > 0 ? 1 : 0);
   } else {
     usageError(
