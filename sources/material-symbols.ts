@@ -3,11 +3,13 @@ import type { SourceConfigInput } from "@iconavo-ui/pipeline";
 // Вес 400, три формы (ADR-0008). Имена как у Iconify: без суффикса — заливка (в источнике это
 // home-fill.svg), -outline — контур (в источнике home.svg), затем -rounded или -sharp.
 // Метка «~» временная: она отличает файлы с -fill от остальных на время замен.
+// «_» → «-» — последней: иначе конец имени format_color_fill не отличить от пометки -fill,
+// и контур ведра с краской получил бы имя format-color.
 const base = [
-  { pattern: "_", with: "-" },
   { pattern: "^(.+)-fill$", with: "$1~" },
   { pattern: "^([^~]+)$", with: "$1-outline" },
   { pattern: "~$", with: "" },
+  { pattern: "_", with: "-" },
 ];
 
 export default {
