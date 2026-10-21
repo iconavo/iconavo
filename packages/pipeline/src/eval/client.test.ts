@@ -109,6 +109,15 @@ describe("чат Polza", () => {
     expect(sleeps).toEqual([5000, 15000]);
   });
 
+  it("сбой сети — те же долгие паузы", async () => {
+    const down = Object.assign(new TypeError("fetch failed"), {
+      cause: { code: "ENOTFOUND" },
+    });
+    const { client, sleeps } = setup([down, answer("ok")]);
+    expect((await client.complete(BODY)).text).toBe("ok");
+    expect(sleeps).toEqual([5000]);
+  });
+
   it("ключ не подошёл — остановка всего прогона, ключ в сообщение не попадает", async () => {
     const { client } = setup([
       new Response(`invalid key ${KEY}`, { status: 401 }),

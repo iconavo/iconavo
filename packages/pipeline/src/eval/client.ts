@@ -2,8 +2,8 @@
 // паузы и остановки — как у эмбеддингов (embed/client.ts): сбой сети и перегрузка — повтор, ключ и
 // баланс — остановка всего прогона, другой отказ — ошибка запроса. Если сервер не принял
 // необязательное поле (схему ответа, усилие мышления), запрос уходит без него — как у генератора
-// эталона (tools/eval/generate-queries.mjs). Лимит запросов в минуту (429 без Retry-After) ждёт
-// дольше — до минуты. Ключ приходит параметром и никуда не печатается.
+// эталона (tools/eval/generate-queries.mjs). Лимит запросов в минуту (429 без Retry-After) и сбой
+// сети ждут дольше — до минуты. Ключ приходит параметром и никуда не печатается.
 
 import {
   apiError,
@@ -14,7 +14,7 @@ import {
 } from "../embed/client.js";
 import { API_URL, MAX_ATTEMPTS } from "../embed/config.js";
 import type { FetchFn } from "../sources/npm.js";
-import { RATE_LIMIT_BACKOFF_MS, TIMEOUT_MS } from "./config.js";
+import { LONG_BACKOFF_MS, TIMEOUT_MS } from "./config.js";
 
 export interface ChatResult {
   /** Текст ответа модели. */
@@ -66,6 +66,10 @@ function contentText(json: unknown): string | undefined {
   }
   return undefined;
 }
+
+/** Долгая пауза перед попыткой номер attempt + 1: 5, 15, 30, 60 с. */
+const longPause = (attempt: number) =>
+  LONG_BACKOFF_MS[Math.min(attempt - 1, LONG_BACKOFF_MS.length - 1)] as number;
 
 export function polzaChatClient(options: ChatOptions): ChatClient {
   const fetchFn = options.fetch ?? fetch;
@@ -147,21 +151,21 @@ export function polzaChatClient(options: ChatOptions): ChatClient {
           const header = res.headers.get("retry-after");
           wait =
             res.status === 429 && (header === null || header.trim() === "")
-              ? (RATE_LIMIT_BACKOFF_MS[
-                  Math.min(attempt - 1, RATE_LIMIT_BACKOFF_MS.length - 1)
-                ] as number)
+              ? longPause(attempt)
               : retryDelay(header, attempt);
         }
       } catch (e) {
         const name = (e as Error).name;
         if (name === "TimeoutError" || name === "AbortError") {
           last = `нет ответа за ${Math.round(timeoutMs / 1000)} с`;
+          wait = longPause(attempt);
         } else if (
           e instanceof TypeError &&
           (e.message === "fetch failed" || "cause" in e)
         ) {
           const cause = (e as { cause?: { code?: string } }).cause?.code;
           last = `сбой сети${cause ? ` (${cause})` : ""}: ${e.message}`;
+          wait = longPause(attempt);
         } else {
           throw (e as { scope?: StopScope }).scope
             ? e
