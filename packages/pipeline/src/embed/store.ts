@@ -158,12 +158,20 @@ export async function readStore(
 }
 
 /**
- * Байты файла → числа float32. Копия в свой буфер: Buffer бывает куском общего пула со смещением,
- * не кратным 4, и Float32Array поверх него не построить.
+ * Байты файла → числа float32. Без копии, если байты начинаются с адреса, кратного 4: большой файл
+ * Node читает в свой буфер с начала, и векторы набора не занимают память дважды. Иначе — копия:
+ * Buffer бывает куском общего пула со смещением, не кратным 4, и Float32Array поверх него не построить.
  */
 export function bytesToFloat32(bytes: Uint8Array): Float32Array {
   if (bytes.byteLength % 4 !== 0) {
     throw new Error(`байтов ${bytes.byteLength} — не кратно 4`);
+  }
+  if (bytes.byteOffset % 4 === 0) {
+    return new Float32Array(
+      bytes.buffer,
+      bytes.byteOffset,
+      bytes.byteLength / 4,
+    );
   }
   const out = new Float32Array(bytes.byteLength / 4);
   new Uint8Array(out.buffer).set(bytes);

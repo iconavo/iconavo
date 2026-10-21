@@ -2,9 +2,12 @@
 // | pnpm normalize [id…] | pnpm data [id…] [--accept-changes] | pnpm pr <id> [--run-url=… …] [--no-auto-merge]
 // | pnpm enrich [id…] [--limit=N] [--max-cost=USD] [--dry-run] [--no-wait]
 // | pnpm embed [id…] [--model=…] [--max-rub=N] [--dry-run] | pnpm nearest [запрос…] [--model=…]
+// | pnpm judge [--limit=N] [--max-rub=N] [--dry-run] | pnpm eval [--model=…] [--baseline]
+// | pnpm search-page [--port=N] [--model=…]
 import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import { basename, join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
+import { canonicalJson } from "./build/json.js";
 import { formatBuildReport, renderBuildGallery } from "./build/report.js";
 import { buildSet, type SetBuildReport, writeSetData } from "./build/run.js";
 import { polzaEmbeddingClient } from "./embed/client.js";
@@ -30,6 +33,18 @@ import {
   renderEnrichPage,
 } from "./enrich/report.js";
 import { countBases, enrichSets } from "./enrich/run.js";
+import { polzaChatClient } from "./eval/client.js";
+import { DEFAULT_MAX_RUB as JUDGE_MAX_RUB } from "./eval/config.js";
+import { readOverrides } from "./eval/golden.js";
+import { judgeEval, judgeStop } from "./eval/judge.js";
+import {
+  baselineJson,
+  formatEvalReport,
+  formatJudgeReport,
+  renderEvalPage,
+  renderJudgePage,
+} from "./eval/report.js";
+import { evalStop, evaluate } from "./eval/run.js";
 import { formatMetadataTable } from "./metadata/report.js";
 import { formatNormalizeReport, renderGallery } from "./normalize/gallery.js";
 import { normalizeSet, type SetNormalizeReport } from "./normalize/run.js";
@@ -44,6 +59,11 @@ import {
   sanitizeFixtures,
   sanitizeSet,
 } from "./sanitize/run.js";
+import { loadCatalog } from "./search/catalog.js";
+import { MODEL_SEARCH, PAGE_PORT } from "./search/config.js";
+import { startSearchServer } from "./search/server.js";
+import { buildTextIndex } from "./search/text.js";
+import { loadModelVectors, type ModelVectors } from "./search/vectors.js";
 import {
   cachedSourceDir,
   fetchSource,
@@ -104,7 +124,21 @@ const USAGE = `Использование:
   pnpm nearest [запрос…]              ближайшие по смыслу иконки к запросам по каждой модели;
                                       без запросов — пары ru/en из конфига; запросы сравниваются
                                       парами; страница .cache/reports/embed/nearest.html
-      --model=…                       только эта модель (флаг можно повторить)`;
+      --model=…                       только эта модель (флаг можно повторить)
+  pnpm judge                          разметка эталона ИИ-судьёй: всё неразмеченное в первых
+                                      десятках вариантов замера → docs/eval/judgments.json; нужен
+                                      POLZA_API_KEY; страница .cache/reports/eval/judge.html
+      --limit=N                       пилот: N запросов, по ячейкам «язык × тип»
+      --max-rub=N                     лимит стоимости запуска в рублях (по умолчанию ${JUDGE_MAX_RUB})
+      --dry-run                       только посчитать пары и оценить стоимость
+  pnpm eval                           замер поиска по эталону: Hit@5, MRR@10, P@5 по моделям,
+                                      языкам и частям; страница .cache/reports/eval/index.html
+      --model=…                       только эта модель (флаг можно повторить)
+      --baseline                      записать docs/eval/baseline.json — итог для фазы 2
+  pnpm search-page                    страница поиска для ручной проверки на 127.0.0.1;
+                                      там же отчёты из .cache/reports
+      --port=N                        порт (по умолчанию ${PAGE_PORT})
+      --model=…                       только эта модель — меньше памяти (флаг можно повторить)`;
 
 /** Флаги pnpm pr со ссылками: флаг → поле PrLinks. */
 const LINK_FLAGS: Record<string, keyof PrLinks> = {
@@ -122,6 +156,11 @@ const cacheDir = join(root, ".cache", "sources");
 const dataDir = join(root, "data");
 const reportsDir = join(root, ".cache", "reports");
 const embeddingsDir = join(root, ".cache", "embeddings");
+const evalDir = join(root, "docs", "eval");
+const queriesPath = join(evalDir, "queries.csv");
+const judgmentsPath = join(evalDir, "judgments.json");
+const overridesPath = join(evalDir, "overrides.json");
+const queryDir = join(root, ".cache", "search", "queries");
 const fixturesDir = join(
   root,
   "packages",
@@ -155,6 +194,8 @@ const links: PrLinks = {};
 let limit: number | undefined;
 let maxCost = DEFAULT_MAX_COST;
 let maxRub = DEFAULT_MAX_RUB;
+let judgeMaxRub = JUDGE_MAX_RUB;
+let port = PAGE_PORT;
 const modelKeys = new Set<string>();
 for (const flag of flags) {
   const eq = flag.indexOf("=");
@@ -178,7 +219,33 @@ for (const flag of flags) {
       continue;
     }
   }
-  if (command === "embed" || command === "nearest") {
+  if (command === "judge") {
+    if (flag === "--dry-run") continue;
+    if (name === "--limit" && /^[1-9][0-9]*$/.test(value ?? "")) {
+      limit = Number(value);
+      continue;
+    }
+    if (name === "--max-rub" && /^[0-9]+(\.[0-9]+)?$/.test(value ?? "")) {
+      judgeMaxRub = Number(value);
+      continue;
+    }
+  }
+  if (command === "eval" && flag === "--baseline") continue;
+  if (
+    command === "search-page" &&
+    name === "--port" &&
+    /^[1-9][0-9]{3,4}$/.test(value ?? "") &&
+    Number(value) <= 65535
+  ) {
+    port = Number(value);
+    continue;
+  }
+  if (
+    command === "embed" ||
+    command === "nearest" ||
+    command === "eval" ||
+    command === "search-page"
+  ) {
     if (name === "--model" && value !== undefined) {
       if (!MODELS.some((m) => m.key === value)) {
         usageError(
@@ -560,6 +627,106 @@ try {
     await writeFile(htmlPath, renderNearestPage(report), "utf8");
     console.log(`\nСтраница: ${htmlPath}`);
     process.exit(nearestStop(report) ? 1 : 0);
+  } else if (command === "judge") {
+    if (args.length > 0) usageError("pnpm judge принимает только флаги.");
+    const dryRun = flags.includes("--dry-run");
+    // Ключ — только из окружения (pnpm judge подхватывает .env); в вывод он не попадает.
+    const key = process.env.POLZA_API_KEY;
+    if (!dryRun && !key) {
+      throw new Error(
+        "нет ключа POLZA_API_KEY: впишите его в .env (имена ключей — в .env.example) или запустите с --dry-run",
+      );
+    }
+    const report = await judgeEval(configs, dataDir, {
+      ...(key && !dryRun ? { client: polzaChatClient({ apiKey: key }) } : {}),
+      ...(key ? { embedClient: polzaEmbeddingClient({ apiKey: key }) } : {}),
+      queriesPath,
+      judgmentsPath,
+      overridesPath,
+      storeDir: embeddingsDir,
+      queryDir,
+      ...(limit === undefined ? {} : { limit }),
+      maxRub: judgeMaxRub,
+      dryRun,
+      log: (line) => console.log(line),
+    });
+    console.log(`\n${formatJudgeReport(report)}`);
+    const reportDir = join(reportsDir, "eval");
+    await mkdir(reportDir, { recursive: true });
+    const htmlPath = join(reportDir, "judge.html");
+    await writeFile(
+      htmlPath,
+      renderJudgePage(report, await readOverrides(overridesPath)),
+      "utf8",
+    );
+    console.log(`Страница: ${htmlPath}`);
+    process.exit(judgeStop(report) ? 1 : 0);
+  } else if (command === "eval") {
+    if (args.length > 0) usageError("pnpm eval принимает только флаги.");
+    // Ключ нужен только для векторов новых запросов: с полным кэшем замер идёт без сети.
+    const key = process.env.POLZA_API_KEY;
+    const report = await evaluate(configs, dataDir, {
+      queriesPath,
+      judgmentsPath,
+      overridesPath,
+      storeDir: embeddingsDir,
+      queryDir,
+      ...(key ? { embedClient: polzaEmbeddingClient({ apiKey: key }) } : {}),
+      models,
+      log: (line) => console.log(line),
+    });
+    console.log(`\n${formatEvalReport(report)}`);
+    const reportDir = join(reportsDir, "eval");
+    await mkdir(reportDir, { recursive: true });
+    const htmlPath = join(reportDir, "index.html");
+    await writeFile(htmlPath, renderEvalPage(report), "utf8");
+    if (!evalStop(report)) {
+      const json = canonicalJson(baselineJson(report));
+      await writeFile(join(reportDir, "eval.json"), json, "utf8");
+      if (flags.includes("--baseline")) {
+        await writeFile(join(evalDir, "baseline.json"), json, "utf8");
+        console.log(`Итог для фазы 2: ${join(evalDir, "baseline.json")}`);
+      }
+    }
+    console.log(`Отчёт: ${htmlPath}`);
+    process.exit(evalStop(report) ? 1 : 0);
+  } else if (command === "search-page") {
+    if (args.length > 0) usageError("pnpm search-page принимает только флаги.");
+    const key = process.env.POLZA_API_KEY;
+    const { catalog, errors } = await loadCatalog(configs, dataDir);
+    for (const e of errors) console.warn(`${e.id}: не прочитан — ${e.message}`);
+    const text = buildTextIndex(catalog.docs.map((d) => d.words));
+    const loaded: ModelVectors[] = [];
+    for (const model of models) {
+      console.log(`${model.key}: загружаю векторы…`);
+      const settings = MODEL_SEARCH[model.key];
+      const mv = await loadModelVectors(
+        catalog,
+        model,
+        embeddingsDir,
+        settings ? [settings.length] : [],
+      );
+      for (const note of mv.notes) console.log(`  ${note}`);
+      loaded.push(mv);
+    }
+    await startSearchServer({
+      port,
+      catalog,
+      text,
+      models: loaded,
+      settings: MODEL_SEARCH,
+      ...(key ? { client: polzaEmbeddingClient({ apiKey: key }) } : {}),
+      queryDir,
+      reportsDir,
+    });
+    console.log(
+      `Страница поиска: http://127.0.0.1:${port}/ — карточек ${catalog.docs.length}. Остановить — Ctrl+C.`,
+    );
+    if (!key) {
+      console.log(
+        "Нет POLZA_API_KEY: векторы новых запросов не считаются — только текстовая часть и кэш.",
+      );
+    }
   } else {
     usageError(
       command ? `Неизвестная команда «${command}».` : "Нужна команда.",
