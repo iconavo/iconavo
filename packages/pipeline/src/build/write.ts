@@ -13,7 +13,7 @@ const RENAME_ATTEMPTS = 5;
  * Переименование с повтором: в Windows только что записанный файл может ненадолго держать
  * антивирус. Пауза 100, 200, 400, 800 мс.
  */
-async function renameRetrying(from: string, to: string): Promise<void> {
+export async function renameRetrying(from: string, to: string): Promise<void> {
   for (let attempt = 1; ; attempt++) {
     try {
       await rename(from, to);

@@ -3,13 +3,20 @@
 // | pnpm enrich [id…] [--limit=N] [--max-cost=USD] [--dry-run] [--no-wait]
 // | pnpm embed [id…] [--model=…] [--max-rub=N] [--dry-run] | pnpm nearest [запрос…] [--model=…]
 // | pnpm judge [--limit=N] [--max-rub=N] [--dry-run] | pnpm eval [--model=…] [--baseline]
-// | pnpm search-page [--port=N] [--model=…]
+// | pnpm search-page [--port=N] [--model=…] | pnpm cdn build
 import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import { basename, join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
 import { canonicalJson } from "./build/json.js";
 import { formatBuildReport, renderBuildGallery } from "./build/report.js";
 import { buildSet, type SetBuildReport, writeSetData } from "./build/run.js";
+import {
+  formatCdnReport,
+  formatCdnSummary,
+  formatCdnTable,
+  renderCdnPage,
+} from "./cdn/report.js";
+import { buildCdn, cdnStop } from "./cdn/run.js";
 import { polzaEmbeddingClient } from "./embed/client.js";
 import {
   DEFAULT_MAX_RUB,
@@ -138,7 +145,11 @@ const USAGE = `Использование:
   pnpm search-page                    страница поиска для ручной проверки на 127.0.0.1;
                                       там же отчёты из .cache/reports
       --port=N                        порт (по умолчанию ${PAGE_PORT})
-      --model=…                       только эта модель — меньше памяти (флаг можно повторить)`;
+      --model=…                       только эта модель — меньше памяти (флаг можно повторить)
+  pnpm cdn build                      папка раздачи dist-cdn/ из data/ (ADR-0022): на каждую иконку
+                                      и алиас v/{версия}/{набор}/{имя}.json и .svg, контрольные суммы
+                                      v/{версия}/{набор}.checksums.json и manifest.json; без изменений
+                                      ничего не перезаписывает; отчёт .cache/reports/cdn/`;
 
 /** Флаги pnpm pr со ссылками: флаг → поле PrLinks. */
 const LINK_FLAGS: Record<string, keyof PrLinks> = {
@@ -155,6 +166,7 @@ const lockPath = join(root, "sources.lock.json");
 const cacheDir = join(root, ".cache", "sources");
 const dataDir = join(root, "data");
 const reportsDir = join(root, ".cache", "reports");
+const distCdnDir = join(root, "dist-cdn");
 const embeddingsDir = join(root, ".cache", "embeddings");
 const evalDir = join(root, "docs", "eval");
 const queriesPath = join(evalDir, "queries.csv");
@@ -727,6 +739,28 @@ try {
         "Нет POLZA_API_KEY: векторы новых запросов не считаются — только текстовая часть и кэш.",
       );
     }
+  } else if (command === "cdn") {
+    const [sub, ...rest] = args;
+    if (sub !== "build" || rest.length > 0) {
+      usageError(
+        "pnpm cdn: нужна подкоманда build без имён наборов — манифест описывает все наборы сразу.",
+      );
+    }
+    const report = await buildCdn(configs, {
+      dataDir,
+      outDir: distCdnDir,
+      log: (line) => console.log(line),
+    });
+    console.log("");
+    for (const r of report.sets) console.log(`${formatCdnReport(r)}\n`);
+    console.log(formatCdnTable(report.sets));
+    for (const line of formatCdnSummary(report)) console.log(line);
+    const reportDir = join(reportsDir, "cdn");
+    await mkdir(reportDir, { recursive: true });
+    const htmlPath = join(reportDir, "index.html");
+    await writeFile(htmlPath, renderCdnPage(report), "utf8");
+    console.log(`Отчёт: ${htmlPath}`);
+    process.exit(cdnStop(report) ? 1 : 0);
   } else {
     usageError(
       command ? `Неизвестная команда «${command}».` : "Нужна команда.",

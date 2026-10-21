@@ -1,5 +1,5 @@
 export { baseName, variantAliases } from "./build/aliases.js";
-export { canonicalJson, type Json } from "./build/json.js";
+export { canonicalJson, compactJson, type Json } from "./build/json.js";
 export {
   formatBuildReport,
   renderBuildGallery,
@@ -13,7 +13,61 @@ export {
   type SetBuildReport,
   writeSetData,
 } from "./build/run.js";
-export { writeFileAtomic } from "./build/write.js";
+export { renameRetrying, writeFileAtomic } from "./build/write.js";
+export {
+  CDN_HOST,
+  CHAIN_LIMIT,
+  CHECKSUM_ALGORITHM,
+  CHECKSUMS_LIMIT,
+  CHECKSUMS_SUFFIX,
+  MANIFEST_FILE,
+  OUT_DIR,
+  TREE_LIMIT,
+  VERSIONS_DIR,
+  WRITE_CONCURRENCY,
+} from "./cdn/config.js";
+export {
+  type CdnFile,
+  type Checksums,
+  checksumsSchema,
+  checksumsText,
+  effectiveIcon,
+  type Manifest,
+  type ManifestEntry,
+  manifestSchema,
+  manifestText,
+  nameFile,
+  type ResolvedName,
+  resolveChain,
+  setFiles,
+} from "./cdn/files.js";
+export { type CdnSet, loadCdnSet, transformedNames } from "./cdn/load.js";
+export {
+  CDN_STYLE,
+  formatCdnReport,
+  formatCdnSummary,
+  formatCdnTable,
+  renderCdnPage,
+} from "./cdn/report.js";
+export {
+  buildCdn,
+  type CdnExample,
+  type CdnOptions,
+  type CdnReport,
+  type CdnStatus,
+  cdnStop,
+  type SetCdnReport,
+} from "./cdn/run.js";
+export { type CdnIcon, svgOf, widthEm } from "./cdn/svg.js";
+export {
+  checksumsPath,
+  cleanupStale,
+  sameVersionOnDisk,
+  setDir,
+  versionDir,
+  writeIfChanged,
+  writeSetVersion,
+} from "./cdn/write.js";
 export {
   type ChangelogInput,
   changelogMarkdown,
@@ -692,3 +746,4 @@ export {
   setSummarySchema,
   summaryText,
 } from "./update/summary.js";
+export { pool } from "./util/pool.js";
