@@ -17218,7 +17218,38 @@
       ]
     },
     "circle-chevrons-down": {
+      "en": {
+        "description": "A circle containing two downward chevrons; it usually means scroll down or jump to the bottom.",
+        "synonyms": [
+          "scroll down",
+          "arrow down",
+          "jump to bottom",
+          "last page",
+          "skip to end",
+          "page down",
+          "down button",
+          "descend",
+          "go down",
+          "fast forward"
+        ]
+      },
       "fingerprint": "c0017aec5a75",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Изображена окружность с двумя стрелками-шевронами вниз внутри; обычно означает прокрутку вниз или переход к концу.",
+        "synonyms": [
+          "вниз",
+          "прокрутка вниз",
+          "стрелка вниз",
+          "в конец",
+          "последняя страница",
+          "листать вниз",
+          "скролл",
+          "пролистать вниз",
+          "кнопка вниз",
+          "дальше"
+        ]
+      },
       "tags": [
         "bottom",
         "descend",
@@ -17241,7 +17272,36 @@
       ]
     },
     "circle-chevrons-left": {
+      "en": {
+        "description": "A circular button containing two left-pointing chevrons, meaning rewind, go back, or jump to the beginning.",
+        "synonyms": [
+          "rewind",
+          "previous",
+          "backward",
+          "skip back",
+          "seek back",
+          "go to start",
+          "media controls",
+          "back button",
+          "pagination"
+        ]
+      },
       "fingerprint": "f13d53931ddb",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Круглая кнопка с двумя шевронами влево, означающая перемотку назад или переход к началу.",
+        "synonyms": [
+          "назад",
+          "перемотка назад",
+          "предыдущий",
+          "в начало",
+          "назад к началу",
+          "пролистать назад",
+          "плеер",
+          "кнопка назад",
+          "пагинация"
+        ]
+      },
       "tags": [
         "previous",
         "rewind",
@@ -17268,7 +17328,38 @@
       ]
     },
     "circle-chevrons-right": {
+      "en": {
+        "description": "A double right chevron inside a circle, usually meaning fast forward, skip ahead, or go to the next item.",
+        "synonyms": [
+          "forward",
+          "next",
+          "skip",
+          "fast forward",
+          "seek forward",
+          "skip ahead",
+          "player control",
+          "double arrow",
+          "chevrons right",
+          "track"
+        ]
+      },
       "fingerprint": "7f1dd016e779",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Изображение показывает двойной шеврон вправо внутри круга; обычно означает перемотку вперёд или переход к следующему элементу.",
+        "synonyms": [
+          "вперёд",
+          "следующий",
+          "перемотка вперёд",
+          "пропустить",
+          "дальше",
+          "стрелка вправо",
+          "плеер",
+          "трек",
+          "кнопка далее",
+          "навигация"
+        ]
+      },
       "tags": [
         "next",
         "forward",
@@ -17292,7 +17383,35 @@
       ]
     },
     "circle-chevrons-up": {
+      "en": {
+        "description": "A circular button with two upward chevrons, usually meaning scroll back to the top of the page.",
+        "synonyms": [
+          "scroll to top",
+          "top",
+          "back to top",
+          "jump to top",
+          "up arrow",
+          "double chevron",
+          "go up",
+          "ascend",
+          "page up"
+        ]
+      },
       "fingerprint": "f9e6b16e3920",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Круглая кнопка с двумя стрелками-шевронами вверх; обычно означает прокрутку к началу страницы.",
+        "synonyms": [
+          "наверх",
+          "вверх",
+          "прокрутка вверх",
+          "к началу",
+          "стрелка вверх",
+          "кнопка наверх",
+          "в начало страницы",
+          "двойная стрелка"
+        ]
+      },
       "tags": [
         "top",
         "ascend",
