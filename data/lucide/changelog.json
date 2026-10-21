@@ -3,6 +3,19 @@
   "releases": [
     {
       "added": [
+        "circle-chevrons-down",
+        "circle-chevrons-left",
+        "circle-chevrons-right",
+        "circle-chevrons-up"
+      ],
+      "date": "2026-10-21T08:35:09Z",
+      "previous": "ebb52e13",
+      "revision": "c29c276f16590cf017126671535ad8c792be64d8",
+      "total": 1903,
+      "version": "dbde54d2"
+    },
+    {
+      "added": [
         "avocado",
         "bacon",
         "brain-off",
