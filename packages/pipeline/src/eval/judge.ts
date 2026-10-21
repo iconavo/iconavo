@@ -14,6 +14,7 @@ import { PER_SET_MODEL } from "../search/config.js";
 import { queryVectors } from "../search/query-vectors.js";
 import { buildTextIndex } from "../search/text.js";
 import type { SourceConfig } from "../sources/config.js";
+import { pool } from "../util/pool.js";
 import type { ChatClient } from "./client.js";
 import {
   AGREEMENT_SHARE,
@@ -208,21 +209,6 @@ export interface JudgeReport {
 }
 
 export const judgeStop = (r: JudgeReport) => r.stop.length > 0;
-
-/** До limit задач одновременно; задача сама ловит свои ошибки. */
-async function pool<T>(
-  items: readonly T[],
-  limit: number,
-  work: (item: T) => Promise<void>,
-): Promise<void> {
-  let next = 0;
-  const worker = async () => {
-    while (next < items.length) await work(items[next++] as T);
-  };
-  await Promise.all(
-    Array.from({ length: Math.min(limit, items.length) }, worker),
-  );
-}
 
 /** Согласие судьи с собой: тот же вердикт и то же «подходит или нет». */
 export function agreementOf(j: Judgments): JudgeReport["agreement"] {

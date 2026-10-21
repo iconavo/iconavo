@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { canonicalJson, type Json } from "./json.js";
+import { canonicalJson, compactJson, type Json } from "./json.js";
 
 describe("запись JSON", () => {
   it("ключи по кодам символов, ключи-числа не прыгают вперёд", () => {
@@ -61,5 +61,29 @@ describe("запись JSON", () => {
     expect(() => canonicalJson({ a: undefined } as unknown as Json)).toThrow();
     expect(() => canonicalJson([Number.NaN])).toThrow(/NaN/);
     expect(() => canonicalJson({ a: Number.POSITIVE_INFINITY })).toThrow();
+  });
+});
+
+describe("компактная запись", () => {
+  it("тот же порядок ключей, без пробелов и перевода строки", () => {
+    const text = compactJson({ z: [3, { y: 1, x: 2 }], a: {}, "360": [] });
+    expect(text).toBe('{"360":[],"a":{},"z":[3,{"x":2,"y":1}]}');
+  });
+
+  it("если ключи уже по порядку, совпадает с JSON.stringify", () => {
+    const data = {
+      height: 24,
+      icons: { house: { body: '<path d="M0 0"/>' } },
+      prefix: "demo",
+      width: 24,
+    };
+    expect(compactJson(data)).toBe(JSON.stringify(data));
+  });
+
+  it("простые значения и ошибки — как у полной записи", () => {
+    expect(compactJson("a")).toBe('"a"');
+    expect(compactJson(null)).toBe("null");
+    expect(() => compactJson({ a: undefined } as unknown as Json)).toThrow();
+    expect(() => compactJson([Number.NaN])).toThrow(/NaN/);
   });
 });
