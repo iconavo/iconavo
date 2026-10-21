@@ -19964,14 +19964,14 @@
       ]
     },
     "award-star-outline": {
-      "fingerprint": "e5edbe14862b",
+      "fingerprint": "52150d510c26",
       "tags": [
         "award",
         "star"
       ]
     },
     "award-star-outline-rounded": {
-      "fingerprint": "93c235aef959",
+      "fingerprint": "9d5332a6ebd2",
       "tags": [
         "award",
         "star"
@@ -31736,14 +31736,14 @@
       ]
     },
     "brightness-4-outline": {
-      "fingerprint": "af1ff63d7866",
+      "fingerprint": "471819f79949",
       "tags": [
         "brightness",
         "4"
       ]
     },
     "brightness-4-outline-rounded": {
-      "fingerprint": "d38059f12a23",
+      "fingerprint": "fbf53cced24f",
       "tags": [
         "brightness",
         "4"
@@ -31816,36 +31816,7 @@
       ]
     },
     "brightness-6": {
-      "en": {
-        "description": "An eight-pointed star outline containing a half-filled circle, usually representing brightness, contrast, or theme switching.",
-        "synonyms": [
-          "contrast",
-          "theme",
-          "dark mode",
-          "light mode",
-          "sun",
-          "light",
-          "adjust brightness",
-          "display settings",
-          "exposure"
-        ]
-      },
-      "fingerprint": "c6041d91114d",
-      "promptVersion": 1,
-      "ru": {
-        "description": "Восьмиконечная звезда с половиной закрашенного круга внутри, обозначает контраст или яркость и регулировку света.",
-        "synonyms": [
-          "яркость",
-          "контраст",
-          "тема",
-          "светлая тема",
-          "тёмная тема",
-          "солнце",
-          "свет",
-          "регулировка яркости",
-          "настройки экрана"
-        ]
-      },
+      "fingerprint": "696ce72f5657",
       "tags": [
         "brightness",
         "6"
@@ -31859,7 +31830,7 @@
       ]
     },
     "brightness-6-outline-rounded": {
-      "fingerprint": "a703bd230d97",
+      "fingerprint": "cb177a68ee30",
       "tags": [
         "brightness",
         "6"
@@ -31967,14 +31938,14 @@
       ]
     },
     "brightness-alert-outline": {
-      "fingerprint": "69c1e8ab364b",
+      "fingerprint": "bef05cd1dc02",
       "tags": [
         "brightness",
         "alert"
       ]
     },
     "brightness-alert-outline-rounded": {
-      "fingerprint": "2ca8117edcdb",
+      "fingerprint": "7370169dc9e8",
       "tags": [
         "brightness",
         "alert"
@@ -32024,21 +31995,21 @@
       ]
     },
     "brightness-auto-outline": {
-      "fingerprint": "8473eebe2e89",
+      "fingerprint": "2614854c3dbd",
       "tags": [
         "brightness",
         "auto"
       ]
     },
     "brightness-auto-outline-rounded": {
-      "fingerprint": "4936f37cc0e5",
+      "fingerprint": "e32d18bbfbe8",
       "tags": [
         "brightness",
         "auto"
       ]
     },
     "brightness-auto-rounded": {
-      "fingerprint": "4967439ccf75",
+      "fingerprint": "eaa6fed0e583",
       "tags": [
         "brightness",
         "auto"
@@ -32079,14 +32050,14 @@
       ]
     },
     "brightness-empty-outline": {
-      "fingerprint": "687ddbe221ab",
+      "fingerprint": "935c05dee283",
       "tags": [
         "brightness",
         "empty"
       ]
     },
     "brightness-empty-outline-rounded": {
-      "fingerprint": "1ca74ba81914",
+      "fingerprint": "d4fe8407a842",
       "tags": [
         "brightness",
         "empty"
@@ -32100,37 +32071,7 @@
       ]
     },
     "brightness-medium": {
-      "en": {
-        "description": "An eight-pointed star outline with a half-filled circle inside, usually representing brightness or contrast adjustment.",
-        "synonyms": [
-          "brightness",
-          "contrast",
-          "theme",
-          "dark mode",
-          "light mode",
-          "display",
-          "exposure",
-          "half filled",
-          "sun",
-          "tone"
-        ]
-      },
-      "fingerprint": "c6041d91114d",
-      "promptVersion": 1,
-      "ru": {
-        "description": "Восьмиконечная звезда с закрашенной правой половиной круга внутри, обозначающая регулировку яркости или контраста.",
-        "synonyms": [
-          "яркость",
-          "контраст",
-          "тема",
-          "средняя яркость",
-          "солнце",
-          "освещение",
-          "настройки экрана",
-          "затемнение",
-          "полутон"
-        ]
-      },
+      "fingerprint": "696ce72f5657",
       "tags": [
         "brightness",
         "medium"
@@ -32144,7 +32085,7 @@
       ]
     },
     "brightness-medium-outline-rounded": {
-      "fingerprint": "a703bd230d97",
+      "fingerprint": "cb177a68ee30",
       "tags": [
         "brightness",
         "medium"
@@ -63265,6 +63206,54 @@
         "share"
       ]
     },
+    "document-share-stack": {
+      "fingerprint": "aa09ae29764c",
+      "tags": [
+        "document",
+        "share",
+        "stack"
+      ]
+    },
+    "document-share-stack-outline": {
+      "fingerprint": "810ba0dd4870",
+      "tags": [
+        "document",
+        "share",
+        "stack"
+      ]
+    },
+    "document-share-stack-outline-rounded": {
+      "fingerprint": "105e0d6e8f5a",
+      "tags": [
+        "document",
+        "share",
+        "stack"
+      ]
+    },
+    "document-share-stack-outline-sharp": {
+      "fingerprint": "9d1e6ff34d2c",
+      "tags": [
+        "document",
+        "share",
+        "stack"
+      ]
+    },
+    "document-share-stack-rounded": {
+      "fingerprint": "bd8c1f5a4637",
+      "tags": [
+        "document",
+        "share",
+        "stack"
+      ]
+    },
+    "document-share-stack-sharp": {
+      "fingerprint": "c6007ba3eed5",
+      "tags": [
+        "document",
+        "share",
+        "stack"
+      ]
+    },
     "domain": {
       "en": {
         "description": "Shows a building with a grid of windows and a smaller wing, representing an organization, office, or institution.",
@@ -73530,13 +73519,13 @@
       ]
     },
     "explosion-outline": {
-      "fingerprint": "692e27d6b7d3",
+      "fingerprint": "c8362f0cb890",
       "tags": [
         "explosion"
       ]
     },
     "explosion-outline-rounded": {
-      "fingerprint": "fd4a745f895a",
+      "fingerprint": "d66e4ce4f8db",
       "tags": [
         "explosion"
       ]
@@ -150920,6 +150909,34 @@
         "edit"
       ]
     },
+    "person-eye": {
+      "fingerprint": "8ada359148cf",
+      "tags": [
+        "person",
+        "eye"
+      ]
+    },
+    "person-eye-outline": {
+      "fingerprint": "c6f15d07dfa5",
+      "tags": [
+        "person",
+        "eye"
+      ]
+    },
+    "person-eye-outline-rounded": {
+      "fingerprint": "af0829b587a2",
+      "tags": [
+        "person",
+        "eye"
+      ]
+    },
+    "person-eye-rounded": {
+      "fingerprint": "f000c9e75ae0",
+      "tags": [
+        "person",
+        "eye"
+      ]
+    },
     "person-heart": {
       "en": {
         "description": "A person silhouette with a heart beside it; usually means favorite people, liked profile, or caring community.",
@@ -187550,6 +187567,54 @@
       "tags": [
         "speed",
         "4"
+      ]
+    },
+    "speed-4-progress": {
+      "fingerprint": "ca9c8ce98a43",
+      "tags": [
+        "speed",
+        "4",
+        "progress"
+      ]
+    },
+    "speed-4-progress-outline": {
+      "fingerprint": "8ec9723d2c4b",
+      "tags": [
+        "speed",
+        "4",
+        "progress"
+      ]
+    },
+    "speed-4-progress-outline-rounded": {
+      "fingerprint": "5834a03ac92c",
+      "tags": [
+        "speed",
+        "4",
+        "progress"
+      ]
+    },
+    "speed-4-progress-outline-sharp": {
+      "fingerprint": "e2f521a90119",
+      "tags": [
+        "speed",
+        "4",
+        "progress"
+      ]
+    },
+    "speed-4-progress-rounded": {
+      "fingerprint": "db66695f2759",
+      "tags": [
+        "speed",
+        "4",
+        "progress"
+      ]
+    },
+    "speed-4-progress-sharp": {
+      "fingerprint": "203f1d748c1a",
+      "tags": [
+        "speed",
+        "4",
+        "progress"
       ]
     },
     "speed-4-rounded": {

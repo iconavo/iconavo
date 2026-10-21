@@ -9,8 +9,8 @@
   },
   "material-symbols": {
     "type": "npm",
-    "version": "0.48.0",
-    "integrity": "sha512-W20MjbiDbLJQ5yi4CPz2y6lCZ9bk3pJ1d5Ra+uErvtj/guVrCNfcYyMZn3KqHpDyyKVfBGkuGHVcdi5h+5+EqA=="
+    "version": "0.48.1",
+    "integrity": "sha512-l3zCJuHOtBdha7C3fZ/OXjt6N0pP+a7+TUtYJeWOLbsOh2hDn8weIPgj1a9hwvF7aI1U5lwuxi0to7JysAiBvg=="
   },
   "ph": {
     "type": "npm",
