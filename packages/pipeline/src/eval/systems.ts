@@ -41,14 +41,14 @@ export interface Choice {
   alpha: ReadonlyMap<string, number>;
   /** Длина вектора каждой модели для главного гибрида. */
   length: ReadonlyMap<string, number>;
-  /** Модель для фильтра по наборам; нет — фильтра нет. */
-  chosen?: string;
+  /** Модель для замера с фильтром по наборам; нет — такого замера нет. */
+  perSetModel?: string;
 }
 
 /** α и длина из настроек поиска (search/config.ts). */
 export function configChoice(
   models: readonly EmbeddingModel[],
-  chosen?: string,
+  perSetModel?: string,
 ): Choice {
   const alpha = new Map<string, number>();
   const length = new Map<string, number>();
@@ -56,7 +56,9 @@ export function configChoice(
     alpha.set(m.key, MODEL_SEARCH[m.key]?.alpha ?? 0.5);
     length.set(m.key, MODEL_SEARCH[m.key]?.length ?? m.dims);
   }
-  return chosen === undefined ? { alpha, length } : { alpha, length, chosen };
+  return perSetModel === undefined
+    ? { alpha, length }
+    : { alpha, length, perSetModel };
 }
 
 const fraction = (n: number) => n.toFixed(1).replace(".", ",");
@@ -130,7 +132,7 @@ export function systems(
         role: "length",
       });
     }
-    if (choice.chosen === m.key) {
+    if (choice.perSetModel === m.key) {
       for (const set of sets) {
         out.push({
           key: `set:${m.key}|${set}`,

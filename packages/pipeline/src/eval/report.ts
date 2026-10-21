@@ -278,6 +278,25 @@ function recommendationText(r: EvalReport): string {
   return `<p><b>Лидер — гибрид ${esc(rec.leader)}: Hit@5 ${hit} на контрольной части.</b> ${esc(close)}</p>`;
 }
 
+/** Наборы в первой пятёрке лидера: не проседает ли набор без тегов автора (Material Symbols). */
+function setSharesSection(r: EvalReport): string {
+  const s = r.setShares;
+  if (!s) return "";
+  const docs = s.sets.reduce((n, x) => n + x.docs, 0);
+  const fits = s.sets.reduce((n, x) => n + x.fits, 0);
+  const slots = s.sets.reduce((n, x) => n + x.slots, 0);
+  const share = (a: number, b: number) => (b === 0 ? "—" : pct(a / b));
+  const rows = s.sets
+    .map(
+      (x) =>
+        `<tr><td>${esc(x.set)}</td><td class="num">${share(x.docs, docs)}</td><td class="num">${share(x.fits, fits)}</td><td class="num">${share(x.slots, slots)}</td><td class="num">${share(x.slotFits, x.slots)}</td></tr>`,
+    )
+    .join("");
+  return `<h2>Наборы в первой пятёрке — гибрид ${esc(s.model)}</h2>
+<table><thead><tr><th>Набор</th><th>Карточек каталога</th><th>Подходящих по разметке</th><th>Мест в пятёрке</th><th>Из них подходят</th></tr></thead><tbody>${rows}</tbody></table>
+<p class="muted">По имеющейся разметке, без новых пар. Если доля мест в пятёрке заметно меньше доли подходящих, набор проседает; если больше, а подходят немногие, — набор попадает в пятёрку лишний раз. Замер поиска с фильтром по набору — вместе с фильтром на сайте (фаза 4).</p>`;
+}
+
 /** Страница index.html замера. */
 export function renderEvalPage(r: EvalReport): string {
   const stops = r.stop
@@ -408,6 +427,7 @@ ${lengthTable}
 <h2>По типам запросов</h2>
 ${typeTable}
 ${perSet}
+${setSharesSection(r)}
 <h2>Потолок: подходящей иконки не нашлось</h2>
 ${ceiling ? `<ul>${ceiling}</ul>` : `<p class="muted">Таких запросов нет.</p>`}
 <h2>Промахи — рабочая часть, гибрид ${esc(leaderKey.replace("hybrid:", ""))}</h2>

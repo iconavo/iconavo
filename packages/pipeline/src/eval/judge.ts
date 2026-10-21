@@ -10,7 +10,7 @@ import type { EmbeddingClient } from "../embed/client.js";
 import { type EmbeddingModel, MODELS } from "../embed/config.js";
 import { initRenderer, renderPreview } from "../qc/render.js";
 import { type Catalog, loadCatalog } from "../search/catalog.js";
-import { CHOSEN_MODEL } from "../search/config.js";
+import { PER_SET_MODEL } from "../search/config.js";
 import { queryVectors } from "../search/query-vectors.js";
 import { buildTextIndex } from "../search/text.js";
 import type { SourceConfig } from "../sources/config.js";
@@ -300,7 +300,7 @@ export async function judgeEval(
   const allWork =
     queries.filter((q) => q.split === "work").length ===
     all.filter((q) => q.split === "work").length;
-  let choice = configChoice(models, CHOSEN_MODEL);
+  let choice = configChoice(models, PER_SET_MODEL);
   const sets = catalog.sets.map((s) => s.id);
   const input = {
     catalog,

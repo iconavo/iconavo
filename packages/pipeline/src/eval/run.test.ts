@@ -69,6 +69,10 @@ describe("pnpm eval", () => {
     expect(text?.strict.all.all).toMatchObject({ n: 5, hits: 4 });
     expect(r.tuned?.get("a")?.curve).toHaveLength(11);
     expect(r.recommendation?.leader).toBe("a");
+    // Наборы в пятёрке лидера — по имеющейся разметке.
+    expect(r.setShares?.model).toBe("a");
+    expect(r.setShares?.sets[0]).toMatchObject({ set: "demo", docs: 5 });
+    expect(r.setShares?.sets[0]?.slotFits).toBeGreaterThan(0);
     // Промахи — только рабочая часть.
     expect(r.misses.every((m) => m.query.split === "work")).toBe(true);
     expect(formatEvalReport(r)).toContain("Hit@5");

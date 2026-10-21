@@ -533,7 +533,6 @@ export {
   setDocs,
 } from "./search/catalog.js";
 export {
-  CHOSEN_MODEL,
   FIELD_WEIGHTS,
   FIELDS,
   type Field,
@@ -543,6 +542,7 @@ export {
   type ModelSearch,
   PAGE_PORT,
   PAGE_RESULTS,
+  PER_SET_MODEL,
   PREFIX_MAX_EXPANSIONS,
   PREFIX_MIN_LENGTH,
   STOP_WORDS,

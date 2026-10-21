@@ -8,7 +8,7 @@ import { join } from "node:path";
 import type { EmbeddingClient } from "../embed/client.js";
 import { type EmbeddingModel, MODELS } from "../embed/config.js";
 import { type Catalog, loadCatalog } from "../search/catalog.js";
-import { CHOSEN_MODEL } from "../search/config.js";
+import { PER_SET_MODEL } from "../search/config.js";
 import { queryVectors } from "../search/query-vectors.js";
 import { buildTextIndex } from "../search/text.js";
 import { catalogBytes } from "../search/vectors.js";
@@ -102,6 +102,20 @@ export interface EvalReport {
   /** Попарно на контрольной части и на всех запросах: ключи вариантов и счёты. */
   pairs: { a: string; b: string; holdout: Paired; all: Paired }[];
   recommendation?: Recommendation;
+  /**
+   * Наборы в первой пятёрке лидера — по имеющейся разметке, без новых пар: доля карточек каталога,
+   * доля подходящих иконок, доля мест в пятёрке и сколько из этих мест подходят.
+   */
+  setShares?: {
+    model: string;
+    sets: {
+      set: string;
+      docs: number;
+      fits: number;
+      slots: number;
+      slotFits: number;
+    }[];
+  };
   /** Промахи лучшего гибрида — только по рабочей части. */
   misses: { query: GoldenQuery; fits: string[]; ranked: string[] }[];
   rankings?: Rankings;
@@ -182,7 +196,7 @@ export async function evaluate(
     included: [],
     ceiling: [],
     labels,
-    choice: configChoice(models, CHOSEN_MODEL),
+    choice: configChoice(models, PER_SET_MODEL),
     main: [],
     lengths: [],
     pairs: [],
@@ -319,7 +333,7 @@ export async function evaluate(
     });
   }
 
-  const chosen = report.choice.chosen;
+  const chosen = report.choice.perSetModel;
   if (chosen !== undefined) {
     report.perSet = {
       model: chosen,
@@ -400,6 +414,34 @@ export async function evaluate(
       closeAll: close("all"),
     };
     const list = listOf(leader.system.key);
+    const shares = sets.map((set) => ({
+      set,
+      docs: catalog.docs.filter((d) => d.set === set).length,
+      fits: 0,
+      slots: 0,
+      slotFits: 0,
+    }));
+    const shareOf = (id: string) =>
+      shares.find((s) => id.startsWith(`${s.set}:`));
+    for (const q of queries) {
+      const known = labels.byQuery.get(q.id);
+      for (const [id, v] of known ?? []) {
+        if (v === "fits") {
+          const s = shareOf(id);
+          if (s) s.fits++;
+        }
+      }
+      for (const id of (list[index.get(q.id) as number] ?? []).slice(0, 5)) {
+        const s = shareOf(id);
+        if (!s) continue;
+        s.slots++;
+        if (known?.get(id) === "fits") s.slotFits++;
+      }
+    }
+    report.setShares = {
+      model: leader.system.model as string,
+      sets: shares,
+    };
     for (const q of report.included.filter((x) => x.split === "work")) {
       const fits = fitsOf(labels, q.id);
       const top = list[index.get(q.id) as number] ?? [];
