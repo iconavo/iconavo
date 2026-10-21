@@ -19,6 +19,8 @@
     "data": "tsc -b && node packages/pipeline/dist/cli.js data",
     "pr": "tsc -b && node packages/pipeline/dist/cli.js pr",
     "enrich": "tsc -b && node --env-file-if-exists=.env packages/pipeline/dist/cli.js enrich",
+    "embed": "tsc -b && node --env-file-if-exists=.env packages/pipeline/dist/cli.js embed",
+    "nearest": "tsc -b && node --env-file-if-exists=.env packages/pipeline/dist/cli.js nearest",
     "check": "pnpm lint && pnpm typecheck && pnpm test && pnpm size"
   },
   "devDependencies": {

@@ -1,11 +1,28 @@
 // Команды конвейера: pnpm sources fetch [id…] | pnpm sources pin <id> [версия|коммит] | pnpm sanitize [id…]
 // | pnpm normalize [id…] | pnpm data [id…] [--accept-changes] | pnpm pr <id> [--run-url=… …] [--no-auto-merge]
 // | pnpm enrich [id…] [--limit=N] [--max-cost=USD] [--dry-run] [--no-wait]
+// | pnpm embed [id…] [--model=…] [--max-rub=N] [--dry-run] | pnpm nearest [запрос…] [--model=…]
 import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import { basename, join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
 import { formatBuildReport, renderBuildGallery } from "./build/report.js";
 import { buildSet, type SetBuildReport, writeSetData } from "./build/run.js";
+import { polzaEmbeddingClient } from "./embed/client.js";
+import {
+  DEFAULT_MAX_RUB,
+  type EmbeddingModel,
+  MODELS,
+  NEAREST_PAIRS,
+} from "./embed/config.js";
+import { nearestQueries, nearestStop } from "./embed/nearest.js";
+import {
+  formatEmbedReport,
+  formatEmbedTable,
+  formatNearest,
+  renderEmbedPage,
+  renderNearestPage,
+} from "./embed/report.js";
+import { embedSets, embedStatus, hasStop, loadTexts } from "./embed/run.js";
 import { DEFAULT_MAX_COST } from "./enrich/config.js";
 import {
   formatEnrichReport,
@@ -76,7 +93,18 @@ const USAGE = `Использование:
       --max-cost=USD                  лимит стоимости прогона (по умолчанию $${DEFAULT_MAX_COST}): оценка выше —
                                       ничего не отправляется
       --dry-run                       только посчитать и оценить стоимость, ничего не отправлять
-      --no-wait                       отправить пакет и выйти; результаты заберёт следующий запуск`;
+      --no-wait                       отправить пакет и выйти; результаты заберёт следующий запуск
+  pnpm embed [id…]                    векторы смысла для базовых иконок с описаниями тремя моделями
+                                      через Polza AI → .cache/embeddings/{модель}/; кэш по хэшу
+                                      текста; нужен POLZA_API_KEY в .env; отчёт .cache/reports/embed/
+      ${`--model=${MODELS.map((m) => m.key).join("|")}`.padEnd(32)}только эта модель (флаг можно повторить)
+      --max-rub=N                     лимит стоимости прогона в рублях (по умолчанию ${DEFAULT_MAX_RUB}): оценка
+                                      выше — ничего не отправляется
+      --dry-run                       только посчитать и оценить стоимость, ничего не отправлять
+  pnpm nearest [запрос…]              ближайшие по смыслу иконки к запросам по каждой модели;
+                                      без запросов — пары ru/en из конфига; запросы сравниваются
+                                      парами; страница .cache/reports/embed/nearest.html
+      --model=…                       только эта модель (флаг можно повторить)`;
 
 /** Флаги pnpm pr со ссылками: флаг → поле PrLinks. */
 const LINK_FLAGS: Record<string, keyof PrLinks> = {
@@ -93,6 +121,7 @@ const lockPath = join(root, "sources.lock.json");
 const cacheDir = join(root, ".cache", "sources");
 const dataDir = join(root, "data");
 const reportsDir = join(root, ".cache", "reports");
+const embeddingsDir = join(root, ".cache", "embeddings");
 const fixturesDir = join(
   root,
   "packages",
@@ -102,7 +131,8 @@ const fixturesDir = join(
 );
 
 const [command, ...params] = process.argv.slice(2);
-// Флаги отдельно от имён наборов, иначе «--accept-changes» искали бы как набор.
+// Флаги отдельно от остальных слов — имён наборов, а у nearest запросов: иначе «--accept-changes»
+// искали бы как набор.
 const flags = params.filter((a) => a.startsWith("--"));
 const args = params.filter((a) => !a.startsWith("--"));
 
@@ -124,6 +154,8 @@ function usageError(message: string): never {
 const links: PrLinks = {};
 let limit: number | undefined;
 let maxCost = DEFAULT_MAX_COST;
+let maxRub = DEFAULT_MAX_RUB;
+const modelKeys = new Set<string>();
 for (const flag of flags) {
   const eq = flag.indexOf("=");
   const name = eq === -1 ? flag : flag.slice(0, eq);
@@ -146,9 +178,32 @@ for (const flag of flags) {
       continue;
     }
   }
+  if (command === "embed" || command === "nearest") {
+    if (name === "--model" && value !== undefined) {
+      if (!MODELS.some((m) => m.key === value)) {
+        usageError(
+          `Модель «${value}» не найдена. Есть: ${MODELS.map((m) => m.key).join(", ")}.`,
+        );
+      }
+      modelKeys.add(value);
+      continue;
+    }
+    if (command === "embed" && flag === "--dry-run") continue;
+    if (
+      command === "embed" &&
+      name === "--max-rub" &&
+      /^[0-9]+(\.[0-9]+)?$/.test(value ?? "")
+    ) {
+      maxRub = Number(value);
+      continue;
+    }
+  }
   usageError(`Неизвестный флаг «${flag}».`);
 }
 const acceptChanges = flags.includes("--accept-changes");
+// Модели эмбеддингов в порядке конфига; без --model — все.
+const models: readonly EmbeddingModel[] =
+  modelKeys.size > 0 ? MODELS.filter((m) => modelKeys.has(m.key)) : MODELS;
 
 try {
   const configs = await loadRegistry(join(root, "sources"));
@@ -447,6 +502,64 @@ try {
     await writeFile(htmlPath, renderEnrichPage(reports, catalog), "utf8");
     console.log(`Отчёт: ${htmlPath}`);
     process.exit(reports.some((r) => r.stop.length > 0) ? 1 : 0);
+  } else if (command === "embed") {
+    const dryRun = flags.includes("--dry-run");
+    const picked = pick(args);
+    // Ключ — только из окружения (pnpm embed подхватывает .env); в вывод он не попадает.
+    const key = process.env.POLZA_API_KEY;
+    if (!dryRun && !key) {
+      throw new Error(
+        "нет ключа POLZA_API_KEY: впишите его в .env (имена ключей — в .env.example) или запустите с --dry-run",
+      );
+    }
+    const client =
+      key && !dryRun ? polzaEmbeddingClient({ apiKey: key }) : undefined;
+    const report = await embedSets(picked, dataDir, {
+      ...(client ? { client } : {}),
+      storeDir: embeddingsDir,
+      models,
+      maxRub,
+      dryRun,
+      log: (line) => console.log(line),
+    });
+    console.log(`\n${formatEmbedReport(report)}`);
+    // Готовность — по всему каталогу и всем моделям, а не только по выбранным.
+    const { texts } = await loadTexts(configs, dataDir);
+    const status = await embedStatus(texts, embeddingsDir, MODELS);
+    console.log(
+      `\nВекторов по текущему тексту / базовых иконок с описаниями:\n${formatEmbedTable(status)}`,
+    );
+    // Папка общая с pnpm nearest, поэтому не удаляется.
+    const reportDir = join(reportsDir, "embed");
+    await mkdir(reportDir, { recursive: true });
+    const htmlPath = join(reportDir, "index.html");
+    await writeFile(htmlPath, renderEmbedPage(report, status), "utf8");
+    console.log(`Отчёт: ${htmlPath}`);
+    process.exit(hasStop(report) ? 1 : 0);
+  } else if (command === "nearest") {
+    const key = process.env.POLZA_API_KEY;
+    if (!key) {
+      throw new Error(
+        "нет ключа POLZA_API_KEY: впишите его в .env (имена ключей — в .env.example)",
+      );
+    }
+    const queries = args.length > 0 ? args : NEAREST_PAIRS.flat();
+    // Запросы печатаются, чтобы было видно, что кириллица дошла целой.
+    console.log(`Запросы: ${queries.map((q) => `«${q}»`).join(", ")}`);
+    const report = await nearestQueries(configs, dataDir, {
+      client: polzaEmbeddingClient({ apiKey: key }),
+      storeDir: embeddingsDir,
+      queries,
+      models,
+      log: (line) => console.log(line),
+    });
+    console.log(`\n${formatNearest(report)}`);
+    const reportDir = join(reportsDir, "embed");
+    await mkdir(reportDir, { recursive: true });
+    const htmlPath = join(reportDir, "nearest.html");
+    await writeFile(htmlPath, renderNearestPage(report), "utf8");
+    console.log(`\nСтраница: ${htmlPath}`);
+    process.exit(nearestStop(report) ? 1 : 0);
   } else {
     usageError(
       command ? `Неизвестная команда «${command}».` : "Нужна команда.",
