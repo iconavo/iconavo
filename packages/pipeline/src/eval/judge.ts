@@ -364,7 +364,11 @@ export async function judgeEval(
     const pending = unlabeled(rankings, defs, queries, labels);
     const count = [...pending.values()].reduce((n, s) => n + s.size, 0);
     report.pending = count;
-    if (count === 0) break;
+    if (count === 0) {
+      // Остаток только что посчитан — пересчитывать не нужно.
+      recount = false;
+      break;
+    }
 
     const jobs: Job[] = [];
     const repeats: Job[] = [];
