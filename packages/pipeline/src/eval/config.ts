@@ -32,8 +32,11 @@ export const RATE_LIMIT_BACKOFF_MS: readonly number[] = [
   5000, 15000, 30000, 60000,
 ];
 
-/** Запросов к судье одновременно, ожидание ответа и сохранение разметки по ходу. */
-export const CONCURRENCY = 4;
+/**
+ * Запросов к судье одновременно, ожидание ответа и сохранение разметки по ходу. Два, а не четыре:
+ * маленькие пачки отвечают за 2–3 с, и четыре потока упирались в лимит Polza в минуту.
+ */
+export const CONCURRENCY = 2;
 export const TIMEOUT_MS = 120_000;
 export const SAVE_EVERY = 10;
 
