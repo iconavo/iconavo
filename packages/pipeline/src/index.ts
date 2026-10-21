@@ -60,6 +60,100 @@ export {
   visibleCount,
 } from "./changelog/state.js";
 export {
+  apiError,
+  type EmbeddingClient,
+  type EmbedResult,
+  errorScope,
+  type PolzaOptions,
+  polzaEmbeddingClient,
+  retryDelay,
+  type StopScope,
+} from "./embed/client.js";
+export {
+  API_URL,
+  BACKOFF_MS,
+  CONCURRENCY,
+  DEFAULT_MAX_RUB,
+  type EmbeddingModel,
+  EST_CHARS_PER_TOKEN,
+  MAX_ATTEMPTS,
+  MODELS,
+  NEAREST_PAIRS,
+  RETRY_AFTER_MAX_MS,
+  SAVE_EVERY_BATCHES,
+  TEXT_VERSION,
+  TIMEOUT_MS,
+  TOP_PAGE,
+  TOP_TERMINAL,
+} from "./embed/config.js";
+export {
+  addSpent,
+  estimateRub,
+  formatRub,
+  noSpent,
+  rubOfTokens,
+  type Spent,
+} from "./embed/cost.js";
+export {
+  type ModelNearest,
+  median,
+  type NearestOptions,
+  type NearestReport,
+  type Neighbor,
+  nearestQueries,
+  nearestStop,
+  overlap,
+  type QueryResult,
+  topK,
+  type VectorSet,
+} from "./embed/nearest.js";
+export {
+  type ParsedEmbeddings,
+  parseEmbeddings,
+  unitVector,
+} from "./embed/parse.js";
+export {
+  EMBED_STYLE,
+  formatEmbedReport,
+  formatEmbedTable,
+  formatMb,
+  formatMs,
+  formatNearest,
+  renderEmbedPage,
+  renderNearestPage,
+} from "./embed/report.js";
+export {
+  type EmbedOptions,
+  type EmbedReport,
+  embedSets,
+  embedStatus,
+  hasStop,
+  type IconText,
+  loadTexts,
+  type ModelEmbedReport,
+  type ModelSetReport,
+  type ModelStatus,
+  type SetInfo,
+  type SetTexts,
+  type StatusCell,
+  setTexts,
+} from "./embed/run.js";
+export {
+  bytesToFloat32,
+  type IndexRead,
+  readIndex,
+  readStore,
+  STORE_FORMAT,
+  type StoredVectors,
+  type StoreIndex,
+  type StoreRead,
+  type StoreRow,
+  storeIndexSchema,
+  storePaths,
+  writeStore,
+} from "./embed/store.js";
+export { iconText, queryInput, textHash } from "./embed/text.js";
+export {
   applyEnrichment,
   type CarryResult,
   carryEnrichment,

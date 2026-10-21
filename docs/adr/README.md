@@ -54,6 +54,7 @@
 | 0044. MCP-сервер | Официальный SDK, Streamable HTTP, Cloudflare Workers, превью-сетка в ответе |
 | 0045. Выбор в чате | Инструмент pick\_icon с сеткой по спецификации MCP Apps |
 | 0046. Обогащение: реализация | Haiku 5.5 через Message Batches, описания только у базовой иконки в `search.json`, кэш по имени и отпечатку, лимит стоимости прогона |
+| 0047. Эмбеддинги | Три модели через Polza AI, один текст ru+en на базовую иконку, кэш по хэшу текста, векторы локально в `.cache`, не в git |
 
 ## Файлы решений
 
@@ -103,6 +104,7 @@
 - [ADR-0044. MCP-сервер: реализация](0044-mcp-server-realizatsiya.md)
 - [ADR-0045. MCP Apps: выбор иконки в чате](0045-mcp-apps-vybor-ikonki-v-chate.md)
 - [ADR-0046. Обогащение: модель, пакетный API и хранение описаний](0046-obogashchenie-model-paketnyy-api-i-khranenie.md)
+- [ADR-0047. Эмбеддинги: модели, текст иконки и хранение векторов](0047-embeddingi-modeli-tekst-i-khranenie-vektorov.md)
 
 ## Решения фазы 0
 
