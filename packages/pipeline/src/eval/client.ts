@@ -2,7 +2,8 @@
 // паузы и остановки — как у эмбеддингов (embed/client.ts): сбой сети и перегрузка — повтор, ключ и
 // баланс — остановка всего прогона, другой отказ — ошибка запроса. Если сервер не принял
 // необязательное поле (схему ответа, усилие мышления), запрос уходит без него — как у генератора
-// эталона (tools/eval/generate-queries.mjs). Ключ приходит параметром и никуда не печатается.
+// эталона (tools/eval/generate-queries.mjs). Лимит запросов в минуту (429 без Retry-After) ждёт
+// дольше — до минуты. Ключ приходит параметром и никуда не печатается.
 
 import {
   apiError,
@@ -13,7 +14,7 @@ import {
 } from "../embed/client.js";
 import { API_URL, MAX_ATTEMPTS } from "../embed/config.js";
 import type { FetchFn } from "../sources/npm.js";
-import { TIMEOUT_MS } from "./config.js";
+import { RATE_LIMIT_BACKOFF_MS, TIMEOUT_MS } from "./config.js";
 
 export interface ChatResult {
   /** Текст ответа модели. */
@@ -143,7 +144,13 @@ export function polzaChatClient(options: ChatOptions): ChatClient {
             );
           }
           last = reason;
-          wait = retryDelay(res.headers.get("retry-after"), attempt);
+          const header = res.headers.get("retry-after");
+          wait =
+            res.status === 429 && (header === null || header.trim() === "")
+              ? (RATE_LIMIT_BACKOFF_MS[
+                  Math.min(attempt - 1, RATE_LIMIT_BACKOFF_MS.length - 1)
+                ] as number)
+              : retryDelay(header, attempt);
         }
       } catch (e) {
         const name = (e as Error).name;
