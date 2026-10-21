@@ -17217,6 +17217,105 @@
         "^"
       ]
     },
+    "circle-chevrons-down": {
+      "fingerprint": "c0017aec5a75",
+      "tags": [
+        "bottom",
+        "descend",
+        "page",
+        "page down",
+        "scroll",
+        "jump",
+        "south",
+        "caret",
+        "button",
+        "skip",
+        "end",
+        "last page",
+        "latest",
+        "feed",
+        "chat",
+        "pagination",
+        "fast",
+        "media"
+      ]
+    },
+    "circle-chevrons-left": {
+      "fingerprint": "f13d53931ddb",
+      "tags": [
+        "previous",
+        "rewind",
+        "backward",
+        "first",
+        "beginning",
+        "start",
+        "west",
+        "music",
+        "caret",
+        "button",
+        "pagination",
+        "skip",
+        "skip-back",
+        "seek-back",
+        "media-controls",
+        "player",
+        "playlist",
+        "track",
+        "chapter",
+        "jump",
+        "timeline",
+        "controls"
+      ]
+    },
+    "circle-chevrons-right": {
+      "fingerprint": "7f1dd016e779",
+      "tags": [
+        "next",
+        "forward",
+        "skip",
+        "fast forward",
+        "last",
+        "end",
+        "east",
+        "music",
+        "caret",
+        "button",
+        "pagination",
+        "jump",
+        "seek",
+        "seek forward",
+        "player control",
+        "chapter",
+        "track",
+        "timeline",
+        "navigation control"
+      ]
+    },
+    "circle-chevrons-up": {
+      "fingerprint": "f9e6b16e3920",
+      "tags": [
+        "top",
+        "ascend",
+        "page",
+        "page up",
+        "back to top",
+        "scroll",
+        "jump",
+        "north",
+        "caret",
+        "button",
+        "skip",
+        "pagination",
+        "first page",
+        "fast",
+        "fast scroll",
+        "rewind",
+        "jump to start",
+        "floating action button",
+        "anchor",
+        "timeline"
+      ]
+    },
     "circle-dashed": {
       "en": {
         "description": "A dashed circle made of eight evenly spaced strokes, usually indicating pending, draft, or in-progress status.",
