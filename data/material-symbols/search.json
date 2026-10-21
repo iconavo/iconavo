@@ -31816,7 +31816,36 @@
       ]
     },
     "brightness-6": {
+      "en": {
+        "description": "A black eight-pointed star with a white half-circle inside, usually meaning brightness, contrast, or switching light and dark theme.",
+        "synonyms": [
+          "contrast",
+          "sun",
+          "light mode",
+          "dark mode",
+          "exposure",
+          "theme",
+          "display settings",
+          "luminosity",
+          "half tone"
+        ]
+      },
       "fingerprint": "696ce72f5657",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Чёрная звезда с белым полукругом внутри обозначает яркость или контраст изображения и переключение светлой и тёмной темы.",
+        "synonyms": [
+          "яркость",
+          "контраст",
+          "солнце",
+          "светлая тема",
+          "тёмная тема",
+          "экспозиция",
+          "настройки экрана",
+          "освещённость",
+          "полутон"
+        ]
+      },
       "tags": [
         "brightness",
         "6"
@@ -32071,7 +32100,38 @@
       ]
     },
     "brightness-medium": {
+      "en": {
+        "description": "A black eight-pointed sun shape with a white half-circle on the right, usually meaning brightness or contrast adjustment.",
+        "synonyms": [
+          "brightness",
+          "contrast",
+          "sun",
+          "light",
+          "half tone",
+          "display settings",
+          "theme",
+          "dark mode",
+          "exposure",
+          "screen adjustment"
+        ]
+      },
       "fingerprint": "696ce72f5657",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Чёрный восьмиконечный солнечный знак с белой половиной круга справа, обозначает регулировку яркости или контраста.",
+        "synonyms": [
+          "яркость",
+          "контраст",
+          "солнце",
+          "свет",
+          "полутон",
+          "регулировка яркости",
+          "тема",
+          "режим экрана",
+          "затемнение",
+          "настройки экрана"
+        ]
+      },
       "tags": [
         "brightness",
         "medium"
@@ -63207,7 +63267,38 @@
       ]
     },
     "document-share-stack": {
+      "en": {
+        "description": "Shows a stack of document pages with a share symbol in the corner, meaning sharing or sending a file.",
+        "synonyms": [
+          "share document",
+          "send file",
+          "document",
+          "file",
+          "file stack",
+          "publish",
+          "export",
+          "share files",
+          "shared docs",
+          "paper"
+        ]
+      },
       "fingerprint": "aa09ae29764c",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Изображена стопка документов с folded-уголком и значком «поделиться» в углу; обозначает отправку или публикацию файла.",
+        "synonyms": [
+          "поделиться документом",
+          "отправить файл",
+          "документ",
+          "файл",
+          "стопка файлов",
+          "опубликовать",
+          "экспорт",
+          "передать файл",
+          "общий доступ",
+          "бумага"
+        ]
+      },
       "tags": [
         "document",
         "share",
@@ -150910,7 +151001,38 @@
       ]
     },
     "person-eye": {
+      "en": {
+        "description": "A person silhouette beside an eye, usually meaning profile visibility, viewing a user, or monitoring someone.",
+        "synonyms": [
+          "profile view",
+          "visibility",
+          "watch user",
+          "monitor",
+          "view profile",
+          "public profile",
+          "observe",
+          "eye",
+          "viewer",
+          "privacy"
+        ]
+      },
       "fingerprint": "8ada359148cf",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Изображена фигура человека с глазом справа, что обозначает просмотр профиля, видимость или наблюдение за пользователем.",
+        "synonyms": [
+          "профиль просмотра",
+          "видимость",
+          "наблюдать",
+          "просмотр пользователя",
+          "показать профиль",
+          "видно",
+          "невидимость",
+          "приватность",
+          "взгляд",
+          "аккаунт"
+        ]
+      },
       "tags": [
         "person",
         "eye"
@@ -187570,7 +187692,36 @@
       ]
     },
     "speed-4-progress": {
+      "en": {
+        "description": "A semicircular speedometer dial with a needle pointing up and right, indicating speed or progress level.",
+        "synonyms": [
+          "speedometer",
+          "gauge",
+          "velocity",
+          "meter",
+          "performance",
+          "indicator",
+          "dashboard",
+          "progress bar",
+          "fast"
+        ]
+      },
       "fingerprint": "ca9c8ce98a43",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Изображена полукруглая шкала спидометра с стрелкой, указывающей вверх и вправо; обозначает скорость или показатель прогресса.",
+        "synonyms": [
+          "спидометр",
+          "скорость",
+          "индикатор",
+          "прогресс",
+          "датчик",
+          "стрелка",
+          "шкала",
+          "производительность",
+          "измеритель"
+        ]
+      },
       "tags": [
         "speed",
         "4",
