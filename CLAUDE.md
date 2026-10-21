@@ -43,7 +43,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Имена и ресурсы
 
-Бренд Iconavo, организация GitHub `iconavo`, веб-компонент `<iconavo-icon>`. В документации scope npm — `@iconavo-ui`; на npm существует и название `iconavo` (организация/пользователь без публичных пакетов). Адреса `api.домен`, `cdn.домен`, `mcp.домен` — заглушки: подставляется домен проекта.
+Бренд Iconavo, организация GitHub `iconavo`, веб-компонент `<iconavo-icon>`. В документации scope npm — `@iconavo-ui`; на npm существует и название `iconavo` (организация/пользователь без публичных пакетов). Домен — `iconavo.dev`, зарегистрирован на Cloudflare (ADR-0004); адреса `api.домен`, `cdn.домен`, `mcp.домен` в документации — заглушки, вместо «домен» подставляется `iconavo.dev`.
 
 ## Правила работы
 
