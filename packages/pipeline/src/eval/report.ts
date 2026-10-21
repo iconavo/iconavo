@@ -214,7 +214,8 @@ export function formatEvalReport(r: EvalReport): string {
           "контр. ru",
           "контр. en",
           "контр. всего",
-          "все 200",
+          "все",
+          "строго, все 200",
           "MRR@10 контр.",
           "P@5 контр.",
         ],
@@ -224,6 +225,7 @@ export function formatEvalReport(r: EvalReport): string {
           plainCell(m.groups.holdout.en),
           plainCell(m.groups.holdout.all),
           plainCell(m.groups.all.all),
+          plainCell(m.strict.all.all),
           fixed(m.groups.holdout.all.mrr),
           fixed(m.groups.holdout.all.p5),
         ]),
@@ -251,11 +253,14 @@ export function formatEvalReport(r: EvalReport): string {
 function mainTable(
   rows: readonly SystemResult[],
   group: "holdout" | "work" | "all",
+  strict = false,
 ): string {
-  const best = Math.max(...rows.map((m) => m.groups[group].all.hit));
+  const pickGroup = (m: SystemResult) =>
+    strict ? m.strict[group] : m.groups[group];
+  const best = Math.max(...rows.map((m) => pickGroup(m).all.hit));
   return `<table><thead><tr><th>Вариант</th><th>ru</th><th>en</th><th>Всего</th><th>MRR@10</th><th>P@5</th><th>Запросов</th></tr></thead><tbody>${rows
     .map((m) => {
-      const g = m.groups[group];
+      const g = pickGroup(m);
       return `<tr${g.all.hit === best && g.all.n > 0 ? ` class="best"` : ""}><td>${esc(m.system.title)}${m.system.mode === "hybrid" ? ` <span class="muted">α ${fixed(m.system.alpha, 1)}, длина ${m.system.length ?? "полная"}</span>` : ""}</td><td class="num">${cell(g.ru)}</td><td class="num">${cell(g.en)}</td><td class="num">${cell(g.all)}</td><td class="num">${fixed(g.all.mrr)}</td><td class="num">${fixed(g.all.p5)}</td><td class="num">${g.all.n}</td></tr>`;
     })
     .join("")}</tbody></table>`;
@@ -388,6 +393,9 @@ ${mainTable(r.main, "holdout")}
 <p class="muted">По ней ничего не настраивается. На 100 запросах погрешность около ±8 пунктов, на 50 запросах одного языка — около ±11. Точное имя срабатывает только у английских запросов: имена иконок английские.</p>
 <h3>Все запросы</h3>
 ${mainTable(r.main, "all")}
+<h3>Строго: все 200 запросов, «потолок» — промах</h3>
+${mainTable(r.main, "all", true)}
+<p class="muted">Запрос, для которого подходящей иконки не нашёл ни один вариант, здесь считается промахом каждого варианта. Сравнение моделей это не меняет, но цифра ниже и честнее для цели к запуску (ADR-0021).</p>
 <h3>Рабочая часть — по ней подбирается α</h3>
 ${mainTable(r.main, "work")}
 <h2>Модели попарно</h2>
@@ -422,6 +430,7 @@ export function baselineJson(r: EvalReport): Json {
     const entry: Record<string, Json> = {
       holdout: summary(m.groups.holdout.all),
       all: summary(m.groups.all.all),
+      strict: summary(m.strict.all.all),
     };
     if (m.system.mode === "hybrid") {
       entry.alpha = m.system.alpha;

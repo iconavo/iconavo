@@ -61,8 +61,13 @@ export const LANG_KEYS: readonly LangKey[] = ["ru", "en", "all"];
 
 export interface SystemResult {
   system: System;
-  /** Часть эталона → язык → цифры. */
+  /** Часть эталона → язык → цифры по запросам с подходящей иконкой. */
   groups: Record<Group, Record<LangKey, Summary>>;
+  /**
+   * Строго: по всем запросам, а запрос, для которого подходящей иконки не нашёл ни один вариант, —
+   * промах. По этой цифре ставится цель к запуску (ADR-0021).
+   */
+  strict: Record<Group, Record<LangKey, Summary>>;
   /** По типам запросов — на всех запросах, только для справки. */
   types: Record<QueryType, Summary>;
 }
@@ -267,11 +272,16 @@ export async function evaluate(
   for (const def of defs.filter((d) => d.role === "main")) {
     const list = listOf(def.key);
     const groups = {} as SystemResult["groups"];
+    const strict = {} as SystemResult["strict"];
     for (const g of GROUPS) {
       groups[g] = {} as Record<LangKey, Summary>;
+      strict[g] = {} as Record<LangKey, Summary>;
       for (const l of LANG_KEYS) {
         groups[g][l] = summarize(
           rowsOf(list, report.included, index, labels, inGroup(g, l)),
+        );
+        strict[g][l] = summarize(
+          rowsOf(list, report.queries, index, labels, inGroup(g, l)),
         );
       }
     }
@@ -281,7 +291,7 @@ export async function evaluate(
         rowsOf(list, report.included, index, labels, (q) => q.type === t),
       );
     }
-    report.main.push({ system: def, groups, types });
+    report.main.push({ system: def, groups, strict, types });
   }
 
   for (const m of models) {

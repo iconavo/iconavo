@@ -65,6 +65,8 @@ describe("pnpm eval", () => {
     const text = r.main[0];
     expect(text?.groups.all.all).toMatchObject({ n: 4, hits: 4 });
     expect(text?.groups.holdout.ru.n).toBe(1);
+    // Строго — все 5 запросов, «потолок» en-003 — промах.
+    expect(text?.strict.all.all).toMatchObject({ n: 5, hits: 4 });
     expect(r.tuned?.get("a")?.curve).toHaveLength(11);
     expect(r.recommendation?.leader).toBe("a");
     // Промахи — только рабочая часть.
