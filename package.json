@@ -21,6 +21,9 @@
     "enrich": "tsc -b && node --env-file-if-exists=.env packages/pipeline/dist/cli.js enrich",
     "embed": "tsc -b && node --env-file-if-exists=.env packages/pipeline/dist/cli.js embed",
     "nearest": "tsc -b && node --env-file-if-exists=.env packages/pipeline/dist/cli.js nearest",
+    "judge": "tsc -b && node --env-file-if-exists=.env packages/pipeline/dist/cli.js judge",
+    "eval": "tsc -b && node --env-file-if-exists=.env packages/pipeline/dist/cli.js eval",
+    "search-page": "tsc -b && node --env-file-if-exists=.env packages/pipeline/dist/cli.js search-page",
     "check": "pnpm lint && pnpm typecheck && pnpm test && pnpm size"
   },
   "devDependencies": {

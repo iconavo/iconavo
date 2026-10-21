@@ -117,6 +117,14 @@ describe("хранилище векторов", () => {
     expect(() => bytesToFloat32(raw.subarray(0, 5))).toThrow(/не кратно 4/);
   });
 
+  it("выровненный буфер читается без копии: векторы не занимают память дважды", () => {
+    const source = vectors();
+    const raw = new Uint8Array(source.buffer.slice(0));
+    const read = bytesToFloat32(raw);
+    expect(read.buffer).toBe(raw.buffer);
+    expect(Array.from(read)).toEqual(Array.from(source));
+  });
+
   it("число векторов не по строкам — ошибка записи", async () => {
     await expect(
       writeStore(dir, model, "demo", rows, new Float32Array(4), spent),

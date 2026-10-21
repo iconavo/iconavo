@@ -120,6 +120,8 @@ export interface LoadedSet {
   /** Видимые иконки из icons.json. */
   icons: Map<string, NormalizedIcon>;
   suffixes: string[];
+  /** Алиасы из icons.json: имя → иконка-родитель (поиску нужны прежние имена). */
+  aliases: Map<string, string>;
 }
 
 const order = (a: string, b: string) => (a < b ? -1 : a > b ? 1 : 0);
@@ -197,7 +199,7 @@ export async function loadSet(
       );
     }
   }
-  return { search, icons, suffixes };
+  return { search, icons, suffixes, aliases: state.aliases };
 }
 
 /** Базовые иконки и описания по всему каталогу — для прогноза в отчёте; набор без файлов не считается. */

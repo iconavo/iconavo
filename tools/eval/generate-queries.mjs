@@ -184,7 +184,6 @@ for (const lang of Object.keys(LANGS)) {
         ...it,
         lang,
         type,
-        expected_icons: "",
         split: i < PER_CELL / 2 ? "work" : "holdout",
       });
     });
@@ -200,15 +199,7 @@ if (
   throw new Error("Нарушены инварианты эталона, файл не записан");
 }
 
-const cols = [
-  "id",
-  "query",
-  "lang",
-  "type",
-  "expected_description",
-  "expected_icons",
-  "split",
-];
+const cols = ["id", "query", "lang", "type", "expected_description", "split"];
 const csv = [
   cols.join(","),
   ...rows.map((r) => cols.map((c) => csvCell(r[c])).join(",")),
