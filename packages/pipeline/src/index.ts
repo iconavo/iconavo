@@ -15,6 +15,13 @@ export {
 } from "./build/run.js";
 export { renameRetrying, writeFileAtomic } from "./build/write.js";
 export {
+  BUNNY_RUN_STOPS,
+  type BunnyOptions,
+  bunnyClient,
+  bunnyRetryable,
+  parseBunnyList,
+} from "./cdn/bunny.js";
+export {
   CHECK_GROUPS,
   type CheckGroup,
   type CheckIssue,
@@ -23,6 +30,7 @@ export {
   type CheckReport,
   checkCdn,
   checkFailed,
+  compareHostManifests,
   type TargetReport,
 } from "./cdn/check.js";
 export {
@@ -30,11 +38,27 @@ export {
   CHECK_HINTS,
   formatCheckSummary,
   formatCheckTable,
+  formatCheckTotal,
 } from "./cdn/check-report.js";
 export {
+  BUNNY_CACHE_RULE,
+  BUNNY_CDN,
+  BUNNY_ENV,
+  BUNNY_HEADERS_RULE,
+  BUNNY_JSON_TYPE_RULE,
+  BUNNY_LIST_TIMEOUT_MS,
+  BUNNY_MANIFEST_RULE,
+  BUNNY_STORAGE_ENDPOINT,
+  BUNNY_STORAGE_ZONE,
+  BUNNY_SVG_RULE,
+  BUNNY_SVG_TYPE_RULE,
   CACHE_IMMUTABLE,
   CACHE_MANIFEST,
   CDN_HOST,
+  CDN_HOSTS,
+  CDN2_HOST,
+  type CdnHost,
+  type CdnProvider,
   CF_CACHE_RULE,
   CF_HEADERS_RULE,
   CF_SVG_RULE,
@@ -58,6 +82,7 @@ export {
   OUT_DIR,
   PROGRESS_EVERY,
   R2_BUCKET,
+  R2_CDN,
   R2_ENV,
   R2_REGION,
   r2Endpoint,
@@ -104,16 +129,10 @@ export {
 } from "./cdn/run.js";
 export {
   md5Hex,
-  type PutOptions,
   parseListPage,
   R2_RUN_STOPS,
-  type R2Client,
   type R2Options,
-  type R2StopScope,
-  type RemoteObject,
   r2Client,
-  r2Error,
-  r2ErrorScope,
 } from "./cdn/s3.js";
 export {
   amzDate,
@@ -126,26 +145,42 @@ export {
   signRequest,
   uriEncode,
 } from "./cdn/sigv4.js";
+export {
+  type PutOptions,
+  type RemoteObject,
+  type RetryRules,
+  requestWithRetries,
+  type StorageClient,
+  type StorageStopScope,
+  storageError,
+  storageErrorScope,
+} from "./cdn/storage.js";
 export { type CdnIcon, svgOf, widthEm } from "./cdn/svg.js";
 export {
   type Comparison,
   compareWithRemote,
   contentTypeOf,
+  type HostUploadReport,
+  hostStop,
   type LocalFile,
   type ManifestStatus,
   readSetFiles,
   type SetUploadReport,
   setObjects,
+  type UploadHost,
   type UploadOptions,
   type UploadReport,
   type UploadStatus,
   uploadCdn,
   uploadStop,
+  verifyFailed,
 } from "./cdn/upload.js";
 export {
+  formatHostTitle,
   formatUploadReport,
   formatUploadSummary,
   formatUploadTable,
+  formatVerifyVerdict,
   MANIFEST_STATUS,
   renderUploadPage,
   UPLOAD_STATUS,

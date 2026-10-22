@@ -1,7 +1,8 @@
 import { describe, expect, it } from "vitest";
 import type { FetchFn } from "../sources/npm.js";
-import { md5Hex, parseListPage, r2Client, r2ErrorScope } from "./s3.js";
+import { md5Hex, parseListPage, r2Client } from "./s3.js";
 import { sha256Hex } from "./sigv4.js";
+import { storageErrorScope } from "./storage.js";
 
 const SECRET = "SECRET/KEY+VALUE";
 const NOW = Date.UTC(2026, 9, 22, 7, 0, 0);
@@ -55,18 +56,18 @@ const page = (keys: readonly string[], next?: string) =>
 </ListBucketResult>`;
 
 describe("r2Client.put", () => {
-  it("подписанный PUT с типом, кэшем и Content-MD5; ETag без кавычек", async () => {
+  it("подписанный PUT с типом, кэшем и Content-MD5", async () => {
     const body = new Uint8Array(Buffer.from('{"a":1}', "utf8"));
     const md5 = md5Hex(body);
     const { c, requests } = client([
       () => new Response(null, { status: 200, headers: { etag: `"${md5}"` } }),
     ]);
-    const result = await c.put("v/x/demo/a.json", body, {
+    await c.put("v/x/demo/a.json", body, {
       contentType: "application/json; charset=utf-8",
       cacheControl: "public, max-age=31536000, immutable",
       md5,
+      sha256: sha256Hex(body),
     });
-    expect(result.etag).toBe(md5);
     expect(requests).toHaveLength(1);
     const req = requests[0];
     expect(req?.url).toBe(
@@ -173,7 +174,7 @@ describe("повторы и остановки", () => {
     expect((error as Error).message).toBe(
       "GET manifest.json: сбой сети (ECONNRESET): fetch failed — не получилось за 2 попыток",
     );
-    expect(r2ErrorScope(error)).toBe("set");
+    expect(storageErrorScope(error)).toBe("set");
     expect(sleeps).toEqual([1000]);
   });
 
@@ -186,7 +187,7 @@ describe("повторы и остановки", () => {
         ),
     ]);
     const error = await c.list("v/").catch((e: Error) => e);
-    expect(r2ErrorScope(error)).toBe("run");
+    expect(storageErrorScope(error)).toBe("run");
     const message = (error as Error).message;
     expect(message).toContain("Object Read & Write");
     expect(message).toContain("HTTP 403");
@@ -206,9 +207,10 @@ describe("повторы и остановки", () => {
         contentType: "application/json",
         cacheControl: "public",
         md5: md5Hex(body),
+        sha256: sha256Hex(body),
       })
       .catch((e: Error) => e);
-    expect(r2ErrorScope(error)).toBe("set");
+    expect(storageErrorScope(error)).toBe("set");
     expect((error as Error).message).toContain("BadDigest");
     expect(requests).toHaveLength(1);
   });

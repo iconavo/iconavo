@@ -1,4 +1,5 @@
-// Настройки сборки раздачи (ADR-0022): имена папок и файлов, параллельность записи, пределы отчёта.
+// Настройки раздачи: сборка (ADR-0022) — имена папок и файлов, параллельность записи, пределы отчёта;
+// выгрузка на два хоста (ADR-0022, ADR-0025) и проверка живых адресов (ADR-0023).
 
 /** Папка раздачи в корне репозитория; в git не попадает. */
 export const OUT_DIR = "dist-cdn";
@@ -36,7 +37,10 @@ export const R2_ENV = {
   accessKeyId: "R2_ACCESS_KEY_ID",
   secretAccessKey: "R2_SECRET_ACCESS_KEY",
 } as const;
-/** Одновременных записей в бакет: общего лимита запросов у R2 нет, предел — одна запись в секунду в один ключ. */
+/**
+ * Одновременных записей в хранилище: общего лимита запросов у R2 нет, предел — одна запись в секунду в
+ * один ключ; Bunny принимает до 100 соединений с одного адреса.
+ */
 export const UPLOAD_CONCURRENCY = 32;
 /** Ключей на страницу списка объектов — максимум S3. */
 export const LIST_PAGE_SIZE = 1000;
@@ -92,3 +96,66 @@ export const EDGE_DIRECT: readonly string[] = ["DYNAMIC", "BYPASS"];
 export const CF_CACHE_RULE = "Раздача: кэш по заголовкам файлов";
 export const CF_HEADERS_RULE = "Раздача: CORS и защита";
 export const CF_SVG_RULE = "Раздача: CSP для SVG";
+
+// Второй хост — Bunny (шаг 4 фазы 2, ADR-0025): та же раскладка у независимого провайдера.
+
+/** Хост второй копии раздачи (ADR-0004). */
+export const CDN2_HOST = "cdn2.iconavo.dev";
+/** Хранилище Bunny (Storage Zone) с раздачей; к нему подключена зона CDN с адресом cdn2.iconavo.dev. */
+export const BUNNY_STORAGE_ZONE = "iconavo-cdn";
+/** HTTP-интерфейс хранилища — по основному региону зоны: у Франкфурта адрес без приставки. */
+export const BUNNY_STORAGE_ENDPOINT = "https://storage.bunnycdn.com";
+/** Переменная окружения с паролем хранилища: локально — .env, в CI — секрет GitHub Actions. */
+export const BUNNY_ENV = { password: "BUNNY_STORAGE_PASSWORD" } as const;
+/** Ожидание списка папки: у material-symbols в одной папке около 47 тысяч файлов, ответ около 20 МБ. */
+export const BUNNY_LIST_TIMEOUT_MS = 120_000;
+/** Правила зоны CDN Bunny — для подсказок; дословно они записаны в ADR-0025. */
+export const BUNNY_CACHE_RULE = "Раздача: кэш версий";
+export const BUNNY_MANIFEST_RULE = "Раздача: манифест мимо кэша";
+export const BUNNY_HEADERS_RULE = "Раздача: CORS и защита";
+export const BUNNY_SVG_RULE = "Раздача: CSP для SVG";
+/** Тип файла Bunny отдаёт по расширению, без charset: тип с charset ставят эти правила. */
+export const BUNNY_JSON_TYPE_RULE = "Раздача: тип JSON";
+export const BUNNY_SVG_TYPE_RULE = "Раздача: тип SVG";
+
+/** Провайдер CDN хоста: от него зависят заголовок кэша и подсказки проверки. */
+export type CdnProvider = "cloudflare" | "bunny";
+
+/** Хост раздачи: адрес, хранилище за ним и как его CDN показывает кэш (ADR-0023, ADR-0025). */
+export interface CdnHost {
+  host: string;
+  provider: CdnProvider;
+  /** Хранилище за хостом — для отчётов. */
+  storage: string;
+  /** Заголовок с состоянием кэша CDN (строчными, как его отдаёт fetch). */
+  cacheHeader: string;
+  /** Состояния файла версии: ответ из кэша CDN или положен в него. */
+  edgeCached: readonly string[];
+  /** Состояния манифеста: CDN его не хранит. */
+  edgeDirect: readonly string[];
+  /** Начало заголовка Server: ответ пришёл от этого CDN, а не через чужой. */
+  server: string;
+}
+
+export const R2_CDN: CdnHost = {
+  host: CDN_HOST,
+  provider: "cloudflare",
+  storage: `бакет R2 ${R2_BUCKET}`,
+  cacheHeader: "cf-cache-status",
+  edgeCached: EDGE_CACHED,
+  edgeDirect: EDGE_DIRECT,
+  server: "cloudflare",
+};
+
+export const BUNNY_CDN: CdnHost = {
+  host: CDN2_HOST,
+  provider: "bunny",
+  storage: `хранилище Bunny ${BUNNY_STORAGE_ZONE}`,
+  cacheHeader: "cdn-cache",
+  edgeCached: ["HIT", "MISS"],
+  edgeDirect: ["BYPASS", "MISS"],
+  server: "BunnyCDN",
+};
+
+/** Хосты раздачи в порядке выгрузки: основной, затем второй (ADR-0025). */
+export const CDN_HOSTS: readonly CdnHost[] = [R2_CDN, BUNNY_CDN];

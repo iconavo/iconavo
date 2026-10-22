@@ -1,10 +1,18 @@
 import { describe, expect, it } from "vitest";
 import type { FetchFn } from "../sources/npm.js";
-import { type CheckReport, checkCdn, checkFailed } from "./check.js";
 import {
+  type CheckReport,
+  checkCdn,
+  checkFailed,
+  compareHostManifests,
+} from "./check.js";
+import {
+  BUNNY_CDN,
   CACHE_IMMUTABLE,
   CACHE_MANIFEST,
+  type CdnHost,
   MANIFEST_FILE,
+  R2_CDN,
   SVG_CSP,
 } from "./config.js";
 import { type CdnFile, checksumsText, manifestText } from "./files.js";
@@ -12,6 +20,8 @@ import { sha256Hex } from "./sigv4.js";
 import { contentTypeOf } from "./upload.js";
 
 const HOST = "cdn.test";
+const CF: CdnHost = { ...R2_CDN, host: HOST };
+const BUNNY: CdnHost = { ...BUNNY_CDN, host: "cdn2.test" };
 const VERSION = "abcd1234";
 const SUMS = `v/${VERSION}/demo.checksums.json`;
 const JSON_PATH = `v/${VERSION}/demo/house.json`;
@@ -67,9 +77,14 @@ const without = (headers: Record<string, string>, ...names: string[]) =>
     Object.entries(headers).filter(([name]) => !names.includes(name)),
   );
 
-/** Ответ раздачи, настроенной по ADR-0023. */
-function goodReply(files: Map<string, Uint8Array>, req: FakeRequest): Reply {
+/** Ответ раздачи, настроенной по ADR-0023 (Cloudflare) или ADR-0025 (Bunny). */
+function goodReply(
+  files: Map<string, Uint8Array>,
+  req: FakeRequest,
+  cdn: CdnHost,
+): Reply {
   const common: Record<string, string> = {
+    server: cdn.provider === "bunny" ? "BunnyCDN-DE1-1080" : "cloudflare",
     "access-control-allow-origin": "*",
     "x-content-type-options": "nosniff",
     "cross-origin-resource-policy": "cross-origin",
@@ -90,7 +105,8 @@ function goodReply(files: Map<string, Uint8Array>, req: FakeRequest): Reply {
       ...common,
       "content-type": contentTypeOf(req.path),
       "cache-control": manifest ? CACHE_MANIFEST : CACHE_IMMUTABLE,
-      "cf-cache-status": manifest ? "DYNAMIC" : "HIT",
+      [cdn.cacheHeader]:
+        (manifest ? cdn.edgeDirect[0] : cdn.edgeCached[0]) ?? "",
       "content-encoding": req.headers["accept-encoding"]?.startsWith("br")
         ? "br"
         : "gzip",
@@ -100,11 +116,15 @@ function goodReply(files: Map<string, Uint8Array>, req: FakeRequest): Reply {
 }
 
 /** Подменный fetch: отвечает по адресу как настроенная раздача, запросы запоминаются. */
-function fakeCdn(tweak: Tweak | undefined, files: Map<string, Uint8Array>) {
+function fakeCdn(
+  tweak: Tweak | undefined,
+  files: Map<string, Uint8Array>,
+  cdn: CdnHost,
+) {
   const requests: FakeRequest[] = [];
   const fn: FetchFn = async (input, init) => {
     const url = new URL(String(input));
-    if (url.host !== HOST)
+    if (url.host !== cdn.host)
       throw new Error(`тест: неожиданный адрес ${url.href}`);
     const req: FakeRequest = {
       path: url.pathname.slice(1),
@@ -112,7 +132,7 @@ function fakeCdn(tweak: Tweak | undefined, files: Map<string, Uint8Array>) {
       redirect: init?.redirect,
     };
     requests.push(req);
-    const good = goodReply(files, req);
+    const good = goodReply(files, req, cdn);
     const reply = tweak?.(req, good) ?? good;
     if (!("body" in reply)) throw reply;
     return new Response(reply.body as BodyInit, {
@@ -123,12 +143,12 @@ function fakeCdn(tweak: Tweak | undefined, files: Map<string, Uint8Array>) {
   return { fetch: fn, requests };
 }
 
-async function check(tweak?: Tweak, files = bucket()) {
-  const cdn = fakeCdn(tweak, files);
+async function check(tweak?: Tweak, files = bucket(), target = CF) {
+  const cdn = fakeCdn(tweak, files, target);
   const sleeps: number[] = [];
   const lines: string[] = [];
   const report = await checkCdn({
-    host: HOST,
+    target,
     set: "demo",
     icon: "house",
     fetch: cdn.fetch,
@@ -541,5 +561,121 @@ describe("checkCdn", () => {
     ]);
     // Файл сумм прочитан из первого ответа — иконки сверены.
     expect(target(report, SVG_PATH)?.checked).toContain("body");
+  });
+
+  it("ответ не от CDN хоста — не так", async () => {
+    const { report } = await check((req, reply) =>
+      req.path === JSON_PATH
+        ? { ...reply, headers: { ...reply.headers, server: "nginx" } }
+        : undefined,
+    );
+    expect(issuesOf(report, JSON_PATH)).toEqual([
+      {
+        group: "edge",
+        message: "ответ пришёл не от cloudflare: Server «nginx»",
+      },
+    ]);
+  });
+});
+
+describe("checkCdn: второй хост — Bunny", () => {
+  it("настроенная раздача: пять адресов «ок», тот же порядок запросов", async () => {
+    const { report, requests } = await check(undefined, bucket(), BUNNY);
+    expect(checkFailed(report)).toBe(false);
+    expect(report.host).toBe("cdn2.test");
+    expect(report.provider).toBe("bunny");
+    expect(report.manifest).toBe(
+      Buffer.from(bucket().get(MANIFEST_FILE) ?? []).toString(),
+    );
+    expect(requests).toHaveLength(9);
+  });
+
+  it("запись cdn2 через прокси Cloudflare — ответ не от BunnyCDN", async () => {
+    const { report } = await check(
+      (req, reply) =>
+        req.path === MISSING
+          ? undefined
+          : { ...reply, headers: { ...reply.headers, server: "cloudflare" } },
+      bucket(),
+      BUNNY,
+    );
+    for (const path of [MANIFEST_FILE, SUMS, JSON_PATH, SVG_PATH]) {
+      expect(issuesOf(report, path)).toEqual([
+        {
+          group: "edge",
+          message: "ответ пришёл не от BunnyCDN: Server «cloudflare»",
+        },
+      ]);
+    }
+    // У 404 Server не проверяется: это не файл раздачи.
+    expect(issuesOf(report, MISSING)).toEqual([]);
+  });
+
+  it("CDN-Cache: файл версии не кэшируется; манифест осел в кэше на втором запросе", async () => {
+    const { report } = await check(
+      (req, reply) => {
+        if (req.path === JSON_PATH) {
+          return {
+            ...reply,
+            headers: { ...reply.headers, "cdn-cache": "BYPASS" },
+          };
+        }
+        if (req.path === MANIFEST_FILE && req.headers.origin === undefined) {
+          return {
+            ...reply,
+            headers: { ...reply.headers, "cdn-cache": "HIT" },
+          };
+        }
+        return undefined;
+      },
+      bucket(),
+      BUNNY,
+    );
+    expect(issuesOf(report, JSON_PATH)).toEqual([
+      {
+        group: "edge",
+        message:
+          "файл не кэшируется на CDN: cdn-cache «BYPASS» вместо HIT, MISS или похожего",
+      },
+    ]);
+    expect(issuesOf(report, MANIFEST_FILE)).toEqual([
+      {
+        group: "edge",
+        message:
+          "манифест хранится в кэше CDN: cdn-cache «HIT» вместо BYPASS или MISS на втором запросе",
+      },
+    ]);
+  });
+});
+
+describe("compareHostManifests", () => {
+  it("одинаковые манифесты — расхождений нет; другой — названы наборы и версии", async () => {
+    const first = await check();
+    const same = await check(undefined, bucket(), BUNNY);
+    expect(compareHostManifests([first.report, same.report])).toEqual([]);
+    const files = bucket();
+    files.set(
+      MANIFEST_FILE,
+      bytes(
+        manifestText([
+          { id: "demo", version: "0000ffff", lastModified: 1 },
+          { id: "other", version: "11112222", lastModified: 1 },
+        ]),
+      ),
+    );
+    const older = await check(undefined, files, BUNNY);
+    expect(compareHostManifests([first.report, older.report])).toEqual([
+      `манифест https://cdn2.test/manifest.json не тот, что на https://cdn.test/manifest.json: demo — ${VERSION} и 0000ffff; other — нет и 11112222`,
+    ]);
+  });
+
+  it("манифест не прочитан — хост не сравнивается: его проблема уже в его отчёте", async () => {
+    const first = await check();
+    const files = bucket();
+    files.delete(MANIFEST_FILE);
+    const empty = await check(undefined, files, BUNNY);
+    expect(empty.report.manifest).toBeUndefined();
+    expect(checkFailed(empty.report)).toBe(true);
+    expect(compareHostManifests([first.report, empty.report])).toEqual([]);
   });
 });

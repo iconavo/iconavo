@@ -4,16 +4,34 @@
 // | pnpm embed [id…] [--model=…] [--max-rub=N] [--dry-run] | pnpm nearest [запрос…] [--model=…]
 // | pnpm judge [--limit=N] [--max-rub=N] [--dry-run] | pnpm eval [--model=…] [--baseline]
 // | pnpm search-page [--port=N] [--model=…] | pnpm cdn build | pnpm cdn upload [--dry-run]
-// | pnpm cdn check
+// | pnpm cdn verify | pnpm cdn check
 import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import { basename, join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
 import { canonicalJson } from "./build/json.js";
 import { formatBuildReport, renderBuildGallery } from "./build/report.js";
 import { buildSet, type SetBuildReport, writeSetData } from "./build/run.js";
-import { checkCdn, checkFailed } from "./cdn/check.js";
-import { formatCheckSummary, formatCheckTable } from "./cdn/check-report.js";
-import { CDN_HOST, OUT_DIR, R2_BUCKET, R2_ENV } from "./cdn/config.js";
+import { bunnyClient } from "./cdn/bunny.js";
+import {
+  type CheckReport,
+  checkCdn,
+  checkFailed,
+  compareHostManifests,
+} from "./cdn/check.js";
+import {
+  formatCheckSummary,
+  formatCheckTable,
+  formatCheckTotal,
+} from "./cdn/check-report.js";
+import {
+  BUNNY_ENV,
+  BUNNY_STORAGE_ZONE,
+  CDN_HOSTS,
+  type CdnProvider,
+  OUT_DIR,
+  R2_BUCKET,
+  R2_ENV,
+} from "./cdn/config.js";
 import {
   formatCdnReport,
   formatCdnSummary,
@@ -22,11 +40,14 @@ import {
 } from "./cdn/report.js";
 import { buildCdn, cdnStop } from "./cdn/run.js";
 import { r2Client } from "./cdn/s3.js";
-import { uploadCdn, uploadStop } from "./cdn/upload.js";
+import type { StorageClient } from "./cdn/storage.js";
+import { uploadCdn, uploadStop, verifyFailed } from "./cdn/upload.js";
 import {
+  formatHostTitle,
   formatUploadReport,
   formatUploadSummary,
   formatUploadTable,
+  formatVerifyVerdict,
   renderUploadPage,
 } from "./cdn/upload-report.js";
 import { polzaEmbeddingClient } from "./embed/client.js";
@@ -162,15 +183,22 @@ const USAGE = `Использование:
                                       и алиас v/{версия}/{набор}/{имя}.json и .svg, контрольные суммы
                                       v/{версия}/{набор}.checksums.json и manifest.json; без изменений
                                       ничего не перезаписывает; отчёт .cache/reports/cdn/
-  pnpm cdn upload                     собрать раздачу и выгрузить в бакет R2 недостающие файлы
-                                      (ADR-0022): файл сумм набора — последним, манифест — в конце и
-                                      только при отличии; в v/ ничего не перезаписывается и не
-                                      удаляется; нужны R2_ACCOUNT_ID, R2_ACCESS_KEY_ID и
-                                      R2_SECRET_ACCESS_KEY в .env; отчёт .cache/reports/cdn/upload.html
-      --dry-run                       только сравнить с бакетом и показать, что будет выгружено
-  pnpm cdn check                      проверить живые адреса раздачи (ADR-0023): манифест, файл сумм,
-                                      lucide:heart (.json и .svg) и ответ 404 — тип, кэш браузера и
-                                      CDN, CORS, защита, сжатие br и gzip, содержимое; ключи не нужны`;
+  pnpm cdn upload                     собрать раздачу и выгрузить недостающие файлы на оба хоста —
+                                      бакет R2 (cdn.iconavo.dev), затем хранилище Bunny
+                                      (cdn2.iconavo.dev), ADR-0022, ADR-0025: файл сумм набора —
+                                      последним, сверка по списку; манифесты — в конце, когда файлы
+                                      есть на обоих хостах, и только при отличии; в v/ ничего не
+                                      перезаписывается и не удаляется; нужны R2_ACCOUNT_ID,
+                                      R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY и BUNNY_STORAGE_PASSWORD
+                                      в .env; отчёт .cache/reports/cdn/upload.html
+      --dry-run                       только сравнить с хранилищами и показать, что будет выгружено
+  pnpm cdn verify                     сверка хостов: сравнить оба хранилища со сборкой, ничего не
+                                      записывая; код 1, если чего-то недостаёт или что-то отличается;
+                                      ключи те же; отчёт .cache/reports/cdn/verify.html
+  pnpm cdn check                      проверить живые адреса обоих хостов (ADR-0023, ADR-0025):
+                                      манифест, файл сумм, lucide:heart (.json и .svg) и ответ 404 —
+                                      тип, кэш браузера и CDN, CORS, защита, сжатие br и gzip,
+                                      содержимое; затем — что манифесты хостов совпадают; ключи не нужны`;
 
 /** Флаги pnpm pr со ссылками: флаг → поле PrLinks. */
 const LINK_FLAGS: Record<string, keyof PrLinks> = {
@@ -765,26 +793,38 @@ try {
     const [sub, ...rest] = args;
     const dryRun = flags.includes("--dry-run");
     if (
-      (sub !== "build" && sub !== "upload" && sub !== "check") ||
+      (sub !== "build" &&
+        sub !== "upload" &&
+        sub !== "verify" &&
+        sub !== "check") ||
       rest.length > 0 ||
       (sub !== "upload" && dryRun)
     ) {
       usageError(
-        "pnpm cdn: нужна подкоманда build, upload [--dry-run] или check без имён наборов — манифест описывает все наборы сразу.",
+        "pnpm cdn: нужна подкоманда build, upload [--dry-run], verify или check без имён наборов — манифест описывает все наборы сразу.",
       );
     }
     if (sub === "check") {
-      // Живые адреса раздачи (ADR-0023): ни сборки, ни ключей не нужно.
-      console.log(`Проверяю раздачу https://${CDN_HOST}/…`);
-      const report = await checkCdn({
-        log: (line) => console.log(`  ${line}`),
-      });
-      console.log("");
-      console.log(formatCheckTable(report));
-      for (const line of formatCheckSummary(report)) console.log(line);
-      process.exit(checkFailed(report) ? 1 : 0);
+      // Живые адреса обоих хостов (ADR-0023, ADR-0025): ни сборки, ни ключей не нужно. По очереди:
+      // с медленного соединения важны строки о ходе проверки.
+      const reports: CheckReport[] = [];
+      for (const target of CDN_HOSTS) {
+        console.log(`Проверяю раздачу https://${target.host}/…`);
+        const report = await checkCdn({
+          target,
+          log: (line) => console.log(`  ${line}`),
+        });
+        console.log("");
+        console.log(formatCheckTable(report));
+        for (const line of formatCheckSummary(report)) console.log(line);
+        console.log("");
+        reports.push(report);
+      }
+      const cross = compareHostManifests(reports);
+      for (const line of formatCheckTotal(reports, cross)) console.log(line);
+      process.exit(reports.some(checkFailed) || cross.length > 0 ? 1 : 0);
     }
-    // Выгрузка начинается со сборки: dist-cdn/ всегда от текущего data/ (без изменений — секунды).
+    // Выгрузка и сверка начинаются со сборки: dist-cdn/ всегда от текущего data/ (без изменений — секунды).
     const report = await buildCdn(configs, {
       dataDir,
       outDir: distCdnDir,
@@ -800,43 +840,74 @@ try {
     await writeFile(htmlPath, renderCdnPage(report), "utf8");
     console.log(`Отчёт: ${htmlPath}`);
     if (sub === "build") process.exit(cdnStop(report) ? 1 : 0);
+    const verify = sub === "verify";
     if (cdnStop(report)) {
-      console.error("Сборка остановлена — выгрузка не начиналась.");
-      process.exit(1);
-    }
-    const keys = {
-      accountId: process.env[R2_ENV.accountId] ?? "",
-      accessKeyId: process.env[R2_ENV.accessKeyId] ?? "",
-      secretAccessKey: process.env[R2_ENV.secretAccessKey] ?? "",
-    };
-    const missing = (Object.keys(R2_ENV) as (keyof typeof R2_ENV)[])
-      .filter((k) => keys[k] === "")
-      .map((k) => R2_ENV[k]);
-    if (missing.length > 0) {
       console.error(
-        `Нет ключей R2: ${missing.join(", ")}. Локально впишите их в .env (имена — в .env.example), в CI это секреты GitHub Actions. Без ключей не прочитать даже список бакета, поэтому --dry-run тоже их требует.`,
+        `Сборка остановлена — ${verify ? "сверка" : "выгрузка"} не начиналась.`,
       );
       process.exit(1);
     }
+    // Ключи обоих хостов — до первого запроса: списки хранилищ без них не отдаются.
+    const env = (name: string) => process.env[name] ?? "";
+    const missing = [
+      ...Object.values(R2_ENV),
+      ...Object.values(BUNNY_ENV),
+    ].filter((name) => env(name) === "");
+    if (missing.length > 0) {
+      console.error(
+        `Нет ключей: ${missing.join(", ")}. Локально впишите их в .env (имена — в .env.example), в CI это секреты GitHub Actions. Без ключей не прочитать списки хранилищ, поэтому --dry-run и verify тоже их требуют.`,
+      );
+      process.exit(1);
+    }
+    const clients: Record<CdnProvider, StorageClient> = {
+      cloudflare: r2Client({
+        accountId: env(R2_ENV.accountId),
+        accessKeyId: env(R2_ENV.accessKeyId),
+        secretAccessKey: env(R2_ENV.secretAccessKey),
+        bucket: R2_BUCKET,
+      }),
+      bunny: bunnyClient({
+        zone: BUNNY_STORAGE_ZONE,
+        password: env(BUNNY_ENV.password),
+      }),
+    };
+    const hosts = CDN_HOSTS.map((h) => ({
+      host: h.host,
+      storage: h.storage,
+      client: clients[h.provider],
+    }));
+    const names = hosts.map((h) => `${h.host} (${h.storage})`).join(", затем ");
     console.log(
-      dryRun
-        ? `\nТолько показ: сравниваю ${OUT_DIR}/ с бакетом ${R2_BUCKET}, ничего не записываю…`
-        : `\nВыгружаю ${OUT_DIR}/ в бакет ${R2_BUCKET}…`,
+      verify
+        ? `\nСверка хостов: сравниваю хранилища со сборкой ${OUT_DIR}/, ничего не записываю…`
+        : dryRun
+          ? `\nТолько показ: сравниваю ${OUT_DIR}/ с хранилищами, ничего не записываю…`
+          : `\nВыгружаю ${OUT_DIR}/: файлы версий — на ${names}; манифесты — в конце…`,
     );
     const upload = await uploadCdn({
       outDir: distCdnDir,
-      client: r2Client({ ...keys, bucket: R2_BUCKET }),
-      dryRun,
+      hosts,
+      dryRun: dryRun || verify,
       log: (line) => console.log(line),
     });
     console.log("");
-    for (const r of upload.sets) console.log(`${formatUploadReport(r)}\n`);
-    console.log(formatUploadTable(upload.sets));
+    for (const h of upload.hosts) {
+      console.log(formatHostTitle(h));
+      for (const r of h.sets) console.log(`${formatUploadReport(r)}\n`);
+      if (h.sets.length > 0) console.log(formatUploadTable(h.sets));
+      console.log("");
+    }
     for (const line of formatUploadSummary(upload)) console.log(line);
-    const uploadPath = join(reportDir, "upload.html");
-    await writeFile(uploadPath, renderUploadPage(upload), "utf8");
-    console.log(`Отчёт: ${uploadPath}`);
-    process.exit(uploadStop(upload) ? 1 : 0);
+    if (verify)
+      for (const line of formatVerifyVerdict(upload)) console.log(line);
+    const pagePath = join(reportDir, verify ? "verify.html" : "upload.html");
+    await writeFile(
+      pagePath,
+      renderUploadPage(upload, verify ? "Сверка хостов" : "Выгрузка"),
+      "utf8",
+    );
+    console.log(`Отчёт: ${pagePath}`);
+    process.exit((verify ? verifyFailed(upload) : uploadStop(upload)) ? 1 : 0);
   } else {
     usageError(
       command ? `Неизвестная команда «${command}».` : "Нужна команда.",

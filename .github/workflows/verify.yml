@@ -1,0 +1,66 @@
+name: Сверка хостов
+
+# Ежедневная сверка двух хостов раздачи (ADR-0025, шаг 4 фазы 2): pnpm cdn verify собирает dist-cdn/
+# из data/ в main и сравнивает с ним бакет R2 (cdn.iconavo.dev) и хранилище Bunny (cdn2.iconavo.dev)
+# по спискам объектов — размер и контрольная сумма каждого файла версии, манифесты, — ничего не
+# записывая; затем pnpm cdn check проверяет живые адреса обоих хостов. Расхождение — красный запуск,
+# и GitHub присылает письмо о неудачном запуске по расписанию: это и есть оповещение. Ключи — те же
+# секреты, что у «Выкладки»; писать сверка ничего не пишет. Группа одновременности своя: в группе
+# «Выкладки» сверка могла бы отменить ждущую выкладку. Совпала с выкладкой — может покраснеть:
+# повторите после неё.
+
+on:
+  schedule:
+    - cron: "47 5 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: verify
+  cancel-in-progress: false
+
+jobs:
+  verify:
+    name: R2 и Bunny
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Сверить хранилища со сборкой
+        env:
+          R2_ACCOUNT_ID: ${{ secrets.R2_ACCOUNT_ID }}
+          R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+          BUNNY_STORAGE_PASSWORD: ${{ secrets.BUNNY_STORAGE_PASSWORD }}
+        run: pnpm cdn verify
+      # И после неудачной сверки: заголовки и манифесты живых адресов помогают понять, что случилось.
+      - name: Проверить живые адреса
+        if: success() || failure()
+        run: pnpm cdn check
+      # Страница без архива открывается в браузере. Копия — вне .cache: скрытые папки upload-artifact пропускает.
+      - name: Отчёт — вне .cache
+        id: pages
+        if: always()
+        run: |
+          pages="$RUNNER_TEMP/pages"
+          mkdir -p "$pages"
+          cp .cache/reports/cdn/verify.html "$pages/verify.html" 2> /dev/null || true
+          echo "pages=$pages" >> "$GITHUB_OUTPUT"
+      - name: Отчёт — сверка
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: verify.html
+          path: ${{ steps.pages.outputs.pages }}/verify.html
+          archive: false
+          if-no-files-found: ignore

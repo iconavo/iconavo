@@ -1,11 +1,11 @@
 // Клиент R2 поверх встроенного fetch (ADR-0022): три операции S3-совместимого API — список объектов
-// по префиксу, запись объекта и чтение объекта. Подпись — sigv4.ts. Повторы и остановки — те же
-// правила, что у Polza (embed/client.ts): временные отказы, сбои сети и истёкшее ожидание повторяются
-// с паузой; ключ не подошёл — «СТОП» всего прогона; другой отказ — «СТОП» набора. Ключи никуда не
-// печатаются, из сообщений об ошибках они вычищены.
+// по префиксу, запись объекта и чтение объекта. Подпись — sigv4.ts; повторы и остановки — общие для
+// хранилищ (storage.ts): временные отказы, сбои сети и истёкшее ожидание повторяются с паузой; ключ
+// не подошёл — «СТОП» всего хоста; другой отказ — «СТОП» набора. Ключи никуда не печатаются, из
+// сообщений об ошибках они вычищены.
 
 import { createHash } from "node:crypto";
-import { retryable, retryDelay } from "../embed/client.js";
+import { retryable } from "../embed/client.js";
 import type { FetchFn } from "../sources/npm.js";
 import { parseXml, type XmlElement } from "../svg/xml.js";
 import {
@@ -16,43 +16,11 @@ import {
   UPLOAD_TIMEOUT_MS,
 } from "./config.js";
 import { EMPTY_SHA256, sha256Hex, signRequest } from "./sigv4.js";
-
-export interface RemoteObject {
-  key: string;
-  size: number;
-  /** ETag без кавычек, строчными; у обычной загрузки — MD5 содержимого в hex. */
-  etag: string;
-}
-
-export interface PutOptions {
-  contentType: string;
-  cacheControl: string;
-  /** MD5 содержимого в hex: уходит в Content-MD5, и сервер сверяет его с тем, что получил. */
-  md5: string;
-}
-
-/** Та часть R2, которая нужна выгрузке; в тестах её подменяют (s3.testing.ts). */
-export interface R2Client {
-  /** Все объекты, ключи которых начинаются с prefix; страницы собираются вместе. */
-  list(prefix: string): Promise<RemoteObject[]>;
-  put(
-    key: string,
-    body: Uint8Array,
-    options: PutOptions,
-  ): Promise<{ etag: string }>;
-  /** Содержимое объекта; нет объекта — undefined. */
-  get(key: string): Promise<Uint8Array | undefined>;
-}
-
-/** Что останавливает ошибка: весь прогон (ключи, доступ) или только текущий набор. */
-export type R2StopScope = "run" | "set";
-
-export const r2Error = (message: string, scope: R2StopScope) =>
-  Object.assign(new Error(message), { scope });
-
-/** Ошибка без пометки — ошибка набора: остальные наборы продолжают. */
-export const r2ErrorScope = (e: unknown): R2StopScope =>
-  (e as { scope?: R2StopScope }).scope === "run" ? "run" : "set";
+import {
+  type RemoteObject,
+  requestWithRetries,
+  type StorageClient,
+} from "./storage.js";
 
 /** Ответы, после которых нет смысла продолжать ни один набор. */
 export const R2_RUN_STOPS: Record<number, string> = {
@@ -129,35 +97,35 @@ interface R2Request {
   allow404?: boolean;
 }
 
-export function r2Client(options: R2Options): R2Client {
+export function r2Client(options: R2Options): StorageClient {
   const fetchFn = options.fetch ?? fetch;
   const sleep =
     options.sleep ??
     ((ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms)));
   const now = options.now ?? (() => Date.now());
-  const timeoutMs = options.timeoutMs ?? UPLOAD_TIMEOUT_MS;
-  const maxAttempts = options.maxAttempts ?? UPLOAD_MAX_ATTEMPTS;
   const endpoint = new URL(r2Endpoint(options.accountId));
-  const secrets = [options.secretAccessKey, options.accessKeyId].filter(
-    (s) => s !== "",
-  );
-  // Начало ответа для сообщения об ошибке: в одну строку и без ключей, даже если сервер их повторил.
-  const snippet = (text: string) => {
-    let out = text;
-    for (const secret of secrets) out = out.replaceAll(secret, "…");
-    return out.replace(/\s+/g, " ").trim().slice(0, 300);
+  const rules = {
+    runStops: R2_RUN_STOPS,
+    retryable,
+    secrets: [options.secretAccessKey, options.accessKeyId],
+    sleep,
+    timeoutMs: options.timeoutMs ?? UPLOAD_TIMEOUT_MS,
+    maxAttempts: options.maxAttempts ?? UPLOAD_MAX_ATTEMPTS,
   };
 
-  async function send(req: R2Request): Promise<Response> {
+  function request<T>(
+    req: R2Request,
+    read: (res: Response) => Promise<T>,
+  ): Promise<T> {
     const path =
       req.key === null ? `/${options.bucket}` : `/${options.bucket}/${req.key}`;
     const payloadHash =
       req.body === undefined ? EMPTY_SHA256 : sha256Hex(req.body);
     const label = `${req.method} ${req.key ?? `${options.bucket}/`}`;
-    let last = "";
-    for (let attempt = 1; ; attempt++) {
-      let wait: number | undefined;
-      try {
+    return requestWithRetries(
+      label,
+      (signal) => {
+        // Подпись — заново на каждую попытку: в ней время запроса.
         const signed = signRequest({
           method: req.method,
           host: endpoint.host,
@@ -171,49 +139,16 @@ export function r2Client(options: R2Options): R2Client {
           service: "s3",
           date: new Date(now()),
         });
-        const res = await fetchFn(`${endpoint.origin}${signed.target}`, {
+        return fetchFn(`${endpoint.origin}${signed.target}`, {
           method: req.method,
           headers: signed.headers,
           body: req.body as BodyInit | undefined,
-          signal: AbortSignal.timeout(timeoutMs),
+          signal,
         });
-        if (res.ok || (res.status === 404 && req.allow404 === true)) return res;
-        const text = await res.text();
-        const reason = `HTTP ${res.status}${text.trim() === "" ? "" : ` — ${snippet(text)}`}`;
-        const fatal = R2_RUN_STOPS[res.status];
-        if (fatal !== undefined) {
-          throw r2Error(`${label}: ${fatal} (${reason})`, "run");
-        }
-        if (!retryable(res.status)) {
-          throw r2Error(`${label}: запрос отклонён (${reason})`, "set");
-        }
-        last = reason;
-        wait = retryDelay(res.headers.get("retry-after"), attempt);
-      } catch (e) {
-        const name = (e as Error).name;
-        if (name === "TimeoutError" || name === "AbortError") {
-          last = `нет ответа за ${Math.round(timeoutMs / 1000)} с`;
-        } else if (
-          e instanceof TypeError &&
-          (e.message === "fetch failed" || "cause" in e)
-        ) {
-          // Так fetch в Node сообщает о сбое соединения; причина — в cause.
-          const cause = (e as { cause?: { code?: string } }).cause?.code;
-          last = `сбой сети${cause ? ` (${cause})` : ""}: ${e.message}`;
-        } else {
-          throw (e as { scope?: R2StopScope }).scope
-            ? e
-            : r2Error(`${label}: ${(e as Error).message}`, "set");
-        }
-      }
-      if (attempt >= maxAttempts) {
-        throw r2Error(
-          `${label}: ${last} — не получилось за ${maxAttempts} попыток`,
-          "set",
-        );
-      }
-      await sleep(wait ?? retryDelay(null, attempt));
-    }
+      },
+      read,
+      { ...rules, allow404: req.allow404 },
+    );
   }
 
   return {
@@ -227,30 +162,37 @@ export function r2Client(options: R2Options): R2Client {
           ["prefix", prefix],
         ];
         if (token !== undefined) query.push(["continuation-token", token]);
-        const res = await send({ method: "GET", key: null, query });
-        const page = parseListPage(await res.text());
+        const page = await request(
+          { method: "GET", key: null, query },
+          async (res) => parseListPage(await res.text()),
+        );
         out.push(...page.objects);
         if (page.next === undefined) return out;
         token = page.next;
       }
     },
     async put(key, body, o) {
-      const res = await send({
-        method: "PUT",
-        key,
-        body,
-        headers: {
-          "content-type": o.contentType,
-          "cache-control": o.cacheControl,
-          "content-md5": Buffer.from(o.md5, "hex").toString("base64"),
+      await request(
+        {
+          method: "PUT",
+          key,
+          body,
+          headers: {
+            "content-type": o.contentType,
+            "cache-control": o.cacheControl,
+            "content-md5": Buffer.from(o.md5, "hex").toString("base64"),
+          },
         },
-      });
-      return { etag: unquote(res.headers.get("etag") ?? "") };
+        async (res) => {
+          await res.arrayBuffer();
+        },
+      );
     },
     async get(key) {
-      const res = await send({ method: "GET", key, allow404: true });
-      if (res.status === 404) return undefined;
-      return new Uint8Array(await res.arrayBuffer());
+      return request({ method: "GET", key, allow404: true }, async (res) => {
+        const body = new Uint8Array(await res.arrayBuffer());
+        return res.status === 404 ? undefined : body;
+      });
     },
   };
 }
