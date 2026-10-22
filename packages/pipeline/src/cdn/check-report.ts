@@ -14,8 +14,10 @@ import {
 import {
   BUNNY_CACHE_RULE,
   BUNNY_HEADERS_RULE,
+  BUNNY_JSON_TYPE_RULE,
   BUNNY_MANIFEST_RULE,
   BUNNY_SVG_RULE,
+  BUNNY_SVG_TYPE_RULE,
   type CdnProvider,
   CF_CACHE_RULE,
   CF_HEADERS_RULE,
@@ -51,7 +53,7 @@ export const CHECK_HINTS: Record<CdnProvider, Record<CheckGroup, string>> = {
   bunny: {
     status:
       "файлы раздачи выкладывает «Выкладка» (pnpm cdn upload, ADR-0025); «нет ответа» — сбой сети или хоста, а у нового хоста — запись cdn2 в DNS Cloudflare или сертификат зоны CDN Bunny",
-    type: "Content-Type задаёт выгрузка в хранилище Bunny; если он без charset — правило Set Response Header зоны CDN (ADR-0025)",
+    type: `Bunny отдаёт тип по расширению, без charset: Content-Type с charset ставят правила зоны CDN Bunny «${BUNNY_JSON_TYPE_RULE}» и «${BUNNY_SVG_TYPE_RULE}» (ADR-0025)`,
     cache: `Cache-Control ставят правила зоны CDN Bunny «${BUNNY_CACHE_RULE}» и «${BUNNY_MANIFEST_RULE}» (ADR-0025)`,
     edge: `правила зоны CDN Bunny «${BUNNY_CACHE_RULE}» (файлы версий — в кэш CDN) и «${BUNNY_MANIFEST_RULE}» (манифест — мимо кэша), Smart Cache выключен (ADR-0025); Server не BunnyCDN — запись cdn2 в DNS Cloudflare должна быть «DNS only» (серое облако)`,
     cors: `правило зоны CDN Bunny «${BUNNY_HEADERS_RULE}»; встроенный CORS зоны выключен, иначе заголовок двоится (ADR-0025)`,

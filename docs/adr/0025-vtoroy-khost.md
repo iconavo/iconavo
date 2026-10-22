@@ -43,11 +43,15 @@
   - Зона CDN `iconavo`: выключены Smart Cache (он не кэширует JSON), встроенный CORS (заголовок двоился бы с правилом), Optimizer, Perma-Cache, Origin Shield. Сжатие br и gzip Bunny делает сам.
   - Hostnames: `cdn2.iconavo.dev`, бесплатный сертификат (Verify & Activate SSL), Force SSL — http переводится на https.
   - DNS в Cloudflare: CNAME `cdn2` → `iconavo.b-cdn.net`, Proxy status — DNS only (серое облако). Через прокси Cloudflare второй хост перестал бы быть независимым; `pnpm cdn check` ловит это по заголовку `Server`.
-  - Четыре правила Edge Rules. Шаблоны без адреса хоста, поэтому `iconavo.b-cdn.net` ведёт себя так же. Ставятся до первой выгрузки: Override Cache Time 0 не трогает то, что уже лежит в кэше.
+  - Шесть правил Edge Rules. Шаблоны без адреса хоста, поэтому `iconavo.b-cdn.net` ведёт себя так же. Ставятся до первой выгрузки: Override Cache Time 0 не трогает то, что уже лежит в кэше.
     1. «Раздача: кэш версий» — Request URL `*/v/*`: Override Cache Time 31536000; Set Response Header `Cache-Control: public, max-age=31536000, immutable`.
     2. «Раздача: манифест мимо кэша» — Request URL `*/manifest.json`: Override Cache Time 0; Set Response Header `Cache-Control: public, max-age=300`.
     3. «Раздача: CORS и защита» — Request URL `*`: Set Response Header `Access-Control-Allow-Origin: *`, `X-Content-Type-Options: nosniff`, `Cross-Origin-Resource-Policy: cross-origin`.
     4. «Раздача: CSP для SVG» — File Extension `svg`: Set Response Header `Content-Security-Policy: default-src 'none'; style-src 'unsafe-inline'; sandbox`.
+    5. «Раздача: тип JSON» — File Extension `json`: Set Response Header `Content-Type: application/json; charset=utf-8`.
+    6. «Раздача: тип SVG» — File Extension `svg`: Set Response Header `Content-Type: image/svg+xml; charset=utf-8`.
+
+    Правила 5 и 6 добавлены после первой выгрузки: тип, присланный при записи, Bunny не хранит и отдаёт тип по расширению, без `charset` (`application/json`, `image/svg+xml`). Решение владельца 22 октября 2026: правила, а не отступление в проверке, — заголовки двух хостов одинаковые.
   - Баланс аккаунта — с автопополнением: пустой баланс останавливает сервис. Цены на 22 октября 2026: хранилище $0,01 за ГБ в месяц, трафик $0,01 за ГБ в Европе и Северной Америке, минимум $1 в месяц на аккаунт.
 - **Манифест мимо кэша CDN Bunny.** Перезапись файла в хранилище не сбрасывает копию в кэше CDN. Поэтому манифест, как и на Cloudflare (ADR-0023), читается из хранилища на каждый запрос.
 - **Проверка — `pnpm cdn check`.**

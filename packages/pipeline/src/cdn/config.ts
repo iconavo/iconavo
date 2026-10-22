@@ -114,6 +114,9 @@ export const BUNNY_CACHE_RULE = "Раздача: кэш версий";
 export const BUNNY_MANIFEST_RULE = "Раздача: манифест мимо кэша";
 export const BUNNY_HEADERS_RULE = "Раздача: CORS и защита";
 export const BUNNY_SVG_RULE = "Раздача: CSP для SVG";
+/** Тип файла Bunny отдаёт по расширению, без charset: тип с charset ставят эти правила. */
+export const BUNNY_JSON_TYPE_RULE = "Раздача: тип JSON";
+export const BUNNY_SVG_TYPE_RULE = "Раздача: тип SVG";
 
 /** Провайдер CDN хоста: от него зависят заголовок кэша и подсказки проверки. */
 export type CdnProvider = "cloudflare" | "bunny";
