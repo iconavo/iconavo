@@ -24,7 +24,7 @@
     "judge": "tsc -b && node --env-file-if-exists=.env packages/pipeline/dist/cli.js judge",
     "eval": "tsc -b && node --env-file-if-exists=.env packages/pipeline/dist/cli.js eval",
     "search-page": "tsc -b && node --env-file-if-exists=.env packages/pipeline/dist/cli.js search-page",
-    "cdn": "tsc -b && node packages/pipeline/dist/cli.js cdn",
+    "cdn": "tsc -b && node --env-file-if-exists=.env packages/pipeline/dist/cli.js cdn",
     "check": "pnpm lint && pnpm typecheck && pnpm test && pnpm size"
   },
   "devDependencies": {

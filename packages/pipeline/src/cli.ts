@@ -3,13 +3,14 @@
 // | pnpm enrich [id…] [--limit=N] [--max-cost=USD] [--dry-run] [--no-wait]
 // | pnpm embed [id…] [--model=…] [--max-rub=N] [--dry-run] | pnpm nearest [запрос…] [--model=…]
 // | pnpm judge [--limit=N] [--max-rub=N] [--dry-run] | pnpm eval [--model=…] [--baseline]
-// | pnpm search-page [--port=N] [--model=…] | pnpm cdn build
+// | pnpm search-page [--port=N] [--model=…] | pnpm cdn build | pnpm cdn upload [--dry-run]
 import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import { basename, join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
 import { canonicalJson } from "./build/json.js";
 import { formatBuildReport, renderBuildGallery } from "./build/report.js";
 import { buildSet, type SetBuildReport, writeSetData } from "./build/run.js";
+import { OUT_DIR, R2_BUCKET, R2_ENV } from "./cdn/config.js";
 import {
   formatCdnReport,
   formatCdnSummary,
@@ -17,6 +18,14 @@ import {
   renderCdnPage,
 } from "./cdn/report.js";
 import { buildCdn, cdnStop } from "./cdn/run.js";
+import { r2Client } from "./cdn/s3.js";
+import { uploadCdn, uploadStop } from "./cdn/upload.js";
+import {
+  formatUploadReport,
+  formatUploadSummary,
+  formatUploadTable,
+  renderUploadPage,
+} from "./cdn/upload-report.js";
 import { polzaEmbeddingClient } from "./embed/client.js";
 import {
   DEFAULT_MAX_RUB,
@@ -149,7 +158,13 @@ const USAGE = `Использование:
   pnpm cdn build                      папка раздачи dist-cdn/ из data/ (ADR-0022): на каждую иконку
                                       и алиас v/{версия}/{набор}/{имя}.json и .svg, контрольные суммы
                                       v/{версия}/{набор}.checksums.json и manifest.json; без изменений
-                                      ничего не перезаписывает; отчёт .cache/reports/cdn/`;
+                                      ничего не перезаписывает; отчёт .cache/reports/cdn/
+  pnpm cdn upload                     собрать раздачу и выгрузить в бакет R2 недостающие файлы
+                                      (ADR-0022): файл сумм набора — последним, манифест — в конце и
+                                      только при отличии; в v/ ничего не перезаписывается и не
+                                      удаляется; нужны R2_ACCOUNT_ID, R2_ACCESS_KEY_ID и
+                                      R2_SECRET_ACCESS_KEY в .env; отчёт .cache/reports/cdn/upload.html
+      --dry-run                       только сравнить с бакетом и показать, что будет выгружено`;
 
 /** Флаги pnpm pr со ссылками: флаг → поле PrLinks. */
 const LINK_FLAGS: Record<string, keyof PrLinks> = {
@@ -243,6 +258,7 @@ for (const flag of flags) {
     }
   }
   if (command === "eval" && flag === "--baseline") continue;
+  if (command === "cdn" && flag === "--dry-run") continue;
   if (
     command === "search-page" &&
     name === "--port" &&
@@ -741,11 +757,17 @@ try {
     }
   } else if (command === "cdn") {
     const [sub, ...rest] = args;
-    if (sub !== "build" || rest.length > 0) {
+    const dryRun = flags.includes("--dry-run");
+    if (
+      (sub !== "build" && sub !== "upload") ||
+      rest.length > 0 ||
+      (sub === "build" && dryRun)
+    ) {
       usageError(
-        "pnpm cdn: нужна подкоманда build без имён наборов — манифест описывает все наборы сразу.",
+        "pnpm cdn: нужна подкоманда build или upload [--dry-run] без имён наборов — манифест описывает все наборы сразу.",
       );
     }
+    // Выгрузка начинается со сборки: dist-cdn/ всегда от текущего data/ (без изменений — секунды).
     const report = await buildCdn(configs, {
       dataDir,
       outDir: distCdnDir,
@@ -760,7 +782,44 @@ try {
     const htmlPath = join(reportDir, "index.html");
     await writeFile(htmlPath, renderCdnPage(report), "utf8");
     console.log(`Отчёт: ${htmlPath}`);
-    process.exit(cdnStop(report) ? 1 : 0);
+    if (sub === "build") process.exit(cdnStop(report) ? 1 : 0);
+    if (cdnStop(report)) {
+      console.error("Сборка остановлена — выгрузка не начиналась.");
+      process.exit(1);
+    }
+    const keys = {
+      accountId: process.env[R2_ENV.accountId] ?? "",
+      accessKeyId: process.env[R2_ENV.accessKeyId] ?? "",
+      secretAccessKey: process.env[R2_ENV.secretAccessKey] ?? "",
+    };
+    const missing = (Object.keys(R2_ENV) as (keyof typeof R2_ENV)[])
+      .filter((k) => keys[k] === "")
+      .map((k) => R2_ENV[k]);
+    if (missing.length > 0) {
+      console.error(
+        `Нет ключей R2: ${missing.join(", ")}. Локально впишите их в .env (имена — в .env.example), в CI это секреты GitHub Actions. Без ключей не прочитать даже список бакета, поэтому --dry-run тоже их требует.`,
+      );
+      process.exit(1);
+    }
+    console.log(
+      dryRun
+        ? `\nТолько показ: сравниваю ${OUT_DIR}/ с бакетом ${R2_BUCKET}, ничего не записываю…`
+        : `\nВыгружаю ${OUT_DIR}/ в бакет ${R2_BUCKET}…`,
+    );
+    const upload = await uploadCdn({
+      outDir: distCdnDir,
+      client: r2Client({ ...keys, bucket: R2_BUCKET }),
+      dryRun,
+      log: (line) => console.log(line),
+    });
+    console.log("");
+    for (const r of upload.sets) console.log(`${formatUploadReport(r)}\n`);
+    console.log(formatUploadTable(upload.sets));
+    for (const line of formatUploadSummary(upload)) console.log(line);
+    const uploadPath = join(reportDir, "upload.html");
+    await writeFile(uploadPath, renderUploadPage(upload), "utf8");
+    console.log(`Отчёт: ${uploadPath}`);
+    process.exit(uploadStop(upload) ? 1 : 0);
   } else {
     usageError(
       command ? `Неизвестная команда «${command}».` : "Нужна команда.",

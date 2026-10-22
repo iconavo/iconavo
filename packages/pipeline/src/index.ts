@@ -15,14 +15,27 @@ export {
 } from "./build/run.js";
 export { renameRetrying, writeFileAtomic } from "./build/write.js";
 export {
+  CACHE_IMMUTABLE,
+  CACHE_MANIFEST,
   CDN_HOST,
   CHAIN_LIMIT,
   CHECKSUM_ALGORITHM,
   CHECKSUMS_LIMIT,
   CHECKSUMS_SUFFIX,
+  CONTENT_TYPES,
+  LIST_PAGE_SIZE,
   MANIFEST_FILE,
+  MISMATCH_LIMIT,
   OUT_DIR,
+  PROGRESS_EVERY,
+  R2_BUCKET,
+  R2_ENV,
+  R2_REGION,
+  r2Endpoint,
   TREE_LIMIT,
+  UPLOAD_CONCURRENCY,
+  UPLOAD_MAX_ATTEMPTS,
+  UPLOAD_TIMEOUT_MS,
   VERSIONS_DIR,
   WRITE_CONCURRENCY,
 } from "./cdn/config.js";
@@ -58,7 +71,54 @@ export {
   cdnStop,
   type SetCdnReport,
 } from "./cdn/run.js";
+export {
+  md5Hex,
+  type PutOptions,
+  parseListPage,
+  R2_RUN_STOPS,
+  type R2Client,
+  type R2Options,
+  type R2StopScope,
+  type RemoteObject,
+  r2Client,
+  r2Error,
+  r2ErrorScope,
+} from "./cdn/s3.js";
+export {
+  amzDate,
+  canonicalPath,
+  canonicalQuery,
+  EMPTY_SHA256,
+  type SignedRequest,
+  type SignInput,
+  sha256Hex,
+  signRequest,
+  uriEncode,
+} from "./cdn/sigv4.js";
 export { type CdnIcon, svgOf, widthEm } from "./cdn/svg.js";
+export {
+  type Comparison,
+  compareWithRemote,
+  contentTypeOf,
+  type LocalFile,
+  type ManifestStatus,
+  readSetFiles,
+  type SetUploadReport,
+  setObjects,
+  type UploadOptions,
+  type UploadReport,
+  type UploadStatus,
+  uploadCdn,
+  uploadStop,
+} from "./cdn/upload.js";
+export {
+  formatUploadReport,
+  formatUploadSummary,
+  formatUploadTable,
+  MANIFEST_STATUS,
+  renderUploadPage,
+  UPLOAD_STATUS,
+} from "./cdn/upload-report.js";
 export {
   checksumsPath,
   cleanupStale,

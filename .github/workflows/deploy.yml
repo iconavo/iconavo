@@ -1,0 +1,87 @@
+name: Выкладка
+
+# Выкладка раздачи в R2 (ADR-0022, шаг 2 фазы 2): после слияния в main PR с данными — pnpm cdn upload,
+# то есть сборка dist-cdn/ из data/ и выгрузка в бакет iconavo-cdn (домен cdn.iconavo.dev).
+# Выгружаются только недостающие файлы версий: версии неизменяемы, в v/ ничего не перезаписывается;
+# в наборе файл сумм уходит последним, манифест — в самом конце и только при отличии; ничего не
+# удаляется. Ключи — секреты R2_ACCOUNT_ID, R2_ACCESS_KEY_ID и R2_SECRET_ACCESS_KEY (токен
+# «Object Read & Write» только на этот бакет). На PR не запускается: секретов там нет, а без ключей
+# не прочитать даже список бакета. Откат — откат PR с данными: манифест вернётся к прежней версии,
+# её файлы на месте.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "data/**"
+      - "packages/pipeline/src/cdn/**"
+      - "packages/pipeline/src/cli.ts"
+      - ".github/workflows/deploy.yml"
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: Только показать, что будет выгружено
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+# Выгрузки не пересекаются и не прерываются: следующая ждёт текущую.
+concurrency:
+  group: deploy
+  cancel-in-progress: false
+
+jobs:
+  upload:
+    name: R2
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Собрать и выгрузить
+        env:
+          R2_ACCOUNT_ID: ${{ secrets.R2_ACCOUNT_ID }}
+          R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+          DRY_RUN: ${{ inputs.dry_run == true }}
+        run: |
+          if [ "$DRY_RUN" = true ]; then
+            pnpm cdn upload --dry-run
+          else
+            pnpm cdn upload
+          fi
+      # Страница без архива открывается в браузере. Копия — вне .cache: скрытые папки upload-artifact пропускает.
+      - name: Отчёт — вне .cache
+        id: pages
+        if: always()
+        run: |
+          pages="$RUNNER_TEMP/pages"
+          mkdir -p "$pages"
+          cp .cache/reports/cdn/upload.html "$pages/upload.html" 2> /dev/null || true
+          cp .cache/reports/cdn/index.html "$pages/build.html" 2> /dev/null || true
+          echo "pages=$pages" >> "$GITHUB_OUTPUT"
+      - name: Отчёт — выгрузка
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: upload.html
+          path: ${{ steps.pages.outputs.pages }}/upload.html
+          archive: false
+          if-no-files-found: ignore
+      - name: Отчёт — сборка раздачи
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: build.html
+          path: ${{ steps.pages.outputs.pages }}/build.html
+          archive: false
+          if-no-files-found: ignore
