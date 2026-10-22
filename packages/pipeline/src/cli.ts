@@ -4,13 +4,16 @@
 // | pnpm embed [id…] [--model=…] [--max-rub=N] [--dry-run] | pnpm nearest [запрос…] [--model=…]
 // | pnpm judge [--limit=N] [--max-rub=N] [--dry-run] | pnpm eval [--model=…] [--baseline]
 // | pnpm search-page [--port=N] [--model=…] | pnpm cdn build | pnpm cdn upload [--dry-run]
+// | pnpm cdn check
 import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import { basename, join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
 import { canonicalJson } from "./build/json.js";
 import { formatBuildReport, renderBuildGallery } from "./build/report.js";
 import { buildSet, type SetBuildReport, writeSetData } from "./build/run.js";
-import { OUT_DIR, R2_BUCKET, R2_ENV } from "./cdn/config.js";
+import { checkCdn, checkFailed } from "./cdn/check.js";
+import { formatCheckSummary, formatCheckTable } from "./cdn/check-report.js";
+import { CDN_HOST, OUT_DIR, R2_BUCKET, R2_ENV } from "./cdn/config.js";
 import {
   formatCdnReport,
   formatCdnSummary,
@@ -164,7 +167,10 @@ const USAGE = `Использование:
                                       только при отличии; в v/ ничего не перезаписывается и не
                                       удаляется; нужны R2_ACCOUNT_ID, R2_ACCESS_KEY_ID и
                                       R2_SECRET_ACCESS_KEY в .env; отчёт .cache/reports/cdn/upload.html
-      --dry-run                       только сравнить с бакетом и показать, что будет выгружено`;
+      --dry-run                       только сравнить с бакетом и показать, что будет выгружено
+  pnpm cdn check                      проверить живые адреса раздачи (ADR-0023): манифест, файл сумм,
+                                      lucide:heart (.json и .svg) и ответ 404 — тип, кэш браузера и
+                                      CDN, CORS, защита, сжатие br и gzip, содержимое; ключи не нужны`;
 
 /** Флаги pnpm pr со ссылками: флаг → поле PrLinks. */
 const LINK_FLAGS: Record<string, keyof PrLinks> = {
@@ -759,13 +765,24 @@ try {
     const [sub, ...rest] = args;
     const dryRun = flags.includes("--dry-run");
     if (
-      (sub !== "build" && sub !== "upload") ||
+      (sub !== "build" && sub !== "upload" && sub !== "check") ||
       rest.length > 0 ||
-      (sub === "build" && dryRun)
+      (sub !== "upload" && dryRun)
     ) {
       usageError(
-        "pnpm cdn: нужна подкоманда build или upload [--dry-run] без имён наборов — манифест описывает все наборы сразу.",
+        "pnpm cdn: нужна подкоманда build, upload [--dry-run] или check без имён наборов — манифест описывает все наборы сразу.",
       );
+    }
+    if (sub === "check") {
+      // Живые адреса раздачи (ADR-0023): ни сборки, ни ключей не нужно.
+      console.log(`Проверяю раздачу https://${CDN_HOST}/…`);
+      const report = await checkCdn({
+        log: (line) => console.log(`  ${line}`),
+      });
+      console.log("");
+      console.log(formatCheckTable(report));
+      for (const line of formatCheckSummary(report)) console.log(line);
+      process.exit(checkFailed(report) ? 1 : 0);
     }
     // Выгрузка начинается со сборки: dist-cdn/ всегда от текущего data/ (без изменений — секунды).
     const report = await buildCdn(configs, {

@@ -39,7 +39,7 @@ export const MANIFEST_STATUS: Record<ManifestStatus, string> = {
 const CHECKLIST = [
   `В браузере открывается https://${CDN_HOST}/${MANIFEST_FILE}, и версии в нём те же, что в ${OUT_DIR}/${MANIFEST_FILE} (у манифеста кэш 5 минут: сразу после записи можно увидеть прежний).`,
   "Ссылки на файлы иконок ниже открываются: .json — текст IconifyJSON, .svg — рисунок иконки.",
-  "В DevTools (F12 → Network) у файла иконки заголовки content-type: image/svg+xml и cache-control: public, max-age=31536000, immutable; у манифеста — max-age=300. CORS, сжатие и кэш JSON на CDN — шаг 3.",
+  "В DevTools (F12 → Network) у файла иконки заголовки content-type: image/svg+xml и cache-control: public, max-age=31536000, immutable; у манифеста — max-age=300. CORS, защиту, сжатие и кэш на CDN проверяет pnpm cdn check (ADR-0023).",
   "Повторный pnpm cdn upload пишет «без изменений» у каждого набора и у манифеста.",
 ];
 
