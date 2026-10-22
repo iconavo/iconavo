@@ -1,9 +1,15 @@
 import { describe, expect, it } from "vitest";
-import type { SetUploadReport, UploadReport } from "./upload.js";
+import type {
+  HostUploadReport,
+  SetUploadReport,
+  UploadReport,
+} from "./upload.js";
 import {
+  formatHostTitle,
   formatUploadReport,
   formatUploadSummary,
   formatUploadTable,
+  formatVerifyVerdict,
   renderUploadPage,
 } from "./upload-report.js";
 
@@ -28,25 +34,45 @@ const stopped: SetUploadReport = {
   uploaded: 0,
   uploadedBytes: 0,
   status: "stopped",
-  stop: ["в бакете уже лежат другие файлы этой версии (1): …"],
+  stop: ["в хранилище уже лежат другие файлы этой версии (1): …"],
   samples: ["other/star.json", "other/star.svg"],
+};
+const primary: HostUploadReport = {
+  host: "cdn.iconavo.dev",
+  storage: "бакет R2 iconavo-cdn",
+  sets: [uploaded, stopped],
+  manifestStatus: "skipped",
+  manifestNote: "остановлено наборов: 1",
+  stop: [],
+  ms: 2600,
+};
+const secondary: HostUploadReport = {
+  host: "cdn2.iconavo.dev",
+  storage: "хранилище Bunny iconavo-cdn",
+  sets: [],
+  manifestStatus: "skipped",
+  manifestNote: "работа с хостом остановлена",
+  stop: ["не выгружался: «СТОП» на cdn.iconavo.dev — иначе хосты разойдутся"],
+  ms: 0,
 };
 const report: UploadReport = {
   dryRun: false,
-  sets: [uploaded, stopped],
   manifest: '{\n  "sets": {}\n}',
-  manifestStatus: "skipped",
+  hosts: [primary, secondary],
   stop: [],
   ms: 3000,
 };
 
 describe("отчёт выгрузки", () => {
   it("строки и таблица для терминала", () => {
+    expect(formatHostTitle(primary)).toBe(
+      "Хост https://cdn.iconavo.dev — бакет R2 iconavo-cdn",
+    );
     expect(formatUploadReport(uploaded)).toBe(
-      "demo\n  Версия 0123abcd · файлов 9 (1.5 КБ) · в бакете было 2 · недоставало 7\n  выгружено 7 (1.2 КБ) за 2,5 с, сверка сошлась",
+      "demo\n  Версия 0123abcd · файлов 9 (1.5 КБ) · в хранилище было 2 · недоставало 7\n  выгружено 7 (1.2 КБ) за 2,5 с, сверка сошлась",
     );
     expect(formatUploadReport(stopped)).toContain(
-      "  СТОП — в бакете уже лежат другие файлы",
+      "  СТОП — в хранилище уже лежат другие файлы",
     );
     const table = formatUploadTable([uploaded, stopped]);
     expect(table.split("\n")[0]).toMatch(
@@ -56,7 +82,9 @@ describe("отчёт выгрузки", () => {
     expect(table).toContain("выгружено");
     expect(table).toContain("СТОП");
     expect(formatUploadSummary(report)).toEqual([
-      "Манифест: не записан — остановлено наборов: 1",
+      "Манифест https://cdn.iconavo.dev/manifest.json — не записан: остановлено наборов: 1",
+      "Манифест https://cdn2.iconavo.dev/manifest.json — не записан: работа с хостом остановлена",
+      "СТОП — cdn2.iconavo.dev: не выгружался: «СТОП» на cdn.iconavo.dev — иначе хосты разойдутся",
       "Время: 3,0 с",
     ]);
   });
@@ -65,43 +93,110 @@ describe("отчёт выгрузки", () => {
     const planned: UploadReport = {
       ...report,
       dryRun: true,
-      sets: [{ ...uploaded, status: "planned", uploaded: 0, uploadedBytes: 0 }],
-      manifestStatus: "planned",
+      hosts: [
+        {
+          ...primary,
+          sets: [
+            { ...uploaded, status: "planned", uploaded: 0, uploadedBytes: 0 },
+          ],
+          manifestStatus: "planned",
+          manifestNote: undefined,
+        },
+      ],
     };
     expect(formatUploadSummary(planned)).toEqual([
-      "Только показ (--dry-run): в бакет ничего не записано.",
-      "Манифест: https://cdn.iconavo.dev/manifest.json — будет записан (в бакете манифеста ещё не было)",
+      "Только показ: в хранилища ничего не записано.",
+      "Манифест https://cdn.iconavo.dev/manifest.json — будет записан (в хранилище манифеста ещё не было)",
       "Время: 3,0 с",
     ]);
-    expect(formatUploadTable(planned.sets)).toContain("(7)");
+    expect(formatUploadTable(planned.hosts[0]?.sets ?? [])).toContain("(7)");
     const written: UploadReport = {
       ...report,
-      sets: [uploaded],
-      remoteManifest: "{}",
-      manifestStatus: "written",
+      hosts: [
+        {
+          ...primary,
+          sets: [uploaded],
+          remoteManifest: "{}",
+          manifestStatus: "written",
+          manifestNote: undefined,
+        },
+      ],
     };
     expect(formatUploadSummary(written)[0]).toBe(
-      "Манифест: https://cdn.iconavo.dev/manifest.json — записан",
+      "Манифест https://cdn.iconavo.dev/manifest.json — записан",
     );
     const failed: UploadReport = {
       ...report,
-      sets: [],
+      hosts: [],
       stop: ["manifest.json не читается"],
     };
     expect(formatUploadSummary(failed)).toEqual([
-      "Манифест: не записан — прогон остановлен",
+      "Манифесты: не записаны — прогон остановлен",
       "СТОП — manifest.json не читается",
       "Время: 3,0 с",
     ]);
   });
 
-  it("страница: ссылки на файлы выгруженного набора, причины СТОП, манифест", () => {
+  it("итог сверки: совпадают или что разошлось", () => {
+    const same: UploadReport = {
+      ...report,
+      dryRun: true,
+      hosts: [
+        {
+          ...primary,
+          sets: [{ ...uploaded, status: "unchanged" }],
+          manifestStatus: "unchanged",
+        },
+        {
+          ...secondary,
+          sets: [{ ...uploaded, status: "unchanged" }],
+          manifestStatus: "unchanged",
+          stop: [],
+        },
+      ],
+    };
+    expect(formatVerifyVerdict(same)).toEqual([
+      "Сверка: cdn.iconavo.dev и cdn2.iconavo.dev совпадают со сборкой — файлы версий и манифесты на месте.",
+    ]);
+    const differs: UploadReport = {
+      ...same,
+      hosts: [
+        same.hosts[0] as HostUploadReport,
+        {
+          ...secondary,
+          sets: [{ ...uploaded, status: "planned", missing: 12 }],
+          manifestStatus: "planned",
+          stop: [],
+        },
+      ],
+    };
+    const verdict = formatVerifyVerdict(differs);
+    expect(verdict[0]).toBe(
+      "Сверка: расхождения — cdn2.iconavo.dev: недостаёт файлов 12 (demo), манифест отличается.",
+    );
+    expect(verdict[1]).toContain("повторите сверку после неё");
+  });
+
+  it("страница: раздел на хост, ссылки на файлы выгруженного набора, причины СТОП, манифест", () => {
     const html = renderUploadPage({
       ...report,
-      remoteManifest: '{"sets":{"demo":1}}',
-      manifestStatus: "written",
+      hosts: [
+        {
+          ...primary,
+          remoteManifest: '{"sets":{"demo":1}}',
+          manifestStatus: "written",
+          manifestNote: undefined,
+        },
+        secondary,
+      ],
     });
     expect(html).toContain("<title>Выгрузка</title>");
+    expect(html).toContain(
+      "<h2>Хост https://cdn.iconavo.dev — бакет R2 iconavo-cdn</h2>",
+    );
+    expect(html).toContain(
+      "<h2>Хост https://cdn2.iconavo.dev — хранилище Bunny iconavo-cdn</h2>",
+    );
     expect(html).toContain(
       'href="https://cdn.iconavo.dev/v/0123abcd/demo/gone.svg"',
     );
@@ -110,18 +205,25 @@ describe("отчёт выгрузки", () => {
     );
     // У остановленного набора ссылок нет: его файлы не выкладывались.
     expect(html).not.toContain("v/89abcdef/other/star.svg");
-    expect(html).toContain("СТОП — в бакете уже лежат другие файлы");
+    expect(html).toContain("СТОП — в хранилище уже лежат другие файлы");
+    expect(html).toContain("СТОП — не выгружался");
     expect(html).toContain(
-      "<h3>В бакете</h3><pre>{&quot;sets&quot;:{&quot;demo&quot;:1}}</pre>",
+      "<p>В хранилище:</p><pre>{&quot;sets&quot;:{&quot;demo&quot;:1}}</pre>",
     );
-    expect(html).toContain("<h3>Локальный</h3>");
+    expect(html).toContain("<h2>Локальный манифест</h2>");
     expect(html).toContain("записан");
-    const dry = renderUploadPage({
-      ...report,
-      dryRun: true,
-      manifestStatus: "planned",
-    });
-    expect(dry).toContain("Только показ (--dry-run)");
-    expect(dry).toContain("Манифеста ещё не было.");
+    const dry = renderUploadPage(
+      {
+        ...report,
+        dryRun: true,
+        hosts: [
+          { ...primary, manifestStatus: "planned", manifestNote: undefined },
+        ],
+      },
+      "Сверка хостов",
+    );
+    expect(dry).toContain("<title>Сверка хостов</title>");
+    expect(dry).toContain("Только показ");
+    expect(dry).toContain("В хранилище манифеста ещё не было.");
   });
 });

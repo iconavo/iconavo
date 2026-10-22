@@ -1,14 +1,17 @@
 name: Выкладка
 
-# Выкладка раздачи в R2 (ADR-0022, шаг 2 фазы 2): после слияния в main PR с данными — pnpm cdn upload,
-# то есть сборка dist-cdn/ из data/ и выгрузка в бакет iconavo-cdn (домен cdn.iconavo.dev).
-# Выгружаются только недостающие файлы версий: версии неизменяемы, в v/ ничего не перезаписывается;
-# в наборе файл сумм уходит последним, манифест — в самом конце и только при отличии; ничего не
-# удаляется. Ключи — секреты R2_ACCOUNT_ID, R2_ACCESS_KEY_ID и R2_SECRET_ACCESS_KEY (токен
-# «Object Read & Write» только на этот бакет). На PR не запускается: секретов там нет, а без ключей
-# не прочитать даже список бакета. Откат — откат PR с данными: манифест вернётся к прежней версии,
-# её файлы на месте. После выгрузки — pnpm cdn check (ADR-0023, шаг 3): заголовки живых адресов
-# cdn.iconavo.dev; сломались правила Cloudflare — «Выкладка» красная.
+# Выкладка раздачи на два хоста (ADR-0022, ADR-0025; шаги 2 и 4 фазы 2): после слияния в main PR с
+# данными — pnpm cdn upload, то есть сборка dist-cdn/ из data/ и выгрузка в бакет R2 iconavo-cdn
+# (cdn.iconavo.dev), затем в хранилище Bunny iconavo-cdn (cdn2.iconavo.dev). Выгружаются только
+# недостающие файлы версий: версии неизменяемы, в v/ ничего не перезаписывается; в наборе файл сумм
+# уходит последним, затем сверка контрольных сумм по списку хранилища. Манифесты — в самом конце,
+# когда файлы версий есть на обоих хостах, второй хост — последним, и только при отличии; «СТОП» на
+# одном хосте — манифесты не пишутся нигде. Ничего не удаляется. Ключи — секреты R2_ACCOUNT_ID,
+# R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY (токен «Object Read & Write» только на бакет) и
+# BUNNY_STORAGE_PASSWORD (пароль хранилища Bunny). На PR не запускается: секретов там нет, а без
+# ключей не прочитать даже списки хранилищ. Откат — откат PR с данными: манифесты вернутся к прежней
+# версии, её файлы на месте. После выгрузки — pnpm cdn check (ADR-0023, ADR-0025): заголовки живых
+# адресов обоих хостов и одинаковые манифесты; сломались правила CDN — «Выкладка» красная.
 
 on:
   push:
@@ -35,13 +38,24 @@ concurrency:
 
 jobs:
   upload:
-    name: R2
+    name: R2 и Bunny
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    # С запасом на первую полную выгрузку на новый хост; повтор докачивает только недостающее.
+    timeout-minutes: 90
     steps:
       - uses: actions/checkout@v7
         with:
           persist-credentials: false
+      # Вручную с другой ветки — только если data/ та же, что в main: иначе выкладка вернула бы
+      # хостам прежний манифест. Показ ничего не пишет — ему можно и так.
+      - name: data/ та же, что в main
+        if: github.ref != 'refs/heads/main' && inputs.dry_run != true
+        run: |
+          git fetch --quiet --no-tags --depth=1 origin "+refs/heads/main:refs/remotes/origin/main"
+          if ! git diff --quiet origin/main HEAD -- data/; then
+            echo "::error::data/ на этой ветке не та, что в main: выкладка с неё вернула бы хостам прежний манифест. Догоните ветку до main или запустите с флажком «только показ»."
+            exit 1
+          fi
       - uses: pnpm/action-setup@v6
       - uses: actions/setup-node@v7
         with:
@@ -53,6 +67,7 @@ jobs:
           R2_ACCOUNT_ID: ${{ secrets.R2_ACCOUNT_ID }}
           R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
           R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+          BUNNY_STORAGE_PASSWORD: ${{ secrets.BUNNY_STORAGE_PASSWORD }}
           DRY_RUN: ${{ inputs.dry_run == true }}
         run: |
           if [ "$DRY_RUN" = true ]; then

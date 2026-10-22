@@ -1,10 +1,13 @@
-// Проверка раздачи по живым адресам (ADR-0023, шаг 3 фазы 2): манифест, файл сумм и иконка-образец
-// текущей версии (.json и .svg), а ещё несуществующее имя — его 404 должен нести CORS, иначе чужой
-// сайт увидит не «иконки нет», а сбой сети. Content-Type и Cache-Control хранятся у объектов R2
-// (выгрузка, ADR-0022), кэш на CDN, CORS и заголовки защиты добавляют правила Cloudflare, сжатие
-// Cloudflare делает сам. К файлу — два запроса: с Origin и «br, gzip», как у чужого сайта, и без
-// Origin только с gzip — так видно второе сжатие и то, что CORS не зависит от Origin (копия в кэше
-// CDN одна на всех). Ключи не нужны: адреса открытые. Повторы — как у выгрузки (s3.ts).
+// Проверка раздачи по живым адресам (ADR-0023, шаги 3 и 4 фазы 2): манифест, файл сумм и иконка-
+// образец текущей версии (.json и .svg), а ещё несуществующее имя — его 404 должен нести CORS, иначе
+// чужой сайт увидит не «иконки нет», а сбой сети. На cdn.iconavo.dev Content-Type и Cache-Control
+// хранятся у объектов R2 (выгрузка, ADR-0022), кэш на CDN, CORS и заголовки защиты добавляют правила
+// Cloudflare; на cdn2.iconavo.dev Cache-Control, CORS и защиту ставят правила зоны CDN Bunny
+// (ADR-0025). Сжатие оба CDN делают сами. К файлу — два запроса: с Origin и «br, gzip», как у чужого
+// сайта, и без Origin только с gzip — так видно второе сжатие и то, что CORS не зависит от Origin
+// (копия в кэше CDN одна на всех). Server показывает, что ответ пришёл от CDN этого хоста: запись
+// cdn2 через прокси Cloudflare лишила бы второй хост независимости. Ключи не нужны: адреса
+// открытые. Повторы — как у выгрузки (storage.ts).
 
 import type { z } from "zod";
 import { retryable, retryDelay } from "../embed/client.js";
@@ -12,7 +15,8 @@ import type { FetchFn } from "../sources/npm.js";
 import {
   CACHE_IMMUTABLE,
   CACHE_MANIFEST,
-  CDN_HOST,
+  type CdnHost,
+  type CdnProvider,
   CHECK_ICON,
   CHECK_MAX_ATTEMPTS,
   CHECK_MISSING,
@@ -21,9 +25,8 @@ import {
   CHECK_TIMEOUT_MS,
   CHECKSUMS_SUFFIX,
   CORS_ALLOW_ORIGIN,
-  EDGE_CACHED,
-  EDGE_DIRECT,
   MANIFEST_FILE,
+  R2_CDN,
   SECURITY_HEADERS,
   SVG_CSP,
   VERSIONS_DIR,
@@ -66,10 +69,13 @@ export interface TargetReport {
 
 export interface CheckReport {
   host: string;
+  provider: CdnProvider;
   set: string;
   icon: string;
   /** Версия набора-образца из манифеста; манифест не прочитан — undefined. */
   version?: string;
+  /** Текст манифеста, если он по схеме, — для сравнения хостов между собой. */
+  manifest?: string;
   targets: TargetReport[];
   /** Почему файлы версии не проверялись. */
   stop: string[];
@@ -79,8 +85,8 @@ export interface CheckReport {
 }
 
 export interface CheckOptions {
-  /** Хост раздачи; на шаге 4 — и второй (ADR-0025). */
-  host?: string;
+  /** Хост раздачи и как его CDN показывает кэш; по умолчанию основной (R2 и Cloudflare). */
+  target?: CdnHost;
   /** Образец: набор и имя иконки. */
   set?: string;
   icon?: string;
@@ -177,7 +183,8 @@ function parseJson<T>(
 export async function checkCdn(
   options: CheckOptions = {},
 ): Promise<CheckReport> {
-  const host = options.host ?? CDN_HOST;
+  const cdn = options.target ?? R2_CDN;
+  const { host } = cdn;
   const set = options.set ?? CHECK_SET;
   const icon = options.icon ?? CHECK_ICON;
   const fetchFn = options.fetch ?? fetch;
@@ -289,19 +296,27 @@ export async function checkCdn(
       "cache",
       mismatch(first.headers, "cache-control", file.cache),
     );
-    const edge = first.headers.get("cf-cache-status");
-    if (file.edge === "cached" && !EDGE_CACHED.includes(edge ?? "")) {
+    const server = first.headers.get("server");
+    if (!server?.toLowerCase().startsWith(cdn.server.toLowerCase())) {
       addIssue(
         target,
         "edge",
-        `файл не кэшируется на CDN: cf-cache-status ${shown(edge)} вместо HIT, MISS или похожего`,
+        `ответ пришёл не от ${cdn.server}: Server ${shown(server)}`,
       );
     }
-    if (file.edge === "direct" && !EDGE_DIRECT.includes(edge ?? "")) {
+    const edge = first.headers.get(cdn.cacheHeader);
+    if (file.edge === "cached" && !cdn.edgeCached.includes(edge ?? "")) {
       addIssue(
         target,
         "edge",
-        `манифест хранится в кэше CDN: cf-cache-status ${shown(edge)} вместо DYNAMIC или BYPASS`,
+        `файл не кэшируется на CDN: ${cdn.cacheHeader} ${shown(edge)} вместо ${cdn.edgeCached.slice(0, 2).join(", ")} или похожего`,
+      );
+    }
+    if (file.edge === "direct" && !cdn.edgeDirect.includes(edge ?? "")) {
+      addIssue(
+        target,
+        "edge",
+        `манифест хранится в кэше CDN: ${cdn.cacheHeader} ${shown(edge)} вместо ${cdn.edgeDirect.join(" или ")}`,
       );
     }
     addIssue(
@@ -335,6 +350,19 @@ export async function checkCdn(
           " на запрос «gzip»",
         ),
       );
+      // Манифест не должен оседать в кэше CDN и после первого запроса.
+      const again = second.headers.get(cdn.cacheHeader);
+      if (
+        file.edge === "direct" &&
+        cdn.edgeDirect.includes(edge ?? "") &&
+        !cdn.edgeDirect.includes(again ?? "")
+      ) {
+        addIssue(
+          target,
+          "edge",
+          `манифест хранится в кэше CDN: ${cdn.cacheHeader} ${shown(again)} вместо ${cdn.edgeDirect.join(" или ")} на втором запросе`,
+        );
+      }
       // Манифест между двумя запросами может смениться выкладкой; файлы версии — нет.
       if (
         kind !== "manifest" &&
@@ -370,11 +398,14 @@ export async function checkCdn(
       `${target.path} — ${target.issues.length === 0 ? "ок" : "не так"}`,
     );
   };
+  let manifestText: string | undefined;
   const report = (version?: string): CheckReport => ({
     host,
+    provider: cdn.provider,
     set,
     icon,
     version,
+    manifest: manifestText,
     targets,
     stop,
     requests,
@@ -389,10 +420,13 @@ export async function checkCdn(
     const parsed = parseJson(manifest.body, manifestSchema);
     if ("error" in parsed) {
       addIssue(manifest.target, "body", `манифест ${parsed.error}`);
-    } else if (!Object.hasOwn(parsed.data.sets, set)) {
-      addIssue(manifest.target, "body", `в манифесте нет набора «${set}»`);
     } else {
-      version = parsed.data.sets[set]?.version;
+      manifestText = Buffer.from(manifest.body).toString("utf8");
+      if (!Object.hasOwn(parsed.data.sets, set)) {
+        addIssue(manifest.target, "body", `в манифесте нет набора «${set}»`);
+      } else {
+        version = parsed.data.sets[set]?.version;
+      }
     }
   }
   done(manifest.target);
@@ -448,4 +482,43 @@ export async function checkCdn(
   );
   done(missing.target);
   return report(version);
+}
+
+/**
+ * Хосты между собой: манифесты побайтно одинаковые — иначе ядро возьмёт версию у одного хоста, а у
+ * другого её может не быть (ADR-0025). Хост без прочитанного манифеста не сравнивается: его
+ * проблема уже в его отчёте. Пусто — расхождений нет.
+ */
+export function compareHostManifests(
+  reports: readonly CheckReport[],
+): string[] {
+  const read = reports.filter(
+    (r): r is CheckReport & { manifest: string } => r.manifest !== undefined,
+  );
+  const [first, ...rest] = read;
+  if (first === undefined) return [];
+  const versions = (text: string) =>
+    manifestSchema.parse(JSON.parse(text)).sets;
+  const base = versions(first.manifest);
+  const issues: string[] = [];
+  for (const r of rest) {
+    if (r.manifest === first.manifest) continue;
+    const other = versions(r.manifest);
+    const ids = [...new Set([...Object.keys(base), ...Object.keys(other)])]
+      .sort()
+      .filter((id) => base[id]?.version !== other[id]?.version);
+    const diff =
+      ids.length === 0
+        ? "версии наборов те же, отличаются даты или запись"
+        : ids
+            .map(
+              (id) =>
+                `${id} — ${base[id]?.version ?? "нет"} и ${other[id]?.version ?? "нет"}`,
+            )
+            .join("; ");
+    issues.push(
+      `манифест https://${r.host}/${MANIFEST_FILE} не тот, что на https://${first.host}/${MANIFEST_FILE}: ${diff}`,
+    );
+  }
+  return issues;
 }

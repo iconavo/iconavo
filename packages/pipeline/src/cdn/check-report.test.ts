@@ -1,6 +1,10 @@
 import { describe, expect, it } from "vitest";
 import type { CheckReport, TargetReport } from "./check.js";
-import { formatCheckSummary, formatCheckTable } from "./check-report.js";
+import {
+  formatCheckSummary,
+  formatCheckTable,
+  formatCheckTotal,
+} from "./check-report.js";
 
 const MANIFEST: TargetReport = {
   kind: "manifest",
@@ -39,6 +43,7 @@ const report = (
   extra: Partial<CheckReport> = {},
 ): CheckReport => ({
   host: "cdn.test",
+  provider: "cloudflare",
   set: "demo",
   icon: "house",
   version: "abcd1234",
@@ -103,5 +108,62 @@ describe("formatCheckSummary", () => {
       "Хост https://cdn.test, образец demo:house; запросов 9 за 1,2 с.",
     );
     expect(lines.at(-1)).toBe("Итог: не так — проблем 2.");
+  });
+
+  it("второй хост — подсказки про правила зоны CDN Bunny и запись DNS only", () => {
+    const edge: TargetReport = {
+      ...MANIFEST,
+      issues: [
+        {
+          group: "edge",
+          message: "ответ пришёл не от BunnyCDN: Server «cloudflare»",
+        },
+      ],
+    };
+    const lines = formatCheckSummary(
+      report([edge, MISSING], { host: "cdn2.test", provider: "bunny" }),
+    );
+    expect(lines[0]).toContain("кэш на серверах Bunny (CDN-Cache)");
+    const cors = lines.find((l) => l.startsWith("  CORS —"));
+    expect(cors).toContain("«Раздача: CORS и защита»");
+    expect(cors).toContain("встроенный CORS зоны выключен");
+    const cdn = lines.find((l) => l.startsWith("  CDN —"));
+    expect(cdn).toContain("«Раздача: манифест мимо кэша»");
+    expect(cdn).toContain("«DNS only»");
+  });
+});
+
+describe("formatCheckTotal", () => {
+  it("оба хоста в порядке и манифесты совпадают", () => {
+    expect(
+      formatCheckTotal(
+        [
+          report([MANIFEST]),
+          report([MANIFEST], { host: "cdn2.test", provider: "bunny" }),
+        ],
+        [],
+      ),
+    ).toEqual([
+      "Итог по хостам: ок — cdn.test и cdn2.test, манифесты совпадают.",
+    ]);
+  });
+
+  it("не так на хосте и манифесты различаются", () => {
+    const lines = formatCheckTotal(
+      [
+        report([MANIFEST]),
+        report([MISSING], { host: "cdn2.test", provider: "bunny" }),
+      ],
+      [
+        "манифест https://cdn2.test/manifest.json не тот, что на https://cdn.test/manifest.json: demo — a и b",
+      ],
+    );
+    expect(lines[0]).toBe("Хосты между собой — не так:");
+    expect(lines).toContain(
+      "  манифест https://cdn2.test/manifest.json не тот, что на https://cdn.test/manifest.json: demo — a и b",
+    );
+    expect(lines.at(-1)).toBe(
+      "Итог по хостам: не так — cdn2.test, манифесты различаются.",
+    );
   });
 });
