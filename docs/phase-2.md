@@ -86,7 +86,9 @@
 
 1. Откройте адрес иконки в Chrome и DevTools: F12 или Cmd+Option+I на Mac.
 2. Вкладка Network, обновите страницу, кликните по запросу и откройте Headers.
-3. Ищите `cache-control` с `immutable`, `access-control-allow-origin: *` и `content-encoding: br`.
+3. В разделе Response headers — ответ сервера, а не Request headers — ищите `cache-control` с `immutable`, `access-control-allow-origin: *` и `content-encoding`.
+   - Chrome получает сжатие `zstd`: он его понимает, и Cloudflare выбирает его. `br` и `gzip` — другим браузерам и программам.
+   - На обновление страницы ответ — `304 Not Modified`: файл тот же, браузер берёт свою копию, и заголовка сжатия нет. Чтобы скачать файл заново, отметьте во вкладке Network «Disable cache».
 
 Правила Cloudflare, которые добавляют эти заголовки, и полный список проверок `pnpm cdn check` — в ADR-0023.
 

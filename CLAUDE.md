@@ -197,7 +197,7 @@ pnpm cdn check               # проверка живых адресов cdn.ic
 - правило заголовков «Раздача: CORS и защита» — на все ответы хоста, включая 404: `Access-Control-Allow-Origin: *`, `X-Content-Type-Options: nosniff`, `Cross-Origin-Resource-Policy: cross-origin`. CORS — правилом, а не настройкой бакета: бакет ставит его только на запрос с `Origin`, а копия в кэше CDN одна на всех;
 - правило «Раздача: CSP для SVG» — `Content-Security-Policy: default-src 'none'; style-src 'unsafe-inline'; sandbox`, только у `.svg`.
 
-Сжатие `br` и `gzip` Cloudflare делает сам. `OPTIONS` (предварительные запросы) не поддерживаются: простой GET их не делает.
+Сжатие Cloudflare делает сам: Chrome получает `zstd`, остальные — `br` или `gzip`. На обновление страницы ответ — `304` без тела и без заголовка сжатия. `OPTIONS` (предварительные запросы) не поддерживаются: простой GET их не делает.
 
 `pnpm cdn check` проверяет живые адреса; ключи не нужны, сборку команда не запускает.
 - Адреса: манифест, файл сумм и иконка `lucide:heart` (.json и .svg) текущей версии из манифеста, плюс несуществующее имя `_missing` (ждём 404).
