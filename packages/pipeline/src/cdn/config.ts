@@ -55,3 +55,40 @@ export const CACHE_IMMUTABLE = "public, max-age=31536000, immutable";
 export const CACHE_MANIFEST = "public, max-age=300";
 /** Сколько расхождений перечисляет сообщение «СТОП». */
 export const MISMATCH_LIMIT = 5;
+
+// Проверка раздачи по живым адресам (шаг 3 фазы 2, ADR-0023): pnpm cdn check.
+
+/** Образец проверки: имена не пропадают (ADR-0005), поэтому адрес есть в любой версии набора. */
+export const CHECK_SET = "lucide";
+export const CHECK_ICON = "heart";
+/** Имя, которого нет ни в одной версии: «_» запрещён правилом имён (ADR-0001). */
+export const CHECK_MISSING = "_missing";
+/** Origin первого запроса к адресу — как у чужого сайта; второй запрос идёт без Origin. */
+export const CHECK_ORIGIN = "https://example.com";
+/** Ожидание одного ответа и число попыток: с медленного соединения новое подключение — до 10 с. */
+export const CHECK_TIMEOUT_MS = 30_000;
+export const CHECK_MAX_ATTEMPTS = 3;
+/** CORS для всех источников, как у Iconify. */
+export const CORS_ALLOW_ORIGIN = "*";
+/** Заголовки защиты у каждого ответа хоста, включая 404 (имена — строчными, как их отдаёт fetch). */
+export const SECURITY_HEADERS: Readonly<Record<string, string>> = {
+  "x-content-type-options": "nosniff",
+  "cross-origin-resource-policy": "cross-origin",
+};
+/** Политика безопасности SVG: открытый напрямую файл не выполнит код и ничего не загрузит. */
+export const SVG_CSP = "default-src 'none'; style-src 'unsafe-inline'; sandbox";
+/** cf-cache-status файлов версии: ответ из кэша CDN или положен в него (первый запрос — MISS). */
+export const EDGE_CACHED: readonly string[] = [
+  "HIT",
+  "MISS",
+  "EXPIRED",
+  "STALE",
+  "REVALIDATED",
+  "UPDATING",
+];
+/** cf-cache-status манифеста: CDN его не хранит, каждый запрос читает R2. */
+export const EDGE_DIRECT: readonly string[] = ["DYNAMIC", "BYPASS"];
+/** Правила Cloudflare в зоне iconavo.dev — для подсказок; дословно они записаны в ADR-0023. */
+export const CF_CACHE_RULE = "Раздача: кэш по заголовкам файлов";
+export const CF_HEADERS_RULE = "Раздача: CORS и защита";
+export const CF_SVG_RULE = "Раздача: CSP для SVG";
