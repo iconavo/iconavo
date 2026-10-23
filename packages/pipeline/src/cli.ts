@@ -4,7 +4,8 @@
 // | pnpm embed [id…] [--model=…] [--max-rub=N] [--dry-run] | pnpm nearest [запрос…] [--model=…]
 // | pnpm judge [--limit=N] [--max-rub=N] [--dry-run] | pnpm eval [--model=…] [--baseline]
 // | pnpm search-page [--port=N] [--model=…] | pnpm cdn build | pnpm cdn upload [--dry-run]
-// | pnpm cdn verify | pnpm cdn check
+// | pnpm cdn verify | pnpm cdn check | pnpm packages prepare [id…] [--new] [--force]
+// | pnpm packages verify [id…] [--wait=N]
 import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import { basename, join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -88,6 +89,20 @@ import { evalStop, evaluate } from "./eval/run.js";
 import { formatMetadataTable } from "./metadata/report.js";
 import { formatNormalizeReport, renderGallery } from "./normalize/gallery.js";
 import { normalizeSet, type SetNormalizeReport } from "./normalize/run.js";
+import { NPM_OUT_DIR } from "./npm/config.js";
+import { preparePackages, prepareStop } from "./npm/prepare.js";
+import { registryClient } from "./npm/registry.js";
+import {
+  formatNpmVerdict,
+  formatNpmVerifyEntry,
+  formatNpmVerifyTable,
+  formatPrepareReport,
+  formatPrepareSummary,
+  formatPrepareTable,
+  renderNpmVerifyPage,
+  renderPreparePage,
+} from "./npm/report.js";
+import { npmVerifyFailed, verifyPackages } from "./npm/verify.js";
 import { gitHistory, loadBaseline } from "./qc/baseline.js";
 import {
   formatFixtures,
@@ -198,7 +213,17 @@ const USAGE = `Использование:
   pnpm cdn check                      проверить живые адреса обоих хостов (ADR-0023, ADR-0025):
                                       манифест, файл сумм, lucide:heart (.json и .svg) и ответ 404 —
                                       тип, кэш браузера и CDN, CORS, защита, сжатие br и gzip,
-                                      содержимое; затем — что манифесты хостов совпадают; ключи не нужны`;
+                                      содержимое; затем — что манифесты хостов совпадают; ключи не нужны
+  pnpm packages prepare [id…]         пакеты npm @iconavo-ui/icons-{набор} в ${NPM_OUT_DIR}/ (ADR-0026):
+                                      данные, LICENSE, README, типы; версия — по реестру npm (только
+                                      чтение, ключи не нужны); план для CI ${NPM_OUT_DIR}/plan.json;
+                                      сама ничего не публикует; отчёт .cache/reports/npm/index.html
+      --new                           новый пакет тоже: первая версия (ручной запуск в CI)
+      --force                         новая патч-версия даже без изменений
+  pnpm packages verify [id…]          проверка по реестру npm: под тегом — версия с отпечатком сборки
+                                      из data/, файлы те же, provenance из main, доверенная
+                                      публикация; отчёт .cache/reports/npm/verify.html
+      --wait=N                        ждать до N секунд, пока реестр покажет новую версию`;
 
 /** Флаги pnpm pr со ссылками: флаг → поле PrLinks. */
 const LINK_FLAGS: Record<string, keyof PrLinks> = {
@@ -216,6 +241,7 @@ const cacheDir = join(root, ".cache", "sources");
 const dataDir = join(root, "data");
 const reportsDir = join(root, ".cache", "reports");
 const distCdnDir = join(root, "dist-cdn");
+const distNpmDir = join(root, NPM_OUT_DIR);
 const embeddingsDir = join(root, ".cache", "embeddings");
 const evalDir = join(root, "docs", "eval");
 const queriesPath = join(evalDir, "queries.csv");
@@ -257,6 +283,7 @@ let maxCost = DEFAULT_MAX_COST;
 let maxRub = DEFAULT_MAX_RUB;
 let judgeMaxRub = JUDGE_MAX_RUB;
 let port = PAGE_PORT;
+let waitSeconds = 0;
 const modelKeys = new Set<string>();
 for (const flag of flags) {
   const eq = flag.indexOf("=");
@@ -293,6 +320,13 @@ for (const flag of flags) {
   }
   if (command === "eval" && flag === "--baseline") continue;
   if (command === "cdn" && flag === "--dry-run") continue;
+  if (command === "packages") {
+    if (flag === "--new" || flag === "--force") continue;
+    if (name === "--wait" && /^(0|[1-9][0-9]{0,4})$/.test(value ?? "")) {
+      waitSeconds = Number(value);
+      continue;
+    }
+  }
   if (
     command === "search-page" &&
     name === "--port" &&
@@ -908,6 +942,65 @@ try {
     );
     console.log(`Отчёт: ${pagePath}`);
     process.exit((verify ? verifyFailed(upload) : uploadStop(upload)) ? 1 : 0);
+  } else if (command === "packages") {
+    const [sub, ...ids] = args;
+    const allowNew = flags.includes("--new");
+    const force = flags.includes("--force");
+    const wait = flags.some((f) => f.startsWith("--wait="));
+    if (
+      (sub !== "prepare" && sub !== "verify") ||
+      (sub !== "prepare" && (allowNew || force)) ||
+      (sub !== "verify" && wait)
+    ) {
+      usageError(
+        "pnpm packages: нужна подкоманда prepare [id…] [--new] [--force] или verify [id…] [--wait=N].",
+      );
+    }
+    const chosen = pick(ids);
+    const registry = registryClient();
+    const reportDir = join(reportsDir, "npm");
+    await mkdir(reportDir, { recursive: true });
+    if (sub === "prepare") {
+      console.log(
+        `Готовлю пакеты npm в ${NPM_OUT_DIR}/ и сверяюсь с реестром — только чтение, ничего не публикую…`,
+      );
+      const report = await preparePackages(chosen, {
+        dataDir,
+        outDir: distNpmDir,
+        registry,
+        allowNew,
+        force,
+        keep: configs.map((c) => c.id),
+        log: (line) => console.log(line),
+      });
+      console.log("");
+      for (const r of report.packages) {
+        console.log(`${formatPrepareReport(r, report.tag)}\n`);
+      }
+      console.log(formatPrepareTable(report));
+      for (const line of formatPrepareSummary(report)) console.log(line);
+      const htmlPath = join(reportDir, "index.html");
+      await writeFile(htmlPath, renderPreparePage(report), "utf8");
+      console.log(`Отчёт: ${htmlPath}`);
+      process.exit(prepareStop(report) ? 1 : 0);
+    }
+    console.log("Проверяю пакеты в реестре npm…");
+    const report = await verifyPackages(chosen, {
+      dataDir,
+      registry,
+      waitMs: waitSeconds * 1000,
+      log: (line) => console.log(line),
+    });
+    console.log("");
+    for (const e of report.packages) {
+      console.log(`${formatNpmVerifyEntry(e, report.tag)}\n`);
+    }
+    console.log(formatNpmVerifyTable(report));
+    console.log(formatNpmVerdict(report));
+    const htmlPath = join(reportDir, "verify.html");
+    await writeFile(htmlPath, renderNpmVerifyPage(report), "utf8");
+    console.log(`Отчёт: ${htmlPath}`);
+    process.exit(npmVerifyFailed(report) ? 1 : 0);
   } else {
     usageError(
       command ? `Неизвестная команда «${command}».` : "Нужна команда.",

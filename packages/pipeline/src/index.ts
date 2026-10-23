@@ -111,7 +111,16 @@ export {
   resolveChain,
   setFiles,
 } from "./cdn/files.js";
-export { type CdnSet, loadCdnSet, transformedNames } from "./cdn/load.js";
+export {
+  type CdnSet,
+  issuesText,
+  loadCdnSet,
+  loadSetData,
+  readSetFile,
+  rebuildHint,
+  type SetData,
+  transformedNames,
+} from "./cdn/load.js";
 export {
   CDN_STYLE,
   formatCdnReport,
@@ -622,6 +631,71 @@ export {
   normalizeSet,
   type SetNormalizeReport,
 } from "./normalize/run.js";
+export {
+  NPM_FIRST_VERSION,
+  NPM_FORMAT_MAJOR,
+  NPM_OUT_DIR,
+  NPM_PLAN_FILE,
+  NPM_REPOSITORY,
+  NPM_REPOSITORY_URL,
+  NPM_SCOPE,
+  NPM_TAG,
+  NPM_WORKFLOW,
+  npmPackageName,
+} from "./npm/config.js";
+export {
+  compareNames,
+  everPublished,
+  firstLook,
+  firstPublished,
+  type NpmAction,
+  nextVersion,
+} from "./npm/decide.js";
+export {
+  buildPackage,
+  fingerprintOf,
+  INDEX_JS,
+  indexDts,
+  type NpmFile,
+  type NpmPackage,
+  packageJsonOf,
+  readmeText,
+} from "./npm/files.js";
+export { loadNpmSet, type NpmSet, namesOf } from "./npm/load.js";
+export {
+  type NpmPackageReport,
+  type NpmPlan,
+  type NpmPlanEntry,
+  type NpmPrepareReport,
+  PUBLISH_ACTIONS,
+  preparePackages,
+  prepareStop,
+} from "./npm/prepare.js";
+export {
+  type NpmVersionDoc,
+  type Packument,
+  type Provenance,
+  parsePackument,
+  parseProvenance,
+  type RegistryClient,
+  registryClient,
+} from "./npm/registry.js";
+export {
+  formatNpmVerdict,
+  formatNpmVerifyEntry,
+  formatNpmVerifyTable,
+  formatPrepareReport,
+  formatPrepareSummary,
+  formatPrepareTable,
+  renderNpmVerifyPage,
+  renderPreparePage,
+} from "./npm/report.js";
+export {
+  type NpmVerifyEntry,
+  type NpmVerifyReport,
+  npmVerifyFailed,
+  verifyPackages,
+} from "./npm/verify.js";
 export { PRECISION, SUPPORTED_GRIDS, SVGO_CONFIG } from "./optimize/config.js";
 export {
   type OptimizeResult,
