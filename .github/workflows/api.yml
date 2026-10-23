@@ -100,7 +100,7 @@ jobs:
             echo "Сборка $BUILD уже на api.iconavo.dev — выкладывать нечего."
             echo "deploy=false" >> "$GITHUB_OUTPUT"
           else
-            echo "На api.iconavo.dev сборка «${current:-нет ответа}», выкладываю $BUILD."
+            echo "На api.iconavo.dev сборка «${current:-нет ответа}» — нужна выкладка $BUILD (её делает только живой запуск из main)."
             echo "deploy=true" >> "$GITHUB_OUTPUT"
           fi
           {
