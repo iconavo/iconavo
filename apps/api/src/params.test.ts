@@ -39,6 +39,8 @@ describe("parseColor", () => {
       "hsl(a,b,c)",
       "red blue",
       "<b>",
+      "rgb(1\u000b2\u000c3)",
+      "rgb(1\t2\t3)",
     ]) {
       expect(
         code(() => parseColor(value)),

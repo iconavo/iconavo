@@ -64,8 +64,9 @@ export function parseNames(query: URLSearchParams): string[] {
 const HEX = /^#?([0-9a-f]{3}|[0-9a-f]{4}|[0-9a-f]{6}|[0-9a-f]{8})$/i;
 const NAMED = /^[a-z]{3,20}$/i;
 const NUMBER = "[+-]?(?:\\d+(?:\\.\\d+)?|\\.\\d+)(?:%|deg|turn|rad|grad)?";
+// Только обычный пробел: \s пропустил бы управляющие символы, а с ними SVG перестаёт быть XML.
 const FUNCTION = new RegExp(
-  `^(?:rgba?|hsla?)\\(\\s*${NUMBER}(?:\\s*[,\\s/]\\s*${NUMBER}){2,3}\\s*\\)$`,
+  `^(?:rgba?|hsla?)\\( *${NUMBER}(?: *[, /] *${NUMBER}){2,3} *\\)$`,
   "i",
 );
 
