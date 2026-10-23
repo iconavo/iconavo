@@ -7,3 +7,4 @@ dist/
 .cache/
 dist-cdn/
 dist-npm/
+dist-api/

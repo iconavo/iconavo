@@ -134,13 +134,70 @@ function fileExpectation(
   };
 }
 
-interface Fetched {
+export interface Fetched {
   status: number;
   headers: Headers;
   body: Uint8Array;
 }
 
-const shown = (value: string | null) => (value === null ? "нет" : `«${value}»`);
+/** Как ходить по живым адресам: те же повторы у статики и у edge API. */
+export interface LiveGetOptions {
+  fetch: FetchFn;
+  sleep: (ms: number) => Promise<void>;
+  timeoutMs: number;
+  maxAttempts: number;
+  /** Каждая попытка — в счётчик запросов отчёта. */
+  onRequest: () => void;
+}
+
+/** GET с повторами; после последней попытки временный отказ — обычный ответ с неверным кодом. */
+export async function liveGet(
+  url: string,
+  headers: Record<string, string>,
+  o: LiveGetOptions,
+): Promise<Fetched | { error: string }> {
+  for (let attempt = 1; ; attempt++) {
+    let wait: number | undefined;
+    try {
+      o.onRequest();
+      // Перенаправление — тоже неверный ответ; тело читается под тем же ожиданием.
+      const res = await o.fetch(url, {
+        headers,
+        redirect: "manual",
+        signal: AbortSignal.timeout(o.timeoutMs),
+      });
+      const body = new Uint8Array(await res.arrayBuffer());
+      if (!retryable(res.status) || attempt >= o.maxAttempts) {
+        return { status: res.status, headers: res.headers, body };
+      }
+      wait = retryDelay(res.headers.get("retry-after"), attempt);
+    } catch (e) {
+      const name = (e as Error).name;
+      let reason: string;
+      if (name === "TimeoutError" || name === "AbortError") {
+        reason = `нет ответа за ${Math.round(o.timeoutMs / 1000)} с`;
+      } else if (
+        e instanceof TypeError &&
+        (e.message === "fetch failed" || "cause" in e)
+      ) {
+        // Так fetch в Node сообщает о сбое соединения; причина — в cause.
+        const cause = (e as { cause?: { code?: string } }).cause?.code;
+        reason = `сбой сети${cause ? ` (${cause})` : ""}: ${e.message}`;
+      } else {
+        return { error: (e as Error).message };
+      }
+      if (attempt >= o.maxAttempts) {
+        return {
+          error: `${reason} — не получилось за ${o.maxAttempts} попыток`,
+        };
+      }
+    }
+    await o.sleep(wait ?? retryDelay(null, attempt));
+  }
+}
+
+export const shown = (value: string | null) =>
+  value === null ? "нет" : `«${value}»`;
 
 /** Имя заголовка как в DevTools: x-content-type-options → X-Content-Type-Options. */
 const label = (name: string) =>
@@ -150,7 +207,7 @@ const label = (name: string) =>
   );
 
 /** Заголовок не с тем значением — что пришло и что ждём; совпал — undefined. */
-function mismatch(
+export function mismatch(
   headers: Headers,
   name: string,
   want: string,
@@ -162,8 +219,8 @@ function mismatch(
     : `${label(name)}: ${shown(got)} вместо «${want}»${suffix}`;
 }
 
-function addIssue(
-  target: TargetReport,
+export function addIssue(
+  target: Pick<TargetReport, "issues">,
   group: CheckGroup,
   message: string | undefined,
 ) {
@@ -206,52 +263,20 @@ export async function checkCdn(
   const maxAttempts = options.maxAttempts ?? CHECK_MAX_ATTEMPTS;
   const started = now();
   let requests = 0;
-
-  /** GET с повторами; после последней попытки временный отказ — обычный ответ с неверным кодом. */
-  async function get(
+  const live: LiveGetOptions = {
+    fetch: fetchFn,
+    sleep,
+    timeoutMs,
+    maxAttempts,
+    onRequest: () => {
+      requests++;
+    },
+  };
+  const get = (
     path: string,
     headers: Record<string, string>,
     scheme: "https" | "http" = "https",
-  ): Promise<Fetched | { error: string }> {
-    for (let attempt = 1; ; attempt++) {
-      let wait: number | undefined;
-      try {
-        requests++;
-        // Перенаправление — тоже неверный ответ; тело читается под тем же ожиданием.
-        const res = await fetchFn(`${scheme}://${host}/${path}`, {
-          headers,
-          redirect: "manual",
-          signal: AbortSignal.timeout(timeoutMs),
-        });
-        const body = new Uint8Array(await res.arrayBuffer());
-        if (!retryable(res.status) || attempt >= maxAttempts) {
-          return { status: res.status, headers: res.headers, body };
-        }
-        wait = retryDelay(res.headers.get("retry-after"), attempt);
-      } catch (e) {
-        const name = (e as Error).name;
-        let reason: string;
-        if (name === "TimeoutError" || name === "AbortError") {
-          reason = `нет ответа за ${Math.round(timeoutMs / 1000)} с`;
-        } else if (
-          e instanceof TypeError &&
-          (e.message === "fetch failed" || "cause" in e)
-        ) {
-          // Так fetch в Node сообщает о сбое соединения; причина — в cause.
-          const cause = (e as { cause?: { code?: string } }).cause?.code;
-          reason = `сбой сети${cause ? ` (${cause})` : ""}: ${e.message}`;
-        } else {
-          return { error: (e as Error).message };
-        }
-        if (attempt >= maxAttempts) {
-          return {
-            error: `${reason} — не получилось за ${maxAttempts} попыток`,
-          };
-        }
-      }
-      await sleep(wait ?? retryDelay(null, attempt));
-    }
-  }
+  ) => liveGet(`${scheme}://${host}/${path}`, headers, live);
 
   /** Манифест по http://: постоянный переход на тот же адрес по https. */
   async function checkRedirect(): Promise<TargetReport> {

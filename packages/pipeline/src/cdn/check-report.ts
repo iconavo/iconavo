@@ -76,8 +76,14 @@ const LEGENDS: Record<CdnProvider, string> = {
     "HTTPS — переход с http:// на https://, Тип — Content-Type, Кэш — Cache-Control, CDN — кэш на серверах Bunny (CDN-Cache) и Server, Защита — nosniff, CORP и у SVG CSP, Файл — схема или контрольная сумма.",
 };
 
+/** Адрес в таблице — статики или edge API. */
+export type CheckedTarget = Pick<
+  TargetReport,
+  "path" | "status" | "checked" | "issues"
+>;
+
 /** Ячейка группы: код ответа или «ок», «не так»; не проверялась — «—». */
-function cell(t: TargetReport, group: CheckGroup): string {
+function cell(t: CheckedTarget, group: CheckGroup): string {
   if (!t.checked.includes(group)) return "—";
   if (t.issues.some((i) => i.group === group)) {
     return group === "status" && t.status === undefined ? "нет" : "не так";
@@ -85,19 +91,24 @@ function cell(t: TargetReport, group: CheckGroup): string {
   return group === "status" ? String(t.status) : "ок";
 }
 
-/** Таблица «адрес × проверки». */
-export function formatCheckTable(r: CheckReport): string {
+/** Таблица «адрес × проверки» для любых адресов. */
+export function targetsTable(targets: readonly CheckedTarget[]): string {
   const head = [
     "Адрес",
     ...CHECK_GROUPS.map((g) => CHECK_GROUP_TITLES[g]),
     "Итог",
   ];
-  const rows = r.targets.map((t) => [
+  const rows = targets.map((t) => [
     t.path,
     ...CHECK_GROUPS.map((g) => cell(t, g)),
     t.issues.length === 0 ? "ок" : "не так",
   ]);
   return textTable(head, rows, head.length);
+}
+
+/** Таблица «адрес × проверки» хоста раздачи. */
+export function formatCheckTable(r: CheckReport): string {
+  return targetsTable(r.targets);
 }
 
 /** Строки после таблицы: расшифровка колонок, что не так и где поправить, итог хоста. */
