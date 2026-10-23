@@ -6,8 +6,10 @@
 // (ADR-0025). Сжатие оба CDN делают сами. К файлу — два запроса: с Origin и «br, gzip», как у чужого
 // сайта, и без Origin только с gzip — так видно второе сжатие и то, что CORS не зависит от Origin
 // (копия в кэше CDN одна на всех). Server показывает, что ответ пришёл от CDN этого хоста: запись
-// cdn2 через прокси Cloudflare лишила бы второй хост независимости. Ключи не нужны: адреса
-// открытые. Повторы — как у выгрузки (storage.ts).
+// cdn2 через прокси Cloudflare лишила бы второй хост независимости. Последний адрес — манифест по
+// http://: ждём постоянный переход на тот же адрес по https (Always Use HTTPS у Cloudflare, Force
+// SSL у Bunny). Браузеры и так открывают .dev только по https, переход нужен программам. Ключи не
+// нужны: адреса открытые. Повторы — как у выгрузки (storage.ts).
 
 import type { z } from "zod";
 import { retryable, retryDelay } from "../embed/client.js";
@@ -25,6 +27,7 @@ import {
   CHECK_TIMEOUT_MS,
   CHECKSUMS_SUFFIX,
   CORS_ALLOW_ORIGIN,
+  HTTPS_REDIRECTS,
   MANIFEST_FILE,
   R2_CDN,
   SECURITY_HEADERS,
@@ -38,6 +41,7 @@ import { contentTypeOf } from "./upload.js";
 /** Группы проверок — колонки таблицы, в этом порядке. */
 export const CHECK_GROUPS = [
   "status",
+  "https",
   "type",
   "cache",
   "edge",
@@ -48,8 +52,14 @@ export const CHECK_GROUPS = [
 ] as const;
 export type CheckGroup = (typeof CHECK_GROUPS)[number];
 
-/** Вид адреса — от него зависят ожидания. */
-export type CheckKind = "manifest" | "checksums" | "json" | "svg" | "missing";
+/** Вид адреса — от него зависят ожидания; redirect — манифест по http://. */
+export type CheckKind =
+  | "manifest"
+  | "checksums"
+  | "json"
+  | "svg"
+  | "missing"
+  | "redirect";
 
 export interface CheckIssue {
   group: CheckGroup;
@@ -58,7 +68,7 @@ export interface CheckIssue {
 
 export interface TargetReport {
   kind: CheckKind;
-  /** Путь от корня хоста: manifest.json, v/{версия}/… */
+  /** Путь от корня хоста: manifest.json, v/{версия}/…; у перехода — «manifest.json по http». */
   path: string;
   /** Код ответа на первый запрос; ответа не было — undefined. */
   status?: number;
@@ -112,7 +122,7 @@ interface FileExpectation {
 }
 
 function fileExpectation(
-  kind: Exclude<CheckKind, "missing">,
+  kind: Exclude<CheckKind, "missing" | "redirect">,
   path: string,
 ): FileExpectation {
   const manifest = kind === "manifest";
@@ -201,13 +211,14 @@ export async function checkCdn(
   async function get(
     path: string,
     headers: Record<string, string>,
+    scheme: "https" | "http" = "https",
   ): Promise<Fetched | { error: string }> {
     for (let attempt = 1; ; attempt++) {
       let wait: number | undefined;
       try {
         requests++;
         // Перенаправление — тоже неверный ответ; тело читается под тем же ожиданием.
-        const res = await fetchFn(`https://${host}/${path}`, {
+        const res = await fetchFn(`${scheme}://${host}/${path}`, {
           headers,
           redirect: "manual",
           signal: AbortSignal.timeout(timeoutMs),
@@ -242,9 +253,45 @@ export async function checkCdn(
     }
   }
 
+  /** Манифест по http://: постоянный переход на тот же адрес по https. */
+  async function checkRedirect(): Promise<TargetReport> {
+    const target: TargetReport = {
+      kind: "redirect",
+      path: `${MANIFEST_FILE} по http`,
+      checked: ["status"],
+      issues: [],
+    };
+    const res = await get(MANIFEST_FILE, {}, "http");
+    if ("error" in res) {
+      addIssue(target, "status", res.error);
+      return target;
+    }
+    target.status = res.status;
+    target.checked.push("https");
+    if (!HTTPS_REDIRECTS.includes(res.status)) {
+      addIssue(
+        target,
+        "https",
+        `http:// не переводит на https: ответ ${res.status} вместо ${HTTPS_REDIRECTS.join(" или ")}`,
+      );
+    } else {
+      addIssue(
+        target,
+        "https",
+        mismatch(
+          res.headers,
+          "location",
+          `https://${host}/${MANIFEST_FILE}`,
+          " — переход не на тот же адрес по https",
+        ),
+      );
+    }
+    return target;
+  }
+
   /** Заголовки адреса; тело — только у файла раздачи с ответом 200. */
   async function checkTarget(
-    kind: CheckKind,
+    kind: Exclude<CheckKind, "redirect">,
     path: string,
   ): Promise<{ target: TargetReport; body?: Uint8Array }> {
     const target: TargetReport = {
@@ -434,6 +481,8 @@ export async function checkCdn(
     stop.push(
       `версия набора «${set}» неизвестна — файлы версии не проверялись`,
     );
+    // Переход на https от версии не зависит — его видно и без манифеста.
+    done(await checkRedirect());
     return report();
   }
 
@@ -481,6 +530,7 @@ export async function checkCdn(
     `${base}/${set}/${CHECK_MISSING}.json`,
   );
   done(missing.target);
+  done(await checkRedirect());
   return report(version);
 }
 

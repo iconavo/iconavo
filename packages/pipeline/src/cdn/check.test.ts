@@ -27,6 +27,7 @@ const SUMS = `v/${VERSION}/demo.checksums.json`;
 const JSON_PATH = `v/${VERSION}/demo/house.json`;
 const SVG_PATH = `v/${VERSION}/demo/house.svg`;
 const MISSING = `v/${VERSION}/demo/_missing.json`;
+const REDIRECT = `${MANIFEST_FILE} по http`;
 
 const bytes = (text: string) => new Uint8Array(Buffer.from(text, "utf8"));
 const file = (path: string, text: string): CdnFile => {
@@ -60,6 +61,7 @@ function bucket(): Map<string, Uint8Array> {
 }
 
 interface FakeRequest {
+  scheme: "https" | "http";
   path: string;
   headers: Record<string, string>;
   redirect?: RequestRedirect;
@@ -89,6 +91,14 @@ function goodReply(
     "x-content-type-options": "nosniff",
     "cross-origin-resource-policy": "cross-origin",
   };
+  // По http — постоянный переход на тот же адрес по https.
+  if (req.scheme === "http") {
+    return {
+      status: 301,
+      headers: { ...common, location: `https://${cdn.host}/${req.path}` },
+      body: bytes(""),
+    };
+  }
   if (req.path.endsWith(".svg")) common["content-security-policy"] = SVG_CSP;
   const body = files.get(req.path);
   if (body === undefined) {
@@ -127,6 +137,7 @@ function fakeCdn(
     if (url.host !== cdn.host)
       throw new Error(`тест: неожиданный адрес ${url.href}`);
     const req: FakeRequest = {
+      scheme: url.protocol === "http:" ? "http" : "https",
       path: url.pathname.slice(1),
       headers: { ...(init?.headers as Record<string, string>) },
       redirect: init?.redirect,
@@ -169,7 +180,7 @@ const groupsOf = (r: CheckReport, path: string) =>
   issuesOf(r, path).map((i) => i.group);
 
 describe("checkCdn", () => {
-  it("настроенная раздача: пять адресов «ок», девять запросов", async () => {
+  it("настроенная раздача: шесть адресов «ок», десять запросов", async () => {
     const { report, requests, sleeps, lines } = await check();
     expect(checkFailed(report)).toBe(false);
     expect(report.version).toBe(VERSION);
@@ -180,7 +191,9 @@ describe("checkCdn", () => {
       ["json", JSON_PATH, 200],
       ["svg", SVG_PATH, 200],
       ["missing", MISSING, 404],
+      ["redirect", REDIRECT, 301],
     ]);
+    expect(target(report, REDIRECT)?.checked).toEqual(["status", "https"]);
     expect(target(report, SVG_PATH)?.checked).toEqual([
       "status",
       "cors",
@@ -206,6 +219,12 @@ describe("checkCdn", () => {
       SVG_PATH,
       SVG_PATH,
       MISSING,
+      MANIFEST_FILE,
+    ]);
+    // Только последний запрос — по http, за переходом на https.
+    expect(requests.map((r) => r.scheme)).toEqual([
+      ...Array(9).fill("https"),
+      "http",
     ]);
     // Первый запрос — как у чужого сайта; второй — только gzip и без Origin.
     expect(requests[0]?.headers).toEqual({
@@ -214,7 +233,7 @@ describe("checkCdn", () => {
     });
     expect(requests[1]?.headers).toEqual({ "accept-encoding": "gzip" });
     expect(requests.every((r) => r.redirect === "manual")).toBe(true);
-    expect(report.requests).toBe(9);
+    expect(report.requests).toBe(10);
     expect(sleeps).toEqual([]);
     expect(lines).toEqual([
       `${MANIFEST_FILE} — ок`,
@@ -222,7 +241,48 @@ describe("checkCdn", () => {
       `${JSON_PATH} — ок`,
       `${SVG_PATH} — ок`,
       `${MISSING} — ок`,
+      `${REDIRECT} — ок`,
     ]);
+  });
+
+  it("http:// без перехода на https или с переходом не туда — не так", async () => {
+    const plain = await check((req, reply) =>
+      req.scheme === "http"
+        ? {
+            status: 200,
+            headers: without(reply.headers, "location"),
+            body: bytes("{}"),
+          }
+        : undefined,
+    );
+    expect(issuesOf(plain.report, REDIRECT)).toEqual([
+      {
+        group: "https",
+        message: "http:// не переводит на https: ответ 200 вместо 301 или 308",
+      },
+    ]);
+    expect(target(plain.report, REDIRECT)?.status).toBe(200);
+    const elsewhere = await check((req, reply) =>
+      req.scheme === "http"
+        ? {
+            ...reply,
+            headers: { ...reply.headers, location: "https://example.com/" },
+          }
+        : undefined,
+    );
+    expect(issuesOf(elsewhere.report, REDIRECT)).toEqual([
+      {
+        group: "https",
+        message: `Location: «https://example.com/» вместо «https://${HOST}/${MANIFEST_FILE}» — переход не на тот же адрес по https`,
+      },
+    ]);
+    // Остальные адреса это не трогает.
+    expect(
+      checkFailed({
+        ...plain.report,
+        targets: plain.report.targets.slice(0, 5),
+      }),
+    ).toBe(false);
   });
 
   it("до правил Cloudflare: нет CORS и защиты, JSON версии не кэшируется", async () => {
@@ -240,7 +300,7 @@ describe("checkCdn", () => {
       return { ...reply, headers };
     });
     expect(checkFailed(report)).toBe(true);
-    for (const t of report.targets) {
+    for (const t of report.targets.filter((t) => t.kind !== "redirect")) {
       expect(t.issues.filter((i) => i.group === "cors")).toEqual([
         {
           group: "cors",
@@ -471,7 +531,10 @@ describe("checkCdn", () => {
       bytes(manifestText([{ id: "other", version: VERSION, lastModified: 1 }])),
     );
     const { report, requests } = await check(undefined, files);
-    expect(report.targets.map((t) => t.path)).toEqual([MANIFEST_FILE]);
+    expect(report.targets.map((t) => t.path)).toEqual([
+      MANIFEST_FILE,
+      REDIRECT,
+    ]);
     expect(issuesOf(report, MANIFEST_FILE)).toEqual([
       { group: "body", message: "в манифесте нет набора «demo»" },
     ]);
@@ -479,7 +542,7 @@ describe("checkCdn", () => {
       "версия набора «demo» неизвестна — файлы версии не проверялись",
     ]);
     expect(report.version).toBeUndefined();
-    expect(requests).toHaveLength(2);
+    expect(requests).toHaveLength(3);
     expect(checkFailed(report)).toBe(true);
   });
 
@@ -502,8 +565,8 @@ describe("checkCdn", () => {
     );
     expect(checkFailed(report)).toBe(false);
     expect(sleeps).toEqual([1000]);
-    expect(requests).toHaveLength(10);
-    expect(report.requests).toBe(10);
+    expect(requests).toHaveLength(11);
+    expect(report.requests).toBe(11);
   });
 
   it("временный отказ повторяется по Retry-After, после последней попытки остаётся ответом", async () => {
@@ -579,7 +642,7 @@ describe("checkCdn", () => {
 });
 
 describe("checkCdn: второй хост — Bunny", () => {
-  it("настроенная раздача: пять адресов «ок», тот же порядок запросов", async () => {
+  it("настроенная раздача: шесть адресов «ок», тот же порядок запросов", async () => {
     const { report, requests } = await check(undefined, bucket(), BUNNY);
     expect(checkFailed(report)).toBe(false);
     expect(report.host).toBe("cdn2.test");
@@ -587,7 +650,7 @@ describe("checkCdn: второй хост — Bunny", () => {
     expect(report.manifest).toBe(
       Buffer.from(bucket().get(MANIFEST_FILE) ?? []).toString(),
     );
-    expect(requests).toHaveLength(9);
+    expect(requests).toHaveLength(10);
   });
 
   it("запись cdn2 через прокси Cloudflare — ответ не от BunnyCDN", async () => {

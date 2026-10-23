@@ -60,14 +60,44 @@ describe("formatCheckTable", () => {
       "\n",
     );
     expect(lines[0]).toMatch(
-      /^Адрес\s+Ответ\s+Тип\s+Кэш\s+CDN\s+CORS\s+Защита\s+Сжатие\s+Файл\s+Итог$/,
+      /^Адрес\s+Ответ\s+HTTPS\s+Тип\s+Кэш\s+CDN\s+CORS\s+Защита\s+Сжатие\s+Файл\s+Итог$/,
     );
-    expect(lines[1]).toMatch(/^manifest\.json\s+200(\s+ок){8}$/);
+    expect(lines[1]).toMatch(/^manifest\.json\s+200\s+—(\s+ок){8}$/);
     expect(lines[2]).toMatch(
-      /^v\/abcd1234\/demo\/_missing\.json\s+404\s+—\s+—\s+—\s+не так\s+ок\s+—\s+—\s+не так$/,
+      /^v\/abcd1234\/demo\/_missing\.json\s+404\s+—\s+—\s+—\s+—\s+не так\s+ок\s+—\s+—\s+не так$/,
     );
     expect(lines[3]).toMatch(
-      /^v\/abcd1234\/demo\/house\.svg\s+нет(\s+—){7}\s+не так$/,
+      /^v\/abcd1234\/demo\/house\.svg\s+нет(\s+—){8}\s+не так$/,
+    );
+  });
+
+  it("переход с http: код ответа и колонка HTTPS, остальное — «—»", () => {
+    const redirect: TargetReport = {
+      kind: "redirect",
+      path: "manifest.json по http",
+      status: 200,
+      checked: ["status", "https"],
+      issues: [
+        {
+          group: "https",
+          message:
+            "http:// не переводит на https: ответ 200 вместо 301 или 308",
+        },
+      ],
+    };
+    const lines = formatCheckTable(report([redirect])).split("\n");
+    expect(lines[1]).toMatch(
+      /^manifest\.json по http\s+200\s+не так(\s+—){7}\s+не так$/,
+    );
+    const summary = formatCheckSummary(report([redirect]));
+    expect(summary).toContain(
+      "  HTTPS — переход на https — настройка зоны iconavo.dev в Cloudflare: SSL/TLS → Edge Certificates → Always Use HTTPS (ADR-0023)",
+    );
+    const bunny = formatCheckSummary(
+      report([redirect], { host: "cdn2.test", provider: "bunny" }),
+    );
+    expect(bunny.find((l) => l.startsWith("  HTTPS —"))).toContain(
+      "Force SSL у адреса cdn2.iconavo.dev",
     );
   });
 });

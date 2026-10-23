@@ -27,6 +27,7 @@ import {
 /** Заголовки колонок таблицы. */
 export const CHECK_GROUP_TITLES: Record<CheckGroup, string> = {
   status: "Ответ",
+  https: "HTTPS",
   type: "Тип",
   cache: "Кэш",
   edge: "CDN",
@@ -41,6 +42,8 @@ export const CHECK_HINTS: Record<CdnProvider, Record<CheckGroup, string>> = {
   cloudflare: {
     status:
       "файлы раздачи выкладывает «Выкладка» (pnpm cdn upload, ADR-0022); «нет ответа» — сбой сети или хоста",
+    https:
+      "переход на https — настройка зоны iconavo.dev в Cloudflare: SSL/TLS → Edge Certificates → Always Use HTTPS (ADR-0023)",
     type: "Content-Type хранится у объекта R2 и задаётся выгрузкой (ADR-0022)",
     cache: `Cache-Control хранится у объекта R2 и задаётся выгрузкой (ADR-0022); если у объекта он верный, его переписал Cloudflare — в правиле кэша «${CF_CACHE_RULE}» Browser TTL должен быть «Respect origin»`,
     edge: `правило кэша Cloudflare «${CF_CACHE_RULE}»: всё на хосте, кроме /manifest.json (ADR-0023); Server не cloudflare — запрос прошёл мимо Cloudflare`,
@@ -53,6 +56,8 @@ export const CHECK_HINTS: Record<CdnProvider, Record<CheckGroup, string>> = {
   bunny: {
     status:
       "файлы раздачи выкладывает «Выкладка» (pnpm cdn upload, ADR-0025); «нет ответа» — сбой сети или хоста, а у нового хоста — запись cdn2 в DNS Cloudflare или сертификат зоны CDN Bunny",
+    https:
+      "переход на https — Force SSL у адреса cdn2.iconavo.dev: зона CDN Bunny → General → Hostnames (ADR-0025)",
     type: `Bunny отдаёт тип по расширению, без charset: Content-Type с charset ставят правила зоны CDN Bunny «${BUNNY_JSON_TYPE_RULE}» и «${BUNNY_SVG_TYPE_RULE}» (ADR-0025)`,
     cache: `Cache-Control ставят правила зоны CDN Bunny «${BUNNY_CACHE_RULE}» и «${BUNNY_MANIFEST_RULE}» (ADR-0025)`,
     edge: `правила зоны CDN Bunny «${BUNNY_CACHE_RULE}» (файлы версий — в кэш CDN) и «${BUNNY_MANIFEST_RULE}» (манифест — мимо кэша), Smart Cache выключен (ADR-0025); Server не BunnyCDN — запись cdn2 в DNS Cloudflare должна быть «DNS only» (серое облако)`,
@@ -66,9 +71,9 @@ export const CHECK_HINTS: Record<CdnProvider, Record<CheckGroup, string>> = {
 
 const LEGENDS: Record<CdnProvider, string> = {
   cloudflare:
-    "Тип — Content-Type, Кэш — Cache-Control, CDN — кэш на серверах Cloudflare (cf-cache-status) и Server, Защита — nosniff, CORP и у SVG CSP, Файл — схема или контрольная сумма.",
+    "HTTPS — переход с http:// на https://, Тип — Content-Type, Кэш — Cache-Control, CDN — кэш на серверах Cloudflare (cf-cache-status) и Server, Защита — nosniff, CORP и у SVG CSP, Файл — схема или контрольная сумма.",
   bunny:
-    "Тип — Content-Type, Кэш — Cache-Control, CDN — кэш на серверах Bunny (CDN-Cache) и Server, Защита — nosniff, CORP и у SVG CSP, Файл — схема или контрольная сумма.",
+    "HTTPS — переход с http:// на https://, Тип — Content-Type, Кэш — Cache-Control, CDN — кэш на серверах Bunny (CDN-Cache) и Server, Защита — nosniff, CORP и у SVG CSP, Файл — схема или контрольная сумма.",
 };
 
 /** Ячейка группы: код ответа или «ок», «не так»; не проверялась — «—». */
