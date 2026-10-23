@@ -5,7 +5,7 @@
 // | pnpm judge [--limit=N] [--max-rub=N] [--dry-run] | pnpm eval [--model=…] [--baseline]
 // | pnpm search-page [--port=N] [--model=…] | pnpm cdn build | pnpm cdn upload [--dry-run]
 // | pnpm cdn verify | pnpm cdn check | pnpm packages prepare [id…] [--new] [--force]
-// | pnpm packages verify [id…] [--wait=N]
+// | pnpm packages verify [id…] [--wait=N] [--plan=…]
 import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import { basename, join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -102,7 +102,7 @@ import {
   renderNpmVerifyPage,
   renderPreparePage,
 } from "./npm/report.js";
-import { npmVerifyFailed, verifyPackages } from "./npm/verify.js";
+import { npmVerifyFailed, readPlan, verifyPackages } from "./npm/verify.js";
 import { gitHistory, loadBaseline } from "./qc/baseline.js";
 import {
   formatFixtures,
@@ -223,7 +223,8 @@ const USAGE = `Использование:
   pnpm packages verify [id…]          проверка по реестру npm: под тегом — версия с отпечатком сборки
                                       из data/, файлы те же, provenance из main, доверенная
                                       публикация; отчёт .cache/reports/npm/verify.html
-      --wait=N                        ждать до N секунд, пока реестр покажет новую версию`;
+      --wait=N                        ждать до N секунд, пока реестр покажет новую версию и её подпись
+      --plan=…                        план подготовки (dist-npm/plan.json): ждать ровно выпущенные версии`;
 
 /** Флаги pnpm pr со ссылками: флаг → поле PrLinks. */
 const LINK_FLAGS: Record<string, keyof PrLinks> = {
@@ -284,6 +285,7 @@ let maxRub = DEFAULT_MAX_RUB;
 let judgeMaxRub = JUDGE_MAX_RUB;
 let port = PAGE_PORT;
 let waitSeconds = 0;
+let planPath: string | undefined;
 const modelKeys = new Set<string>();
 for (const flag of flags) {
   const eq = flag.indexOf("=");
@@ -322,6 +324,10 @@ for (const flag of flags) {
   if (command === "cdn" && flag === "--dry-run") continue;
   if (command === "packages") {
     if (flag === "--new" || flag === "--force") continue;
+    if (name === "--plan" && value !== undefined && value !== "") {
+      planPath = value;
+      continue;
+    }
     if (name === "--wait" && /^(0|[1-9][0-9]{0,4})$/.test(value ?? "")) {
       waitSeconds = Number(value);
       continue;
@@ -946,14 +952,16 @@ try {
     const [sub, ...ids] = args;
     const allowNew = flags.includes("--new");
     const force = flags.includes("--force");
-    const wait = flags.some((f) => f.startsWith("--wait="));
+    const wait = flags.some(
+      (f) => f.startsWith("--wait=") || f.startsWith("--plan="),
+    );
     if (
       (sub !== "prepare" && sub !== "verify") ||
       (sub !== "prepare" && (allowNew || force)) ||
       (sub !== "verify" && wait)
     ) {
       usageError(
-        "pnpm packages: нужна подкоманда prepare [id…] [--new] [--force] или verify [id…] [--wait=N].",
+        "pnpm packages: нужна подкоманда prepare [id…] [--new] [--force] или verify [id…] [--wait=N] [--plan=…].",
       );
     }
     const chosen = pick(ids);
@@ -988,6 +996,7 @@ try {
     const report = await verifyPackages(chosen, {
       dataDir,
       registry,
+      expected: planPath === undefined ? undefined : await readPlan(planPath),
       waitMs: waitSeconds * 1000,
       log: (line) => console.log(line),
     });

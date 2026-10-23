@@ -12,7 +12,12 @@ import {
   packageFiles,
   writeNpmDemoSet,
 } from "./fixture.testing.js";
-import { npmVerifyFailed, verifyPackages } from "./verify.js";
+import {
+  expectedFromPlan,
+  npmVerifyFailed,
+  readPlan,
+  verifyPackages,
+} from "./verify.js";
 
 const NAME = "@iconavo-ui/icons-demo";
 const DEMO: NpmDemoSet = {
@@ -69,11 +74,14 @@ function clock() {
 const verify = (
   packages: Record<string, FakePackage | FakePackage[]>,
   waitMs = 0,
+  expected?: Record<string, string>,
 ) => {
   const c = clock();
   return verifyPackages(configs, {
     dataDir,
     registry: fakeRegistry(packages).client,
+    expected:
+      expected === undefined ? undefined : new Map(Object.entries(expected)),
     waitMs,
     pollMs: 20_000,
     now: c.now,
@@ -214,5 +222,88 @@ describe("verifyPackages", () => {
     expect(bad.report.packages[0]?.problems).toEqual([
       expect.stringContaining("версия 1.0.1 выложена токеном"),
     ]);
+  });
+});
+
+describe("ожидание выпущенной версии (npm показывает её через минуты)", () => {
+  it("по плану ждёт ровно выпущенную версию, даже с тем же отпечатком", async () => {
+    const old = await version("1.0.0", { trusted: false });
+    const fresh = await version("1.0.1");
+    const { report, sleeps } = await verify(
+      {
+        [NAME]: [
+          { versions: [old], tags: { next: "1.0.0" } },
+          { versions: [old, fresh], tags: { next: "1.0.1" } },
+        ],
+      },
+      60_000,
+      { demo: "1.0.1" },
+    );
+    expect(sleeps).toEqual([20_000]);
+    expect(report.packages[0]).toMatchObject({
+      status: "ok",
+      version: "1.0.1",
+      publisher: "trusted",
+    });
+  });
+
+  it("версия видна, а подпись ещё нет — ждёт и её", async () => {
+    const v = await version("1.0.0", { trusted: false, provenanceLag: 1 });
+    const { report, sleeps } = await verify(
+      { [NAME]: { versions: [v], tags: { next: "1.0.0" } } },
+      60_000,
+    );
+    expect(sleeps).toEqual([20_000]);
+    expect(report.packages[0]?.status).toBe("ok");
+  });
+
+  it("срок вышел, а выпущенной версии нет — не так, с объяснением", async () => {
+    const old = await version("1.0.0", { trusted: false });
+    const { report, sleeps } = await verify(
+      { [NAME]: { versions: [old], tags: { next: "1.0.0" } } },
+      40_000,
+      { demo: "1.0.1" },
+    );
+    expect(sleeps).toEqual([20_000, 20_000]);
+    expect(report.packages[0]?.problems).toEqual([
+      expect.stringContaining(
+        "под тегом next — 1.0.0, а запуск выпускал 1.0.1",
+      ),
+    ]);
+  });
+
+  it("пакета нет, а запуск его выпускал — ждёт и сообщает", async () => {
+    const { report, sleeps } = await verify({}, 20_000, { demo: "1.0.0" });
+    expect(sleeps).toEqual([20_000]);
+    expect(report.packages[0]?.problems).toEqual([
+      expect.stringContaining("пакета нет в npm, а запуск выпускал 1.0.0"),
+    ]);
+  });
+
+  it("пакета нет и запуск его не выпускал — ждать нечего", async () => {
+    const { report, sleeps } = await verify({}, 60_000);
+    expect(sleeps).toEqual([]);
+    expect(report.packages[0]?.status).toBe("awaiting");
+  });
+});
+
+describe("план подготовки", () => {
+  it("берутся только пакеты к публикации", () => {
+    expect(
+      expectedFromPlan({
+        tag: "next",
+        packages: [
+          { id: "lucide", version: "1.0.1", publish: true, files: [] },
+          { id: "tabler", version: "1.0.0", publish: false },
+        ],
+      }),
+    ).toEqual(new Map([["lucide", "1.0.1"]]));
+    expect(() => expectedFromPlan({ packages: [{ id: "x" }] })).toThrow();
+  });
+
+  it("плана нет на диске — ошибка с подсказкой", async () => {
+    await expect(readPlan(join(root, "none.json"))).rejects.toThrow(
+      "не читается — его пишет pnpm packages prepare",
+    );
   });
 });

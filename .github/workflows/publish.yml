@@ -261,7 +261,13 @@ jobs:
           node-version: 24
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      # Реестр показывает новую версию не сразу: после публикации ждём до 10 минут.
+      # План «Подготовки»: какие версии выпустил этот запуск — проверка ждёт именно их.
+      - uses: actions/download-artifact@v8
+        with:
+          name: dist-npm
+          path: dist-npm
+      # npm показывает новую версию и её подпись после своей проверки — через минуты (23 октября 2026
+      # самый большой пакет ждал 5 минут): после публикации ждём до 15 минут.
       - name: Проверить пакеты в npm
         env:
           SETS: ${{ needs.prepare.outputs.sets }}
@@ -269,11 +275,11 @@ jobs:
         run: |
           set -f
           case $PUBLISHED in
-            success) wait=600 ;;
+            success) wait=900 ;;
             failure) wait=120 ;;
             *) wait=0 ;;
           esac
-          pnpm packages verify $SETS --wait=$wait | tee "$RUNNER_TEMP/verify.txt"
+          pnpm packages verify $SETS --wait=$wait --plan=dist-npm/plan.json | tee "$RUNNER_TEMP/verify.txt"
       - name: Сводка
         if: always()
         run: |
