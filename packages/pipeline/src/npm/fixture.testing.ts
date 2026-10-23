@@ -101,6 +101,8 @@ export interface FakeVersion {
   trusted?: boolean;
   /** Подпись provenance: по умолчанию верная, null — подписи нет. */
   provenance?: Provenance | null;
+  /** Сколько первых запросов подписи она ещё «не готова»: так npm отдаёт её после своей проверки. */
+  provenanceLag?: number;
   /** Время выхода; по умолчанию — по порядку в списке. */
   time?: string;
 }
@@ -122,6 +124,7 @@ export function fakeRegistry(
   const calls: string[] = [];
   const asked = new Map<string, number>();
   const byTarball = new Map<string, FakeVersion>();
+  const provenanceAsked = new Map<FakeVersion, number>();
   const client: RegistryClient = {
     async packument(name) {
       calls.push(`packument ${name}`);
@@ -180,6 +183,11 @@ export function fakeRegistry(
       calls.push(`provenance ${doc.version}`);
       const v = byTarball.get(doc.tarball);
       if (v?.provenance === null) return undefined;
+      if (v !== undefined) {
+        const asked = provenanceAsked.get(v) ?? 0;
+        provenanceAsked.set(v, asked + 1);
+        if (asked < (v.provenanceLag ?? 0)) return undefined;
+      }
       return (
         v?.provenance ?? {
           repository: NPM_REPOSITORY,

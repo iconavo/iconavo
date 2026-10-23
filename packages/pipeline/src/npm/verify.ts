@@ -1,9 +1,14 @@
 // Команда pnpm packages verify (шаг 5 фазы 2, ADR-0026): что в npm лежат ровно наши пакеты. Ожидаемое
-// собирается заново из data/, а не берётся из плана: так проверка работает и после сбоя прошлого
-// запуска, и по расписанию. Под тегом — версия с нашим отпечатком; архив побайтно равен сборке; есть
-// подпись provenance из нашего репозитория, workflow и ветки; выложено доверенной публикацией — токен
-// допустим только у самой первой версии. Пакета ещё нет — предупреждение, а не ошибка.
+// содержимое собирается заново из data/: так проверка работает и после сбоя прошлого запуска, и по
+// расписанию. Под тегом — версия с нашим отпечатком; архив побайтно равен сборке; есть подпись
+// provenance из нашего репозитория, workflow и ветки; выложено доверенной публикацией — токен допустим
+// только у самой первой версии. Пакета ещё нет — предупреждение, а не ошибка. npm показывает новую
+// версию и её подпись не сразу, а после своей проверки — через минуты, поэтому проверка ждёт: по плану
+// запуска — ровно выпущенную версию (у «новой версии без изменений» отпечаток прежний), без плана —
+// наш отпечаток.
 
+import { readFile } from "node:fs/promises";
+import { z } from "zod";
 import type { SourceConfig } from "../sources/config.js";
 import {
   NPM_POLL_MS,
@@ -18,6 +23,7 @@ import { buildPackage, packageJsonOf } from "./files.js";
 import { loadNpmSet } from "./load.js";
 import {
   integrityHex,
+  type NpmVersionDoc,
   type Packument,
   type Provenance,
   type RegistryClient,
@@ -55,7 +61,9 @@ export interface NpmVerifyReport {
 export interface VerifyOptions {
   dataDir: string;
   registry: RegistryClient;
-  /** Сколько ждать, пока реестр покажет версию с нашим отпечатком: после публикации он отстаёт. */
+  /** Набор → версия, которую выпустил этот запуск (из плана): ждём именно её под тегом. */
+  expected?: ReadonlyMap<string, string>;
+  /** Сколько ждать, пока реестр покажет новую версию и её подпись: после публикации он отстаёт. */
   waitMs?: number;
   pollMs?: number;
   tag?: string;
@@ -66,6 +74,35 @@ export interface VerifyOptions {
 
 export const npmVerifyFailed = (r: NpmVerifyReport) =>
   r.packages.some((p) => p.status === "failed");
+
+const planSchema = z.object({
+  packages: z.array(
+    z.object({
+      id: z.string().min(1),
+      version: z.string().min(1),
+      publish: z.boolean(),
+    }),
+  ),
+});
+
+/** Что выпустил запуск: набор → версия из plan.json подготовки — только пакеты к публикации. */
+export function expectedFromPlan(json: unknown): Map<string, string> {
+  const plan = planSchema.parse(json);
+  return new Map(
+    plan.packages.filter((p) => p.publish).map((p) => [p.id, p.version]),
+  );
+}
+
+/** plan.json с диска; не читается или не по схеме — ошибка с путём. */
+export async function readPlan(path: string): Promise<Map<string, string>> {
+  try {
+    return expectedFromPlan(JSON.parse(await readFile(path, "utf8")));
+  } catch {
+    throw new Error(
+      `план ${path} не читается — его пишет pnpm packages prepare`,
+    );
+  }
+}
 
 /** Версия под тегом и её запись в реестре. */
 function tagged(p: Packument | undefined, tag: string) {
@@ -84,6 +121,8 @@ export async function verifyPackages(
     options.sleep ?? ((ms) => new Promise((done) => setTimeout(done, ms)));
   const now = options.now ?? Date.now;
   const log = options.log ?? (() => {});
+  // Срок один на весь запуск: пакеты выходят вместе, и npm проверяет их одновременно.
+  const deadline = now() + waitMs;
   const packages: NpmVerifyEntry[] = [];
   for (const config of configs) {
     const entry: NpmVerifyEntry = {
@@ -98,17 +137,39 @@ export async function verifyPackages(
       const set = await loadNpmSet(config, options.dataDir);
       const pkg = buildPackage(set, tag);
       entry.fingerprint = pkg.fingerprint;
-      // Реестр показывает новую версию не сразу: ждём наш отпечаток под тегом до срока.
-      const deadline = now() + waitMs;
-      let p = await options.registry.packument(pkg.name);
-      while (tagged(p, tag)?.fingerprint !== pkg.fingerprint) {
+      const expected = options.expected?.get(config.id);
+      // Реестр показывает новую версию и её подпись не сразу: ждём их под тегом до срока.
+      let p: Packument | undefined;
+      let doc: NpmVersionDoc | undefined;
+      let prov: Provenance | undefined;
+      for (;;) {
+        p = await options.registry.packument(pkg.name);
+        doc = tagged(p, tag);
+        prov = undefined;
+        const arrived =
+          doc !== undefined &&
+          doc.fingerprint === pkg.fingerprint &&
+          (expected === undefined || doc.version === expected);
+        if (arrived && doc?.attestationsUrl !== undefined) {
+          prov = await options.registry.provenance(doc);
+        }
+        if (arrived && prov !== undefined) break;
+        // Пакета нет и этот запуск его не выпускал — ждать нечего.
+        if (p === undefined && expected === undefined) break;
         const left = deadline - now();
         if (left <= 0) break;
-        log(`${pkg.name}: жду, пока реестр покажет новую версию…`);
+        log(
+          `${pkg.name}: жду, пока реестр покажет ${expected ?? "новую версию"} и её подпись…`,
+        );
         await sleep(Math.min(pollMs, left));
-        p = await options.registry.packument(pkg.name);
       }
       if (p === undefined) {
+        if (expected !== undefined) {
+          entry.problems.push(
+            `пакета нет в npm, а запуск выпускал ${expected}: npm ещё проверяет новый пакет или публикация не прошла — повторите «Проверку» позже`,
+          );
+          continue;
+        }
         entry.status = "awaiting";
         entry.notes.push(
           "пакета ещё нет в npm: первая версия выходит только при ручном запуске с «первой публикацией» (ADR-0026)",
@@ -116,13 +177,18 @@ export async function verifyPackages(
         continue;
       }
       entry.latest = p.distTags.latest;
-      const doc = tagged(p, tag);
       if (doc === undefined) {
         entry.problems.push(`в npm нет тега ${tag}`);
         continue;
       }
       entry.version = doc.version;
       entry.published = doc.fingerprint;
+      if (expected !== undefined && doc.version !== expected) {
+        entry.problems.push(
+          `под тегом ${tag} — ${doc.version}, а запуск выпускал ${expected}: npm ещё проверяет новую версию (это занимает минуты) или публикация не прошла — повторите «Проверку» позже`,
+        );
+        continue;
+      }
       if (doc.fingerprint !== pkg.fingerprint) {
         entry.problems.push(
           `под тегом ${tag} версия ${doc.version} с другим отпечатком: эта сборка data/ в npm не вышла — повторите запуск «Публикации в npm»`,
@@ -131,15 +197,15 @@ export async function verifyPackages(
       }
 
       const published = await options.registry.files(doc);
-      const expected = new Map(
+      const wanted = new Map(
         [...pkg.files, packageJsonOf(set, tag, pkg, doc.version)].map((f) => [
           f.path,
           f.data,
         ]),
       );
-      const missing = [...expected.keys()].filter((f) => !published.has(f));
-      const extra = [...published.keys()].filter((f) => !expected.has(f));
-      const different = [...expected]
+      const missing = [...wanted.keys()].filter((f) => !published.has(f));
+      const extra = [...published.keys()].filter((f) => !wanted.has(f));
+      const different = [...wanted]
         .filter(([path, data]) => {
           const got = published.get(path);
           return (
@@ -162,41 +228,38 @@ export async function verifyPackages(
           `файлы в npm отличаются от сборки: ${different.sort(order).join(", ")}`,
         );
       }
-      entry.files = expected.size;
+      entry.files = wanted.size;
 
       if (doc.attestationsUrl === undefined) {
         entry.problems.push(`у версии ${doc.version} нет подписи provenance`);
+      } else if (prov === undefined) {
+        entry.problems.push(
+          `подпись provenance версии ${doc.version} не прочитать: npm ещё готовит её или её нет — повторите «Проверку» позже`,
+        );
       } else {
-        const prov = await options.registry.provenance(doc);
-        if (prov === undefined) {
+        entry.provenance = prov;
+        if (prov.repository !== NPM_REPOSITORY) {
           entry.problems.push(
-            `подпись provenance версии ${doc.version} не прочитать`,
+            `provenance: репозиторий ${prov.repository ?? "—"}, а не ${NPM_REPOSITORY}`,
           );
-        } else {
-          entry.provenance = prov;
-          if (prov.repository !== NPM_REPOSITORY) {
-            entry.problems.push(
-              `provenance: репозиторий ${prov.repository ?? "—"}, а не ${NPM_REPOSITORY}`,
-            );
-          }
-          if (prov.workflow !== NPM_WORKFLOW) {
-            entry.problems.push(
-              `provenance: workflow ${prov.workflow ?? "—"}, а не ${NPM_WORKFLOW}`,
-            );
-          }
-          if (prov.ref !== NPM_PUBLISH_REF) {
-            entry.problems.push(
-              `provenance: ветка ${prov.ref ?? "—"}, а не ${NPM_PUBLISH_REF}`,
-            );
-          }
-          if (
-            doc.integrity === undefined ||
-            prov.sha512 !== integrityHex(doc.integrity)
-          ) {
-            entry.problems.push(
-              "provenance подписывает другой архив: SHA-512 не совпадает с реестром",
-            );
-          }
+        }
+        if (prov.workflow !== NPM_WORKFLOW) {
+          entry.problems.push(
+            `provenance: workflow ${prov.workflow ?? "—"}, а не ${NPM_WORKFLOW}`,
+          );
+        }
+        if (prov.ref !== NPM_PUBLISH_REF) {
+          entry.problems.push(
+            `provenance: ветка ${prov.ref ?? "—"}, а не ${NPM_PUBLISH_REF}`,
+          );
+        }
+        if (
+          doc.integrity === undefined ||
+          prov.sha512 !== integrityHex(doc.integrity)
+        ) {
+          entry.problems.push(
+            "provenance подписывает другой архив: SHA-512 не совпадает с реестром",
+          );
         }
       }
 
