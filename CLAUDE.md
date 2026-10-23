@@ -8,7 +8,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Состояние проекта
 
-Монорепозиторий создан (фаза 0, шаг 9): pnpm workspaces, TypeScript, Biome, Vitest, size-limit, CI в `.github/workflows/ci.yml` и `data.yml`, робот обновления наборов — `update.yml`, выкладка раздачи на два хоста — `deploy.yml`, их ежедневная сверка — `verify.yml`. Код пока ранний: заготовка `packages/core` (проверка имени иконки по ADR-0001), `packages/schema` (схемы набора, фаза 1 шаг 1) и `packages/pipeline` (реестр источников и загрузчик, шаг 2; конфиги пяти наборов в `sources/`; санитайзер SVG, шаг 3; нормализация и галерея, шаг 4; SVGO и сборка `data/`, шаг 5; контроль качества, шаг 6; метаданные и лицензии, шаг 7; журнал изменений и версии наборов, шаг 8; автообновление в CI, шаг 9; обогащение ИИ, шаг 10; эмбеддинги, шаг 11; прототип поиска, разметка эталона и замер, шаг 12 — выбрана модель `google/gemini-embedding-001` с длиной вектора 1024, цель — строгий Hit@5 90% для ru и en, ADR-0010, ADR-0021). В `data/{набор}/` — собранные `icons.json`, `info.json`, `metadata.json`, `search.json`, `LICENSE`, `changelog.json` и `CHANGELOG.md` пяти наборов (описания и синонимы ru/en — у всех базовых иконок, ADR-0046); векторы трёх моделей — только локально в `.cache/embeddings/` (ADR-0047); эталон поиска и его разметка — в `docs/eval/` (ADR-0048), `apps/` пуста. Фаза 1 закрыта 21 октября 2026, чек-лист готовности в `docs/phase-1.md` отмечен. Фаза 2, доставка (`docs/phase-2.md`): шаг 1 — сборка раздачи `pnpm cdn build` в `dist-cdn/` (не в git, ADR-0022); шаг 2 — выгрузка в бакет R2 `iconavo-cdn` (`pnpm cdn upload`, workflow «Выкладка» в `deploy.yml`, домен `cdn.iconavo.dev`); шаг 3 — заголовки и кэш: три правила Cloudflare и проверка `pnpm cdn check` (ADR-0023); шаг 4 — второй хост Bunny `cdn2.iconavo.dev`: выгрузка на два хоста, сверка `pnpm cdn verify` и ежедневная «Сверка хостов» (ADR-0025); дальше — шаг 5, публикация в npm.
+Монорепозиторий создан (фаза 0, шаг 9): pnpm workspaces, TypeScript, Biome, Vitest, size-limit, CI в `.github/workflows/ci.yml` и `data.yml`, робот обновления наборов — `update.yml`, выкладка раздачи на два хоста — `deploy.yml`, их ежедневная сверка — `verify.yml`, публикация пакетов данных в npm — `publish.yml`. Код пока ранний: заготовка `packages/core` (проверка имени иконки по ADR-0001), `packages/schema` (схемы набора, фаза 1 шаг 1) и `packages/pipeline` (реестр источников и загрузчик, шаг 2; конфиги пяти наборов в `sources/`; санитайзер SVG, шаг 3; нормализация и галерея, шаг 4; SVGO и сборка `data/`, шаг 5; контроль качества, шаг 6; метаданные и лицензии, шаг 7; журнал изменений и версии наборов, шаг 8; автообновление в CI, шаг 9; обогащение ИИ, шаг 10; эмбеддинги, шаг 11; прототип поиска, разметка эталона и замер, шаг 12 — выбрана модель `google/gemini-embedding-001` с длиной вектора 1024, цель — строгий Hit@5 90% для ru и en, ADR-0010, ADR-0021). В `data/{набор}/` — собранные `icons.json`, `info.json`, `metadata.json`, `search.json`, `LICENSE`, `changelog.json` и `CHANGELOG.md` пяти наборов (описания и синонимы ru/en — у всех базовых иконок, ADR-0046); векторы трёх моделей — только локально в `.cache/embeddings/` (ADR-0047); эталон поиска и его разметка — в `docs/eval/` (ADR-0048), `apps/` пуста. Фаза 1 закрыта 21 октября 2026, чек-лист готовности в `docs/phase-1.md` отмечен. Фаза 2, доставка (`docs/phase-2.md`): шаг 1 — сборка раздачи `pnpm cdn build` в `dist-cdn/` (не в git, ADR-0022); шаг 2 — выгрузка в бакет R2 `iconavo-cdn` (`pnpm cdn upload`, workflow «Выкладка» в `deploy.yml`, домен `cdn.iconavo.dev`); шаг 3 — заголовки и кэш: три правила Cloudflare и проверка `pnpm cdn check` (ADR-0023); шаг 4 — второй хост Bunny `cdn2.iconavo.dev`: выгрузка на два хоста, сверка `pnpm cdn verify` и ежедневная «Сверка хостов» (ADR-0025); шаг 5 — пакеты данных `@iconavo-ui/icons-{набор}` в npm: `pnpm packages prepare` и `verify`, workflow «Публикация в npm» в `publish.yml`, доверенная публикация с provenance, тег `next` (ADR-0026); дальше — шаг 6, мониторинг и расходы.
 
 План и решения — в `docs/`, ADR — в `docs/adr/`. Начинай с `docs/README.md`: там оглавление, а `docs/roadmap.md` даёт фазы и сроки (запуск 1 июня 2027). Фазы 0–3 подробно расписаны в `docs/phase-0.md` … `docs/phase-3.md` вместе с готовыми промптами. Если нужного решения в ADR нет — спроси, не придумывай.
 
@@ -30,7 +30,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - Имя иконки — `набор:иконка`, части по `^[a-z0-9]+(-[a-z0-9]+)*$`, префиксы как у Iconify (`lucide`, `tabler`, `material-symbols`, `ph`, `fluent-emoji-flat`). Имя без двоеточия не принимается.
 - Иконки никогда не удаляются: пропавшие помечаются `hidden`, переименованные становятся алиасами.
 - Файлы данных совместимы с IconifyJSON; данные поиска лежат отдельно в `search.json`.
-- Пакеты — semver, до запуска 0.x, публикация в npm только из CI с provenance, тег `next` до запуска.
+- Пакеты — semver: для разработчиков до запуска 0.x, пакеты данных — с 1.0.0 (ADR-0005, ADR-0026); публикация в npm только из CI с provenance, тег `next` до запуска.
 - Первые наборы: Lucide, Tabler, Material Symbols, Phosphor, Fluent Emoji Flat — только с разрешительными лицензиями.
 
 ## Формат набора (ADR-0003)
@@ -69,6 +69,8 @@ pnpm cdn build               # папка раздачи dist-cdn/ из data/ (A
 pnpm cdn upload [--dry-run]  # сборка + выгрузка недостающих файлов в R2, затем в Bunny, манифесты — в конце (ADR-0022, ADR-0025); ключи R2_* и BUNNY_STORAGE_PASSWORD из .env; --dry-run — только сравнить
 pnpm cdn verify              # сверка хостов: оба хранилища против сборки, ничего не пишет; код 1 при расхождении (ADR-0025); ключи те же
 pnpm cdn check               # проверка живых адресов cdn и cdn2.iconavo.dev: тип, кэш, CORS, защита, сжатие, содержимое, одинаковые манифесты (ADR-0023, ADR-0025); ключи не нужны
+pnpm packages prepare [id…] [--new] [--force]   # пакеты npm в dist-npm/ и план версий по реестру npm (ADR-0026); только чтение, ключи не нужны, сама не публикует
+pnpm packages verify [id…] [--wait=N]           # в npm ровно эта сборка: отпечаток, файлы, provenance из main, доверенная публикация (ADR-0026)
 ```
 
 Источники наборов (ADR-0012): конфиг на набор — `sources/{id}.ts` (экспорт по умолчанию, `satisfies SourceConfigInput`, имя файла = префикс набора; папки с SVG и правила имён вариантов — список `svgFolders`; сетка набора `grid` и, если холст источника другой, `sourceGrid` — ADR-0014; автор `author`, лицензия `license`, формат метаданных автора `metadata`, карта вариантов `suffixes`, витрина `samples` — ADR-0017), версии закреплены в `sources.lock.json`, скачанное лежит в `.cache/sources/{id}/{версия}/` (не в git). `pnpm sources fetch [id…]` скачивает по lock (при первом запуске набора закрепляет последнюю версию) и проверяет имена: нарушение правила или конфликт имён — «СТОП» и код выхода 1 (ADR-0001); повторный запуск без изменений не использует сеть, а при смене правил скачивания (папки, файлы метаданных) набор скачивается заново; git-источники приходят без перевода строк под систему; `pnpm sources pin <id> [версия|коммит]` меняет версию — `sources.lock.json` правь только этой командой. Для git в lock нужен полный хэш коммита, не ветка. Без версии `pin` берёт последнюю: у npm — `latest`, у git — последний коммит основной ветки автора, а при `source.latest: "tag"` (Lucide) — свежий тег выпуска вида `1.60.0` (ADR-0012). Код — `packages/pipeline/src/sources/`.
@@ -232,6 +234,45 @@ pnpm cdn check               # проверка живых адресов cdn и
 - Независимость неполная: DNS домена — Cloudflare. `iconavo.b-cdn.net` от него не зависит — кандидат в запасной список ядра (фаза 3).
 - Первая полная выгрузка в Bunny — 22 октября 2026, из CI ручным запуском «Выкладки» с ветки PR: 88 659 файлов за 18 мин 51 с, сверка по SHA-256 сошлась. 404 внутри `v/` у Bunny кэшируется на год — допустимо: версии неизменяемы, а файлы ложатся раньше манифеста.
 
+Пакеты npm (ADR-0026, шаг 5 фазы 2): пакет на набор `@iconavo-ui/icons-{набор}`. Внутри — `icons.json`, `info.json`, `metadata.json` побайтно из `data/`, `LICENSE` (и `NOTICE`, если есть у автора), `index.js` (ESM, три JSON через `import … with { type: "json" }`), `index.d.ts` (типы без зависимостей) и README на английском; `search.json` в пакет не идёт. Папка `dist-npm/{набор}/` — в корне, не в git.
+- `pnpm packages prepare [набор…] [--new] [--force]` — папки пакетов и план для CI `dist-npm/plan.json`. Реестр npm только читается, ключи не нужны, сама команда ничего не публикует. Повтор без изменений не пишет ни байта. Отчёт — `.cache/reports/npm/index.html`.
+  - Версия: отпечаток пакета (SHA-256 файлов и `package.json` без номера; лежит в `package.json` → `iconavo.fingerprint`) сравнивается с версией под тегом `next`.
+    - Отпечаток тот же — «без изменений».
+    - Новые имена — средняя цифра, остальное — последняя, `NPM_FORMAT_MAJOR` — первая.
+    - Пакета нет — `1.0.0`, только с `--new`; без него — «ждёт первой публикации», не ошибка.
+    - Номер — от самой старшей когда-либо вышедшей версии, даже снятой.
+  - «СТОП» — плана нет, CI ничего не публикует:
+    - пропало имя опубликованной версии;
+    - версии набора из npm нет в `changelog.json`: в npm данные новее;
+    - версия в npm без отметки `iconavo`;
+    - набор не читается.
+  - `--force` — последняя цифра без изменений: проверка доверенной публикации после её включения.
+- `pnpm packages verify [набор…] [--wait=N]` — пакеты собираются заново из `data/` и сверяются с реестром. Отчёт — `.cache/reports/npm/verify.html`. Проверяется:
+  - под тегом — наш отпечаток; команда ждёт до N секунд, пока реестр его покажет;
+  - архив побайтно тот же;
+  - provenance из `iconavo/iconavo`, `publish.yml`, `refs/heads/main`;
+  - выложено доверенной публикацией: токен допустим только у первой версии.
+- Workflow «Публикация в npm» (`.github/workflows/publish.yml`). Запуски:
+  - `push` в `main` при изменении `data/**` или кода `src/npm/`;
+  - раз в сутки в 06:37 UTC — при сбое GitHub пришлёт письмо;
+  - вручную: наборы, «первая публикация новых пакетов», «новая версия без изменений», «только показ»;
+  - на PR — только показ.
+
+  Публикует только «живой» запуск: `main`, не показ, и `main` не ушёл вперёд. Задачи:
+  - «Подготовка» — `pnpm packages prepare`, сверка файлов с `npm pack --dry-run`, артефакт `dist-npm`.
+  - «Публикация» — окружение GitHub `npm` (публиковать из него можно только из `main`), право только `id-token: write`, без checkout и `pnpm install`. Перед каждым пакетом — реестр ещё раз: версия уже есть — пропуск, под тегом не та версия, от которой считал план, — «план устарел». Затем `npm publish --provenance --ignore-scripts`.
+  - «Проверка» — `pnpm packages verify` на каждом «живом» запуске.
+- Первая версия нового пакета. Доверенную публикацию npm включает только у пакета, который уже есть в реестре, поэтому:
+  1. временный токен — в секрет `NPM_TOKEN` окружения `npm`;
+  2. ручной запуск с «первой публикацией»;
+  3. секрет удалить, токен отозвать;
+  4. владелец включает Trusted Publisher: `iconavo` / `iconavo` / `publish.yml` / `npm`, Allowed actions — npm publish;
+  5. в течение 2 дней — ручной запуск с «новой версией без изменений»;
+  6. «Require two-factor authentication and disallow tokens».
+
+  Дословно — в ADR-0026. Не переименовывай `publish.yml` и окружение `npm`: к ним привязана доверенная публикация.
+- Тег до запуска — `NPM_TAG = "next"`, в день запуска — `"latest"`. Константы — `src/npm/config.ts`, код — `src/npm/`.
+
 Проверка файла набора по схеме: `pnpm validate <файл>` (вид по имени `icons|info|metadata|search|changelog.json` или `--kind`). Код выхода 0 — ошибок нет, 1 — есть ошибки, 2 — неверный вызов. Примеры: `packages/schema/examples/{valid,broken}/`.
 
 `size-limit` читает собранные файлы из `dist/`, поэтому перед `pnpm size` запускай `pnpm typecheck`.
@@ -247,4 +288,4 @@ pnpm cdn check               # проверка живых адресов cdn и
 
 ## Ключи
 
-Имена ключей — в `.env.example`, значения — в локальном `.env` (в git не попадает) и в секретах GitHub Actions. `ANTHROPIC_API_KEY` — обогащение иконок (`pnpm enrich` читает `.env` сам через `--env-file-if-exists`). Вместо ключей OpenAI и Google для эмбеддингов (шаг 12 фазы 0, ADR-0007) временно используется агрегатор Polza AI: `POLZA_API_KEY` (`pnpm embed` и `pnpm nearest` читают `.env` сами). `UPDATE_APP_CLIENT_ID` и `UPDATE_APP_PRIVATE_KEY` — приложение GitHub робота обновления (ADR-0019), только в секретах GitHub Actions. `R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID` и `R2_SECRET_ACCESS_KEY` — бакет R2 раздачи (`pnpm cdn upload` и `verify` читают `.env` сами, ADR-0022): токен «Object Read & Write» только на бакет `iconavo-cdn`, в CI — секреты Actions. `BUNNY_STORAGE_PASSWORD` — пароль хранилища Bunny второго хоста (ADR-0025): Password, не Read-only; в CI — секрет Actions, локально нужен только для показа и сверки. Значения ключей читай только из переменных окружения; не открывай `.env` и не выводи его содержимое.
+Имена ключей — в `.env.example`, значения — в локальном `.env` (в git не попадает) и в секретах GitHub Actions. `ANTHROPIC_API_KEY` — обогащение иконок (`pnpm enrich` читает `.env` сам через `--env-file-if-exists`). Вместо ключей OpenAI и Google для эмбеддингов (шаг 12 фазы 0, ADR-0007) временно используется агрегатор Polza AI: `POLZA_API_KEY` (`pnpm embed` и `pnpm nearest` читают `.env` сами). `UPDATE_APP_CLIENT_ID` и `UPDATE_APP_PRIVATE_KEY` — приложение GitHub робота обновления (ADR-0019), только в секретах GitHub Actions. `R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID` и `R2_SECRET_ACCESS_KEY` — бакет R2 раздачи (`pnpm cdn upload` и `verify` читают `.env` сами, ADR-0022): токен «Object Read & Write» только на бакет `iconavo-cdn`, в CI — секреты Actions. `BUNNY_STORAGE_PASSWORD` — пароль хранилища Bunny второго хоста (ADR-0025): Password, не Read-only; в CI — секрет Actions, локально нужен только для показа и сверки. У npm локального ключа нет: публикует только CI доверенной публикацией (ADR-0026). `NPM_TOKEN` — временный секрет окружения GitHub `npm` только на время первой публикации нового пакета; после неё секрет удаляется, токен отзывается. Значения ключей читай только из переменных окружения; не открывай `.env` и не выводи его содержимое.

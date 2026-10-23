@@ -6,3 +6,4 @@ dist/
 !.env.example
 .cache/
 dist-cdn/
+dist-npm/
