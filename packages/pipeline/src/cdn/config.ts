@@ -74,6 +74,8 @@ export const CHECK_TIMEOUT_MS = 30_000;
 export const CHECK_MAX_ATTEMPTS = 3;
 /** CORS для всех источников, как у Iconify. */
 export const CORS_ALLOW_ORIGIN = "*";
+/** Переход с http:// на https:// — постоянный: 301 отдают Cloudflare и Bunny, 308 тоже годится. */
+export const HTTPS_REDIRECTS: readonly number[] = [301, 308];
 /** Заголовки защиты у каждого ответа хоста, включая 404 (имена — строчными, как их отдаёт fetch). */
 export const SECURITY_HEADERS: Readonly<Record<string, string>> = {
   "x-content-type-options": "nosniff",
