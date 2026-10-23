@@ -26,7 +26,8 @@
     "search-page": "tsc -b && node --env-file-if-exists=.env packages/pipeline/dist/cli.js search-page",
     "cdn": "tsc -b && node --env-file-if-exists=.env packages/pipeline/dist/cli.js cdn",
     "packages": "tsc -b && node packages/pipeline/dist/cli.js packages",
-    "check": "pnpm lint && pnpm typecheck && pnpm test && pnpm size"
+    "api": "tsc -b && node packages/pipeline/dist/cli.js api",
+    "check": "pnpm lint && pnpm typecheck && pnpm api build && pnpm test && pnpm size"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.5.15",

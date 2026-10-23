@@ -1,0 +1,182 @@
+name: Edge API
+
+# Функция edge API на api.iconavo.dev (ADR-0024, шаг 7 фазы 2): пачки иконок, SVG с параметрами и
+# CSS поверх файлов раздачи в R2. Три задачи. «Сборка» — pnpm api build: один ES-модуль
+# dist-api/worker.js и тело metadata запроса загрузки; если на api.iconavo.dev уже эта сборка
+# (заголовок X-Iconavo-Build), выкладывать нечего. «Выкладка» — из окружения api (выкладывать из него
+# можно только из main): один запрос curl к API Cloudflare загружает функцию и сразу её выкладывает;
+# в задаче нет ни checkout, ни pnpm install — ключ видит только curl. «Проверка» — pnpm api check:
+# живой адрес отвечает этой сборкой и сходится со статикой. Выкладывает только «живой» запуск — из
+# main, не «только показ», и когда main не ушёл вперёд. Ключи: CLOUDFLARE_API_TOKEN — секрет
+# окружения api (право Account · Workers Scripts · Edit), R2_ACCOUNT_ID — идентификатор того же
+# аккаунта Cloudflare. Функцию iconavo-api, домен api.iconavo.dev и выключенный workers.dev владелец
+# настроил в панели один раз (ADR-0024). Откат — откат PR: запуск от main выложит прежнюю сборку.
+# Что функция собирается, на каждом PR проверяет CI; PR с правкой этого файла — только показ.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "apps/api/**"
+      - "packages/core/**"
+      - "packages/pipeline/src/api/**"
+      - "pnpm-lock.yaml"
+      - ".github/workflows/api.yml"
+  # Проверка самого workflow на PR — только показ: секретов и права выкладывать там нет.
+  pull_request:
+    paths:
+      - ".github/workflows/api.yml"
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: Только собрать и показать, ничего не выкладывать
+        type: boolean
+        default: false
+
+permissions: {}
+
+# Выкладки из main не пересекаются и не прерываются: следующая ждёт текущую. Показы с веток и PR —
+# в своих группах: в общей они отменяли бы ждущую выкладку.
+concurrency:
+  group: ${{ github.ref == 'refs/heads/main' && github.event_name != 'pull_request' && 'api' || format('api-{0}', github.ref) }}
+  cancel-in-progress: false
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  build:
+    name: Сборка
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    outputs:
+      live: ${{ steps.live.outputs.live }}
+      build: ${{ steps.build.outputs.build }}
+      deploy: ${{ steps.deployed.outputs.deploy }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      # «Живой» запуск: main и не «только показ», а main за это время не ушёл вперёд по коду функции —
+      # иначе запоздавший запуск выложил бы старую сборку поверх новой.
+      - name: Живой запуск?
+        id: live
+        env:
+          EVENT: ${{ github.event_name }}
+          DRY_RUN: ${{ inputs.dry_run == true }}
+        run: |
+          live=false
+          if [ "$GITHUB_REF" = refs/heads/main ] && [ "$EVENT" != pull_request ] && [ "$DRY_RUN" != true ]; then
+            git fetch --quiet --no-tags --depth=1 origin "+refs/heads/main:refs/remotes/origin/main"
+            if git diff --quiet origin/main HEAD -- apps/api/ packages/core/ packages/pipeline/src/api/ pnpm-lock.yaml .github/workflows/api.yml; then
+              live=true
+            else
+              echo "::warning::main ушёл вперёд — этот запуск только показывает; выкладывает запуск от свежего main."
+            fi
+          fi
+          echo "live=$live" >> "$GITHUB_OUTPUT"
+      - name: Собрать функцию
+        id: build
+        run: |
+          pnpm api build
+          echo "build=$(jq -r .build dist-api/build.json)" >> "$GITHUB_OUTPUT"
+      # Та же сборка уже отвечает — выкладывать нечего. Нет ответа или другая сборка — выкладываем.
+      - name: Уже выложена?
+        id: deployed
+        env:
+          BUILD: ${{ steps.build.outputs.build }}
+        run: |
+          current=$(curl -sS --max-time 30 -o /dev/null -D - "https://api.iconavo.dev/lucide/heart.svg" | tr -d '\r' | awk -F': ' 'tolower($1) == "x-iconavo-build" { print $2 }' || true)
+          if [ "$current" = "$BUILD" ]; then
+            echo "Сборка $BUILD уже на api.iconavo.dev — выкладывать нечего."
+            echo "deploy=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "На api.iconavo.dev сборка «${current:-нет ответа}» — нужна выкладка $BUILD (её делает только живой запуск из main)."
+            echo "deploy=true" >> "$GITHUB_OUTPUT"
+          fi
+          {
+            echo "### Сборка"
+            echo "- функция $BUILD: $(jq -r '"\(.bytes) байт, в gzip \(.gzipBytes)"' dist-api/build.json)"
+            echo "- на api.iconavo.dev: ${current:-нет ответа}"
+          } >> "$GITHUB_STEP_SUMMARY"
+      # Бандл и metadata — для задачи «Выкладка»: она ничего не собирает сама.
+      - uses: actions/upload-artifact@v7
+        with:
+          name: dist-api
+          path: dist-api/
+          if-no-files-found: error
+
+  deploy:
+    name: Выкладка
+    needs: build
+    if: needs.build.outputs.live == 'true' && needs.build.outputs.deploy == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    # Окружение api: выкладывать из него можно только из main; ключ Cloudflare — его секрет.
+    environment: api
+    permissions: {}
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          name: dist-api
+          path: dist-api
+      - name: Загрузить функцию в Cloudflare
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          ACCOUNT_ID: ${{ secrets.R2_ACCOUNT_ID }}
+          BUILD: ${{ needs.build.outputs.build }}
+        run: |
+          if [ -z "$CLOUDFLARE_API_TOKEN" ] || [ -z "$ACCOUNT_ID" ]; then
+            echo "::error::Нет секрета CLOUDFLARE_API_TOKEN окружения api или R2_ACCOUNT_ID (ADR-0024)"
+            exit 1
+          fi
+          if ! [[ $ACCOUNT_ID =~ ^[0-9a-f]{32}$ ]]; then
+            echo "::error::R2_ACCOUNT_ID — не 32 шестнадцатеричных знака"
+            exit 1
+          fi
+          # Загрузка сразу выкладывает новую версию функции; модуль, дата совместимости и привязка R2 —
+          # из metadata.json. Домен и выключенный workers.dev остаются как настроены в панели.
+          code=$(curl -sS --max-time 120 --retry 3 -o "$RUNNER_TEMP/deploy.json" -w "%{http_code}" \
+            -X PUT "https://api.cloudflare.com/client/v4/accounts/$ACCOUNT_ID/workers/scripts/iconavo-api" \
+            -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
+            -F "metadata=@dist-api/metadata.json;type=application/json" \
+            -F "worker.js=@dist-api/worker.js;type=application/javascript+module" || echo 000)
+          if [ "$code" != 200 ] || ! jq -e '.success == true' "$RUNNER_TEMP/deploy.json" > /dev/null 2>&1; then
+            echo "::error::Cloudflare ответил $code: $(jq -c '.errors // .' "$RUNNER_TEMP/deploy.json" 2> /dev/null | head -c 1000)"
+            exit 1
+          fi
+          echo "- выложена сборка $BUILD" >> "$GITHUB_STEP_SUMMARY"
+
+  check:
+    name: Проверка
+    needs: [build, deploy]
+    # И без выкладки (сборка уже на месте): живой адрес должен отвечать этой сборкой.
+    if: ${{ !cancelled() && needs.build.result == 'success' && needs.build.outputs.live == 'true' && needs.deploy.result != 'failure' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      # Только чтение открытых адресов, ключи не нужны. Ждёт до 3 минут, пока ответит новая сборка.
+      - name: Проверить api.iconavo.dev
+        env:
+          BUILD: ${{ needs.build.outputs.build }}
+        run: pnpm api check --expect-build="$BUILD"

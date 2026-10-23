@@ -5,10 +5,24 @@
 // | pnpm judge [--limit=N] [--max-rub=N] [--dry-run] | pnpm eval [--model=…] [--baseline]
 // | pnpm search-page [--port=N] [--model=…] | pnpm cdn build | pnpm cdn upload [--dry-run]
 // | pnpm cdn verify | pnpm cdn check | pnpm packages prepare [id…] [--new] [--force]
-// | pnpm packages verify [id…] [--wait=N] [--plan=…]
+// | pnpm packages verify [id…] [--wait=N] [--plan=…] | pnpm api build | pnpm api preview [--port=N]
+// | pnpm api check [--expect-build=…]
 import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import { basename, join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
+import { buildApi } from "./api/build.js";
+import { type ApiCheckReport, apiCheckFailed, checkApi } from "./api/check.js";
+import {
+  formatApiCheckSummary,
+  formatApiCheckTable,
+} from "./api/check-report.js";
+import {
+  API_HOST,
+  API_OUT_DIR,
+  PREVIEW_PORT,
+  WORKER_FILE,
+} from "./api/config.js";
+import { startApiPreview } from "./api/preview.js";
 import { canonicalJson } from "./build/json.js";
 import { formatBuildReport, renderBuildGallery } from "./build/report.js";
 import { buildSet, type SetBuildReport, writeSetData } from "./build/run.js";
@@ -133,7 +147,7 @@ import {
 } from "./sources/git.js";
 import { lockFileSchema, readLock, writeLock } from "./sources/lock.js";
 import { loadRegistry } from "./sources/registry.js";
-import { fetchStop, formatReport } from "./sources/report.js";
+import { fetchStop, formatBytes, formatReport } from "./sources/report.js";
 import { type PrLinks, prText } from "./update/pr.js";
 import {
   buildSummarySchema,
@@ -213,7 +227,17 @@ const USAGE = `Использование:
   pnpm cdn check                      проверить живые адреса обоих хостов (ADR-0023, ADR-0025):
                                       манифест, файл сумм, lucide:heart (.json и .svg) и ответ 404 —
                                       тип, кэш браузера и CDN, CORS, защита, сжатие br и gzip,
-                                      содержимое; затем — что манифесты хостов совпадают; ключи не нужны
+                                      содержимое; затем — что манифесты хостов совпадают; и edge API
+                                      (pnpm api check); ключи не нужны
+  pnpm api build                      собрать функцию edge API (ADR-0024) в ${API_OUT_DIR}/: ${WORKER_FILE} — один
+                                      модуль для Cloudflare Workers, metadata.json — тело запроса
+                                      загрузки, build.json — метка сборки; без изменений ничего не пишет
+  pnpm api preview                    превью функции на 127.0.0.1 с данными из dist-cdn/ и страница
+                                      для глаз: SVG с параметрами, CSS, пачка, ошибки
+      --port=N                        порт (по умолчанию ${PREVIEW_PORT})
+  pnpm api check                      проверить живой https://${API_HOST}: ответы сходятся со
+                                      статикой той же версии, повтор — из кэша, заголовки, сжатие
+      --expect-build=…                ждать и проверять эту сборку (после выкладки в CI)
   pnpm packages prepare [id…]         пакеты npm @iconavo-ui/icons-{набор} в ${NPM_OUT_DIR}/ (ADR-0026):
                                       данные, LICENSE, README, типы; версия — по реестру npm (только
                                       чтение, ключи не нужны); план для CI ${NPM_OUT_DIR}/plan.json;
@@ -243,6 +267,7 @@ const dataDir = join(root, "data");
 const reportsDir = join(root, ".cache", "reports");
 const distCdnDir = join(root, "dist-cdn");
 const distNpmDir = join(root, NPM_OUT_DIR);
+const distApiDir = join(root, API_OUT_DIR);
 const embeddingsDir = join(root, ".cache", "embeddings");
 const evalDir = join(root, "docs", "eval");
 const queriesPath = join(evalDir, "queries.csv");
@@ -277,15 +302,23 @@ function usageError(message: string): never {
   process.exit(2);
 }
 
+/** Таблица и итог проверки edge API. */
+function printApiCheck(report: ApiCheckReport) {
+  console.log("");
+  console.log(formatApiCheckTable(report));
+  for (const line of formatApiCheckSummary(report)) console.log(line);
+}
+
 // У каждой команды свои флаги; ссылки pnpm pr — в виде --флаг=https://…
 const links: PrLinks = {};
 let limit: number | undefined;
 let maxCost = DEFAULT_MAX_COST;
 let maxRub = DEFAULT_MAX_RUB;
 let judgeMaxRub = JUDGE_MAX_RUB;
-let port = PAGE_PORT;
+let port = command === "api" ? PREVIEW_PORT : PAGE_PORT;
 let waitSeconds = 0;
 let planPath: string | undefined;
+let expectBuild: string | undefined;
 const modelKeys = new Set<string>();
 for (const flag of flags) {
   const eq = flag.indexOf("=");
@@ -334,12 +367,20 @@ for (const flag of flags) {
     }
   }
   if (
-    command === "search-page" &&
+    (command === "search-page" || command === "api") &&
     name === "--port" &&
     /^[1-9][0-9]{3,4}$/.test(value ?? "") &&
     Number(value) <= 65535
   ) {
     port = Number(value);
+    continue;
+  }
+  if (
+    command === "api" &&
+    name === "--expect-build" &&
+    /^[0-9a-f]{8}$/.test(value ?? "")
+  ) {
+    expectBuild = value;
     continue;
   }
   if (
@@ -862,7 +903,22 @@ try {
       }
       const cross = compareHostManifests(reports);
       for (const line of formatCheckTotal(reports, cross)) console.log(line);
-      process.exit(reports.some(checkFailed) || cross.length > 0 ? 1 : 0);
+      // Edge API работает поверх тех же файлов (ADR-0024): его ответы сверяются со статикой версии
+      // из манифеста R2, уже прочитанного выше.
+      console.log(`\nПроверяю edge API https://${API_HOST}/…`);
+      const manifest = reports.find(
+        (r) => r.provider === "cloudflare",
+      )?.manifest;
+      const api = await checkApi({
+        ...(manifest === undefined ? {} : { manifest }),
+        log: (line) => console.log(`  ${line}`),
+      });
+      printApiCheck(api);
+      process.exit(
+        reports.some(checkFailed) || cross.length > 0 || apiCheckFailed(api)
+          ? 1
+          : 0,
+      );
     }
     // Выгрузка и сверка начинаются со сборки: dist-cdn/ всегда от текущего data/ (без изменений — секунды).
     const report = await buildCdn(configs, {
@@ -1010,6 +1066,58 @@ try {
     await writeFile(htmlPath, renderNpmVerifyPage(report), "utf8");
     console.log(`Отчёт: ${htmlPath}`);
     process.exit(npmVerifyFailed(report) ? 1 : 0);
+  } else if (command === "api") {
+    const [sub, ...rest] = args;
+    if (
+      (sub !== "build" && sub !== "preview" && sub !== "check") ||
+      rest.length > 0 ||
+      (sub !== "preview" && flags.some((f) => f.startsWith("--port="))) ||
+      (sub !== "check" && expectBuild !== undefined)
+    ) {
+      usageError(
+        "pnpm api: нужна подкоманда build, preview [--port=N] или check [--expect-build=…].",
+      );
+    }
+    if (sub === "build") {
+      const report = await buildApi({ root, outDir: distApiDir });
+      console.log(
+        `Функция edge API: ${API_OUT_DIR}/${WORKER_FILE} — ${formatBytes(report.bytes)}, в gzip ${formatBytes(report.gzipBytes)}; сборка ${report.build}.`,
+      );
+      console.log(
+        report.written.length === 0
+          ? "Без изменений: файлы на диске те же."
+          : `Записано: ${report.written.join(", ")}.`,
+      );
+      process.exit(0);
+    }
+    if (sub === "check") {
+      console.log(
+        `Проверяю edge API https://${API_HOST}/${expectBuild === undefined ? "" : `, жду сборку ${expectBuild}`}…`,
+      );
+      const report = await checkApi({
+        ...(expectBuild === undefined ? {} : { expectBuild }),
+        log: (line) => console.log(`  ${line}`),
+      });
+      printApiCheck(report);
+      process.exit(apiCheckFailed(report) ? 1 : 0);
+    }
+    // Превью: раздача всегда от текущего data/ (без изменений — секунды), функция — свежая сборка.
+    const cdn = await buildCdn(configs, { dataDir, outDir: distCdnDir });
+    if (cdnStop(cdn)) {
+      console.error(
+        "Сборка раздачи остановлена — превью без данных не запустить: pnpm cdn build покажет почему.",
+      );
+      process.exit(1);
+    }
+    const preview = await startApiPreview({
+      root,
+      outDir: distApiDir,
+      cdnDir: distCdnDir,
+      port,
+    });
+    console.log(
+      `Превью edge API: http://127.0.0.1:${preview.port}/ — сборка ${preview.build}, данные из dist-cdn/. Остановить — Ctrl+C.`,
+    );
   } else {
     usageError(
       command ? `Неизвестная команда «${command}».` : "Нужна команда.",

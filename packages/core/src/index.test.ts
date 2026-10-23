@@ -1,5 +1,15 @@
 import { describe, expect, it } from "vitest";
-import { isValidIconName } from "./index.js";
+import { isValidIconName, isValidNamePart } from "./index.js";
+
+describe("isValidNamePart", () => {
+  it("одна часть имени: набор или иконка", () => {
+    expect(isValidNamePart("material-symbols")).toBe(true);
+    expect(isValidNamePart("123")).toBe(true);
+    expect(isValidNamePart("lucide:heart")).toBe(false);
+    expect(isValidNamePart("_missing")).toBe(false);
+    expect(isValidNamePart("")).toBe(false);
+  });
+});
 
 describe("isValidIconName", () => {
   it("принимает набор:иконка", () => {
