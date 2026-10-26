@@ -36,11 +36,6 @@ on:
 permissions:
   contents: read
 
-# Обновления индекса не пересекаются и не прерываются: следующее ждёт текущее.
-concurrency:
-  group: search
-  cancel-in-progress: false
-
 jobs:
   index:
     name: Индекс и замер
@@ -55,6 +50,12 @@ jobs:
       && github.event.workflow_run.head_branch == 'main')
     runs-on: ubuntu-latest
     environment: search
+    # Обновления индекса не пересекаются и не прерываются: следующее ждёт текущее. Очередь — у задачи,
+    # а не у всего workflow: запуск, пропущенный по условию выше (например, после «Выкладки» из форка),
+    # в неё не встаёт и ждущее обновление не отменяет.
+    concurrency:
+      group: search
+      cancel-in-progress: false
     # С запасом на полную пересборку: ≈ 14 тыс. векторов иконок и ≈ 68 тыс. фраз через Polza — около
     # двух часов (первый запуск 26 октября 2026); обычное обновление — минуты.
     timeout-minutes: 180

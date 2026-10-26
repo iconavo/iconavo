@@ -151,6 +151,13 @@ describe("сервис в замере", () => {
     expect(partial.service?.ratio).toBe(
       partial.service?.tuned?.alpha ?? SEMANTIC_RATIO,
     );
+    // Без моделей прототипа — ни пустых строк долей и длин, ни разделов без данных.
+    expect(formatEvalReport(partial)).not.toMatch(
+      /Доля смысловой части:|Длина вектора/,
+    );
+    const page = renderEvalPage(partial);
+    expect(page).not.toContain("<h2>Длина вектора</h2>");
+    expect(page).not.toContain("<h2>Промахи");
   });
 
   it("с разметкой судьи доля смысла подбирается по рабочей части", async () => {
