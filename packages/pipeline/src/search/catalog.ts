@@ -22,6 +22,18 @@ export interface SearchDoc {
   fingerprint: string;
   /** Хэш текста для эмбеддинга (ADR-0047): не совпал с векторами — вектор устарел. Без описаний — нет. */
   textHash?: string;
+  /** Сам текст для эмбеддинга: по нему робот индекса считает недостающие векторы (ADR-0049). */
+  text?: string;
+  /**
+   * Фразы для поиска по словам в сервисе (ADR-0049): имя и прежние имена, теги автора, синонимы en
+   * и ru — как в файлах набора, фразами, а не отдельными словами.
+   */
+  phrases: {
+    name: string[];
+    tags: readonly string[];
+    en: readonly string[];
+    ru: readonly string[];
+  };
   /** Другие видимые имена карточки — варианты стиля (ADR-0002), по алфавиту. */
   variants: string[];
   /** Оттенки кожи, свёрнутые в карточку. */
@@ -140,13 +152,22 @@ export function setDocs(config: SourceConfig, set: LoadedSet): SetDocs {
       tones: TONE_SUFFIXES.map((s) => `${name}${s}`).filter((t) =>
         toneOf.has(t),
       ),
+      phrases: {
+        name: unique([name, ...(renamed.get(name) ?? [])]),
+        tags: entry.tags,
+        en: entry.en?.synonyms ?? [],
+        ru: entry.ru?.synonyms ?? [],
+      },
       words: {
         name: unique([name, ...(renamed.get(name) ?? [])].flatMap(words)),
         tags: unique(entry.tags.flatMap(words)),
         synonyms: unique(synonyms.flatMap(words)),
       },
     };
-    if (text !== undefined) doc.textHash = textHash(text);
+    if (text !== undefined) {
+      doc.textHash = textHash(text);
+      doc.text = text;
+    }
     docs.push(doc);
   }
   return { docs, names };

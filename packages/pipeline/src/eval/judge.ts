@@ -3,11 +3,14 @@
 // запрос, описание ожидаемой иконки и PNG кандидатов, перемешанных постоянным случаем. Разметка
 // пишется в docs/eval/judgments.json по ходу; повторный запуск отправляет только новые пары. Круги
 // повторяются, пока новых пар нет: подбор α меняет списки. Сеть — только через ChatClient и
-// EmbeddingClient, поэтому в тестах их подменяют.
+// EmbeddingClient, поэтому в тестах их подменяют. С --service в кандидаты идёт и поисковый сервис
+// (ADR-0049): его списки берутся из Meilisearch один раз за запуск — от разметки они не зависят.
 
 import { createHash } from "node:crypto";
+import { SEMANTIC_RATIO } from "@iconavo-ui/search";
 import type { EmbeddingClient } from "../embed/client.js";
 import { type EmbeddingModel, MODELS } from "../embed/config.js";
+import type { MeiliClient } from "../meili/client.js";
 import { initRenderer, renderPreview } from "../qc/render.js";
 import { type Catalog, loadCatalog } from "../search/catalog.js";
 import { PER_SET_MODEL } from "../search/config.js";
@@ -46,6 +49,7 @@ import {
   writeJudgments,
 } from "./golden.js";
 import { type Candidate, judgeBody, parseVerdicts } from "./prompt.js";
+import { serviceLists } from "./service.js";
 import {
   configChoice,
   rankAll,
@@ -171,6 +175,8 @@ export interface JudgeOptions {
   /** Только посчитать пары и оценить стоимость. */
   dryRun?: boolean;
   concurrency?: number;
+  /** Поисковый сервис — клиент Meilisearch только для чтения. */
+  service?: { client: MeiliClient };
   log?: (line: string) => void;
 }
 
@@ -283,6 +289,26 @@ export async function judgeEval(
   }
   if (report.stop.length > 0) return report;
 
+  let remote: Map<string, string[][]> | undefined;
+  if (options.service) {
+    log("Сервис: ответы Meilisearch на запросы эталона…");
+    const s = await serviceLists({
+      client: options.service.client,
+      catalog,
+      queries,
+      queryDir: options.queryDir,
+      ...(options.embedClient ? { embedClient: options.embedClient } : {}),
+      log,
+    });
+    report.notes.push(...s.notes);
+    if (s.error !== undefined) {
+      report.stop.push(`сервис: ${s.error}`);
+      return report;
+    }
+    remote = s.lists;
+  }
+  const service = options.service ? { ratio: SEMANTIC_RATIO } : undefined;
+
   const allWork =
     queries.filter((q) => q.split === "work").length ===
     all.filter((q) => q.split === "work").length;
@@ -295,6 +321,7 @@ export async function judgeEval(
     vectors,
     models,
     storeDir: options.storeDir,
+    ...(remote ? { remote } : {}),
     log,
   };
   const byId = new Map(queries.map((q) => [q.id, q]));
@@ -323,7 +350,7 @@ export async function judgeEval(
   // Пересчитать остаток после разметки: судья мог добавить вердикты.
   let recount = false;
   for (let round = 1; round <= MAX_ROUNDS && !stopped; round++) {
-    const defs = systems(models, choice, sets);
+    const defs = systems(models, choice, sets, service);
     const rankings = await rankAll(input, defs);
     if (round === 1) report.notes.push(...rankings.notes);
     const labels = currentLabels(queries, judgments, overrides, catalog);
@@ -500,7 +527,7 @@ export async function judgeEval(
 
   report.labels = currentLabels(queries, judgments, overrides, catalog);
   if (recount) {
-    const defs = systems(models, choice, sets);
+    const defs = systems(models, choice, sets, service);
     const rankings = await rankAll(input, defs);
     report.pending = [
       ...unlabeled(rankings, defs, queries, report.labels).values(),

@@ -234,6 +234,8 @@ export function formatEvalReport(r: EvalReport): string {
       `Доля смысловой части: ${[...r.choice.alpha].map(([k, a]) => `${k} ${fixed(a, 1)}`).join(", ")}${r.tuned ? " (подобрана на рабочей части)" : " (из настроек)"}`,
       `Длина вектора по правилу ADR-0048: ${r.lengths.map((l) => `${l.model} ${l.picked}`).join(", ")}`,
     );
+    const service = serviceText(r);
+    if (service !== "") lines.push(service);
     const rec = r.recommendation;
     if (rec) {
       lines.push(
@@ -264,6 +266,35 @@ function mainTable(
       return `<tr${g.all.hit === best && g.all.n > 0 ? ` class="best"` : ""}><td>${esc(m.system.title)}${m.system.mode === "hybrid" ? ` <span class="muted">α ${fixed(m.system.alpha, 1)}, длина ${m.system.length ?? "полная"}</span>` : ""}</td><td class="num">${cell(g.ru)}</td><td class="num">${cell(g.en)}</td><td class="num">${cell(g.all)}</td><td class="num">${fixed(g.all.mrr)}</td><td class="num">${fixed(g.all.p5)}</td><td class="num">${g.all.n}</td></tr>`;
     })
     .join("")}</tbody></table>`;
+}
+
+/** Итог поискового сервиса (ADR-0049): доля смысла и сравнение с гибридом Gemini прототипа. */
+export function serviceText(r: EvalReport): string {
+  const s = r.service;
+  if (!s) return "";
+  const ratio = `Сервис: доля смысла ${fixed(s.ratio, 1)} ${s.tuned ? "(подобрана на рабочей части)" : "(из настроек)"}`;
+  if (!s.versus) return `${ratio}.`;
+  const h = s.versus.holdout;
+  return `${ratio}; против гибрида Gemini прототипа на контрольной части нашёл только сервис ${h.onlyA}, только прототип ${h.onlyB}, p = ${fixed(h.p, 3)} — ${s.versus.notWorse ? "не хуже в пределах случайности" : "хуже прототипа сверх случайности: нужен запасной способ (ADR-0049)"}.`;
+}
+
+/** Раздел страницы о поисковом сервисе: итог и кривая доли смысла на рабочей части. */
+function serviceSection(r: EvalReport): string {
+  const s = r.service;
+  if (!s) return "";
+  const curve = s.tuned
+    ? `<table><thead><tr><th>Доля смысла</th><th>Hit@5</th><th>MRR@10</th></tr></thead><tbody>${s.tuned.curve
+        .map(
+          (p) =>
+            `<tr${p.alpha === s.ratio ? ` class="best"` : ""}><td class="num">${fixed(p.alpha, 1)}</td><td class="num">${pct(p.hit)}</td><td class="num">${fixed(p.mrr)}</td></tr>`,
+        )
+        .join("")}</tbody></table>
+<p class="muted">Рабочая часть. Жирным — выбранная доля: середина лучшего плато, при равенстве — по MRR@10, как α прототипа (ADR-0048, ADR-0049). 0 — только слова, 1 — только смысл.</p>`
+    : `<p class="muted">Доля смысла не подобрана: разметка рабочей части неполная — взята из настроек (SEMANTIC_RATIO).</p>`;
+  return `<h2>Поисковый сервис</h2>
+<p><b>${esc(serviceText(r))}</b></p>
+<p class="muted">«Сервис» — гибрид Meilisearch теми же запросами, что у функции edge API; «Сервис, только слова» — выдача, которая приходит первой, пока смысл не посчитан. Приёмка шага 8: сервис не хуже гибрида Gemini прототипа в пределах случайности (решение владельца 26 октября 2026).</p>
+${curve}`;
 }
 
 function recommendationText(r: EvalReport): string {
@@ -406,6 +437,7 @@ export function renderEvalPage(r: EvalReport): string {
 ${stops}
 <h2>Главное</h2>
 ${recommendationText(r)}
+${serviceSection(r)}
 <p>В замере ${r.included.length} запросов из ${r.queries.length}. У ${r.ceiling.length} запросов подходящей иконки не нашёл ни один вариант — они в доли не входят, список ниже.</p>
 <h3>Контрольная часть — честная цифра</h3>
 ${mainTable(r.main, "holdout")}

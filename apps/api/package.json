@@ -4,6 +4,7 @@
   "private": true,
   "type": "module",
   "dependencies": {
-    "@iconavo-ui/core": "workspace:*"
+    "@iconavo-ui/core": "workspace:*",
+    "@iconavo-ui/search": "workspace:*"
   }
 }

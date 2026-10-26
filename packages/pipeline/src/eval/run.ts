@@ -1,12 +1,16 @@
 // Команда pnpm eval (шаг 12, ADR-0048): замер поиска по эталону (ADR-0021). Варианты — из
 // eval/systems.ts, разметка — judgments.json с правками владельца. Цифры — только когда первые
 // десятки всех вариантов размечены целиком. Запросы, для которых в каталоге нет подходящей иконки,
-// в доли не входят, а идут списком: это дыра в каталоге или ошибка разметки.
+// в доли не входят, а идут списком: это дыра в каталоге или ошибка разметки. С --service меряется и
+// поисковый сервис (ADR-0049): доля смысла — по рабочей части, сравнение с гибридом Gemini прототипа
+// на контрольной части — точным тестом Мак-Немара.
 
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
+import { SEMANTIC_RATIO } from "@iconavo-ui/search";
 import type { EmbeddingClient } from "../embed/client.js";
 import { type EmbeddingModel, MODELS } from "../embed/config.js";
+import type { MeiliClient } from "../meili/client.js";
 import { type Catalog, loadCatalog } from "../search/catalog.js";
 import { PER_SET_MODEL } from "../search/config.js";
 import { queryVectors } from "../search/query-vectors.js";
@@ -40,16 +44,20 @@ import {
   type Summary,
   summarize,
 } from "./metrics.js";
+import { serviceLists } from "./service.js";
 import {
   type Choice,
   configChoice,
   modelLengths,
   type Rankings,
   rankAll,
+  SERVICE_KEY,
+  SERVICE_TEXT_KEY,
   type System,
   systems,
   type Tuned,
   tuneAlphas,
+  tuneRatio,
   unlabeled,
 } from "./systems.js";
 
@@ -116,6 +124,16 @@ export interface EvalReport {
       slotFits: number;
     }[];
   };
+  /**
+   * Поисковый сервис (ADR-0049): доля смысла — подобранная по рабочей части или из настроек; сравнение
+   * с гибридом Gemini прототипа на контрольной части. notWorse — сервис не хуже в пределах
+   * случайности: Hit@5 не ниже или p ≥ 0,05.
+   */
+  service?: {
+    ratio: number;
+    tuned?: Tuned;
+    versus?: { key: string; holdout: Paired; notWorse: boolean };
+  };
   /** Промахи лучшего гибрида — только по рабочей части. */
   misses: { query: GoldenQuery; fits: string[]; ranked: string[] }[];
   rankings?: Rankings;
@@ -137,6 +155,11 @@ export interface EvalOptions {
   /** Векторы запросов, которых нет в кэше; нет клиента — нужен полный кэш. */
   embedClient?: EmbeddingClient;
   models?: readonly EmbeddingModel[];
+  /**
+   * Поисковый сервис: клиент Meilisearch только для чтения; only — без моделей прототипа (в CI нет
+   * векторов иконок), а неразмеченные пары — заметка, а не «СТОП».
+   */
+  service?: { client: MeiliClient; only?: boolean };
   log?: (line: string) => void;
 }
 
@@ -181,7 +204,7 @@ export async function evaluate(
   options: EvalOptions,
 ): Promise<EvalReport> {
   const log = options.log ?? (() => {});
-  const models = options.models ?? MODELS;
+  const models = options.service?.only ? [] : (options.models ?? MODELS);
   const { catalog, errors } = await loadCatalog(configs, dataDir);
   const queries = await readQueries(options.queriesPath);
   const { judgments, reset } = await readJudgments(options.judgmentsPath, {
@@ -233,6 +256,25 @@ export async function evaluate(
   }
   if (report.stop.length > 0) return report;
 
+  let remote: Map<string, string[][]> | undefined;
+  if (options.service) {
+    log("Сервис: ответы Meilisearch на запросы эталона…");
+    const s = await serviceLists({
+      client: options.service.client,
+      catalog,
+      queries,
+      queryDir: options.queryDir,
+      ...(options.embedClient ? { embedClient: options.embedClient } : {}),
+      log,
+    });
+    report.notes.push(...s.notes);
+    if (s.error !== undefined) {
+      report.stop.push(`сервис: ${s.error}`);
+      return report;
+    }
+    remote = s.lists;
+    report.service = { ratio: SEMANTIC_RATIO };
+  }
   const input = {
     catalog,
     text,
@@ -240,11 +282,26 @@ export async function evaluate(
     vectors,
     models,
     storeDir: options.storeDir,
+    ...(remote ? { remote } : {}),
     log,
   };
   const sets = catalog.sets.map((s) => s.id);
-  let defs = systems(models, report.choice, sets);
+  const service = () =>
+    report.service ? { ratio: report.service.ratio } : undefined;
+  let defs = systems(models, report.choice, sets, service());
   let rankings = await rankAll(input, defs);
+  if (report.service) {
+    const tunedRatio = tuneRatio(rankings, queries, labels);
+    if (tunedRatio) {
+      report.service = { ratio: tunedRatio.alpha, tuned: tunedRatio };
+      defs = systems(models, report.choice, sets, service());
+      rankings = await rankAll(input, defs);
+    } else {
+      report.notes.push(
+        "доля смысла сервиса не подобрана: первые десятки сетки на рабочей части размечены не целиком — взята из настроек (SEMANTIC_RATIO)",
+      );
+    }
+  }
   const tuned = tuneAlphas(rankings, queries, labels, models);
   if (tuned) {
     report.tuned = tuned;
@@ -256,7 +313,7 @@ export async function evaluate(
       alpha: new Map([...tuned].map(([k, t]) => [k, t.alpha])),
     };
     if (changed) {
-      defs = systems(models, report.choice, sets);
+      defs = systems(models, report.choice, sets, service());
       rankings = await rankAll(input, defs);
     }
   } else {
@@ -270,10 +327,13 @@ export async function evaluate(
     ...unlabeled(rankings, defs, queries, labels).values(),
   ].reduce((n, s) => n + s.size, 0);
   if (report.unlabeled > 0) {
-    report.stop.push(
-      `в первых местах вариантов не размечено пар: ${report.unlabeled} — запустите pnpm judge`,
-    );
-    return report;
+    const message = `в первых местах вариантов не размечено пар: ${report.unlabeled} — запустите pnpm judge`;
+    // В CI судьи нет: неразмеченные пары считаются неподходящими, цифры — только для отчёта.
+    if (options.service?.only) report.notes.push(message);
+    else {
+      report.stop.push(message);
+      return report;
+    }
   }
 
   report.included = queries.filter((q) => fitsOf(labels, q.id).size > 0);
@@ -373,6 +433,12 @@ export async function evaluate(
     for (const b of hybridKeys.slice(i + 1)) pairKeys.push([a, b]);
   });
   for (const h of hybridKeys) pairKeys.push([h, "text"]);
+  if (report.service) {
+    if (hybridKeys.includes("hybrid:gemini")) {
+      pairKeys.push([SERVICE_KEY, "hybrid:gemini"]);
+    }
+    pairKeys.push([SERVICE_KEY, "text"], [SERVICE_TEXT_KEY, "text"]);
+  }
   const holdout = (q: GoldenQuery) => q.split === "holdout";
   for (const [a, b] of pairKeys) {
     report.pairs.push({
@@ -384,6 +450,21 @@ export async function evaluate(
         hitsOf(b, () => true),
       ),
     });
+  }
+
+  // Сервис против гибрида Gemini прототипа (ADR-0049): не хуже — Hit@5 не ниже или разница в пределах
+  // случайности.
+  const versus = report.pairs.find(
+    (p) => p.a === SERVICE_KEY && p.b === "hybrid:gemini",
+  );
+  if (report.service && versus) {
+    report.service.versus = {
+      key: "hybrid:gemini",
+      holdout: versus.holdout,
+      notWorse:
+        versus.holdout.onlyA >= versus.holdout.onlyB ||
+        versus.holdout.p >= SIGNIFICANCE,
+    };
   }
 
   // Лидер — по правилу ADR-0048: Hit@5 на контрольной части, затем на всех и MRR@10 на всех.

@@ -86,6 +86,8 @@ describe("точное имя", () => {
   it("у `набор:имя` текстовая часть ищет только имя", () => {
     expect(textQuery(catalog, "lucide:house")).toBe("house");
     expect(textQuery(catalog, "unknown:house")).toBe("unknown:house");
+    // Пробелы перед префиксом: прототип искал «s» вместо пробела (исправлено на шаге 8 фазы 2).
+    expect(textQuery(catalog, "  lucide:house")).toBe("house");
   });
 });
 

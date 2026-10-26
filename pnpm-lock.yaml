@@ -187,6 +187,9 @@ importers:
       '@iconavo-ui/core':
         specifier: workspace:*
         version: link:../../packages/core
+      '@iconavo-ui/search':
+        specifier: workspace:*
+        version: link:../../packages/search
 
   packages/core: {}
 
@@ -198,6 +201,9 @@ importers:
       '@iconavo-ui/schema':
         specifier: workspace:*
         version: link:../schema
+      '@iconavo-ui/search':
+        specifier: workspace:*
+        version: link:../search
       '@resvg/resvg-wasm':
         specifier: 2.6.2
         version: 2.6.2
@@ -230,6 +236,12 @@ importers:
       '@types/node':
         specifier: ^26.6.5
         version: 26.6.5
+
+  packages/search:
+    dependencies:
+      '@iconavo-ui/core':
+        specifier: workspace:*
+        version: link:../core
 
   sources:
     devDependencies:

@@ -84,6 +84,8 @@ export interface R2Options {
   now?: () => number;
   timeoutMs?: number;
   maxAttempts?: number;
+  /** Подсказки к ответам 401 и 403 — у другого бакета свои ключи (бакет поиска, ADR-0049). */
+  runStops?: Record<number, string>;
 }
 
 interface R2Request {
@@ -105,7 +107,7 @@ export function r2Client(options: R2Options): StorageClient {
   const now = options.now ?? (() => Date.now());
   const endpoint = new URL(r2Endpoint(options.accountId));
   const rules = {
-    runStops: R2_RUN_STOPS,
+    runStops: options.runStops ?? R2_RUN_STOPS,
     retryable,
     secrets: [options.secretAccessKey, options.accessKeyId],
     sleep,

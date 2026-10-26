@@ -4,6 +4,7 @@
 // у трёх моделей одна шкала. Точное совпадение имени — всегда первым (ADR-0009, ADR-0040) и в
 // нормировку не входит. Варианты: «Текст» — текст и точное имя, «Смысл» — только векторы.
 
+import { stripSetPrefix } from "@iconavo-ui/search";
 import type { Catalog } from "./catalog.js";
 import { VECTOR_NORM_RANK } from "./config.js";
 import type { TextResult } from "./text.js";
@@ -20,11 +21,8 @@ export const nameForm = (query: string): string =>
 /**
  * Текст запроса для текстовой части: у `набор:имя` — только имя, префикс набора словом не ищется.
  */
-export function textQuery(catalog: Catalog, query: string): string {
-  const m = /^s*([a-z0-9-]+):(.*)$/i.exec(query);
-  const set = m?.[1]?.toLowerCase();
-  return m && catalog.sets.some((s) => s.id === set) ? (m[2] ?? "") : query;
-}
+export const textQuery = (catalog: Catalog, query: string): string =>
+  stripSetPrefix(query, (id) => catalog.sets.some((s) => s.id === id));
 
 /** Карточки, у которых имя, вариант, оттенок или алиас совпали с запросом; с `набор:` — только этот набор. */
 export function exactDocs(catalog: Catalog, query: string): number[] {
