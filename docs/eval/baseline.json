@@ -39,6 +39,30 @@
         "material-symbols:mobile-gear",
         "tabler:device-desktop-cog"
       ],
+      "service-text:gemini": [
+        "fluent-emoji-flat:gear",
+        "ph:gear",
+        "ph:gear-fine",
+        "ph:gear-six",
+        "tabler:automatic-gearbox",
+        "tabler:manual-gearbox",
+        "material-symbols:car-gear",
+        "material-symbols:mic-gear",
+        "material-symbols:mobile-gear",
+        "material-symbols:search-gear"
+      ],
+      "service:gemini": [
+        "fluent-emoji-flat:gear",
+        "ph:gear",
+        "material-symbols:search-gear",
+        "material-symbols:home-storage-gear",
+        "material-symbols:mic-gear",
+        "material-symbols:car-gear",
+        "material-symbols:settings",
+        "material-symbols:mobile-gear",
+        "material-symbols:backpack",
+        "material-symbols:subtitles-gear"
+      ],
       "text": [
         "fluent-emoji-flat:gear",
         "ph:gear",
@@ -124,6 +148,30 @@
         "ph:calendar-blank",
         "lucide:calendar-cog",
         "tabler:calendar-dot"
+      ],
+      "service-text:gemini": [
+        "fluent-emoji-flat:calendar",
+        "lucide:calendar",
+        "ph:calendar",
+        "tabler:calendar",
+        "lucide:calendars",
+        "fluent-emoji-flat:spiral-calendar",
+        "lucide:calendar-1",
+        "lucide:calendar-check",
+        "lucide:calendar-clock",
+        "lucide:calendar-cog"
+      ],
+      "service:gemini": [
+        "fluent-emoji-flat:calendar",
+        "lucide:calendar",
+        "ph:calendar",
+        "tabler:calendar",
+        "tabler:calendar-event",
+        "lucide:calendar-range",
+        "tabler:calendar-week",
+        "fluent-emoji-flat:tear-off-calendar",
+        "tabler:calendar-dot",
+        "material-symbols:event"
       ],
       "text": [
         "fluent-emoji-flat:calendar",
@@ -211,6 +259,30 @@
         "lucide:credit-card-x",
         "material-symbols:payment-card"
       ],
+      "service-text:gemini": [
+        "fluent-emoji-flat:credit-card",
+        "lucide:credit-card",
+        "material-symbols:credit-card",
+        "ph:credit-card",
+        "tabler:credit-card",
+        "lucide:credit-card-check",
+        "lucide:credit-card-minus",
+        "lucide:credit-card-plus",
+        "lucide:credit-card-reader",
+        "lucide:credit-card-x"
+      ],
+      "service:gemini": [
+        "fluent-emoji-flat:credit-card",
+        "lucide:credit-card",
+        "material-symbols:credit-card",
+        "ph:credit-card",
+        "tabler:credit-card",
+        "tabler:credit-card-pay",
+        "material-symbols:credit-score",
+        "material-symbols:credit-card-heart",
+        "lucide:credit-card-plus",
+        "material-symbols:add-card"
+      ],
       "text": [
         "fluent-emoji-flat:credit-card",
         "lucide:credit-card",
@@ -296,6 +368,30 @@
         "ph:telegram-logo",
         "material-symbols:send-and-archive",
         "tabler:brand-telegram"
+      ],
+      "service-text:gemini": [
+        "ph:paper-plane",
+        "ph:paper-plane-right",
+        "ph:paper-plane-tilt",
+        "tabler:send",
+        "tabler:send-2",
+        "tabler:send-off",
+        "tabler:brand-telegram",
+        "lucide:send-horizontal",
+        "lucide:send",
+        "material-symbols:send"
+      ],
+      "service:gemini": [
+        "ph:paper-plane",
+        "ph:paper-plane-tilt",
+        "tabler:send",
+        "lucide:send-horizontal",
+        "ph:paper-plane-right",
+        "lucide:send",
+        "lucide:tickets-plane",
+        "fluent-emoji-flat:airplane",
+        "tabler:send-2",
+        "tabler:send-off"
       ],
       "text": [
         "ph:paper-plane",
@@ -383,6 +479,30 @@
         "fluent-emoji-flat:e-mail",
         "tabler:mail-share"
       ],
+      "service-text:gemini": [
+        "fluent-emoji-flat:envelope",
+        "ph:envelope",
+        "ph:envelope-open",
+        "ph:envelope-simple",
+        "fluent-emoji-flat:envelope-with-arrow",
+        "ph:envelope-simple-open",
+        "fluent-emoji-flat:incoming-envelope",
+        "fluent-emoji-flat:red-envelope",
+        "tabler:mail",
+        "tabler:mail-dollar"
+      ],
+      "service:gemini": [
+        "fluent-emoji-flat:envelope",
+        "ph:envelope",
+        "ph:envelope-simple",
+        "fluent-emoji-flat:incoming-envelope",
+        "ph:envelope-simple-open",
+        "tabler:mail",
+        "material-symbols:drafts",
+        "material-symbols:mail",
+        "lucide:mail",
+        "tabler:mail-code"
+      ],
       "text": [
         "fluent-emoji-flat:envelope",
         "ph:envelope",
@@ -468,6 +588,30 @@
         "material-symbols:label",
         "tabler:label",
         "tabler:label-important"
+      ],
+      "service-text:gemini": [
+        "lucide:tag",
+        "material-symbols:tag",
+        "ph:tag",
+        "tabler:tag",
+        "lucide:tags",
+        "lucide:tag-plus",
+        "lucide:tag-x",
+        "material-symbols:nest-tag",
+        "ph:tag-chevron",
+        "ph:tag-simple"
+      ],
+      "service:gemini": [
+        "lucide:tag",
+        "material-symbols:tag",
+        "ph:tag",
+        "tabler:tag",
+        "material-symbols:nest-tag",
+        "material-symbols:label",
+        "tabler:tags-chevron-down",
+        "tabler:tags-chevron-up",
+        "ph:tag-chevron",
+        "material-symbols:new-label"
       ],
       "text": [
         "lucide:tag",
@@ -555,6 +699,30 @@
         "ph:hourglass-simple-high",
         "ph:hourglass-medium"
       ],
+      "service-text:gemini": [
+        "lucide:hourglass",
+        "material-symbols:hourglass",
+        "ph:hourglass",
+        "tabler:hourglass",
+        "fluent-emoji-flat:hourglass-done",
+        "lucide:hourglass-cog",
+        "material-symbols:hourglass-bottom",
+        "material-symbols:hourglass-check",
+        "material-symbols:hourglass-disabled",
+        "material-symbols:hourglass-empty"
+      ],
+      "service:gemini": [
+        "lucide:hourglass",
+        "material-symbols:hourglass",
+        "ph:hourglass",
+        "tabler:hourglass",
+        "tabler:hourglass-low",
+        "fluent-emoji-flat:hourglass-done",
+        "material-symbols:hourglass-bottom",
+        "material-symbols:hourglass-top",
+        "tabler:hourglass-high",
+        "ph:hourglass-simple-medium"
+      ],
       "text": [
         "lucide:hourglass",
         "material-symbols:hourglass",
@@ -640,6 +808,30 @@
         "lucide:shield-cog",
         "ph:shield-chevron",
         "ph:shield-checkered"
+      ],
+      "service-text:gemini": [
+        "fluent-emoji-flat:shield",
+        "lucide:shield",
+        "material-symbols:shield",
+        "ph:shield",
+        "tabler:shield",
+        "lucide:shield-alert",
+        "lucide:shield-ban",
+        "lucide:shield-check",
+        "lucide:shield-cog",
+        "lucide:shield-ellipsis"
+      ],
+      "service:gemini": [
+        "fluent-emoji-flat:shield",
+        "lucide:shield",
+        "material-symbols:shield",
+        "ph:shield",
+        "tabler:shield",
+        "material-symbols:shield-lock",
+        "material-symbols:shield-locked",
+        "material-symbols:shield-question",
+        "material-symbols:shield-moon",
+        "tabler:shield-share"
       ],
       "text": [
         "fluent-emoji-flat:shield",
@@ -727,6 +919,30 @@
         "material-symbols:delete-sweep",
         "lucide:trash"
       ],
+      "service-text:gemini": [
+        "tabler:trash-x",
+        "tabler:trash-off",
+        "tabler:trash",
+        "lucide:trash",
+        "ph:trash-simple",
+        "fluent-emoji-flat:wastebasket",
+        "material-symbols:delete",
+        "tabler:bucket",
+        "tabler:file-x",
+        "material-symbols:delete-sweep"
+      ],
+      "service:gemini": [
+        "fluent-emoji-flat:wastebasket",
+        "ph:trash",
+        "lucide:trash",
+        "ph:trash-simple",
+        "tabler:trash",
+        "material-symbols:delete",
+        "tabler:trash-x",
+        "material-symbols:delete-forever",
+        "material-symbols:folder-delete",
+        "lucide:trash-off"
+      ],
       "text": [
         "tabler:trash",
         "tabler:trash-off",
@@ -812,6 +1028,30 @@
         "material-symbols:lock-person",
         "fluent-emoji-flat:locked",
         "tabler:lock-star"
+      ],
+      "service-text:gemini": [
+        "ph:key",
+        "ph:lock",
+        "tabler:lock",
+        "ph:lock-key",
+        "ph:lock-laminated",
+        "ph:lock-open",
+        "ph:lock-simple",
+        "tabler:lock-bitcoin",
+        "tabler:lock-bolt",
+        "tabler:lock-cancel"
+      ],
+      "service:gemini": [
+        "tabler:lock",
+        "ph:lock",
+        "lucide:lock",
+        "material-symbols:lock",
+        "ph:lock-key",
+        "tabler:lock-bolt",
+        "tabler:lock-square",
+        "tabler:lock-code",
+        "tabler:lock-down",
+        "tabler:lock-exclamation"
       ],
       "text": [
         "ph:key",
@@ -899,6 +1139,30 @@
         "tabler:navigation-top",
         "tabler:navigation-plus"
       ],
+      "service-text:gemini": [
+        "fluent-emoji-flat:compass",
+        "lucide:compass",
+        "ph:compass",
+        "tabler:compass",
+        "lucide:drafting-compass",
+        "material-symbols:compass-calibration",
+        "ph:compass-rose",
+        "ph:compass-tool",
+        "tabler:compass-off",
+        "tabler:geometry"
+      ],
+      "service:gemini": [
+        "fluent-emoji-flat:compass",
+        "lucide:compass",
+        "ph:compass",
+        "tabler:compass",
+        "ph:compass-rose",
+        "material-symbols:compass-calibration",
+        "material-symbols:explore",
+        "tabler:compass-off",
+        "ph:compass-tool",
+        "tabler:navigation-south"
+      ],
       "text": [
         "fluent-emoji-flat:compass",
         "lucide:compass",
@@ -984,6 +1248,30 @@
         "material-symbols:mobile-wrench",
         "ph:pipe-wrench",
         "tabler:tools"
+      ],
+      "service-text:gemini": [
+        "fluent-emoji-flat:wrench",
+        "lucide:wrench",
+        "ph:wrench",
+        "lucide:wrench-off",
+        "material-symbols:mobile-wrench",
+        "material-symbols:reset-wrench",
+        "ph:pipe-wrench",
+        "fluent-emoji-flat:hammer-and-wrench",
+        "tabler:tool",
+        "tabler:tools"
+      ],
+      "service:gemini": [
+        "fluent-emoji-flat:wrench",
+        "lucide:wrench",
+        "ph:wrench",
+        "material-symbols:build",
+        "ph:pipe-wrench",
+        "material-symbols:mobile-wrench",
+        "material-symbols:plumbing",
+        "fluent-emoji-flat:hammer-and-wrench",
+        "tabler:tool",
+        "material-symbols:reset-wrench"
       ],
       "text": [
         "fluent-emoji-flat:wrench",
@@ -1071,6 +1359,30 @@
         "tabler:shopping-cart-copy",
         "lucide:shopping-cart-plus"
       ],
+      "service-text:gemini": [
+        "fluent-emoji-flat:shopping-cart",
+        "lucide:shopping-cart",
+        "material-symbols:shopping-cart",
+        "ph:shopping-cart",
+        "tabler:shopping-cart",
+        "lucide:shopping-cart-minus",
+        "lucide:shopping-cart-plus",
+        "material-symbols:shopping-cart-checkout",
+        "material-symbols:shopping-cart-off",
+        "ph:shopping-cart-simple"
+      ],
+      "service:gemini": [
+        "fluent-emoji-flat:shopping-cart",
+        "lucide:shopping-cart",
+        "material-symbols:shopping-cart",
+        "ph:shopping-cart",
+        "tabler:shopping-cart",
+        "material-symbols:add-shopping-cart",
+        "material-symbols:shopping-basket",
+        "material-symbols:shopping-cart-checkout",
+        "tabler:shopping-cart-copy",
+        "lucide:shopping-bag"
+      ],
       "text": [
         "fluent-emoji-flat:shopping-cart",
         "lucide:shopping-cart",
@@ -1156,6 +1468,30 @@
         "ph:speaker-high",
         "material-symbols:speaker-phone",
         "material-symbols:campaign"
+      ],
+      "service-text:gemini": [
+        "fluent-emoji-flat:megaphone",
+        "lucide:megaphone",
+        "ph:megaphone",
+        "lucide:megaphone-off",
+        "ph:megaphone-simple",
+        "tabler:speakerphone",
+        "fluent-emoji-flat:loudspeaker",
+        "material-symbols:campaign",
+        "material-symbols:brand-awareness",
+        "ph:speaker-high"
+      ],
+      "service:gemini": [
+        "fluent-emoji-flat:megaphone",
+        "lucide:megaphone",
+        "ph:megaphone",
+        "tabler:speakerphone",
+        "material-symbols:campaign",
+        "ph:megaphone-simple",
+        "fluent-emoji-flat:loudspeaker",
+        "tabler:brand-apple-podcast",
+        "material-symbols:podcasts",
+        "material-symbols:brand-awareness"
       ],
       "text": [
         "fluent-emoji-flat:megaphone",
@@ -1243,6 +1579,30 @@
         "material-symbols:attach-file-add",
         "tabler:pin"
       ],
+      "service-text:gemini": [
+        "fluent-emoji-flat:paperclip",
+        "lucide:paperclip",
+        "ph:paperclip",
+        "tabler:paperclip",
+        "fluent-emoji-flat:linked-paperclips",
+        "ph:paperclip-horizontal",
+        "material-symbols:attachment",
+        "material-symbols:attach-file",
+        "material-symbols:attach-file-off",
+        "material-symbols:attach-file-add"
+      ],
+      "service:gemini": [
+        "fluent-emoji-flat:paperclip",
+        "lucide:paperclip",
+        "ph:paperclip",
+        "tabler:paperclip",
+        "material-symbols:attachment",
+        "material-symbols:attach-file",
+        "ph:paperclip-horizontal",
+        "material-symbols:attach-file-add",
+        "material-symbols:file-present",
+        "fluent-emoji-flat:linked-paperclips"
+      ],
       "text": [
         "fluent-emoji-flat:paperclip",
         "lucide:paperclip",
@@ -1328,6 +1688,30 @@
         "fluent-emoji-flat:light-bulb",
         "material-symbols:emoji-objects",
         "ph:lightbulb-filament"
+      ],
+      "service-text:gemini": [
+        "lucide:lightbulb",
+        "material-symbols:lightbulb",
+        "ph:lightbulb",
+        "lucide:lightbulb-off",
+        "material-symbols:lightbulb-2",
+        "material-symbols:lightbulb-circle",
+        "ph:lightbulb-filament",
+        "tabler:bulb",
+        "tabler:bulb-off",
+        "tabler:circuit-bulb"
+      ],
+      "service:gemini": [
+        "lucide:lightbulb",
+        "material-symbols:lightbulb",
+        "ph:lightbulb",
+        "material-symbols:lightbulb-circle",
+        "tabler:bulb",
+        "fluent-emoji-flat:light-bulb",
+        "material-symbols:lightbulb-2",
+        "material-symbols:light",
+        "ph:lightbulb-filament",
+        "material-symbols:emoji-objects"
       ],
       "text": [
         "lucide:lightbulb",
@@ -1415,6 +1799,30 @@
         "tabler:bell-cog",
         "tabler:bell-code"
       ],
+      "service-text:gemini": [
+        "fluent-emoji-flat:bell",
+        "lucide:bell",
+        "ph:bell",
+        "tabler:bell",
+        "fluent-emoji-flat:bell-pepper",
+        "fluent-emoji-flat:bellhop-bell",
+        "lucide:bell-check",
+        "lucide:bell-dot",
+        "lucide:bell-electric",
+        "lucide:bell-minus"
+      ],
+      "service:gemini": [
+        "fluent-emoji-flat:bell",
+        "lucide:bell",
+        "ph:bell",
+        "tabler:bell",
+        "ph:bell-simple",
+        "tabler:bell-school",
+        "ph:bell-simple-ringing",
+        "ph:call-bell",
+        "tabler:bell-star",
+        "tabler:bell-plus"
+      ],
       "text": [
         "fluent-emoji-flat:bell",
         "lucide:bell",
@@ -1500,6 +1908,30 @@
         "tabler:plug-connected",
         "ph:plug-charging",
         "material-symbols:smart-outlet"
+      ],
+      "service-text:gemini": [
+        "lucide:plug",
+        "ph:plug",
+        "tabler:plug",
+        "ph:plugs",
+        "fluent-emoji-flat:electric-plug",
+        "lucide:plug-2",
+        "lucide:plug-zap",
+        "material-symbols:plug-connect",
+        "ph:plug-charging",
+        "ph:plugs-connected"
+      ],
+      "service:gemini": [
+        "lucide:plug",
+        "ph:plug",
+        "tabler:plug",
+        "material-symbols:plug-connect",
+        "ph:plug-charging",
+        "lucide:plug-2",
+        "ph:plugs-connected",
+        "material-symbols:power",
+        "tabler:plug-connected",
+        "fluent-emoji-flat:electric-plug"
       ],
       "text": [
         "lucide:plug",
@@ -1587,6 +2019,30 @@
         "tabler:zoom",
         "tabler:eye-search"
       ],
+      "service-text:gemini": [
+        "ph:magnifying-glass",
+        "ph:magnifying-glass-minus",
+        "ph:magnifying-glass-plus",
+        "fluent-emoji-flat:magnifying-glass-tilted-left",
+        "fluent-emoji-flat:magnifying-glass-tilted-right",
+        "ph:file-magnifying-glass",
+        "ph:list-magnifying-glass",
+        "lucide:zoom-in",
+        "lucide:zoom-out",
+        "tabler:search"
+      ],
+      "service:gemini": [
+        "ph:magnifying-glass",
+        "tabler:zoom-in",
+        "lucide:zoom-in",
+        "tabler:zoom",
+        "material-symbols:zoom-in",
+        "material-symbols:pageview",
+        "material-symbols:magnification-large",
+        "ph:magnifying-glass-plus",
+        "fluent-emoji-flat:magnifying-glass-tilted-right",
+        "material-symbols:mystery"
+      ],
       "text": [
         "ph:magnifying-glass",
         "ph:file-magnifying-glass",
@@ -1672,6 +2128,30 @@
         "ph:suitcase",
         "ph:suitcase-simple",
         "ph:briefcase-metal"
+      ],
+      "service-text:gemini": [
+        "fluent-emoji-flat:briefcase",
+        "lucide:briefcase",
+        "ph:briefcase",
+        "tabler:briefcase",
+        "lucide:briefcase-business",
+        "lucide:briefcase-medical",
+        "lucide:briefcase-plus",
+        "material-symbols:briefcase-meal",
+        "ph:briefcase-metal",
+        "tabler:briefcase-2"
+      ],
+      "service:gemini": [
+        "fluent-emoji-flat:briefcase",
+        "lucide:briefcase",
+        "ph:briefcase",
+        "tabler:briefcase",
+        "material-symbols:cases",
+        "ph:briefcase-metal",
+        "material-symbols:work",
+        "lucide:briefcase-business",
+        "material-symbols:enterprise",
+        "ph:suitcase"
       ],
       "text": [
         "fluent-emoji-flat:briefcase",
@@ -1759,6 +2239,30 @@
         "tabler:file-horizontal",
         "lucide:printer-check"
       ],
+      "service-text:gemini": [
+        "material-symbols:print",
+        "tabler:printer",
+        "material-symbols:print-add",
+        "material-symbols:print-lock",
+        "tabler:file-type-pdf",
+        "tabler:page-break",
+        "fluent-emoji-flat:printer",
+        "ph:printer",
+        "lucide:printer",
+        "material-symbols:adf-scanner"
+      ],
+      "service:gemini": [
+        "material-symbols:print",
+        "ph:printer",
+        "tabler:printer",
+        "material-symbols:print-connect",
+        "material-symbols:print-lock",
+        "lucide:printer",
+        "material-symbols:print-add",
+        "tabler:page-break",
+        "lucide:file-output",
+        "material-symbols:picture-as-pdf"
+      ],
       "text": [
         "material-symbols:print",
         "material-symbols:print-add",
@@ -1844,6 +2348,30 @@
         "tabler:message-circle-share",
         "ph:chat-teardrop-text",
         "tabler:message-circle-up"
+      ],
+      "service-text:gemini": [
+        "tabler:message-2-share",
+        "tabler:message-circle-share",
+        "tabler:message-share",
+        "tabler:message-forward",
+        "tabler:send",
+        "tabler:message-up",
+        "tabler:message-2-up",
+        "ph:chat",
+        "lucide:message-square-share",
+        "material-symbols:send"
+      ],
+      "service:gemini": [
+        "tabler:message-2-ai",
+        "tabler:message-2-up",
+        "material-symbols:send",
+        "tabler:message-chatbot",
+        "tabler:message-2-share",
+        "ph:chat-teardrop-text",
+        "lucide:send",
+        "tabler:send-2",
+        "ph:chat-centered",
+        "ph:chat"
       ],
       "text": [
         "lucide:send",
@@ -1931,6 +2459,30 @@
         "tabler:lock-x",
         "material-symbols:mobile-rotate-lock"
       ],
+      "service-text:gemini": [
+        "material-symbols:mobile-rotate-lock",
+        "material-symbols:mobile-screensaver",
+        "lucide:wallpaper",
+        "material-symbols:pattern",
+        "material-symbols:aod-tablet",
+        "material-symbols:mobile-lock-landscape",
+        "material-symbols:mobile-lock-portrait",
+        "material-symbols:mobile-unlock",
+        "material-symbols:rotate-auto",
+        "lucide:lock"
+      ],
+      "service:gemini": [
+        "material-symbols:mobile-lock-landscape",
+        "material-symbols:mobile-lock-portrait",
+        "ph:lock-laminated",
+        "material-symbols:phone-locked",
+        "material-symbols:visibility-lock",
+        "material-symbols:lock-person",
+        "tabler:lock-password",
+        "material-symbols:mobile-rotate-lock",
+        "material-symbols:watch-lock",
+        "lucide:lock"
+      ],
       "text": [
         "material-symbols:mobile-lock-landscape",
         "material-symbols:mobile-lock-portrait",
@@ -2016,6 +2568,30 @@
         "ph:user-circle-gear",
         "tabler:user-square",
         "tabler:user-circle"
+      ],
+      "service-text:gemini": [
+        "tabler:user-edit",
+        "lucide:user-pen",
+        "material-symbols:person-edit",
+        "lucide:user-round-pen",
+        "lucide:user-cog",
+        "lucide:user-round-cog",
+        "material-symbols:background-replace",
+        "material-symbols:edit",
+        "tabler:edit",
+        "lucide:file-pen"
+      ],
+      "service:gemini": [
+        "material-symbols:person-edit",
+        "tabler:user-edit",
+        "lucide:user-round-pen",
+        "lucide:user-pen",
+        "lucide:user-cog",
+        "lucide:user-round-cog",
+        "material-symbols:manage-accounts",
+        "material-symbols:edit-attributes",
+        "material-symbols:edit",
+        "material-symbols:switch-account"
       ],
       "text": [
         "tabler:user-edit",
@@ -2103,6 +2679,30 @@
         "ph:map-pin-line",
         "tabler:map-pinned"
       ],
+      "service-text:gemini": [
+        "tabler:location-pin",
+        "material-symbols:globe-location-pin",
+        "tabler:map-pin-minus",
+        "tabler:map-pin-share",
+        "tabler:navigation-pin",
+        "lucide:map-pin-plus",
+        "lucide:map-pin-check-inside",
+        "lucide:map-pin-minus-inside",
+        "lucide:map-pin-x-inside",
+        "tabler:device-desktop-pin"
+      ],
+      "service:gemini": [
+        "material-symbols:location-on",
+        "tabler:device-imac-pin",
+        "lucide:pin",
+        "tabler:location-pin",
+        "material-symbols:pin-drop",
+        "tabler:map-pin-pin",
+        "tabler:devices-pin",
+        "material-symbols:distance",
+        "material-symbols:globe-location-pin",
+        "lucide:map-pin"
+      ],
       "text": [
         "tabler:location-pin",
         "lucide:map-pin-pen",
@@ -2188,6 +2788,30 @@
         "lucide:download",
         "material-symbols:file-save",
         "tabler:cloud-download"
+      ],
+      "service-text:gemini": [
+        "tabler:file-download",
+        "ph:file-arrow-down",
+        "tabler:download",
+        "lucide:file-output",
+        "material-symbols:download-2",
+        "material-symbols:file-export",
+        "ph:arrow-fat-lines-down",
+        "tabler:arrow-big-down-lines",
+        "material-symbols:file-download-off",
+        "lucide:file-down"
+      ],
+      "service:gemini": [
+        "tabler:file-download",
+        "material-symbols:download",
+        "material-symbols:download-2",
+        "lucide:file-down",
+        "tabler:download",
+        "material-symbols:downloading",
+        "material-symbols:play-for-work",
+        "material-symbols:file-save",
+        "ph:download",
+        "ph:download-simple"
       ],
       "text": [
         "tabler:file-download",
@@ -2275,6 +2899,30 @@
         "tabler:zoom",
         "tabler:zoom-out"
       ],
+      "service-text:gemini": [
+        "lucide:zoom-in",
+        "material-symbols:zoom-in",
+        "tabler:zoom-in",
+        "tabler:zoom-code",
+        "tabler:zoom-scan",
+        "material-symbols:frame-inspect",
+        "ph:magnifying-glass-minus",
+        "ph:magnifying-glass-plus",
+        "material-symbols:text-increase",
+        "tabler:text-increase"
+      ],
+      "service:gemini": [
+        "lucide:zoom-in",
+        "material-symbols:zoom-in",
+        "tabler:zoom-in",
+        "tabler:zoom-in-area",
+        "material-symbols:zoom-in-map",
+        "tabler:zoom-scan",
+        "tabler:zoom",
+        "material-symbols:pinch-zoom-in",
+        "tabler:zoom-out-area",
+        "tabler:zoom-money"
+      ],
       "text": [
         "lucide:zoom-in",
         "material-symbols:zoom-in",
@@ -2360,6 +3008,30 @@
         "ph:file-minus",
         "tabler:circle-x",
         "lucide:list-x"
+      ],
+      "service-text:gemini": [
+        "lucide:list-minus",
+        "tabler:basket-x",
+        "lucide:shopping-cart-minus",
+        "tabler:shopping-bag-minus",
+        "tabler:shopping-cart-x",
+        "material-symbols:remove-shopping-cart",
+        "tabler:basket-minus",
+        "tabler:shopping-cart-minus",
+        "lucide:package-minus",
+        "lucide:bookmark-minus"
+      ],
+      "service:gemini": [
+        "material-symbols:delete",
+        "material-symbols:playlist-remove",
+        "material-symbols:delete-forever",
+        "lucide:list-x",
+        "material-symbols:remove-shopping-cart",
+        "material-symbols:remove-from-queue",
+        "material-symbols:folder-delete",
+        "lucide:list-minus",
+        "tabler:http-delete",
+        "material-symbols:delete-sweep"
       ],
       "text": [
         "lucide:list-minus",
@@ -2447,6 +3119,30 @@
         "tabler:refresh-alert",
         "fluent-emoji-flat:clockwise-vertical-arrows"
       ],
+      "service-text:gemini": [
+        "material-symbols:refresh",
+        "tabler:refresh",
+        "lucide:refresh-ccw",
+        "lucide:refresh-cw",
+        "tabler:refresh-alert",
+        "tabler:refresh-dot",
+        "tabler:refresh-off",
+        "lucide:refresh-ccw-dot",
+        "lucide:refresh-cw-off",
+        "tabler:reload"
+      ],
+      "service:gemini": [
+        "material-symbols:refresh",
+        "tabler:refresh",
+        "tabler:reload",
+        "tabler:square-f5",
+        "lucide:refresh-cw",
+        "tabler:refresh-dot",
+        "lucide:refresh-ccw-dot",
+        "material-symbols:frame-reload",
+        "material-symbols:update",
+        "lucide:refresh-ccw"
+      ],
       "text": [
         "material-symbols:refresh",
         "tabler:refresh",
@@ -2532,6 +3228,30 @@
         "tabler:square-plus-2",
         "tabler:square-rounded-plus-2",
         "material-symbols:rectangle-add"
+      ],
+      "service-text:gemini": [
+        "material-symbols:create-new-folder",
+        "lucide:git-pull-request-create",
+        "lucide:file-plus",
+        "lucide:folder-plus",
+        "material-symbols:new-label",
+        "ph:file-plus",
+        "ph:folder-plus",
+        "tabler:file-plus",
+        "tabler:folder-plus",
+        "lucide:file-plus-corner"
+      ],
+      "service:gemini": [
+        "material-symbols:create-new-folder",
+        "lucide:file-plus",
+        "material-symbols:new-label",
+        "lucide:folder-plus",
+        "material-symbols:post-add",
+        "material-symbols:add",
+        "ph:folder-plus",
+        "material-symbols:add-diamond",
+        "tabler:file-plus",
+        "tabler:new-section"
       ],
       "text": [
         "material-symbols:create-new-folder",
@@ -2619,6 +3339,30 @@
         "ph:speaker-slash",
         "material-symbols:volume-mute"
       ],
+      "service-text:gemini": [
+        "ph:waveform-slash",
+        "lucide:audio-lines-x",
+        "lucide:audio-lines-off",
+        "material-symbols:adaptive-audio-mic-off",
+        "material-symbols:notification-audio-off",
+        "tabler:music-off",
+        "tabler:volume-3",
+        "tabler:volume-off",
+        "tabler:microphone-2-off",
+        "material-symbols:volume-mute"
+      ],
+      "service:gemini": [
+        "material-symbols:volume-mute",
+        "ph:speaker-simple-slash",
+        "fluent-emoji-flat:muted-speaker",
+        "material-symbols:volume-off",
+        "lucide:volume-off",
+        "tabler:microphone-off",
+        "tabler:volume-3",
+        "ph:speaker-slash",
+        "ph:speaker-x",
+        "material-symbols:mic-off"
+      ],
       "text": [
         "lucide:audio-lines-off",
         "lucide:audio-lines-x",
@@ -2704,6 +3448,30 @@
         "material-symbols:bookmark-add",
         "ph:star",
         "lucide:star"
+      ],
+      "service-text:gemini": [
+        "lucide:heart-plus",
+        "lucide:star-plus",
+        "tabler:heart-plus",
+        "material-symbols:heart-plus",
+        "material-symbols:bookmark-add",
+        "tabler:bookmark-plus",
+        "lucide:bookmark-plus",
+        "material-symbols:add",
+        "material-symbols:add-2",
+        "material-symbols:add-ad"
+      ],
+      "service:gemini": [
+        "tabler:heart-plus",
+        "material-symbols:bookmark-add",
+        "lucide:heart-plus",
+        "material-symbols:favorite",
+        "lucide:star-plus",
+        "ph:push-pin",
+        "material-symbols:heart-plus",
+        "material-symbols:pages",
+        "material-symbols:bookmark-added",
+        "tabler:bookmark-plus"
       ],
       "text": [
         "lucide:heart-plus",
@@ -2791,6 +3559,30 @@
         "material-symbols:filter-list",
         "lucide:list-sort-ascending"
       ],
+      "service-text:gemini": [
+        "lucide:calendar-arrow-down",
+        "lucide:calendar-arrow-up",
+        "material-symbols:sort",
+        "ph:sort-ascending",
+        "ph:sort-descending",
+        "tabler:arrows-sort",
+        "tabler:sort-ascending",
+        "tabler:sort-descending",
+        "lucide:list-sort-ascending",
+        "lucide:list-sort-descending"
+      ],
+      "service:gemini": [
+        "material-symbols:sort-by-alpha",
+        "tabler:sort-descending-small-big",
+        "tabler:sort-ascending-small-big",
+        "lucide:calendar-arrow-down",
+        "tabler:sort-descending-letters",
+        "tabler:sort-ascending-letters",
+        "lucide:list-sort-descending",
+        "tabler:sort-z-a",
+        "tabler:sort-a-z",
+        "tabler:sort-ascending-numbers"
+      ],
       "text": [
         "lucide:calendar-arrow-down",
         "lucide:calendar-arrow-up",
@@ -2876,6 +3668,30 @@
         "material-symbols:exit-to-app",
         "tabler:login-2",
         "ph:user-circle-minus"
+      ],
+      "service-text:gemini": [
+        "lucide:log-out",
+        "ph:sign-out",
+        "tabler:logout",
+        "material-symbols:output",
+        "tabler:logout-2",
+        "tabler:door-exit",
+        "lucide:square-arrow-right-exit",
+        "material-symbols:logout",
+        "material-symbols:exit-to-app",
+        "material-symbols:move-item"
+      ],
+      "service:gemini": [
+        "lucide:log-out",
+        "ph:sign-out",
+        "material-symbols:logout",
+        "tabler:logout",
+        "tabler:logout-2",
+        "tabler:door-exit",
+        "material-symbols:exit-to-app",
+        "material-symbols:output",
+        "material-symbols:move-item",
+        "material-symbols:unsubscribe"
       ],
       "text": [
         "lucide:log-out",
@@ -2963,6 +3779,30 @@
         "ph:monitor-play",
         "lucide:monitor-play"
       ],
+      "service-text:gemini": [
+        "lucide:file-play",
+        "lucide:circle-play",
+        "tabler:brand-youtube",
+        "ph:youtube-logo",
+        "material-symbols:slideshow",
+        "ph:monitor-play",
+        "lucide:play-off",
+        "lucide:circle-fading-play",
+        "lucide:monitor-play",
+        "lucide:play"
+      ],
+      "service:gemini": [
+        "lucide:file-play",
+        "ph:video",
+        "material-symbols:slideshow",
+        "material-symbols:motion-play",
+        "material-symbols:video-search",
+        "material-symbols:smart-display",
+        "material-symbols:play-lesson",
+        "ph:monitor-play",
+        "lucide:image-play",
+        "material-symbols:video-library"
+      ],
       "text": [
         "lucide:file-play",
         "lucide:play",
@@ -3048,6 +3888,30 @@
         "lucide:clipboard-paste",
         "material-symbols:content-paste-search",
         "material-symbols:content-paste-go"
+      ],
+      "service-text:gemini": [
+        "lucide:scan-text",
+        "material-symbols:markdown-copy",
+        "ph:clipboard",
+        "tabler:clipboard-typography",
+        "ph:clipboard-text",
+        "lucide:text-search",
+        "lucide:square-text",
+        "tabler:clipboard-text",
+        "lucide:clipboard-type",
+        "ph:files"
+      ],
+      "service:gemini": [
+        "material-symbols:content-copy",
+        "lucide:clipboard-copy",
+        "ph:clipboard-text",
+        "material-symbols:markdown-copy",
+        "tabler:clipboard-text",
+        "lucide:scan-text",
+        "tabler:clipboard-copy",
+        "ph:copy",
+        "material-symbols:content-paste",
+        "tabler:copy"
       ],
       "text": [
         "lucide:scan-text",
@@ -3135,6 +3999,30 @@
         "tabler:brand-linktree",
         "ph:link-simple-horizontal"
       ],
+      "service-text:gemini": [
+        "lucide:external-link",
+        "tabler:share",
+        "tabler:browser-share",
+        "material-symbols:share",
+        "lucide:share-2",
+        "material-symbols:share-off",
+        "lucide:square-arrow-out-up-right",
+        "lucide:square-arrow-up-right",
+        "ph:arrow-square-out",
+        "lucide:circle-arrow-out-up-right"
+      ],
+      "service:gemini": [
+        "tabler:share",
+        "material-symbols:share",
+        "material-symbols:document-share",
+        "ph:share-network",
+        "material-symbols:share-eta",
+        "material-symbols:share-location",
+        "tabler:browser-share",
+        "material-symbols:inbox-text-share",
+        "tabler:user-share",
+        "ph:share-fat"
+      ],
       "text": [
         "lucide:external-link",
         "tabler:share",
@@ -3220,6 +4108,30 @@
         "tabler:filter-cog",
         "lucide:list-filter-plus",
         "tabler:filter-2-minus"
+      ],
+      "service-text:gemini": [
+        "material-symbols:filter-list",
+        "material-symbols:filter-list-off",
+        "tabler:filter-2",
+        "tabler:filter-2-search",
+        "ph:list-magnifying-glass",
+        "lucide:list-filter",
+        "lucide:list-filter-plus",
+        "tabler:list-search",
+        "tabler:filter-2-bolt",
+        "tabler:filter-2-cancel"
+      ],
+      "service:gemini": [
+        "material-symbols:filter-list",
+        "material-symbols:filter-list-off",
+        "lucide:list-filter",
+        "tabler:filter-2",
+        "tabler:filter-2-x",
+        "tabler:list-search",
+        "tabler:filter-2-minus",
+        "tabler:filter-2-edit",
+        "tabler:filter-2-cancel",
+        "tabler:filter-2-code"
       ],
       "text": [
         "material-symbols:filter-list",
@@ -3307,6 +4219,30 @@
         "tabler:message-2-search",
         "lucide:folder-search"
       ],
+      "service-text:gemini": [
+        "material-symbols:content-paste-search",
+        "lucide:search",
+        "material-symbols:search",
+        "tabler:search",
+        "lucide:book-search",
+        "lucide:file-search",
+        "lucide:folder-search",
+        "lucide:package-search",
+        "lucide:scan-search",
+        "lucide:search-alert"
+      ],
+      "service:gemini": [
+        "material-symbols:content-paste-search",
+        "material-symbols:quick-reference-all",
+        "material-symbols:document-search",
+        "lucide:file-search-corner",
+        "lucide:file-search",
+        "material-symbols:category-search",
+        "tabler:eye-search",
+        "tabler:map-search",
+        "lucide:folder-search",
+        "tabler:file-search"
+      ],
       "text": [
         "material-symbols:content-paste-search",
         "material-symbols:collapse-content",
@@ -3392,6 +4328,30 @@
         "material-symbols:upload-file",
         "lucide:image-plus",
         "tabler:photo-share"
+      ],
+      "service-text:gemini": [
+        "tabler:photo-up",
+        "lucide:image-up",
+        "tabler:camera-up",
+        "material-symbols:add-photo-alternate",
+        "material-symbols:add-a-photo",
+        "ph:camera-plus",
+        "material-symbols:image-arrow-up",
+        "lucide:image-plus",
+        "tabler:photo-plus",
+        "tabler:photo-circle-plus"
+      ],
+      "service:gemini": [
+        "tabler:photo-up",
+        "lucide:image-up",
+        "material-symbols:add-photo-alternate",
+        "material-symbols:add-a-photo",
+        "tabler:camera-up",
+        "tabler:photo-plus",
+        "tabler:photo-circle-plus",
+        "material-symbols:image-arrow-up",
+        "material-symbols:upload-file",
+        "lucide:image-plus"
       ],
       "text": [
         "tabler:photo-plus",
@@ -3479,6 +4439,24 @@
         "material-symbols:align-items-stretch",
         "material-symbols:accessibility-new"
       ],
+      "service-text:gemini": [
+        "tabler:gymnastics",
+        "tabler:stretching",
+        "tabler:stretching-2",
+        "material-symbols:sports-gymnastics"
+      ],
+      "service:gemini": [
+        "tabler:stretching",
+        "tabler:stretching-2",
+        "tabler:yoga",
+        "material-symbols:sports-gymnastics",
+        "lucide:stretch-vertical",
+        "tabler:acrobatic",
+        "material-symbols:flex-wrap",
+        "material-symbols:align-justify-stretch",
+        "tabler:gymnastics",
+        "lucide:stretch-horizontal"
+      ],
       "text": [
         "tabler:gymnastics",
         "tabler:stretching",
@@ -3558,6 +4536,25 @@
         "tabler:user-exclamation",
         "lucide:message-circle-warning",
         "ph:warning-diamond"
+      ],
+      "service-text:gemini": [
+        "lucide:umbrella-off",
+        "tabler:alert-triangle",
+        "material-symbols:gpp-maybe",
+        "lucide:shield-question-mark",
+        "ph:warning"
+      ],
+      "service:gemini": [
+        "material-symbols:gpp-maybe",
+        "ph:warning",
+        "material-symbols:dangerous",
+        "fluent-emoji-flat:warning",
+        "ph:shield-warning",
+        "tabler:alert-triangle",
+        "material-symbols:casino",
+        "material-symbols:emergency-home",
+        "tabler:dice",
+        "material-symbols:flood"
       ],
       "text": [
         "tabler:alert-triangle",
@@ -3639,6 +4636,30 @@
         "material-symbols:chart-data",
         "lucide:chart-bar-increasing",
         "material-symbols:trending-up"
+      ],
+      "service-text:gemini": [
+        "tabler:growth",
+        "tabler:chart-arrows-vertical",
+        "tabler:trending-up",
+        "tabler:trending-up-2",
+        "tabler:trending-up-3",
+        "fluent-emoji-flat:chart-increasing-with-yen",
+        "lucide:sprout",
+        "tabler:seedling",
+        "fluent-emoji-flat:chart-increasing",
+        "tabler:seedling-off"
+      ],
+      "service:gemini": [
+        "tabler:growth",
+        "material-symbols:people-size-increase",
+        "tabler:trending-up-3",
+        "tabler:trending-up-2",
+        "fluent-emoji-flat:chart-increasing",
+        "material-symbols:trending-up",
+        "lucide:trending-up",
+        "tabler:trending-up",
+        "ph:trend-up",
+        "material-symbols:moving"
       ],
       "text": [
         "tabler:growth",
@@ -3726,6 +4747,30 @@
         "tabler:message-question",
         "lucide:signal-medium"
       ],
+      "service-text:gemini": [
+        "material-symbols:call-quality",
+        "material-symbols:high-quality",
+        "material-symbols:high-quality-off",
+        "tabler:badge-2k",
+        "tabler:badge-3k",
+        "tabler:badge-5k",
+        "tabler:badge-8k",
+        "tabler:badge-hd",
+        "tabler:uhd",
+        "tabler:badge-4k"
+      ],
+      "service:gemini": [
+        "material-symbols:high-quality",
+        "material-symbols:hd",
+        "material-symbols:high-res",
+        "material-symbols:workspace-premium",
+        "material-symbols:call-quality",
+        "material-symbols:high-quality-off",
+        "material-symbols:1k",
+        "material-symbols:9k",
+        "tabler:badge-hd",
+        "material-symbols:grading"
+      ],
       "text": [
         "material-symbols:call-quality",
         "material-symbols:high-quality",
@@ -3811,6 +4856,30 @@
         "tabler:folder-stats",
         "fluent-emoji-flat:information",
         "tabler:device-analytics"
+      ],
+      "service-text:gemini": [
+        "material-symbols:search-insights",
+        "tabler:analyze",
+        "tabler:analyze-off",
+        "material-symbols:data-exploration",
+        "material-symbols:analytics",
+        "tabler:eye-spark",
+        "lucide:brain",
+        "lucide:lightbulb",
+        "material-symbols:lightbulb",
+        "fluent-emoji-flat:light-bulb"
+      ],
+      "service:gemini": [
+        "material-symbols:search-insights",
+        "tabler:analyze",
+        "material-symbols:data-exploration",
+        "material-symbols:analytics",
+        "tabler:report",
+        "lucide:summary",
+        "material-symbols:batch-prediction",
+        "tabler:graph",
+        "material-symbols:overview",
+        "tabler:chart-treemap"
       ],
       "text": [
         "material-symbols:search-insights",
@@ -3898,6 +4967,30 @@
         "material-symbols:lock-person",
         "ph:lock-simple"
       ],
+      "service-text:gemini": [
+        "material-symbols:privacy",
+        "material-symbols:privacy-tip",
+        "ph:cookie",
+        "tabler:spy",
+        "lucide:earth-lock",
+        "lucide:globe-lock",
+        "tabler:currency-monero",
+        "tabler:currency-zcash",
+        "tabler:spy-off",
+        "fluent-emoji-flat:locked-with-pen"
+      ],
+      "service:gemini": [
+        "material-symbols:privacy",
+        "ph:cookie",
+        "material-symbols:private-connectivity",
+        "material-symbols:encrypted",
+        "material-symbols:hide-source",
+        "lucide:messages-square",
+        "tabler:pills",
+        "tabler:no-copyright",
+        "material-symbols:security",
+        "material-symbols:group-eye"
+      ],
       "text": [
         "material-symbols:privacy",
         "material-symbols:privacy-tip",
@@ -3984,6 +5077,22 @@
         "tabler:chart-ppf",
         "lucide:chart-no-axes-combined"
       ],
+      "service-text:gemini": [
+        "tabler:automation",
+        "material-symbols:hevc"
+      ],
+      "service:gemini": [
+        "tabler:automation",
+        "material-symbols:energy-program-time-used",
+        "material-symbols:energy-program-saving",
+        "material-symbols:energy-savings-leaf",
+        "tabler:multiplier-0-5x",
+        "material-symbols:data-saver-on",
+        "tabler:multiplier-1-5x",
+        "material-symbols:heat-pump-balance",
+        "material-symbols:hevc",
+        "material-symbols:high-density"
+      ],
       "text": [
         "tabler:automation",
         "material-symbols:hevc"
@@ -4061,6 +5170,30 @@
         "material-symbols:crowdsource",
         "tabler:pointer-collaboration",
         "tabler:users"
+      ],
+      "service-text:gemini": [
+        "lucide:users-collaboration",
+        "tabler:pointer-collaboration",
+        "tabler:pointer-collaboration-2",
+        "lucide:users-round-collaboration",
+        "lucide:folder-users",
+        "lucide:user-group",
+        "tabler:brand-abstract",
+        "tabler:brand-airtable",
+        "tabler:brand-asana",
+        "tabler:brand-figma"
+      ],
+      "service:gemini": [
+        "lucide:users-collaboration",
+        "lucide:users-round-collaboration",
+        "tabler:pointer-collaboration",
+        "tabler:pointer-collaboration-2",
+        "material-symbols:group-work",
+        "material-symbols:partner-exchange",
+        "lucide:folder-users",
+        "material-symbols:display-group",
+        "material-symbols:co-present",
+        "material-symbols:diversity-2"
       ],
       "text": [
         "lucide:users-collaboration",
@@ -4148,6 +5281,23 @@
         "tabler:bulb",
         "tabler:icons"
       ],
+      "service-text:gemini": [
+        "lucide:zodiac-aquarius",
+        "tabler:bulb",
+        "material-symbols:emoji-objects"
+      ],
+      "service:gemini": [
+        "material-symbols:automation",
+        "tabler:filter-2-spark",
+        "tabler:ai",
+        "material-symbols:model-training",
+        "material-symbols:military-tech",
+        "tabler:bulb",
+        "tabler:cube-spark",
+        "material-symbols:dynamic-feed",
+        "material-symbols:api",
+        "material-symbols:network-intelligence"
+      ],
       "text": [
         "tabler:bulb",
         "lucide:zodiac-aquarius",
@@ -4227,6 +5377,19 @@
         "material-symbols:accessibility",
         "material-symbols:accessible-menu"
       ],
+      "service-text:gemini": [],
+      "service:gemini": [
+        "material-symbols:sprint",
+        "material-symbols:api",
+        "tabler:acrobatic",
+        "material-symbols:speed",
+        "material-symbols:dynamic-form",
+        "lucide:waypoints",
+        "material-symbols:acute",
+        "material-symbols:directions-run",
+        "fluent-emoji-flat:person-cartwheeling",
+        "tabler:ai-agents"
+      ],
       "text": [],
       "vector:gemini": [
         "material-symbols:sprint",
@@ -4302,6 +5465,19 @@
         "material-symbols:person-text",
         "material-symbols:imagesmode"
       ],
+      "service-text:gemini": [],
+      "service:gemini": [
+        "material-symbols:relax",
+        "material-symbols:diversity-2",
+        "ph:funnel-simple",
+        "material-symbols:diversity-1",
+        "ph:code-simple",
+        "ph:rss-simple",
+        "ph:stack-simple",
+        "ph:globe-simple",
+        "material-symbols:diversity-4",
+        "ph:copy-simple"
+      ],
       "text": [],
       "vector:gemini": [
         "material-symbols:productivity",
@@ -4376,6 +5552,30 @@
         "material-symbols:temp-preferences-eco",
         "material-symbols:energy-savings-leaf",
         "lucide:recycle"
+      ],
+      "service-text:gemini": [
+        "lucide:flower",
+        "lucide:leaf",
+        "lucide:recycle",
+        "lucide:flower-2",
+        "lucide:sprout",
+        "ph:windmill",
+        "tabler:recycle",
+        "tabler:recycle-off",
+        "ph:recycle",
+        "fluent-emoji-flat:recycling-symbol"
+      ],
+      "service:gemini": [
+        "tabler:recycle",
+        "lucide:recycle",
+        "lucide:flower",
+        "material-symbols:temp-preferences-eco",
+        "lucide:flower-2",
+        "lucide:leaf",
+        "material-symbols:energy-program-saving",
+        "material-symbols:eco",
+        "ph:recycle",
+        "tabler:michelin-star-green"
       ],
       "text": [
         "lucide:flower",
@@ -4463,6 +5663,30 @@
         "tabler:wifi",
         "material-symbols:wifi"
       ],
+      "service-text:gemini": [
+        "material-symbols:private-connectivity",
+        "lucide:antenna",
+        "lucide:radio",
+        "lucide:radio-off",
+        "lucide:radio-tower",
+        "ph:bluetooth-slash",
+        "ph:bluetooth-x",
+        "ph:bluetooth",
+        "lucide:house-wifi",
+        "ph:bluetooth-connected"
+      ],
+      "service:gemini": [
+        "material-symbols:private-connectivity",
+        "tabler:network",
+        "lucide:house-wifi",
+        "tabler:cloud-network",
+        "tabler:cloud-data-connection",
+        "tabler:connection",
+        "ph:wifi-high",
+        "ph:wifi-medium",
+        "ph:bluetooth-connected",
+        "material-symbols:network-ping"
+      ],
       "text": [
         "material-symbols:private-connectivity",
         "lucide:antenna",
@@ -4549,6 +5773,26 @@
         "fluent-emoji-flat:rainbow-flag",
         "lucide:transgender"
       ],
+      "service-text:gemini": [
+        "material-symbols:diversity-1",
+        "material-symbols:diversity-2",
+        "material-symbols:diversity-3",
+        "material-symbols:diversity-4",
+        "lucide:transgender",
+        "fluent-emoji-flat:rainbow-flag"
+      ],
+      "service:gemini": [
+        "material-symbols:diversity-2",
+        "material-symbols:diversity-1",
+        "material-symbols:diversity-3",
+        "material-symbols:diversity-4",
+        "lucide:transgender",
+        "fluent-emoji-flat:rainbow-flag",
+        "material-symbols:accessibility",
+        "material-symbols:interests",
+        "material-symbols:accessibility-new",
+        "lucide:accessibility"
+      ],
       "text": [
         "material-symbols:diversity-1",
         "material-symbols:diversity-2",
@@ -4630,6 +5874,30 @@
         "material-symbols:filter-center-focus",
         "material-symbols:fan-focus",
         "material-symbols:reset-focus"
+      ],
+      "service-text:gemini": [
+        "lucide:focus",
+        "tabler:focus",
+        "tabler:focus-2",
+        "tabler:focus-auto",
+        "tabler:focus-centered",
+        "material-symbols:center-focus-strong",
+        "material-symbols:center-focus-weak",
+        "material-symbols:filter-center-focus",
+        "material-symbols:highlight-keyboard-focus",
+        "material-symbols:fan-focus"
+      ],
+      "service:gemini": [
+        "lucide:focus",
+        "tabler:focus",
+        "material-symbols:center-focus-weak",
+        "tabler:focus-2",
+        "material-symbols:filter-center-focus",
+        "tabler:focus-centered",
+        "material-symbols:center-focus-strong",
+        "material-symbols:fan-focus",
+        "material-symbols:reset-focus",
+        "tabler:viewfinder"
       ],
       "text": [
         "lucide:focus",
@@ -4717,6 +5985,30 @@
         "tabler:scale-outline-off",
         "material-symbols:account-balance-wallet"
       ],
+      "service-text:gemini": [
+        "material-symbols:balance",
+        "fluent-emoji-flat:balance-scale",
+        "material-symbols:account-balance",
+        "material-symbols:fluid-balance",
+        "material-symbols:account-balance-wallet",
+        "tabler:load-balancer",
+        "material-symbols:heat-pump-balance",
+        "material-symbols:reset-white-balance",
+        "fluent-emoji-flat:libra",
+        "lucide:scale"
+      ],
+      "service:gemini": [
+        "material-symbols:balance",
+        "fluent-emoji-flat:balance-scale",
+        "tabler:scale",
+        "material-symbols:heat-pump-balance",
+        "ph:scales",
+        "tabler:yin-yang",
+        "material-symbols:account-balance",
+        "lucide:scale",
+        "material-symbols:fluid-balance",
+        "ph:yin-yang"
+      ],
       "text": [
         "material-symbols:balance",
         "fluent-emoji-flat:balance-scale",
@@ -4802,6 +6094,30 @@
         "material-symbols:speed-3",
         "ph:speedometer",
         "tabler:gauge-off"
+      ],
+      "service-text:gemini": [
+        "material-symbols:speed",
+        "ph:speedometer",
+        "material-symbols:speed-2",
+        "material-symbols:speed-2x",
+        "material-symbols:speed-3",
+        "material-symbols:speed-4",
+        "material-symbols:speed-camera",
+        "material-symbols:speed-0-25",
+        "material-symbols:speed-0-2x",
+        "material-symbols:speed-0-5"
+      ],
+      "service:gemini": [
+        "material-symbols:speed",
+        "material-symbols:speed-2",
+        "material-symbols:speed-3",
+        "material-symbols:speed-4",
+        "material-symbols:speed-2x",
+        "material-symbols:speed-1-2",
+        "material-symbols:delivery-truck-speed",
+        "material-symbols:speed-1-5",
+        "material-symbols:speed-1-7x",
+        "material-symbols:speed-4-progress"
       ],
       "text": [
         "material-symbols:speed",
@@ -4889,6 +6205,30 @@
         "ph:shield",
         "tabler:shield"
       ],
+      "service-text:gemini": [
+        "material-symbols:security",
+        "material-symbols:security-key",
+        "ph:security-camera",
+        "lucide:lock-open",
+        "lucide:lock-keyhole-open",
+        "lucide:lock",
+        "ph:fingerprint",
+        "ph:password",
+        "tabler:shield",
+        "lucide:lock-keyhole"
+      ],
+      "service:gemini": [
+        "material-symbols:security",
+        "material-symbols:local-police",
+        "material-symbols:private-connectivity",
+        "lucide:lock",
+        "tabler:shield-lock",
+        "material-symbols:encrypted",
+        "tabler:lock",
+        "ph:vault",
+        "tabler:lock-access",
+        "material-symbols:lock"
+      ],
       "text": [
         "material-symbols:security",
         "material-symbols:security-key",
@@ -4974,6 +6314,30 @@
         "tabler:flag-check",
         "tabler:message-check",
         "tabler:photo-check"
+      ],
+      "service-text:gemini": [
+        "tabler:mood-check",
+        "lucide:cloud-check",
+        "tabler:circle-check",
+        "lucide:credit-card-check",
+        "tabler:circle-dashed-check",
+        "tabler:device-desktop-check",
+        "tabler:device-imac-check",
+        "tabler:device-ipad-check",
+        "tabler:device-ipad-horizontal-check",
+        "lucide:podium"
+      ],
+      "service:gemini": [
+        "tabler:circle-check",
+        "tabler:devices-check",
+        "tabler:mood-check",
+        "material-symbols:download-done",
+        "material-symbols:target-check",
+        "lucide:cloud-check",
+        "lucide:save-check",
+        "tabler:copy-check",
+        "tabler:stack-check",
+        "material-symbols:check-circle"
       ],
       "text": [
         "lucide:podium",
@@ -5061,6 +6425,28 @@
         "ph:user-plus",
         "material-symbols:identity-aware-proxy"
       ],
+      "service-text:gemini": [
+        "lucide:certificate",
+        "tabler:heart-handshake",
+        "material-symbols:verified",
+        "material-symbols:verified-user",
+        "ph:shield-check",
+        "lucide:book-check",
+        "lucide:book-open-check",
+        "tabler:jetpack"
+      ],
+      "service:gemini": [
+        "material-symbols:approval-delegation",
+        "material-symbols:relax",
+        "material-symbols:private-connectivity",
+        "tabler:shield-down",
+        "material-symbols:stress-management",
+        "material-symbols:security",
+        "material-symbols:gpp-maybe",
+        "tabler:vault",
+        "tabler:heart-handshake",
+        "material-symbols:assured-workload"
+      ],
       "text": [
         "lucide:certificate",
         "tabler:heart-handshake",
@@ -5142,6 +6528,19 @@
         "ph:map-pin-area",
         "tabler:menu-4"
       ],
+      "service-text:gemini": [],
+      "service:gemini": [
+        "tabler:bread",
+        "tabler:sitemap",
+        "material-symbols:navigation",
+        "material-symbols:bakery-dining",
+        "ph:bread",
+        "material-symbols:toc",
+        "fluent-emoji-flat:bread",
+        "lucide:list-tree",
+        "tabler:arrow-bar-to-left-dashed",
+        "material-symbols:breakfast-dining"
+      ],
       "text": [],
       "vector:gemini": [
         "tabler:bread",
@@ -5216,6 +6615,30 @@
         "material-symbols:feature-search",
         "ph:textbox",
         "lucide:text-search"
+      ],
+      "service-text:gemini": [
+        "tabler:input-search",
+        "material-symbols:search",
+        "tabler:search",
+        "material-symbols:search-insights",
+        "lucide:search",
+        "lucide:book-search",
+        "lucide:file-search",
+        "lucide:folder-search",
+        "lucide:package-search",
+        "lucide:scan-search"
+      ],
+      "service:gemini": [
+        "tabler:input-search",
+        "material-symbols:search",
+        "tabler:input-ai",
+        "tabler:input-spark",
+        "tabler:search",
+        "material-symbols:feature-search",
+        "material-symbols:input",
+        "lucide:search",
+        "lucide:text-cursor-input",
+        "tabler:input-check"
       ],
       "text": [
         "tabler:input-search",
@@ -5303,6 +6726,30 @@
         "material-symbols:select-check-box",
         "tabler:squares-selected"
       ],
+      "service-text:gemini": [
+        "material-symbols:radio-button-checked",
+        "material-symbols:radio-button-partial",
+        "tabler:circle-dot",
+        "fluent-emoji-flat:radio-button",
+        "ph:radio-button",
+        "material-symbols:radio-button-unchecked",
+        "tabler:playstation-circle",
+        "tabler:square-dot",
+        "lucide:circle-dot",
+        "material-symbols:nest-heat-link-e"
+      ],
+      "service:gemini": [
+        "material-symbols:radio-button-checked",
+        "ph:radio-button",
+        "material-symbols:radio-button-partial",
+        "fluent-emoji-flat:radio-button",
+        "tabler:circle-dot",
+        "material-symbols:radio-button-unchecked",
+        "material-symbols:select-check-box",
+        "material-symbols:radio",
+        "fluent-emoji-flat:radio",
+        "material-symbols:edit-attributes"
+      ],
       "text": [
         "material-symbols:radio-button-checked",
         "material-symbols:radio-button-partial",
@@ -5388,6 +6835,30 @@
         "ph:dots-six",
         "lucide:grip",
         "ph:dots-six-vertical"
+      ],
+      "service-text:gemini": [
+        "lucide:grip-vertical",
+        "tabler:drag-drop",
+        "tabler:drag-drop-2",
+        "tabler:reorder",
+        "material-symbols:drag-click",
+        "lucide:scratch-blocks",
+        "tabler:hand-grab",
+        "material-symbols:drag-handle",
+        "material-symbols:drag-indicator",
+        "material-symbols:drag-pan"
+      ],
+      "service:gemini": [
+        "tabler:drag-drop",
+        "lucide:handle-bottom-right",
+        "material-symbols:drag-handle",
+        "material-symbols:drag-indicator",
+        "tabler:drag-drop-2",
+        "tabler:grip-vertical",
+        "tabler:grip-horizontal",
+        "lucide:grip",
+        "lucide:grip-vertical",
+        "lucide:grip-horizontal"
       ],
       "text": [
         "lucide:grip-vertical",
@@ -5475,6 +6946,30 @@
         "lucide:calendar-chevrons-right",
         "lucide:circle-chevrons-right"
       ],
+      "service-text:gemini": [
+        "lucide:circle-chevrons-right",
+        "tabler:chevron-right-pipe",
+        "material-symbols:last-page",
+        "tabler:chevron-left-pipe",
+        "lucide:columns-2",
+        "lucide:columns-3",
+        "lucide:columns-4",
+        "lucide:circle-chevrons-down",
+        "lucide:circle-chevrons-left",
+        "lucide:circle-chevrons-up"
+      ],
+      "service:gemini": [
+        "material-symbols:last-page",
+        "material-symbols:skip-next",
+        "material-symbols:next-plan",
+        "material-symbols:tv-next",
+        "lucide:step-forward",
+        "tabler:chevron-right-pipe",
+        "material-symbols:east",
+        "tabler:player-track-next",
+        "lucide:circle-chevrons-right",
+        "material-symbols:first-page"
+      ],
       "text": [
         "lucide:circle-chevrons-right",
         "tabler:chevron-right-pipe",
@@ -5560,6 +7055,30 @@
         "material-symbols:notification-important",
         "tabler:bell-pin",
         "tabler:bell-cog"
+      ],
+      "service-text:gemini": [
+        "material-symbols:notifications-unread",
+        "material-symbols:app-badging",
+        "ph:notification",
+        "tabler:notification",
+        "tabler:notification-off",
+        "tabler:home-dot",
+        "material-symbols:release-alert",
+        "material-symbols:mark-chat-unread",
+        "material-symbols:mark-unread-chat-alt",
+        "material-symbols:filter-9-plus"
+      ],
+      "service:gemini": [
+        "ph:notification",
+        "material-symbols:app-badging",
+        "tabler:notification",
+        "material-symbols:notifications-unread",
+        "tabler:home-dot",
+        "tabler:notification-off",
+        "material-symbols:notifications",
+        "lucide:badge-alert",
+        "material-symbols:release-alert",
+        "material-symbols:notifications-active"
       ],
       "text": [
         "ph:notification",
@@ -5647,6 +7166,30 @@
         "lucide:square-check",
         "fluent-emoji-flat:white-medium-small-square"
       ],
+      "service-text:gemini": [
+        "tabler:checkbox",
+        "tabler:square-check",
+        "ph:radio-button",
+        "tabler:square-rounded-check",
+        "ph:check-square",
+        "lucide:square-check-big",
+        "material-symbols:select-check-box",
+        "material-symbols:check-box",
+        "material-symbols:indeterminate-check-box",
+        "material-symbols:check-indeterminate-small"
+      ],
+      "service:gemini": [
+        "tabler:checkbox",
+        "material-symbols:select-check-box",
+        "material-symbols:check-box",
+        "tabler:square-check",
+        "fluent-emoji-flat:check-box-with-check",
+        "material-symbols:radio-button-checked",
+        "tabler:input-check",
+        "ph:check-square",
+        "ph:check",
+        "lucide:square-check"
+      ],
       "text": [
         "tabler:checkbox",
         "ph:radio-button",
@@ -5732,6 +7275,30 @@
         "material-symbols:expand-content",
         "tabler:fold-down",
         "material-symbols:top-panel-open"
+      ],
+      "service-text:gemini": [
+        "tabler:details",
+        "material-symbols:expand-all",
+        "lucide:list-chevrons-down-up",
+        "lucide:list-collapse",
+        "tabler:fold-down",
+        "lucide:list-chevrons-up-down",
+        "tabler:chevron-down",
+        "tabler:fold-up",
+        "tabler:details-off",
+        "material-symbols:expansion-panels"
+      ],
+      "service:gemini": [
+        "material-symbols:expand-content",
+        "material-symbols:expansion-panels",
+        "material-symbols:expand-all",
+        "tabler:details",
+        "tabler:fold-down",
+        "material-symbols:expand",
+        "lucide:list-collapse",
+        "lucide:list-chevrons-up-down",
+        "lucide:expand",
+        "tabler:layout-sidebar-left-expand"
       ],
       "text": [
         "tabler:details",
@@ -5819,6 +7386,30 @@
         "lucide:chevron-down",
         "tabler:selector"
       ],
+      "service-text:gemini": [
+        "material-symbols:arrow-drop-down",
+        "material-symbols:arrow-drop-down-circle",
+        "tabler:square-rounded-chevron-down",
+        "material-symbols:dropdown-menu",
+        "tabler:caret-down",
+        "material-symbols:keyboard-arrow-down",
+        "tabler:chevron-compact-down",
+        "tabler:caret-up",
+        "tabler:chevron-down",
+        "tabler:caret-up-down"
+      ],
+      "service:gemini": [
+        "material-symbols:arrow-drop-down",
+        "material-symbols:dropdown-menu",
+        "tabler:selector",
+        "tabler:select",
+        "material-symbols:arrow-drop-down-circle",
+        "material-symbols:dropdown",
+        "material-symbols:keyboard-arrow-down",
+        "lucide:chevron-down",
+        "material-symbols:list-arrow",
+        "tabler:caret-down"
+      ],
       "text": [
         "material-symbols:dropdown-menu",
         "tabler:caret-down",
@@ -5904,6 +7495,30 @@
         "tabler:dots-vertical",
         "tabler:square-rounded-plus",
         "material-symbols:picture-in-picture-center"
+      ],
+      "service-text:gemini": [
+        "lucide:circle-chevrons-up",
+        "tabler:picture-in-picture",
+        "tabler:picture-in-picture-off",
+        "tabler:picture-in-picture-on",
+        "tabler:picture-in-picture-top",
+        "lucide:balloon",
+        "lucide:bubbles",
+        "material-symbols:houseboat",
+        "lucide:picture-in-picture",
+        "material-symbols:float-portrait-2"
+      ],
+      "service:gemini": [
+        "material-symbols:bottom-app-bar",
+        "material-symbols:bottom-navigation",
+        "lucide:circle-chevrons-up",
+        "material-symbols:call-to-action",
+        "lucide:panel-bottom-open",
+        "material-symbols:bottom-sheets",
+        "material-symbols:buttons-alt",
+        "lucide:panel-bottom",
+        "tabler:layout-bottombar-expand",
+        "material-symbols:bottom-panel-open"
       ],
       "text": [
         "lucide:circle-chevrons-up",
@@ -5991,6 +7606,30 @@
         "lucide:panel-top",
         "material-symbols:table-rows"
       ],
+      "service-text:gemini": [
+        "tabler:layout-bottombar",
+        "material-symbols:tab-unselected",
+        "tabler:tabs",
+        "material-symbols:tabs",
+        "material-symbols:bottom-navigation",
+        "ph:browser",
+        "material-symbols:tab",
+        "material-symbols:keyboard-tab",
+        "material-symbols:tab-close",
+        "material-symbols:tab-duplicate"
+      ],
+      "service:gemini": [
+        "tabler:layout-bottombar",
+        "tabler:tabs",
+        "tabler:layout-navbar",
+        "material-symbols:tabs",
+        "material-symbols:bottom-navigation",
+        "ph:tabs",
+        "material-symbols:tab-unselected",
+        "tabler:layout-navbar-inactive",
+        "ph:layout",
+        "material-symbols:mobile-layout"
+      ],
       "text": [
         "tabler:layout-bottombar",
         "material-symbols:tab-unselected",
@@ -6076,6 +7715,30 @@
         "material-symbols:splitscreen-landscape-add",
         "material-symbols:view-column-2",
         "ph:square-split-horizontal"
+      ],
+      "service-text:gemini": [
+        "material-symbols:vertical-split",
+        "material-symbols:split-scene-left",
+        "ph:square-split-horizontal",
+        "material-symbols:horizontal-split",
+        "material-symbols:split-scene-right",
+        "material-symbols:view-column-2",
+        "tabler:layout-columns",
+        "material-symbols:splitscreen-top",
+        "material-symbols:splitscreen",
+        "material-symbols:splitscreen-bottom"
+      ],
+      "service:gemini": [
+        "material-symbols:splitscreen-right",
+        "material-symbols:splitscreen",
+        "material-symbols:splitscreen-landscape",
+        "material-symbols:splitscreen-left",
+        "material-symbols:splitscreen-top",
+        "material-symbols:splitscreen-bottom",
+        "material-symbols:splitscreen-portrait",
+        "material-symbols:vertical-split",
+        "material-symbols:splitscreen-landscape-add",
+        "material-symbols:split-scene"
       ],
       "text": [
         "material-symbols:horizontal-split",
@@ -6163,6 +7826,30 @@
         "tabler:browser-x",
         "fluent-emoji-flat:cross-mark-button"
       ],
+      "service-text:gemini": [
+        "tabler:app-window-center",
+        "material-symbols:bottom-sheets",
+        "lucide:medal",
+        "ph:medal",
+        "tabler:medal",
+        "fluent-emoji-flat:military-medal",
+        "fluent-emoji-flat:sports-medal",
+        "material-symbols:model-training",
+        "ph:medal-military",
+        "tabler:medal-2"
+      ],
+      "service:gemini": [
+        "material-symbols:close",
+        "material-symbols:tab-close",
+        "material-symbols:left-panel-close",
+        "material-symbols:bottom-panel-close",
+        "material-symbols:tab-close-inactive",
+        "material-symbols:top-panel-close",
+        "material-symbols:close-small",
+        "material-symbols:arrow-menu-close",
+        "material-symbols:right-panel-close",
+        "tabler:tab-close"
+      ],
       "text": [
         "tabler:app-window-center",
         "material-symbols:bottom-sheets",
@@ -6248,6 +7935,30 @@
         "lucide:toggle-right",
         "material-symbols:toggle-off",
         "tabler:square-toggle-horizontal"
+      ],
+      "service-text:gemini": [
+        "tabler:square-toggle-horizontal",
+        "ph:toggle-left",
+        "ph:toggle-right",
+        "lucide:toggle-left",
+        "lucide:toggle-right",
+        "tabler:square-toggle",
+        "tabler:toggle-left",
+        "tabler:toggle-right",
+        "tabler:switch",
+        "tabler:history-toggle"
+      ],
+      "service:gemini": [
+        "material-symbols:toggle-on",
+        "material-symbols:shield-toggle",
+        "material-symbols:switch",
+        "lucide:toggle-left",
+        "tabler:circuit-changeover",
+        "material-symbols:toggle-off",
+        "material-symbols:switches",
+        "lucide:toggle-right",
+        "tabler:square-toggle",
+        "ph:toggle-left"
       ],
       "text": [
         "lucide:toggle-left",
@@ -6335,6 +8046,30 @@
         "tabler:dots-vertical",
         "ph:list"
       ],
+      "service-text:gemini": [
+        "material-symbols:mobile-menu",
+        "lucide:ellipsis-vertical",
+        "ph:dots-three-circle",
+        "ph:dots-three-outline",
+        "ph:dots-three-circle-vertical",
+        "ph:dots-three-outline-vertical",
+        "tabler:dots",
+        "lucide:ellipsis",
+        "tabler:dots-diagonal",
+        "tabler:dots-diagonal-2"
+      ],
+      "service:gemini": [
+        "material-symbols:kebab-dining",
+        "fluent-emoji-flat:oden",
+        "fluent-emoji-flat:stuffed-flatbread",
+        "material-symbols:yakitori",
+        "tabler:dots-vertical",
+        "material-symbols:mobile-menu",
+        "ph:dots-three-vertical",
+        "material-symbols:dinner-dining",
+        "ph:dots-three-circle-vertical",
+        "material-symbols:menu"
+      ],
       "text": [
         "tabler:dots-vertical",
         "material-symbols:mobile-menu",
@@ -6420,6 +8155,30 @@
         "tabler:info-circle",
         "material-symbols:info",
         "material-symbols:toast"
+      ],
+      "service-text:gemini": [
+        "tabler:tooltip",
+        "material-symbols:tooltip",
+        "material-symbols:tooltip-2",
+        "lucide:info",
+        "fluent-emoji-flat:information",
+        "material-symbols:info",
+        "ph:info",
+        "material-symbols:info-i",
+        "lucide:badge-question-mark",
+        "material-symbols:question-mark"
+      ],
+      "service:gemini": [
+        "material-symbols:tooltip",
+        "tabler:tooltip",
+        "material-symbols:tooltip-2",
+        "lucide:info",
+        "fluent-emoji-flat:information",
+        "tabler:info-circle",
+        "tabler:question-mark",
+        "material-symbols:prompt-suggestion",
+        "ph:info",
+        "material-symbols:question-mark"
       ],
       "text": [
         "tabler:tooltip",
@@ -6507,6 +8266,30 @@
         "lucide:clipboard-x",
         "tabler:clear-all"
       ],
+      "service-text:gemini": [
+        "tabler:input-x",
+        "lucide:remove-formatting",
+        "tabler:message-2-x",
+        "ph:text-t-slash",
+        "tabler:clear-formatting",
+        "material-symbols:format-clear",
+        "material-symbols:clear-all",
+        "tabler:message-x",
+        "tabler:pencil-x",
+        "material-symbols:clear-day"
+      ],
+      "service:gemini": [
+        "tabler:input-x",
+        "tabler:clear-formatting",
+        "material-symbols:clear-all",
+        "material-symbols:format-clear",
+        "lucide:remove-formatting",
+        "ph:textbox",
+        "tabler:clear-all",
+        "lucide:text-cursor-input",
+        "material-symbols:text-fields-alt",
+        "tabler:backspace"
+      ],
       "text": [
         "tabler:input-x",
         "lucide:text-cursor-input",
@@ -6592,6 +8375,21 @@
         "ph:number-four",
         "tabler:circle-dashed-number-2",
         "tabler:square-rounded-number-2"
+      ],
+      "service-text:gemini": [
+        "material-symbols:steppers"
+      ],
+      "service:gemini": [
+        "material-symbols:steppers",
+        "material-symbols:counter-8",
+        "material-symbols:counter-7",
+        "material-symbols:counter-3",
+        "material-symbols:counter-0",
+        "material-symbols:counter-9",
+        "tabler:hexagon-number-8",
+        "material-symbols:counter-5",
+        "tabler:hexagon-number-7",
+        "material-symbols:counter-2"
       ],
       "text": [
         "material-symbols:steppers",
@@ -6679,6 +8477,30 @@
         "material-symbols:menu-open",
         "tabler:menu-deep"
       ],
+      "service-text:gemini": [
+        "tabler:menu",
+        "tabler:menu-2",
+        "material-symbols:home-mini",
+        "material-symbols:density-medium",
+        "tabler:burger",
+        "fluent-emoji-flat:hamburger",
+        "lucide:hamburger",
+        "tabler:brand-mcdonalds",
+        "lucide:sandwich",
+        "ph:hamburger"
+      ],
+      "service:gemini": [
+        "tabler:burger",
+        "fluent-emoji-flat:hamburger",
+        "tabler:menu-2",
+        "lucide:hamburger",
+        "tabler:menu",
+        "material-symbols:menu",
+        "tabler:menu-4",
+        "lucide:menu",
+        "material-symbols:home-mini",
+        "tabler:menu-3"
+      ],
       "text": [
         "tabler:menu",
         "tabler:menu-2",
@@ -6764,6 +8586,30 @@
         "ph:sliders-horizontal",
         "tabler:adjustments-plus",
         "material-symbols:discover-tune"
+      ],
+      "service-text:gemini": [
+        "fluent-emoji-flat:level-slider",
+        "material-symbols:page-control",
+        "ph:toggle-left",
+        "lucide:settings-2",
+        "tabler:toggle-right",
+        "material-symbols:sliders",
+        "ph:faders",
+        "material-symbols:settings-input-component",
+        "material-symbols:page-info",
+        "material-symbols:discover-tune"
+      ],
+      "service:gemini": [
+        "material-symbols:sliders",
+        "fluent-emoji-flat:level-slider",
+        "lucide:sliders-horizontal",
+        "material-symbols:settings-input-component",
+        "material-symbols:page-control",
+        "lucide:sliders-vertical",
+        "ph:sliders-horizontal",
+        "tabler:adjustments-exclamation",
+        "tabler:adjustments-horizontal",
+        "tabler:adjustments-code"
       ],
       "text": [
         "fluent-emoji-flat:level-slider",
@@ -6851,6 +8697,30 @@
         "tabler:check",
         "material-symbols:check-circle"
       ],
+      "service-text:gemini": [
+        "fluent-emoji-flat:check-mark",
+        "fluent-emoji-flat:check-mark-button",
+        "material-symbols:check-box-outline-blank",
+        "lucide:list-check",
+        "material-symbols:select-check-box",
+        "lucide:square-check-big",
+        "lucide:badge",
+        "tabler:checklist",
+        "material-symbols:checklist",
+        "material-symbols:rubric"
+      ],
+      "service:gemini": [
+        "fluent-emoji-flat:check-mark",
+        "material-symbols:check",
+        "ph:check",
+        "tabler:check",
+        "lucide:check",
+        "ph:check-square",
+        "lucide:check-line",
+        "material-symbols:calendar-check",
+        "material-symbols:flag-check",
+        "lucide:file-check"
+      ],
       "text": [
         "fluent-emoji-flat:check-mark",
         "fluent-emoji-flat:check-mark-button",
@@ -6936,6 +8806,30 @@
         "material-symbols:person-3",
         "lucide:user-round",
         "lucide:square-user-round"
+      ],
+      "service-text:gemini": [
+        "tabler:user-square",
+        "tabler:user-heart",
+        "tabler:user-pentagon",
+        "tabler:user-pin",
+        "tabler:user-up",
+        "tabler:user-square-rounded",
+        "fluent-emoji-flat:person",
+        "material-symbols:person",
+        "tabler:user",
+        "fluent-emoji-flat:person-beard"
+      ],
+      "service:gemini": [
+        "material-symbols:person",
+        "material-symbols:person-3",
+        "lucide:user",
+        "material-symbols:person-2",
+        "material-symbols:for-you",
+        "ph:user",
+        "ph:person",
+        "fluent-emoji-flat:person",
+        "material-symbols:face",
+        "material-symbols:person-4"
       ],
       "text": [
         "tabler:user",
@@ -7023,6 +8917,30 @@
         "ph:house",
         "material-symbols:other-houses"
       ],
+      "service-text:gemini": [
+        "material-symbols:home-max",
+        "fluent-emoji-flat:house",
+        "material-symbols:house",
+        "ph:house",
+        "lucide:house",
+        "lucide:house-cog",
+        "lucide:house-heart",
+        "lucide:house-plug",
+        "lucide:house-plus",
+        "lucide:house-wifi"
+      ],
+      "service:gemini": [
+        "ph:house",
+        "lucide:house",
+        "material-symbols:in-home-mode",
+        "tabler:home-2",
+        "ph:house-line",
+        "fluent-emoji-flat:house",
+        "tabler:home",
+        "tabler:home-link",
+        "tabler:home-dot",
+        "material-symbols:home-max"
+      ],
       "text": [
         "material-symbols:home-max",
         "fluent-emoji-flat:house",
@@ -7108,6 +9026,30 @@
         "material-symbols:notifications-active",
         "tabler:bell-cog",
         "tabler:bell-share"
+      ],
+      "service-text:gemini": [
+        "tabler:bell",
+        "tabler:bell-bolt",
+        "tabler:bell-cancel",
+        "tabler:bell-check",
+        "tabler:bell-code",
+        "tabler:bell-cog",
+        "tabler:bell-dollar",
+        "tabler:bell-down",
+        "tabler:bell-exclamation",
+        "tabler:bell-heart"
+      ],
+      "service:gemini": [
+        "material-symbols:add-alert",
+        "tabler:bell-ringing",
+        "material-symbols:notification-important",
+        "fluent-emoji-flat:bell",
+        "material-symbols:notifications-active",
+        "tabler:bell",
+        "tabler:bell-code",
+        "ph:bell",
+        "tabler:bell-bolt",
+        "tabler:bell-exclamation"
       ],
       "text": [
         "tabler:bell",
@@ -7195,6 +9137,30 @@
         "ph:arrows-clockwise",
         "lucide:refresh-cw-off"
       ],
+      "service-text:gemini": [
+        "tabler:circle-open-arrow-down",
+        "tabler:circle-open-arrow-up",
+        "tabler:circle-open-arrow-left",
+        "tabler:circle-open-arrow-right",
+        "material-symbols:change-circle",
+        "material-symbols:forward-circle",
+        "ph:circle-notch",
+        "tabler:rotate-dot",
+        "material-symbols:wifi-protected-setup",
+        "material-symbols:refresh"
+      ],
+      "service:gemini": [
+        "material-symbols:refresh",
+        "material-symbols:change-circle",
+        "lucide:refresh-cw",
+        "tabler:refresh-dot",
+        "tabler:refresh",
+        "lucide:refresh-ccw",
+        "tabler:rotate-dot",
+        "material-symbols:autorenew",
+        "lucide:refresh-ccw-dot",
+        "tabler:reload"
+      ],
       "text": [
         "tabler:circle-open-arrow-down",
         "tabler:circle-open-arrow-left",
@@ -7280,6 +9246,30 @@
         "tabler:cloud-up",
         "tabler:cloud",
         "material-symbols:cloud-circle"
+      ],
+      "service-text:gemini": [
+        "lucide:cloud-download",
+        "material-symbols:cloud-download",
+        "tabler:cloud-download",
+        "tabler:cloud-down",
+        "ph:cloud-arrow-down",
+        "lucide:cloud-sync",
+        "tabler:world-download",
+        "material-symbols:cloud-sync",
+        "fluent-emoji-flat:cloud",
+        "lucide:cloud"
+      ],
+      "service:gemini": [
+        "lucide:cloud-download",
+        "material-symbols:cloud-download",
+        "tabler:cloud-download",
+        "ph:cloud-arrow-down",
+        "tabler:cloud-down",
+        "material-symbols:cloud-sync",
+        "material-symbols:cloud",
+        "material-symbols:cloud-done",
+        "tabler:world-download",
+        "material-symbols:cloud-upload"
       ],
       "text": [
         "lucide:cloud-download",
@@ -7367,6 +9357,30 @@
         "material-symbols:add-link",
         "fluent-emoji-flat:chains"
       ],
+      "service-text:gemini": [
+        "ph:link-simple-break",
+        "material-symbols:media-link",
+        "lucide:link",
+        "lucide:link-2",
+        "ph:link",
+        "lucide:link-2-off",
+        "tabler:link",
+        "ph:link-simple",
+        "ph:link-simple-horizontal",
+        "ph:link-break"
+      ],
+      "service:gemini": [
+        "fluent-emoji-flat:link",
+        "material-symbols:link",
+        "lucide:link",
+        "ph:link",
+        "tabler:link",
+        "ph:link-simple",
+        "lucide:link-2",
+        "ph:link-simple-horizontal",
+        "fluent-emoji-flat:chains",
+        "tabler:circles-relation"
+      ],
       "text": [
         "lucide:link",
         "tabler:link",
@@ -7452,6 +9466,30 @@
         "lucide:cog",
         "ph:user-circle-gear",
         "tabler:message-circle-cog"
+      ],
+      "service-text:gemini": [
+        "lucide:cog",
+        "fluent-emoji-flat:gear",
+        "ph:gear",
+        "ph:gear-fine",
+        "ph:gear-six",
+        "material-symbols:car-gear",
+        "material-symbols:mic-gear",
+        "material-symbols:mobile-gear",
+        "material-symbols:search-gear",
+        "material-symbols:subtitles-gear"
+      ],
+      "service:gemini": [
+        "fluent-emoji-flat:gear",
+        "ph:gear-fine",
+        "lucide:cog",
+        "ph:gear",
+        "lucide:settings",
+        "ph:gear-six",
+        "tabler:settings",
+        "material-symbols:car-gear",
+        "tabler:clock-cog",
+        "tabler:wheel"
       ],
       "text": [
         "lucide:cog",
@@ -7539,6 +9577,30 @@
         "tabler:edit",
         "lucide:pen-line"
       ],
+      "service-text:gemini": [
+        "tabler:pencil-cancel",
+        "ph:pencil-slash",
+        "tabler:pencil-x",
+        "ph:pencil",
+        "tabler:edit",
+        "tabler:pencil",
+        "lucide:pencil-off",
+        "lucide:pencil-ruler",
+        "lucide:pencil-sparkles",
+        "lucide:square-pen"
+      ],
+      "service:gemini": [
+        "material-symbols:edit",
+        "tabler:pencil",
+        "tabler:edit",
+        "ph:pencil-line",
+        "lucide:pencil-line",
+        "fluent-emoji-flat:pencil",
+        "tabler:file-pencil",
+        "ph:pencil",
+        "material-symbols:edit-line",
+        "material-symbols:contract-edit"
+      ],
       "text": [
         "lucide:pencil",
         "tabler:pencil",
@@ -7624,6 +9686,30 @@
         "material-symbols:bookmark-add",
         "material-symbols:book-ribbon",
         "material-symbols:bookmark-heart"
+      ],
+      "service-text:gemini": [
+        "tabler:bookmark",
+        "material-symbols:book-ribbon",
+        "fluent-emoji-flat:bookmark",
+        "lucide:bookmark",
+        "material-symbols:bookmark",
+        "ph:bookmark",
+        "lucide:bookmark-plus",
+        "lucide:square-bookmark",
+        "material-symbols:bookmark-heart",
+        "ph:bookmark-simple"
+      ],
+      "service:gemini": [
+        "material-symbols:book-ribbon",
+        "material-symbols:bookmark",
+        "tabler:bookmark",
+        "lucide:bookmark",
+        "ph:bookmark",
+        "lucide:book-bookmark",
+        "ph:book-bookmark",
+        "ph:bookmark-simple",
+        "lucide:square-bookmark",
+        "lucide:folder-bookmark"
       ],
       "text": [
         "tabler:bookmark",
@@ -7711,6 +9797,30 @@
         "tabler:user-heart",
         "tabler:flag-heart"
       ],
+      "service-text:gemini": [
+        "tabler:heart-plus",
+        "tabler:heart-search",
+        "lucide:heart-plus",
+        "tabler:heart-check",
+        "tabler:heart-star",
+        "tabler:pencil-heart",
+        "ph:list-heart",
+        "tabler:devices-heart",
+        "ph:heart",
+        "tabler:clock-heart"
+      ],
+      "service:gemini": [
+        "material-symbols:favorite",
+        "tabler:heart-star",
+        "lucide:file-heart",
+        "tabler:database-heart",
+        "tabler:heart",
+        "lucide:heart",
+        "tabler:heart-bitcoin",
+        "ph:heart",
+        "tabler:heart-spark",
+        "material-symbols:heart-check"
+      ],
       "text": [
         "tabler:heart",
         "lucide:book-heart",
@@ -7796,6 +9906,30 @@
         "material-symbols:comic-bubble",
         "tabler:message-2",
         "tabler:bubble"
+      ],
+      "service-text:gemini": [
+        "fluent-emoji-flat:left-speech-bubble",
+        "fluent-emoji-flat:eye-in-speech-bubble",
+        "tabler:bubble",
+        "fluent-emoji-flat:speech-balloon",
+        "tabler:bubble-minus",
+        "tabler:bubble-plus",
+        "tabler:bubble-text",
+        "tabler:bubble-x",
+        "material-symbols:comic-bubble",
+        "material-symbols:chat-bubble-off"
+      ],
+      "service:gemini": [
+        "tabler:bubble",
+        "fluent-emoji-flat:speech-balloon",
+        "tabler:bubble-text",
+        "fluent-emoji-flat:left-speech-bubble",
+        "material-symbols:chat-bubble",
+        "material-symbols:comic-bubble",
+        "material-symbols:comment",
+        "material-symbols:chat",
+        "tabler:bubble-x",
+        "lucide:message-circle"
       ],
       "text": [
         "fluent-emoji-flat:left-speech-bubble",
@@ -7883,6 +10017,30 @@
         "tabler:filter-2",
         "tabler:filter"
       ],
+      "service-text:gemini": [
+        "ph:funnel",
+        "ph:funnel-simple",
+        "ph:funnel-simple-x",
+        "ph:funnel-x",
+        "lucide:funnel",
+        "tabler:filter",
+        "tabler:filter-bolt",
+        "tabler:filter-cancel",
+        "tabler:filter-check",
+        "tabler:filter-code"
+      ],
+      "service:gemini": [
+        "ph:funnel",
+        "ph:funnel-simple",
+        "lucide:funnel",
+        "tabler:filter",
+        "ph:funnel-x",
+        "tabler:filter-code",
+        "tabler:filter-search",
+        "tabler:filter-down",
+        "tabler:filter-dollar",
+        "tabler:filter-x"
+      ],
       "text": [
         "lucide:funnel",
         "ph:funnel",
@@ -7968,6 +10126,30 @@
         "material-symbols:cancel",
         "tabler:square-x",
         "tabler:square-rounded-x"
+      ],
+      "service-text:gemini": [
+        "fluent-emoji-flat:cross-mark",
+        "fluent-emoji-flat:cross-mark-button",
+        "ph:file-x",
+        "tabler:file-x",
+        "tabler:input-x",
+        "ph:receipt-x",
+        "material-symbols:cancel-schedule-send",
+        "tabler:x-mark",
+        "tabler:map-pin-x",
+        "lucide:bookmark-x"
+      ],
+      "service:gemini": [
+        "fluent-emoji-flat:cross-mark",
+        "tabler:x-mark",
+        "fluent-emoji-flat:cross-mark-button",
+        "fluent-emoji-flat:multiply",
+        "lucide:x",
+        "tabler:x",
+        "ph:x-square",
+        "tabler:flag-x",
+        "ph:x",
+        "tabler:cross-off"
       ],
       "text": [
         "fluent-emoji-flat:cross-mark",
@@ -8055,6 +10237,30 @@
         "tabler:eye-plus",
         "fluent-emoji-flat:eye-in-speech-bubble"
       ],
+      "service-text:gemini": [
+        "fluent-emoji-flat:eye",
+        "lucide:eye",
+        "ph:eye",
+        "tabler:eye",
+        "lucide:eye-closed",
+        "lucide:eye-dashed",
+        "lucide:eye-off",
+        "lucide:scan-eye",
+        "material-symbols:eye-tracking",
+        "ph:eye-closed"
+      ],
+      "service:gemini": [
+        "tabler:eye",
+        "ph:eye",
+        "lucide:eye",
+        "material-symbols:person-eye",
+        "lucide:view",
+        "material-symbols:folder-eye",
+        "material-symbols:preview",
+        "tabler:eye-check",
+        "tabler:eye-search",
+        "material-symbols:visibility"
+      ],
       "text": [
         "fluent-emoji-flat:eye",
         "lucide:eye",
@@ -8140,6 +10346,30 @@
         "tabler:alert-hexagon",
         "tabler:info-triangle",
         "tabler:alert-small"
+      ],
+      "service-text:gemini": [
+        "tabler:alert-triangle",
+        "tabler:alert-triangle-off",
+        "lucide:triangle-alert",
+        "material-symbols:exclamation",
+        "fluent-emoji-flat:heart-exclamation",
+        "ph:exclamation-mark",
+        "tabler:clock-exclamation",
+        "tabler:cloud-exclamation",
+        "tabler:database-exclamation",
+        "tabler:exclamation-circle"
+      ],
+      "service:gemini": [
+        "lucide:triangle-alert",
+        "tabler:alert-triangle",
+        "material-symbols:warning",
+        "ph:warning",
+        "tabler:info-triangle",
+        "lucide:octagon-alert",
+        "fluent-emoji-flat:warning",
+        "tabler:help-triangle",
+        "material-symbols:exclamation",
+        "tabler:circle-triangle"
       ],
       "text": [
         "lucide:triangle-alert",
@@ -8227,6 +10457,30 @@
         "tabler:volume",
         "lucide:file-volume"
       ],
+      "service-text:gemini": [
+        "lucide:volume-2",
+        "tabler:volume",
+        "fluent-emoji-flat:speaker-medium-volume",
+        "fluent-emoji-flat:speaker-high-volume",
+        "fluent-emoji-flat:speaker-low-volume",
+        "lucide:volume",
+        "ph:speaker-none",
+        "ph:speaker-simple-high",
+        "lucide:volume-1",
+        "tabler:volume-2"
+      ],
+      "service:gemini": [
+        "tabler:volume",
+        "lucide:volume",
+        "tabler:volume-2",
+        "lucide:file-volume",
+        "tabler:volume-4",
+        "material-symbols:volume-up",
+        "lucide:volume-2",
+        "lucide:volume-1",
+        "ph:speaker-high",
+        "fluent-emoji-flat:speaker-low-volume"
+      ],
       "text": [
         "fluent-emoji-flat:speaker-high-volume",
         "fluent-emoji-flat:speaker-low-volume",
@@ -8312,6 +10566,30 @@
         "material-symbols:dehaze",
         "lucide:square-menu",
         "lucide:menu"
+      ],
+      "service-text:gemini": [
+        "tabler:menu-3",
+        "ph:list",
+        "tabler:menu",
+        "tabler:menu-2",
+        "tabler:menu-4",
+        "lucide:square-menu",
+        "material-symbols:menu",
+        "material-symbols:table-rows-narrow",
+        "material-symbols:density-medium",
+        "material-symbols:density-small"
+      ],
+      "service:gemini": [
+        "lucide:hamburger",
+        "material-symbols:home-mini",
+        "ph:hamburger",
+        "tabler:menu",
+        "tabler:menu-2",
+        "material-symbols:lunch-dining",
+        "ph:text-align-justify",
+        "tabler:menu-4",
+        "tabler:burger",
+        "fluent-emoji-flat:hamburger"
       ],
       "text": [
         "ph:list",
@@ -8399,6 +10677,30 @@
         "tabler:thumb-up-off",
         "tabler:heart-up"
       ],
+      "service-text:gemini": [
+        "material-symbols:thumb-up",
+        "tabler:thumb-up",
+        "tabler:thumb-up-off",
+        "fluent-emoji-flat:thumbs-up",
+        "lucide:thumbs-up",
+        "material-symbols:thumbs-up-down",
+        "ph:thumbs-up",
+        "material-symbols:thumbs-up-double",
+        "tabler:file-like",
+        "material-symbols:recommend"
+      ],
+      "service:gemini": [
+        "material-symbols:thumb-up",
+        "tabler:thumb-up",
+        "fluent-emoji-flat:thumbs-up",
+        "ph:thumbs-up",
+        "lucide:thumbs-up",
+        "material-symbols:recommend",
+        "material-symbols:thumbs-up-down",
+        "tabler:file-like",
+        "material-symbols:thumbs-up-double",
+        "material-symbols:thumb-down"
+      ],
       "text": [
         "material-symbols:thumb-up",
         "tabler:thumb-up",
@@ -8484,6 +10786,30 @@
         "ph:dots-three-circle-vertical",
         "tabler:dots-vertical",
         "material-symbols:monitor-weight"
+      ],
+      "service-text:gemini": [
+        "ph:dots-three",
+        "ph:dots-three-circle",
+        "ph:dots-three-outline",
+        "ph:dots-three-vertical",
+        "ph:dots-three-circle-vertical",
+        "ph:dots-three-outline-vertical",
+        "tabler:dots-diagonal",
+        "tabler:dots-diagonal-2",
+        "tabler:dots",
+        "tabler:dots-vertical"
+      ],
+      "service:gemini": [
+        "tabler:dots",
+        "lucide:ellipsis",
+        "tabler:file-dots",
+        "tabler:code-dots",
+        "material-symbols:atr",
+        "material-symbols:padding",
+        "tabler:message-dots",
+        "ph:dots-three",
+        "tabler:dots-vertical",
+        "ph:dots-three-vertical"
       ],
       "text": [
         "ph:dots-three",
@@ -8571,6 +10897,30 @@
         "ph:envelope-simple",
         "fluent-emoji-flat:incoming-envelope"
       ],
+      "service-text:gemini": [
+        "fluent-emoji-flat:postbox",
+        "ph:mailbox",
+        "fluent-emoji-flat:closed-mailbox-with-lowered-flag",
+        "fluent-emoji-flat:open-mailbox-with-raised-flag",
+        "fluent-emoji-flat:closed-mailbox-with-raised-flag",
+        "material-symbols:local-post-office",
+        "tabler:inbox",
+        "tabler:mail-cog",
+        "lucide:mailbox",
+        "tabler:mailbox"
+      ],
+      "service:gemini": [
+        "ph:envelope",
+        "fluent-emoji-flat:envelope",
+        "ph:envelope-simple",
+        "ph:envelope-simple-open",
+        "material-symbols:local-post-office",
+        "fluent-emoji-flat:incoming-envelope",
+        "material-symbols:mail",
+        "fluent-emoji-flat:e-mail",
+        "tabler:mail-bitcoin",
+        "fluent-emoji-flat:love-letter"
+      ],
       "text": [
         "fluent-emoji-flat:postbox",
         "ph:mailbox",
@@ -8656,6 +11006,30 @@
         "material-symbols:speaker-phone",
         "fluent-emoji-flat:loudspeaker",
         "material-symbols:speaker-2"
+      ],
+      "service-text:gemini": [
+        "fluent-emoji-flat:loudspeaker",
+        "lucide:megaphone",
+        "ph:megaphone",
+        "tabler:speakerphone",
+        "ph:megaphone-simple",
+        "fluent-emoji-flat:megaphone",
+        "material-symbols:campaign",
+        "lucide:megaphone-off",
+        "fluent-emoji-flat:speaker-low-volume",
+        "material-symbols:sound-detection-loud-sound"
+      ],
+      "service:gemini": [
+        "lucide:megaphone",
+        "fluent-emoji-flat:megaphone",
+        "fluent-emoji-flat:loudspeaker",
+        "ph:megaphone",
+        "tabler:speakerphone",
+        "ph:megaphone-simple",
+        "fluent-emoji-flat:speaker-low-volume",
+        "tabler:device-speaker",
+        "material-symbols:sound-detection-loud-sound",
+        "material-symbols:campaign"
       ],
       "text": [
         "fluent-emoji-flat:loudspeaker",
@@ -8743,6 +11117,30 @@
         "lucide:bell-dot",
         "tabler:bell-heart"
       ],
+      "service-text:gemini": [
+        "fluent-emoji-flat:bell",
+        "lucide:bell",
+        "material-symbols:notifications",
+        "ph:bell",
+        "tabler:bell",
+        "fluent-emoji-flat:bellhop-bell",
+        "fluent-emoji-flat:wind-chime",
+        "lucide:bell-check",
+        "lucide:bell-dot",
+        "lucide:bell-minus"
+      ],
+      "service:gemini": [
+        "fluent-emoji-flat:wind-chime",
+        "fluent-emoji-flat:bell",
+        "material-symbols:doorbell",
+        "lucide:bell-ring",
+        "material-symbols:doorbell-3p",
+        "lucide:bell",
+        "ph:bell",
+        "tabler:bell-ringing",
+        "material-symbols:notifications",
+        "tabler:bell-exclamation"
+      ],
       "text": [
         "fluent-emoji-flat:bell",
         "lucide:bell",
@@ -8828,6 +11226,30 @@
         "tabler:calendar-plus",
         "tabler:calendar-dot",
         "material-symbols:calendar-month"
+      ],
+      "service-text:gemini": [
+        "fluent-emoji-flat:calendar",
+        "lucide:calendar",
+        "material-symbols:event",
+        "ph:calendar",
+        "tabler:calendar",
+        "fluent-emoji-flat:spiral-calendar",
+        "lucide:calendar-1",
+        "lucide:calendar-check",
+        "lucide:calendar-clock",
+        "lucide:calendar-cog"
+      ],
+      "service:gemini": [
+        "material-symbols:event",
+        "tabler:calendar-week",
+        "tabler:calendar-event",
+        "tabler:calendar",
+        "lucide:calendar-range",
+        "material-symbols:event-upcoming",
+        "material-symbols:calendar-today",
+        "lucide:calendar-days",
+        "lucide:calendars",
+        "tabler:calendar-due"
       ],
       "text": [
         "fluent-emoji-flat:calendar",
@@ -8915,6 +11337,27 @@
         "fluent-emoji-flat:student",
         "tabler:school-off"
       ],
+      "service-text:gemini": [
+        "fluent-emoji-flat:man-student",
+        "fluent-emoji-flat:woman-student",
+        "ph:student",
+        "fluent-emoji-flat:graduation-cap",
+        "material-symbols:school",
+        "fluent-emoji-flat:student",
+        "ph:graduation-cap"
+      ],
+      "service:gemini": [
+        "lucide:graduation-cap",
+        "tabler:school",
+        "ph:graduation-cap",
+        "material-symbols:school",
+        "fluent-emoji-flat:graduation-cap",
+        "ph:student",
+        "fluent-emoji-flat:student",
+        "fluent-emoji-flat:man-student",
+        "fluent-emoji-flat:woman-student",
+        "material-symbols:chef-hat"
+      ],
       "text": [
         "material-symbols:school",
         "ph:student",
@@ -9000,6 +11443,19 @@
         "fluent-emoji-flat:wine-glass",
         "ph:pint-glass",
         "lucide:glass-water"
+      ],
+      "service-text:gemini": [],
+      "service:gemini": [
+        "tabler:glass",
+        "material-symbols:glass-cup",
+        "fluent-emoji-flat:wine-glass",
+        "tabler:glass-gin",
+        "tabler:glass-full",
+        "tabler:glass-champagne",
+        "fluent-emoji-flat:tumbler-glass",
+        "lucide:glass-water",
+        "tabler:glass-cocktail",
+        "ph:brandy"
       ],
       "text": [
         "lucide:martini",
@@ -9087,6 +11543,30 @@
         "material-symbols:carry-on-bag-inactive",
         "ph:trolley"
       ],
+      "service-text:gemini": [
+        "lucide:luggage",
+        "ph:suitcase-rolling",
+        "material-symbols:carry-on-bag",
+        "material-symbols:carry-on-bag-inactive",
+        "fluent-emoji-flat:luggage",
+        "material-symbols:luggage",
+        "material-symbols:trip",
+        "tabler:luggage",
+        "material-symbols:bookmark-bag",
+        "material-symbols:no-luggage"
+      ],
+      "service:gemini": [
+        "material-symbols:carry-on-bag",
+        "ph:suitcase-rolling",
+        "fluent-emoji-flat:luggage",
+        "tabler:luggage",
+        "lucide:luggage",
+        "ph:trolley-suitcase",
+        "material-symbols:luggage",
+        "ph:trolley",
+        "material-symbols:checked-bag",
+        "material-symbols:carry-on-bag-question"
+      ],
       "text": [
         "lucide:luggage",
         "ph:suitcase-rolling",
@@ -9172,6 +11652,19 @@
         "lucide:trash",
         "ph:trash-simple",
         "material-symbols:restore-from-trash"
+      ],
+      "service-text:gemini": [],
+      "service:gemini": [
+        "fluent-emoji-flat:wastebasket",
+        "ph:trash",
+        "tabler:trash",
+        "lucide:trash",
+        "material-symbols:delete",
+        "tabler:trash-x",
+        "ph:trash-simple",
+        "material-symbols:delete-forever",
+        "material-symbols:folder-delete",
+        "tabler:trash-off"
       ],
       "text": [
         "fluent-emoji-flat:basket",
@@ -9259,6 +11752,30 @@
         "material-symbols:explore",
         "material-symbols:assistant-navigation"
       ],
+      "service-text:gemini": [
+        "fluent-emoji-flat:compass",
+        "lucide:compass",
+        "material-symbols:explore",
+        "ph:compass",
+        "tabler:compass",
+        "material-symbols:explore-off",
+        "ph:compass-rose",
+        "tabler:brand-safari",
+        "tabler:compass-off",
+        "tabler:map-east"
+      ],
+      "service:gemini": [
+        "lucide:compass",
+        "tabler:compass",
+        "fluent-emoji-flat:compass",
+        "ph:compass",
+        "material-symbols:compass-calibration",
+        "material-symbols:explore",
+        "ph:compass-rose",
+        "tabler:compass-off",
+        "ph:compass-tool",
+        "tabler:map-west"
+      ],
       "text": [
         "fluent-emoji-flat:compass",
         "lucide:compass",
@@ -9344,6 +11861,30 @@
         "lucide:origami",
         "ph:airplane-tilt",
         "ph:airplane"
+      ],
+      "service-text:gemini": [
+        "ph:telegram-logo",
+        "tabler:brand-telegram",
+        "tabler:send-2",
+        "lucide:send",
+        "tabler:send",
+        "tabler:send-off",
+        "ph:paper-plane-right",
+        "ph:paper-plane-tilt",
+        "lucide:send-horizontal",
+        "lucide:paper-bag"
+      ],
+      "service:gemini": [
+        "ph:paper-plane-tilt",
+        "tabler:send",
+        "lucide:send",
+        "lucide:origami",
+        "lucide:send-horizontal",
+        "ph:paper-plane-right",
+        "ph:paper-plane",
+        "material-symbols:send",
+        "ph:telegram-logo",
+        "tabler:send-2"
       ],
       "text": [
         "lucide:send",
@@ -9431,6 +11972,30 @@
         "tabler:trophy-off",
         "tabler:favicon"
       ],
+      "service-text:gemini": [
+        "fluent-emoji-flat:trophy",
+        "lucide:trophy",
+        "material-symbols:trophy",
+        "ph:trophy",
+        "tabler:trophy",
+        "material-symbols:rewarded-ads",
+        "tabler:trophy-off",
+        "tabler:glass",
+        "lucide:anvil",
+        "fluent-emoji-flat:ice"
+      ],
+      "service:gemini": [
+        "material-symbols:trophy",
+        "ph:trophy",
+        "tabler:trophy",
+        "lucide:trophy",
+        "fluent-emoji-flat:trophy",
+        "material-symbols:glass-cup",
+        "material-symbols:rewarded-ads",
+        "tabler:cup",
+        "tabler:cup-off",
+        "tabler:trophy-off"
+      ],
       "text": [
         "fluent-emoji-flat:trophy",
         "lucide:anvil",
@@ -9516,6 +12081,30 @@
         "lucide:wifi-cog",
         "tabler:settings",
         "lucide:cog"
+      ],
+      "service-text:gemini": [
+        "fluent-emoji-flat:gear",
+        "lucide:cog",
+        "lucide:settings",
+        "material-symbols:manufacturing",
+        "ph:gear",
+        "tabler:settings",
+        "material-symbols:settings-heart",
+        "ph:gear-fine",
+        "tabler:settings-cancel",
+        "tabler:settings-cog"
+      ],
+      "service:gemini": [
+        "ph:gear-six",
+        "lucide:cog",
+        "fluent-emoji-flat:gear",
+        "lucide:settings",
+        "material-symbols:settings",
+        "tabler:settings",
+        "ph:gear",
+        "ph:gear-fine",
+        "tabler:settings-2",
+        "material-symbols:manufacturing"
       ],
       "text": [
         "fluent-emoji-flat:gear",
@@ -9603,6 +12192,30 @@
         "tabler:camera-search",
         "lucide:scan-search"
       ],
+      "service-text:gemini": [
+        "tabler:search",
+        "lucide:search-alert",
+        "lucide:search-x",
+        "material-symbols:frame-inspect",
+        "material-symbols:magnification-small",
+        "ph:magnifying-glass",
+        "tabler:zoom-code",
+        "tabler:zoom-exclamation",
+        "tabler:zoom-money",
+        "tabler:zoom-scan"
+      ],
+      "service:gemini": [
+        "tabler:search",
+        "material-symbols:search",
+        "ph:magnifying-glass",
+        "tabler:zoom",
+        "lucide:zoom-in",
+        "lucide:search",
+        "material-symbols:zoom-in",
+        "material-symbols:mobile-loupe",
+        "ph:list-magnifying-glass",
+        "tabler:zoom-code"
+      ],
       "text": [
         "fluent-emoji-flat:detective",
         "fluent-emoji-flat:microscope",
@@ -9688,6 +12301,30 @@
         "fluent-emoji-flat:studio-microphone",
         "lucide:mic-vocal",
         "lucide:mic-signal"
+      ],
+      "service-text:gemini": [
+        "fluent-emoji-flat:microphone",
+        "lucide:mic",
+        "material-symbols:mic",
+        "ph:microphone",
+        "tabler:microphone",
+        "fluent-emoji-flat:studio-microphone",
+        "lucide:mic-off",
+        "lucide:mic-signal",
+        "lucide:mic-vocal",
+        "material-symbols:mic-alert"
+      ],
+      "service:gemini": [
+        "fluent-emoji-flat:microphone",
+        "material-symbols:mic",
+        "material-symbols:mic-external-on",
+        "tabler:microphone-2",
+        "lucide:mic",
+        "tabler:microphone",
+        "fluent-emoji-flat:studio-microphone",
+        "ph:microphone",
+        "ph:microphone-stage",
+        "lucide:mic-vocal"
       ],
       "text": [
         "fluent-emoji-flat:microphone",
@@ -9775,6 +12412,30 @@
         "lucide:folder-closed",
         "ph:file"
       ],
+      "service-text:gemini": [
+        "lucide:folder",
+        "material-symbols:folder",
+        "material-symbols:topic",
+        "ph:folder",
+        "tabler:folder",
+        "fluent-emoji-flat:file-folder",
+        "lucide:folder-bookmark",
+        "lucide:folder-check",
+        "lucide:folder-clock",
+        "lucide:folder-closed"
+      ],
+      "service:gemini": [
+        "fluent-emoji-flat:file-folder",
+        "material-symbols:docs",
+        "material-symbols:folder",
+        "tabler:files",
+        "lucide:file",
+        "material-symbols:files",
+        "material-symbols:snippet-folder",
+        "ph:folder",
+        "tabler:folder",
+        "lucide:files"
+      ],
       "text": [
         "lucide:file",
         "lucide:files",
@@ -9860,6 +12521,30 @@
         "lucide:credit-card",
         "tabler:credit-card-hand",
         "lucide:credit-card-x"
+      ],
+      "service-text:gemini": [
+        "fluent-emoji-flat:credit-card",
+        "material-symbols:credit-score",
+        "material-symbols:payment-card",
+        "ph:credit-card",
+        "tabler:credit-card",
+        "lucide:credit-card-minus",
+        "material-symbols:credit-card-clock",
+        "lucide:credit-card",
+        "material-symbols:credit-card",
+        "material-symbols:credit-card-gear"
+      ],
+      "service:gemini": [
+        "fluent-emoji-flat:credit-card",
+        "lucide:credit-card",
+        "material-symbols:credit-card",
+        "ph:credit-card",
+        "material-symbols:payment-card",
+        "tabler:credit-card",
+        "tabler:credit-card-pay",
+        "tabler:credit-card-hand",
+        "material-symbols:add-card",
+        "tabler:credit-card-refund"
       ],
       "text": [
         "material-symbols:atm",
@@ -9947,6 +12632,26 @@
         "tabler:user-circle",
         "material-symbols:support"
       ],
+      "service-text:gemini": [
+        "ph:lifebuoy",
+        "tabler:lifebuoy",
+        "fluent-emoji-flat:ring-buoy",
+        "lucide:life-buoy",
+        "tabler:lifebuoy-off",
+        "material-symbols:support"
+      ],
+      "service:gemini": [
+        "lucide:life-buoy",
+        "fluent-emoji-flat:ring-buoy",
+        "tabler:lifebuoy",
+        "ph:lifebuoy",
+        "material-symbols:support",
+        "material-symbols:guardian",
+        "material-symbols:nest-protect",
+        "fluent-emoji-flat:sos-button",
+        "tabler:alert-circle",
+        "ph:warning-circle"
+      ],
       "text": [
         "material-symbols:support",
         "ph:lifebuoy",
@@ -10032,6 +12737,23 @@
         "ph:lock-simple",
         "fluent-emoji-flat:locked-with-key",
         "material-symbols:lock"
+      ],
+      "service-text:gemini": [
+        "ph:lock-key",
+        "ph:lock-laminated-open",
+        "tabler:lock-open-2"
+      ],
+      "service:gemini": [
+        "lucide:lock",
+        "tabler:lock",
+        "ph:lock-key",
+        "ph:lock-simple",
+        "material-symbols:lock",
+        "ph:lock",
+        "fluent-emoji-flat:locked",
+        "material-symbols:lock-clock",
+        "tabler:lock-access",
+        "lucide:lock-keyhole"
       ],
       "text": [
         "ph:lock-key",
@@ -10119,6 +12841,29 @@
         "tabler:building-lighthouse",
         "material-symbols:fluorescent"
       ],
+      "service-text:gemini": [
+        "fluent-emoji-flat:flashlight",
+        "lucide:flashlight",
+        "ph:flashlight",
+        "lucide:flashlight-off",
+        "material-symbols:flashlight-off",
+        "material-symbols:flashlight-on",
+        "fluent-emoji-flat:red-paper-lantern",
+        "material-symbols:flash-off",
+        "ph:lightbulb-filament"
+      ],
+      "service:gemini": [
+        "material-symbols:flashlight-on",
+        "ph:flashlight",
+        "lucide:flashlight",
+        "fluent-emoji-flat:flashlight",
+        "material-symbols:flashlight-off",
+        "lucide:flashlight-off",
+        "ph:lightbulb",
+        "ph:lightbulb-filament",
+        "material-symbols:fluorescent",
+        "material-symbols:highlight"
+      ],
       "text": [
         "fluent-emoji-flat:flashlight",
         "lucide:flashlight",
@@ -10203,6 +12948,30 @@
         "fluent-emoji-flat:hammer-and-wrench",
         "tabler:nut",
         "material-symbols:plumbing"
+      ],
+      "service-text:gemini": [
+        "fluent-emoji-flat:wrench",
+        "ph:wrench",
+        "tabler:tool",
+        "lucide:wrench-off",
+        "lucide:wrench",
+        "material-symbols:build",
+        "material-symbols:build-circle",
+        "fluent-emoji-flat:hammer-and-wrench",
+        "tabler:tools-off",
+        "material-symbols:plumbing"
+      ],
+      "service:gemini": [
+        "fluent-emoji-flat:wrench",
+        "lucide:wrench",
+        "material-symbols:build",
+        "ph:wrench",
+        "tabler:tool",
+        "fluent-emoji-flat:hammer-and-wrench",
+        "ph:pipe-wrench",
+        "material-symbols:plumbing",
+        "material-symbols:mobile-wrench",
+        "material-symbols:reset-wrench"
       ],
       "text": [
         "fluent-emoji-flat:mechanic",
@@ -10290,6 +13059,30 @@
         "lucide:user-cog",
         "material-symbols:manage-accounts"
       ],
+      "service-text:gemini": [
+        "tabler:user-edit",
+        "lucide:user-round-cog",
+        "lucide:user-pen",
+        "material-symbols:person-edit",
+        "lucide:user-round-pen",
+        "lucide:user-cog",
+        "material-symbols:checkbook",
+        "material-symbols:edit",
+        "tabler:edit",
+        "tabler:pencil"
+      ],
+      "service:gemini": [
+        "material-symbols:person-edit",
+        "tabler:user-edit",
+        "lucide:user-pen",
+        "lucide:user-round-pen",
+        "lucide:user-cog",
+        "lucide:user-round-cog",
+        "material-symbols:manage-accounts",
+        "tabler:user-cog",
+        "ph:user-gear",
+        "material-symbols:edit"
+      ],
       "text": [
         "lucide:user-cog",
         "lucide:user-pen",
@@ -10375,6 +13168,30 @@
         "ph:list-heart",
         "lucide:star",
         "ph:star"
+      ],
+      "service-text:gemini": [
+        "lucide:heart-plus",
+        "lucide:star-plus",
+        "material-symbols:heart-plus",
+        "tabler:heart-plus",
+        "lucide:bookmark-plus",
+        "material-symbols:bookmark-add",
+        "tabler:bookmark-plus",
+        "lucide:plus",
+        "material-symbols:loupe",
+        "tabler:plus"
+      ],
+      "service:gemini": [
+        "material-symbols:favorite",
+        "tabler:heart-plus",
+        "ph:push-pin",
+        "material-symbols:bookmark-add",
+        "material-symbols:bookmark-heart",
+        "tabler:bookmark",
+        "material-symbols:bookmark-star",
+        "lucide:heart-plus",
+        "lucide:file-heart",
+        "lucide:bookmark"
       ],
       "text": [
         "lucide:bookmark-plus",
@@ -10462,6 +13279,30 @@
         "material-symbols:add-call",
         "tabler:phone-done"
       ],
+      "service-text:gemini": [
+        "lucide:phone-outgoing",
+        "material-symbols:add-call",
+        "fluent-emoji-flat:telephone",
+        "lucide:phone",
+        "material-symbols:lift-to-talk",
+        "material-symbols:call",
+        "material-symbols:deskphone",
+        "ph:phone",
+        "tabler:phone",
+        "fluent-emoji-flat:telephone-receiver"
+      ],
+      "service:gemini": [
+        "lucide:phone",
+        "material-symbols:call",
+        "lucide:phone-call",
+        "tabler:phone-call",
+        "tabler:phone-calling",
+        "ph:phone-outgoing",
+        "tabler:phone",
+        "lucide:phone-outgoing",
+        "ph:phone",
+        "ph:phone-call"
+      ],
       "text": [
         "fluent-emoji-flat:telephone",
         "lucide:phone",
@@ -10547,6 +13388,30 @@
         "material-symbols:attachment",
         "fluent-emoji-flat:paperclip",
         "material-symbols:attach-file-off"
+      ],
+      "service-text:gemini": [
+        "material-symbols:attach-file-add",
+        "material-symbols:file-present",
+        "material-symbols:attach-file-off",
+        "material-symbols:attach-file",
+        "fluent-emoji-flat:paperclip",
+        "ph:paperclip",
+        "ph:paperclip-horizontal",
+        "tabler:paperclip",
+        "material-symbols:attach-email",
+        "tabler:file-upload"
+      ],
+      "service:gemini": [
+        "material-symbols:attach-file-add",
+        "material-symbols:attach-file",
+        "material-symbols:attachment",
+        "lucide:paperclip",
+        "ph:paperclip",
+        "material-symbols:attach-email",
+        "material-symbols:file-present",
+        "tabler:paperclip",
+        "fluent-emoji-flat:paperclip",
+        "material-symbols:upload-file"
       ],
       "text": [
         "fluent-emoji-flat:paperclip",
@@ -10634,6 +13499,30 @@
         "tabler:backspace",
         "lucide:clipboard-minus"
       ],
+      "service-text:gemini": [
+        "tabler:video-minus",
+        "lucide:sticky-note-minus",
+        "lucide:sticky-note-x",
+        "lucide:delete",
+        "ph:backspace",
+        "tabler:backspace",
+        "lucide:file-x",
+        "lucide:image-minus",
+        "lucide:list-x",
+        "lucide:package-minus"
+      ],
+      "service:gemini": [
+        "material-symbols:delete",
+        "material-symbols:delete-sweep",
+        "material-symbols:contract-delete",
+        "material-symbols:scan-delete",
+        "material-symbols:remove-done",
+        "material-symbols:playlist-remove",
+        "lucide:delete",
+        "material-symbols:remove-from-queue",
+        "material-symbols:remove-selection",
+        "tabler:http-delete"
+      ],
       "text": [
         "tabler:video-minus",
         "fluent-emoji-flat:cinema",
@@ -10719,6 +13608,21 @@
         "material-symbols:receipt-long",
         "lucide:receipt-euro",
         "ph:receipt"
+      ],
+      "service-text:gemini": [
+        "material-symbols:print"
+      ],
+      "service:gemini": [
+        "fluent-emoji-flat:receipt",
+        "tabler:receipt",
+        "material-symbols:receipt",
+        "material-symbols:receipt-long",
+        "lucide:receipt-text",
+        "material-symbols:order-play",
+        "tabler:invoice",
+        "ph:receipt",
+        "material-symbols:print",
+        "material-symbols:order-approve"
       ],
       "text": [
         "material-symbols:print",
@@ -10806,6 +13710,30 @@
         "ph:play-circle",
         "tabler:brand-parsinta"
       ],
+      "service-text:gemini": [
+        "tabler:brand-youtube",
+        "lucide:tv-minimal-play",
+        "tabler:circle-play",
+        "material-symbols:slideshow",
+        "material-symbols:play-circle",
+        "material-symbols:play-lesson",
+        "material-symbols:bubble",
+        "lucide:bug-play",
+        "material-symbols:order-play",
+        "material-symbols:rocket-launch"
+      ],
+      "service:gemini": [
+        "material-symbols:motion-play",
+        "tabler:player-play",
+        "lucide:play",
+        "lucide:circle-play",
+        "lucide:square-play",
+        "material-symbols:play-circle",
+        "lucide:file-play",
+        "ph:play",
+        "material-symbols:slideshow",
+        "material-symbols:play-lesson"
+      ],
       "text": [
         "material-symbols:slideshow",
         "material-symbols:play-circle",
@@ -10891,6 +13819,30 @@
         "tabler:refresh-dot",
         "material-symbols:autorenew",
         "material-symbols:update"
+      ],
+      "service-text:gemini": [
+        "tabler:home-edit",
+        "material-symbols:autorenew",
+        "material-symbols:cached",
+        "material-symbols:refresh",
+        "material-symbols:update",
+        "tabler:refresh",
+        "tabler:reload",
+        "lucide:refresh-ccw",
+        "lucide:refresh-cw",
+        "material-symbols:change-circle"
+      ],
+      "service:gemini": [
+        "material-symbols:refresh",
+        "material-symbols:update",
+        "tabler:reload",
+        "tabler:refresh",
+        "material-symbols:autorenew",
+        "tabler:refresh-alert",
+        "lucide:refresh-cw",
+        "lucide:refresh-ccw",
+        "tabler:refresh-dot",
+        "material-symbols:sync"
       ],
       "text": [
         "tabler:home-edit",
@@ -10978,6 +13930,30 @@
         "ph:download",
         "tabler:cloud-download"
       ],
+      "service-text:gemini": [
+        "tabler:file-download",
+        "ph:file-arrow-down",
+        "material-symbols:file-export",
+        "lucide:file-down",
+        "material-symbols:download",
+        "material-symbols:downloading",
+        "lucide:cloud-download",
+        "lucide:file-output",
+        "material-symbols:download-2",
+        "lucide:file-axis-3d"
+      ],
+      "service:gemini": [
+        "material-symbols:download",
+        "material-symbols:download-2",
+        "tabler:file-download",
+        "material-symbols:downloading",
+        "material-symbols:file-save",
+        "material-symbols:play-for-work",
+        "lucide:download",
+        "material-symbols:docs",
+        "tabler:download",
+        "lucide:file-down"
+      ],
       "text": [
         "lucide:import",
         "material-symbols:download",
@@ -11063,6 +14039,27 @@
         "tabler:filter-2-cog",
         "lucide:list-filter-plus",
         "tabler:filter-cog"
+      ],
+      "service-text:gemini": [
+        "tabler:filter-share",
+        "lucide:funnel",
+        "material-symbols:filter-alt",
+        "material-symbols:filter-arrow-right",
+        "tabler:filter-check",
+        "tabler:filter-edit",
+        "tabler:filter-minus"
+      ],
+      "service:gemini": [
+        "material-symbols:filter-list",
+        "material-symbols:filter-list-off",
+        "lucide:list-filter",
+        "tabler:list-search",
+        "tabler:filter-2",
+        "tabler:filter",
+        "tabler:filter-2-minus",
+        "tabler:filter-2-cancel",
+        "tabler:filter-2-pin",
+        "tabler:filter-2-x"
       ],
       "text": [
         "lucide:funnel",
@@ -11150,6 +14147,30 @@
         "ph:speaker-simple-high",
         "tabler:volume-4"
       ],
+      "service-text:gemini": [
+        "material-symbols:volume-up",
+        "ph:speaker-simple-high",
+        "tabler:volume",
+        "ph:speaker-high",
+        "tabler:volume-2",
+        "fluent-emoji-flat:speaker-medium-volume",
+        "fluent-emoji-flat:speaker-high-volume",
+        "ph:bell-slash",
+        "ph:speaker-x",
+        "material-symbols:media-output-off"
+      ],
+      "service:gemini": [
+        "tabler:volume",
+        "material-symbols:volume-up",
+        "material-symbols:media-bluetooth-on",
+        "lucide:volume-2",
+        "lucide:volume",
+        "fluent-emoji-flat:speaker-medium-volume",
+        "material-symbols:mobile-sound",
+        "ph:speaker-simple-high",
+        "material-symbols:enable",
+        "ph:speaker-high"
+      ],
       "text": [
         "tabler:volume",
         "material-symbols:volume-up",
@@ -11235,6 +14256,30 @@
         "lucide:save-all",
         "tabler:bookmark",
         "tabler:bookmark-plus"
+      ],
+      "service-text:gemini": [
+        "lucide:save-plus",
+        "material-symbols:file-save",
+        "ph:file",
+        "lucide:file-heart",
+        "material-symbols:developer-guide",
+        "ph:floppy-disk",
+        "ph:floppy-disk-back",
+        "lucide:file-axis-3d",
+        "lucide:book-down",
+        "lucide:file-down"
+      ],
+      "service:gemini": [
+        "material-symbols:file-save",
+        "material-symbols:save",
+        "lucide:save",
+        "ph:file-text",
+        "ph:file",
+        "material-symbols:file-save-off",
+        "ph:floppy-disk",
+        "tabler:file-download",
+        "ph:file-arrow-down",
+        "lucide:save-plus"
       ],
       "text": [
         "ph:file",
@@ -11322,6 +14367,29 @@
         "tabler:heart",
         "tabler:heart-pause"
       ],
+      "service-text:gemini": [
+        "material-symbols:add-reaction",
+        "material-symbols:signature",
+        "material-symbols:add-circle",
+        "tabler:phone-pause",
+        "lucide:mail-pen",
+        "lucide:rectangle-circle",
+        "material-symbols:rate-review",
+        "tabler:writing",
+        "tabler:pencil-down"
+      ],
+      "service:gemini": [
+        "ph:thumbs-up",
+        "lucide:thumbs-up",
+        "tabler:file-like",
+        "material-symbols:recommend",
+        "material-symbols:favorite",
+        "tabler:thumb-up",
+        "material-symbols:thumb-up",
+        "tabler:heart-up",
+        "tabler:heart-star",
+        "lucide:heart-plus"
+      ],
       "text": [
         "material-symbols:add-reaction",
         "material-symbols:signature",
@@ -11407,6 +14475,30 @@
         "tabler:shopping-bag-plus",
         "tabler:basket",
         "tabler:shopping-cart-share"
+      ],
+      "service-text:gemini": [
+        "lucide:shopping-cart-plus",
+        "material-symbols:add-shopping-cart",
+        "tabler:basket-plus",
+        "tabler:shopping-cart-plus",
+        "tabler:shopping-cart-up",
+        "tabler:shopping-bag-plus",
+        "lucide:plus",
+        "material-symbols:loupe",
+        "tabler:plus",
+        "lucide:badge-plus"
+      ],
+      "service:gemini": [
+        "material-symbols:add-shopping-cart",
+        "tabler:basket-plus",
+        "material-symbols:shopping-cart",
+        "tabler:shopping-cart-plus",
+        "lucide:shopping-cart-plus",
+        "tabler:shopping-bag-plus",
+        "material-symbols:shopping-basket",
+        "material-symbols:add-card",
+        "material-symbols:add",
+        "material-symbols:add-to-queue"
       ],
       "text": [
         "tabler:basket-plus",
@@ -11494,6 +14586,30 @@
         "tabler:share-2",
         "tabler:link"
       ],
+      "service-text:gemini": [
+        "lucide:share",
+        "material-symbols:share",
+        "ph:export",
+        "ph:share",
+        "tabler:share",
+        "lucide:share-2",
+        "material-symbols:document-share",
+        "material-symbols:ios-share",
+        "material-symbols:share-off",
+        "material-symbols:share-reviews"
+      ],
+      "service:gemini": [
+        "material-symbols:share",
+        "tabler:share",
+        "ph:share-network",
+        "lucide:share-2",
+        "tabler:share-3",
+        "tabler:user-share",
+        "fluent-emoji-flat:link",
+        "material-symbols:document-share",
+        "tabler:heart-share",
+        "material-symbols:share-location"
+      ],
       "text": [
         "lucide:forward",
         "lucide:share",
@@ -11579,6 +14695,30 @@
         "tabler:message-up",
         "tabler:message-circle-up",
         "material-symbols:send"
+      ],
+      "service-text:gemini": [
+        "tabler:message-circle-share",
+        "tabler:message-share",
+        "lucide:message-square-share",
+        "tabler:send",
+        "ph:telegram-logo",
+        "tabler:message-up",
+        "tabler:message-2-up",
+        "tabler:message-heart",
+        "tabler:message-2-share",
+        "tabler:message-circle-up"
+      ],
+      "service:gemini": [
+        "ph:envelope",
+        "material-symbols:send",
+        "tabler:send",
+        "lucide:send",
+        "ph:envelope-simple",
+        "tabler:send-2",
+        "material-symbols:mail",
+        "ph:paper-plane-tilt",
+        "tabler:message-chatbot",
+        "tabler:message-2-ai"
       ],
       "text": [
         "fluent-emoji-flat:envelope",
@@ -11666,6 +14806,30 @@
         "ph:lock-simple",
         "material-symbols:encrypted-minus-circle"
       ],
+      "service-text:gemini": [
+        "material-symbols:key-off",
+        "material-symbols:mouse-lock",
+        "material-symbols:no-accounts",
+        "tabler:forbid-2",
+        "material-symbols:network-locked",
+        "tabler:lock-access-off",
+        "lucide:shield-ban",
+        "tabler:lock-cancel",
+        "tabler:lock-square-rounded",
+        "tabler:cloud-cancel"
+      ],
+      "service:gemini": [
+        "tabler:lock-access-off",
+        "material-symbols:block",
+        "tabler:lock-access",
+        "tabler:lock-cancel",
+        "material-symbols:mobile-block",
+        "material-symbols:desktop-access-disabled",
+        "tabler:ban",
+        "tabler:forbid",
+        "material-symbols:share-off",
+        "material-symbols:key-off"
+      ],
       "text": [
         "material-symbols:key-off",
         "material-symbols:mouse-lock",
@@ -11751,6 +14915,30 @@
         "tabler:browser-maximize",
         "tabler:window-maximize",
         "tabler:arrows-maximize"
+      ],
+      "service-text:gemini": [
+        "material-symbols:arrows-output",
+        "lucide:square-arrow-out-down-right",
+        "lucide:expand",
+        "tabler:browser-maximize",
+        "material-symbols:maximize",
+        "material-symbols:all-out",
+        "material-symbols:open-run",
+        "tabler:window-maximize",
+        "material-symbols:zoom-out-map",
+        "lucide:maximize"
+      ],
+      "service:gemini": [
+        "material-symbols:fullscreen",
+        "ph:corners-out",
+        "material-symbols:open-in-full",
+        "material-symbols:expand-content",
+        "lucide:maximize",
+        "material-symbols:maximize",
+        "tabler:maximize",
+        "lucide:expand",
+        "tabler:window-maximize",
+        "material-symbols:width-full"
       ],
       "text": [
         "lucide:expand",
@@ -11838,6 +15026,30 @@
         "material-symbols:output",
         "material-symbols:rear-camera"
       ],
+      "service-text:gemini": [
+        "tabler:logout",
+        "material-symbols:output",
+        "ph:sign-out",
+        "tabler:door-exit",
+        "lucide:square-arrow-right-exit",
+        "material-symbols:logout",
+        "material-symbols:move-item",
+        "tabler:logout-2",
+        "material-symbols:rear-camera",
+        "lucide:log-in"
+      ],
+      "service:gemini": [
+        "ph:sign-out",
+        "material-symbols:logout",
+        "lucide:log-out",
+        "tabler:logout",
+        "tabler:door-exit",
+        "tabler:logout-2",
+        "material-symbols:output",
+        "material-symbols:move-item",
+        "material-symbols:exit-to-app",
+        "material-symbols:step-out"
+      ],
       "text": [
         "material-symbols:logout",
         "material-symbols:output",
@@ -11923,6 +15135,30 @@
         "ph:copy",
         "lucide:clipboard-paste",
         "ph:clipboard-text"
+      ],
+      "service-text:gemini": [
+        "material-symbols:markdown-copy",
+        "lucide:clipboard-type",
+        "material-symbols:content-paste",
+        "lucide:scan-text",
+        "tabler:scan-letter-t",
+        "lucide:text-search",
+        "tabler:text-scan-2",
+        "tabler:text-scan-ai",
+        "material-symbols:document-scanner",
+        "material-symbols:markdown-paste"
+      ],
+      "service:gemini": [
+        "material-symbols:content-copy",
+        "tabler:clipboard-copy",
+        "ph:copy",
+        "material-symbols:markdown-copy",
+        "lucide:clipboard-copy",
+        "tabler:copy",
+        "tabler:clipboard-text",
+        "ph:clipboard-text",
+        "material-symbols:content-paste",
+        "material-symbols:copy-all"
       ],
       "text": [
         "lucide:clipboard-type",
@@ -12010,6 +15246,29 @@
         "ph:lock-open",
         "lucide:book-open-text"
       ],
+      "service-text:gemini": [
+        "material-symbols:opacity",
+        "lucide:blend",
+        "lucide:lens",
+        "tabler:alpha",
+        "tabler:blend-mode",
+        "tabler:droplet-half",
+        "tabler:droplet-half-2",
+        "ph:gradient",
+        "material-symbols:masked-transitions"
+      ],
+      "service:gemini": [
+        "material-symbols:conditions",
+        "material-symbols:policy",
+        "material-symbols:opacity",
+        "tabler:mist",
+        "material-symbols:visibility",
+        "material-symbols:foggy",
+        "material-symbols:clear-day",
+        "material-symbols:mist",
+        "fluent-emoji-flat:foggy",
+        "material-symbols:rule"
+      ],
       "text": [
         "lucide:blend",
         "lucide:lens",
@@ -12095,6 +15354,30 @@
         "tabler:disabled-2",
         "tabler:disabled",
         "tabler:accessible-off"
+      ],
+      "service-text:gemini": [
+        "tabler:accessible",
+        "material-symbols:accessibility",
+        "material-symbols:accessibility-new",
+        "material-symbols:accessible",
+        "ph:wheelchair",
+        "tabler:disabled",
+        "fluent-emoji-flat:wheelchair-symbol",
+        "ph:wheelchair-motion",
+        "tabler:disabled-2",
+        "material-symbols:accessible-forward"
+      ],
+      "service:gemini": [
+        "material-symbols:accessibility",
+        "material-symbols:accessible",
+        "material-symbols:accessibility-new",
+        "tabler:accessible",
+        "material-symbols:settings-accessibility",
+        "lucide:accessibility",
+        "tabler:disabled",
+        "material-symbols:accessible-forward",
+        "material-symbols:accessible-menu",
+        "tabler:disabled-2"
       ],
       "text": [
         "material-symbols:accessibility",
@@ -12182,6 +15465,19 @@
         "ph:armchair",
         "material-symbols:accessible-menu"
       ],
+      "service-text:gemini": [],
+      "service:gemini": [
+        "lucide:rocking-chair",
+        "material-symbols:relax",
+        "lucide:heater",
+        "material-symbols:sentiment-content",
+        "material-symbols:sentiment-calm",
+        "material-symbols:nest-remote-comfort-sensor",
+        "material-symbols:check",
+        "material-symbols:priority",
+        "material-symbols:blanket",
+        "tabler:pillow"
+      ],
       "text": [],
       "vector:gemini": [
         "material-symbols:view-comfy",
@@ -12256,6 +15552,30 @@
         "material-symbols:task-alt",
         "tabler:mood-up",
         "tabler:circle-check"
+      ],
+      "service-text:gemini": [
+        "material-symbols:flaky",
+        "tabler:check",
+        "tabler:trophy",
+        "fluent-emoji-flat:check-mark",
+        "fluent-emoji-flat:green-circle",
+        "fluent-emoji-flat:green-square",
+        "lucide:circle-check",
+        "lucide:printer-check",
+        "material-symbols:check-circle",
+        "material-symbols:done-outline"
+      ],
+      "service:gemini": [
+        "tabler:check",
+        "tabler:circle-check",
+        "lucide:save-check",
+        "material-symbols:check",
+        "material-symbols:check-circle",
+        "lucide:printer-check",
+        "tabler:copy-check",
+        "ph:check",
+        "material-symbols:done-outline",
+        "material-symbols:download-done"
       ],
       "text": [
         "material-symbols:flaky",
@@ -12343,6 +15663,30 @@
         "material-symbols:wifi-calling-bar-2",
         "tabler:servicemark"
       ],
+      "service-text:gemini": [
+        "material-symbols:aq-indoor",
+        "material-symbols:high-quality",
+        "tabler:badge-sd",
+        "lucide:hd",
+        "material-symbols:2k",
+        "material-symbols:hd",
+        "ph:standard-definition",
+        "tabler:badge-hd",
+        "material-symbols:high-quality-off",
+        "material-symbols:2k-plus"
+      ],
+      "service:gemini": [
+        "material-symbols:call-quality",
+        "material-symbols:high-quality",
+        "material-symbols:concierge",
+        "material-symbols:room-service",
+        "tabler:hotel-service",
+        "material-symbols:reviews",
+        "material-symbols:hotel-class",
+        "material-symbols:home-repair-service",
+        "lucide:hand-platter",
+        "material-symbols:linked-services"
+      ],
       "text": [
         "material-symbols:apps-outage",
         "tabler:brand-gumroad",
@@ -12429,6 +15773,21 @@
         "lucide:target",
         "tabler:chart-funnel"
       ],
+      "service-text:gemini": [
+        "tabler:automation"
+      ],
+      "service:gemini": [
+        "material-symbols:productivity",
+        "tabler:automation",
+        "material-symbols:energy-program-time-used",
+        "material-symbols:priority",
+        "material-symbols:check",
+        "material-symbols:energy-savings-leaf",
+        "material-symbols:energy-program-saving",
+        "material-symbols:approval",
+        "material-symbols:60fps",
+        "material-symbols:speed-1-7x"
+      ],
       "text": [
         "tabler:automation"
       ],
@@ -12505,6 +15864,30 @@
         "material-symbols:speed-4",
         "ph:gauge",
         "tabler:gauge"
+      ],
+      "service-text:gemini": [
+        "tabler:multiplier-1x",
+        "material-symbols:speed-0-2x",
+        "material-symbols:speed-0-75",
+        "material-symbols:speed-0-7x",
+        "material-symbols:speed-1-2",
+        "material-symbols:speed-1-25",
+        "material-symbols:speed-1-2x",
+        "material-symbols:speed-1-5x",
+        "material-symbols:speed-1-75",
+        "material-symbols:speed-1-7x"
+      ],
+      "service:gemini": [
+        "material-symbols:speed",
+        "material-symbols:delivery-truck-speed",
+        "material-symbols:speed-1-7x",
+        "material-symbols:speed-1-5x",
+        "material-symbols:speed-2x",
+        "material-symbols:speed-1-2x",
+        "material-symbols:speed-2",
+        "material-symbols:speed-1-75",
+        "material-symbols:speed-0-7x",
+        "material-symbols:speed-1-5"
       ],
       "text": [
         "fluent-emoji-flat:construction",
@@ -12592,6 +15975,30 @@
         "lucide:shield",
         "lucide:shield-check"
       ],
+      "service-text:gemini": [
+        "lucide:shield",
+        "material-symbols:security",
+        "material-symbols:shield",
+        "ph:anchor",
+        "ph:shield",
+        "material-symbols:assured-workload",
+        "material-symbols:safety-check",
+        "material-symbols:verified-user",
+        "ph:anchor-simple",
+        "ph:shield-chevron"
+      ],
+      "service:gemini": [
+        "material-symbols:assured-workload",
+        "material-symbols:safety-check",
+        "material-symbols:security",
+        "material-symbols:verified",
+        "material-symbols:no-crash",
+        "ph:shield-check",
+        "material-symbols:priority",
+        "material-symbols:shield",
+        "material-symbols:data-check",
+        "material-symbols:credit-score"
+      ],
       "text": [
         "lucide:shield",
         "material-symbols:security",
@@ -12678,6 +16085,21 @@
         "tabler:home-eco",
         "lucide:sprout"
       ],
+      "service-text:gemini": [
+        "tabler:michelin-star-green"
+      ],
+      "service:gemini": [
+        "lucide:flower-2",
+        "tabler:recycle",
+        "lucide:flower",
+        "lucide:recycle",
+        "tabler:home-eco",
+        "tabler:growth",
+        "material-symbols:recycling",
+        "material-symbols:co2",
+        "material-symbols:diversity-2",
+        "lucide:leaf"
+      ],
       "text": [
         "tabler:michelin-star-green",
         "material-symbols:strategy",
@@ -12760,6 +16182,19 @@
         "tabler:settings-up",
         "lucide:chart-no-axes-combined"
       ],
+      "service-text:gemini": [],
+      "service:gemini": [
+        "material-symbols:video-stable",
+        "material-symbols:flaky",
+        "material-symbols:balance",
+        "ph:anchor",
+        "material-symbols:stress-management",
+        "material-symbols:security",
+        "material-symbols:sentiment-calm",
+        "material-symbols:width-normal",
+        "material-symbols:foundation",
+        "fluent-emoji-flat:shield"
+      ],
       "text": [],
       "vector:gemini": [
         "material-symbols:video-stable",
@@ -12834,6 +16269,22 @@
         "material-symbols:fit-width",
         "material-symbols:align-flex-start",
         "material-symbols:accessibility-new"
+      ],
+      "service-text:gemini": [
+        "tabler:stretching",
+        "tabler:stretching-2"
+      ],
+      "service:gemini": [
+        "tabler:stretching",
+        "tabler:stretching-2",
+        "material-symbols:flex-wrap",
+        "material-symbols:flex-no-wrap",
+        "tabler:acrobatic",
+        "lucide:stretch-vertical",
+        "material-symbols:flex-direction",
+        "tabler:gymnastics",
+        "material-symbols:sports-gymnastics",
+        "material-symbols:cable"
       ],
       "text": [
         "tabler:stretching",
@@ -12913,6 +16364,19 @@
         "tabler:user-up",
         "tabler:user-share"
       ],
+      "service-text:gemini": [],
+      "service:gemini": [
+        "material-symbols:for-you",
+        "material-symbols:loyalty",
+        "material-symbols:support",
+        "material-symbols:help-center",
+        "material-symbols:concierge",
+        "material-symbols:support-agent",
+        "lucide:info",
+        "material-symbols:contacts-product",
+        "ph:info",
+        "material-symbols:productivity"
+      ],
       "text": [],
       "vector:gemini": [
         "material-symbols:for-you",
@@ -12987,6 +16451,19 @@
         "lucide:user-round-arrow-left",
         "material-symbols:diversity-1",
         "lucide:users-collaboration"
+      ],
+      "service-text:gemini": [],
+      "service:gemini": [
+        "material-symbols:interests",
+        "material-symbols:volunteer-activism",
+        "material-symbols:crowdsource",
+        "material-symbols:diversity-1",
+        "material-symbols:diversity-2",
+        "material-symbols:loyalty",
+        "material-symbols:local-activity",
+        "material-symbols:join",
+        "material-symbols:join-left",
+        "material-symbols:productivity"
       ],
       "text": [],
       "vector:gemini": [
@@ -13063,6 +16540,19 @@
         "material-symbols:person-text",
         "tabler:circle-dashed-plus"
       ],
+      "service-text:gemini": [],
+      "service:gemini": [
+        "ph:train-simple",
+        "ph:megaphone-simple",
+        "ph:music-note-simple",
+        "ph:stack-simple",
+        "ph:copy-simple",
+        "tabler:asterisk-simple",
+        "ph:align-left-simple",
+        "ph:anchor-simple",
+        "ph:house-simple",
+        "ph:funnel-simple"
+      ],
       "text": [],
       "vector:gemini": [
         "ph:megaphone-simple",
@@ -13138,6 +16628,19 @@
         "tabler:report-medical",
         "tabler:clipboard-search"
       ],
+      "service-text:gemini": [],
+      "service:gemini": [
+        "tabler:analyze",
+        "material-symbols:explicit",
+        "material-symbols:experiment",
+        "material-symbols:quiz",
+        "ph:exam",
+        "material-symbols:grading",
+        "material-symbols:approval",
+        "material-symbols:diagnosis",
+        "material-symbols:plagiarism",
+        "material-symbols:planner-review"
+      ],
       "text": [],
       "vector:gemini": [
         "tabler:analyze",
@@ -13212,6 +16715,22 @@
         "tabler:ai",
         "material-symbols:api",
         "tabler:brand-pinterest"
+      ],
+      "service-text:gemini": [
+        "tabler:bulb",
+        "ph:lightbulb"
+      ],
+      "service:gemini": [
+        "material-symbols:military-tech",
+        "material-symbols:5g",
+        "tabler:bulb",
+        "material-symbols:sensors",
+        "material-symbols:network-intelligence",
+        "material-symbols:automation",
+        "material-symbols:connect-without-contact",
+        "material-symbols:biotech",
+        "tabler:ai",
+        "material-symbols:science"
       ],
       "text": [
         "ph:lightbulb",
@@ -13290,6 +16809,25 @@
         "fluent-emoji-flat:japanese-open-for-business-button",
         "tabler:building-plus",
         "lucide:chart-column-increasing"
+      ],
+      "service-text:gemini": [
+        "material-symbols:strategy",
+        "tabler:growth",
+        "material-symbols:self-improvement",
+        "tabler:michelin-star-green",
+        "material-symbols:congenital"
+      ],
+      "service:gemini": [
+        "material-symbols:add-business",
+        "material-symbols:business-center",
+        "tabler:businessplan",
+        "material-symbols:business-chip",
+        "material-symbols:enterprise",
+        "lucide:building-complex-plus",
+        "material-symbols:business-messages",
+        "tabler:growth",
+        "material-symbols:finance-mode",
+        "material-symbols:shop-two"
       ],
       "text": [
         "fluent-emoji-flat:japanese-open-for-business-button",
@@ -13377,6 +16915,30 @@
         "material-symbols:privacy",
         "material-symbols:shield-person"
       ],
+      "service-text:gemini": [
+        "lucide:shredder",
+        "material-symbols:privacy",
+        "material-symbols:privacy-tip",
+        "material-symbols:shield-locked",
+        "tabler:cookie-off",
+        "tabler:door-hanger",
+        "tabler:lock-cog",
+        "material-symbols:perm-data-setting",
+        "lucide:cookie",
+        "lucide:earth-lock"
+      ],
+      "service:gemini": [
+        "material-symbols:privacy",
+        "material-symbols:private-connectivity",
+        "ph:cookie",
+        "material-symbols:privacy-tip",
+        "tabler:file-text-shield",
+        "material-symbols:lock",
+        "material-symbols:encrypted",
+        "material-symbols:visibility-lock",
+        "material-symbols:policy",
+        "material-symbols:security"
+      ],
       "text": [
         "lucide:cookie",
         "lucide:shredder",
@@ -13463,6 +17025,27 @@
         "lucide:users-round-collaboration",
         "tabler:friends"
       ],
+      "service-text:gemini": [
+        "material-symbols:partner-exchange",
+        "material-symbols:handshake",
+        "fluent-emoji-flat:handshake",
+        "lucide:handshake",
+        "ph:handshake",
+        "lucide:heart-handshake",
+        "tabler:heart-handshake"
+      ],
+      "service:gemini": [
+        "material-symbols:partner-exchange",
+        "material-symbols:partner-heart",
+        "material-symbols:handshake",
+        "lucide:handshake",
+        "tabler:affiliate",
+        "lucide:users-collaboration",
+        "ph:handshake",
+        "lucide:users-round-collaboration",
+        "lucide:heart-handshake",
+        "tabler:heart-handshake"
+      ],
       "text": [
         "fluent-emoji-flat:handshake",
         "lucide:handshake",
@@ -13546,6 +17129,19 @@
         "tabler:bulb",
         "lucide:circle-fading-plus"
       ],
+      "service-text:gemini": [],
+      "service:gemini": [
+        "tabler:bulb",
+        "fluent-emoji-flat:crayon",
+        "tabler:brand-behance",
+        "tabler:creative-commons",
+        "tabler:brand-adobe",
+        "material-symbols:diversity-2",
+        "lucide:origami",
+        "fluent-emoji-flat:artist",
+        "material-symbols:cognition-2",
+        "fluent-emoji-flat:man-artist"
+      ],
       "text": [],
       "vector:gemini": [
         "tabler:bulb",
@@ -13620,6 +17216,30 @@
         "material-symbols:settings-input-component",
         "tabler:carousel-horizontal",
         "tabler:adjustments-plus"
+      ],
+      "service-text:gemini": [
+        "material-symbols:sliders",
+        "material-symbols:page-info",
+        "fluent-emoji-flat:level-slider",
+        "lucide:settings-2",
+        "ph:faders",
+        "material-symbols:settings-input-component",
+        "material-symbols:switches",
+        "material-symbols:tune",
+        "lucide:sliders-horizontal",
+        "material-symbols:discover-tune"
+      ],
+      "service:gemini": [
+        "material-symbols:sliders",
+        "fluent-emoji-flat:level-slider",
+        "ph:sliders-horizontal",
+        "lucide:sliders-horizontal",
+        "material-symbols:page-info",
+        "material-symbols:settings-input-component",
+        "tabler:adjustments-exclamation",
+        "ph:faders-horizontal",
+        "ph:sliders",
+        "lucide:sliders-vertical"
       ],
       "text": [
         "material-symbols:sliders",
@@ -13707,6 +17327,27 @@
         "lucide:circle-chevrons-down",
         "lucide:table-of-contents"
       ],
+      "service-text:gemini": [
+        "material-symbols:page-control",
+        "material-symbols:first-page",
+        "material-symbols:last-page",
+        "tabler:chevron-left-pipe",
+        "tabler:chevron-right-pipe",
+        "material-symbols:steppers",
+        "lucide:circle-chevrons-left"
+      ],
+      "service:gemini": [
+        "material-symbols:last-page",
+        "material-symbols:first-page",
+        "material-symbols:page-control",
+        "material-symbols:contact-page",
+        "material-symbols:pages",
+        "material-symbols:request-page",
+        "material-symbols:pageview",
+        "material-symbols:pageless",
+        "material-symbols:page-info",
+        "material-symbols:page-footer"
+      ],
       "text": [
         "material-symbols:page-control",
         "material-symbols:first-page",
@@ -13793,6 +17434,19 @@
         "material-symbols:home-mini",
         "material-symbols:cookie"
       ],
+      "service-text:gemini": [],
+      "service:gemini": [
+        "fluent-emoji-flat:bread",
+        "tabler:bread",
+        "material-symbols:bakery-dining",
+        "ph:bread",
+        "ph:cookie",
+        "fluent-emoji-flat:cookie",
+        "tabler:bread-off",
+        "tabler:cookie",
+        "material-symbols:breakfast-dining",
+        "fluent-emoji-flat:bagel"
+      ],
       "text": [
         "fluent-emoji-flat:cookie",
         "ph:cookie",
@@ -13873,6 +17527,30 @@
         "tabler:square-dot",
         "ph:dot-outline",
         "material-symbols:edit-attributes"
+      ],
+      "service-text:gemini": [
+        "material-symbols:radio-button-partial",
+        "fluent-emoji-flat:radio-button",
+        "ph:radio-button",
+        "material-symbols:radio-button-checked",
+        "material-symbols:radio-button-unchecked",
+        "lucide:circle-dot",
+        "material-symbols:circle-circle",
+        "ph:dot-outline",
+        "material-symbols:mode-standby",
+        "fluent-emoji-flat:white-circle"
+      ],
+      "service:gemini": [
+        "ph:radio-button",
+        "material-symbols:radio-button-checked",
+        "fluent-emoji-flat:radio-button",
+        "material-symbols:radio-button-partial",
+        "material-symbols:radio-button-unchecked",
+        "tabler:circle-dot",
+        "material-symbols:radio",
+        "ph:toggle-right",
+        "lucide:radio-receiver",
+        "material-symbols:circle-circle"
       ],
       "text": [
         "fluent-emoji-flat:radio-button",
@@ -13960,6 +17638,22 @@
         "fluent-emoji-flat:information",
         "tabler:info-square"
       ],
+      "service-text:gemini": [
+        "tabler:tooltip",
+        "material-symbols:tooltip-2"
+      ],
+      "service:gemini": [
+        "material-symbols:tooltip-2",
+        "material-symbols:tooltip",
+        "tabler:tooltip",
+        "lucide:info",
+        "fluent-emoji-flat:information",
+        "material-symbols:info",
+        "ph:info",
+        "tabler:info-circle",
+        "material-symbols:help",
+        "lucide:circle-question-mark"
+      ],
       "text": [
         "tabler:tooltip",
         "material-symbols:tooltip-2",
@@ -14045,6 +17739,30 @@
         "tabler:grip-horizontal",
         "material-symbols:drag-click",
         "tabler:reorder"
+      ],
+      "service-text:gemini": [
+        "material-symbols:drag-click",
+        "material-symbols:drag-indicator",
+        "tabler:drag-drop",
+        "lucide:grip",
+        "lucide:grip-horizontal",
+        "material-symbols:drag-handle",
+        "ph:dots-six",
+        "tabler:grip-horizontal",
+        "ph:dots-six-vertical",
+        "tabler:drag-drop-2"
+      ],
+      "service:gemini": [
+        "tabler:drag-drop-2",
+        "tabler:drag-drop",
+        "material-symbols:drag-click",
+        "material-symbols:drag-indicator",
+        "tabler:reorder",
+        "lucide:grip",
+        "material-symbols:drag-handle",
+        "material-symbols:drag-pan",
+        "lucide:grip-vertical",
+        "tabler:grip-vertical"
       ],
       "text": [
         "lucide:grip",
@@ -14132,6 +17850,30 @@
         "tabler:loader-4",
         "lucide:loader"
       ],
+      "service-text:gemini": [
+        "tabler:progress",
+        "tabler:progress-check",
+        "tabler:progress-x",
+        "material-symbols:steppers",
+        "material-symbols:progress-activity",
+        "material-symbols:clock-loader-90",
+        "material-symbols:incomplete-circle",
+        "tabler:percentage-40",
+        "tabler:percentage-60",
+        "tabler:progress-down"
+      ],
+      "service:gemini": [
+        "material-symbols:progress-activity",
+        "tabler:progress",
+        "tabler:progress-down",
+        "tabler:progress-bolt",
+        "tabler:progress-alert",
+        "tabler:loader-3",
+        "ph:spinner-ball",
+        "material-symbols:arrow-upload-progress",
+        "tabler:loader-quarter",
+        "tabler:progress-help"
+      ],
       "text": [
         "lucide:ellipsis",
         "lucide:loader",
@@ -14217,6 +17959,23 @@
         "tabler:device-imac-search",
         "ph:textbox",
         "tabler:input-spark"
+      ],
+      "service-text:gemini": [
+        "ph:textbox",
+        "lucide:text-cursor-input",
+        "fluent-emoji-flat:keyboard"
+      ],
+      "service:gemini": [
+        "tabler:input-search",
+        "tabler:input-ai",
+        "ph:textbox",
+        "material-symbols:input",
+        "lucide:text-cursor-input",
+        "tabler:input-spark",
+        "material-symbols:arrows-input",
+        "tabler:input-check",
+        "material-symbols:search",
+        "lucide:file-input"
       ],
       "text": [
         "fluent-emoji-flat:keyboard",
@@ -14304,6 +18063,30 @@
         "tabler:dots-vertical",
         "material-symbols:float-landscape-2"
       ],
+      "service-text:gemini": [
+        "tabler:decimal",
+        "fluent-emoji-flat:shooting-star",
+        "ph:shooting-star",
+        "material-symbols:float-portrait-2",
+        "tabler:picture-in-picture",
+        "tabler:comet",
+        "tabler:meteor-off",
+        "material-symbols:float-landscape-2",
+        "tabler:picture-in-picture-on",
+        "tabler:picture-in-picture-top"
+      ],
+      "service:gemini": [
+        "material-symbols:bottom-app-bar",
+        "material-symbols:call-to-action",
+        "material-symbols:buttons-alt",
+        "material-symbols:bottom-navigation",
+        "lucide:panel-bottom-open",
+        "material-symbols:dock-to-bottom",
+        "fluent-emoji-flat:up-button",
+        "material-symbols:action-key",
+        "lucide:circle-chevrons-up",
+        "fluent-emoji-flat:upwards-button"
+      ],
       "text": [
         "material-symbols:bottom-app-bar",
         "material-symbols:call-to-action",
@@ -14388,6 +18171,30 @@
         "lucide:arrow-down-1-0",
         "tabler:filter-2-down",
         "lucide:arrow-down-0-1",
+        "tabler:sort-descending-shapes"
+      ],
+      "service-text:gemini": [
+        "tabler:sort-9-0",
+        "tabler:sort-descending-numbers",
+        "tabler:sort-descending-small-big",
+        "ph:sort-descending",
+        "tabler:sort-descending",
+        "lucide:list-sort-descending",
+        "tabler:sort-descending-2",
+        "tabler:sort-descending-shapes",
+        "lucide:arrow-down-0-1",
+        "lucide:arrow-down-1-0"
+      ],
+      "service:gemini": [
+        "lucide:list-sort-descending",
+        "tabler:sort-descending-numbers",
+        "tabler:sort-descending-small-big",
+        "tabler:sort-descending",
+        "tabler:sort-descending-letters",
+        "ph:sort-descending",
+        "tabler:sort-z-a",
+        "tabler:sort-descending-2",
+        "lucide:arrow-down-wide-narrow",
         "tabler:sort-descending-shapes"
       ],
       "text": [
@@ -14476,6 +18283,30 @@
         "material-symbols:picture-in-picture-mobile",
         "lucide:picture-in-picture"
       ],
+      "service-text:gemini": [
+        "tabler:app-window-center",
+        "material-symbols:bottom-sheets",
+        "material-symbols:android",
+        "material-symbols:mobile-check",
+        "material-symbols:mobile-hand",
+        "material-symbols:tablet-android",
+        "ph:android-logo",
+        "tabler:brand-miniprogram",
+        "tabler:device-ipad",
+        "tabler:device-tablet"
+      ],
+      "service:gemini": [
+        "tabler:app-window-center",
+        "tabler:queue-pop-out",
+        "lucide:picture-in-picture-2",
+        "material-symbols:tooltip",
+        "material-symbols:toast",
+        "lucide:picture-in-picture",
+        "ph:picture-in-picture",
+        "material-symbols:open-in-new",
+        "tabler:queue-pop-in",
+        "material-symbols:dialogs"
+      ],
       "text": [
         "material-symbols:bottom-sheets",
         "tabler:app-window-center",
@@ -14561,6 +18392,23 @@
         "tabler:caret-down",
         "tabler:square-rounded-chevron-down",
         "tabler:square-chevron-down"
+      ],
+      "service-text:gemini": [
+        "material-symbols:dropdown-menu",
+        "material-symbols:arrow-drop-down",
+        "tabler:caret-up-down"
+      ],
+      "service:gemini": [
+        "material-symbols:dropdown-menu",
+        "material-symbols:dropdown",
+        "tabler:select",
+        "material-symbols:arrow-drop-down",
+        "tabler:selector",
+        "material-symbols:arrow-drop-down-circle",
+        "lucide:list",
+        "material-symbols:list",
+        "material-symbols:list-arrow",
+        "lucide:chevron-down"
       ],
       "text": [
         "material-symbols:dropdown-menu",
@@ -14648,6 +18496,30 @@
         "material-symbols:collapse-all",
         "material-symbols:collapse-content"
       ],
+      "service-text:gemini": [
+        "lucide:list-collapse",
+        "tabler:fold-down",
+        "tabler:fold-up",
+        "lucide:list-chevrons-down-up",
+        "lucide:list-chevrons-up-down",
+        "material-symbols:expansion-panels",
+        "tabler:details-off",
+        "tabler:details",
+        "tabler:chevron-up",
+        "material-symbols:hide"
+      ],
+      "service:gemini": [
+        "tabler:fold-up",
+        "material-symbols:collapse-all",
+        "material-symbols:collapse-content",
+        "material-symbols:unfold-less",
+        "tabler:fold-down",
+        "material-symbols:top-panel-close",
+        "material-symbols:hide",
+        "lucide:chevrons-down-up",
+        "tabler:fold",
+        "lucide:list-collapse"
+      ],
       "text": [
         "tabler:details",
         "lucide:list-collapse",
@@ -14733,6 +18605,30 @@
         "tabler:square-check",
         "lucide:square-check",
         "material-symbols:indeterminate-check-box"
+      ],
+      "service-text:gemini": [
+        "tabler:checkbox",
+        "ph:check-square",
+        "material-symbols:select-check-box",
+        "lucide:square-check",
+        "material-symbols:check-box",
+        "tabler:square-check",
+        "ph:check-square-offset",
+        "tabler:square-rounded-check",
+        "material-symbols:check-box-outline-blank",
+        "material-symbols:check"
+      ],
+      "service:gemini": [
+        "material-symbols:select-check-box",
+        "material-symbols:check-box",
+        "tabler:checkbox",
+        "material-symbols:check",
+        "tabler:square-check",
+        "tabler:check",
+        "ph:check",
+        "fluent-emoji-flat:check-box-with-check",
+        "material-symbols:priority",
+        "lucide:square-check"
       ],
       "text": [
         "material-symbols:check",
@@ -14820,6 +18716,30 @@
         "tabler:id-badge-off",
         "lucide:id-card"
       ],
+      "service-text:gemini": [
+        "material-symbols:app-badging",
+        "ph:notification",
+        "material-symbols:3k-plus",
+        "tabler:pentagon-number-3",
+        "tabler:pentagon-number-4",
+        "material-symbols:1k-plus",
+        "material-symbols:looks-5",
+        "lucide:tally-3",
+        "material-symbols:counter-0",
+        "material-symbols:electric-meter"
+      ],
+      "service:gemini": [
+        "material-symbols:counter-3",
+        "material-symbols:readiness-score",
+        "material-symbols:counter-9",
+        "material-symbols:badge",
+        "material-symbols:counter-2",
+        "material-symbols:counter-5",
+        "material-symbols:app-badging",
+        "material-symbols:counter-6",
+        "tabler:rosette-number-0",
+        "tabler:hexagon-number-0"
+      ],
       "text": [
         "ph:notification",
         "material-symbols:1k-plus",
@@ -14905,6 +18825,30 @@
         "tabler:square-rounded-chevron-left",
         "tabler:circle-chevron-left",
         "fluent-emoji-flat:fast-reverse-button"
+      ],
+      "service-text:gemini": [
+        "fluent-emoji-flat:reverse-button",
+        "fluent-emoji-flat:fast-reverse-button",
+        "ph:rewind-circle",
+        "lucide:circle-arrow-left",
+        "lucide:circle-chevron-left",
+        "lucide:circle-chevrons-left",
+        "lucide:square-arrow-left",
+        "lucide:square-chevron-left",
+        "tabler:circle-caret-left",
+        "tabler:circle-chevron-left"
+      ],
+      "service:gemini": [
+        "material-symbols:arrow-back",
+        "tabler:arrow-back",
+        "tabler:arrow-back-up",
+        "fluent-emoji-flat:back-arrow",
+        "material-symbols:arrow-back-ios",
+        "lucide:square-chevron-left",
+        "material-symbols:keyboard-backspace",
+        "material-symbols:undo",
+        "material-symbols:chevron-backward",
+        "material-symbols:arrow-back-ios-new"
       ],
       "text": [
         "fluent-emoji-flat:reverse-button",
@@ -14992,6 +18936,30 @@
         "material-symbols:dehaze",
         "material-symbols:menu-open"
       ],
+      "service-text:gemini": [
+        "lucide:menu",
+        "material-symbols:dehaze",
+        "material-symbols:menu",
+        "ph:list",
+        "tabler:menu",
+        "lucide:square-menu",
+        "material-symbols:density-medium",
+        "material-symbols:density-small",
+        "tabler:menu-2",
+        "tabler:menu-4"
+      ],
+      "service:gemini": [
+        "fluent-emoji-flat:hamburger",
+        "tabler:menu",
+        "tabler:menu-2",
+        "tabler:burger",
+        "material-symbols:menu",
+        "lucide:hamburger",
+        "ph:hamburger",
+        "lucide:menu",
+        "tabler:menu-4",
+        "tabler:menu-3"
+      ],
       "text": [
         "lucide:menu",
         "material-symbols:dehaze",
@@ -15077,6 +19045,21 @@
         "material-symbols:tab-inactive",
         "material-symbols:tab-search",
         "material-symbols:tab-recent"
+      ],
+      "service-text:gemini": [
+        "ph:tabs"
+      ],
+      "service:gemini": [
+        "tabler:tabs",
+        "ph:tabs",
+        "material-symbols:tabs",
+        "material-symbols:tab",
+        "material-symbols:tab-inactive",
+        "material-symbols:tab-duplicate",
+        "material-symbols:tab-search",
+        "material-symbols:tab-unselected",
+        "fluent-emoji-flat:bookmark-tabs",
+        "lucide:notebook-tabs"
       ],
       "text": [
         "ph:tabs",
@@ -15164,6 +19147,30 @@
         "material-symbols:switch",
         "material-symbols:toggle-on"
       ],
+      "service-text:gemini": [
+        "material-symbols:switches",
+        "lucide:toggle-left",
+        "material-symbols:edit-attributes",
+        "material-symbols:toggle-off",
+        "material-symbols:toggle-on",
+        "ph:toggle-left",
+        "ph:toggle-right",
+        "tabler:square-toggle",
+        "tabler:toggle-right",
+        "lucide:toggle-right"
+      ],
+      "service:gemini": [
+        "tabler:circuit-changeover",
+        "material-symbols:switch",
+        "material-symbols:toggle-on",
+        "material-symbols:switches",
+        "lucide:toggle-left",
+        "ph:toggle-left",
+        "tabler:toggle-left",
+        "material-symbols:shield-toggle",
+        "material-symbols:toggle-off",
+        "ph:toggle-right"
+      ],
       "text": [
         "material-symbols:sliders",
         "material-symbols:switch",
@@ -15249,6 +19256,30 @@
         "material-symbols:filter-list-off",
         "tabler:filter-off",
         "tabler:filter-2-cancel"
+      ],
+      "service-text:gemini": [
+        "ph:funnel-x",
+        "tabler:filter-2-x",
+        "lucide:funnel-x",
+        "material-symbols:filter-cancel",
+        "tabler:filter-x",
+        "ph:funnel-simple-x",
+        "lucide:remove-formatting",
+        "material-symbols:clear-all",
+        "material-symbols:format-clear",
+        "tabler:clear-all"
+      ],
+      "service:gemini": [
+        "material-symbols:filter-cancel",
+        "ph:funnel-x",
+        "material-symbols:filter-list-off",
+        "ph:funnel-simple-x",
+        "material-symbols:clear-all",
+        "tabler:filter-cancel",
+        "tabler:filter-2-cancel",
+        "tabler:clear-all",
+        "tabler:filter-2-x",
+        "lucide:funnel-x"
       ],
       "text": [
         "ph:funnel-x",
@@ -15336,6 +19367,28 @@
         "tabler:menu",
         "fluent-emoji-flat:hamburger"
       ],
+      "service-text:gemini": [
+        "fluent-emoji-flat:sandwich",
+        "lucide:sandwich",
+        "ph:bread",
+        "tabler:bread",
+        "tabler:burger",
+        "material-symbols:breakfast-dining",
+        "material-symbols:lunch-dining",
+        "tabler:bread-off"
+      ],
+      "service:gemini": [
+        "fluent-emoji-flat:sandwich",
+        "lucide:sandwich",
+        "tabler:bread",
+        "fluent-emoji-flat:bread",
+        "ph:bread",
+        "material-symbols:breakfast-dining",
+        "material-symbols:home-mini",
+        "tabler:baguette",
+        "fluent-emoji-flat:hot-dog",
+        "material-symbols:toast"
+      ],
       "text": [
         "fluent-emoji-flat:sandwich",
         "lucide:sandwich",
@@ -15420,6 +19473,21 @@
         "lucide:view",
         "tabler:eye-search"
       ],
+      "service-text:gemini": [
+        "ph:eyes"
+      ],
+      "service:gemini": [
+        "ph:eyes",
+        "fluent-emoji-flat:eye",
+        "tabler:eye",
+        "lucide:eye",
+        "tabler:eye-dotted",
+        "material-symbols:eye-tracking",
+        "lucide:view",
+        "material-symbols:visibility",
+        "ph:eye",
+        "tabler:eye-discount"
+      ],
       "text": [
         "ph:eyes"
       ],
@@ -15496,6 +19564,30 @@
         "ph:wallet",
         "fluent-emoji-flat:purse",
         "tabler:wallet-off"
+      ],
+      "service-text:gemini": [
+        "fluent-emoji-flat:purse",
+        "lucide:wallet",
+        "material-symbols:wallet",
+        "ph:cardholder",
+        "ph:wallet",
+        "tabler:wallet",
+        "lucide:wallet-cards",
+        "lucide:wallet-minimal",
+        "tabler:cap-projecting",
+        "tabler:wallet-off"
+      ],
+      "service:gemini": [
+        "material-symbols:wallet",
+        "material-symbols:account-balance-wallet",
+        "lucide:wallet",
+        "tabler:wallet",
+        "ph:wallet",
+        "lucide:wallet-minimal",
+        "lucide:wallet-cards",
+        "fluent-emoji-flat:purse",
+        "ph:cardholder",
+        "tabler:cap-projecting"
       ],
       "text": [
         "fluent-emoji-flat:handbag",
@@ -15583,6 +19675,30 @@
         "material-symbols:boy",
         "tabler:user-circle"
       ],
+      "service-text:gemini": [
+        "material-symbols:accessibility",
+        "material-symbols:streetview",
+        "tabler:lego",
+        "material-symbols:accessibility-new",
+        "material-symbols:settings-accessibility",
+        "tabler:cookie-man",
+        "tabler:brand-ok-ru",
+        "fluent-emoji-flat:alien",
+        "tabler:alien",
+        "tabler:meeple"
+      ],
+      "service:gemini": [
+        "material-symbols:man",
+        "ph:person",
+        "material-symbols:boy",
+        "tabler:man",
+        "fluent-emoji-flat:man-standing",
+        "material-symbols:for-you",
+        "fluent-emoji-flat:man",
+        "material-symbols:man-2",
+        "material-symbols:person",
+        "ph:person-simple"
+      ],
       "text": [
         "fluent-emoji-flat:alien",
         "material-symbols:accessibility",
@@ -15668,6 +19784,30 @@
         "material-symbols:person-heart",
         "tabler:heart-plus",
         "fluent-emoji-flat:pink-heart"
+      ],
+      "service-text:gemini": [
+        "material-symbols:favorite",
+        "fluent-emoji-flat:two-hearts",
+        "tabler:heart-check",
+        "ph:heart",
+        "tabler:heart",
+        "fluent-emoji-flat:brown-heart",
+        "fluent-emoji-flat:heart-hands",
+        "fluent-emoji-flat:orange-heart",
+        "fluent-emoji-flat:purple-heart",
+        "fluent-emoji-flat:red-heart"
+      ],
+      "service:gemini": [
+        "fluent-emoji-flat:red-heart",
+        "material-symbols:heart-check",
+        "material-symbols:credit-card-heart",
+        "tabler:heart-check",
+        "fluent-emoji-flat:heart-decoration",
+        "fluent-emoji-flat:heart-suit",
+        "ph:heart",
+        "tabler:heart",
+        "tabler:clock-heart",
+        "material-symbols:person-heart"
       ],
       "text": [
         "lucide:heart",
@@ -15755,6 +19895,30 @@
         "tabler:playstation-x",
         "tabler:square-x"
       ],
+      "service-text:gemini": [
+        "fluent-emoji-flat:multiply",
+        "ph:x",
+        "fluent-emoji-flat:cross-mark",
+        "lucide:badge-x",
+        "tabler:xbox-x",
+        "fluent-emoji-flat:cross-mark-button",
+        "tabler:circle-dashed-x",
+        "tabler:tic-tac",
+        "lucide:tic-tac-toe",
+        "tabler:cloud-x"
+      ],
+      "service:gemini": [
+        "tabler:cross",
+        "tabler:x",
+        "fluent-emoji-flat:cross-mark",
+        "ph:cross",
+        "lucide:x",
+        "material-symbols:close-small",
+        "material-symbols:close",
+        "ph:x",
+        "tabler:plus",
+        "material-symbols:add"
+      ],
       "text": [
         "fluent-emoji-flat:multiply",
         "lucide:delete",
@@ -15840,6 +20004,30 @@
         "tabler:circle-dotted-letter-g",
         "ph:dot-outline",
         "tabler:point"
+      ],
+      "service-text:gemini": [
+        "lucide:check",
+        "material-symbols:check",
+        "material-symbols:priority",
+        "ph:check",
+        "tabler:check",
+        "fluent-emoji-flat:check-mark",
+        "lucide:check-check",
+        "lucide:check-line",
+        "lucide:circle-check",
+        "lucide:square-check"
+      ],
+      "service:gemini": [
+        "tabler:check",
+        "material-symbols:check",
+        "ph:check",
+        "fluent-emoji-flat:check-mark",
+        "tabler:square-check",
+        "material-symbols:verified",
+        "lucide:badge-check",
+        "material-symbols:priority",
+        "material-symbols:check-small",
+        "material-symbols:check-box"
       ],
       "text": [
         "lucide:badge",
@@ -15927,6 +20115,30 @@
         "fluent-emoji-flat:locked-with-key",
         "ph:lock-laminated"
       ],
+      "service-text:gemini": [
+        "lucide:lock",
+        "material-symbols:lock",
+        "ph:lock",
+        "tabler:lock",
+        "lucide:lock-keyhole",
+        "material-symbols:lock-person",
+        "ph:lock-laminated",
+        "ph:lock-simple",
+        "tabler:lock-bolt",
+        "tabler:lock-cancel"
+      ],
+      "service:gemini": [
+        "material-symbols:lock",
+        "tabler:lock",
+        "lucide:lock",
+        "ph:lock",
+        "ph:lock-simple",
+        "fluent-emoji-flat:locked",
+        "lucide:file-lock",
+        "material-symbols:water-lock",
+        "lucide:lock-keyhole",
+        "ph:key"
+      ],
       "text": [
         "fluent-emoji-flat:locked",
         "fluent-emoji-flat:unlocked",
@@ -16012,6 +20224,30 @@
         "lucide:pen",
         "ph:marker-circle",
         "material-symbols:ink-marker"
+      ],
+      "service-text:gemini": [
+        "fluent-emoji-flat:pencil",
+        "lucide:pen",
+        "lucide:pencil",
+        "material-symbols:stylus",
+        "ph:pencil",
+        "lucide:pen-line",
+        "lucide:pencil-line",
+        "lucide:pencil-ruler",
+        "lucide:pencil-sparkles",
+        "material-symbols:draft-orders"
+      ],
+      "service:gemini": [
+        "fluent-emoji-flat:pencil",
+        "lucide:pencil",
+        "tabler:pencil",
+        "material-symbols:edit",
+        "ph:pencil-line",
+        "ph:pencil",
+        "ph:pencil-simple",
+        "ph:pencil-circle",
+        "ph:pencil-slash",
+        "tabler:pencil-x"
       ],
       "text": [
         "fluent-emoji-flat:crayon",
@@ -16099,6 +20335,30 @@
         "tabler:flag-share",
         "tabler:pennant-2"
       ],
+      "service-text:gemini": [
+        "tabler:pennant-off",
+        "lucide:flag",
+        "material-symbols:flag",
+        "material-symbols:tour",
+        "ph:flag",
+        "tabler:flag",
+        "fluent-emoji-flat:triangular-flag",
+        "material-symbols:flag-2",
+        "material-symbols:flag-circle",
+        "ph:flag-pennant"
+      ],
+      "service:gemini": [
+        "material-symbols:flag-check",
+        "material-symbols:bookmark-flag",
+        "tabler:flag-check",
+        "material-symbols:flag",
+        "material-symbols:flag-2",
+        "tabler:flag-2",
+        "lucide:flag",
+        "tabler:flag-down",
+        "material-symbols:flag-circle",
+        "ph:flag"
+      ],
       "text": [
         "lucide:bookmark",
         "lucide:flag",
@@ -16184,6 +20444,30 @@
         "tabler:basket-down",
         "tabler:basket-exclamation",
         "tabler:basket-x"
+      ],
+      "service-text:gemini": [
+        "fluent-emoji-flat:basket",
+        "ph:basket",
+        "tabler:basket",
+        "lucide:shopping-basket",
+        "lucide:shopping-cart",
+        "material-symbols:shopping-basket",
+        "tabler:basket-bolt",
+        "tabler:basket-heart",
+        "tabler:shopping-cart",
+        "ph:shopping-cart-simple"
+      ],
+      "service:gemini": [
+        "material-symbols:shopping-basket",
+        "lucide:shopping-basket",
+        "ph:basket",
+        "tabler:basket",
+        "material-symbols:shopping-cart",
+        "tabler:shopping-cart",
+        "fluent-emoji-flat:basket",
+        "tabler:basket-code",
+        "tabler:basket-plus",
+        "lucide:shopping-bag"
       ],
       "text": [
         "fluent-emoji-flat:basket",
@@ -16271,6 +20555,30 @@
         "ph:arrow-fat-line-left",
         "tabler:square-rounded-arrow-left"
       ],
+      "service-text:gemini": [
+        "material-symbols:chevron-backward",
+        "ph:caret-left",
+        "lucide:corner-up-left",
+        "material-symbols:arrow-back-2",
+        "tabler:square-rounded-chevron-left",
+        "tabler:arrow-big-left",
+        "ph:arrow-fat-line-left",
+        "lucide:move-left",
+        "tabler:arrow-narrow-left",
+        "tabler:arrow-narrow-left-dashed"
+      ],
+      "service:gemini": [
+        "fluent-emoji-flat:back-arrow",
+        "material-symbols:arrow-back",
+        "material-symbols:chevron-backward",
+        "material-symbols:arrow-left",
+        "tabler:arrow-back-up",
+        "tabler:arrow-back",
+        "material-symbols:arrow-back-ios",
+        "material-symbols:keyboard-arrow-left",
+        "material-symbols:undo",
+        "material-symbols:arrow-back-2"
+      ],
       "text": [
         "lucide:arrow-up",
         "lucide:move-left",
@@ -16356,6 +20664,30 @@
         "material-symbols:priority-high",
         "tabler:pointer-exclamation",
         "fluent-emoji-flat:heart-exclamation"
+      ],
+      "service-text:gemini": [
+        "material-symbols:exclamation",
+        "fluent-emoji-flat:heart-exclamation",
+        "material-symbols:partner-reports",
+        "material-symbols:priority-high",
+        "ph:exclamation-mark",
+        "tabler:alert-small",
+        "tabler:exclamation-circle",
+        "tabler:exclamation-mark",
+        "fluent-emoji-flat:double-exclamation-mark",
+        "fluent-emoji-flat:red-exclamation-mark"
+      ],
+      "service:gemini": [
+        "material-symbols:frame-exclamation",
+        "ph:exclamation-mark",
+        "tabler:exclamation-mark",
+        "material-symbols:exclamation",
+        "fluent-emoji-flat:white-exclamation-mark",
+        "fluent-emoji-flat:exclamation-question-mark",
+        "tabler:alert-small",
+        "fluent-emoji-flat:red-exclamation-mark",
+        "fluent-emoji-flat:double-exclamation-mark",
+        "tabler:zoom-exclamation"
       ],
       "text": [
         "fluent-emoji-flat:warning",
@@ -16443,6 +20775,19 @@
         "tabler:reload",
         "material-symbols:change-circle"
       ],
+      "service-text:gemini": [],
+      "service:gemini": [
+        "material-symbols:update",
+        "tabler:refresh-dot",
+        "material-symbols:refresh",
+        "material-symbols:change-circle",
+        "lucide:refresh-ccw-dot",
+        "tabler:rotate-dot",
+        "tabler:refresh",
+        "material-symbols:autorenew",
+        "tabler:reload",
+        "material-symbols:published-with-changes"
+      ],
       "text": [
         "lucide:rss",
         "material-symbols:rss-feed",
@@ -16528,6 +20873,30 @@
         "tabler:pin",
         "lucide:pin",
         "material-symbols:attach-file"
+      ],
+      "service-text:gemini": [
+        "fluent-emoji-flat:paperclip",
+        "lucide:paperclip",
+        "ph:paperclip",
+        "tabler:paperclip",
+        "fluent-emoji-flat:linked-paperclips",
+        "material-symbols:attach-file",
+        "ph:paperclip-horizontal",
+        "material-symbols:attach-file-off",
+        "material-symbols:attachment",
+        "material-symbols:link-2"
+      ],
+      "service:gemini": [
+        "fluent-emoji-flat:paperclip",
+        "ph:paperclip",
+        "tabler:paperclip",
+        "lucide:paperclip",
+        "material-symbols:keep",
+        "ph:paperclip-horizontal",
+        "material-symbols:attach-file",
+        "material-symbols:attachment",
+        "fluent-emoji-flat:linked-paperclips",
+        "fluent-emoji-flat:safety-pin"
       ],
       "text": [
         "fluent-emoji-flat:paperclip",
@@ -16615,6 +20984,30 @@
         "material-symbols:home-app-logo",
         "ph:house"
       ],
+      "service-text:gemini": [
+        "fluent-emoji-flat:house",
+        "lucide:house",
+        "material-symbols:bungalow",
+        "material-symbols:cabin",
+        "material-symbols:cottage",
+        "material-symbols:gite",
+        "material-symbols:home",
+        "material-symbols:house",
+        "ph:house",
+        "tabler:home"
+      ],
+      "service:gemini": [
+        "fluent-emoji-flat:house",
+        "material-symbols:home",
+        "material-symbols:house",
+        "material-symbols:cottage",
+        "material-symbols:other-houses",
+        "ph:house",
+        "ph:house-line",
+        "material-symbols:home-work",
+        "material-symbols:chalet",
+        "material-symbols:gite"
+      ],
       "text": [
         "fluent-emoji-flat:house",
         "fluent-emoji-flat:hut",
@@ -16701,6 +21094,23 @@
         "material-symbols:add-circle",
         "material-symbols:rectangle-add"
       ],
+      "service-text:gemini": [
+        "ph:plus-circle",
+        "material-symbols:add-circle",
+        "lucide:user-round-plus"
+      ],
+      "service:gemini": [
+        "material-symbols:add",
+        "ph:plus",
+        "fluent-emoji-flat:plus",
+        "tabler:plus",
+        "lucide:star-plus",
+        "lucide:plus",
+        "lucide:square-plus",
+        "lucide:package-plus",
+        "ph:list-plus",
+        "material-symbols:heart-plus"
+      ],
       "text": [
         "material-symbols:add-circle",
         "ph:plus-circle",
@@ -16779,6 +21189,30 @@
         "material-symbols:multiple-airports",
         "tabler:plane-departure",
         "ph:telegram-logo"
+      ],
+      "service-text:gemini": [
+        "ph:telegram-logo",
+        "tabler:plane-inflight",
+        "tabler:brand-telegram",
+        "tabler:send-2",
+        "lucide:send",
+        "material-symbols:send",
+        "tabler:send",
+        "lucide:send-horizontal",
+        "tabler:send-off",
+        "material-symbols:send-and-archive"
+      ],
+      "service:gemini": [
+        "fluent-emoji-flat:small-airplane",
+        "fluent-emoji-flat:airplane",
+        "tabler:send",
+        "tabler:plane-inflight",
+        "lucide:plane",
+        "tabler:plane",
+        "material-symbols:flight-takeoff",
+        "ph:airplane-in-flight",
+        "material-symbols:travel",
+        "lucide:plane-takeoff"
       ],
       "text": [
         "lucide:send",
@@ -16866,6 +21300,30 @@
         "material-symbols:monitor-weight",
         "ph:dots-three-outline"
       ],
+      "service-text:gemini": [
+        "material-symbols:atr",
+        "lucide:ellipsis-vertical",
+        "tabler:dots-diagonal",
+        "tabler:dots-diagonal-2",
+        "lucide:ellipsis",
+        "material-symbols:padding",
+        "material-symbols:spoke",
+        "material-symbols:monitor-weight",
+        "tabler:file-dots",
+        "ph:dots-three-outline"
+      ],
+      "service:gemini": [
+        "material-symbols:spoke",
+        "material-symbols:atr",
+        "tabler:circles",
+        "material-symbols:looks-3",
+        "ph:dots-three",
+        "material-symbols:group-work",
+        "ph:circles-three",
+        "ph:dots-three-vertical",
+        "material-symbols:format-list-bulleted",
+        "material-symbols:padding"
+      ],
       "text": [
         "lucide:ellipsis",
         "material-symbols:atr",
@@ -16951,6 +21409,30 @@
         "tabler:message-2-bolt",
         "tabler:heart-bolt",
         "tabler:cloud-bolt"
+      ],
+      "service-text:gemini": [
+        "lucide:zap",
+        "material-symbols:bolt",
+        "ph:lightning",
+        "tabler:bolt",
+        "fluent-emoji-flat:high-voltage",
+        "lucide:zap-off",
+        "material-symbols:bolt-boost",
+        "material-symbols:dynamic-form",
+        "material-symbols:electric-bolt",
+        "material-symbols:flash-on"
+      ],
+      "service:gemini": [
+        "ph:lightning",
+        "material-symbols:bolt",
+        "tabler:bolt",
+        "lucide:zap",
+        "ph:lightning-a",
+        "material-symbols:electric-bolt",
+        "tabler:progress-bolt",
+        "lucide:cloud-lightning",
+        "ph:cloud-lightning",
+        "tabler:bolt-off"
       ],
       "text": [
         "lucide:zap",
@@ -17074,6 +21556,48 @@
         "mrr": 0.7225,
         "n": 200,
         "p5": 0.539
+      }
+    },
+    "service-text:gemini": {
+      "all": {
+        "hit": 0.7813,
+        "mrr": 0.6727,
+        "n": 192,
+        "p5": 0.5115
+      },
+      "holdout": {
+        "hit": 0.8229,
+        "mrr": 0.7199,
+        "n": 96,
+        "p5": 0.5333
+      },
+      "strict": {
+        "hit": 0.75,
+        "mrr": 0.6458,
+        "n": 200,
+        "p5": 0.491
+      }
+    },
+    "service:gemini": {
+      "all": {
+        "hit": 0.8906,
+        "mrr": 0.7644,
+        "n": 192,
+        "p5": 0.601
+      },
+      "alpha": 0.8,
+      "holdout": {
+        "hit": 0.9375,
+        "mrr": 0.7736,
+        "n": 96,
+        "p5": 0.6146
+      },
+      "length": 1024,
+      "strict": {
+        "hit": 0.855,
+        "mrr": 0.7339,
+        "n": 200,
+        "p5": 0.577
       }
     },
     "text": {

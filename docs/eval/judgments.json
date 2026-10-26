@@ -19,6 +19,10 @@
           "fingerprint": "3df2ac036711",
           "verdict": "fits"
         },
+        "material-symbols:backpack": {
+          "fingerprint": "435c8aba20f0",
+          "verdict": "no"
+        },
         "material-symbols:car-gear": {
           "fingerprint": "0321dd703aac",
           "verdict": "partial"
@@ -86,6 +90,10 @@
         },
         "ph:user-gear": {
           "fingerprint": "27d203b8193e",
+          "verdict": "partial"
+        },
+        "tabler:automatic-gearbox": {
+          "fingerprint": "e425f3614535",
           "verdict": "partial"
         },
         "tabler:device-desktop-cog": {
@@ -171,12 +179,20 @@
           "fingerprint": "4d2562b69738",
           "verdict": "partial"
         },
+        "lucide:calendars": {
+          "fingerprint": "e614c495f4b1",
+          "verdict": "fits"
+        },
         "material-symbols:calendar-apps-script": {
           "fingerprint": "a38738261edb",
           "verdict": "partial"
         },
         "material-symbols:calendar-today": {
           "fingerprint": "9a325145eb6e",
+          "verdict": "fits"
+        },
+        "material-symbols:event": {
+          "fingerprint": "eab3a54099fc",
           "verdict": "fits"
         },
         "ph:calendar": {
@@ -514,6 +530,10 @@
         },
         "tabler:mail-cog": {
           "fingerprint": "ced794f209e2",
+          "verdict": "partial"
+        },
+        "tabler:mail-dollar": {
+          "fingerprint": "c5e1f375689e",
           "verdict": "partial"
         },
         "tabler:mail-fast": {
@@ -1447,6 +1467,10 @@
           "repeat": "partial",
           "verdict": "partial"
         },
+        "material-symbols:attach-file-off": {
+          "fingerprint": "a5771422b978",
+          "verdict": "partial"
+        },
         "material-symbols:attachment": {
           "fingerprint": "b05fbfaa1910",
           "verdict": "fits"
@@ -1802,6 +1826,14 @@
         "material-symbols:magnification-small": {
           "fingerprint": "733ad45d108a",
           "verdict": "no"
+        },
+        "material-symbols:mystery": {
+          "fingerprint": "6b99497bb65b",
+          "verdict": "partial"
+        },
+        "material-symbols:pageview": {
+          "fingerprint": "facd90e7c39e",
+          "verdict": "fits"
         },
         "material-symbols:search": {
           "fingerprint": "e780cedd2800",
@@ -2296,6 +2328,10 @@
     "en-024": {
       "description": "Карандаш или ручка расположенные по диагонали рядом с силуэтом пользователя.",
       "icons": {
+        "lucide:file-pen": {
+          "fingerprint": "0a883af764ec",
+          "verdict": "no"
+        },
         "lucide:pen": {
           "fingerprint": "2f626efcf976",
           "verdict": "partial"
@@ -2363,6 +2399,10 @@
         },
         "material-symbols:remember-me": {
           "fingerprint": "84a337e0af64",
+          "verdict": "no"
+        },
+        "material-symbols:switch-account": {
+          "fingerprint": "534c3d917444",
           "verdict": "no"
         },
         "ph:user-circle": {
@@ -2433,8 +2473,24 @@
           "fingerprint": "e111be6d57ee",
           "verdict": "fits"
         },
+        "lucide:map-pin-check-inside": {
+          "fingerprint": "59b663a2a17f",
+          "verdict": "partial"
+        },
+        "lucide:map-pin-minus-inside": {
+          "fingerprint": "aefa96b36ba1",
+          "verdict": "partial"
+        },
         "lucide:map-pin-pen": {
           "fingerprint": "446423f2ae2a",
+          "verdict": "partial"
+        },
+        "lucide:map-pin-plus": {
+          "fingerprint": "a0da2257d595",
+          "verdict": "partial"
+        },
+        "lucide:map-pin-x-inside": {
+          "fingerprint": "d7297d1b2fe7",
           "verdict": "partial"
         },
         "lucide:pin": {
@@ -2557,6 +2613,10 @@
           "fingerprint": "b6cf8e965298",
           "verdict": "partial"
         },
+        "tabler:map-pin-minus": {
+          "fingerprint": "9e604b508873",
+          "verdict": "partial"
+        },
         "tabler:map-pin-pin": {
           "fingerprint": "4ca2e8f024d1",
           "verdict": "partial"
@@ -2569,12 +2629,20 @@
           "fingerprint": "22ab662f597c",
           "verdict": "partial"
         },
+        "tabler:map-pin-share": {
+          "fingerprint": "4f40a7ef1a80",
+          "verdict": "partial"
+        },
         "tabler:map-pinned": {
           "fingerprint": "994d37b11187",
           "verdict": "fits"
         },
         "tabler:mood-pin": {
           "fingerprint": "25ffff330eb4",
+          "verdict": "partial"
+        },
+        "tabler:navigation-pin": {
+          "fingerprint": "861dd909c28b",
           "verdict": "partial"
         },
         "tabler:photo-pin": {
@@ -2651,6 +2719,10 @@
           "fingerprint": "1d909521b8c1",
           "verdict": "no"
         },
+        "material-symbols:file-export": {
+          "fingerprint": "71208e43baff",
+          "verdict": "partial"
+        },
         "material-symbols:file-save": {
           "fingerprint": "a8650839dd2d",
           "verdict": "fits"
@@ -2664,6 +2736,10 @@
           "repeat": "no",
           "verdict": "no"
         },
+        "ph:arrow-fat-lines-down": {
+          "fingerprint": "a9c7a4382562",
+          "verdict": "partial"
+        },
         "ph:download": {
           "fingerprint": "f6b49ffd4a5a",
           "verdict": "fits"
@@ -2675,6 +2751,10 @@
         "ph:file-arrow-down": {
           "fingerprint": "f7ce67f18e5b",
           "verdict": "fits"
+        },
+        "tabler:arrow-big-down-lines": {
+          "fingerprint": "d28a1dfea674",
+          "verdict": "partial"
         },
         "tabler:cloud-download": {
           "fingerprint": "1390b571a208",
@@ -2710,6 +2790,10 @@
           "fingerprint": "1dcd459b2b79",
           "verdict": "no"
         },
+        "material-symbols:frame-inspect": {
+          "fingerprint": "7bf447a8bdc0",
+          "verdict": "partial"
+        },
         "material-symbols:magnification-large": {
           "fingerprint": "79f797a6df4c",
           "verdict": "no"
@@ -2735,6 +2819,10 @@
           "repeat": "partial",
           "verdict": "partial"
         },
+        "material-symbols:text-increase": {
+          "fingerprint": "bf0e5ed051e0",
+          "verdict": "no"
+        },
         "material-symbols:zoom-in": {
           "fingerprint": "5f076894422f",
           "repeat": "fits",
@@ -2752,12 +2840,20 @@
           "fingerprint": "0613e3808797",
           "verdict": "no"
         },
+        "ph:magnifying-glass-minus": {
+          "fingerprint": "a23ad68252ce",
+          "verdict": "partial"
+        },
         "ph:magnifying-glass-plus": {
           "fingerprint": "dda82d05108d",
           "verdict": "fits"
         },
         "tabler:brand-zoom": {
           "fingerprint": "f857ca27c8f7",
+          "verdict": "no"
+        },
+        "tabler:text-increase": {
+          "fingerprint": "f2bf1ea1f426",
           "verdict": "no"
         },
         "tabler:zoom": {
@@ -3273,6 +3369,10 @@
           "fingerprint": "5218b9c00aa4",
           "verdict": "no"
         },
+        "material-symbols:mic-off": {
+          "fingerprint": "b0f4fd50642a",
+          "verdict": "partial"
+        },
         "material-symbols:no-sound": {
           "fingerprint": "2ab2abd46f69",
           "verdict": "fits"
@@ -3316,6 +3416,10 @@
         "ph:speaker-x": {
           "fingerprint": "8a00fd32d6d9",
           "verdict": "fits"
+        },
+        "ph:waveform-slash": {
+          "fingerprint": "df009b530aff",
+          "verdict": "partial"
         },
         "tabler:headphones-off": {
           "fingerprint": "692d28e756f0",
@@ -3362,6 +3466,18 @@
         "lucide:star-plus": {
           "fingerprint": "1fe553e13230",
           "verdict": "fits"
+        },
+        "material-symbols:add": {
+          "fingerprint": "753b51d1a830",
+          "verdict": "no"
+        },
+        "material-symbols:add-2": {
+          "fingerprint": "e73459b10300",
+          "verdict": "no"
+        },
+        "material-symbols:add-ad": {
+          "fingerprint": "b422cf80e8b6",
+          "verdict": "no"
         },
         "material-symbols:add-to-queue": {
           "fingerprint": "b6f406f8e488",
@@ -3776,9 +3892,17 @@
           "fingerprint": "4d4126650b39",
           "verdict": "partial"
         },
+        "ph:youtube-logo": {
+          "fingerprint": "2d7f5e4d600a",
+          "verdict": "partial"
+        },
         "tabler:brand-parsinta": {
           "fingerprint": "ef423d56b40d",
           "verdict": "fits"
+        },
+        "tabler:brand-youtube": {
+          "fingerprint": "1724b2d97a23",
+          "verdict": "partial"
         },
         "tabler:circle-play": {
           "fingerprint": "438015a6c491",
@@ -3931,6 +4055,10 @@
           "fingerprint": "496cbcbae5fa",
           "verdict": "partial"
         },
+        "material-symbols:inbox-text-share": {
+          "fingerprint": "be00017319fb",
+          "verdict": "partial"
+        },
         "material-symbols:ios-share": {
           "fingerprint": "d92de1297ad9",
           "repeat": "fits",
@@ -4072,6 +4200,10 @@
           "fingerprint": "f0b14e52a5de",
           "verdict": "fits"
         },
+        "ph:list-magnifying-glass": {
+          "fingerprint": "b79efcd00a2d",
+          "verdict": "partial"
+        },
         "tabler:filter": {
           "fingerprint": "4fcf619eeb9f",
           "verdict": "fits"
@@ -4181,6 +4313,18 @@
         "lucide:package-search": {
           "fingerprint": "d03a4e565b76",
           "verdict": "no"
+        },
+        "lucide:scan-search": {
+          "fingerprint": "bece8b61fc7f",
+          "verdict": "partial"
+        },
+        "lucide:search": {
+          "fingerprint": "c8cd3217625c",
+          "verdict": "fits"
+        },
+        "lucide:search-alert": {
+          "fingerprint": "95de95394ad6",
+          "verdict": "partial"
         },
         "lucide:search-code": {
           "fingerprint": "359ed60a3f85",
@@ -4350,6 +4494,10 @@
           "fingerprint": "ac50666937a3",
           "verdict": "partial"
         },
+        "tabler:search": {
+          "fingerprint": "60e26b7776d3",
+          "verdict": "fits"
+        },
         "tabler:shopping-cart-search": {
           "fingerprint": "ea7690e88ca7",
           "verdict": "no"
@@ -4383,6 +4531,10 @@
         "material-symbols:upload-file": {
           "fingerprint": "f94d1db42488",
           "verdict": "partial"
+        },
+        "ph:camera-plus": {
+          "fingerprint": "2a85b0741a19",
+          "verdict": "fits"
         },
         "tabler:camera-share": {
           "fingerprint": "a2997c6ee085",
@@ -4707,6 +4859,10 @@
           "fingerprint": "323b7bf47713",
           "verdict": "partial"
         },
+        "tabler:dice": {
+          "fingerprint": "01b61221db2a",
+          "verdict": "partial"
+        },
         "tabler:fall": {
           "fingerprint": "f389aea92e15",
           "verdict": "partial"
@@ -4933,6 +5089,10 @@
           "fingerprint": "922cd72b8215",
           "verdict": "partial"
         },
+        "material-symbols:grading": {
+          "fingerprint": "79365024a617",
+          "verdict": "partial"
+        },
         "material-symbols:hd": {
           "fingerprint": "b86db47926ab",
           "verdict": "partial"
@@ -5135,6 +5295,10 @@
           "fingerprint": "b80fbe0219a1",
           "verdict": "partial"
         },
+        "tabler:chart-treemap": {
+          "fingerprint": "85e306d5d8eb",
+          "verdict": "partial"
+        },
         "tabler:device-analytics": {
           "fingerprint": "b13cdd9ab70e",
           "verdict": "partial"
@@ -5157,6 +5321,10 @@
         },
         "tabler:folder-stats": {
           "fingerprint": "8c7ca2cd3faf",
+          "verdict": "partial"
+        },
+        "tabler:graph": {
+          "fingerprint": "ce8d561e748e",
           "verdict": "partial"
         },
         "tabler:info-octagon": {
@@ -5189,6 +5357,10 @@
     "en-046": {
       "description": "Перечёркнутый контур глаза или маска шпиона.",
       "icons": {
+        "fluent-emoji-flat:locked-with-pen": {
+          "fingerprint": "1e0f629cab45",
+          "verdict": "partial"
+        },
         "lucide:cookie": {
           "fingerprint": "d79a9cb5cc42",
           "verdict": "no"
@@ -5204,6 +5376,10 @@
         "lucide:globe-lock": {
           "fingerprint": "bf942c364ec8",
           "verdict": "partial"
+        },
+        "lucide:messages-square": {
+          "fingerprint": "40bd4df495cc",
+          "verdict": "no"
         },
         "lucide:shield-lock": {
           "fingerprint": "f99b32f1e7ef",
@@ -5231,6 +5407,10 @@
         },
         "material-symbols:encrypted": {
           "fingerprint": "39e84c7741de",
+          "verdict": "partial"
+        },
+        "material-symbols:group-eye": {
+          "fingerprint": "3ca7a4537adc",
           "verdict": "partial"
         },
         "material-symbols:hide-source": {
@@ -5326,6 +5506,14 @@
           "fingerprint": "e95813380409",
           "verdict": "no"
         },
+        "tabler:currency-monero": {
+          "fingerprint": "54b53e7df283",
+          "verdict": "no"
+        },
+        "tabler:currency-zcash": {
+          "fingerprint": "122c2875fdfe",
+          "verdict": "no"
+        },
         "tabler:file-text-shield": {
           "fingerprint": "1d907f959e3c",
           "verdict": "partial"
@@ -5337,6 +5525,10 @@
         "tabler:lock-square-rounded": {
           "fingerprint": "f30e26ea8fb0",
           "verdict": "partial"
+        },
+        "tabler:no-copyright": {
+          "fingerprint": "8640a5efff23",
+          "verdict": "no"
         },
         "tabler:photo-shield": {
           "fingerprint": "5b9934c37e18",
@@ -6583,6 +6775,10 @@
           "fingerprint": "6cf58c513f71",
           "verdict": "partial"
         },
+        "ph:bluetooth-slash": {
+          "fingerprint": "b7002a41df2e",
+          "verdict": "partial"
+        },
         "ph:bluetooth-x": {
           "fingerprint": "a1b575ccea99",
           "verdict": "no"
@@ -6890,6 +7086,10 @@
         "tabler:target-2": {
           "fingerprint": "3c5fd3a8c20c",
           "verdict": "partial"
+        },
+        "tabler:viewfinder": {
+          "fingerprint": "ed050d3ac222",
+          "verdict": "fits"
         }
       },
       "query": "focus"
@@ -6965,6 +7165,10 @@
           "fingerprint": "37deae851b07",
           "verdict": "no"
         },
+        "tabler:load-balancer": {
+          "fingerprint": "0f0269fb25c6",
+          "verdict": "no"
+        },
         "tabler:scale": {
           "fingerprint": "437a6e409cc6",
           "verdict": "fits"
@@ -7022,6 +7226,10 @@
         "material-symbols:speed": {
           "fingerprint": "afcdaa97ba36",
           "verdict": "fits"
+        },
+        "material-symbols:speed-0-25": {
+          "fingerprint": "ddc8c504d377",
+          "verdict": "partial"
         },
         "material-symbols:speed-0-2x": {
           "fingerprint": "2b700f3248bb",
@@ -7149,6 +7357,18 @@
           "fingerprint": "4a5ba8816fa8",
           "verdict": "fits"
         },
+        "lucide:lock-keyhole": {
+          "fingerprint": "1774f8a773d8",
+          "verdict": "fits"
+        },
+        "lucide:lock-keyhole-open": {
+          "fingerprint": "8b2d23daa249",
+          "verdict": "partial"
+        },
+        "lucide:lock-open": {
+          "fingerprint": "3a36a9611bb8",
+          "verdict": "partial"
+        },
         "lucide:shield": {
           "fingerprint": "12cd228f3829",
           "verdict": "fits"
@@ -7244,6 +7464,10 @@
         "ph:lock-simple": {
           "fingerprint": "27149ccdcbeb",
           "verdict": "fits"
+        },
+        "ph:password": {
+          "fingerprint": "42be9f158940",
+          "verdict": "partial"
         },
         "ph:security-camera": {
           "fingerprint": "1b6dfa32d34f",
@@ -7455,6 +7679,10 @@
           "fingerprint": "2dc8267ac1b9",
           "verdict": "fits"
         },
+        "tabler:circle-dashed-check": {
+          "fingerprint": "6c65b46b9965",
+          "verdict": "fits"
+        },
         "tabler:cloud-check": {
           "fingerprint": "2e270791fa2c",
           "verdict": "no"
@@ -7474,6 +7702,10 @@
         "tabler:device-ipad-check": {
           "fingerprint": "e6396b846e8b",
           "verdict": "no"
+        },
+        "tabler:device-ipad-horizontal-check": {
+          "fingerprint": "0b1d0b731fe7",
+          "verdict": "partial"
         },
         "tabler:devices-check": {
           "fingerprint": "4a48fda591f0",
@@ -7543,6 +7775,14 @@
         },
         "lucide:badge-plus": {
           "fingerprint": "f2f61b3966b7",
+          "verdict": "no"
+        },
+        "lucide:book-check": {
+          "fingerprint": "440c111898b4",
+          "verdict": "no"
+        },
+        "lucide:book-open-check": {
+          "fingerprint": "4ac79439f7fa",
           "verdict": "no"
         },
         "lucide:certificate": {
@@ -7655,6 +7895,10 @@
           "fingerprint": "f18f134bacba",
           "verdict": "no"
         },
+        "material-symbols:security": {
+          "fingerprint": "5f0106cc33ac",
+          "verdict": "partial"
+        },
         "material-symbols:share": {
           "fingerprint": "524bda07d0f3",
           "verdict": "no"
@@ -7746,6 +7990,10 @@
         "tabler:heart-handshake": {
           "fingerprint": "7fe265b01725",
           "verdict": "fits"
+        },
+        "tabler:jetpack": {
+          "fingerprint": "10f22ef88c45",
+          "verdict": "no"
         },
         "tabler:lock-check": {
           "fingerprint": "f71b1243d58b",
@@ -8079,6 +8327,14 @@
           "fingerprint": "fa69f706cebe",
           "verdict": "no"
         },
+        "lucide:file-search": {
+          "fingerprint": "d75ca118693d",
+          "verdict": "partial"
+        },
+        "lucide:folder-search": {
+          "fingerprint": "6b5b4e652e1d",
+          "verdict": "partial"
+        },
         "lucide:form": {
           "fingerprint": "1e176e5bc9bc",
           "verdict": "no"
@@ -8090,6 +8346,14 @@
         "lucide:map-pin-search": {
           "fingerprint": "d2e470beb9f4",
           "verdict": "no"
+        },
+        "lucide:package-search": {
+          "fingerprint": "d03a4e565b76",
+          "verdict": "partial"
+        },
+        "lucide:scan-search": {
+          "fingerprint": "bece8b61fc7f",
+          "verdict": "partial"
         },
         "lucide:search": {
           "fingerprint": "c8cd3217625c",
@@ -8281,6 +8545,14 @@
           "fingerprint": "88e75113d3e4",
           "verdict": "partial"
         },
+        "material-symbols:edit-attributes": {
+          "fingerprint": "558aed4b0c6a",
+          "verdict": "no"
+        },
+        "material-symbols:nest-heat-link-e": {
+          "fingerprint": "6b5b4366a859",
+          "verdict": "fits"
+        },
         "material-symbols:radio": {
           "fingerprint": "1fff5ae0dfa2",
           "verdict": "no"
@@ -8363,6 +8635,10 @@
           "fingerprint": "06619549cf05",
           "verdict": "partial"
         },
+        "lucide:scratch-blocks": {
+          "fingerprint": "018cd8847d22",
+          "verdict": "no"
+        },
         "material-symbols:drag-click": {
           "fingerprint": "d6b083a56f9a",
           "verdict": "no"
@@ -8373,6 +8649,10 @@
         },
         "material-symbols:drag-indicator": {
           "fingerprint": "4aa27de399aa",
+          "verdict": "fits"
+        },
+        "material-symbols:drag-pan": {
+          "fingerprint": "6988700bc5a0",
           "verdict": "fits"
         },
         "ph:dots-six": {
@@ -8402,6 +8682,10 @@
         "tabler:grip-vertical": {
           "fingerprint": "730d4427882e",
           "verdict": "fits"
+        },
+        "tabler:hand-grab": {
+          "fingerprint": "117e6ffa23fd",
+          "verdict": "partial"
         },
         "tabler:reorder": {
           "fingerprint": "ab7b152bf83d",
@@ -8573,6 +8857,10 @@
         },
         "material-symbols:badge": {
           "fingerprint": "a75d5659253b",
+          "verdict": "no"
+        },
+        "material-symbols:filter-9-plus": {
+          "fingerprint": "43944afd8a76",
           "verdict": "no"
         },
         "material-symbols:mark-chat-unread": {
@@ -8767,6 +9055,10 @@
         "lucide:chevrons-up-down": {
           "fingerprint": "292645773bf2",
           "verdict": "partial"
+        },
+        "lucide:expand": {
+          "fingerprint": "8ff6a675b4b3",
+          "verdict": "no"
         },
         "lucide:list-chevrons-down-up": {
           "fingerprint": "021fe7a2118f",
@@ -9036,6 +9328,10 @@
           "fingerprint": "9c34a4c3bc8c",
           "verdict": "no"
         },
+        "material-symbols:bottom-panel-open": {
+          "fingerprint": "2e51c9b10ec0",
+          "verdict": "no"
+        },
         "material-symbols:bottom-sheets": {
           "fingerprint": "447d8d79dacd",
           "verdict": "no"
@@ -9058,6 +9354,10 @@
         },
         "material-symbols:flutter": {
           "fingerprint": "c702db263062",
+          "verdict": "no"
+        },
+        "material-symbols:houseboat": {
+          "fingerprint": "844604f6ef25",
           "verdict": "no"
         },
         "material-symbols:mode-standby": {
@@ -9136,6 +9436,10 @@
           "fingerprint": "c826e347e688",
           "verdict": "no"
         },
+        "tabler:picture-in-picture-top": {
+          "fingerprint": "60284d7c20eb",
+          "verdict": "no"
+        },
         "tabler:square-arrow-up": {
           "fingerprint": "df7d13d72c72",
           "verdict": "no"
@@ -9194,6 +9498,10 @@
           "fingerprint": "9c34a4c3bc8c",
           "verdict": "partial"
         },
+        "material-symbols:keyboard-tab": {
+          "fingerprint": "bbdd4eee29d5",
+          "verdict": "no"
+        },
         "material-symbols:mobile-layout": {
           "fingerprint": "aa4f8526bc56",
           "verdict": "no"
@@ -9201,6 +9509,14 @@
         "material-symbols:tab": {
           "fingerprint": "c7bf891c9471",
           "verdict": "partial"
+        },
+        "material-symbols:tab-close": {
+          "fingerprint": "ab63646929b8",
+          "verdict": "no"
+        },
+        "material-symbols:tab-duplicate": {
+          "fingerprint": "67072f147a1e",
+          "verdict": "no"
         },
         "material-symbols:tab-group": {
           "fingerprint": "ec5ee59311bc",
@@ -9225,6 +9541,11 @@
         "material-symbols:view-list": {
           "fingerprint": "09907f73135f",
           "verdict": "no"
+        },
+        "ph:browser": {
+          "fingerprint": "4dddaabb60e5",
+          "repeat": "partial",
+          "verdict": "partial"
         },
         "ph:layout": {
           "fingerprint": "be72e0dc0f04",
@@ -9382,6 +9703,18 @@
           "fingerprint": "7691f2fb2732",
           "verdict": "fits"
         },
+        "fluent-emoji-flat:military-medal": {
+          "fingerprint": "92d39732e02c",
+          "verdict": "no"
+        },
+        "fluent-emoji-flat:sports-medal": {
+          "fingerprint": "828a38a8c8d4",
+          "verdict": "no"
+        },
+        "lucide:medal": {
+          "fingerprint": "89b49557a939",
+          "verdict": "no"
+        },
         "lucide:message-square-off": {
           "fingerprint": "93916ea6bb7a",
           "verdict": "no"
@@ -9454,6 +9787,10 @@
           "fingerprint": "dbf941c55cb1",
           "verdict": "no"
         },
+        "material-symbols:model-training": {
+          "fingerprint": "4875c4e27c58",
+          "verdict": "no"
+        },
         "material-symbols:right-panel-close": {
           "fingerprint": "6164c613de98",
           "verdict": "no"
@@ -9478,6 +9815,14 @@
           "fingerprint": "54c2c84fde91",
           "verdict": "no"
         },
+        "ph:medal": {
+          "fingerprint": "e589d95e06f6",
+          "verdict": "no"
+        },
+        "ph:medal-military": {
+          "fingerprint": "add4d43824bd",
+          "verdict": "no"
+        },
         "tabler:adjustments-x": {
           "fingerprint": "75020fa1b21b",
           "verdict": "no"
@@ -9493,6 +9838,14 @@
         "tabler:circle-x": {
           "fingerprint": "b166d20316a9",
           "verdict": "fits"
+        },
+        "tabler:medal": {
+          "fingerprint": "a425a58a9388",
+          "verdict": "no"
+        },
+        "tabler:medal-2": {
+          "fingerprint": "cfcb96383430",
+          "verdict": "no"
         },
         "tabler:picture-in-picture-off": {
           "fingerprint": "54bb592f3b84",
@@ -9642,6 +9995,10 @@
           "fingerprint": "601c1e2026ec",
           "verdict": "no"
         },
+        "material-symbols:dinner-dining": {
+          "fingerprint": "a6eaf194115b",
+          "verdict": "no"
+        },
         "material-symbols:kebab-dining": {
           "fingerprint": "14e97a55c989",
           "verdict": "no"
@@ -9776,6 +10133,11 @@
           "fingerprint": "d97482430c49",
           "verdict": "partial"
         },
+        "material-symbols:prompt-suggestion": {
+          "fingerprint": "6443ff776536",
+          "repeat": "no",
+          "verdict": "no"
+        },
         "material-symbols:question-mark": {
           "fingerprint": "0d666a7abc0a",
           "verdict": "partial"
@@ -9836,6 +10198,10 @@
           "fingerprint": "27ae4684d75c",
           "verdict": "partial"
         },
+        "tabler:question-mark": {
+          "fingerprint": "c2ed78dbe159",
+          "verdict": "fits"
+        },
         "tabler:tooltip": {
           "fingerprint": "7d25bb3d683b",
           "verdict": "fits"
@@ -9864,6 +10230,10 @@
         },
         "material-symbols:clear-all": {
           "fingerprint": "8f5d745df72f",
+          "verdict": "no"
+        },
+        "material-symbols:clear-day": {
+          "fingerprint": "e1fa912c10aa",
           "verdict": "no"
         },
         "material-symbols:delete": {
@@ -9968,6 +10338,10 @@
         },
         "tabler:password": {
           "fingerprint": "33101ade073f",
+          "verdict": "no"
+        },
+        "tabler:pencil-x": {
+          "fingerprint": "4872cebe3f4e",
           "verdict": "no"
         }
       },
@@ -10086,6 +10460,14 @@
         },
         "tabler:hexagon-number-3": {
           "fingerprint": "44dd0d5ba792",
+          "verdict": "no"
+        },
+        "tabler:hexagon-number-7": {
+          "fingerprint": "ac7aa091a3c0",
+          "verdict": "no"
+        },
+        "tabler:hexagon-number-8": {
+          "fingerprint": "34cffba97f81",
           "verdict": "no"
         },
         "tabler:square-rounded-number-2": {
@@ -10261,6 +10643,10 @@
           "fingerprint": "b63fe153a848",
           "verdict": "partial"
         },
+        "tabler:adjustments-code": {
+          "fingerprint": "8bd18d68fb03",
+          "verdict": "partial"
+        },
         "tabler:adjustments-cog": {
           "fingerprint": "6703d450a20c",
           "verdict": "partial"
@@ -10307,6 +10693,10 @@
           "fingerprint": "2cbb4262c9d8",
           "verdict": "fits"
         },
+        "lucide:badge": {
+          "fingerprint": "e40e667856cb",
+          "verdict": "no"
+        },
         "lucide:book-check": {
           "fingerprint": "440c111898b4",
           "verdict": "partial"
@@ -10322,6 +10712,10 @@
         "lucide:circle-check": {
           "fingerprint": "c744eacf7341",
           "verdict": "fits"
+        },
+        "lucide:file-check": {
+          "fingerprint": "147e9c192c70",
+          "verdict": "partial"
         },
         "lucide:list-check": {
           "fingerprint": "aca7afdfb5af",
@@ -10347,6 +10741,10 @@
           "fingerprint": "db78a5085203",
           "verdict": "fits"
         },
+        "material-symbols:calendar-check": {
+          "fingerprint": "b1212a860c1d",
+          "verdict": "partial"
+        },
         "material-symbols:check": {
           "fingerprint": "f5606ec1e3bd",
           "verdict": "fits"
@@ -10363,6 +10761,10 @@
           "fingerprint": "65e791172af4",
           "verdict": "fits"
         },
+        "material-symbols:checklist": {
+          "fingerprint": "de1dc0b77530",
+          "verdict": "partial"
+        },
         "material-symbols:flag-check": {
           "fingerprint": "485ba6f7bb43",
           "verdict": "no"
@@ -10374,6 +10776,10 @@
         "material-symbols:priority": {
           "fingerprint": "be29ccfb48e9",
           "verdict": "fits"
+        },
+        "material-symbols:rubric": {
+          "fingerprint": "86cd64b8b0e4",
+          "verdict": "partial"
         },
         "material-symbols:select-check-box": {
           "fingerprint": "d30b61fda3a4",
@@ -10403,6 +10809,10 @@
           "fingerprint": "c77ca40011a3",
           "verdict": "fits"
         },
+        "tabler:checklist": {
+          "fingerprint": "55978456babd",
+          "verdict": "partial"
+        },
         "tabler:circle-check": {
           "fingerprint": "2dc8267ac1b9",
           "verdict": "fits"
@@ -10431,6 +10841,10 @@
       "icons": {
         "fluent-emoji-flat:person": {
           "fingerprint": "2fcc314e95ce",
+          "verdict": "fits"
+        },
+        "fluent-emoji-flat:person-beard": {
+          "fingerprint": "906fe3dbbf1e",
           "verdict": "fits"
         },
         "lucide:circle-user": {
@@ -10557,6 +10971,10 @@
           "fingerprint": "a1362b36d61c",
           "verdict": "partial"
         },
+        "tabler:user-heart": {
+          "fingerprint": "378655a21b1c",
+          "verdict": "partial"
+        },
         "tabler:user-hexagon": {
           "fingerprint": "d0a41b150d94",
           "verdict": "fits"
@@ -10583,6 +11001,10 @@
         },
         "tabler:user-star": {
           "fingerprint": "595d14e48d6e",
+          "verdict": "partial"
+        },
+        "tabler:user-up": {
+          "fingerprint": "8855575f84b3",
           "verdict": "partial"
         }
       },
@@ -10804,6 +11226,10 @@
         "tabler:bell-exclamation": {
           "fingerprint": "e00c2e177bfe",
           "verdict": "fits"
+        },
+        "tabler:bell-heart": {
+          "fingerprint": "5a72dc7081a4",
+          "verdict": "partial"
         },
         "tabler:bell-pause": {
           "fingerprint": "18d723fd3a02",
@@ -11099,9 +11525,17 @@
           "fingerprint": "f0cccc1a7638",
           "verdict": "fits"
         },
+        "material-symbols:media-link": {
+          "fingerprint": "f0359cf4eada",
+          "verdict": "partial"
+        },
         "ph:link": {
           "fingerprint": "cd00a4fde14b",
           "verdict": "fits"
+        },
+        "ph:link-break": {
+          "fingerprint": "2f121200bb1b",
+          "verdict": "partial"
         },
         "ph:link-simple": {
           "fingerprint": "193fca04c736",
@@ -11209,6 +11643,10 @@
           "fingerprint": "686e7c058aee",
           "verdict": "fits"
         },
+        "material-symbols:mic-gear": {
+          "fingerprint": "b55839841cf1",
+          "verdict": "partial"
+        },
         "material-symbols:mobile-gear": {
           "fingerprint": "84df6856898c",
           "verdict": "partial"
@@ -11224,6 +11662,10 @@
         "material-symbols:steering-wheel-cool": {
           "fingerprint": "49b4df100939",
           "verdict": "no"
+        },
+        "material-symbols:subtitles-gear": {
+          "fingerprint": "aefc483846f9",
+          "verdict": "partial"
         },
         "material-symbols:swap-driving-apps-wheel": {
           "fingerprint": "efc782ac7c3c",
@@ -11339,6 +11781,10 @@
           "fingerprint": "f8e1799dafaf",
           "verdict": "partial"
         },
+        "lucide:square-pen": {
+          "fingerprint": "7ff60fe54eaa",
+          "verdict": "fits"
+        },
         "lucide:user-pen": {
           "fingerprint": "d75a1b49ce3a",
           "verdict": "partial"
@@ -11382,6 +11828,10 @@
         "ph:pencil-simple-line": {
           "fingerprint": "d8402f50c8d9",
           "verdict": "fits"
+        },
+        "ph:pencil-slash": {
+          "fingerprint": "7ae49ad13a0c",
+          "verdict": "no"
         },
         "tabler:edit": {
           "fingerprint": "7d0d609c85bc",
@@ -11475,6 +11925,10 @@
           "fingerprint": "46322dbe58b9",
           "verdict": "partial"
         },
+        "tabler:pencil-x": {
+          "fingerprint": "4872cebe3f4e",
+          "verdict": "no"
+        },
         "tabler:photo-edit": {
           "fingerprint": "d97d8c68a97e",
           "verdict": "partial"
@@ -11503,6 +11957,10 @@
         },
         "lucide:bookmark-plus": {
           "fingerprint": "7055c1453087",
+          "verdict": "partial"
+        },
+        "lucide:folder-bookmark": {
+          "fingerprint": "62ec9b099e52",
           "verdict": "partial"
         },
         "lucide:square-bookmark": {
@@ -11647,6 +12105,10 @@
           "fingerprint": "bc74151ba9b6",
           "verdict": "no"
         },
+        "tabler:clock-heart": {
+          "fingerprint": "eb9606303b5f",
+          "verdict": "partial"
+        },
         "tabler:database-heart": {
           "fingerprint": "6f3bd0902506",
           "verdict": "no"
@@ -11658,6 +12120,11 @@
         "tabler:device-ipad-heart": {
           "fingerprint": "884a63fe4755",
           "verdict": "no"
+        },
+        "tabler:devices-heart": {
+          "fingerprint": "a73071fb5fd5",
+          "repeat": "partial",
+          "verdict": "partial"
         },
         "tabler:flag-heart": {
           "fingerprint": "feb81f2d0e09",
@@ -11731,6 +12198,10 @@
           "fingerprint": "db40f0307bf4",
           "verdict": "no"
         },
+        "tabler:pencil-heart": {
+          "fingerprint": "02b6013a9f10",
+          "verdict": "partial"
+        },
         "tabler:settings-heart": {
           "fingerprint": "b49d81bd59e9",
           "verdict": "no"
@@ -11800,6 +12271,10 @@
         "material-symbols:chat-bubble": {
           "fingerprint": "dedead5716a6",
           "verdict": "fits"
+        },
+        "material-symbols:chat-bubble-off": {
+          "fingerprint": "42577d4b9eb7",
+          "verdict": "partial"
         },
         "material-symbols:comic-bubble": {
           "fingerprint": "1e14c7005e7d",
@@ -12053,6 +12528,10 @@
           "fingerprint": "62a778c244f7",
           "verdict": "fits"
         },
+        "material-symbols:cancel-schedule-send": {
+          "fingerprint": "90a775003baa",
+          "verdict": "no"
+        },
         "material-symbols:close": {
           "fingerprint": "76126a4fca56",
           "verdict": "fits"
@@ -12080,6 +12559,10 @@
         "ph:receipt-x": {
           "fingerprint": "00dd987b5bdc",
           "verdict": "no"
+        },
+        "ph:x": {
+          "fingerprint": "60c36d16fa53",
+          "verdict": "fits"
         },
         "ph:x-circle": {
           "fingerprint": "26f997d51713",
@@ -12317,6 +12800,10 @@
     "en-096": {
       "description": "Равносторонний треугольник с восклицательным знаком внутри для предупреждения об ошибке или опасности.",
       "icons": {
+        "fluent-emoji-flat:heart-exclamation": {
+          "fingerprint": "44e222c3d71d",
+          "verdict": "no"
+        },
         "fluent-emoji-flat:red-triangle": {
           "fingerprint": "6820d730f8a1",
           "verdict": "no"
@@ -12381,6 +12868,10 @@
           "fingerprint": "37bff0b246c2",
           "verdict": "no"
         },
+        "ph:exclamation-mark": {
+          "fingerprint": "172bf14d2600",
+          "verdict": "partial"
+        },
         "ph:triangle": {
           "fingerprint": "99c58143b720",
           "verdict": "no"
@@ -12415,6 +12906,18 @@
         },
         "tabler:circle-triangle": {
           "fingerprint": "cfe14e7f89f8",
+          "verdict": "no"
+        },
+        "tabler:clock-exclamation": {
+          "fingerprint": "2dc8d34af42d",
+          "verdict": "no"
+        },
+        "tabler:cloud-exclamation": {
+          "fingerprint": "f5cbf5727a7e",
+          "verdict": "no"
+        },
+        "tabler:database-exclamation": {
+          "fingerprint": "884efb77986f",
           "verdict": "no"
         },
         "tabler:device-imac-exclamation": {
@@ -13072,6 +13575,10 @@
           "fingerprint": "309cd91df281",
           "verdict": "partial"
         },
+        "lucide:bell-minus": {
+          "fingerprint": "98d47774c262",
+          "verdict": "partial"
+        },
         "lucide:bell-ring": {
           "fingerprint": "4962322f9131",
           "verdict": "fits"
@@ -13175,6 +13682,14 @@
         "lucide:calendar": {
           "fingerprint": "069b607280c6",
           "verdict": "fits"
+        },
+        "lucide:calendar-1": {
+          "fingerprint": "b3e52fe5ac27",
+          "verdict": "fits"
+        },
+        "lucide:calendar-check": {
+          "fingerprint": "a3856d0c75fe",
+          "verdict": "partial"
         },
         "lucide:calendar-clock": {
           "fingerprint": "0d440810fc18",
@@ -13348,6 +13863,10 @@
           "fingerprint": "9c8866894053",
           "verdict": "fits"
         },
+        "material-symbols:chef-hat": {
+          "fingerprint": "878f44b244e4",
+          "verdict": "no"
+        },
         "material-symbols:school": {
           "fingerprint": "4f076ccfa80a",
           "verdict": "fits"
@@ -13501,6 +14020,10 @@
           "fingerprint": "45367f247f4f",
           "verdict": "no"
         },
+        "material-symbols:bookmark-bag": {
+          "fingerprint": "d0bf86e93aee",
+          "verdict": "partial"
+        },
         "material-symbols:carry-on-bag": {
           "fingerprint": "a8d5af76679d",
           "verdict": "fits"
@@ -13512,6 +14035,10 @@
         "material-symbols:carry-on-bag-inactive": {
           "fingerprint": "6495c3eb6832",
           "verdict": "no"
+        },
+        "material-symbols:carry-on-bag-question": {
+          "fingerprint": "8d8e2ddc9703",
+          "verdict": "partial"
         },
         "material-symbols:cases": {
           "fingerprint": "208501ea42b6",
@@ -13532,6 +14059,10 @@
         "material-symbols:no-luggage": {
           "fingerprint": "add1e9bfb207",
           "verdict": "no"
+        },
+        "material-symbols:trip": {
+          "fingerprint": "3e67f5b719c6",
+          "verdict": "partial"
         },
         "ph:suitcase-rolling": {
           "fingerprint": "ec1d1b791de7",
@@ -13681,6 +14212,10 @@
           "fingerprint": "a62f13b23761",
           "verdict": "fits"
         },
+        "material-symbols:explore-off": {
+          "fingerprint": "4ba54630a0f3",
+          "verdict": "partial"
+        },
         "material-symbols:navigation": {
           "fingerprint": "532870c070c0",
           "verdict": "no"
@@ -13778,6 +14313,10 @@
         },
         "lucide:origami": {
           "fingerprint": "562fcc3afc0c",
+          "verdict": "no"
+        },
+        "lucide:paper-bag": {
+          "fingerprint": "532b87c79759",
           "verdict": "no"
         },
         "lucide:send": {
@@ -14074,6 +14613,10 @@
           "fingerprint": "b84d4e5f500e",
           "verdict": "no"
         },
+        "tabler:settings-cancel": {
+          "fingerprint": "1fa28fa67045",
+          "verdict": "partial"
+        },
         "tabler:settings-cog": {
           "fingerprint": "1ac7348e5f3a",
           "verdict": "fits"
@@ -14129,6 +14672,10 @@
           "fingerprint": "95de95394ad6",
           "verdict": "partial"
         },
+        "lucide:search-x": {
+          "fingerprint": "c3b15dbe1653",
+          "verdict": "partial"
+        },
         "lucide:zoom-in": {
           "fingerprint": "6c5b54c33b0e",
           "verdict": "partial"
@@ -14141,8 +14688,18 @@
           "fingerprint": "6bceece003ed",
           "verdict": "partial"
         },
+        "material-symbols:frame-inspect": {
+          "fingerprint": "7bf447a8bdc0",
+          "repeat": "partial",
+          "verdict": "partial"
+        },
         "material-symbols:loupe": {
           "fingerprint": "032a9700e68b",
+          "repeat": "no",
+          "verdict": "no"
+        },
+        "material-symbols:magnification-small": {
+          "fingerprint": "733ad45d108a",
           "repeat": "no",
           "verdict": "no"
         },
@@ -14226,6 +14783,10 @@
         "tabler:zoom-money": {
           "fingerprint": "bc468aa7fef9",
           "verdict": "partial"
+        },
+        "tabler:zoom-scan": {
+          "fingerprint": "adadd6650946",
+          "verdict": "partial"
         }
       },
       "query": "лупа"
@@ -14260,6 +14821,10 @@
         "lucide:mic-audio-lines": {
           "fingerprint": "51acfcddc43f",
           "verdict": "fits"
+        },
+        "lucide:mic-off": {
+          "fingerprint": "5ed36a688923",
+          "verdict": "partial"
         },
         "lucide:mic-signal": {
           "fingerprint": "92e548f2d2a4",
@@ -14360,6 +14925,18 @@
         "lucide:folder": {
           "fingerprint": "fccb13aa80c0",
           "verdict": "fits"
+        },
+        "lucide:folder-bookmark": {
+          "fingerprint": "62ec9b099e52",
+          "verdict": "partial"
+        },
+        "lucide:folder-check": {
+          "fingerprint": "0549e2353cdd",
+          "verdict": "partial"
+        },
+        "lucide:folder-clock": {
+          "fingerprint": "4956af914fcf",
+          "verdict": "partial"
         },
         "lucide:folder-closed": {
           "fingerprint": "49c31d8d79d6",
@@ -14507,6 +15084,14 @@
         "material-symbols:credit-card": {
           "fingerprint": "3827bac04dfd",
           "verdict": "fits"
+        },
+        "material-symbols:credit-card-clock": {
+          "fingerprint": "104193b5957f",
+          "verdict": "partial"
+        },
+        "material-symbols:credit-card-gear": {
+          "fingerprint": "46e8c206a125",
+          "verdict": "partial"
         },
         "material-symbols:credit-card-heart": {
           "fingerprint": "a285bb9ce21c",
@@ -14657,6 +15242,10 @@
         },
         "ph:number-circle-five": {
           "fingerprint": "6937bf48e458",
+          "verdict": "no"
+        },
+        "ph:warning-circle": {
+          "fingerprint": "34d8719a57a2",
           "verdict": "no"
         },
         "tabler:alert-circle": {
@@ -15074,6 +15663,10 @@
         "tabler:tool": {
           "fingerprint": "fa8281c0d301",
           "verdict": "fits"
+        },
+        "tabler:tools-off": {
+          "fingerprint": "11c49141e6ff",
+          "verdict": "no"
         }
       },
       "query": "гаечный ключ"
@@ -15114,6 +15707,10 @@
         "lucide:user-round-pen": {
           "fingerprint": "dd085cf355ce",
           "verdict": "fits"
+        },
+        "material-symbols:checkbook": {
+          "fingerprint": "f05397613eee",
+          "verdict": "no"
         },
         "material-symbols:dashboard-2-edit": {
           "fingerprint": "3fe70e1d6e6a",
@@ -15175,6 +15772,10 @@
           "fingerprint": "b8f8d4f33a5c",
           "verdict": "no"
         },
+        "tabler:edit": {
+          "fingerprint": "7d0d609c85bc",
+          "verdict": "fits"
+        },
         "tabler:edit-circle": {
           "fingerprint": "00946bd686ca",
           "verdict": "partial"
@@ -15187,6 +15788,10 @@
           "fingerprint": "3a3de2dc5c97",
           "repeat": "partial",
           "verdict": "partial"
+        },
+        "tabler:pencil": {
+          "fingerprint": "7c8cf08aad71",
+          "verdict": "fits"
         },
         "tabler:pencil-cog": {
           "fingerprint": "166131142732",
@@ -15238,6 +15843,10 @@
           "fingerprint": "92ead1329b22",
           "verdict": "fits"
         },
+        "lucide:plus": {
+          "fingerprint": "8026aa3f43c0",
+          "verdict": "no"
+        },
         "lucide:star": {
           "fingerprint": "8612e32a7307",
           "verdict": "fits"
@@ -15271,6 +15880,10 @@
         "material-symbols:heart-plus": {
           "fingerprint": "1cd248a6a690",
           "verdict": "fits"
+        },
+        "material-symbols:loupe": {
+          "fingerprint": "032a9700e68b",
+          "verdict": "no"
         },
         "material-symbols:playlist-add": {
           "fingerprint": "01dfe24e5acf",
@@ -15315,6 +15928,10 @@
         },
         "tabler:heart-search": {
           "fingerprint": "5ecdb085ec0a",
+          "verdict": "no"
+        },
+        "tabler:plus": {
+          "fingerprint": "1bad3b0e2c1c",
           "verdict": "no"
         }
       },
@@ -15377,6 +15994,10 @@
         },
         "material-symbols:deskphone": {
           "fingerprint": "b37a2fb27cd0",
+          "verdict": "partial"
+        },
+        "material-symbols:lift-to-talk": {
+          "fingerprint": "47b00c6c9f92",
           "verdict": "partial"
         },
         "material-symbols:phone-callback": {
@@ -15575,9 +16196,33 @@
           "fingerprint": "89e95f38f901",
           "verdict": "no"
         },
+        "lucide:file-x": {
+          "fingerprint": "cc27a67aa60f",
+          "verdict": "partial"
+        },
+        "lucide:image-minus": {
+          "fingerprint": "27a37935e601",
+          "verdict": "no"
+        },
+        "lucide:list-x": {
+          "fingerprint": "873f167331a2",
+          "verdict": "partial"
+        },
         "lucide:mic": {
           "fingerprint": "1d4c48210af3",
           "verdict": "no"
+        },
+        "lucide:package-minus": {
+          "fingerprint": "9c218c954dcc",
+          "verdict": "no"
+        },
+        "lucide:sticky-note-minus": {
+          "fingerprint": "3e4a9d786bb3",
+          "verdict": "partial"
+        },
+        "lucide:sticky-note-x": {
+          "fingerprint": "b13a033f94c0",
+          "verdict": "partial"
         },
         "material-symbols:add-notes": {
           "fingerprint": "5f29a80018b6",
@@ -15674,6 +16319,10 @@
         },
         "material-symbols:screen-record": {
           "fingerprint": "c9038d9d9654",
+          "verdict": "no"
+        },
+        "ph:backspace": {
+          "fingerprint": "f9dc9cf2cb0e",
           "verdict": "no"
         },
         "ph:file-minus": {
@@ -16071,6 +16720,10 @@
           "fingerprint": "6d0d188c091c",
           "verdict": "no"
         },
+        "material-symbols:cached": {
+          "fingerprint": "199877df4be3",
+          "verdict": "fits"
+        },
         "material-symbols:change-circle": {
           "fingerprint": "c652b4b28442",
           "verdict": "fits"
@@ -16434,6 +17087,10 @@
           "fingerprint": "24a04ef60987",
           "verdict": "no"
         },
+        "material-symbols:media-output-off": {
+          "fingerprint": "5218b9c00aa4",
+          "verdict": "no"
+        },
         "material-symbols:mobile-sound": {
           "fingerprint": "8678402c5332",
           "verdict": "partial"
@@ -16466,6 +17123,10 @@
           "fingerprint": "c36f1d1489ec",
           "repeat": "fits",
           "verdict": "fits"
+        },
+        "ph:bell-slash": {
+          "fingerprint": "d0357b119512",
+          "verdict": "no"
         },
         "ph:speaker-high": {
           "fingerprint": "6d227c4081ba",
@@ -16562,6 +17223,10 @@
           "fingerprint": "c2a4e4b85c56",
           "verdict": "partial"
         },
+        "material-symbols:developer-guide": {
+          "fingerprint": "329e952eaf06",
+          "verdict": "no"
+        },
         "material-symbols:draft": {
           "fingerprint": "11cfed150ace",
           "repeat": "no",
@@ -16642,6 +17307,14 @@
           "fingerprint": "92ead1329b22",
           "verdict": "partial"
         },
+        "lucide:mail-pen": {
+          "fingerprint": "665c784a6820",
+          "verdict": "no"
+        },
+        "lucide:rectangle-circle": {
+          "fingerprint": "85f54fb7651b",
+          "verdict": "no"
+        },
         "lucide:star": {
           "fingerprint": "8612e32a7307",
           "verdict": "no"
@@ -16669,6 +17342,10 @@
         "material-symbols:heart-plus": {
           "fingerprint": "1cd248a6a690",
           "verdict": "partial"
+        },
+        "material-symbols:rate-review": {
+          "fingerprint": "4e97daced3d0",
+          "verdict": "no"
         },
         "material-symbols:recommend": {
           "fingerprint": "de4cb893c03f",
@@ -16746,6 +17423,11 @@
           "fingerprint": "9bcf64bb05c4",
           "verdict": "partial"
         },
+        "tabler:pencil-down": {
+          "fingerprint": "1f9bdbf99fde",
+          "repeat": "no",
+          "verdict": "no"
+        },
         "tabler:phone-pause": {
           "fingerprint": "bdd4ea36e785",
           "verdict": "no"
@@ -16765,6 +17447,10 @@
         "tabler:user-heart": {
           "fingerprint": "378655a21b1c",
           "verdict": "no"
+        },
+        "tabler:writing": {
+          "fingerprint": "b51185d94cd2",
+          "verdict": "no"
         }
       },
       "query": "поставить лайк"
@@ -16772,6 +17458,14 @@
     "ru-034": {
       "description": "Покупательская тележка из супермаркета со знаком плюс в правом углу",
       "icons": {
+        "lucide:badge-plus": {
+          "fingerprint": "f2f61b3966b7",
+          "verdict": "no"
+        },
+        "lucide:plus": {
+          "fingerprint": "8026aa3f43c0",
+          "verdict": "partial"
+        },
         "lucide:shopping-bag": {
           "fingerprint": "aa55fc355b23",
           "verdict": "no"
@@ -16799,6 +17493,10 @@
         },
         "material-symbols:add-to-queue": {
           "fingerprint": "b6f406f8e488",
+          "verdict": "no"
+        },
+        "material-symbols:loupe": {
+          "fingerprint": "032a9700e68b",
           "verdict": "no"
         },
         "material-symbols:shopping-basket": {
@@ -16837,6 +17535,10 @@
         "tabler:basket-x": {
           "fingerprint": "f85db0c779bf",
           "verdict": "no"
+        },
+        "tabler:plus": {
+          "fingerprint": "1bad3b0e2c1c",
+          "verdict": "partial"
         },
         "tabler:shopping-bag-plus": {
           "fingerprint": "f8eb21ae97ee",
@@ -17100,10 +17802,18 @@
           "fingerprint": "1046c8df0a16",
           "verdict": "fits"
         },
+        "ph:telegram-logo": {
+          "fingerprint": "38d96582098f",
+          "verdict": "fits"
+        },
         "tabler:mail-share": {
           "fingerprint": "8e1a943d4b97",
           "repeat": "fits",
           "verdict": "partial"
+        },
+        "tabler:message-2-ai": {
+          "fingerprint": "26c5428fb811",
+          "verdict": "no"
         },
         "tabler:message-2-share": {
           "fingerprint": "6711adc487d6",
@@ -17128,6 +17838,10 @@
         "tabler:message-forward": {
           "fingerprint": "38218ef6b479",
           "verdict": "partial"
+        },
+        "tabler:message-heart": {
+          "fingerprint": "3f492b5a1df2",
+          "verdict": "no"
         },
         "tabler:message-plus": {
           "fingerprint": "981d17695bba",
@@ -17162,6 +17876,10 @@
         "lucide:door-closed-locked": {
           "fingerprint": "99f139016fb6",
           "verdict": "partial"
+        },
+        "lucide:shield-ban": {
+          "fingerprint": "0c432a3b3065",
+          "verdict": "fits"
         },
         "lucide:user-lock": {
           "fingerprint": "8a70dace7475",
@@ -17218,6 +17936,10 @@
         "tabler:ban": {
           "fingerprint": "be3bcfb3054c",
           "repeat": "fits",
+          "verdict": "partial"
+        },
+        "tabler:cloud-cancel": {
+          "fingerprint": "d3d6e252a16a",
           "verdict": "partial"
         },
         "tabler:forbid": {
@@ -17308,9 +18030,17 @@
           "fingerprint": "f0392f6bb5fa",
           "verdict": "fits"
         },
+        "lucide:square-arrow-out-down-right": {
+          "fingerprint": "4c43dd3e6b31",
+          "verdict": "partial"
+        },
         "material-symbols:all-out": {
           "fingerprint": "8d3c2f89bbf6",
           "verdict": "no"
+        },
+        "material-symbols:arrows-output": {
+          "fingerprint": "ed002bc2c3b0",
+          "verdict": "fits"
         },
         "material-symbols:azm": {
           "fingerprint": "2b247c4a59bd",
@@ -17356,6 +18086,10 @@
           "fingerprint": "a41f171c2492",
           "verdict": "fits"
         },
+        "material-symbols:width-full": {
+          "fingerprint": "9c634e576ef5",
+          "verdict": "no"
+        },
         "material-symbols:zoom-out-map": {
           "fingerprint": "0613e3808797",
           "verdict": "fits"
@@ -17394,6 +18128,10 @@
     "ru-039": {
       "description": "Прямоугольный дверной проем со стрелкой направленной наружу вправо",
       "icons": {
+        "lucide:log-in": {
+          "fingerprint": "3c2d49215fa2",
+          "verdict": "partial"
+        },
         "lucide:log-out": {
           "fingerprint": "52126be77f91",
           "verdict": "fits"
@@ -17488,6 +18226,14 @@
           "fingerprint": "63471a3611e2",
           "verdict": "fits"
         },
+        "lucide:scan-text": {
+          "fingerprint": "6618a2a721a2",
+          "verdict": "no"
+        },
+        "lucide:text-search": {
+          "fingerprint": "bc2a2ed2208d",
+          "verdict": "no"
+        },
         "material-symbols:content-copy": {
           "fingerprint": "bcc547743f58",
           "verdict": "fits"
@@ -17508,12 +18254,21 @@
           "fingerprint": "98ed5c79b011",
           "verdict": "fits"
         },
+        "material-symbols:document-scanner": {
+          "fingerprint": "16f96dc1bee1",
+          "repeat": "no",
+          "verdict": "no"
+        },
         "material-symbols:file-copy": {
           "fingerprint": "1fc0006fe66d",
           "verdict": "fits"
         },
         "material-symbols:markdown-copy": {
           "fingerprint": "5bed20983a94",
+          "verdict": "partial"
+        },
+        "material-symbols:markdown-paste": {
+          "fingerprint": "70d690ee270f",
           "verdict": "partial"
         },
         "ph:clipboard": {
@@ -17547,6 +18302,18 @@
         "tabler:copy": {
           "fingerprint": "ece93a1aafc2",
           "verdict": "fits"
+        },
+        "tabler:scan-letter-t": {
+          "fingerprint": "0ce390f3df7a",
+          "verdict": "no"
+        },
+        "tabler:text-scan-2": {
+          "fingerprint": "37f6079b077d",
+          "verdict": "no"
+        },
+        "tabler:text-scan-ai": {
+          "fingerprint": "070595e841d3",
+          "verdict": "no"
         }
       },
       "query": "скопировать текст"
@@ -17554,6 +18321,10 @@
     "ru-041": {
       "description": "Стилизованная призма преломляющая свет или кристалл с четкими гранями",
       "icons": {
+        "fluent-emoji-flat:foggy": {
+          "fingerprint": "c1d9ecc2805a",
+          "verdict": "no"
+        },
         "fluent-emoji-flat:window": {
           "fingerprint": "c3222ac23a97",
           "verdict": "no"
@@ -17625,6 +18396,10 @@
         },
         "material-symbols:masked-transitions": {
           "fingerprint": "e2ad0bcddb7e",
+          "verdict": "no"
+        },
+        "material-symbols:mist": {
+          "fingerprint": "3def28463ce7",
           "verdict": "no"
         },
         "material-symbols:opacity": {
@@ -17888,6 +18663,14 @@
           "fingerprint": "60c415d48bf5",
           "verdict": "partial"
         },
+        "material-symbols:blanket": {
+          "fingerprint": "ddddb73035eb",
+          "verdict": "partial"
+        },
+        "material-symbols:check": {
+          "fingerprint": "f5606ec1e3bd",
+          "verdict": "no"
+        },
         "material-symbols:flights-and-hotels": {
           "fingerprint": "88da9671f144",
           "verdict": "no"
@@ -17914,6 +18697,10 @@
         },
         "material-symbols:night-shelter": {
           "fingerprint": "37dd7aa50e8e",
+          "verdict": "no"
+        },
+        "material-symbols:priority": {
+          "fingerprint": "be29ccfb48e9",
           "verdict": "no"
         },
         "material-symbols:productivity": {
@@ -18088,6 +18875,10 @@
         },
         "material-symbols:done-outline": {
           "fingerprint": "439fe2ff70a4",
+          "verdict": "partial"
+        },
+        "material-symbols:download-done": {
+          "fingerprint": "553a39850940",
           "verdict": "partial"
         },
         "material-symbols:flaky": {
@@ -18275,6 +19066,14 @@
           "fingerprint": "2afdb043e15b",
           "verdict": "no"
         },
+        "material-symbols:2k": {
+          "fingerprint": "72ffbc13dffa",
+          "verdict": "no"
+        },
+        "material-symbols:2k-plus": {
+          "fingerprint": "7f377986ce8a",
+          "verdict": "no"
+        },
         "material-symbols:4k": {
           "fingerprint": "1b1b029e05a2",
           "verdict": "no"
@@ -18359,6 +19158,10 @@
           "fingerprint": "be2458ba4c2b",
           "verdict": "no"
         },
+        "material-symbols:hotel-class": {
+          "fingerprint": "6440b3ff0e57",
+          "verdict": "partial"
+        },
         "material-symbols:linked-services": {
           "fingerprint": "853bc843cd19",
           "verdict": "no"
@@ -18409,6 +19212,10 @@
         },
         "ph:four-k": {
           "fingerprint": "54627f8204df",
+          "verdict": "no"
+        },
+        "ph:standard-definition": {
+          "fingerprint": "9a604f49a859",
           "verdict": "no"
         },
         "tabler:api-app": {
@@ -18728,6 +19535,10 @@
           "fingerprint": "afcdaa97ba36",
           "verdict": "fits"
         },
+        "material-symbols:speed-0-2x": {
+          "fingerprint": "2b700f3248bb",
+          "verdict": "no"
+        },
         "material-symbols:speed-0-75": {
           "fingerprint": "4f2582abd0d1",
           "verdict": "no"
@@ -18738,6 +19549,10 @@
         },
         "material-symbols:speed-1-2": {
           "fingerprint": "c0fc791b26b8",
+          "verdict": "no"
+        },
+        "material-symbols:speed-1-25": {
+          "fingerprint": "8e9f3f4bf318",
           "verdict": "no"
         },
         "material-symbols:speed-1-2x": {
@@ -18846,6 +19661,10 @@
           "fingerprint": "b48f3fb2dfa9",
           "verdict": "no"
         },
+        "tabler:multiplier-1x": {
+          "fingerprint": "123154b29cf2",
+          "verdict": "no"
+        },
         "tabler:server-bolt": {
           "fingerprint": "bb8357375abe",
           "verdict": "partial"
@@ -18894,6 +19713,10 @@
         },
         "material-symbols:assured-workload": {
           "fingerprint": "6d7a8718519f",
+          "verdict": "partial"
+        },
+        "material-symbols:credit-score": {
+          "fingerprint": "12d8f50f8ccd",
           "verdict": "partial"
         },
         "material-symbols:data-check": {
@@ -20767,6 +21590,10 @@
           "fingerprint": "3173906a88a3",
           "verdict": "no"
         },
+        "material-symbols:science": {
+          "fingerprint": "b770c6c7bb90",
+          "verdict": "partial"
+        },
         "material-symbols:security": {
           "fingerprint": "5f0106cc33ac",
           "verdict": "no"
@@ -20973,6 +21800,10 @@
           "fingerprint": "5d985ccf166e",
           "verdict": "fits"
         },
+        "material-symbols:congenital": {
+          "fingerprint": "9613fe6506e6",
+          "verdict": "no"
+        },
         "material-symbols:data-exploration": {
           "fingerprint": "b321d404b9b9",
           "repeat": "fits",
@@ -21156,6 +21987,10 @@
           "fingerprint": "3173906a88a3",
           "verdict": "partial"
         },
+        "material-symbols:security": {
+          "fingerprint": "5f0106cc33ac",
+          "verdict": "partial"
+        },
         "material-symbols:shield-locked": {
           "fingerprint": "cd256764647f",
           "verdict": "fits"
@@ -21311,6 +22146,10 @@
         },
         "fluent-emoji-flat:crayon": {
           "fingerprint": "a1eb27c0958d",
+          "verdict": "partial"
+        },
+        "fluent-emoji-flat:man-artist": {
+          "fingerprint": "5a91647b4da4",
           "verdict": "partial"
         },
         "lucide:brain": {
@@ -21560,6 +22399,10 @@
         },
         "ph:faders": {
           "fingerprint": "9221ff7326ef",
+          "verdict": "fits"
+        },
+        "ph:faders-horizontal": {
+          "fingerprint": "34227e0d9338",
           "verdict": "fits"
         },
         "ph:sliders": {
@@ -22251,6 +23094,10 @@
           "fingerprint": "677343368cda",
           "verdict": "partial"
         },
+        "material-symbols:clock-loader-90": {
+          "fingerprint": "02d028be48e7",
+          "verdict": "partial"
+        },
         "material-symbols:data-usage": {
           "fingerprint": "cda38123d973",
           "verdict": "partial"
@@ -22259,12 +23106,20 @@
           "fingerprint": "ee1c7c2fea6a",
           "verdict": "partial"
         },
+        "material-symbols:incomplete-circle": {
+          "fingerprint": "f8c375db109e",
+          "verdict": "partial"
+        },
         "material-symbols:pending": {
           "fingerprint": "70b79a9845fe",
           "verdict": "partial"
         },
         "material-symbols:progress-activity": {
           "fingerprint": "b85b225cd3d8",
+          "verdict": "partial"
+        },
+        "material-symbols:steppers": {
+          "fingerprint": "d34dd05b0529",
           "verdict": "partial"
         },
         "ph:circle-notch": {
@@ -22307,6 +23162,10 @@
           "fingerprint": "f861ada7894f",
           "verdict": "no"
         },
+        "tabler:percentage-40": {
+          "fingerprint": "5e07fa23d1e1",
+          "verdict": "partial"
+        },
         "tabler:percentage-60": {
           "fingerprint": "55ab8e5c303a",
           "verdict": "partial"
@@ -22325,6 +23184,10 @@
         },
         "tabler:progress-bolt": {
           "fingerprint": "4917c3d72ff4",
+          "verdict": "partial"
+        },
+        "tabler:progress-check": {
+          "fingerprint": "b165ef034e3b",
           "verdict": "partial"
         },
         "tabler:progress-down": {
@@ -22351,6 +23214,10 @@
       "icons": {
         "fluent-emoji-flat:keyboard": {
           "fingerprint": "56d3f8fb73df",
+          "verdict": "no"
+        },
+        "lucide:file-input": {
+          "fingerprint": "ff2ae4b1f5f5",
           "verdict": "no"
         },
         "lucide:form": {
@@ -22540,6 +23407,10 @@
           "fingerprint": "f866fbb17ad1",
           "verdict": "no"
         },
+        "fluent-emoji-flat:shooting-star": {
+          "fingerprint": "f65b8994ad91",
+          "verdict": "no"
+        },
         "fluent-emoji-flat:up-button": {
           "fingerprint": "24dcd0dc13f5",
           "verdict": "no"
@@ -22678,12 +23549,20 @@
           "fingerprint": "15d2905f2b1f",
           "verdict": "no"
         },
+        "ph:shooting-star": {
+          "fingerprint": "2970f0a4c6e3",
+          "verdict": "no"
+        },
         "tabler:circle-plus": {
           "fingerprint": "001fad561b34",
           "verdict": "fits"
         },
         "tabler:click": {
           "fingerprint": "df7045e11f3f",
+          "verdict": "no"
+        },
+        "tabler:comet": {
+          "fingerprint": "f2e98149f379",
           "verdict": "no"
         },
         "tabler:decimal": {
@@ -22718,12 +23597,24 @@
           "fingerprint": "da988cc27c32",
           "verdict": "no"
         },
+        "tabler:meteor-off": {
+          "fingerprint": "22f4126d7cd2",
+          "verdict": "no"
+        },
+        "tabler:picture-in-picture": {
+          "fingerprint": "9a71ab75ad27",
+          "verdict": "no"
+        },
         "tabler:picture-in-picture-off": {
           "fingerprint": "54bb592f3b84",
           "verdict": "no"
         },
         "tabler:picture-in-picture-on": {
           "fingerprint": "c826e347e688",
+          "verdict": "no"
+        },
+        "tabler:picture-in-picture-top": {
+          "fingerprint": "60284d7c20eb",
           "verdict": "no"
         },
         "tabler:square-chevron-up": {
@@ -22890,6 +23781,10 @@
           "fingerprint": "8e95ff089b09",
           "verdict": "partial"
         },
+        "material-symbols:android": {
+          "fingerprint": "62c1813a85a7",
+          "verdict": "no"
+        },
         "material-symbols:blinds": {
           "fingerprint": "5c8a1be4ce02",
           "verdict": "no"
@@ -22916,6 +23811,14 @@
         },
         "material-symbols:forum": {
           "fingerprint": "e74e71c3ea63",
+          "verdict": "no"
+        },
+        "material-symbols:mobile-check": {
+          "fingerprint": "b95e20d5311a",
+          "verdict": "no"
+        },
+        "material-symbols:mobile-hand": {
+          "fingerprint": "cc9b8338ed9b",
           "verdict": "no"
         },
         "material-symbols:open-in-new": {
@@ -22950,6 +23853,10 @@
           "fingerprint": "07f2ec5682b5",
           "verdict": "fits"
         },
+        "material-symbols:tablet-android": {
+          "fingerprint": "c5c82ff507e2",
+          "verdict": "no"
+        },
         "material-symbols:toast": {
           "fingerprint": "9421d9c79545",
           "verdict": "no"
@@ -22964,6 +23871,10 @@
         },
         "material-symbols:window-open": {
           "fingerprint": "c2b9e424b9b1",
+          "verdict": "no"
+        },
+        "ph:android-logo": {
+          "fingerprint": "cbefccac987a",
           "verdict": "no"
         },
         "ph:picture-in-picture": {
@@ -22983,9 +23894,22 @@
           "fingerprint": "000fe30ac7fc",
           "verdict": "partial"
         },
+        "tabler:brand-miniprogram": {
+          "fingerprint": "10431d27803d",
+          "verdict": "no"
+        },
         "tabler:browser-check": {
           "fingerprint": "f1f9ee5e947c",
           "verdict": "partial"
+        },
+        "tabler:device-ipad": {
+          "fingerprint": "6bcd5e549b94",
+          "repeat": "no",
+          "verdict": "no"
+        },
+        "tabler:device-tablet": {
+          "fingerprint": "59a34066986e",
+          "verdict": "no"
         },
         "tabler:picture-in-picture-off": {
           "fingerprint": "54bb592f3b84",
@@ -22998,6 +23922,10 @@
         "tabler:picture-in-picture-top": {
           "fingerprint": "60284d7c20eb",
           "verdict": "no"
+        },
+        "tabler:queue-pop-in": {
+          "fingerprint": "0dd11492c184",
+          "verdict": "partial"
         },
         "tabler:queue-pop-out": {
           "fingerprint": "1f6e1b8d4b8d",
@@ -23373,6 +24301,10 @@
           "fingerprint": "b01a468e35da",
           "verdict": "fits"
         },
+        "ph:check-square-offset": {
+          "fingerprint": "83e292340770",
+          "verdict": "fits"
+        },
         "tabler:check": {
           "fingerprint": "c77ca40011a3",
           "verdict": "partial"
@@ -23415,6 +24347,10 @@
           "fingerprint": "643d147ac754",
           "verdict": "no"
         },
+        "lucide:tally-3": {
+          "fingerprint": "f5f711a6259a",
+          "verdict": "no"
+        },
         "material-symbols:1k-plus": {
           "fingerprint": "262cd3cf7e5d",
           "verdict": "partial"
@@ -23434,6 +24370,10 @@
         "material-symbols:badge": {
           "fingerprint": "a75d5659253b",
           "verdict": "no"
+        },
+        "material-symbols:counter-0": {
+          "fingerprint": "871d31c356e3",
+          "verdict": "fits"
         },
         "material-symbols:counter-2": {
           "fingerprint": "39ba78ec2f74",
@@ -23455,9 +24395,17 @@
           "fingerprint": "846382d8d6ed",
           "verdict": "fits"
         },
+        "material-symbols:electric-meter": {
+          "fingerprint": "0fabc2497273",
+          "verdict": "no"
+        },
         "material-symbols:license": {
           "fingerprint": "2703ff61ef3b",
           "verdict": "no"
+        },
+        "material-symbols:looks-5": {
+          "fingerprint": "100253673154",
+          "verdict": "fits"
         },
         "material-symbols:nest-tag": {
           "fingerprint": "dab9ff3c7479",
@@ -23486,6 +24434,10 @@
         "tabler:brand-days-counter": {
           "fingerprint": "cedf71fa433a",
           "verdict": "no"
+        },
+        "tabler:hexagon-number-0": {
+          "fingerprint": "2117746be457",
+          "verdict": "partial"
         },
         "tabler:id-badge": {
           "fingerprint": "0da39f55f38a",
@@ -23612,6 +24564,10 @@
         },
         "material-symbols:arrow-left": {
           "fingerprint": "5c9f4e04cc52",
+          "verdict": "fits"
+        },
+        "material-symbols:chevron-backward": {
+          "fingerprint": "40463ed6ea52",
           "verdict": "fits"
         },
         "material-symbols:keyboard-backspace": {
@@ -23974,6 +24930,10 @@
           "fingerprint": "877cf38ccd7e",
           "verdict": "fits"
         },
+        "lucide:remove-formatting": {
+          "fingerprint": "0aec8a9f91c6",
+          "verdict": "no"
+        },
         "material-symbols:border-clear": {
           "fingerprint": "bb8b766a228a",
           "verdict": "no"
@@ -24118,6 +25078,10 @@
         },
         "material-symbols:lunch-dining": {
           "fingerprint": "675b66487ab5",
+          "verdict": "no"
+        },
+        "material-symbols:toast": {
+          "fingerprint": "9421d9c79545",
           "verdict": "no"
         },
         "ph:bread": {
@@ -24515,6 +25479,10 @@
           "fingerprint": "78dc3f66dde5",
           "verdict": "fits"
         },
+        "fluent-emoji-flat:heart-hands": {
+          "fingerprint": "6a711350ce07",
+          "verdict": "partial"
+        },
         "fluent-emoji-flat:heart-suit": {
           "fingerprint": "5dc501cd1094",
           "verdict": "fits"
@@ -24522,6 +25490,11 @@
         "fluent-emoji-flat:heart-with-arrow": {
           "fingerprint": "ca2b748424bd",
           "verdict": "partial"
+        },
+        "fluent-emoji-flat:orange-heart": {
+          "fingerprint": "b1d7e7029d58",
+          "repeat": "fits",
+          "verdict": "fits"
         },
         "fluent-emoji-flat:pink-heart": {
           "fingerprint": "feaf1bfc6944",
@@ -24604,6 +25577,10 @@
         "tabler:circle-heart": {
           "fingerprint": "059092428385",
           "verdict": "fits"
+        },
+        "tabler:clock-heart": {
+          "fingerprint": "eb9606303b5f",
+          "verdict": "partial"
         },
         "tabler:heart": {
           "fingerprint": "1ecb8a83f6ac",
@@ -24705,6 +25682,10 @@
           "fingerprint": "24640f446ac6",
           "verdict": "no"
         },
+        "lucide:tic-tac-toe": {
+          "fingerprint": "63b5a32f86b6",
+          "verdict": "no"
+        },
         "lucide:x": {
           "fingerprint": "6a7f9fd3453a",
           "verdict": "fits"
@@ -24770,6 +25751,14 @@
           "fingerprint": "916153eb91b2",
           "verdict": "fits"
         },
+        "tabler:circle-dashed-x": {
+          "fingerprint": "bc3b37b0366a",
+          "verdict": "partial"
+        },
+        "tabler:cloud-x": {
+          "fingerprint": "69b50dcddcf5",
+          "verdict": "no"
+        },
         "tabler:cross": {
           "fingerprint": "13fe00dc9cb8",
           "repeat": "no",
@@ -24794,6 +25783,10 @@
         "tabler:square-x": {
           "fingerprint": "dab9e7ec24b9",
           "verdict": "partial"
+        },
+        "tabler:tic-tac": {
+          "fingerprint": "e4288ad55c09",
+          "verdict": "no"
         },
         "tabler:x": {
           "fingerprint": "6a7f9fd3453a",
@@ -24845,8 +25838,16 @@
           "fingerprint": "5d9f0b08383b",
           "verdict": "fits"
         },
+        "lucide:check-check": {
+          "fingerprint": "3d78a171424c",
+          "verdict": "fits"
+        },
         "lucide:check-line": {
           "fingerprint": "88793ee92e86",
+          "verdict": "fits"
+        },
+        "lucide:circle-check": {
+          "fingerprint": "c744eacf7341",
           "verdict": "fits"
         },
         "lucide:circle-dashed-check": {
@@ -25126,6 +26127,10 @@
           "fingerprint": "fb7c2c846d84",
           "verdict": "partial"
         },
+        "tabler:lock-cancel": {
+          "fingerprint": "92d4e1836b2f",
+          "verdict": "partial"
+        },
         "tabler:lock-check": {
           "fingerprint": "f71b1243d58b",
           "verdict": "partial"
@@ -25227,6 +26232,10 @@
         "material-symbols:checkbook": {
           "fingerprint": "f05397613eee",
           "verdict": "no"
+        },
+        "material-symbols:draft-orders": {
+          "fingerprint": "3e19b5bce9af",
+          "verdict": "fits"
         },
         "material-symbols:draw": {
           "fingerprint": "454e481fc0b7",
@@ -25344,6 +26353,10 @@
     "ru-090": {
       "description": "Тканевый вымпел на вертикальном флагштоке для отметки важной задачи или закладки страницы.",
       "icons": {
+        "fluent-emoji-flat:triangular-flag": {
+          "fingerprint": "18eaaa006740",
+          "verdict": "fits"
+        },
         "lucide:bookmark": {
           "fingerprint": "a7c1fb07d888",
           "verdict": "partial"
@@ -25884,6 +26897,10 @@
         },
         "material-symbols:frame-exclamation": {
           "fingerprint": "0c8349ec4777",
+          "verdict": "partial"
+        },
+        "material-symbols:partner-reports": {
+          "fingerprint": "5ca5008e5a8b",
           "verdict": "partial"
         },
         "material-symbols:priority-high": {
@@ -26487,6 +27504,10 @@
           "fingerprint": "d36c97e3c3e0",
           "verdict": "partial"
         },
+        "lucide:plane-takeoff": {
+          "fingerprint": "532556d55094",
+          "verdict": "no"
+        },
         "lucide:send": {
           "fingerprint": "0d1e2c7c76cf",
           "verdict": "fits"
@@ -26510,6 +27531,10 @@
         "material-symbols:flight": {
           "fingerprint": "0b8f580f0e6c",
           "verdict": "partial"
+        },
+        "material-symbols:flight-takeoff": {
+          "fingerprint": "3247d41fe152",
+          "verdict": "no"
         },
         "material-symbols:helicopter": {
           "fingerprint": "15757c4cf421",
@@ -26630,6 +27655,10 @@
           "fingerprint": "d7e7cfad6b2c",
           "verdict": "partial"
         },
+        "material-symbols:format-list-bulleted": {
+          "fingerprint": "0e5bad47998f",
+          "verdict": "no"
+        },
         "material-symbols:group-work": {
           "fingerprint": "b4828af97f6a",
           "verdict": "no"
@@ -26731,6 +27760,10 @@
         "tabler:dots-diagonal-2": {
           "fingerprint": "1e9ddcec5098",
           "verdict": "partial"
+        },
+        "tabler:file-dots": {
+          "fingerprint": "0bab0afabc9d",
+          "verdict": "partial"
         }
       },
       "query": "три точки"
@@ -26759,13 +27792,25 @@
           "fingerprint": "4e5e36183da8",
           "verdict": "fits"
         },
+        "lucide:zap-off": {
+          "fingerprint": "bab7bde4e82f",
+          "verdict": "partial"
+        },
         "material-symbols:bolt": {
           "fingerprint": "6547d59d1504",
+          "verdict": "fits"
+        },
+        "material-symbols:bolt-boost": {
+          "fingerprint": "8dd7de1b308b",
           "verdict": "fits"
         },
         "material-symbols:charger": {
           "fingerprint": "7ab1a0bc02d3",
           "verdict": "fits"
+        },
+        "material-symbols:dynamic-form": {
+          "fingerprint": "532efb4405b5",
+          "verdict": "partial"
         },
         "material-symbols:electric-bolt": {
           "fingerprint": "0ab54bd8aedf",
@@ -26893,8 +27938,8 @@
     }
   },
   "spent": {
-    "images": 6580,
-    "requests": 826,
-    "rub": 253.8448415600003
+    "images": 6848,
+    "requests": 942,
+    "rub": 271.9195240600004
   }
 }
