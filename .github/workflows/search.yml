@@ -44,8 +44,15 @@ concurrency:
 jobs:
   index:
     name: Индекс и замер
-    # После «Выкладки» — только если она удалась: иначе индекс обогнал бы раздачу.
-    if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'
+    # После «Выкладки» — только если она удалась (иначе индекс обогнал бы раздачу) и шла в этом
+    # репозитории от push или ручного запуска на main. Фильтр branches выше смотрит лишь на имя ветки,
+    # а workflow с тем же именем из PR форка тоже вызывает workflow_run: без этих условий робот выполнил
+    # бы чужой коммит с ключами окружения search (проверка безопасности 26 октября 2026).
+    if: >-
+      github.event_name != 'workflow_run' || (github.event.workflow_run.conclusion == 'success'
+      && github.event.workflow_run.head_repository.full_name == github.repository
+      && (github.event.workflow_run.event == 'push' || github.event.workflow_run.event == 'workflow_dispatch')
+      && github.event.workflow_run.head_branch == 'main')
     runs-on: ubuntu-latest
     environment: search
     # С запасом на полную пересборку: ≈ 14 тыс. векторов иконок и ≈ 68 тыс. фраз через Polza — около
