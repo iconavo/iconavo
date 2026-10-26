@@ -248,22 +248,7 @@ describe("/search: сначала текст", () => {
     expect((await json(again)).semantic).toBe("full");
   });
 
-  it("Polza упала сразу — только слова (text), без кэша; запроса в журнале нет", async () => {
-    const s = await setup({
-      polza: async () => {
-        throw new Error("boom");
-      },
-    });
-    const res = await s.get("/search?query=сердце");
-    expect(res.headers.get("cache-control")).toBe("no-store");
-    const body = await json(res);
-    expect(body.semantic).toBe("text");
-    expect(body.icons).toEqual(["demo:heart"]);
-    expect(s.logs.join(" ")).toMatch(/Polza/);
-    expect(s.logs.join(" ")).not.toContain("сердце");
-  });
-
-  it("Polza не ответила в фоне — 30 секунд только слова (text) и без Polza, затем снова модель", async () => {
+  it("Polza не ответила три раза подряд — 30 секунд только слова (text) и без Polza, затем снова модель; запроса в журнале нет", async () => {
     const clock = { t: 0 };
     // Как в жизни: модель отвечает дольше, чем уходит выдача по словам.
     let fail: () => void = () => {};
@@ -274,25 +259,49 @@ describe("/search: сначала текст", () => {
           fail = () => reject(new Error("boom"));
         }),
     });
-    const first = await s.get("/search?query=сердце");
-    expect((await json(first)).semantic).toBe("pending");
-    fail();
-    await s.flush();
-    expect(s.net.polza).toHaveLength(1);
+    for (const query of ["сердце", "love", "дом"]) {
+      const res = await s.get(`/search?query=${encodeURIComponent(query)}`);
+      expect((await json(res)).semantic).toBe("pending");
+      fail();
+      await s.flush();
+    }
+    expect(s.net.polza).toHaveLength(3);
+    expect(s.logs.join(" ")).toMatch(/Polza/);
+    expect(s.logs.join(" ")).not.toContain("сердце");
 
     clock.t = 29_999;
-    const res = await s.get("/search?query=love");
+    const res = await s.get("/search?query=heart");
     expect(res.headers.get("cache-control")).toBe("no-store");
-    expect((await json(res)).semantic).toBe("text");
+    const body = await json(res);
+    expect(body.semantic).toBe("text");
+    expect(body.icons).toEqual(["demo:heart"]);
     await s.flush();
-    expect(s.net.polza).toHaveLength(1);
+    expect(s.net.polza).toHaveLength(3);
 
     clock.t = 30_000;
-    const again = await s.get("/search?query=дом");
+    const again = await s.get("/search?query=house");
     expect((await json(again)).semantic).toBe("pending");
     fail();
     await s.flush();
-    expect(s.net.polza).toHaveLength(2);
+    expect(s.net.polza).toHaveLength(4);
+  });
+
+  it("редкий сбой модели задевает один запрос: удачный вектор сбрасывает счёт", async () => {
+    let answer: (ok: boolean) => void = () => {};
+    const s = await setup({
+      polza: () =>
+        new Promise<number[]>((resolve, reject) => {
+          answer = (ok) =>
+            ok ? resolve([1, 0, 0]) : reject(new Error("boom"));
+        }),
+    });
+    for (const [i, ok] of [false, false, true, false, false].entries()) {
+      const res = await s.get(`/search?query=love${i}`);
+      expect((await json(res)).semantic).toBe("pending");
+      answer(ok);
+      await s.flush();
+    }
+    expect(s.net.polza).toHaveLength(5);
   });
 });
 

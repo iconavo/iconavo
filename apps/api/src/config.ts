@@ -65,7 +65,11 @@ export const SEARCH_DEADLINE_MS = 250;
 /** Ожидание Meilisearch и модели векторов в фоне. */
 export const MEILI_TIMEOUT_MS = 5_000;
 export const MODEL_TIMEOUT_MS = 10_000;
-/** Модель не дала вектор — столько новые запросы без фразы в бакете получают text, не зовя Polza. */
+/**
+ * Модель не дала вектор MODEL_FAILURES_TO_PAUSE раз подряд — MODEL_RETRY_MS новые запросы без фразы в
+ * бакете получают text, не зовя Polza.
+ */
+export const MODEL_FAILURES_TO_PAUSE = 3;
 export const MODEL_RETRY_MS = 30_000;
 /**
  * Кэш ответа поиска: копия на CDN — неделя, её ключ меняется с версией индекса; браузеру — 5 минут:
