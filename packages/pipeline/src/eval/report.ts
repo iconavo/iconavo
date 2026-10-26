@@ -231,9 +231,18 @@ export function formatEvalReport(r: EvalReport): string {
         ]),
       ),
       "",
-      `Доля смысловой части: ${[...r.choice.alpha].map(([k, a]) => `${k} ${fixed(a, 1)}`).join(", ")}${r.tuned ? " (подобрана на рабочей части)" : " (из настроек)"}`,
-      `Длина вектора по правилу ADR-0048: ${r.lengths.map((l) => `${l.model} ${l.picked}`).join(", ")}`,
     );
+    // Замер только сервиса (CI) идёт без моделей прототипа: их долей и длин нет.
+    if (r.choice.alpha.size > 0) {
+      lines.push(
+        `Доля смысловой части: ${[...r.choice.alpha].map(([k, a]) => `${k} ${fixed(a, 1)}`).join(", ")}${r.tuned ? " (подобрана на рабочей части)" : " (из настроек)"}`,
+      );
+    }
+    if (r.lengths.length > 0) {
+      lines.push(
+        `Длина вектора по правилу ADR-0048: ${r.lengths.map((l) => `${l.model} ${l.picked}`).join(", ")}`,
+      );
+    }
     const service = serviceText(r);
     if (service !== "") lines.push(service);
     const rec = r.recommendation;
@@ -452,19 +461,21 @@ ${mainTable(r.main, "work")}
 <h2>Модели попарно</h2>
 <table><thead><tr><th>Пара</th><th>Контр.: нашёл только первый / только второй</th><th>Вероятность случайно</th><th>Все: только первый / только второй</th><th>Вероятность случайно</th></tr></thead><tbody>${pairRows}</tbody></table>
 <p class="muted">Точный тест Мак-Немара: сравниваются только запросы, где один вариант нашёл, а другой нет. Меньше ${fixed(SIGNIFICANCE)} — разница надёжна.</p>
-<h2>Доля смысловой части α</h2>
-${alphaTable}
-<h2>Длина вектора</h2>
-${lengthTable}
+${r.choice.alpha.size > 0 ? `<h2>Доля смысловой части α</h2>\n${alphaTable}` : ""}
+${r.lengths.length > 0 ? `<h2>Длина вектора</h2>\n${lengthTable}` : ""}
 <h2>По типам запросов</h2>
 ${typeTable}
 ${perSet}
 ${setSharesSection(r)}
 <h2>Потолок: подходящей иконки не нашлось</h2>
 ${ceiling ? `<ul>${ceiling}</ul>` : `<p class="muted">Таких запросов нет.</p>`}
-<h2>Промахи — рабочая часть, гибрид ${esc(leaderKey.replace("hybrid:", ""))}</h2>
+${
+  leaderKey === ""
+    ? ""
+    : `<h2>Промахи — рабочая часть, гибрид ${esc(leaderKey.replace("hybrid:", ""))}</h2>
 <p class="muted">Только рабочая часть: контрольную не разглядываем, чтобы не подгонять поиск под неё. Зелёная рамка в пятёрке — подходит, жёлтая — частично.</p>
-${misses || `<p class="muted">Промахов нет.</p>`}
+${misses || `<p class="muted">Промахов нет.</p>`}`
+}
 ${notes ? `<h2>Заметки</h2><ul>${notes}</ul>` : ""}`,
   );
 }

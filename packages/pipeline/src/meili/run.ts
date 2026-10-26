@@ -33,6 +33,7 @@ import {
   DOCUMENTS_BATCH,
   JSON_TYPE,
   LIVE_MANIFEST_URL,
+  PHRASES_LOG_EVERY,
   PUT_CONCURRENCY,
   REPORT_SAMPLES,
   VECTOR_TYPE,
@@ -72,6 +73,8 @@ export interface SearchIndexOptions {
   /** Живой манифест раздачи; нет — сверка с раздачей пропускается. */
   liveManifest?: () => Promise<Manifest>;
   log?: (line: string) => void;
+  /** Строка хода фраз — каждые столько фраз; по умолчанию PHRASES_LOG_EVERY. */
+  phraseLogEvery?: number;
   now?: () => number;
 }
 
@@ -569,6 +572,8 @@ export async function searchIndex(
         return finish();
       }
       log(`Фразы: векторы ${missingPhrases.length}…`);
+      const every = o.phraseLogEvery ?? PHRASES_LOG_EVERY;
+      let done = 0;
       const res = await embedBatches<PhraseEntry>(missingPhrases, {
         client: o.embedder,
         model,
@@ -585,6 +590,13 @@ export async function searchIndex(
               VECTOR_TYPE,
             );
           });
+          const before = done;
+          done += items.length;
+          if (Math.floor(done / every) > Math.floor(before / every)) {
+            log(
+              `  фразы: ${done} из ${missingPhrases.length} · ${formatRub(budget.spent)}`,
+            );
+          }
         },
       });
       report.phrases.computed = res.computed;

@@ -181,6 +181,18 @@ describe("searchIndex: первый запуск", () => {
     expect(embed.calls.length).toBeGreaterThan(0);
   });
 
+  it("пишет в журнал ход фраз и потраченное", async () => {
+    const { run } = setup();
+    const lines: string[] = [];
+    const r = await run({ log: (l) => lines.push(l), phraseLogEvery: 2 });
+    const total = r.phrases.missing;
+    expect(total).toBeGreaterThan(2);
+    expect(lines).toContain(`Фразы: векторы ${total}…`);
+    expect(lines.at(-1)).toMatch(
+      new RegExp(`^ {2}фразы: ${total} из ${total} · .+₽$`),
+    );
+  });
+
   it("повтор без изменений ничего не пишет и не платит", async () => {
     const { storage, embed, meili, run } = setup();
     await run();
