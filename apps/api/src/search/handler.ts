@@ -6,7 +6,7 @@
 //    сроку (≈ 0,25 с) — полная выдача; фразы нет — выдача по словам с пометкой pending, как только
 //    слова готовы: модель к сроку не успеет. Вектор от Polza и полная выдача досчитываются в фоне и
 //    ложатся в кэш: повторный запрос через секунду — полный.
-// 5. Polza недавно не ответила или нет ключа — выдача по словам с пометкой text, не ошибка;
+// 5. Polza не ответила три раза подряд или нет ключа — выдача по словам с пометкой text, не ошибка;
 //    Meilisearch недоступен — 503.
 // Неполная выдача не кэшируется нигде. В журнал не попадают ни запрос, ни адрес (ADR-0028).
 
@@ -25,6 +25,7 @@ import {
 import { cacheKey } from "../cache.js";
 import {
   MEILI_TIMEOUT_MS,
+  MODEL_FAILURES_TO_PAUSE,
   MODEL_RETRY_MS,
   MODEL_TIMEOUT_MS,
   SEARCH_CACHE_BROWSER,
@@ -134,11 +135,14 @@ export function createSearch(
     ctx.cache,
   );
   /**
-   * Когда модель последний раз не дала вектор: MODEL_RETRY_MS после этого новые запросы без фразы
-   * в бакете сразу получают text и Polza не зовут — иначе при сбое модели они получали бы pending,
-   * и повтор ничего бы не дал. Своё у каждой копии функции.
+   * Сбои модели подряд и время последнего. После MODEL_FAILURES_TO_PAUSE сбоев подряд новые запросы
+   * без фразы в бакете MODEL_RETRY_MS получают text и Polza не зовут — иначе при сбое модели они
+   * получали бы pending, и повтор ничего бы не дал. Удачный вектор сбрасывает счёт: редкий сбой
+   * задевает один запрос (повторный замер скорости 26 октября 2026: пауза после одного сбоя
+   * отдала 22 запроса из 100 без смысла). Своё у каждой копии функции.
    */
-  let modelFailedAt: number | undefined;
+  let modelFailures = 0;
+  let modelFailedAt = 0;
 
   return async (request, url, waitUntil, head) => {
     const started = ctx.now();
@@ -278,7 +282,8 @@ export function createSearch(
       }
     })();
     const modelDown = () =>
-      modelFailedAt !== undefined && ctx.now() - modelFailedAt < MODEL_RETRY_MS;
+      modelFailures >= MODEL_FAILURES_TO_PAUSE &&
+      ctx.now() - modelFailedAt < MODEL_RETRY_MS;
     const vectorP: Promise<VectorResult> = (async () => {
       const stored = await storedP;
       if (stored) return { vector: stored, source: "store" };
@@ -292,8 +297,10 @@ export function createSearch(
           p.text,
           MODEL_TIMEOUT_MS,
         );
+        modelFailures = 0;
         return { vector, source: "model" };
       } catch (e) {
+        modelFailures += 1;
         modelFailedAt = ctx.now();
         ctx.log(`вектор запроса: ${(e as Error).message}`);
         return { error: (e as Error).message };
