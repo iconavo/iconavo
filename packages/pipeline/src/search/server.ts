@@ -1,12 +1,27 @@
 // Сервер страницы поиска (шаг 12, ADR-0048): только 127.0.0.1, только GET. Заголовок Host
 // сверяется с адресом сервера: иначе чужой сайт мог бы через браузер (DNS rebinding) слать запросы
 // и тратить деньги Polza на векторы. Отчёты из .cache/reports отдаются по /reports/… — браузерное
-// расширение Claude не открывает file://.
+// расширение Claude не открывает file://. Колонка «Сервис» (ADR-0049) — ответ Meilisearch теми же
+// запросами, что у функции edge API: появляется, когда в .env есть ключи поискового сервиса.
 
 import { readFile } from "node:fs/promises";
 import { createServer, type Server } from "node:http";
 import { extname, isAbsolute, join, normalize, relative } from "node:path";
+import {
+  exactName,
+  exactQuery,
+  mainQuery,
+  normalizeText,
+  pageResults,
+  parseMultiSearch,
+  SEARCH_MODEL,
+  SEMANTIC_RATIO,
+  stripSetPrefix,
+  truncateUnit,
+} from "@iconavo-ui/search";
 import type { EmbeddingClient } from "../embed/client.js";
+import type { MeiliClient } from "../meili/client.js";
+import { searchEmbeddingModel } from "../meili/embed.js";
 import { esc, htmlPage } from "../report/html.js";
 import type { Catalog } from "./catalog.js";
 import { type ModelSearch, PAGE_RESULTS } from "./config.js";
@@ -27,6 +42,8 @@ export interface SearchContext {
   /** Кэш векторов запросов и папка отчётов. */
   queryDir: string;
   reportsDir: string;
+  /** Поисковый сервис (ADR-0049); нет ключей — колонки «Сервис» нет. */
+  service?: MeiliClient;
 }
 
 export interface Reply {
@@ -86,6 +103,62 @@ const formatMs = (ms: number) =>
   ms < 1000
     ? `${Math.round(ms)} мс`
     : `${(ms / 1000).toFixed(1).replace(".", ",")} с`;
+
+/**
+ * Колонка «Сервис»: Meilisearch теми же запросами, что строит функция edge API. Вектор — Gemini от
+ * нормализованного текста, первые 1024 числа; без вектора — только слова, как ответ «сначала текст».
+ */
+async function serviceColumn(
+  ctx: SearchContext,
+  client: MeiliClient,
+  query: string,
+  mode: Mode,
+  set: string | undefined,
+): Promise<Column> {
+  const started = performance.now();
+  const isSet = (id: string) => ctx.catalog.sets.some((s) => s.id === id);
+  const q = normalizeText(stripSetPrefix(query, isSet));
+  const notes: string[] = [];
+  let vector: Float32Array | undefined;
+  if (mode !== "text") {
+    const qv = await queryVectors(searchEmbeddingModel(), [q], {
+      dir: ctx.queryDir,
+      ...(ctx.client ? { client: ctx.client } : {}),
+    });
+    const full = qv.vectors[0];
+    if (full) vector = truncateUnit(full, SEARCH_MODEL.dims);
+    else notes.push(`нет вектора запроса: ${qv.error ?? "?"} — только слова`);
+  }
+  const ratio = mode === "vector" ? 1 : SEMANTIC_RATIO;
+  const filters = set === undefined ? {} : { sets: [set] };
+  const name = exactName(query);
+  const body = [
+    ...(name === undefined ? [] : [exactQuery(name, filters)]),
+    mainQuery({
+      q,
+      filters,
+      ...(name === undefined ? {} : { exclude: name }),
+      start: 0,
+      limit: PAGE_RESULTS,
+      ...(vector ? { vector, semanticRatio: ratio } : {}),
+    }),
+  ];
+  const lists = parseMultiSearch(await client.multiSearch(body), body.length);
+  const exact = name === undefined ? [] : (lists[0] ?? []);
+  const main = lists[lists.length - 1] ?? [];
+  const results = pageResults(exact, main, 0, PAGE_RESULTS).flatMap((r) => {
+    const doc = ctx.catalog.byId.get(r.icon);
+    return doc === undefined
+      ? []
+      : [{ doc, score: 0, exact: r.exact === true, text: 0 }];
+  });
+  return {
+    title: "Сервис",
+    subtitle: `Meilisearch · ${vector ? `доля смысла ${ratio.toFixed(1).replace(".", ",")}` : "только слова"} · ${formatMs(performance.now() - started)}`,
+    notes,
+    results,
+  };
+}
 
 /** Ответ страницы поиска на запрос: колонка текста и колонка каждой модели. */
 export async function searchReply(
@@ -172,6 +245,13 @@ export async function searchReply(
       notes.push(
         "Нет ключа POLZA_API_KEY: векторы новых запросов не считаются, в колонках моделей — только текстовая часть (ADR-0027).",
       );
+    }
+  }
+  if (ctx.service) {
+    try {
+      columns.push(await serviceColumn(ctx, ctx.service, query, mode, set));
+    } catch (e) {
+      notes.push(`Сервис не ответил: ${(e as Error).message}`);
     }
   }
   return {

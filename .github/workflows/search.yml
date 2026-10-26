@@ -1,0 +1,114 @@
+name: Поисковый индекс
+
+# Робот поискового индекса (ADR-0049, шаг 8 фазы 2). После каждой успешной «Выкладки» на main —
+# pnpm search-index: карточки из data/ → Meilisearch Cloud (только изменившиеся документы); векторы
+# иконок и фраз каталога → закрытый бакет R2 iconavo-search; версия индекса (index.json) — там же,
+# после документов. Индекс не обгоняет раздачу: команда сверяет версии наборов с живым манифестом
+# cdn.iconavo.dev и при расхождении пишет «СТОП». Затем — замер сервиса по эталону «только отчёт»
+# (pnpm eval --service-only, ADR-0021): без судьи, неразмеченные пары — заметка.
+# Ключи — секреты окружения search (только main): MEILISEARCH_URL, MEILISEARCH_ADMIN_KEY, POLZA_API_KEY,
+# SEARCH_R2_ACCESS_KEY_ID, SEARCH_R2_SECRET_ACCESS_KEY; R2_ACCOUNT_ID — общий секрет репозитория. Адрес
+# Meilisearch — тоже секрет: логи CI открыты всем. Ключа записи раздачи у робота нет.
+
+on:
+  workflow_run:
+    workflows: ["Выкладка"]
+    types: [completed]
+    branches: [main]
+  push:
+    branches: [main]
+    paths:
+      - "packages/search/**"
+      - "packages/pipeline/src/meili/**"
+      - "packages/pipeline/src/search/catalog.ts"
+      - ".github/workflows/search.yml"
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: Только показать, что изменится в индексе
+        type: boolean
+        default: false
+      reembed:
+        description: Сменить эмбеддер индекса — векторы всех документов уйдут заново
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+# Обновления индекса не пересекаются и не прерываются: следующее ждёт текущее.
+concurrency:
+  group: search
+  cancel-in-progress: false
+
+jobs:
+  index:
+    name: Индекс и замер
+    # После «Выкладки» — только если она удалась: иначе индекс обогнал бы раздачу.
+    if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+    environment: search
+    # С запасом на первый запуск: ≈ 14 тыс. векторов иконок и ≈ 68 тыс. фраз через Polza.
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+          # После «Выкладки» — ровно тот коммит, который выложен.
+          ref: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_sha || github.sha }}
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Обновить индекс
+        env:
+          MEILISEARCH_URL: ${{ secrets.MEILISEARCH_URL }}
+          MEILISEARCH_ADMIN_KEY: ${{ secrets.MEILISEARCH_ADMIN_KEY }}
+          POLZA_API_KEY: ${{ secrets.POLZA_API_KEY }}
+          R2_ACCOUNT_ID: ${{ secrets.R2_ACCOUNT_ID }}
+          SEARCH_R2_ACCESS_KEY_ID: ${{ secrets.SEARCH_R2_ACCESS_KEY_ID }}
+          SEARCH_R2_SECRET_ACCESS_KEY: ${{ secrets.SEARCH_R2_SECRET_ACCESS_KEY }}
+          DRY_RUN: ${{ inputs.dry_run == true }}
+          REEMBED: ${{ inputs.reembed == true }}
+        run: |
+          flags=""
+          if [ "$DRY_RUN" = true ]; then flags="$flags --dry-run"; fi
+          if [ "$REEMBED" = true ]; then flags="$flags --reembed"; fi
+          pnpm search-index $flags
+      # Замер — только отчёт: судьи в CI нет, задачу он не красит (ADR-0021, ADR-0049).
+      - name: Замер сервиса — только отчёт
+        if: success() && inputs.dry_run != true
+        continue-on-error: true
+        env:
+          MEILISEARCH_URL: ${{ secrets.MEILISEARCH_URL }}
+          MEILISEARCH_ADMIN_KEY: ${{ secrets.MEILISEARCH_ADMIN_KEY }}
+          POLZA_API_KEY: ${{ secrets.POLZA_API_KEY }}
+        run: pnpm eval --service-only
+      # Страницы без архива открываются в браузере. Копия — вне .cache: скрытые папки upload-artifact пропускает.
+      - name: Отчёты — вне .cache
+        id: pages
+        if: always()
+        run: |
+          pages="$RUNNER_TEMP/pages"
+          mkdir -p "$pages"
+          cp .cache/reports/search/index.html "$pages/search-index.html" 2> /dev/null || true
+          cp .cache/reports/eval/index.html "$pages/eval.html" 2> /dev/null || true
+          echo "pages=$pages" >> "$GITHUB_OUTPUT"
+      - name: Отчёт — индекс
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: search-index.html
+          path: ${{ steps.pages.outputs.pages }}/search-index.html
+          archive: false
+          if-no-files-found: ignore
+      - name: Отчёт — замер
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: eval.html
+          path: ${{ steps.pages.outputs.pages }}/eval.html
+          archive: false
+          if-no-files-found: ignore

@@ -2,8 +2,10 @@
 // | pnpm normalize [id…] | pnpm data [id…] [--accept-changes] | pnpm pr <id> [--run-url=… …] [--no-auto-merge]
 // | pnpm enrich [id…] [--limit=N] [--max-cost=USD] [--dry-run] [--no-wait]
 // | pnpm embed [id…] [--model=…] [--max-rub=N] [--dry-run] | pnpm nearest [запрос…] [--model=…]
-// | pnpm judge [--limit=N] [--max-rub=N] [--dry-run] | pnpm eval [--model=…] [--baseline]
-// | pnpm search-page [--port=N] [--model=…] | pnpm cdn build | pnpm cdn upload [--dry-run]
+// | pnpm judge [--limit=N] [--max-rub=N] [--dry-run] [--service]
+// | pnpm eval [--model=…] [--baseline] [--service | --service-only]
+// | pnpm search-page [--port=N] [--model=…] | pnpm search-index [--dry-run] [--max-rub=N] [--reembed]
+// | pnpm cdn build | pnpm cdn upload [--dry-run]
 // | pnpm cdn verify | pnpm cdn check | pnpm packages prepare [id…] [--new] [--force]
 // | pnpm packages verify [id…] [--wait=N] [--plan=…] | pnpm api build | pnpm api preview [--port=N]
 // | pnpm api check [--expect-build=…]
@@ -100,6 +102,19 @@ import {
   renderJudgePage,
 } from "./eval/report.js";
 import { evalStop, evaluate } from "./eval/run.js";
+import { type MeiliClient, meiliClient } from "./meili/client.js";
+import {
+  DEFAULT_SEARCH_MAX_RUB,
+  SEARCH_BUCKET,
+  SEARCH_ENV,
+  SEARCH_R2_RUN_STOPS,
+} from "./meili/config.js";
+import {
+  formatSearchIndexReport,
+  formatSetsTable,
+  renderSearchIndexPage,
+} from "./meili/report.js";
+import { fetchLiveManifest, searchIndex } from "./meili/run.js";
 import { formatMetadataTable } from "./metadata/report.js";
 import { formatNormalizeReport, renderGallery } from "./normalize/gallery.js";
 import { normalizeSet, type SetNormalizeReport } from "./normalize/run.js";
@@ -200,14 +215,31 @@ const USAGE = `Использование:
       --limit=N                       пилот: N запросов, по ячейкам «язык × тип»
       --max-rub=N                     лимит стоимости запуска в рублях (по умолчанию ${JUDGE_MAX_RUB})
       --dry-run                       только посчитать пары и оценить стоимость
+      --service                       и поисковый сервис (ADR-0049): его десятки из Meilisearch;
+                                      нужны ${SEARCH_ENV.url} и ${SEARCH_ENV.readKey}
   pnpm eval                           замер поиска по эталону: Hit@5, MRR@10, P@5 по моделям,
                                       языкам и частям; страница .cache/reports/eval/index.html
       --model=…                       только эта модель (флаг можно повторить)
       --baseline                      записать docs/eval/baseline.json — итог для фазы 2
+      --service                       и поисковый сервис (ADR-0049): доля смысла по рабочей части
+                                      и сравнение с гибридом Gemini прототипа
+      --service-only                  только сервис и «Текст»: векторы иконок не нужны (для CI);
+                                      неразмеченные пары — заметка, а не «СТОП»
   pnpm search-page                    страница поиска для ручной проверки на 127.0.0.1;
                                       там же отчёты из .cache/reports
       --port=N                        порт (по умолчанию ${PAGE_PORT})
       --model=…                       только эта модель — меньше памяти (флаг можно повторить)
+  pnpm search-index                   поисковый индекс Meilisearch из data/ (ADR-0049): карточки,
+                                      векторы иконок и фраз каталога в закрытом бакете ${SEARCH_BUCKET},
+                                      только изменившиеся документы, версия индекса — последней;
+                                      «СТОП», если data/ не совпадает с манифестом раздачи; нужны
+                                      ${SEARCH_ENV.url}, ${SEARCH_ENV.adminKey}, R2_ACCOUNT_ID,
+                                      ${SEARCH_ENV.r2AccessKeyId}, ${SEARCH_ENV.r2SecretAccessKey} и POLZA_API_KEY
+                                      в .env; отчёт .cache/reports/search/index.html
+      --dry-run                       только сравнить и показать (хватит ${SEARCH_ENV.readKey}); без
+                                      ключей — план с нуля без сети
+      --max-rub=N                     лимит стоимости прогона в рублях (по умолчанию ${DEFAULT_SEARCH_MAX_RUB})
+      --reembed                       сменить эмбеддер индекса: векторы всех документов уйдут заново
   pnpm cdn build                      папка раздачи dist-cdn/ из data/ (ADR-0022): на каждую иконку
                                       и алиас v/{версия}/{набор}/{имя}.json и .svg, контрольные суммы
                                       v/{версия}/{набор}.checksums.json и manifest.json; без изменений
@@ -302,6 +334,24 @@ function usageError(message: string): never {
   process.exit(2);
 }
 
+/**
+ * Поисковый сервис для замера (ADR-0049): клиент Meilisearch из окружения — ключа только для чтения
+ * хватает, админский тоже подойдёт.
+ */
+function readService(): { client: MeiliClient } {
+  const url = process.env[SEARCH_ENV.url]?.trim() ?? "";
+  const key =
+    process.env[SEARCH_ENV.readKey]?.trim() ||
+    process.env[SEARCH_ENV.adminKey]?.trim() ||
+    "";
+  if (url === "" || key === "") {
+    throw new Error(
+      `нет ключей поискового сервиса: ${SEARCH_ENV.url} и ${SEARCH_ENV.readKey} — впишите их в .env (имена — в .env.example)`,
+    );
+  }
+  return { client: meiliClient({ url, apiKey: key }) };
+}
+
 /** Таблица и итог проверки edge API. */
 function printApiCheck(report: ApiCheckReport) {
   console.log("");
@@ -315,6 +365,7 @@ let limit: number | undefined;
 let maxCost = DEFAULT_MAX_COST;
 let maxRub = DEFAULT_MAX_RUB;
 let judgeMaxRub = JUDGE_MAX_RUB;
+let searchMaxRub = DEFAULT_SEARCH_MAX_RUB;
 let port = command === "api" ? PREVIEW_PORT : PAGE_PORT;
 let waitSeconds = 0;
 let planPath: string | undefined;
@@ -354,6 +405,20 @@ for (const flag of flags) {
     }
   }
   if (command === "eval" && flag === "--baseline") continue;
+  if (
+    (command === "eval" &&
+      (flag === "--service" || flag === "--service-only")) ||
+    (command === "judge" && flag === "--service")
+  ) {
+    continue;
+  }
+  if (command === "search-index") {
+    if (flag === "--dry-run" || flag === "--reembed") continue;
+    if (name === "--max-rub" && /^[0-9]+(\.[0-9]+)?$/.test(value ?? "")) {
+      searchMaxRub = Number(value);
+      continue;
+    }
+  }
   if (command === "cdn" && flag === "--dry-run") continue;
   if (command === "packages") {
     if (flag === "--new" || flag === "--force") continue;
@@ -791,6 +856,7 @@ try {
       ...(limit === undefined ? {} : { limit }),
       maxRub: judgeMaxRub,
       dryRun,
+      ...(flags.includes("--service") ? { service: readService() } : {}),
       log: (line) => console.log(line),
     });
     console.log(`\n${formatJudgeReport(report)}`);
@@ -816,6 +882,14 @@ try {
       queryDir,
       ...(key ? { embedClient: polzaEmbeddingClient({ apiKey: key }) } : {}),
       models,
+      ...(flags.includes("--service") || flags.includes("--service-only")
+        ? {
+            service: {
+              ...readService(),
+              only: flags.includes("--service-only"),
+            },
+          }
+        : {}),
       log: (line) => console.log(line),
     });
     console.log(`\n${formatEvalReport(report)}`);
@@ -852,6 +926,16 @@ try {
       for (const note of mv.notes) console.log(`  ${note}`);
       loaded.push(mv);
     }
+    // Колонка «Сервис» — когда есть ключи поискового сервиса (ADR-0049).
+    const meiliUrl = process.env[SEARCH_ENV.url]?.trim() ?? "";
+    const meiliKey =
+      process.env[SEARCH_ENV.readKey]?.trim() ||
+      process.env[SEARCH_ENV.adminKey]?.trim() ||
+      "";
+    const service =
+      meiliUrl !== "" && meiliKey !== ""
+        ? meiliClient({ url: meiliUrl, apiKey: meiliKey })
+        : undefined;
     await startSearchServer({
       port,
       catalog,
@@ -861,15 +945,77 @@ try {
       ...(key ? { client: polzaEmbeddingClient({ apiKey: key }) } : {}),
       queryDir,
       reportsDir,
+      ...(service ? { service } : {}),
     });
     console.log(
-      `Страница поиска: http://127.0.0.1:${port}/ — карточек ${catalog.docs.length}. Остановить — Ctrl+C.`,
+      `Страница поиска: http://127.0.0.1:${port}/ — карточек ${catalog.docs.length}${service ? ", с колонкой «Сервис»" : ""}. Остановить — Ctrl+C.`,
     );
     if (!key) {
       console.log(
         "Нет POLZA_API_KEY: векторы новых запросов не считаются — только текстовая часть и кэш.",
       );
     }
+  } else if (command === "search-index") {
+    if (args.length > 0) {
+      usageError(
+        "pnpm search-index принимает только флаги: индекс описывает все наборы сразу.",
+      );
+    }
+    const dryRun = flags.includes("--dry-run");
+    // Ключи — только из окружения (команда подхватывает .env); в вывод они не попадают.
+    const env = (name: string) => process.env[name]?.trim() ?? "";
+    const meiliKey =
+      env(SEARCH_ENV.adminKey) || (dryRun ? env(SEARCH_ENV.readKey) : "");
+    const missing = [
+      ...[
+        SEARCH_ENV.url,
+        R2_ENV.accountId,
+        SEARCH_ENV.r2AccessKeyId,
+        SEARCH_ENV.r2SecretAccessKey,
+      ].filter((name) => env(name) === ""),
+      ...(meiliKey === "" ? [SEARCH_ENV.adminKey] : []),
+    ];
+    if (!dryRun && missing.length > 0) {
+      throw new Error(
+        `нет ключей: ${missing.join(", ")}. Локально впишите их в .env (имена — в .env.example), в CI это секреты окружения search; для плана без записи — --dry-run`,
+      );
+    }
+    const online = missing.length === 0;
+    const polzaKey = env("POLZA_API_KEY");
+    const report = await searchIndex({
+      configs,
+      dataDir,
+      dryRun,
+      maxRub: searchMaxRub,
+      reembed: flags.includes("--reembed"),
+      ...(online
+        ? {
+            meili: meiliClient({ url: env(SEARCH_ENV.url), apiKey: meiliKey }),
+            storage: r2Client({
+              accountId: env(R2_ENV.accountId),
+              accessKeyId: env(SEARCH_ENV.r2AccessKeyId),
+              secretAccessKey: env(SEARCH_ENV.r2SecretAccessKey),
+              bucket: SEARCH_BUCKET,
+              runStops: SEARCH_R2_RUN_STOPS,
+            }),
+            // Сверка с раздачей — только когда сеть и так нужна: план без ключей сеть не трогает.
+            liveManifest: () => fetchLiveManifest(),
+          }
+        : {}),
+      ...(polzaKey !== "" && !dryRun
+        ? { embedder: polzaEmbeddingClient({ apiKey: polzaKey }) }
+        : {}),
+      log: (line) => console.log(line),
+    });
+    console.log("");
+    for (const line of formatSearchIndexReport(report)) console.log(line);
+    console.log(`\n${formatSetsTable(report)}`);
+    const reportDir = join(reportsDir, "search");
+    await mkdir(reportDir, { recursive: true });
+    const htmlPath = join(reportDir, "index.html");
+    await writeFile(htmlPath, renderSearchIndexPage(report), "utf8");
+    console.log(`Отчёт: ${htmlPath}`);
+    process.exit(report.stop.length > 0 ? 1 : 0);
   } else if (command === "cdn") {
     const [sub, ...rest] = args;
     const dryRun = flags.includes("--dry-run");

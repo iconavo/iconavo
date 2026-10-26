@@ -1,8 +1,10 @@
 // Варианты замера (шаг 12, ADR-0048): один список на pnpm judge и pnpm eval. Судья размечает всё, что
 // попадает в первые десятки этих вариантов, поэтому замер всегда опирается на размеченное. Главные
 // варианты — «Текст», «Смысл» и «Гибрид» каждой модели; служебные — сетка α, длины вектора и фильтр
-// по наборам для выбранной модели.
+// по наборам для выбранной модели. Поисковый сервис (ADR-0049) — «Сервис» и «Сервис, только слова»
+// плюс сетка доли смысла; их списки приходят из Meilisearch готовыми (eval/service.ts).
 
+import { SEARCH_MODEL } from "@iconavo-ui/search";
 import type { EmbeddingModel } from "../embed/config.js";
 import type { Catalog } from "../search/catalog.js";
 import { MODEL_SEARCH } from "../search/config.js";
@@ -19,7 +21,7 @@ import { ALPHA_GRID, DEPTH, LENGTHS, SET_DEPTH } from "./config.js";
 import { fitsOf, type GoldenQuery, type Labels } from "./golden.js";
 import { type CurvePoint, pickAlpha, summarize } from "./metrics.js";
 
-export type Role = "main" | "alpha" | "length" | "set";
+export type Role = "main" | "alpha" | "length" | "set" | "ratio";
 
 export interface System {
   key: string;
@@ -34,7 +36,14 @@ export interface System {
   /** Сколько первых карточек размечается и хранится. */
   depth: number;
   role: Role;
+  /** Списки варианта приходят готовыми — от поискового сервиса, а не из прототипа. */
+  remote?: true;
 }
+
+/** Ключи вариантов поискового сервиса. */
+export const SERVICE_KEY = "service:gemini";
+export const SERVICE_TEXT_KEY = "service-text:gemini";
+export const ratioKey = (ratio: number) => `ratio:gemini@${ratio}`;
 
 export interface Choice {
   /** Доля смысловой части каждой модели — подобранная или из настроек. */
@@ -69,11 +78,12 @@ export const modelLengths = (m: EmbeddingModel): number[] => [
   m.dims,
 ];
 
-/** Все варианты замера. */
+/** Все варианты замера; service — доля смысла сервиса, нет — сервис не меряется. */
 export function systems(
   models: readonly EmbeddingModel[],
   choice: Choice,
   sets: readonly string[],
+  service?: { ratio: number },
 ): System[] {
   const out: System[] = [
     {
@@ -148,6 +158,41 @@ export function systems(
       }
     }
   }
+  if (service !== undefined) {
+    out.push(
+      {
+        key: SERVICE_KEY,
+        title: "Сервис",
+        mode: "hybrid",
+        alpha: service.ratio,
+        length: SEARCH_MODEL.dims,
+        depth: DEPTH,
+        role: "main",
+        remote: true,
+      },
+      {
+        key: SERVICE_TEXT_KEY,
+        title: "Сервис, только слова",
+        mode: "text",
+        alpha: 0,
+        depth: DEPTH,
+        role: "main",
+        remote: true,
+      },
+    );
+    for (const r of ALPHA_GRID) {
+      out.push({
+        key: ratioKey(r),
+        title: `Сервис, доля смысла ${fraction(r)}`,
+        mode: "hybrid",
+        alpha: r,
+        length: SEARCH_MODEL.dims,
+        depth: DEPTH,
+        role: "ratio",
+        remote: true,
+      });
+    }
+  }
   return out;
 }
 
@@ -159,6 +204,8 @@ export interface RankingInput {
   vectors: ReadonlyMap<string, readonly (Float32Array | undefined)[]>;
   models: readonly EmbeddingModel[];
   storeDir: string;
+  /** Готовые списки сервиса по ключу eval/service.ts (serviceKey); нет — варианты сервиса пусты. */
+  remote?: ReadonlyMap<string, readonly string[][]>;
   log?: (line: string) => void;
 }
 
@@ -186,7 +233,16 @@ export async function rankAll(
   const texts = queries.map((q) =>
     searchText(input.text, textQuery(catalog, q.query)),
   );
-  for (const def of defs.filter((d) => d.model === undefined)) {
+  // Варианты сервиса — готовыми списками: «только слова» и гибрид при своей доле смысла.
+  for (const def of defs.filter((d) => d.remote)) {
+    const key = def.mode === "text" ? "text" : `ratio:${def.alpha}`;
+    const list = input.remote?.get(key);
+    lists.set(
+      def.key,
+      list ? list.map((ids) => [...ids]) : queries.map(() => []),
+    );
+  }
+  for (const def of defs.filter((d) => d.model === undefined && !d.remote)) {
     const list = lists.get(def.key) as string[][];
     queries.forEach((q, i) => {
       const p = prepare(
@@ -200,7 +256,7 @@ export async function rankAll(
     });
   }
   for (const model of input.models) {
-    const own = defs.filter((d) => d.model === model.key);
+    const own = defs.filter((d) => d.model === model.key && !d.remote);
     if (own.length === 0) continue;
     const lengths = own
       .map((d) => d.length)
@@ -267,6 +323,55 @@ export interface Tuned {
 }
 
 /**
+ * Кривая по сетке на рабочей части: только когда первые десятки всех точек размечены целиком, иначе
+ * подбор шёл бы по неполной разметке. Пустой список у прототипа значит «нет вектора запроса», а у
+ * сервиса — честное «ничего не нашлось»: при доле смысла 0 ищутся только слова (allowEmpty).
+ */
+function workCurve(
+  rankings: Rankings,
+  queries: readonly GoldenQuery[],
+  labels: Labels,
+  keyOf: (a: number) => string,
+  allowEmpty = false,
+): CurvePoint[] | undefined {
+  const work = queries
+    .map((q, i) => ({ q, i }))
+    .filter(({ q }) => q.split === "work");
+  if (work.length === 0) return undefined;
+  const curve: CurvePoint[] = [];
+  for (const a of ALPHA_GRID) {
+    const list = rankings.lists.get(keyOf(a));
+    if (!list) return undefined;
+    const rows = [];
+    for (const { q, i } of work) {
+      const ranked = list[i] ?? [];
+      const known = labels.byQuery.get(q.id);
+      if (
+        (ranked.length === 0 && !allowEmpty) ||
+        ranked.some((id) => !known?.has(id))
+      ) {
+        return undefined;
+      }
+      const fits = fitsOf(labels, q.id);
+      if (fits.size > 0) rows.push({ ranked, fits });
+    }
+    const s = summarize(rows);
+    curve.push({ alpha: a, hit: s.hit, mrr: s.mrr });
+  }
+  return curve;
+}
+
+/** Доля смысла сервиса по рабочей части — по тому же правилу, что α прототипа (ADR-0049). */
+export function tuneRatio(
+  rankings: Rankings,
+  queries: readonly GoldenQuery[],
+  labels: Labels,
+): Tuned | undefined {
+  const curve = workCurve(rankings, queries, labels, ratioKey, true);
+  return curve ? { alpha: pickAlpha(curve), curve } : undefined;
+}
+
+/**
  * Доля смысловой части каждой модели по рабочей части (ADR-0048). Только когда первые десятки
  * сетки α на рабочей части размечены целиком: иначе подбор шёл бы по неполной разметке.
  */
@@ -276,29 +381,15 @@ export function tuneAlphas(
   labels: Labels,
   models: readonly EmbeddingModel[],
 ): Map<string, Tuned> | undefined {
-  const work = queries
-    .map((q, i) => ({ q, i }))
-    .filter(({ q }) => q.split === "work");
-  if (work.length === 0) return undefined;
   const out = new Map<string, Tuned>();
   for (const m of models) {
-    const curve: CurvePoint[] = [];
-    for (const a of ALPHA_GRID) {
-      const list = rankings.lists.get(`alpha:${m.key}@${a}`);
-      if (!list) return undefined;
-      const rows = [];
-      for (const { q, i } of work) {
-        const ranked = list[i] ?? [];
-        const known = labels.byQuery.get(q.id);
-        if (ranked.length === 0 || ranked.some((id) => !known?.has(id))) {
-          return undefined;
-        }
-        const fits = fitsOf(labels, q.id);
-        if (fits.size > 0) rows.push({ ranked, fits });
-      }
-      const s = summarize(rows);
-      curve.push({ alpha: a, hit: s.hit, mrr: s.mrr });
-    }
+    const curve = workCurve(
+      rankings,
+      queries,
+      labels,
+      (a) => `alpha:${m.key}@${a}`,
+    );
+    if (!curve) return undefined;
     out.set(m.key, { alpha: pickAlpha(curve), curve });
   }
   return out;

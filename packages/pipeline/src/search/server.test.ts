@@ -2,6 +2,8 @@ import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { searchDocuments } from "../meili/docs.js";
+import { fakeMeili } from "../meili/fake.testing.js";
 import { buildCatalog, setDocs } from "./catalog.js";
 import { demoConfig, loadedSet } from "./fixture.testing.js";
 import { allowedHost, reply, type SearchContext } from "./server.js";
@@ -102,5 +104,37 @@ describe("страница поиска", () => {
       (await reply(ctx, "GET", "/reports/eval/nope.html", HOST)).status,
     ).toBe(404);
     expect((await reply(ctx, "GET", "/other", HOST)).status).toBe(404);
+  });
+
+  it("колонка «Сервис» — ответ Meilisearch; сервис упал — пометка, страница работает", async () => {
+    const meili = fakeMeili();
+    for (const d of searchDocuments(
+      catalog,
+      new Map([["demo", { palette: false, license: "MIT", order: 0 }]]),
+    )) {
+      meili.docs.set(d.id, { ...d });
+    }
+    const html = body(
+      await reply(
+        { ...ctx, service: meili.client },
+        "GET",
+        "/?q=house&mode=text",
+        HOST,
+      ),
+    );
+    const column = html.slice(html.indexOf("Сервис"));
+    expect(column).toContain("только слова");
+    expect(column).toContain("<code>demo:house</code>");
+    const broken = fakeMeili({ fail: () => new Error("нет связи") });
+    const failed = body(
+      await reply(
+        { ...ctx, service: broken.client },
+        "GET",
+        "/?q=house&mode=text",
+        HOST,
+      ),
+    );
+    expect(failed).toContain("Сервис не ответил: нет связи");
+    expect(failed).toContain("<code>demo:house</code>");
   });
 });
