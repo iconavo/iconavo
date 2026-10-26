@@ -70,19 +70,31 @@ interface Stored {
   status: number;
   headers: [string, string][];
   body: Uint8Array;
+  /** Когда положен и сколько живёт (max-age), мс; без max-age — вечно. */
+  at: number;
+  ttl?: number;
 }
 
 export interface FakeCache extends EdgeCache {
   stored: Map<string, Stored>;
+  /** Ответов в кэше — без служебных файлов (манифест, версия индекса). */
+  answers(): number;
 }
 
-export function fakeCache(): FakeCache {
+/** Кэш дата-центра; с часами now записи живут max-age, как в Cache API. */
+export function fakeCache(now: () => number = () => 0): FakeCache {
   const stored = new Map<string, Stored>();
   return {
     stored,
+    answers: () =>
+      [...stored.keys()].filter((url) => !url.includes("/meta/")).length,
     async match(request) {
       const entry = stored.get(request.url);
       if (entry === undefined) return undefined;
+      if (entry.ttl !== undefined && now() - entry.at >= entry.ttl) {
+        stored.delete(request.url);
+        return undefined;
+      }
       const response = new Response(entry.body.slice().buffer as ArrayBuffer, {
         status: entry.status,
         headers: entry.headers,
@@ -105,10 +117,15 @@ export function fakeCache(): FakeCache {
       ) {
         throw new TypeError("Response is not cacheable.");
       }
+      const maxAge = /max-age=(\d+)/.exec(
+        response.headers.get("cache-control") ?? "",
+      )?.[1];
       stored.set(request.url, {
         status: response.status,
         headers: [...response.headers],
         body: new Uint8Array(await response.arrayBuffer()),
+        at: now(),
+        ...(maxAge === undefined ? {} : { ttl: Number(maxAge) * 1000 }),
       });
     },
   };

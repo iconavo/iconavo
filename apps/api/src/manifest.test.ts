@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { fakeBucket, manifestText, VERSION } from "./fake.testing.js";
+import {
+  fakeBucket,
+  fakeCache,
+  manifestText,
+  VERSION,
+} from "./fake.testing.js";
 import { StorageError } from "./http.js";
 import { manifestLoader, parseManifest } from "./manifest.js";
 
@@ -78,5 +83,26 @@ describe("manifestLoader", () => {
       () => {},
     );
     await expect(load()).rejects.toThrow(/манифеста нет/);
+  });
+
+  it("холодная копия функции берёт манифест из кэша дата-центра; через 30 секунд — снова R2", async () => {
+    const bucket = fakeBucket({
+      "manifest.json": manifestText({ lucide: VERSION }),
+    });
+    let time = 0;
+    const cache = fakeCache(() => time);
+    const copy = () =>
+      manifestLoader(
+        bucket,
+        () => time,
+        () => {},
+        cache,
+      );
+    await copy()();
+    expect((await copy()()).get("lucide")?.version).toBe(VERSION);
+    expect(bucket.reads).toEqual(["manifest.json"]);
+    time += 30_000;
+    await copy()();
+    expect(bucket.reads).toHaveLength(2);
   });
 });

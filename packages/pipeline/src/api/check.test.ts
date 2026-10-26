@@ -46,7 +46,7 @@ function world(
   let time = 0;
   const handler = createHandler({
     bucket,
-    cache: fakeCache(),
+    cache: fakeCache(() => time),
     build: "b1",
     now: () => time,
   });

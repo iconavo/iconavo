@@ -58,6 +58,8 @@ interface SetupOptions {
   phrases?: string[];
   noMeili?: boolean;
   noIndex?: boolean;
+  /** Часы функции, мс; по умолчанию стоят на нуле. */
+  clock?: { t: number };
 }
 
 async function setup(o: SetupOptions = {}) {
@@ -80,25 +82,37 @@ async function setup(o: SetupOptions = {}) {
     ...(o.polza ? { polza: o.polza } : {}),
     ...(o.meiliStatus === undefined ? {} : { meiliStatus: o.meiliStatus }),
   });
-  const handler = createHandler({
-    bucket,
-    cache,
-    build: "test",
-    now: () => 0,
-    log: (message) => logs.push(message),
-    search: {
-      bucket: searchBucket,
-      ...(o.limiter ? { limiter: o.limiter } : {}),
-      ...(o.noMeili ? {} : { meili: { url: MEILI_URL, key: "search-key" } }),
-      polzaKey: "polza-key",
-      fetch: net.fn,
-      deadlineMs: o.deadlineMs ?? 60_000,
-    },
-  });
+  const make = () =>
+    createHandler({
+      bucket,
+      cache,
+      build: "test",
+      now: () => o.clock?.t ?? 0,
+      log: (message) => logs.push(message),
+      search: {
+        bucket: searchBucket,
+        ...(o.limiter ? { limiter: o.limiter } : {}),
+        ...(o.noMeili ? {} : { meili: { url: MEILI_URL, key: "search-key" } }),
+        polzaKey: "polza-key",
+        fetch: net.fn,
+        deadlineMs: o.deadlineMs ?? 60_000,
+      },
+    });
   const w = waiter();
-  const get = (path: string, init?: RequestInit) =>
-    handler(new Request(`https://api.iconavo.dev${path}`, init), w.waitUntil);
-  return { get, flush: () => w.flush(), cache, logs, net };
+  const getter =
+    (handler: ReturnType<typeof make>) => (path: string, init?: RequestInit) =>
+      handler(new Request(`https://api.iconavo.dev${path}`, init), w.waitUntil);
+  return {
+    get: getter(make()),
+    /** Другая копия функции в том же дата-центре: своя память, общий кэш. */
+    copy: () => getter(make()),
+    flush: () => w.flush(),
+    cache,
+    logs,
+    net,
+    bucket,
+    searchBucket,
+  };
 }
 
 const json = async (res: Response) => JSON.parse(await res.text());
@@ -162,20 +176,38 @@ describe("/search: полная выдача", () => {
     expect(main?.vector).toHaveLength(SEARCH_MODEL.dims);
   });
 
-  it("вектор от Polza — 1024 числа; запомнен в дата-центре для следующих страниц", async () => {
+  it("вектор от Polza — 1024 числа, в фоне; запомнен в дата-центре для следующих страниц", async () => {
     const s = await setup();
     const res = await s.get("/search?query=сердце");
-    expect((await json(res)).semantic).toBe("full");
+    // Фразы в бакете нет: слова сразу, вектор — в фоне.
+    expect((await json(res)).semantic).toBe("pending");
+    await s.flush();
     expect(s.net.polza).toEqual([
       { model: SEARCH_MODEL.id, input: ["сердце"], dimensions: 1024 },
     ]);
-    await s.flush();
     const meiliBefore = s.net.meili.length;
     const page = await s.get("/search?query=сердце&start=1&limit=1");
     expect(page.headers.get("server-timing")).toMatch(/vector;desc="cache"/);
+    expect((await json(page)).semantic).toBe("full");
     expect(s.net.polza).toHaveLength(1);
     // С вектором из кэша — сразу гибрид, без поиска по словам впереди.
     expect(s.net.meili.length - meiliBefore).toBe(1);
+  });
+
+  it("холодная копия функции: манифест и версия индекса — из кэша дата-центра", async () => {
+    const s = await setup({ phrases: ["house", "heart"] });
+    await s.get("/search?query=house");
+    const other = s.copy();
+    const reads = s.bucket.reads.length;
+    const searchReads = s.searchBucket.reads.length;
+    const res = await other("/search?query=heart");
+    expect(res.headers.get("x-iconavo-index")).toBe(INDEX);
+    expect((await json(res)).semantic).toBe("full");
+    // Из хранилищ новая копия читает только фразу запроса.
+    expect(s.bucket.reads.slice(reads)).toEqual([]);
+    expect(s.searchBucket.reads.slice(searchReads)).toEqual([
+      STORE_KEYS.phrase(await vectorHash(SEARCH_MODEL.id, "heart")),
+    ]);
   });
 });
 
@@ -199,7 +231,24 @@ describe("/search: сначала текст", () => {
     expect((await json(again)).semantic).toBe("full");
   });
 
-  it("Polza недоступна — только слова (text), без кэша; запроса в журнале нет", async () => {
+  it("фразы нет — слова сразу, не дожидаясь срока; полная выдача — в фоне", async () => {
+    let release: (v: number[]) => void = () => {};
+    const gate = new Promise<number[]>((resolve) => {
+      release = resolve;
+    });
+    // Срок — минута: если бы функция ждала модель, ответа не было бы до конца теста.
+    const s = await setup({ polza: () => gate, deadlineMs: 60_000 });
+    const res = await s.get("/search?query=love");
+    expect((await json(res)).semantic).toBe("pending");
+    expect(res.headers.get("server-timing")).toMatch(/vector;desc="pending"/);
+    release([0, 1, 0]);
+    await s.flush();
+    const again = await s.get("/search?query=love");
+    expect(again.headers.get("x-cache")).toBe("HIT");
+    expect((await json(again)).semantic).toBe("full");
+  });
+
+  it("Polza упала сразу — только слова (text), без кэша; запроса в журнале нет", async () => {
     const s = await setup({
       polza: async () => {
         throw new Error("boom");
@@ -212,6 +261,38 @@ describe("/search: сначала текст", () => {
     expect(body.icons).toEqual(["demo:heart"]);
     expect(s.logs.join(" ")).toMatch(/Polza/);
     expect(s.logs.join(" ")).not.toContain("сердце");
+  });
+
+  it("Polza не ответила в фоне — 30 секунд только слова (text) и без Polza, затем снова модель", async () => {
+    const clock = { t: 0 };
+    // Как в жизни: модель отвечает дольше, чем уходит выдача по словам.
+    let fail: () => void = () => {};
+    const s = await setup({
+      clock,
+      polza: () =>
+        new Promise<number[]>((_, reject) => {
+          fail = () => reject(new Error("boom"));
+        }),
+    });
+    const first = await s.get("/search?query=сердце");
+    expect((await json(first)).semantic).toBe("pending");
+    fail();
+    await s.flush();
+    expect(s.net.polza).toHaveLength(1);
+
+    clock.t = 29_999;
+    const res = await s.get("/search?query=love");
+    expect(res.headers.get("cache-control")).toBe("no-store");
+    expect((await json(res)).semantic).toBe("text");
+    await s.flush();
+    expect(s.net.polza).toHaveLength(1);
+
+    clock.t = 30_000;
+    const again = await s.get("/search?query=дом");
+    expect((await json(again)).semantic).toBe("pending");
+    fail();
+    await s.flush();
+    expect(s.net.polza).toHaveLength(2);
   });
 });
 

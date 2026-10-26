@@ -43,30 +43,46 @@ export function diskBucket(dir: string) {
   };
 }
 
-/** Cache API в памяти: только GET, как у Workers. */
-export function memoryCache() {
+const MAX_AGE = /max-age=(\d+)/;
+
+/** Cache API в памяти: только GET, записи живут max-age, как у Workers. */
+export function memoryCache(now: () => number = Date.now) {
   const stored = new Map<
     string,
-    { status: number; headers: [string, string][]; body: ArrayBuffer }
+    {
+      status: number;
+      headers: [string, string][];
+      body: ArrayBuffer;
+      at: number;
+      ttl?: number;
+    }
   >();
   return {
     async match(request: Request) {
       const entry = stored.get(request.url);
-      return entry === undefined
-        ? undefined
-        : new Response(entry.body, {
-            status: entry.status,
-            headers: entry.headers,
-          });
+      if (entry === undefined) return undefined;
+      if (entry.ttl !== undefined && now() - entry.at >= entry.ttl) {
+        stored.delete(request.url);
+        return undefined;
+      }
+      return new Response(entry.body, {
+        status: entry.status,
+        headers: entry.headers,
+      });
     },
     async put(request: Request, response: Response) {
       if (request.method !== "GET") {
         throw new TypeError("Cannot cache response to non-GET request.");
       }
+      const maxAge = MAX_AGE.exec(
+        response.headers.get("cache-control") ?? "",
+      )?.[1];
       stored.set(request.url, {
         status: response.status,
         headers: [...response.headers],
         body: await response.arrayBuffer(),
+        at: now(),
+        ...(maxAge === undefined ? {} : { ttl: Number(maxAge) * 1000 }),
       });
     },
   };

@@ -1,10 +1,12 @@
-// Манифест раздачи (ADR-0022) из R2: набор → версия и время выпуска. В памяти функции — минуту;
-// одновременные запросы ждут одну загрузку; если R2 не ответил, служит прежняя копия. Наборы — в
-// Map: имя «constructor» проходит правило имён, но не должно найти что-то в прототипе объекта.
+// Манифест раздачи (ADR-0022) из R2: набор → версия и время выпуска. В памяти функции — минуту, в кэше
+// дата-центра — 30 секунд, чтобы холодная копия функции не ждала R2; одновременные запросы ждут одну
+// загрузку; если R2 не ответил, служит прежняя копия. Наборы — в Map: имя «constructor» проходит
+// правило имён, но не должно найти что-то в прототипе объекта.
 
 import { isValidNamePart } from "@iconavo-ui/core";
+import { sharedText } from "./cache.js";
 import { MANIFEST_KEY, MANIFEST_TTL_MS, VERSION_PATTERN } from "./config.js";
-import type { Bucket } from "./env.js";
+import type { Bucket, EdgeCache } from "./env.js";
 import { StorageError } from "./http.js";
 
 export interface SetEntry {
@@ -46,22 +48,27 @@ export function parseManifest(text: string): Manifest {
   return sets;
 }
 
-async function readManifest(bucket: Bucket): Promise<Manifest> {
-  let text: string | undefined;
-  try {
-    text = await (await bucket.get(MANIFEST_KEY))?.text();
-  } catch (e) {
-    throw new StorageError(`манифест не прочитан: ${(e as Error).message}`);
-  }
+async function readManifest(
+  bucket: Bucket,
+  cache: EdgeCache | undefined,
+): Promise<Manifest> {
+  const text = await sharedText(cache, MANIFEST_KEY, async () => {
+    try {
+      return (await bucket.get(MANIFEST_KEY))?.text();
+    } catch (e) {
+      throw new StorageError(`манифест не прочитан: ${(e as Error).message}`);
+    }
+  });
   if (text === undefined) throw new StorageError("манифеста нет в R2");
   return parseManifest(text);
 }
 
-/** Загрузчик манифеста с памятью на минуту. */
+/** Загрузчик манифеста с памятью на минуту; с cache — ещё и через кэш дата-центра. */
 export function manifestLoader(
   bucket: Bucket,
   now: () => number,
   log: (message: string) => void,
+  cache?: EdgeCache,
 ): () => Promise<Manifest> {
   let cached: { manifest: Manifest; at: number } | undefined;
   let pending: Promise<Manifest> | undefined;
@@ -69,7 +76,7 @@ export function manifestLoader(
     if (cached && now() - cached.at < MANIFEST_TTL_MS) {
       return Promise.resolve(cached.manifest);
     }
-    pending ??= readManifest(bucket)
+    pending ??= readManifest(bucket, cache)
       .then((manifest) => {
         cached = { manifest, at: now() };
         return manifest;
