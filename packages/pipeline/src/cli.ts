@@ -8,10 +8,11 @@
 // | pnpm cdn build | pnpm cdn upload [--dry-run]
 // | pnpm cdn verify | pnpm cdn check | pnpm packages prepare [id…] [--new] [--force]
 // | pnpm packages verify [id…] [--wait=N] [--plan=…] | pnpm api build | pnpm api preview [--port=N]
-// | pnpm api check [--expect-build=…]
+// | pnpm api check [--expect-build=…] | pnpm api bench [--base=…]
 import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import { basename, join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
+import { benchSearch, formatBench, renderBenchPage } from "./api/bench.js";
 import { buildApi } from "./api/build.js";
 import { type ApiCheckReport, apiCheckFailed, checkApi } from "./api/check.js";
 import {
@@ -25,6 +26,11 @@ import {
   WORKER_FILE,
 } from "./api/config.js";
 import { startApiPreview } from "./api/preview.js";
+import {
+  checkSearch,
+  formatSearchCheck,
+  searchCheckFailed,
+} from "./api/search-check.js";
 import { canonicalJson } from "./build/json.js";
 import { formatBuildReport, renderBuildGallery } from "./build/report.js";
 import { buildSet, type SetBuildReport, writeSetData } from "./build/run.js";
@@ -92,7 +98,7 @@ import {
 import { countBases, enrichSets } from "./enrich/run.js";
 import { polzaChatClient } from "./eval/client.js";
 import { DEFAULT_MAX_RUB as JUDGE_MAX_RUB } from "./eval/config.js";
-import { readOverrides } from "./eval/golden.js";
+import { readOverrides, readQueries } from "./eval/golden.js";
 import { judgeEval, judgeStop } from "./eval/judge.js";
 import {
   baselineJson,
@@ -268,8 +274,14 @@ const USAGE = `Использование:
                                       для глаз: SVG с параметрами, CSS, пачка, ошибки
       --port=N                        порт (по умолчанию ${PREVIEW_PORT})
   pnpm api check                      проверить живой https://${API_HOST}: ответы сходятся со
-                                      статикой той же версии, повтор — из кэша, заголовки, сжатие
+                                      статикой той же версии, повтор — из кэша, заголовки, сжатие;
+                                      затем поиск /search (ADR-0049) — отдельно от pnpm cdn check
       --expect-build=…                ждать и проверять эту сборку (после выкладки в CI)
+  pnpm api bench                      скорость поиска: 100 запросов контрольной части эталона к
+                                      /search, холодный проход и повтор, не чаще 46 в минуту;
+                                      цель — 95% ответов не дольше 0,3 с (ADR-0040, ADR-0049);
+                                      страница .cache/reports/api/bench.html
+      --base=…                        другой адрес API: https://… или http://127.0.0.1:порт (превью)
   pnpm packages prepare [id…]         пакеты npm @iconavo-ui/icons-{набор} в ${NPM_OUT_DIR}/ (ADR-0026):
                                       данные, LICENSE, README, типы; версия — по реестру npm (только
                                       чтение, ключи не нужны); план для CI ${NPM_OUT_DIR}/plan.json;
@@ -370,6 +382,7 @@ let port = command === "api" ? PREVIEW_PORT : PAGE_PORT;
 let waitSeconds = 0;
 let planPath: string | undefined;
 let expectBuild: string | undefined;
+let benchBase: string | undefined;
 const modelKeys = new Set<string>();
 for (const flag of flags) {
   const eq = flag.indexOf("=");
@@ -438,6 +451,16 @@ for (const flag of flags) {
     Number(value) <= 65535
   ) {
     port = Number(value);
+    continue;
+  }
+  if (
+    command === "api" &&
+    name === "--base" &&
+    /^(https:\/\/[a-z0-9.-]+|http:\/\/127\.0\.0\.1:[0-9]{2,5})$/.test(
+      value ?? "",
+    )
+  ) {
+    benchBase = value;
     continue;
   }
   if (
@@ -1215,13 +1238,17 @@ try {
   } else if (command === "api") {
     const [sub, ...rest] = args;
     if (
-      (sub !== "build" && sub !== "preview" && sub !== "check") ||
+      (sub !== "build" &&
+        sub !== "preview" &&
+        sub !== "check" &&
+        sub !== "bench") ||
       rest.length > 0 ||
       (sub !== "preview" && flags.some((f) => f.startsWith("--port="))) ||
-      (sub !== "check" && expectBuild !== undefined)
+      (sub !== "check" && expectBuild !== undefined) ||
+      (sub !== "bench" && benchBase !== undefined)
     ) {
       usageError(
-        "pnpm api: нужна подкоманда build, preview [--port=N] или check [--expect-build=…].",
+        "pnpm api: нужна подкоманда build, preview [--port=N], check [--expect-build=…] или bench [--base=…].",
       );
     }
     if (sub === "build") {
@@ -1245,7 +1272,37 @@ try {
         log: (line) => console.log(`  ${line}`),
       });
       printApiCheck(report);
-      process.exit(apiCheckFailed(report) ? 1 : 0);
+      // Поиск — отдельно от раздачи (ADR-0049): pnpm cdn check его не запускает.
+      console.log(`\nПроверяю поиск https://${API_HOST}/search…`);
+      const search = await checkSearch({
+        log: (line) => console.log(`  ${line}`),
+      });
+      console.log("");
+      for (const line of formatSearchCheck(search)) console.log(line);
+      process.exit(apiCheckFailed(report) || searchCheckFailed(search) ? 1 : 0);
+    }
+    if (sub === "bench") {
+      const holdout = (await readQueries(queriesPath)).filter(
+        (q) => q.split === "holdout",
+      );
+      const base = benchBase ?? `https://${API_HOST}`;
+      console.log(
+        `Замер скорости поиска: ${holdout.length} запросов контрольной части к ${base}/search…`,
+      );
+      const report = await benchSearch({
+        base,
+        queries: holdout,
+        log: (line) => console.log(line),
+      });
+      console.log("");
+      for (const line of formatBench(report)) console.log(line);
+      const reportDir = join(reportsDir, "api");
+      await mkdir(reportDir, { recursive: true });
+      const htmlPath = join(reportDir, "bench.html");
+      await writeFile(htmlPath, renderBenchPage(report), "utf8");
+      console.log(`Отчёт: ${htmlPath}`);
+      // Замер — отчёт: код 1 только при ошибках запросов; цель видна в итоге.
+      process.exit(report.cold.some((s) => s.error) ? 1 : 0);
     }
     // Превью: раздача всегда от текущего data/ (без изменений — секунды), функция — свежая сборка.
     const cdn = await buildCdn(configs, { dataDir, outDir: distCdnDir });
@@ -1255,11 +1312,28 @@ try {
       );
       process.exit(1);
     }
+    // Поиск в превью — Meilisearch с ключом только для чтения и Polza из .env (ADR-0049).
+    const searchUrl = process.env[SEARCH_ENV.url]?.trim() ?? "";
+    const searchKey =
+      process.env[SEARCH_ENV.readKey]?.trim() ||
+      process.env[SEARCH_ENV.adminKey]?.trim() ||
+      "";
+    const polzaKey = process.env.POLZA_API_KEY?.trim() ?? "";
     const preview = await startApiPreview({
       root,
       outDir: distApiDir,
       cdnDir: distCdnDir,
       port,
+      ...(searchUrl !== "" && searchKey !== ""
+        ? {
+            search: {
+              url: searchUrl,
+              key: searchKey,
+              dir: join(root, ".cache", "search", "preview-bucket"),
+              ...(polzaKey === "" ? {} : { polzaKey }),
+            },
+          }
+        : {}),
     });
     console.log(
       `Превью edge API: http://127.0.0.1:${preview.port}/ — сборка ${preview.build}, данные из dist-cdn/. Остановить — Ctrl+C.`,

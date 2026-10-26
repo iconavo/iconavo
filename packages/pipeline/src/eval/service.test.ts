@@ -147,7 +147,10 @@ describe("сервис в замере", () => {
       SERVICE_KEY,
       SERVICE_TEXT_KEY,
     ]);
-    expect(partial.service?.ratio).toBe(SEMANTIC_RATIO);
+    // Подобрана по рабочей части, если её хватило; иначе — из настроек.
+    expect(partial.service?.ratio).toBe(
+      partial.service?.tuned?.alpha ?? SEMANTIC_RATIO,
+    );
   });
 
   it("с разметкой судьи доля смысла подбирается по рабочей части", async () => {

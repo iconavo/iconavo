@@ -27,7 +27,7 @@
     "search-index": "tsc -b && node --env-file-if-exists=.env packages/pipeline/dist/cli.js search-index",
     "cdn": "tsc -b && node --env-file-if-exists=.env packages/pipeline/dist/cli.js cdn",
     "packages": "tsc -b && node packages/pipeline/dist/cli.js packages",
-    "api": "tsc -b && node packages/pipeline/dist/cli.js api",
+    "api": "tsc -b && node --env-file-if-exists=.env packages/pipeline/dist/cli.js api",
     "check": "pnpm lint && pnpm typecheck && pnpm api build && pnpm test && pnpm size"
   },
   "devDependencies": {

@@ -48,8 +48,9 @@ jobs:
     if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-latest
     environment: search
-    # С запасом на первый запуск: ≈ 14 тыс. векторов иконок и ≈ 68 тыс. фраз через Polza.
-    timeout-minutes: 120
+    # С запасом на полную пересборку: ≈ 14 тыс. векторов иконок и ≈ 68 тыс. фраз через Polza — около
+    # двух часов (первый запуск 26 октября 2026); обычное обновление — минуты.
+    timeout-minutes: 180
     steps:
       - uses: actions/checkout@v7
         with:

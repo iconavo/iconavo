@@ -15,6 +15,19 @@ export default {
       cache: (caches as unknown as { default: EdgeCache }).default,
       build: BUILD,
       log: (message) => console.error(message),
+      search: {
+        ...(env.SEARCH ? { bucket: env.SEARCH } : {}),
+        ...(env.SEARCH_LIMIT ? { limiter: env.SEARCH_LIMIT } : {}),
+        ...(env.MEILISEARCH_URL && env.MEILISEARCH_SEARCH_KEY
+          ? {
+              meili: {
+                url: env.MEILISEARCH_URL,
+                key: env.MEILISEARCH_SEARCH_KEY,
+              },
+            }
+          : {}),
+        ...(env.POLZA_API_KEY ? { polzaKey: env.POLZA_API_KEY } : {}),
+      },
     });
     return handler(request, (promise) => ctx.waitUntil(promise));
   },

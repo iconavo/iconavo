@@ -1,6 +1,6 @@
 # Iconavo edge API
 
-Icon data, SVG and CSS from `https://api.iconavo.dev`, compatible with the [Iconify API](https://iconify.design/docs/api/) addresses. The API is public and free, with no key. It runs on Cloudflare Workers on top of the versioned static files of `cdn.iconavo.dev`.
+Icon data, SVG, CSS and semantic search from `https://api.iconavo.dev`, compatible with the [Iconify API](https://iconify.design/docs/api/) addresses. The API is public and free, with no key. It runs on Cloudflare Workers on top of the versioned static files of `cdn.iconavo.dev`.
 
 Icon names follow `set:icon`, for example `lucide:heart`. Both parts use lowercase Latin letters, digits and single hyphens.
 
@@ -64,6 +64,49 @@ Without parameters, the SVG is byte for byte the static file from `cdn.iconavo.d
 | `format` | `expanded` (default), `compact` or `compressed`. |
 | `download` | `1` sends the file as an attachment. |
 
+## Search: `/search?query=…`
+
+Hybrid search over all icon sets: words (names, tags, Russian and English synonyms) plus meaning (embeddings). It understands Russian and English and finds icons by what they show, not only by their names.
+
+```
+GET https://api.iconavo.dev/search?query=trash%20can&limit=4
+```
+
+```json
+{
+  "icons": ["lucide:trash", "tabler:trash", "ph:trash", "material-symbols:delete"],
+  "limit": 4,
+  "results": [
+    { "icon": "lucide:trash", "tones": [], "variants": [] },
+    { "icon": "ph:trash", "tones": [], "variants": ["trash-bold", "trash-duotone"] }
+  ],
+  "semantic": "full",
+  "start": 0,
+  "total": 4
+}
+```
+
+- **Iconify-compatible fields.** `icons`, `total`, `limit` and `start` work as on Iconify: `total` is the number of icons in this response, and if it equals `limit`, request the next page with `start`.
+- **`results`** groups each base icon with its style `variants` and Fluent Emoji skin `tones`. Variant and tone names are given without the set prefix.
+- **Exact names first.** A query that looks like an icon name (`house`, `lucide:house`) puts the matching icons first and marks them with `"exact": true`. With a `set:` prefix, only the exact match is limited to that set; the other results come from all sets (use `prefix` to filter them).
+- **`semantic`** says how complete the results are:
+  - `full` — words and meaning;
+  - `pending` — the meaning of a new query is still being computed: these are word matches only, not cached; repeat the request in about a second to get full results;
+  - `text` — the embedding model is unavailable right now: word matches only.
+
+| Parameter | Values |
+| --- | --- |
+| `query` | Required, up to 100 characters, in any language. |
+| `limit` | 1–96 results, 64 by default. |
+| `start` | Index of the first result; `start` + `limit` is at most 1000. |
+| `prefix`, `prefixes` | One icon set, or several separated by commas. |
+| `palette` | `1` — multicolor sets only, `0` — monochrome sets only. |
+| `license` | SPDX license ids separated by commas, for example `MIT,ISC`. |
+
+- **Rate limit.** At most 60 uncached searches per minute from one address (IPv6 — per /64 network); more gives 429 with `Retry-After: 60`. Cached responses are not counted.
+- **Caching.** Full results are cached for 5 minutes in browsers (`Cache-Control: public, max-age=300`); `pending` and `text` results are not cached. `X-Iconavo-Index` is the version of the search index.
+- **Privacy.** Queries are not logged and IP addresses are not stored.
+
 ## Errors
 
 Errors are short JSON with an HTTP status:
@@ -74,14 +117,15 @@ Errors are short JSON with an HTTP status:
 
 | Status | Codes |
 | --- | --- |
-| 400 | `icons_required`, `too_many_icons`, `duplicate_parameter`, `invalid_parameter`, `invalid_color`, `invalid_size`, `invalid_rotate`, `invalid_flip`, `invalid_mode`, `invalid_format` |
+| 400 | `icons_required`, `too_many_icons`, `duplicate_parameter`, `invalid_parameter`, `invalid_color`, `invalid_size`, `invalid_rotate`, `invalid_flip`, `invalid_mode`, `invalid_format`; search: `query_required`, `invalid_limit`, `invalid_start`, `invalid_prefix`, `invalid_license` |
 | 404 | `not_found` (unknown address), `set_not_found`, `icon_not_found` |
 | 405 | `method_not_allowed`: only `GET`, `HEAD` and `OPTIONS` are allowed |
-| 503 | `storage_unavailable`: retry later. The static files on `cdn.iconavo.dev` and `cdn2.iconavo.dev` keep working. |
+| 429 | `rate_limited`: too many searches, retry after a minute |
+| 503 | `storage_unavailable`: retry later. The static files on `cdn.iconavo.dev` and `cdn2.iconavo.dev` keep working. `search_unavailable`: the search service is down, retry later; icons keep working. |
 
 ## Differences from the Iconify API
 
-Invalid values are rejected with 400 instead of being silently ignored. For example, `rotate=90` means 180° on Iconify; here it is an error. Use `90deg` or `1` instead.
+Invalid values are rejected with 400 instead of being silently ignored. Search results group style variants into one result, and `/search` does not return the `collections` block yet. For example, `rotate=90` means 180° on Iconify; here it is an error. Use `90deg` or `1` instead.
 
 These are not supported:
 - custom CSS selectors, `pseudo` and `var`;
@@ -92,7 +136,7 @@ These are not supported:
 
 ## Caching and headers
 
-- Successful responses are cached for a week (`Cache-Control: public, max-age=604800`). Errors are cached for 5 minutes, outages not at all.
+- Successful responses are cached for a week (`Cache-Control: public, max-age=604800`), search results for 5 minutes. Errors are cached for 5 minutes, outages and rate limits not at all.
 - A new release of a set is served within a minute; the edge cache needs no purge.
 - `X-Iconavo-Version` is the data version of the set, `X-Iconavo-Build` is the API build, and `X-Cache` says `HIT` or `MISS`.
 - Every response allows any origin (`Access-Control-Allow-Origin: *`). SVG responses carry a strict `Content-Security-Policy`.

@@ -69,8 +69,48 @@ const SHOWN_HEADERS = [
   "cache-control",
   "x-cache",
   "x-iconavo-version",
+  "x-iconavo-index",
   "x-iconavo-build",
+  "server-timing",
 ];
+
+/** Поиск (ADR-0049): точное имя, русский запрос, префикс набора, фильтр и ошибка. */
+const SEARCHES: readonly [string, string][] = [
+  ["Точное имя", "/search?query=house&limit=8"],
+  [
+    "По-русски",
+    `/search?query=${encodeURIComponent("мусорное ведро")}&limit=8`,
+  ],
+  ["С набором", "/search?query=lucide:house&limit=4"],
+  [
+    "Фильтр: цветные наборы",
+    `/search?query=${encodeURIComponent("сердце")}&palette=1&limit=6`,
+  ],
+  ["Без query", "/search"],
+];
+
+const ICON = /^[a-z0-9-]+:[a-z0-9-]+$/;
+
+/** Картинки найденных иконок из ответа поиска — у той же функции. */
+function searchImages(base: string, body: string): string {
+  let icons: string[] = [];
+  try {
+    const data = JSON.parse(body) as { icons?: unknown };
+    if (Array.isArray(data.icons)) {
+      icons = data.icons.filter(
+        (i): i is string => typeof i === "string" && ICON.test(i),
+      );
+    }
+  } catch {
+    return "";
+  }
+  return icons
+    .map((icon) => {
+      const [set, name] = icon.split(":");
+      return `<img src="${esc(`${base}/${set}/${name}.svg`)}" title="${esc(icon)}" alt="">`;
+    })
+    .join("");
+}
 
 const STYLE = `
 .grid td, .grid th { text-align: center; vertical-align: middle; }
@@ -78,6 +118,7 @@ const STYLE = `
 .grid td.q { text-align: left; font-family: ui-monospace, monospace; font-size: 12px; white-space: nowrap; }
 .css-demo span { font-size: 44px; margin-right: 12px; vertical-align: middle; }
 .ex h4 code { font-weight: normal; }
+.found img { height: 32px; margin: 0 6px 6px 0; background: #fff; border: 1px solid var(--line); border-radius: 6px; padding: 4px; }
 `;
 
 const decode = (query: string) => {
@@ -147,6 +188,14 @@ export async function renderPreviewPage(
   for (const [title, path] of ERRORS) {
     errors.push(block(title, path, await example(source, path)));
   }
+  const searches = [];
+  for (const [title, path] of SEARCHES) {
+    const r = await example(source, path);
+    const images = searchImages(base, r.body);
+    searches.push(
+      `${images === "" ? "" : `<p class="found">${images}</p>`}${block(title, path, r)}`,
+    );
+  }
   const same =
     first.status === "200" && first.body === second.body
       ? '<span class="ok">да</span>'
@@ -185,6 +234,10 @@ ${block("CSS", "/lucide.css?icons=heart,home", css)}
 <p>Те же имена в другом порядке — побайтно тот же ответ: ${same}. Второй запрос — из кэша (x-cache: HIT).</p>
 ${block("Первый запрос", BATCH[0] as string, first)}
 ${block("Другой порядок", BATCH[1] as string, second)}
+
+<h2>Поиск</h2>
+<p class="muted">Ответ совместим с Iconify (icons, total, limit, start), плюс results — карточки с вариантами — и semantic: full — слова и смысл, pending — смысл ещё считается (повторите запрос), text — только слова. Нет ключей Meilisearch в .env — 503.</p>
+${searches.join("\n")}
 
 <h2>Ошибки</h2>
 ${errors.join("\n")}

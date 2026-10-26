@@ -1,5 +1,5 @@
 // Обработчик edge API (ADR-0024): маршрут → параметры → манифест → кэш дата-центра → файлы имён из
-// R2 → ответ. Новый выпуск набора или новая сборка дают новые ключи кэша, сбрасывать ничего не нужно
+// R2 → ответ. Поиск /search (ADR-0049) — свой путь: search/handler.ts. Новый выпуск набора или новая сборка дают новые ключи кэша, сбрасывать ничего не нужно
 // (ADR-0023). В кэш попадают только ответы, которым понадобился R2. Ответ из кэша менять нельзя —
 // он оборачивается в новый Response; тело собирается строкой, и из неё делаются два ответа: в кэш и
 // клиенту.
@@ -20,6 +20,11 @@ import {
 } from "./http.js";
 import { manifestLoader, type SetEntry } from "./manifest.js";
 import { parseNames, searchable } from "./params.js";
+import {
+  createSearch,
+  SearchError,
+  type SearchOptions,
+} from "./search/handler.js";
 import { parseSvgOptions, svgBody, svgOptionsKey } from "./svg.js";
 
 export interface HandlerOptions {
@@ -30,6 +35,8 @@ export interface HandlerOptions {
   now?: () => number;
   /** Сообщения об ошибках — в журнал Workers; без адресов и IP (ADR-0028). */
   log?: (message: string) => void;
+  /** Поиск (ADR-0049); нет — /search отвечает 503. */
+  search?: SearchOptions;
 }
 
 export type Handler = (
@@ -73,7 +80,7 @@ function route(pathname: string): Route {
     throw new ApiError(
       404,
       "not_found",
-      "Unknown address: use /{set}.json?icons=a,b, /{set}/{icon}.svg or /{set}.css?icons=a,b",
+      "Unknown address: use /{set}.json?icons=a,b, /{set}/{icon}.svg, /{set}.css?icons=a,b or /search?query=…",
     );
   }
   if (!isValidNamePart(set)) throw setNotFound(set);
@@ -138,6 +145,10 @@ export function createHandler(options: HandlerOptions): Handler {
   const now = options.now ?? (() => Date.now());
   const log = options.log ?? (() => {});
   const manifest = manifestLoader(options.bucket, now, log);
+  const search = createSearch(
+    { cache: options.cache, build: options.build, manifest, now, log },
+    options.search ?? {},
+  );
   return async (request, waitUntil) => {
     const head = request.method === "HEAD";
     try {
@@ -150,6 +161,9 @@ export function createHandler(options: HandlerOptions): Handler {
         );
       }
       const url = new URL(request.url);
+      if (url.pathname === "/search") {
+        return await search(request, url, waitUntil, head);
+      }
       const plan = planFor(route(url.pathname), url.searchParams);
       const entry = (await manifest()).get(plan.set);
       if (entry === undefined) throw setNotFound(plan.set);
@@ -197,7 +211,28 @@ export function createHandler(options: HandlerOptions): Handler {
       }
       return respond(body, 200, { ...headers, "x-cache": "MISS" }, head);
     } catch (e) {
-      if (e instanceof ApiError) return errorResponse(e, head);
+      if (e instanceof ApiError) {
+        // Лимит частоты — ждать минуту; браузеру отказ не запоминать.
+        return errorResponse(
+          e,
+          head,
+          e.status === 429
+            ? { "cache-control": "no-store", "retry-after": "60" }
+            : {},
+        );
+      }
+      if (e instanceof SearchError) {
+        log(`поиск: ${e.message}`);
+        return errorResponse(
+          new ApiError(
+            503,
+            "search_unavailable",
+            "Search is temporarily unavailable, retry later",
+          ),
+          head,
+          { "retry-after": "30" },
+        );
+      }
       if (e instanceof StorageError) {
         log(`R2: ${e.message}`);
         return errorResponse(

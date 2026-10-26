@@ -62,12 +62,19 @@ describe("buildApi", () => {
     ).toMatchObject({ build: first.build, bytes: first.bytes });
   });
 
-  it("metadata: модуль, дата совместимости, бакет раздачи, журнал без запросов", () => {
+  it("metadata: модуль, дата совместимости, бакеты раздачи и поиска, лимит частоты, журнал без запросов", () => {
     expect(workerMetadata()).toEqual({
       main_module: "worker.js",
       compatibility_date: "2026-10-01",
       bindings: [
         { type: "r2_bucket", name: "CDN", bucket_name: "iconavo-cdn" },
+        { type: "r2_bucket", name: "SEARCH", bucket_name: "iconavo-search" },
+        {
+          type: "ratelimit",
+          name: "SEARCH_LIMIT",
+          namespace_id: "1001",
+          simple: { limit: 60, period: 60 },
+        },
       ],
       observability: {
         enabled: true,

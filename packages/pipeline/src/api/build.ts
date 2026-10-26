@@ -9,15 +9,20 @@ import { createHash } from "node:crypto";
 import { mkdir } from "node:fs/promises";
 import { join } from "node:path";
 import { gzipSync } from "node:zlib";
+import { SEARCH_RATE } from "@iconavo-ui/search";
 import { canonicalJson, type Json } from "../build/json.js";
 import { writeIfChanged } from "../cdn/write.js";
+import { SEARCH_BUCKET } from "../meili/config.js";
 import {
   BUILD_FILE,
   BUILD_ID_LENGTH,
   BUILD_PLACEHOLDER,
   COMPATIBILITY_DATE,
+  LIMIT_BINDING,
+  LIMIT_NAMESPACE,
   METADATA_FILE,
   R2_BINDING,
+  SEARCH_BINDING,
   WORKER_BUCKET,
   WORKER_ENTRY,
   WORKER_FILE,
@@ -38,8 +43,9 @@ export interface ApiBuildOptions {
 }
 
 /**
- * metadata загрузки функции: модуль, дата совместимости, привязка бакета раздачи. Журналы — только
- * наши сообщения об ошибках, без журнала запросов с IP (ADR-0028).
+ * metadata загрузки функции: модуль, дата совместимости, привязки бакета раздачи, закрытого бакета
+ * поиска и лимита частоты (ADR-0049). Секреты поиска сюда не пишутся: их вписывает выкладка. Журналы —
+ * только наши сообщения об ошибках, без журнала запросов с IP (ADR-0028).
  */
 export function workerMetadata(): Json {
   return {
@@ -47,6 +53,13 @@ export function workerMetadata(): Json {
     compatibility_date: COMPATIBILITY_DATE,
     bindings: [
       { type: "r2_bucket", name: R2_BINDING, bucket_name: WORKER_BUCKET },
+      { type: "r2_bucket", name: SEARCH_BINDING, bucket_name: SEARCH_BUCKET },
+      {
+        type: "ratelimit",
+        name: LIMIT_BINDING,
+        namespace_id: LIMIT_NAMESPACE,
+        simple: { limit: SEARCH_RATE.limit, period: SEARCH_RATE.period },
+      },
     ],
     observability: {
       enabled: true,
