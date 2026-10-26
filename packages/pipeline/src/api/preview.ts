@@ -35,7 +35,10 @@ export function diskBucket(dir: string) {
       const data = await fileIn(dir, key);
       if (data === null) return null;
       const text = Buffer.from(data).toString("utf8");
-      return { text: async () => text };
+      return {
+        text: async () => text,
+        arrayBuffer: async () => data.slice().buffer as ArrayBuffer,
+      };
     },
   };
 }
@@ -83,6 +86,11 @@ export interface ApiPreviewOptions {
   cdnDir: string;
   /** 0 — любой свободный. */
   port: number;
+  /**
+   * Поиск (ADR-0049): Meilisearch с ключом только для чтения и Polza из .env; бакет поиска — папка на
+   * диске (нет — версии индекса и векторов фраз нет, вектор каждого запроса считает Polza).
+   */
+  search?: { url: string; key: string; polzaKey?: string; dir: string };
   log?: (line: string) => void;
 }
 
@@ -122,7 +130,19 @@ export async function startApiPreview(
       pathToFileURL(join(o.outDir, WORKER_FILE)).href
     )) as WorkerModule
   ).default;
-  const env = { CDN: diskBucket(o.cdnDir) };
+  const env = {
+    CDN: diskBucket(o.cdnDir),
+    ...(o.search
+      ? {
+          SEARCH: diskBucket(o.search.dir),
+          // Лимита частоты в превью нет: сервер слушает только 127.0.0.1.
+          SEARCH_LIMIT: { limit: async () => ({ success: true }) },
+          MEILISEARCH_URL: o.search.url,
+          MEILISEARCH_SEARCH_KEY: o.search.key,
+          ...(o.search.polzaKey ? { POLZA_API_KEY: o.search.polzaKey } : {}),
+        }
+      : {}),
+  };
   const ctx = {
     waitUntil: (promise: Promise<unknown>) => {
       promise.catch(() => {});

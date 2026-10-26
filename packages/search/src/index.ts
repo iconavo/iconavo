@@ -10,6 +10,7 @@ export {
   MAX_TOTAL_HITS,
   QUERY_MAX_LENGTH,
   SEARCH_MODEL,
+  SEARCH_RATE,
   SEMANTIC_RATIO,
   STORE_KEYS,
 } from "./config.js";

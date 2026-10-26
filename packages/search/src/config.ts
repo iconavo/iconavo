@@ -29,6 +29,12 @@ export const SEMANTIC_RATIO = 0.5;
  */
 export const EXACT_LIMIT = 50;
 
+/**
+ * Лимит частоты поиска мимо кэша (ADR-0024): 60 запросов в минуту с одного адреса. Его ставит привязка
+ * функции (сборка, pnpm api build), а функция называет в ответе 429.
+ */
+export const SEARCH_RATE = { limit: 60, period: 60 } as const;
+
 /** Длина запроса в символах; длиннее — ошибка 400. */
 export const QUERY_MAX_LENGTH = 100;
 

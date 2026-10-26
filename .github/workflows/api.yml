@@ -12,6 +12,10 @@ name: Edge API
 # аккаунта Cloudflare. Функцию iconavo-api, домен api.iconavo.dev и выключенный workers.dev владелец
 # настроил в панели один раз (ADR-0024). Откат — откат PR: запуск от main выложит прежнюю сборку.
 # Что функция собирается, на каждом PR проверяет CI; PR с правкой этого файла — только показ.
+# Поиск /search (ADR-0049): секреты MEILISEARCH_URL, MEILISEARCH_SEARCH_KEY и POLZA_API_KEY окружения api
+# «Выкладка» вписывает в metadata при загрузке (jq читает их из окружения, в аргументы и артефакты они
+# не попадают); нет секрета — выкладка красная. Сменили ключ — ручной запуск с «выложить заново».
+# «Проверка» — и поиск; ручной запуск с «замер скорости» — ещё pnpm api bench.
 
 on:
   push:
@@ -19,6 +23,7 @@ on:
     paths:
       - "apps/api/**"
       - "packages/core/**"
+      - "packages/search/**"
       - "packages/pipeline/src/api/**"
       - "pnpm-lock.yaml"
       - ".github/workflows/api.yml"
@@ -30,6 +35,14 @@ on:
     inputs:
       dry_run:
         description: Только собрать и показать, ничего не выкладывать
+        type: boolean
+        default: false
+      force:
+        description: Выложить заново, даже если эта сборка уже отвечает (после смены ключей)
+        type: boolean
+        default: false
+      bench:
+        description: После проверки — замер скорости поиска (pnpm api bench)
         type: boolean
         default: false
 
@@ -77,7 +90,7 @@ jobs:
           live=false
           if [ "$GITHUB_REF" = refs/heads/main ] && [ "$EVENT" != pull_request ] && [ "$DRY_RUN" != true ]; then
             git fetch --quiet --no-tags --depth=1 origin "+refs/heads/main:refs/remotes/origin/main"
-            if git diff --quiet origin/main HEAD -- apps/api/ packages/core/ packages/pipeline/src/api/ pnpm-lock.yaml .github/workflows/api.yml; then
+            if git diff --quiet origin/main HEAD -- apps/api/ packages/core/ packages/search/ packages/pipeline/src/api/ pnpm-lock.yaml .github/workflows/api.yml; then
               live=true
             else
               echo "::warning::main ушёл вперёд — этот запуск только показывает; выкладывает запуск от свежего main."
@@ -94,9 +107,10 @@ jobs:
         id: deployed
         env:
           BUILD: ${{ steps.build.outputs.build }}
+          FORCE: ${{ inputs.force == true }}
         run: |
           current=$(curl -sS --max-time 30 -o /dev/null -D - "https://api.iconavo.dev/lucide/heart.svg" | tr -d '\r' | awk -F': ' 'tolower($1) == "x-iconavo-build" { print $2 }' || true)
-          if [ "$current" = "$BUILD" ]; then
+          if [ "$current" = "$BUILD" ] && [ "$FORCE" != true ]; then
             echo "Сборка $BUILD уже на api.iconavo.dev — выкладывать нечего."
             echo "deploy=false" >> "$GITHUB_OUTPUT"
           else
@@ -134,21 +148,37 @@ jobs:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           ACCOUNT_ID: ${{ secrets.R2_ACCOUNT_ID }}
           BUILD: ${{ needs.build.outputs.build }}
+          MEILISEARCH_URL: ${{ secrets.MEILISEARCH_URL }}
+          MEILISEARCH_SEARCH_KEY: ${{ secrets.MEILISEARCH_SEARCH_KEY }}
+          POLZA_API_KEY: ${{ secrets.POLZA_API_KEY }}
         run: |
           if [ -z "$CLOUDFLARE_API_TOKEN" ] || [ -z "$ACCOUNT_ID" ]; then
             echo "::error::Нет секрета CLOUDFLARE_API_TOKEN окружения api или R2_ACCOUNT_ID (ADR-0024)"
             exit 1
           fi
+          for name in MEILISEARCH_URL MEILISEARCH_SEARCH_KEY POLZA_API_KEY; do
+            if [ -z "${!name}" ]; then
+              echo "::error::Нет секрета $name окружения api — поиск /search без него не работает (ADR-0049)"
+              exit 1
+            fi
+          done
+          # Секреты поиска — в metadata при загрузке: jq читает их из окружения ($ENV), файл — во временной
+          # папке задачи, в артефакты он не попадает.
+          jq '.bindings += [
+            {type: "secret_text", name: "MEILISEARCH_URL", text: $ENV.MEILISEARCH_URL},
+            {type: "secret_text", name: "MEILISEARCH_SEARCH_KEY", text: $ENV.MEILISEARCH_SEARCH_KEY},
+            {type: "secret_text", name: "POLZA_API_KEY", text: $ENV.POLZA_API_KEY}
+          ]' dist-api/metadata.json > "$RUNNER_TEMP/metadata.json"
           if ! [[ $ACCOUNT_ID =~ ^[0-9a-f]{32}$ ]]; then
             echo "::error::R2_ACCOUNT_ID — не 32 шестнадцатеричных знака"
             exit 1
           fi
-          # Загрузка сразу выкладывает новую версию функции; модуль, дата совместимости и привязка R2 —
-          # из metadata.json. Домен и выключенный workers.dev остаются как настроены в панели.
+          # Загрузка сразу выкладывает новую версию функции; модуль, дата совместимости, привязки R2 и
+          # лимита частоты — из metadata.json. Домен и выключенный workers.dev остаются как в панели.
           code=$(curl -sS --max-time 120 --retry 3 -o "$RUNNER_TEMP/deploy.json" -w "%{http_code}" \
             -X PUT "https://api.cloudflare.com/client/v4/accounts/$ACCOUNT_ID/workers/scripts/iconavo-api" \
             -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
-            -F "metadata=@dist-api/metadata.json;type=application/json" \
+            -F "metadata=@$RUNNER_TEMP/metadata.json;type=application/json" \
             -F "worker.js=@dist-api/worker.js;type=application/javascript+module" || echo 000)
           if [ "$code" != 200 ] || ! jq -e '.success == true' "$RUNNER_TEMP/deploy.json" > /dev/null 2>&1; then
             echo "::error::Cloudflare ответил $code: $(jq -c '.errors // .' "$RUNNER_TEMP/deploy.json" 2> /dev/null | head -c 1000)"
@@ -180,3 +210,42 @@ jobs:
         env:
           BUILD: ${{ needs.build.outputs.build }}
         run: pnpm api check --expect-build="$BUILD"
+
+  # Замер скорости поиска (ADR-0049, ADR-0040) — только по ручному запуску: 100 запросов контрольной
+  # части эталона, не чаще 46 в минуту. Отчёт — артефакт bench.html.
+  bench:
+    name: Замер скорости поиска
+    needs: [build, check]
+    if: ${{ !cancelled() && inputs.bench == true && needs.check.result == 'success' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Замерить скорость /search
+        run: pnpm api bench
+      - name: Отчёт — вне .cache
+        id: pages
+        if: always()
+        run: |
+          pages="$RUNNER_TEMP/pages"
+          mkdir -p "$pages"
+          cp .cache/reports/api/bench.html "$pages/bench.html" 2> /dev/null || true
+          echo "pages=$pages" >> "$GITHUB_OUTPUT"
+      - name: Отчёт — скорость
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: bench.html
+          path: ${{ steps.pages.outputs.pages }}/bench.html
+          archive: false
+          if-no-files-found: ignore

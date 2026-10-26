@@ -1,5 +1,6 @@
 // Подделки для тестов функции: R2 из словаря, строгий кэш — только GET, а ответ из кэша менять
-// нельзя, как в workerd, — и файлы имён в формате статики (pnpm cdn build, ADR-0022).
+// нельзя, как в workerd, — и файлы имён в формате статики (pnpm cdn build, ADR-0022). Для поиска
+// (ADR-0049) — Meilisearch и Polza за подменным fetch и лимит частоты.
 
 import type { IconifyAlias, IconifyIcon } from "@iconavo-ui/core";
 import type { Bucket, EdgeCache } from "./env.js";
@@ -34,13 +35,15 @@ export function manifestText(sets: Record<string, string>): string {
 }
 
 export interface FakeBucket extends Bucket {
-  files: Map<string, string>;
+  files: Map<string, string | Uint8Array>;
   reads: string[];
   /** Ключи, на которых R2 «падает»; «*» — на всех. */
   failing: Set<string>;
 }
 
-export function fakeBucket(files: Record<string, string>): FakeBucket {
+export function fakeBucket(
+  files: Record<string, string | Uint8Array>,
+): FakeBucket {
   const map = new Map(Object.entries(files));
   const reads: string[] = [];
   const failing = new Set<string>();
@@ -51,8 +54,14 @@ export function fakeBucket(files: Record<string, string>): FakeBucket {
     async get(key) {
       reads.push(key);
       if (failing.has(key) || failing.has("*")) throw new Error("R2 down");
-      const text = map.get(key);
-      return text === undefined ? null : { text: async () => text };
+      const value = map.get(key);
+      if (value === undefined) return null;
+      const bytes =
+        typeof value === "string" ? new TextEncoder().encode(value) : value;
+      return {
+        text: async () => new TextDecoder().decode(bytes),
+        arrayBuffer: async () => bytes.slice().buffer as ArrayBuffer,
+      };
     },
   };
 }
@@ -60,7 +69,7 @@ export function fakeBucket(files: Record<string, string>): FakeBucket {
 interface Stored {
   status: number;
   headers: [string, string][];
-  body: string;
+  body: Uint8Array;
 }
 
 export interface FakeCache extends EdgeCache {
@@ -74,7 +83,7 @@ export function fakeCache(): FakeCache {
     async match(request) {
       const entry = stored.get(request.url);
       if (entry === undefined) return undefined;
-      const response = new Response(entry.body, {
+      const response = new Response(entry.body.slice().buffer as ArrayBuffer, {
         status: entry.status,
         headers: entry.headers,
       });
@@ -99,7 +108,7 @@ export function fakeCache(): FakeCache {
       stored.set(request.url, {
         status: response.status,
         headers: [...response.headers],
-        body: await response.text(),
+        body: new Uint8Array(await response.arrayBuffer()),
       });
     },
   };
@@ -113,5 +122,100 @@ export function waiter() {
       pending.push(promise);
     },
     flush: () => Promise.all(pending),
+  };
+}
+
+/** Карточка подменного индекса: имена для точного совпадения и слова для поиска. */
+export interface FakeDoc {
+  icon: string;
+  names: string[];
+  words: string[];
+  set: string;
+}
+
+export interface FakeSearchOptions {
+  docs: FakeDoc[];
+  /** Вектор Polza для текста; ошибка — отказ, обещание без конца — «не успела». */
+  polza?: (text: string) => Promise<number[]>;
+  /** Meilisearch отвечает этим кодом. */
+  meiliStatus?: number;
+}
+
+export const MEILI_URL = "https://ms-test.fra.meilisearch.io";
+
+/**
+ * fetch для Meilisearch и Polza. Meilisearch понимает фильтры общего модуля поиска (names, NOT names,
+ * set IN); слова — по вхождению; с вектором — ещё и все остальные карточки, как смысловая часть.
+ */
+export function fakeSearchFetch(options: FakeSearchOptions) {
+  const meili: { queries: Record<string, unknown>[] }[] = [];
+  const polza: { input: string[]; dimensions?: number }[] = [];
+  const fn = (async (input: RequestInfo | URL, init?: RequestInit) => {
+    const url = String(input);
+    const body = JSON.parse(String(init?.body ?? "{}"));
+    if (url === `${MEILI_URL}/multi-search`) {
+      meili.push(body);
+      if (options.meiliStatus !== undefined) {
+        return new Response("{}", { status: options.meiliStatus });
+      }
+      const results = (body.queries as Record<string, unknown>[]).map((q) => {
+        const filter = (q.filter as string[] | undefined) ?? [];
+        const words = String(q.q)
+          .split(" ")
+          .filter((w) => w !== "");
+        const ok = (d: FakeDoc) =>
+          filter.every((f) => {
+            let m = /^NOT names = "(.+)"$/.exec(f);
+            if (m) return !d.names.includes(m[1] as string);
+            m = /^names = "(.+)"$/.exec(f);
+            if (m) return d.names.includes(m[1] as string);
+            m = /^set IN [(.+)]$/.exec(f);
+            if (m) return (m[1] as string).includes(`"${d.set}"`);
+            return true;
+          });
+        const byWords = options.docs.filter(
+          (d) => ok(d) && words.some((w) => d.words.includes(w)),
+        );
+        const rest =
+          q.vector === undefined
+            ? []
+            : options.docs.filter((d) => ok(d) && !byWords.includes(d));
+        const found =
+          q.q === "" ? options.docs.filter(ok) : [...byWords, ...rest];
+        const offset = Number(q.offset ?? 0);
+        const limit = Number(q.limit ?? 20);
+        return {
+          hits: found
+            .slice(offset, offset + limit)
+            .map((d) => ({ icon: d.icon, variants: [], tones: [] })),
+        };
+      });
+      return Response.json({ results });
+    }
+    if (url === "https://polza.ai/api/v1/embeddings") {
+      polza.push(body);
+      const make = options.polza ?? (async () => [1, 0, 0]);
+      const values = await make(body.input[0]);
+      const embedding = Array.from(
+        { length: body.dimensions ?? 1024 },
+        (_, i) => values[i % values.length] ?? 0,
+      );
+      return Response.json({ data: [{ embedding }] });
+    }
+    throw new TypeError(`подменный fetch: нет адреса ${url}`);
+  }) as typeof fetch;
+  return { fn, meili, polza };
+}
+
+/** Лимит частоты: разрешено allowed запросов на ключ. */
+export function fakeLimiter(allowed: number) {
+  const counts = new Map<string, number>();
+  return {
+    counts,
+    async limit({ key }: { key: string }) {
+      const n = (counts.get(key) ?? 0) + 1;
+      counts.set(key, n);
+      return { success: n <= allowed };
+    },
   };
 }

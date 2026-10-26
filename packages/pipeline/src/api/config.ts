@@ -23,6 +23,19 @@ export const BUILD_ID_LENGTH = 8;
 /** Привязка R2 в функции: env.CDN — бакет раздачи, тот же, что за cdn.iconavo.dev. */
 export const R2_BINDING = "CDN";
 export const WORKER_BUCKET = R2_BUCKET;
+/**
+ * Поиск (ADR-0049): env.SEARCH — закрытый бакет iconavo-search (версия индекса, векторы фраз),
+ * env.SEARCH_LIMIT — лимит частоты; номер пространства лимита — свой у каждой привязки аккаунта.
+ * Секреты поиска вписывает выкладка (api.yml) из окружения GitHub api.
+ */
+export const SEARCH_BINDING = "SEARCH";
+export const LIMIT_BINDING = "SEARCH_LIMIT";
+export const LIMIT_NAMESPACE = "1001";
+export const SEARCH_SECRETS = [
+  "MEILISEARCH_URL",
+  "MEILISEARCH_SEARCH_KEY",
+  "POLZA_API_KEY",
+] as const;
 /** Дата совместимости рантайма Workers: закреплена, меняется осознанно. */
 export const COMPATIBILITY_DATE = "2026-10-01";
 /** Порт превью: у страницы поиска 4280. */

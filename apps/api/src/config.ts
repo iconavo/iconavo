@@ -44,11 +44,33 @@ export const TYPES = {
 /** Та же политика, что у SVG на статике: открытый напрямую файл не выполнит код. */
 export const SVG_CSP = "default-src 'none'; style-src 'unsafe-inline'; sandbox";
 
+/** Поиск /search (ADR-0049). */
+/** Версия индекса из бакета поиска — в памяти минуту, как манифест. */
+export const SEARCH_INDEX_TTL_MS = 60_000;
+/**
+ * Срок первого ответа от начала запроса: не успела смысловая часть — приходит выдача по словам с
+ * пометкой pending, а полная досчитывается в фоне (ADR-0040: 0,3 с для 95% поисков).
+ */
+export const SEARCH_DEADLINE_MS = 250;
+/** Ожидание Meilisearch и модели векторов в фоне. */
+export const MEILI_TIMEOUT_MS = 5_000;
+export const MODEL_TIMEOUT_MS = 10_000;
+/**
+ * Кэш ответа поиска: копия на CDN — неделя, её ключ меняется с версией индекса; браузеру — 5 минут:
+ * в адресе версии индекса нет. Неполная выдача (pending, text) не кэшируется нигде.
+ */
+export const SEARCH_CACHE_EDGE = "public, max-age=604800";
+export const SEARCH_CACHE_BROWSER = "public, max-age=300";
+/** Вектор нового запроса — в кэше дата-центра 30 дней. */
+export const QUERY_VECTOR_CACHE = "public, max-age=2592000";
+/** Векторы запросов — Polza (решение владельца 26 октября 2026). */
+export const POLZA_EMBEDDINGS_URL = "https://polza.ai/api/v1/embeddings";
+
 /** На каждом ответе, включая ошибки (ADR-0023). */
 export const COMMON_HEADERS: Readonly<Record<string, string>> = {
   "access-control-allow-origin": "*",
   "access-control-expose-headers":
-    "X-Cache, X-Iconavo-Build, X-Iconavo-Version",
+    "Server-Timing, X-Cache, X-Iconavo-Build, X-Iconavo-Index, X-Iconavo-Version",
   "cross-origin-resource-policy": "cross-origin",
   "x-content-type-options": "nosniff",
 };
