@@ -41,9 +41,9 @@ const FILES: Record<string, string> = {
 
 function setup(files: Record<string, string> = FILES, build = "test") {
   const bucket = fakeBucket(files);
-  const cache = fakeCache();
-  const logs: string[] = [];
   let time = 0;
+  const cache = fakeCache(() => time);
+  const logs: string[] = [];
   const handler = createHandler({
     bucket,
     cache,
@@ -124,9 +124,9 @@ describe("пачка /{набор}.json", () => {
       `{"aliases":{},"icons":{},"lastModified":${LAST_MODIFIED},"not_found":["_bad","nope"],"prefix":"demo"}`,
     );
     // «nope» прочитан из R2 — ответ в кэше; без чтений R2 кэша нет.
-    expect(cache.stored.size).toBe(1);
+    expect(cache.answers()).toBe(1);
     await get("/demo.json?icons=_only-bad");
-    expect(cache.stored.size).toBe(1);
+    expect(cache.answers()).toBe(1);
   });
 
   it("ошибки запроса — 400 с кодом", async () => {
@@ -275,7 +275,7 @@ describe("SVG /{набор}/{имя}.svg", () => {
       expect((await json(res)).error).toBe("icon_not_found");
       expect(res.headers.get("x-iconavo-version")).toBe(VERSION);
     }
-    expect(cache.stored.size).toBe(0);
+    expect(cache.answers()).toBe(0);
   });
 });
 
@@ -347,7 +347,7 @@ describe("кэш: версия набора и сборка — в ключе", 
     const res = await get("/demo.css?icons=heart,x&format=compressed");
     expect(res.headers.get("x-cache")).toBe("MISS");
     expect(await res.text()).not.toContain("\n  ");
-    expect(cache.stored.size).toBe(2);
+    expect(cache.answers()).toBe(2);
   });
 });
 
@@ -360,7 +360,7 @@ describe("сбои R2", () => {
     expect(res.headers.get("cache-control")).toBe("no-store");
     expect(res.headers.get("retry-after")).toBe("30");
     expect((await json(res)).error).toBe("storage_unavailable");
-    expect(cache.stored.size).toBe(0);
+    expect(cache.answers()).toBe(0);
     expect(logs.some((l) => l.startsWith("R2:"))).toBe(true);
     bucket.failing.clear();
     expect((await get("/demo/heart.svg")).status).toBe(200);

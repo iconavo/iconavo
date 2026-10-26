@@ -144,7 +144,7 @@ function planFor(r: Route, query: URLSearchParams): Plan {
 export function createHandler(options: HandlerOptions): Handler {
   const now = options.now ?? (() => Date.now());
   const log = options.log ?? (() => {});
-  const manifest = manifestLoader(options.bucket, now, log);
+  const manifest = manifestLoader(options.bucket, now, log, options.cache);
   const search = createSearch(
     { cache: options.cache, build: options.build, manifest, now, log },
     options.search ?? {},

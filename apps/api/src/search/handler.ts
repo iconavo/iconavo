@@ -2,10 +2,12 @@
 // 1. Готовый ответ в кэше дата-центра — сразу (ключ: сборка, версия индекса, параметры).
 // 2. Мимо кэша — лимит частоты с одного адреса.
 // 3. Вектор запроса в кэше дата-центра — сразу гибрид слов и смысла.
-// 4. Иначе одновременно: поиск по словам и вектор — фраза каталога из бакета, затем Polza. Смысл
-//    успел к сроку (≈ 0,25 с) — полная выдача; нет — выдача по словам с пометкой pending, а вектор и
-//    полная выдача досчитываются в фоне и ложатся в кэш: повторный запрос через секунду — полный.
-// 5. Polza недоступна — выдача по словам с пометкой text, не ошибка; Meilisearch недоступен — 503.
+// 4. Иначе одновременно: поиск по словам и фраза каталога из бакета. Фраза нашлась и гибрид успел к
+//    сроку (≈ 0,25 с) — полная выдача; фразы нет — выдача по словам с пометкой pending, как только
+//    слова готовы: модель к сроку не успеет. Вектор от Polza и полная выдача досчитываются в фоне и
+//    ложатся в кэш: повторный запрос через секунду — полный.
+// 5. Polza недавно не ответила или нет ключа — выдача по словам с пометкой text, не ошибка;
+//    Meilisearch недоступен — 503.
 // Неполная выдача не кэшируется нигде. В журнал не попадают ни запрос, ни адрес (ADR-0028).
 
 import {
@@ -23,6 +25,7 @@ import {
 import { cacheKey } from "../cache.js";
 import {
   MEILI_TIMEOUT_MS,
+  MODEL_RETRY_MS,
   MODEL_TIMEOUT_MS,
   SEARCH_CACHE_BROWSER,
   SEARCH_CACHE_EDGE,
@@ -124,7 +127,18 @@ export function createSearch(
 ): SearchRoute {
   const fetchFn = options.fetch ?? fetch;
   const deadlineMs = options.deadlineMs ?? SEARCH_DEADLINE_MS;
-  const indexVersion = indexVersionLoader(options.bucket, ctx.now, ctx.log);
+  const indexVersion = indexVersionLoader(
+    options.bucket,
+    ctx.now,
+    ctx.log,
+    ctx.cache,
+  );
+  /**
+   * Когда модель последний раз не дала вектор: MODEL_RETRY_MS после этого новые запросы без фразы
+   * в бакете сразу получают text и Polza не зовут — иначе при сбое модели они получали бы pending,
+   * и повтор ничего бы не дал. Своё у каждой копии функции.
+   */
+  let modelFailedAt: number | undefined;
 
   return async (request, url, waitUntil, head) => {
     const started = ctx.now();
@@ -134,10 +148,12 @@ export function createSearch(
         `${name};${desc === undefined ? "" : `desc="${desc}";`}dur=${Math.round(ctx.now() - from)}`,
       );
     };
+    // Манифест и версия индекса — одновременно: у холодной копии функции это два чтения хранилища.
+    const indexStarted = ctx.now();
+    const versionP = indexVersion();
     const manifest = await ctx.manifest();
     const p = parseSearchParams(url.searchParams, (id) => manifest.has(id));
-    const indexStarted = ctx.now();
-    const version = await indexVersion();
+    const version = await versionP;
     mark("index", indexStarted);
     const meta = { "x-iconavo-build": ctx.build, "x-iconavo-index": version };
     const key = cacheKey(ctx.build, version, "/search", searchCacheParams(p));
@@ -245,20 +261,30 @@ export function createSearch(
       return finish(lists, "full");
     }
 
-    // Слова — сразу; вектор — фраза каталога из бакета, затем Polza.
+    // Слова — сразу; вектор — фраза каталога из бакета. Фразы нет — вектор считает модель, а это
+    // секунда и больше: к сроку он не успеет, поэтому слова уходят, как только готовы, а модель
+    // и полная выдача — в фоне (замер скорости 26 октября 2026).
     const textStarted = ctx.now();
     const textP = run();
     textP.catch(() => {});
     const vectorStarted = ctx.now();
-    const vectorP: Promise<VectorResult> = (async () => {
-      if (p.text === "") return { error: "нет текста запроса" };
+    const storedP: Promise<Float32Array | undefined> = (async () => {
+      if (p.text === "") return undefined;
       try {
-        const stored = await storedVector(options.bucket, hash);
-        if (stored) return { vector: stored, source: "store" };
+        return await storedVector(options.bucket, hash);
       } catch (e) {
         ctx.log(`вектор фразы не прочитан: ${(e as Error).message}`);
+        return undefined;
       }
-      if (!options.polzaKey) return { error: "нет ключа Polza" };
+    })();
+    const modelDown = () =>
+      modelFailedAt !== undefined && ctx.now() - modelFailedAt < MODEL_RETRY_MS;
+    const vectorP: Promise<VectorResult> = (async () => {
+      const stored = await storedP;
+      if (stored) return { vector: stored, source: "store" };
+      if (p.text === "" || !options.polzaKey || modelDown()) {
+        return { error: "без модели" };
+      }
       try {
         const vector = await modelVector(
           fetchFn,
@@ -268,6 +294,8 @@ export function createSearch(
         );
         return { vector, source: "model" };
       } catch (e) {
+        modelFailedAt = ctx.now();
+        ctx.log(`вектор запроса: ${(e as Error).message}`);
         return { error: (e as Error).message };
       }
     })();
@@ -289,23 +317,27 @@ export function createSearch(
       return finish(lists, semantic);
     };
 
-    const got = await within(vectorP, remaining());
-    if (got === TIMEOUT) {
+    const stored = await within(storedP, remaining());
+    if (stored === TIMEOUT) {
       mark("vector", vectorStarted, "pending");
       background();
       return textOnly("pending");
     }
-    if ("error" in got) {
-      mark("vector", vectorStarted, "error");
-      ctx.log(`вектор запроса: ${got.error}`);
-      return textOnly("text");
+    if (stored === undefined) {
+      // Без ключа, без текста или пока модель не отвечает — только слова; иначе — модель в фоне.
+      if (p.text === "" || !options.polzaKey || modelDown()) {
+        mark("vector", vectorStarted, "error");
+        if (!options.polzaKey) ctx.log("вектор запроса: нет ключа Polza");
+        return textOnly("text");
+      }
+      mark("vector", vectorStarted, "pending");
+      background();
+      return textOnly("pending");
     }
-    mark("vector", vectorStarted, got.source);
-    if (got.source === "model" || got.source === "store") {
-      waitUntil(remember(got.vector, hash));
-    }
+    mark("vector", vectorStarted, "store");
+    waitUntil(remember(stored, hash));
     const fullStarted = ctx.now();
-    const fullP = run(got.vector);
+    const fullP = run(stored);
     fullP.catch(() => {});
     const full = await within(fullP, remaining()).catch(() => undefined);
     if (full === undefined) {
