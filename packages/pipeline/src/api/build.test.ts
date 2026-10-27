@@ -35,10 +35,12 @@ describe("bundleWorker", () => {
     expect(code).toContain("function iconToSvg(");
   });
 
-  it("из ядра — только сборка SVG: хранилища и загрузки пакета в функции нет", async () => {
+  it("из ядра — только сборка SVG: хранилища, загрузки и рендера пакета в функции нет", async () => {
     const code = await bundleWorker(ROOT);
     expect(code).not.toContain("iconavo.core");
     expect(code).not.toContain("function loadIcon(");
+    expect(code).not.toContain("function renderIcon(");
+    expect(code).not.toContain("function replaceIds(");
   });
 });
 

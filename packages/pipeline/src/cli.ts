@@ -287,7 +287,8 @@ const USAGE = `Использование:
   pnpm sandbox                        песочница ядра пакета на 127.0.0.1 (фаза 3): иконки грузит
                                       @iconavo-ui/core — пачки с api.iconavo.dev, при сбое по одной
                                       со статики (или всё с превью API); имитация сбоев хостов и
-                                      журнал запросов для сверки с DevTools
+                                      журнал запросов для сверки с DevTools; /render — сетка
+                                      вариантов рендера
       --port=N                        порт (по умолчанию ${SANDBOX_PORT})
   pnpm packages prepare [id…]       пакеты npm @iconavo-ui/icons-{набор} в ${NPM_OUT_DIR}/ (ADR-0026):
                                       данные, LICENSE, README, типы; версия — по реестру npm (только
@@ -1006,10 +1007,13 @@ try {
       clientFile: fileURLToPath(
         new URL("./sandbox/client.js", import.meta.url),
       ),
+      renderFile: fileURLToPath(
+        new URL("./sandbox/render-client.js", import.meta.url),
+      ),
       names,
     });
     console.log(
-      `Песочница ядра: http://127.0.0.1:${port}/ — наборов ${Object.keys(names).length}, иконки с ${LIVE_API} и запасных хостов статики. Остановить — Ctrl+C.`,
+      `Песочница ядра: http://127.0.0.1:${port}/ — наборов ${Object.keys(names).length}, иконки с ${LIVE_API} и запасных хостов статики; сетка вариантов рендера — http://127.0.0.1:${port}/render. Остановить — Ctrl+C.`,
     );
   } else if (command === "search-index") {
     if (args.length > 0) {

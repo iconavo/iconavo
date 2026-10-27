@@ -1,10 +1,11 @@
 import { describe, expect, it } from "vitest";
-import type { IconData } from "./icon.js";
+import { type IconData, iconData } from "./icon.js";
 import {
   calculateSize,
   iconToSvg,
   type SvgCustomisations,
   svgToString,
+  transformIcon,
 } from "./svg.js";
 
 // Ожидания — живые ответы api.iconify.design для fa-solid:home (холст 576×512), 23 октября 2026.
@@ -127,6 +128,28 @@ describe("iconToSvg: повороты и отражения, как у Iconify",
     expect(iconToSvg(HOME).body).toBe("<path/>");
     expect(iconToSvg(HOME, { rotate: 0, hFlip: false }).body).toBe("<path/>");
   });
+
+  it("поворот в данных и в настройках — две обёртки, как два прохода iconToSVG у Iconify", () => {
+    const turned = iconData(
+      {
+        prefix: "x",
+        width: 576,
+        height: 512,
+        icons: { home: { body: "<path/>" } },
+        aliases: { "home-down": { parent: "home", rotate: 1 } },
+      },
+      "home-down",
+    ) as IconData;
+    expect(svg(turned, { rotate: 1 })).toBe(
+      '<svg xmlns="http://www.w3.org/2000/svg" width="1.13em" height="1em" viewBox="0 0 576 512"><g transform="rotate(90 288 288)"><g transform="rotate(90 256 256)"><path/></g></g></svg>',
+    );
+  });
+});
+
+describe("transformIcon", () => {
+  it("без поворота и отражения — та же иконка", () => {
+    expect(transformIcon(HOME, 0, false, false)).toEqual(HOME);
+  });
 });
 
 describe("svgToString", () => {
@@ -135,5 +158,15 @@ describe("svgToString", () => {
       'xmlns:xlink="http://www.w3.org/1999/xlink"',
     );
     expect(svg(HOME)).not.toContain("xlink");
+  });
+
+  it("атрибуты — по порядку, значения экранируются", () => {
+    const parts = iconToSvg(HOME, { height: "24" });
+    parts.attributes.color = "red";
+    parts.attributes.role = "img";
+    parts.attributes["aria-label"] = 'Tom & "Jerry" <3';
+    expect(svgToString(parts)).toBe(
+      '<svg xmlns="http://www.w3.org/2000/svg" width="27" height="24" viewBox="0 0 576 512" color="red" role="img" aria-label="Tom &amp; &quot;Jerry&quot; &lt;3"><path/></svg>',
+    );
   });
 });

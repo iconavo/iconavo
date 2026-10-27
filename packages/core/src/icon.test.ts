@@ -71,20 +71,79 @@ describe("iconData", () => {
       ),
     ).toThrow(/loops/);
   });
+});
 
-  it("поворот или отражение в данных — ошибка, а не тихо неверная картинка", () => {
-    expect(() =>
-      iconData(
-        {
-          prefix: "x",
-          icons: { a: { body: "" } },
-          aliases: { b: { parent: "a", hFlip: true } },
-        },
-        "b",
-      ),
-    ).toThrow(/rotate or flip/);
-    expect(() =>
-      iconData({ prefix: "x", icons: { a: { body: "", rotate: 1 } } }, "a"),
-    ).toThrow(/rotate or flip/);
+describe("iconData: повороты и отражения в данных, как у Iconify", () => {
+  // Широкая иконка 32×16: поворот на 90° меняет стороны холста.
+  const TURNS: IconavoIconSet = {
+    prefix: "x",
+    width: 32,
+    height: 16,
+    icons: {
+      wide: { body: "<path/>" },
+      turned: { body: "<path/>", rotate: 1 },
+    },
+    aliases: {
+      down: { parent: "wide", rotate: 1 },
+      up: { parent: "down", rotate: 2 },
+      left: { parent: "wide", hFlip: true },
+      right: { parent: "left", hFlip: true },
+      both: { parent: "left", vFlip: true },
+      odd: { parent: "wide", rotate: 1.5 },
+      back: { parent: "turned", rotate: -1 },
+      full: { parent: "turned", rotate: 7 },
+      "down-tall": { parent: "down", height: 20 },
+    },
+  };
+  const WIDE = { body: "<path/>", left: 0, top: 0, width: 32, height: 16 };
+
+  it("поворот сразу в рисунке и холсте: стороны меняются местами", () => {
+    const down = {
+      body: '<g transform="rotate(90 8 8)"><path/></g>',
+      left: 0,
+      top: 0,
+      width: 16,
+      height: 32,
+    };
+    expect(iconData(TURNS, "down")).toEqual(down);
+    expect(iconData(TURNS, "turned")).toEqual(down);
+  });
+
+  it("повороты по цепочке складываются по модулю 4", () => {
+    expect(iconData(TURNS, "up")).toEqual({
+      body: '<g transform="rotate(-90 16 16)"><path/></g>',
+      left: 0,
+      top: 0,
+      width: 16,
+      height: 32,
+    });
+    expect(iconData(TURNS, "back")).toEqual(WIDE);
+    expect(iconData(TURNS, "full")).toEqual(WIDE);
+  });
+
+  it("отражения гасят друг друга; оба сразу — поворот на 180°", () => {
+    expect(iconData(TURNS, "left")).toEqual({
+      ...WIDE,
+      body: '<g transform="translate(32 0) scale(-1 1)"><path/></g>',
+    });
+    expect(iconData(TURNS, "right")).toEqual(WIDE);
+    expect(iconData(TURNS, "both")).toEqual({
+      ...WIDE,
+      body: '<g transform="rotate(180 16 8)"><path/></g>',
+    });
+  });
+
+  it("нецелый поворот в чужих данных не учитывается", () => {
+    expect(iconData(TURNS, "odd")).toEqual(WIDE);
+  });
+
+  it("размеры алиаса — до поворота: поворачивается уже его холст", () => {
+    expect(iconData(TURNS, "down-tall")).toEqual({
+      body: '<g transform="rotate(90 10 10)"><path/></g>',
+      left: 0,
+      top: 0,
+      width: 20,
+      height: 32,
+    });
   });
 });

@@ -1,6 +1,7 @@
-// Страница песочницы ядра (фаза 3, шаги 2 и 3). Скрипты — только свои: /sandbox.js и файлы ядра с
-// этого же сервера; import map разрешён по хэшу. Ядро ходит только на хосты режима (connect-src), а
-// имена иконок лежат в странице блоком JSON, чтобы в журнале и в DevTools были одни запросы ядра.
+// Страница песочницы ядра (фаза 3, шаги 2 и 3): загрузка и сеть; сетка вариантов рендера — на
+// странице /render (render-page.ts). Скрипты — только свои: /sandbox.js и файлы ядра с этого же
+// сервера; import map разрешён по хэшу. Ядро ходит только на хосты режима (connect-src), а имена
+// иконок лежат в странице блоком JSON, чтобы в журнале и в DevTools были одни запросы ядра.
 
 import { createHash } from "node:crypto";
 import {
@@ -79,8 +80,25 @@ export const sandboxCsp = (hosts: SandboxHost[]) =>
   `default-src 'none'; script-src 'self' '${IMPORT_MAP_HASH}'; connect-src ${[...new Set(hosts.map((h) => new URL(h.url).origin))].join(" ")}; img-src data:; style-src 'unsafe-inline'; base-uri 'none'; form-action 'none'`;
 
 /** JSON внутри <script>: «<» экранируется, и текст не закроет блок раньше времени. */
-const jsonInScript = (value: unknown) =>
+export const jsonInScript = (value: unknown) =>
   JSON.stringify(value).replace(/</g, "\\u003c");
+
+/** Ссылки между страницами песочницы с тем же хостом API; текущая — без ссылки. */
+export function sandboxNav(api: string, current: "/" | "/render"): string {
+  const query = api === LIVE_API ? "" : `?api=${encodeURIComponent(api)}`;
+  return `<p class="nav">${(
+    [
+      ["/", "Загрузка и сеть"],
+      ["/render", "Рендер"],
+    ] as const
+  )
+    .map(([path, label]) =>
+      path === current
+        ? `<b>${label}</b>`
+        : `<a href="${esc(`${path}${query}`)}">${label}</a>`,
+    )
+    .join(" · ")}</p>`;
+}
 
 /** Адрес хоста без схемы — для подписей. */
 const short = (url: string) => url.replace(/^https?:\/\//, "");
@@ -91,6 +109,7 @@ const PAUSES = Array.from({ length: RETRIES }, (_, i) => 2 ** i);
 const STYLE = `
 body { max-width: 1200px; }
 .hosts a { margin-right: 12px; } .hosts .current { font-weight: 600; text-decoration: none; }
+.nav { margin: 0 0 16px; }
 .controls { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center; margin: 16px 0 8px; }
 .controls label { display: flex; gap: 6px; align-items: center; }
 select, button { font: inherit; color: inherit; background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 6px 12px; }
@@ -163,6 +182,7 @@ export function renderSandboxPage(data: SandboxData): string {
 <script type="module" src="/sandbox.js"></script>
 </head>
 <body>
+${sandboxNav(data.api, "/")}
 <h1>Песочница ядра</h1>
 <p class="muted">Иконки грузит ядро <code>@iconavo-ui/core</code>. Иконки, запрошенные в один момент, уходят одним запросом на набор; адрес — не длиннее 500 символов, поэтому 100 иконок — это 3–5 запросов. Загруженная иконка и иконка, которой нет, в сеть больше не идут.</p>
 <p class="muted">Хосты — по очереди: пачками через <code>${esc(short(data.api))}</code>, затем по одной иконке со статики ${cdn.map((h) => `<code>${esc(short(h.url))}</code>`).join(" → ")}. Хост молчит ${ROTATE} мс — тот же запрос уходит и на следующий, побеждает первый ответ; попытка — не дольше ${seconds(TIMEOUT)}; неудавшаяся повторяется через ${pauses}, пока иконка на странице.</p>

@@ -7,8 +7,8 @@
 import { configure } from "@iconavo-ui/core";
 import {
   getIcon,
-  iconToSvg,
   loadIcon,
+  renderIcon,
   subscribeIcon,
   svgToString,
 } from "@iconavo-ui/core/internal";
@@ -259,9 +259,9 @@ function draw(div: HTMLDivElement, name: string): void {
     typeof state === "object" || state === "loading"
       ? name
       : `${name} — ${state === "missing" ? "нет такой иконки" : "не загрузилась после всех повторов"}`;
-  // Данные с нашего хоста очищены конвейером (ADR-0013); рендер ядра с ID и доступностью — шаг 4.
+  // Данные с нашего хоста очищены конвейером (ADR-0013); рендер ядра — со своими ID и aria-hidden.
   div.innerHTML =
-    typeof state === "object" ? svgToString(iconToSvg(state)) : "";
+    typeof state === "object" ? svgToString(renderIcon(state)) : "";
 }
 
 function render(names: string[]): void {
