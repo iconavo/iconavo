@@ -3,25 +3,43 @@ import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { IMPORT_MAP, IMPORT_MAP_HASH, sandboxHosts } from "./page.js";
+import { esc } from "../report/html.js";
+import { MANY_STYLE, manyImportMap } from "./many-page.js";
+import { cspHash, IMPORT_MAP, IMPORT_MAP_HASH, sandboxHosts } from "./page.js";
 import { VARIANTS } from "./render-page.js";
-import { apiHost, reply, type SandboxContext, visibleNames } from "./server.js";
+import {
+  apiHost,
+  reply,
+  type SandboxContext,
+  scriptDelay,
+  visibleNames,
+} from "./server.js";
+import { TAG_IMPORT_MAP, TAG_STYLE, UNDEFINED_RULE } from "./tag-page.js";
 
 let root: string;
 let ctx: SandboxContext;
 beforeEach(async () => {
   root = await mkdtemp(join(tmpdir(), "iconavo-sandbox-"));
   const coreDir = join(root, "core");
+  const iconDir = join(root, "icon");
   await mkdir(coreDir);
+  await mkdir(iconDir);
   await writeFile(join(coreDir, "index.js"), "export const core = 1;");
+  await writeFile(join(iconDir, "index.js"), "export const icon = 1;");
+  await writeFile(join(iconDir, "iconavo-icon.js"), "export const script = 1;");
   await writeFile(join(root, "client.js"), "console.log(1);");
   await writeFile(join(root, "render-client.js"), "console.log(2);");
+  await writeFile(join(root, "tag-client.js"), "console.log(3);");
+  await writeFile(join(root, "many-client.js"), "console.log(4);");
   await writeFile(join(root, "secret.js"), "не отдавать");
   ctx = {
     port: 4282,
     coreDir,
+    iconDir,
     clientFile: join(root, "client.js"),
     renderFile: join(root, "render-client.js"),
+    tagFile: join(root, "tag-client.js"),
+    manyFile: join(root, "many-client.js"),
     names: { lucide: ["heart", "house"], ph: ["x"] },
   };
 });
@@ -179,6 +197,91 @@ describe("сервер песочницы", () => {
     ]) {
       expect((await reply(ctx, "GET", path, HOST)).status, path).toBe(404);
     }
+  });
+
+  it("страницы тега и 5000 иконок: строгая CSP — хэши import map и стиля, Trusted Types, без атрибутов style", async () => {
+    const tag = body(await reply(ctx, "GET", "/tag", HOST));
+    const many = body(await reply(ctx, "GET", "/many", HOST));
+    const pages: [string, string, string, string][] = [
+      [tag, TAG_IMPORT_MAP, TAG_STYLE, "/tag.js"],
+      [many, manyImportMap(false), MANY_STYLE, "/many.js"],
+    ];
+    for (const [html, importMap, style, script] of pages) {
+      expect(html).toContain(
+        esc(
+          `default-src 'none'; script-src 'self' '${cspHash(importMap)}'; connect-src https://api.iconavo.dev https://cdn.iconavo.dev https://cdn2.iconavo.dev https://iconavo.b-cdn.net; img-src data:; style-src '${cspHash(style)}'; base-uri 'none'; form-action 'none'; require-trusted-types-for 'script'; trusted-types iconavo`,
+        ),
+      );
+      expect(html).toContain(`<style>${style}</style>`);
+      expect(html).toContain(`<script type="importmap">${importMap}</script>`);
+      expect(html).toContain(`<script type="module" src="${script}">`);
+      expect(style).toContain(UNDEFINED_RULE);
+      expect(html).not.toMatch(/\sstyle="/);
+    }
+    for (const id of [
+      "copies",
+      "placeholders",
+      "missing",
+      "label",
+      "inline",
+      "color",
+      "attributes",
+    ]) {
+      expect(tag).toContain(`<section id="${id}">`);
+    }
+    expect(JSON.parse(TAG_IMPORT_MAP).imports["@iconavo-ui/icon"]).toBe(
+      "/icon/index.js",
+    );
+    expect(many.match(/<iconavo-icon /g)).toHaveLength(3);
+    expect(many).toContain(
+      '<div class="c"><iconavo-icon icon="lucide:heart"></iconavo-icon><span>heart</span></div>',
+    );
+    expect(many).toContain('<a href="/many?slow-script=1">');
+  });
+
+  it("медленный скрипт и превью: адрес скрипта с задержкой, ссылки с тем же хостом API", async () => {
+    const preview = encodeURIComponent("http://127.0.0.1:4281");
+    const html = body(
+      await reply(ctx, "GET", `/many?api=${preview}&slow-script=1`, HOST),
+    );
+    expect(html).toContain(
+      `<script type="importmap">${manyImportMap(true)}</script>`,
+    );
+    expect(manyImportMap(true)).toContain("/icon/iconavo-icon.js?delay=2000");
+    expect(html).toContain("connect-src http://127.0.0.1:4281;");
+    expect(html).toContain(
+      `<a href="/many?api=${preview}">скрипт без задержки</a>`,
+    );
+    expect(html).toContain(`<a href="/tag?api=${preview}">Тег</a>`);
+  });
+
+  it("файлы пакета тега — из его dist; скрипт по ?delay= приходит позже, не дольше 10 с", async () => {
+    const script = await reply(ctx, "GET", "/icon/iconavo-icon.js", HOST);
+    expect(script.type).toBe("text/javascript; charset=utf-8");
+    expect(body(script)).toBe("export const script = 1;");
+    expect(body(await reply(ctx, "GET", "/icon/index.js", HOST))).toBe(
+      "export const icon = 1;",
+    );
+    expect(body(await reply(ctx, "GET", "/tag.js", HOST))).toBe(
+      "console.log(3);",
+    );
+    expect(body(await reply(ctx, "GET", "/many.js", HOST))).toBe(
+      "console.log(4);",
+    );
+    for (const path of [
+      "/icon/../secret.js",
+      "/icon/missing.js",
+      "/icon/Index.js",
+    ]) {
+      expect((await reply(ctx, "GET", path, HOST)).status, path).toBe(404);
+    }
+    expect(scriptDelay("2000")).toBe(2000);
+    expect(scriptDelay("99999")).toBe(10_000);
+    expect(scriptDelay("x")).toBe(0);
+    expect(scriptDelay(null)).toBe(0);
+    const start = Date.now();
+    await reply(ctx, "GET", "/icon/iconavo-icon.js?delay=60", HOST);
+    expect(Date.now() - start).toBeGreaterThanOrEqual(50);
   });
 
   it("видимые имена набора: без скрытых, по кодам символов", async () => {
