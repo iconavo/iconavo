@@ -28,23 +28,33 @@ export interface Store {
   icons: Map<string, IconState>;
   listeners: Map<string, Set<() => void>>;
   loaders: Map<string, Loader>;
+  /** Тексты предупреждений, уже показанных на странице: одно на текст (ADR-0031). */
+  warned: Set<string>;
 }
+
+/**
+ * Хосты по умолчанию (ADR-0030): пачки — через edge API, по одной иконке — со статики. Список попадает
+ * в CSP сайтов (connect-src), поэтому добавить в него адрес — сломать сайты со строгой CSP.
+ */
+export const DEFAULT_API = ["https://api.iconavo.dev"];
+export const DEFAULT_CDN = [
+  "https://cdn.iconavo.dev",
+  "https://cdn2.iconavo.dev",
+  "https://iconavo.b-cdn.net",
+];
 
 const KEY = Symbol.for("iconavo.core.1");
 
 const create = (): Store => ({
   settings: {
-    api: ["https://api.iconavo.dev"],
-    cdn: [
-      "https://cdn.iconavo.dev",
-      "https://cdn2.iconavo.dev",
-      "https://iconavo.b-cdn.net",
-    ],
+    api: [...DEFAULT_API],
+    cdn: [...DEFAULT_CDN],
     placeholder: "skeleton",
   },
   icons: new Map(),
   listeners: new Map(),
   loaders: new Map(),
+  warned: new Set(),
 });
 
 const shared = globalThis as unknown as Record<symbol, Store | undefined>;

@@ -234,7 +234,7 @@ Loads one set from your own source instead of the hosts: a server with another f
 
 - The core calls `loader` with the names it needs, in batches and without duplicates.
 - The result is added as with `addIcons`. Names missing from it, or a `null` result, count as missing icons.
-- A rejected promise counts as a failed host and is retried.
+- A rejected promise, or one that does not settle within 5 seconds, counts as a failed host and is retried.
 - `null` instead of a function removes the loader.
 
 ```js
@@ -268,7 +268,7 @@ Passes icons loaded on the server (`IconavoIconSet[]`, as returned by `loadIcons
 - Icons requested at the same moment (in one tick of the event loop) go out together: one request per set, with sorted names, split into several requests when the address would be longer than 500 characters or hold more than 100 names. For example, 100 Lucide icons take 4 requests. An icon that is already loading is not requested again.
 - The hosts are tried in order: `api.iconavo.dev` sends batches, then `cdn.iconavo.dev`, `cdn2.iconavo.dev` and `iconavo.b-cdn.net` send one icon per request, using their `manifest.json` to find the current version of a set.
 - If a host does not answer within 750 ms, the same request also goes to the next host, and the first answer wins. After 5 seconds without an answer, the attempt has failed.
-- A failed attempt is repeated after 1, 2 and 4 seconds, and the placeholder stays meanwhile. After the last attempt, the icon looks like a missing one, but it is requested again the next time it appears.
+- A failed attempt is repeated after 1, 2 and 4 seconds while the icon is on the page, and the placeholder stays meanwhile. After the last attempt, the icon looks like a missing one and the console shows one warning with the error, but the icon is requested again the next time it appears.
 
 ### Missing icons
 

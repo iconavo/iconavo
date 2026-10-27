@@ -3,7 +3,7 @@ import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { IMPORT_MAP, IMPORT_MAP_HASH } from "./page.js";
+import { IMPORT_MAP, IMPORT_MAP_HASH, sandboxHosts } from "./page.js";
 import { apiHost, reply, type SandboxContext, visibleNames } from "./server.js";
 
 let root: string;
@@ -40,7 +40,7 @@ describe("сервер песочницы", () => {
     expect((await reply(ctx, "GET", "/", "localhost:4282")).status).toBe(200);
   });
 
-  it("страница: CSP со своим хэшем import map и хостом API, имена — блоком JSON", async () => {
+  it("страница: CSP со своим хэшем import map и хостами ядра, имена — блоком JSON", async () => {
     const r = await reply(ctx, "GET", "/", HOST);
     expect(r.status).toBe(200);
     expect(r.type).toBe("text/html; charset=utf-8");
@@ -50,10 +50,46 @@ describe("сервер песочницы", () => {
     expect(html).toContain(
       `script-src &#39;self&#39; &#39;sha256-${hash}&#39;`,
     );
-    expect(html).toContain("connect-src https://api.iconavo.dev;");
+    expect(html).toContain(
+      "connect-src https://api.iconavo.dev https://cdn.iconavo.dev https://cdn2.iconavo.dev https://iconavo.b-cdn.net;",
+    );
     expect(html).toContain(`<script type="importmap">${IMPORT_MAP}</script>`);
     expect(html).toContain('"lucide":["heart","house"]');
     expect(html).toContain('<script type="module" src="/sandbox.js">');
+  });
+
+  it("условия сети: сценарии, хост за хостом в порядке ядра, иконки, которых нет", async () => {
+    const html = body(await reply(ctx, "GET", "/", HOST));
+    for (const preset of ["ok", "primary", "slow", "silent"]) {
+      expect(html).toContain(`data-preset="${preset}"`);
+    }
+    const hosts = [...html.matchAll(/data-host="([^"]+)"/g)].map((m) => m[1]);
+    expect(hosts).toEqual([
+      "https://api.iconavo.dev",
+      "https://cdn.iconavo.dev",
+      "https://cdn2.iconavo.dev",
+      "https://iconavo.b-cdn.net",
+    ]);
+    expect(html).toContain('<option value="slow">медленный (+2 с)</option>');
+    expect(html).toContain(
+      '"missing":["lucide:no-such-icon","nope:house","Lucide:House"]',
+    );
+    expect(html).toContain('id="missing"');
+    expect(html).toContain("Хост молчит 750 мс");
+    expect(html).toContain("повторяется через 1, 2 и 4 с");
+  });
+
+  it("хосты режима: живой — хосты ядра по умолчанию, превью — API и статика превью", () => {
+    expect(sandboxHosts("https://api.iconavo.dev")).toEqual([
+      { url: "https://api.iconavo.dev", kind: "api" },
+      { url: "https://cdn.iconavo.dev", kind: "cdn" },
+      { url: "https://cdn2.iconavo.dev", kind: "cdn" },
+      { url: "https://iconavo.b-cdn.net", kind: "cdn" },
+    ]);
+    expect(sandboxHosts("http://127.0.0.1:4281")).toEqual([
+      { url: "http://127.0.0.1:4281", kind: "api" },
+      { url: "http://127.0.0.1:4281/_static", kind: "cdn" },
+    ]);
   });
 
   it("хост API: живой или превью на 127.0.0.1, другое — 400", async () => {
@@ -70,6 +106,7 @@ describe("сервер песочницы", () => {
       HOST,
     );
     expect(body(local)).toContain("connect-src http://127.0.0.1:4281;");
+    expect(body(local)).toContain('data-host="http://127.0.0.1:4281/_static"');
     const bad = await reply(
       ctx,
       "GET",

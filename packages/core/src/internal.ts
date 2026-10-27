@@ -10,10 +10,23 @@ export {
   type Rotation,
 } from "./customise.js";
 export { ALIAS_CHAIN_LIMIT, type IconData, iconData } from "./icon.js";
-export { loadIcon, MAX_NAMES, MAX_URL } from "./load.js";
+export {
+  loadIcon,
+  MAX_NAMES,
+  MAX_URL,
+  RETRIES,
+  ROTATE,
+  TIMEOUT,
+} from "./load.js";
 export { isValidIconName, isValidNamePart } from "./name.js";
 export { cleanNumber, formatNumber } from "./number.js";
-export { getIcon, type IconState, subscribeIcon } from "./store.js";
+export {
+  DEFAULT_API,
+  DEFAULT_CDN,
+  getIcon,
+  type IconState,
+  subscribeIcon,
+} from "./store.js";
 export {
   calculateSize,
   iconToSvg,

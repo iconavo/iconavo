@@ -1,20 +1,62 @@
-import { afterEach, describe, expect, it, vi } from "vitest";
 import {
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  type MockInstance,
+  vi,
+} from "vitest";
+import {
+  type Behavior,
   type Core,
+  DEMO_VERSION,
   deferred,
   demoBatch,
+  demoHosts,
+  demoStatic,
   fakeFetch,
+  fakeNet,
+  fakeTime,
   freshCore,
+  hosts,
   idle,
+  later,
+  realTime,
+  wait,
+  warnings,
 } from "./fake.testing.js";
 import { batches, MAX_NAMES, MAX_URL } from "./load.js";
 
-afterEach(() => {
-  vi.unstubAllGlobals();
+let warn: MockInstance;
+beforeEach(() => {
+  fakeTime();
+  warn = warnings();
 });
+afterEach(realTime);
 
-const HOST = "https://api.iconavo.dev";
-const BASE = `${HOST}/demo.json?icons=`;
+const API = "https://api.iconavo.dev";
+const CDN = "https://cdn.iconavo.dev";
+const CDN2 = "https://cdn2.iconavo.dev";
+const BCDN = "https://iconavo.b-cdn.net";
+const BASE = `${API}/demo.json?icons=`;
+
+/** Адрес файла имени на хосте статики. */
+const file = (host: string, name: string) =>
+  `${host}/v/${DEMO_VERSION}/demo/${name}.json`;
+
+/** Все четыре наших хоста с одним поведением. */
+const all = (behavior: Behavior) =>
+  hosts({
+    "api.iconavo.dev": behavior,
+    "cdn.iconavo.dev": behavior,
+    "cdn2.iconavo.dev": behavior,
+    "iconavo.b-cdn.net": behavior,
+  });
+
+/** Рисунок поддельной статики: в нём хост, с которого пришла иконка. */
+const fromHost = (name: string, host: string) =>
+  `<path d="${name}" data-host="${new URL(host).host}"/>`;
 
 /** Имена из адреса запроса. */
 const namesOf = (url: string) =>
@@ -81,8 +123,8 @@ describe("пачки", () => {
     show(core, ["beta:b", "alpha:z", "beta:a", "alpha:y"]);
     await idle();
     expect(requests.sort()).toEqual([
-      `${HOST}/alpha.json?icons=y,z`,
-      `${HOST}/beta.json?icons=a,b`,
+      `${API}/alpha.json?icons=y,z`,
+      `${API}/beta.json?icons=a,b`,
     ]);
   });
 
@@ -207,36 +249,44 @@ describe("ответы хоста", () => {
     expect(requests).toEqual([`${BASE}alias-star`]);
   });
 
-  it("неизвестный набор: 404 и ответ 200 с телом 404, как у Iconify API, — «нет»", async () => {
-    fakeFetch((url) =>
-      url.pathname === "/iconify.json" ? Response.json(404) : demoBatch(url),
+  it("неизвестный набор: 404 и ответ 200 с телом 404, как у Iconify API, — «нет», статику не спрашивают", async () => {
+    const requests = fakeFetch((url) =>
+      url.pathname === "/iconify.json" ? Response.json(404) : demoHosts(url),
     );
     const core = await freshCore();
     show(core, ["nope:house", "iconify:house"]);
     await idle();
     expect(core.getIcon("nope:house")).toBe("missing");
     expect(core.getIcon("iconify:house")).toBe("missing");
+    expect(requests).toEqual([
+      `${API}/nope.json?icons=house`,
+      `${API}/iconify.json?icons=house`,
+    ]);
+    expect(vi.getTimerCount()).toBe(0);
   });
 
-  it("сбой — «ошибка», а новый показ запрашивает снова", async () => {
-    const failures: (() => Response | Promise<Response>)[] = [
-      () => new Response("oops", { status: 503 }),
-      () => Promise.reject(new TypeError("Failed to fetch")),
+  it("сбой у всех хостов — «ошибка», а новый показ запрашивает снова", async () => {
+    const failures: Behavior[] = [
+      503,
+      403,
+      "down",
       () => new Response("<html>", { status: 200 }),
       () => Response.json(null),
       () => Response.json({ prefix: "other", icons: {} }),
     ];
     for (const failure of failures) {
       let failing = true;
+      const broken = hosts({ "api.iconavo.dev": failure });
       const requests = fakeFetch((url) =>
-        failing ? failure() : demoBatch(url),
+        failing ? broken(url) : demoHosts(url),
       );
       const core = await freshCore();
-      show(core, ["demo:house"]);
+      core.configure({ cdn: [] });
+      core.loadIcon("demo:house");
       await idle();
       expect(core.getIcon("demo:house")).toBe("error");
       failing = false;
-      show(core, ["demo:house"]);
+      core.loadIcon("demo:house");
       await idle();
       expect(requests).toEqual([`${BASE}house`, `${BASE}house`]);
       expect(core.getIcon("demo:house")).toMatchObject({
@@ -258,7 +308,7 @@ describe("ответы хоста", () => {
     expect(core.getIcon("demo:house")).toMatchObject({ body: "<g/>" });
   });
 
-  it("свой хост: адрес без лишнего «/» в конце; пустой список — «ошибка» без запроса", async () => {
+  it("свой хост: адрес без лишнего «/» в конце; хостов нет совсем — «ошибка» без запроса", async () => {
     const requests = fakeFetch();
     const core = await freshCore();
     core.configure({ api: ["https://icons.example.com/api/"] });
@@ -267,11 +317,473 @@ describe("ответы хоста", () => {
     expect(requests).toEqual([
       "https://icons.example.com/api/demo.json?icons=house",
     ]);
-    core.configure({ api: [] });
+    core.configure({ api: [], cdn: [] });
     show(core, ["demo:heart"]);
     await idle();
     expect(requests).toHaveLength(1);
     expect(core.getIcon("demo:heart")).toBe("error");
+    expect(vi.getTimerCount()).toBe(0);
+    expect(warn).toHaveBeenCalledWith(
+      'Iconavo: icon "demo:heart" failed to load',
+      expect.objectContaining({ message: "No hosts" }),
+    );
+  });
+});
+
+describe("запасные хосты", () => {
+  it("edge API отказал — те же имена сразу со статики: манифест, затем файл на иконку", async () => {
+    const calls = fakeNet(hosts({ "api.iconavo.dev": "down" }));
+    const core = await freshCore();
+    show(core, ["demo:house", "demo:alias-star", "demo:missing-x"]);
+    await idle();
+    expect(calls.map((c) => c.url)).toEqual([
+      `${BASE}alias-star,house,missing-x`,
+      `${CDN}/manifest.json`,
+      file(CDN, "alias-star"),
+      file(CDN, "house"),
+      file(CDN, "missing-x"),
+    ]);
+    expect(calls.every((c) => c.at === 0)).toBe(true);
+    expect(core.getIcon("demo:house")).toMatchObject({
+      body: fromHost("house", CDN),
+      width: 24,
+      height: 24,
+    });
+    expect(core.getIcon("demo:alias-star")).toMatchObject({
+      body: fromHost("star", CDN),
+    });
+    expect(core.getIcon("demo:star")).toMatchObject({
+      body: fromHost("star", CDN),
+    });
+    expect(core.getIcon("demo:missing-x")).toBe("missing");
+    expect(vi.getTimerCount()).toBe(0);
+  });
+
+  it("edge API: 5xx, другой 4xx, не JSON, чужой набор — тоже сразу статика", async () => {
+    const failures: Behavior[] = [
+      503,
+      429,
+      () => new Response("<html>", { status: 200 }),
+      () => Response.json(null),
+      () => Response.json({ prefix: "other", icons: {} }),
+    ];
+    for (const failure of failures) {
+      const calls = fakeNet(hosts({ "api.iconavo.dev": failure }));
+      const core = await freshCore();
+      show(core, ["demo:house"]);
+      await idle();
+      expect(calls.map((c) => [c.url, c.at])).toEqual([
+        [`${BASE}house`, 0],
+        [`${CDN}/manifest.json`, 0],
+        [file(CDN, "house"), 0],
+      ]);
+      expect(core.getIcon("demo:house")).toMatchObject({
+        body: fromHost("house", CDN),
+      });
+      vi.unstubAllGlobals();
+    }
+  });
+
+  it("edge API молчит — в 750 мс тот же запрос уходит на статику; первый ответ побеждает, запрос к API отменён", async () => {
+    const calls = fakeNet(hosts({ "api.iconavo.dev": "silent" }));
+    const core = await freshCore();
+    show(core, ["demo:house"]);
+    await wait(749);
+    expect(calls.map((c) => c.url)).toEqual([`${BASE}house`]);
+    await wait(1);
+    expect(calls.map((c) => [c.url, c.at])).toEqual([
+      [`${BASE}house`, 0],
+      [`${CDN}/manifest.json`, 750],
+      [file(CDN, "house"), 750],
+    ]);
+    expect(calls[0]?.signal?.aborted).toBe(true);
+    expect(core.getIcon("demo:house")).toMatchObject({
+      body: fromHost("house", CDN),
+    });
+    expect(vi.getTimerCount()).toBe(0);
+  });
+
+  it("edge API ответил после начала статики — побеждает он, запросы статики отменены", async () => {
+    const calls = fakeNet(
+      hosts({
+        "api.iconavo.dev": later(1000),
+        "cdn.iconavo.dev": (url) =>
+          url.pathname === "/manifest.json"
+            ? demoStatic(url)
+            : new Promise<Response>(() => {}),
+      }),
+    );
+    const core = await freshCore();
+    show(core, ["demo:house"]);
+    await wait(1000);
+    expect(calls.map((c) => [c.url, c.at])).toEqual([
+      [`${BASE}house`, 0],
+      [`${CDN}/manifest.json`, 750],
+      [file(CDN, "house"), 750],
+    ]);
+    expect(core.getIcon("demo:house")).toMatchObject({
+      body: '<path d="house"/>',
+    });
+    expect(calls[2]?.signal?.aborted).toBe(true);
+    expect(vi.getTimerCount()).toBe(0);
+  });
+
+  it("статика ответила на часть иконок — остальные сразу идут на следующий хост", async () => {
+    const calls = fakeNet(
+      hosts({
+        "api.iconavo.dev": "down",
+        "cdn.iconavo.dev": (url) =>
+          url.pathname.endsWith("/house.json")
+            ? new Response("oops", { status: 503 })
+            : demoStatic(url),
+      }),
+    );
+    const core = await freshCore();
+    show(core, ["demo:heart", "demo:house"]);
+    await idle();
+    expect(calls.map((c) => c.url)).toEqual([
+      `${BASE}heart,house`,
+      `${CDN}/manifest.json`,
+      file(CDN, "heart"),
+      file(CDN, "house"),
+      `${CDN2}/manifest.json`,
+      file(CDN2, "house"),
+    ]);
+    expect(core.getIcon("demo:heart")).toMatchObject({
+      body: fromHost("heart", CDN),
+    });
+    expect(core.getIcon("demo:house")).toMatchObject({
+      body: fromHost("house", CDN2),
+    });
+  });
+
+  it("хосты молчат — следующий каждые 750 мс; через 5 с запрос отменён, повтор — через 1 с", async () => {
+    const calls = fakeNet(all("silent"));
+    const core = await freshCore();
+    show(core, ["demo:house"]);
+    await wait(4999);
+    expect(calls.map((c) => [c.url, c.at])).toEqual([
+      [`${BASE}house`, 0],
+      [`${CDN}/manifest.json`, 750],
+      [`${CDN2}/manifest.json`, 1500],
+      [`${BCDN}/manifest.json`, 2250],
+    ]);
+    expect(calls[0]?.signal?.aborted).toBe(false);
+    await wait(1);
+    expect(calls[0]?.signal?.aborted).toBe(true);
+    expect(core.getIcon("demo:house")).toBe("loading");
+    await wait(999);
+    expect(calls).toHaveLength(4);
+    await wait(1);
+    expect(calls.at(-1)).toMatchObject({ url: `${BASE}house`, at: 6000 });
+  });
+
+  it("куски — по самому длинному хосту api: на запасном адрес тоже не длиннее 500", async () => {
+    const short = "https://a.example";
+    const long = "https://icons.example.com/a-much-longer-path/to/the/api";
+    const calls = fakeNet(
+      hosts({ "a.example": "down", "icons.example.com": demoBatch }),
+    );
+    const core = await freshCore();
+    core.configure({ api: [short, long], cdn: [] });
+    const names = Array.from(
+      { length: 100 },
+      (_, i) => `icon-name-${1000 + i}`,
+    );
+    show(
+      core,
+      names.map((n) => `demo:${n}`),
+    );
+    await idle();
+    const of = (host: string) =>
+      calls.filter((c) => c.url.startsWith(`${host}/`)).map((c) => c.url);
+    expect(of(short)).toHaveLength(
+      batches(`${long}/demo.json?icons=`, names).length,
+    );
+    expect(of(long)).toHaveLength(of(short).length);
+    for (const url of of(long)) expect(url.length).toBeLessThanOrEqual(MAX_URL);
+    expect(core.getIcon("demo:icon-name-1099")).toMatchObject({
+      body: '<path d="icon-name-1099"/>',
+    });
+  });
+
+  it("addIcons во время попытки — следующий хост не спрашивают, пустых запросов нет", async () => {
+    const calls = fakeNet(hosts({ "api.iconavo.dev": "silent" }));
+    const core = await freshCore();
+    show(core, ["demo:heart", "demo:house"]);
+    await wait(500);
+    core.addIcons({
+      prefix: "demo",
+      icons: { heart: { body: "<g/>" }, house: { body: "<g/>" } },
+    });
+    await wait(250);
+    expect(calls.map((c) => c.url)).toEqual([`${BASE}heart,house`]);
+    expect(calls[0]?.signal?.aborted).toBe(true);
+    expect(vi.getTimerCount()).toBe(0);
+  });
+});
+
+describe("статика", () => {
+  it("манифест — один запрос на хост для всех кусков; не прочитался — снова в следующей попытке", async () => {
+    let fails = 1;
+    const calls = fakeNet(
+      hosts({
+        "api.iconavo.dev": "down",
+        "cdn.iconavo.dev": (url) =>
+          url.pathname === "/manifest.json" && fails-- > 0
+            ? later(10, () => new Response("oops", { status: 503 }))(url)
+            : demoStatic(url),
+      }),
+    );
+    const core = await freshCore();
+    const names = Array.from(
+      { length: 100 },
+      (_, i) => `icon-name-${1000 + i}`,
+    );
+    show(
+      core,
+      names.map((n) => `demo:${n}`),
+    );
+    await wait(10);
+    const count = (url: string) => calls.filter((c) => c.url === url).length;
+    expect(calls.filter((c) => c.url.startsWith(API))).toHaveLength(
+      batches(BASE, names).length,
+    );
+    expect(count(`${CDN}/manifest.json`)).toBe(1);
+    expect(count(`${CDN2}/manifest.json`)).toBe(1);
+    expect(calls.filter((c) => c.url.startsWith(`${CDN2}/v/`))).toHaveLength(
+      100,
+    );
+    show(core, ["demo:heart"]);
+    await idle();
+    expect(count(`${CDN}/manifest.json`)).toBe(2);
+    expect(core.getIcon("demo:heart")).toMatchObject({
+      body: fromHost("heart", CDN),
+    });
+    show(core, ["demo:house"]);
+    await idle();
+    expect(count(`${CDN}/manifest.json`)).toBe(2);
+  });
+
+  it("попытка кончилась, пока ждали манифест, — файлы не запрашиваются, манифест пригодится потом", async () => {
+    let apiDown = false;
+    const calls = fakeNet(
+      hosts({
+        "api.iconavo.dev": (url) =>
+          apiDown
+            ? Promise.reject(new TypeError("Failed to fetch"))
+            : later(1000)(url),
+        "cdn.iconavo.dev": (url) =>
+          url.pathname === "/manifest.json"
+            ? later(1200)(url)
+            : demoStatic(url),
+      }),
+    );
+    const core = await freshCore();
+    show(core, ["demo:house"]);
+    await wait(2000);
+    expect(calls.map((c) => [c.url, c.at])).toEqual([
+      [`${BASE}house`, 0],
+      [`${CDN}/manifest.json`, 750],
+    ]);
+    expect(core.getIcon("demo:house")).toMatchObject({
+      body: '<path d="house"/>',
+    });
+    expect(calls[1]?.signal?.aborted).toBe(false);
+    apiDown = true;
+    show(core, ["demo:heart"]);
+    await wait(1200);
+    expect(calls.slice(2).map((c) => c.url)).toEqual([
+      `${BASE}heart`,
+      file(CDN, "heart"),
+    ]);
+    expect(core.getIcon("demo:heart")).toMatchObject({
+      body: fromHost("heart", CDN),
+    });
+  });
+
+  it("набора нет в манифесте — «нет» без запросов файлов; 404 файла — «нет» навсегда", async () => {
+    const calls = fakeNet(hosts({ "api.iconavo.dev": "down" }));
+    const core = await freshCore();
+    const stops = show(core, ["other:house", "demo:missing-x"]);
+    await idle();
+    expect(core.getIcon("other:house")).toBe("missing");
+    expect(core.getIcon("demo:missing-x")).toBe("missing");
+    expect(calls.some((c) => c.url.includes("/other/"))).toBe(false);
+    expect(calls.filter((c) => c.url.startsWith(CDN2))).toEqual([]);
+    for (const stop of stops) stop();
+    const before = calls.length;
+    show(core, ["other:house", "demo:missing-x"]);
+    await idle();
+    expect(calls).toHaveLength(before);
+    expect(vi.getTimerCount()).toBe(0);
+  });
+
+  it("битый манифест и чужой набор в файле — сбой хоста, иконка — со следующего", async () => {
+    const manifests = [
+      () => Response.json({ version: 1 }),
+      () => Response.json({ sets: null }),
+      () => Response.json({ sets: { demo: { version: "../x" } } }),
+      () => new Response("<html>", { status: 200 }),
+      () => new Response("Not found", { status: 404 }),
+    ];
+    for (const broken of manifests) {
+      fakeNet(
+        hosts({
+          "api.iconavo.dev": "down",
+          "cdn.iconavo.dev": broken,
+          "cdn2.iconavo.dev": (url) =>
+            url.pathname === "/manifest.json"
+              ? demoStatic(url)
+              : Response.json({ prefix: "other", icons: {} }),
+        }),
+      );
+      const core = await freshCore();
+      show(core, ["demo:house"]);
+      await idle();
+      expect(core.getIcon("demo:house")).toMatchObject({
+        body: fromHost("house", BCDN),
+      });
+      vi.unstubAllGlobals();
+    }
+  });
+
+  it("свой хост статики: адреса без лишнего «/»", async () => {
+    const calls = fakeNet(demoStatic);
+    const core = await freshCore();
+    core.configure({ api: [], cdn: ["https://static.example.com/icons/"] });
+    show(core, ["demo:house"]);
+    await idle();
+    expect(calls.map((c) => c.url)).toEqual([
+      "https://static.example.com/icons/manifest.json",
+      `https://static.example.com/icons/v/${DEMO_VERSION}/demo/house.json`,
+    ]);
+    expect(core.getIcon("demo:house")).toMatchObject({
+      body: fromHost("house", "https://static.example.com"),
+    });
+  });
+});
+
+describe("повторы", () => {
+  it("хосты отказывают — попытки в 0, 1, 3 и 7 с, всё это время «загружается»; потом «ошибка» и одно предупреждение", async () => {
+    const calls = fakeNet(all("down"));
+    const core = await freshCore();
+    show(core, ["demo:house"]);
+    await wait(6999);
+    expect(core.getIcon("demo:house")).toBe("loading");
+    expect(warn).not.toHaveBeenCalled();
+    await wait(1);
+    expect(calls.filter((c) => c.url.startsWith(API)).map((c) => c.at)).toEqual(
+      [0, 1000, 3000, 7000],
+    );
+    // Каждая попытка — пачка и манифесты трёх хостов статики.
+    expect(calls).toHaveLength(16);
+    expect(core.getIcon("demo:house")).toBe("error");
+    expect(warn.mock.calls).toEqual([
+      ['Iconavo: icon "demo:house" failed to load', expect.any(TypeError)],
+    ]);
+    expect(vi.getTimerCount()).toBe(0);
+  });
+
+  it("после «ошибки» новый показ запрашивает снова", async () => {
+    let down = true;
+    const calls = fakeNet((url) =>
+      down ? Promise.reject(new TypeError("Failed to fetch")) : demoHosts(url),
+    );
+    const core = await freshCore();
+    const stops = show(core, ["demo:house"]);
+    await wait(7000);
+    expect(core.getIcon("demo:house")).toBe("error");
+    for (const stop of stops) stop();
+    down = false;
+    const before = calls.length;
+    show(core, ["demo:house"]);
+    await idle();
+    expect(calls.slice(before).map((c) => c.url)).toEqual([`${BASE}house`]);
+    expect(core.getIcon("demo:house")).toMatchObject({
+      body: '<path d="house"/>',
+    });
+  });
+
+  it("иконку никто не показывает — «ошибка» сразу, без таймеров", async () => {
+    const calls = fakeNet(all("down"));
+    const core = await freshCore();
+    core.loadIcon("demo:house");
+    await idle();
+    expect(core.getIcon("demo:house")).toBe("error");
+    expect(calls).toHaveLength(4);
+    expect(vi.getTimerCount()).toBe(0);
+  });
+
+  it("слушатель ушёл во время паузы — повтора нет", async () => {
+    const calls = fakeNet(all("down"));
+    const core = await freshCore();
+    const [stop] = show(core, ["demo:house"]);
+    await wait(500);
+    stop?.();
+    await wait(500);
+    expect(calls).toHaveLength(4);
+    expect(core.getIcon("demo:house")).toBe("error");
+    expect(vi.getTimerCount()).toBe(0);
+  });
+
+  it("addIcons во время паузы — имя выпадает из повтора", async () => {
+    const calls = fakeNet(all("down"));
+    const core = await freshCore();
+    show(core, ["demo:heart", "demo:house"]);
+    await wait(500);
+    core.addIcons({ prefix: "demo", icons: { house: { body: "<g/>" } } });
+    await wait(500);
+    expect(
+      calls.filter((c) => c.url.startsWith(API)).map((c) => c.url),
+    ).toEqual([`${BASE}heart,house`, `${BASE}heart`]);
+  });
+
+  it("«нет» и 404 edge API не повторяются", async () => {
+    const calls = fakeNet();
+    const core = await freshCore();
+    show(core, ["demo:missing-x", "nope:house"]);
+    await wait(10_000);
+    expect(calls.map((c) => c.url)).toEqual([
+      `${BASE}missing-x`,
+      `${API}/nope.json?icons=house`,
+    ]);
+    expect(core.getIcon("demo:missing-x")).toBe("missing");
+    expect(core.getIcon("nope:house")).toBe("missing");
+  });
+});
+
+describe("предупреждения", () => {
+  it("«нет» и неверное имя — одно предупреждение на имя, повторный показ — без новых", async () => {
+    fakeNet();
+    const core = await freshCore();
+    const names = ["demo:missing-x", "nope:house", "Lucide:House"];
+    const stops = show(core, names);
+    await idle();
+    for (const stop of stops) stop();
+    show(core, names);
+    await idle();
+    expect(warn.mock.calls.map(([message]) => message).sort()).toEqual([
+      'Iconavo: icon "demo:missing-x" not found',
+      'Iconavo: icon "nope:house" not found',
+      'Iconavo: invalid icon name "Lucide:House"',
+    ]);
+  });
+
+  it("сбой — одно предупреждение на имя за жизнь страницы, причина — последняя ошибка или «нет ответа за 5 с»", async () => {
+    fakeNet(all("silent"));
+    const core = await freshCore();
+    core.loadIcon("demo:house");
+    await wait(5000);
+    expect(core.getIcon("demo:house")).toBe("error");
+    core.loadIcon("demo:house");
+    await wait(5000);
+    expect(warn.mock.calls).toEqual([
+      [
+        'Iconavo: icon "demo:house" failed to load',
+        expect.objectContaining({ message: "No answer in 5 s" }),
+      ],
+    ]);
   });
 });
 

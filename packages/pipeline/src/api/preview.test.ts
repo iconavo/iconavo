@@ -85,6 +85,23 @@ describe("превью edge API", () => {
     ).toBe(file);
   });
 
+  it("статика /_static/ — с CORS, и 404 тоже: песочница ядра берёт её как хост статики", async () => {
+    const manifest = await fetch(url("/_static/manifest.json"));
+    expect(manifest.status).toBe(200);
+    expect(manifest.headers.get("access-control-allow-origin")).toBe("*");
+    expect((await manifest.json()).sets.demo.version).toBe(version);
+    const icon = await fetch(url(`/_static/v/${version}/demo/home.json`));
+    expect(icon.headers.get("access-control-allow-origin")).toBe("*");
+    expect(await icon.json()).toMatchObject({
+      prefix: "demo",
+      icons: { house: { body: HOUSE } },
+      aliases: { home: { parent: "house" } },
+    });
+    const missing = await fetch(url(`/_static/v/${version}/demo/missing.json`));
+    expect(missing.status).toBe(404);
+    expect(missing.headers.get("access-control-allow-origin")).toBe("*");
+  });
+
   it("HEAD — без тела; браузер ответы превью не хранит", async () => {
     const res = await fetch(url("/demo/house.svg"), { method: "HEAD" });
     expect(res.status).toBe(200);

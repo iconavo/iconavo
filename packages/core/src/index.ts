@@ -3,7 +3,7 @@
 // Описания функций — по-английски: их видят разработчики в подсказках редактора.
 
 import type { IconavoIconSet } from "./icon.js";
-import { loadIcon } from "./load.js";
+import { loadIcon, passive, TIMEOUT } from "./load.js";
 import { isValidNamePart } from "./name.js";
 import {
   addSet,
@@ -63,28 +63,37 @@ export function setLoader(prefix: string, loader: Loader | null): void {
 
 /**
  * Loads icons ahead of time. Resolves with one IconifyJSON object per icon set: the loaded icons and,
- * in `not_found`, the missing names. Never rejects: icons that failed to load are left out.
+ * in `not_found`, the missing names. Makes one pass over the hosts, at most 5 seconds, and never
+ * rejects: icons that failed to load are left out.
  */
 export function loadIcons(names: string[]): Promise<IconavoIconSet[]> {
   const unique = [...new Set(names)];
   return new Promise((resolve) => {
     const stops: (() => void)[] = [];
-    const check = () => {
-      if (unique.some((name) => getIcon(name) === "loading")) return;
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const done = () => {
+      clearTimeout(timer);
       for (const stop of stops) stop();
       resolve(collect(unique));
     };
+    const check = () => {
+      if (!unique.some((name) => getIcon(name) === "loading")) done();
+    };
+    // Ожидание не держит повторы: имя, которое ждёт только loadIcons, после неудачной попытки сразу
+    // становится «ошибкой». Имени, которое повторяют ради иконки на странице, — не дольше прохода.
+    passive.add(check);
     for (const name of unique) {
       stops.push(subscribeIcon(name, check));
       loadIcon(name);
     }
+    timer = setTimeout(done, TIMEOUT);
     check();
   });
 }
 
 /**
  * Ответ loadIcons: по объекту на набор в порядке первого упоминания, копии данных хранилища.
- * «Ошибка» не попадает; имя без верного набора — тоже: его некуда положить.
+ * «Ошибка» и то, что ещё грузится, не попадают; имя без верного набора — тоже: его некуда положить.
  */
 function collect(names: string[]): IconavoIconSet[] {
   const sets = new Map<string, IconavoIconSet>();
@@ -92,7 +101,12 @@ function collect(names: string[]): IconavoIconSet[] {
     const state = getIcon(name);
     const parts = String(name).split(":");
     const [prefix, icon] = parts as [string, string];
-    if (state === "error" || parts.length !== 2 || !isValidNamePart(prefix)) {
+    if (
+      state === "error" ||
+      state === "loading" ||
+      parts.length !== 2 ||
+      !isValidNamePart(prefix)
+    ) {
       continue;
     }
     const set = upsert(sets, prefix, () => ({ prefix, icons: {} }));

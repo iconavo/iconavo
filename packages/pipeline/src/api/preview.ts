@@ -218,9 +218,14 @@ export async function startApiPreview(
       );
       const type = STATIC_TYPES[extname(path)];
       const data = type === undefined ? null : await fileIn(o.cdnDir, path);
-      return data === null || type === undefined
-        ? text(404, "Нет такого файла раздачи — сначала pnpm cdn build")
-        : { status: 200, headers: { "content-type": type }, body: data };
+      const file: Reply =
+        data === null || type === undefined
+          ? text(404, "Нет такого файла раздачи — сначала pnpm cdn build")
+          : { status: 200, headers: { "content-type": type }, body: data };
+      // Песочница ядра (pnpm sandbox) берёт эти файлы как хост статики со своего адреса, как у
+      // раздачи (ADR-0023): CORS — у всех ответов, и у 404 тоже.
+      file.headers["access-control-allow-origin"] = "*";
+      return file;
     }
     const res = await local(`${parsed.pathname}${parsed.search}`, method);
     return {
