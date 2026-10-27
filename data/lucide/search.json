@@ -4567,6 +4567,20 @@
         "coordinates"
       ]
     },
+    "azerbaijani-manat": {
+      "fingerprint": "00d40862854c",
+      "tags": [
+        "currency",
+        "money",
+        "payment",
+        "azerbaijan",
+        "azn",
+        "exchange",
+        "banking",
+        "pricing",
+        "currency symbol"
+      ]
+    },
     "baby": {
       "en": {
         "description": "A round baby face with a curl of hair, two dot eyes and a smile, representing a baby or child-related content.",
@@ -5559,6 +5573,34 @@
         "cart",
         "trolley",
         "suitcase"
+      ]
+    },
+    "ball-wave": {
+      "fingerprint": "262525384825",
+      "tags": [
+        "polo",
+        "watercraft",
+        "athlete",
+        "feature",
+        "sport",
+        "ball",
+        "aquatic",
+        "swimming",
+        "pool",
+        "team",
+        "game",
+        "competition",
+        "olympic",
+        "water",
+        "match",
+        "aquatic sports",
+        "water polo",
+        "aquatics",
+        "water sports",
+        "pool sport",
+        "team sport",
+        "tournament",
+        "league"
       ]
     },
     "balloon": {
@@ -27022,6 +27064,27 @@
         "..."
       ]
     },
+    "emirati-dirham": {
+      "fingerprint": "8084bf891362",
+      "tags": [
+        "currency",
+        "money",
+        "payment",
+        "finance",
+        "price",
+        "aed",
+        "arab emirates dirham",
+        "uae",
+        "united arab emirates",
+        "cash",
+        "currency symbol",
+        "middle east",
+        "gulf",
+        "banking",
+        "invoice",
+        "exchange rate"
+      ]
+    },
     "engine": {
       "en": {
         "description": "Outline of a car engine with an intake on top and a mounting bracket on the side; usually means engine, motor or vehicle diagnostics.",
@@ -38055,6 +38118,27 @@
         "mountains"
       ]
     },
+    "hockey-stick": {
+      "fingerprint": "2a205ef5d579",
+      "tags": [
+        "sport",
+        "campus",
+        "puck",
+        "athlete",
+        "ice",
+        "player",
+        "goal",
+        "cricket",
+        "bat",
+        "sports",
+        "game",
+        "equipment",
+        "stick",
+        "ball",
+        "match",
+        "play"
+      ]
+    },
     "hop": {
       "en": {
         "description": "A hop cone with overlapping scales and a stem, usually representing beer, brewing, or hops.",
@@ -38178,6 +38262,18 @@
         "building",
         "medical",
         "vet"
+      ]
+    },
+    "hot-air-balloon": {
+      "fingerprint": "26fc6d70ddae",
+      "tags": [
+        "aircraft",
+        "flight",
+        "adventure",
+        "travel",
+        "sky",
+        "celebration",
+        "festive"
       ]
     },
     "hotel": {

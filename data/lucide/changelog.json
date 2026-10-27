@@ -3,6 +3,20 @@
   "releases": [
     {
       "added": [
+        "azerbaijani-manat",
+        "ball-wave",
+        "emirati-dirham",
+        "hockey-stick",
+        "hot-air-balloon"
+      ],
+      "date": "2026-10-27T08:59:51Z",
+      "previous": "dbde54d2",
+      "revision": "03f11e2d6adc319ea21e9a1d5820a99cd3767257",
+      "total": 1908,
+      "version": "01c7796f"
+    },
+    {
+      "added": [
         "circle-chevrons-down",
         "circle-chevrons-left",
         "circle-chevrons-right",
