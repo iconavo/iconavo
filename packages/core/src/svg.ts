@@ -1,7 +1,8 @@
 // SVG иконки с настройками (ADR-0031): высота по умолчанию 1em, ширина по пропорции; повороты и
 // отражения — внутри SVG, с поворотом холста, как iconToSVG у Iconify: сначала отражение, потом
-// поворот, строки transform те же. Без настроек результат побайтно равен файлу статики (ADR-0022) —
-// это проверяет тест конвейера на всех иконках data/.
+// поворот, строки transform те же. Iconify делает это в два прохода — для данных иконки и для
+// настроек; первый проход здесь делает iconData (icon.ts), второй — iconToSvg. Без настроек результат
+// побайтно равен файлу статики (ADR-0022) — это проверяет тест конвейера на всех иконках data/.
 
 import type { Rotation } from "./customise.js";
 import type { IconData } from "./icon.js";
@@ -29,9 +30,22 @@ export interface SvgBox {
   height: number;
 }
 
+/**
+ * Атрибуты корня в порядке записи: width и height — если не сняты через «unset» или «none»; цвет и
+ * доступность добавляет renderIcon (render.ts).
+ */
+export interface SvgAttributes {
+  width?: string;
+  height?: string;
+  viewBox: string;
+  color?: string;
+  role?: "img";
+  "aria-label"?: string;
+  "aria-hidden"?: "true";
+}
+
 export interface SvgParts {
-  /** Атрибуты корня; width и height — если не сняты через «unset» или «none». */
-  attributes: { width?: string; height?: string; viewBox: string };
+  attributes: SvgAttributes;
   /** Холст после поворота. */
   box: SvgBox;
   body: string;
@@ -48,11 +62,17 @@ export function calculateSize(size: string, ratio: number): string {
   return `${formatNumber(value)}${match[2]}`;
 }
 
-/** Холст, рисунок в обёртке поворота и отражения и размеры корня. */
-export function iconToSvg(
+/**
+ * Один проход iconToSVG у Iconify: отражение, затем поворот на rotate четвертей (0–3) по часовой
+ * стрелке; холст поворачивается вместе с рисунком, рисунок — в обёртке <g transform>. Без поворота
+ * и отражения — та же иконка.
+ */
+export function transformIcon(
   icon: IconData,
-  customisations: SvgCustomisations = {},
-): SvgParts {
+  rotate: number,
+  hFlip: boolean,
+  vFlip: boolean,
+): IconData {
   const box: SvgBox = {
     left: icon.left,
     top: icon.top,
@@ -60,9 +80,7 @@ export function iconToSvg(
     height: icon.height,
   };
   const transforms: string[] = [];
-  let rotation: number = customisations.rotate ?? 0;
-  const hFlip = customisations.hFlip ?? false;
-  const vFlip = customisations.vFlip ?? false;
+  let rotation = rotate;
   if (hFlip && vFlip) {
     rotation += 2;
   } else if (hFlip) {
@@ -96,10 +114,26 @@ export function iconToSvg(
     [box.left, box.top] = [box.top, box.left];
     [box.width, box.height] = [box.height, box.width];
   }
-  const body =
-    transforms.length > 0
-      ? `<g transform="${transforms.join(" ")}">${icon.body}</g>`
-      : icon.body;
+  return {
+    body:
+      transforms.length > 0
+        ? `<g transform="${transforms.join(" ")}">${icon.body}</g>`
+        : icon.body,
+    ...box,
+  };
+}
+
+/** Холст, рисунок в обёртке поворота и отражения и размеры корня. */
+export function iconToSvg(
+  icon: IconData,
+  customisations: SvgCustomisations = {},
+): SvgParts {
+  const { body, ...box } = transformIcon(
+    icon,
+    customisations.rotate ?? 0,
+    customisations.hFlip ?? false,
+    customisations.vFlip ?? false,
+  );
 
   const auto = (value: string, side: number) =>
     value === "auto" ? formatNumber(side) : value;
@@ -132,12 +166,18 @@ export function iconToSvg(
   };
 }
 
+/** Значение атрибута в двойных кавычках: подпись и цвет приходят от разработчика. */
+const quote = (value: string) =>
+  value.replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;");
+
 /** Текст SVG: без пролога и без перевода строки в конце, как файл статики. */
 export function svgToString(parts: SvgParts): string {
-  const { width, height, viewBox } = parts.attributes;
   const xlink = parts.body.includes("xlink:")
     ? ` xmlns:xlink="${XLINK_NS}"`
     : "";
-  const size = `${width === undefined ? "" : ` width="${width}"`}${height === undefined ? "" : ` height="${height}"`}`;
-  return `<svg xmlns="${SVG_NS}"${xlink}${size} viewBox="${viewBox}">${parts.body}</svg>`;
+  let attributes = "";
+  for (const [name, value] of Object.entries(parts.attributes)) {
+    if (value !== undefined) attributes += ` ${name}="${quote(value)}"`;
+  }
+  return `<svg xmlns="${SVG_NS}"${xlink}${attributes}>${parts.body}</svg>`;
 }

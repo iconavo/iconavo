@@ -111,6 +111,20 @@ describe("cssBody", () => {
     expect(compressed).not.toContain("\n");
   });
 
+  it("поворот из данных — и в CSS, как getIconCSS у Iconify: холст повёрнут, ширина своя", () => {
+    const css = cssBody(
+      "demo",
+      ["arrow"],
+      files("demo", {
+        arrow: { body: '<path fill="currentColor"/>', width: 48, rotate: 1 },
+      }),
+      DEFAULTS,
+    );
+    expect(css).toContain(
+      ".icon--demo.icon--demo--arrow {\n  width: 0.5em;\n  --svg: url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 48' width='24' height='48'%3E%3Cg transform='rotate(90 12 12)'%3E%3Cpath fill='black'/%3E%3C/g%3E%3C/svg%3E\");\n}",
+    );
+  });
+
   it("ненайденные — комментарием, но только имена по правилу", () => {
     const css = cssBody(
       "mdi",

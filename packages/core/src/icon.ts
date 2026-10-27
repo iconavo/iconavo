@@ -1,8 +1,12 @@
 // Иконка по имени в наборе IconifyJSON (ADR-0003): цепочка алиасов до иконки и холст. Так же
 // считает статика конвейера (resolveChain и effectiveIcon в packages/pipeline/src/cdn/files.ts),
 // поэтому SVG ядра без настроек совпадает с файлом статики побайтно. Повороты и отражения в данных
-// не поддерживаются: сборка набора их останавливает (ADR-0022), а здесь они дали бы тихо неверную
-// картинку. Сообщения ошибок — по-английски: ядро читают разработчики (ADR-0029).
+// (у Iconify они бывают в алиасах) складываются по цепочке, как mergeIconTransformations у Iconify,
+// и сразу применяются к рисунку и холсту — первый проход iconToSVG у Iconify (ADR-0031). В наших
+// наборах их нет: сборка статики их останавливает (ADR-0022). Сообщения ошибок — по-английски: ядро
+// читают разработчики (ADR-0029).
+
+import { transformIcon } from "./svg.js";
 
 // Типы — те же, что у пакетов данных @iconavo-ui/icons-{набор} (indexDts в
 // packages/pipeline/src/npm/files.ts), но шире там, где addIcons принимает IconifyJSON из
@@ -44,7 +48,7 @@ export interface IconavoIconSet {
   height?: number;
 }
 
-/** Иконка, готовая к рисованию: рисунок и холст. */
+/** Иконка, готовая к рисованию: рисунок и холст; повороты и отражения из данных уже применены. */
 export interface IconData {
   body: string;
   left: number;
@@ -61,7 +65,8 @@ const DEFAULT_SIZE = 16;
 
 /**
  * Иконка по имени: размеры свои, иначе набора, иначе 16 (left и top — 0); алиасы цепочки могут их
- * переопределить — ближний к имени главнее. Имени нет — null.
+ * переопределить — ближний к имени главнее. Повороты иконки и алиасов складываются, отражения
+ * взаимно гасятся; нецелый поворот не учитывается, как у Iconify. Имени нет — null.
  */
 export function iconData(set: IconavoIconSet, name: string): IconData | null {
   const aliases = set.aliases ?? {};
@@ -82,12 +87,13 @@ export function iconData(set: IconavoIconSet, name: string): IconData | null {
     throw new Error(`Alias "${name}" does not lead to an icon`);
   }
   const icon = set.icons[current] as IconavoIcon;
+  let rotate = 0;
+  let hFlip = false;
+  let vFlip = false;
   for (const item of [icon, ...chain]) {
-    if (item.rotate || item.hFlip || item.vFlip) {
-      throw new Error(
-        `Icon "${name}" has rotate or flip in its data: not supported`,
-      );
-    }
+    if (Number.isInteger(item.rotate)) rotate += item.rotate as number;
+    if (item.hFlip) hFlip = !hFlip;
+    if (item.vFlip) vFlip = !vFlip;
   }
   const out: IconData = {
     body: icon.body,
@@ -102,5 +108,8 @@ export function iconData(set: IconavoIconSet, name: string): IconData | null {
     if (alias.width !== undefined) out.width = alias.width;
     if (alias.height !== undefined) out.height = alias.height;
   }
-  return out;
+  rotate = ((rotate % 4) + 4) % 4;
+  return rotate || hFlip || vFlip
+    ? transformIcon(out, rotate, hFlip, vFlip)
+    : out;
 }

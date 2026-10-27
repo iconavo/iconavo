@@ -123,7 +123,11 @@ describe("addIcons", () => {
       },
     });
     expect(core.getIcon("acme:logo")).toMatchObject({ body: "<g/>" });
-    for (const name of ["loop", "nowhere", "turned"]) {
+    // Поворот в данных — не ошибка: он уже в рисунке (ADR-0031).
+    expect(core.getIcon("acme:turned")).toMatchObject({
+      body: '<g transform="rotate(90 8 8)"><g/></g>',
+    });
+    for (const name of ["loop", "nowhere"]) {
       expect(core.getIcon(`acme:${name}`)).toBe("missing");
       core.loadIcon(`acme:${name}`);
     }
@@ -306,6 +310,28 @@ describe("loadIcons", () => {
     other.addIcons(sets);
     expect(other.getIcon("demo:house")).toMatchObject({ width: 24 });
     expect(other.getIcon("demo:missing-x")).toBe("missing");
+  });
+
+  it("поворот и отражение из данных — в ответе уже в рисунке, и addIcons рисует так же", async () => {
+    fakeFetch();
+    const core = await freshCore();
+    core.addIcons({
+      prefix: "acme",
+      width: 32,
+      height: 16,
+      icons: { arrow: { body: "<path/>" } },
+      aliases: { "arrow-down": { parent: "arrow", rotate: 1, hFlip: true } },
+    });
+    const sets = await settled(core.loadIcons(["acme:arrow-down"]));
+    const other = await freshCore();
+    other.addIcons(sets);
+    expect(other.getIcon("acme:arrow-down")).toEqual(
+      core.getIcon("acme:arrow-down"),
+    );
+    expect(other.getIcon("acme:arrow-down")).toMatchObject({
+      width: 16,
+      height: 32,
+    });
   });
 
   it("не отклоняется: не загрузившихся иконок в ответе нет", async () => {

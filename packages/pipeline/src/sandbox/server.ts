@@ -1,6 +1,7 @@
-// Сервер песочницы ядра (фаза 3, шаг 2): слушает только 127.0.0.1 и сверяет Host, как страница
-// поиска. Отдаёт страницу, её скрипт (dist/sandbox/client.js) и файлы ядра из packages/core/dist —
-// по имени из строчных букв и дефисов, так что за пределы папки не выйти.
+// Сервер песочницы ядра (фаза 3, шаги 2–4): слушает только 127.0.0.1 и сверяет Host, как страница
+// поиска. Отдаёт две страницы — загрузку и сеть (/) и рендер (/render), их скрипты
+// (dist/sandbox/client.js и render-client.js) и файлы ядра из packages/core/dist — по имени из
+// строчных букв и дефисов, так что за пределы папки не выйти.
 
 import { readFile } from "node:fs/promises";
 import { createServer, type Server } from "node:http";
@@ -9,6 +10,7 @@ import { esc, htmlPage } from "../report/html.js";
 import { allowedHost, type Reply } from "../search/server.js";
 import { LIVE_API, LOCAL_API } from "./config.js";
 import { renderSandboxPage, sandboxData } from "./page.js";
+import { renderData, renderVariantsPage } from "./render-page.js";
 
 export interface SandboxContext {
   port: number;
@@ -16,6 +18,8 @@ export interface SandboxContext {
   coreDir: string;
   /** Скрипт страницы — dist/sandbox/client.js конвейера. */
   clientFile: string;
+  /** Скрипт страницы рендера — dist/sandbox/render-client.js конвейера. */
+  renderFile: string;
   /** Видимые имена каждого набора, по кодам символов. */
   names: Record<string, string[]>;
 }
@@ -54,7 +58,7 @@ export async function reply(
   }
   if (method !== "GET" && method !== "HEAD") return text(405, "Только GET");
   const parsed = new URL(url ?? "/", `http://127.0.0.1:${ctx.port}`);
-  if (parsed.pathname === "/") {
+  if (parsed.pathname === "/" || parsed.pathname === "/render") {
     const api = apiHost(parsed.searchParams.get("api"));
     if (api === null) {
       return text(
@@ -65,12 +69,15 @@ export async function reply(
     return {
       status: 200,
       type: "text/html; charset=utf-8",
-      body: renderSandboxPage(sandboxData(api, ctx.names)),
+      body:
+        parsed.pathname === "/"
+          ? renderSandboxPage(sandboxData(api, ctx.names))
+          : renderVariantsPage(renderData(api)),
     };
   }
-  if (parsed.pathname === "/sandbox.js") {
+  if (parsed.pathname === "/sandbox.js" || parsed.pathname === "/render.js") {
     return file(
-      ctx.clientFile,
+      parsed.pathname === "/sandbox.js" ? ctx.clientFile : ctx.renderFile,
       "Нет скрипта песочницы — запустите pnpm sandbox",
     );
   }
