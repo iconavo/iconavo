@@ -8,7 +8,7 @@
 // | pnpm cdn build | pnpm cdn upload [--dry-run]
 // | pnpm cdn verify | pnpm cdn check | pnpm packages prepare [id…] [--new] [--force]
 // | pnpm packages verify [id…] [--wait=N] [--plan=…] | pnpm api build | pnpm api preview [--port=N]
-// | pnpm api check [--expect-build=…] | pnpm api bench [--base=…]
+// | pnpm api check [--expect-build=…] | pnpm api bench [--base=…] | pnpm sandbox [--port=N]
 import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import { basename, join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -139,6 +139,8 @@ import {
 } from "./npm/report.js";
 import { npmVerifyFailed, readPlan, verifyPackages } from "./npm/verify.js";
 import { gitHistory, loadBaseline } from "./qc/baseline.js";
+import { LIVE_API, SANDBOX_PORT } from "./sandbox/config.js";
+import { startSandbox, visibleNames } from "./sandbox/server.js";
 import {
   formatFixtures,
   formatSanitizeReport,
@@ -282,7 +284,11 @@ const USAGE = `Использование:
                                       цель — 95% ответов не дольше 0,3 с (ADR-0040, ADR-0049);
                                       страница .cache/reports/api/bench.html
       --base=…                        другой адрес API: https://… или http://127.0.0.1:порт (превью)
-  pnpm packages prepare [id…]         пакеты npm @iconavo-ui/icons-{набор} в ${NPM_OUT_DIR}/ (ADR-0026):
+  pnpm sandbox                        песочница ядра пакета на 127.0.0.1 (фаза 3): иконки грузит
+                                      @iconavo-ui/core с api.iconavo.dev или превью API, рядом —
+                                      журнал запросов для сверки с DevTools
+      --port=N                        порт (по умолчанию ${SANDBOX_PORT})
+  pnpm packages prepare [id…]       пакеты npm @iconavo-ui/icons-{набор} в ${NPM_OUT_DIR}/ (ADR-0026):
                                       данные, LICENSE, README, типы; версия — по реестру npm (только
                                       чтение, ключи не нужны); план для CI ${NPM_OUT_DIR}/plan.json;
                                       сама ничего не публикует; отчёт .cache/reports/npm/index.html
@@ -378,7 +384,12 @@ let maxCost = DEFAULT_MAX_COST;
 let maxRub = DEFAULT_MAX_RUB;
 let judgeMaxRub = JUDGE_MAX_RUB;
 let searchMaxRub = DEFAULT_SEARCH_MAX_RUB;
-let port = command === "api" ? PREVIEW_PORT : PAGE_PORT;
+let port =
+  command === "api"
+    ? PREVIEW_PORT
+    : command === "sandbox"
+      ? SANDBOX_PORT
+      : PAGE_PORT;
 let waitSeconds = 0;
 let planPath: string | undefined;
 let expectBuild: string | undefined;
@@ -445,7 +456,7 @@ for (const flag of flags) {
     }
   }
   if (
-    (command === "search-page" || command === "api") &&
+    (command === "search-page" || command === "api" || command === "sandbox") &&
     name === "--port" &&
     /^[1-9][0-9]{3,4}$/.test(value ?? "") &&
     Number(value) <= 65535
@@ -978,6 +989,27 @@ try {
         "Нет POLZA_API_KEY: векторы новых запросов не считаются — только текстовая часть и кэш.",
       );
     }
+  } else if (command === "sandbox") {
+    if (args.length > 0) usageError("pnpm sandbox принимает только флаги.");
+    const names: Record<string, string[]> = {};
+    for (const config of configs) {
+      try {
+        names[config.id] = await visibleNames(dataDir, config.id);
+      } catch (e) {
+        console.warn(`${config.id}: не прочитан — ${(e as Error).message}`);
+      }
+    }
+    await startSandbox({
+      port,
+      coreDir: join(root, "packages", "core", "dist"),
+      clientFile: fileURLToPath(
+        new URL("./sandbox/client.js", import.meta.url),
+      ),
+      names,
+    });
+    console.log(
+      `Песочница ядра: http://127.0.0.1:${port}/ — наборов ${Object.keys(names).length}, иконки с ${LIVE_API}. Остановить — Ctrl+C.`,
+    );
   } else if (command === "search-index") {
     if (args.length > 0) {
       usageError(

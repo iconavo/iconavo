@@ -4,29 +4,40 @@
 // не поддерживаются: сборка набора их останавливает (ADR-0022), а здесь они дали бы тихо неверную
 // картинку. Сообщения ошибок — по-английски: ядро читают разработчики (ADR-0029).
 
-/** Иконка в IconifyJSON: рисунок и, если отличаются от набора, свои размеры. */
-export interface IconifyIcon {
+// Типы — те же, что у пакетов данных @iconavo-ui/icons-{набор} (indexDts в
+// packages/pipeline/src/npm/files.ts), но шире там, где addIcons принимает IconifyJSON из
+// @iconify-json/*: prefix — любая строка, rotate — число. Описания — по-английски: их видят
+// разработчики в подсказках редактора.
+
+/** An icon: SVG content without the <svg> element, and its own size if it differs from the set. */
+export interface IconavoIcon {
   body: string;
   left?: number;
   top?: number;
   width?: number;
   height?: number;
+  /** Rotation in 90° steps. */
   rotate?: number;
   hFlip?: boolean;
   vFlip?: boolean;
+  /** Removed by the author: still works by name, but is not listed. */
   hidden?: boolean;
 }
 
-/** Алиас — другое имя той же иконки; может переопределить размеры. */
-export interface IconifyAlias extends Omit<IconifyIcon, "body"> {
+/** Another name of an icon; it can override the size. */
+export interface IconavoAlias extends Omit<IconavoIcon, "body"> {
   parent: string;
 }
 
-/** Набор или его часть в формате IconifyJSON. */
-export interface IconifySet {
+/** An icon set or a part of it, in IconifyJSON format. */
+export interface IconavoIconSet {
   prefix: string;
-  icons: Record<string, IconifyIcon>;
-  aliases?: Record<string, IconifyAlias>;
+  icons: Record<string, IconavoIcon>;
+  aliases?: Record<string, IconavoAlias>;
+  /** Names that the host does not have. */
+  not_found?: string[];
+  /** Time of the last release, Unix seconds. */
+  lastModified?: number;
   left?: number;
   top?: number;
   width?: number;
@@ -52,9 +63,9 @@ const DEFAULT_SIZE = 16;
  * Иконка по имени: размеры свои, иначе набора, иначе 16 (left и top — 0); алиасы цепочки могут их
  * переопределить — ближний к имени главнее. Имени нет — null.
  */
-export function iconData(set: IconifySet, name: string): IconData | null {
+export function iconData(set: IconavoIconSet, name: string): IconData | null {
   const aliases = set.aliases ?? {};
-  const chain: IconifyAlias[] = [];
+  const chain: IconavoAlias[] = [];
   const seen: string[] = [];
   let current = name;
   while (Object.hasOwn(aliases, current)) {
@@ -62,7 +73,7 @@ export function iconData(set: IconifySet, name: string): IconData | null {
       throw new Error(`Alias "${name}" loops`);
     }
     seen.push(current);
-    const alias = aliases[current] as IconifyAlias;
+    const alias = aliases[current] as IconavoAlias;
     chain.push(alias);
     current = alias.parent;
   }
@@ -70,7 +81,7 @@ export function iconData(set: IconifySet, name: string): IconData | null {
     if (chain.length === 0) return null;
     throw new Error(`Alias "${name}" does not lead to an icon`);
   }
-  const icon = set.icons[current] as IconifyIcon;
+  const icon = set.icons[current] as IconavoIcon;
   for (const item of [icon, ...chain]) {
     if (item.rotate || item.hFlip || item.vFlip) {
       throw new Error(

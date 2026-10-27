@@ -34,6 +34,12 @@ describe("bundleWorker", () => {
     expect(code.split(BUILD_PLACEHOLDER)).toHaveLength(2);
     expect(code).toContain("function iconToSvg(");
   });
+
+  it("из ядра — только сборка SVG: хранилища и загрузки пакета в функции нет", async () => {
+    const code = await bundleWorker(ROOT);
+    expect(code).not.toContain("iconavo.core");
+    expect(code).not.toContain("function loadIcon(");
+  });
 });
 
 describe("buildApi", () => {

@@ -25,6 +25,14 @@
 - **Публичное API ядра** — только то, что описано в README. Вспомогательные функции, которые `packages/core` сейчас экспортирует для edge API (`calculateSize`, `formatNumber`, `SVG_NS` и другие), в шаге 2 переезжают в `@iconavo-ui/core/internal`: после публикации они стали бы обещанием разработчикам.
 - **README** — `packages/icon/README.md`, на английском (ADR-0036).
 
+Уточнение от 27 октября 2026 (шаг 2 фазы 3):
+
+- **Два входа ядра.**
+  - `@iconavo-ui/core` — только `configure`, `addIcons`, `setLoader`, `loadIcons` и типы `IconavoIconSet`, `IconavoIcon`, `IconavoAlias`; это проверяет тест.
+  - `@iconavo-ui/core/internal` — для наших адаптеров и edge API: проверка имён, разбор `rotate`, `flip` и размеров, `iconData`, `iconToSvg`, `svgToString`, `calculateSize`, `formatNumber`, `SVG_NS` и доступ к хранилищу (`getIcon`, `subscribeIcon`, `loadIcon`, ADR-0030).
+- **`"sideEffects": false`** — функция edge API берёт из ядра только сборку SVG, хранилище и загрузка в её бандл не попадают; это проверяет тест сборки.
+- **Общее хранилище** — под `Symbol.for("iconavo.core.1")`: иконки, слушатели, настройки и загрузчики. Подробности — в ADR-0030.
+
 Почему: логика живёт в одном месте, а каждый адаптер остаётся тонким и простым.
 
 ← [Все решения](README.md)

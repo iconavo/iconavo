@@ -4,13 +4,13 @@
 // поверхность для подмены CSS (бэклог). Ненайденное имя — комментарием, и только если оно прошло
 // правило имён: «*/» в имени закрыл бы комментарий.
 
+import type { IconavoIconSet } from "@iconavo-ui/core";
 import {
   calculateSize,
   formatNumber,
-  type IconifySet,
   iconData,
   SVG_NS,
-} from "@iconavo-ui/core";
+} from "@iconavo-ui/core/internal";
 import { ApiError } from "./http.js";
 import { parseBool, parseColor, searchable, single } from "./params.js";
 
@@ -138,10 +138,10 @@ function format(rules: readonly Rule[], f: CssFormat): string {
 export function cssBody(
   set: string,
   names: readonly string[],
-  files: ReadonlyMap<string, IconifySet | null>,
+  files: ReadonlyMap<string, IconavoIconSet | null>,
   o: CssOptions,
 ): string {
-  const found: { name: string; file: IconifySet }[] = [];
+  const found: { name: string; file: IconavoIconSet }[] = [];
   const missing: string[] = [];
   for (const name of names) {
     const file = files.get(name);

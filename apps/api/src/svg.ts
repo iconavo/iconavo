@@ -3,9 +3,9 @@
 // итоговому холсту для редакторов, которые не читают viewBox; download — отдать файлом. Без
 // параметров ответ побайтно равен файлу статики.
 
+import type { IconavoIconSet } from "@iconavo-ui/core";
 import {
   formatNumber,
-  type IconifySet,
   iconData,
   iconToSvg,
   parseFlip,
@@ -13,7 +13,7 @@ import {
   parseSize,
   type Rotation,
   svgToString,
-} from "@iconavo-ui/core";
+} from "@iconavo-ui/core/internal";
 import { ApiError } from "./http.js";
 import { parseBool, parseColor, single } from "./params.js";
 
@@ -100,7 +100,7 @@ export function svgOptionsKey(o: SvgOptions): URLSearchParams {
 
 /** SVG имени; имени нет в файле — null. */
 export function svgBody(
-  file: IconifySet,
+  file: IconavoIconSet,
   name: string,
   o: SvgOptions,
 ): string | null {

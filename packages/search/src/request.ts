@@ -3,7 +3,7 @@
 // что у пользователя. Фильтры собираются только из проверенных значений: подставить в выражение
 // фильтра кавычку, скобку или оператор нельзя.
 
-import { isValidIconName, isValidNamePart } from "@iconavo-ui/core";
+import { isValidIconName, isValidNamePart } from "@iconavo-ui/core/internal";
 import { EMBEDDER, EXACT_LIMIT, INDEX_UID, SEMANTIC_RATIO } from "./config.js";
 import { DISPLAYED } from "./settings.js";
 

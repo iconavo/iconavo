@@ -1,4 +1,4 @@
-import type { IconifySet } from "@iconavo-ui/core";
+import type { IconavoIconSet } from "@iconavo-ui/core";
 import { describe, expect, it } from "vitest";
 import { type CssOptions, cssBody, svgToUrl } from "./css.js";
 
@@ -6,9 +6,9 @@ const MDI_HOME =
   '<path fill="currentColor" d="M10 20v-6h4v6h5v-8h3L12 3L2 12h3v8z"/>';
 const files = (
   set: string,
-  icons: IconifySet["icons"],
+  icons: IconavoIconSet["icons"],
   size = 24,
-): Map<string, IconifySet> =>
+): Map<string, IconavoIconSet> =>
   new Map(
     Object.entries(icons).map(([name, icon]) => [
       name,

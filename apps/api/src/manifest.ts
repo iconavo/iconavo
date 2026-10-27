@@ -3,7 +3,7 @@
 // загрузку; если R2 не ответил, служит прежняя копия. Наборы — в Map: имя «constructor» проходит
 // правило имён, но не должно найти что-то в прототипе объекта.
 
-import { isValidNamePart } from "@iconavo-ui/core";
+import { isValidNamePart } from "@iconavo-ui/core/internal";
 import { sharedText } from "./cache.js";
 import { MANIFEST_KEY, MANIFEST_TTL_MS, VERSION_PATTERN } from "./config.js";
 import type { Bucket, EdgeCache } from "./env.js";

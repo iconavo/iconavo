@@ -3,7 +3,7 @@
 // соединений Workers); тело читается в той же задаче, что его запросила: соединение, которое ждёт,
 // пока другие закончат, Workers может оборвать. Нет файла — null; сбой R2 — ошибка хранилища.
 
-import type { IconifySet } from "@iconavo-ui/core";
+import type { IconavoIconSet } from "@iconavo-ui/core";
 import { READ_CONCURRENCY } from "./config.js";
 import type { Bucket } from "./env.js";
 import { StorageError } from "./http.js";
@@ -15,7 +15,7 @@ const isObject = (value: unknown): value is Record<string, unknown> =>
   typeof value === "object" && value !== null && !Array.isArray(value);
 
 /** Файл имени по тексту: IconifyJSON нашего набора с хотя бы одной иконкой. */
-export function parseNameFile(text: string, set: string): IconifySet {
+export function parseNameFile(text: string, set: string): IconavoIconSet {
   let data: unknown;
   try {
     data = JSON.parse(text);
@@ -34,7 +34,7 @@ export function parseNameFile(text: string, set: string): IconifySet {
   ) {
     throw new StorageError(`файл имени набора «${set}» не по формату`);
   }
-  return data as unknown as IconifySet;
+  return data as unknown as IconavoIconSet;
 }
 
 /** Файлы имён набора: имя → данные или null, если такого имени в версии нет. */
@@ -43,8 +43,8 @@ export async function readNames(
   version: string,
   set: string,
   names: readonly string[],
-): Promise<Map<string, IconifySet | null>> {
-  const files = new Map<string, IconifySet | null>();
+): Promise<Map<string, IconavoIconSet | null>> {
+  const files = new Map<string, IconavoIconSet | null>();
   let next = 0;
   const worker = async () => {
     while (next < names.length) {
