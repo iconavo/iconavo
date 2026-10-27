@@ -18,6 +18,7 @@ export {
   RETRIES,
   ROTATE,
   TIMEOUT,
+  warn,
 } from "./load.js";
 export { isValidIconName, isValidNamePart } from "./name.js";
 export { cleanNumber, formatNumber } from "./number.js";
@@ -27,6 +28,9 @@ export {
   DEFAULT_CDN,
   getIcon,
   type IconState,
+  type Settings,
+  type Store,
+  store,
   subscribeIcon,
 } from "./store.js";
 export {

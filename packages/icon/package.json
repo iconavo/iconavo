@@ -1,0 +1,25 @@
+{
+  "name": "@iconavo-ui/icon",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "sideEffects": [
+    "./dist/index.js",
+    "./dist/development.js",
+    "./dist/script.js"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "development": "./dist/development.js",
+      "default": "./dist/index.js"
+    }
+  },
+  "types": "./dist/index.d.ts",
+  "scripts": {
+    "build": "tsc -b"
+  },
+  "dependencies": {
+    "@iconavo-ui/core": "workspace:*"
+  }
+}

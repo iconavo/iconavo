@@ -23,5 +23,7 @@ jobs:
       - run: pnpm typecheck
       # Функция edge API собирается в один модуль без внешних импортов (ADR-0024).
       - run: pnpm api build
+      # Скрипт тега для страниц без сборщика — тоже один модуль; его размер меряет pnpm size (ADR-0034).
+      - run: pnpm icon build
       - run: pnpm test
       - run: pnpm size

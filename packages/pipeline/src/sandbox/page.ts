@@ -73,31 +73,58 @@ export const IMPORT_MAP = JSON.stringify({
   },
 });
 
-export const IMPORT_MAP_HASH = `sha256-${createHash("sha256").update(IMPORT_MAP, "utf8").digest("base64")}`;
+/** Хэш встроенного скрипта или стиля для CSP. */
+export const cspHash = (text: string) =>
+  `sha256-${createHash("sha256").update(text, "utf8").digest("base64")}`;
+
+export const IMPORT_MAP_HASH = cspHash(IMPORT_MAP);
+
+/** Источники запросов ядра — хосты режима. */
+const origins = (hosts: SandboxHost[]) =>
+  [...new Set(hosts.map((h) => new URL(h.url).origin))].join(" ");
 
 /** Политика страницы: сеть — только хосты режима. */
 export const sandboxCsp = (hosts: SandboxHost[]) =>
-  `default-src 'none'; script-src 'self' '${IMPORT_MAP_HASH}'; connect-src ${[...new Set(hosts.map((h) => new URL(h.url).origin))].join(" ")}; img-src data:; style-src 'unsafe-inline'; base-uri 'none'; form-action 'none'`;
+  `default-src 'none'; script-src 'self' '${IMPORT_MAP_HASH}'; connect-src ${origins(hosts)}; img-src data:; style-src 'unsafe-inline'; base-uri 'none'; form-action 'none'`;
+
+/**
+ * Строгая политика страниц тега — какую README предлагает сайтам (ADR-0032): скрипты — свои и import
+ * map по хэшу, стиль — только <style> страницы по хэшу, без 'unsafe-inline', разметка — только через
+ * политику Trusted Types iconavo. Стили тега (adoptedStyleSheets) и свойства стиля из скрипта она
+ * не запрещает.
+ */
+export const strictCsp = (
+  hosts: SandboxHost[],
+  importMap: string,
+  style: string,
+) =>
+  `default-src 'none'; script-src 'self' '${cspHash(importMap)}'; connect-src ${origins(hosts)}; img-src data:; style-src '${cspHash(style)}'; base-uri 'none'; form-action 'none'; require-trusted-types-for 'script'; trusted-types iconavo`;
+
+/** Пустая иконка вкладки: иначе браузер сам просит /favicon.ico, а строгая политика это запрещает. */
+export const NO_FAVICON = '<link rel="icon" href="data:,">';
+
+/** Страницы песочницы по порядку в меню. */
+export const SANDBOX_PAGES = [
+  ["/", "Загрузка и сеть"],
+  ["/render", "Рендер"],
+  ["/tag", "Тег"],
+  ["/many", "5000 иконок"],
+] as const;
+
+export type SandboxPage = (typeof SANDBOX_PAGES)[number][0];
 
 /** JSON внутри <script>: «<» экранируется, и текст не закроет блок раньше времени. */
 export const jsonInScript = (value: unknown) =>
   JSON.stringify(value).replace(/</g, "\\u003c");
 
 /** Ссылки между страницами песочницы с тем же хостом API; текущая — без ссылки. */
-export function sandboxNav(api: string, current: "/" | "/render"): string {
+export function sandboxNav(api: string, current: SandboxPage): string {
   const query = api === LIVE_API ? "" : `?api=${encodeURIComponent(api)}`;
-  return `<p class="nav">${(
-    [
-      ["/", "Загрузка и сеть"],
-      ["/render", "Рендер"],
-    ] as const
-  )
-    .map(([path, label]) =>
-      path === current
-        ? `<b>${label}</b>`
-        : `<a href="${esc(`${path}${query}`)}">${label}</a>`,
-    )
-    .join(" · ")}</p>`;
+  return `<p class="nav">${SANDBOX_PAGES.map(([path, label]) =>
+    path === current
+      ? `<b>${label}</b>`
+      : `<a href="${esc(`${path}${query}`)}">${label}</a>`,
+  ).join(" · ")}</p>`;
 }
 
 /** Адрес хоста без схемы — для подписей. */

@@ -145,7 +145,7 @@ Without a build step, import `configure` from the same address as the script, in
 | `inline` | `inline` | Present or absent; `true` or `false` in React | Absent |
 | `label` | `label` | Text for screen readers | None: the icon is decorative |
 | `placeholder` | `placeholder` | `skeleton`, `spinner` or `none` | `skeleton`, or the value from `configure()` |
-| `noobserver` | — | Present or absent | Absent: an icon renders when it becomes visible |
+| `noobserver` | — | Present or absent | Absent: an icon loads when it comes near the visible part of the page |
 
 - **Multicolor icons** (Fluent Emoji Flat) keep their colors: `color` and `stroke-width` do not change them.
 - **Rotation and flip** are drawn inside the SVG, not with a CSS transform, so the icon's box follows the drawing: at 90° and 270° a non-square icon swaps its width and height. Flip is applied before rotation.
@@ -259,9 +259,9 @@ Passes icons loaded on the server (`IconavoIconSet[]`, as returned by `loadIcons
 
 ### While an icon loads
 
-- The icon keeps a `1em` × `1em` square, or the size you set, so the text around it does not jump.
+- The icon keeps a `1em` × `1em` square, or the size you set, so the text around it does not jump. With only one side set, the square has that side; with `auto`, it is `1em` until the icon's own size is known.
 - If loading takes longer than 150 ms, a placeholder appears: a skeleton by default, a spinner with `placeholder="spinner"`, nothing with `placeholder="none"`. When the system asks to reduce motion, placeholders do not animate.
-- The tag loads an icon when it becomes visible; `noobserver` turns this off. The React component loads it when it mounts.
+- The tag loads an icon when it comes within half a screen of the visible part of the page, so it is usually ready when you scroll to it; `noobserver` turns this off. The React component loads it when it mounts.
 
 ### Batches and hosts
 

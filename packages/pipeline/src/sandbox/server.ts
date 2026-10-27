@@ -1,35 +1,47 @@
-// Сервер песочницы ядра (фаза 3, шаги 2–4): слушает только 127.0.0.1 и сверяет Host, как страница
-// поиска. Отдаёт две страницы — загрузку и сеть (/) и рендер (/render), их скрипты
-// (dist/sandbox/client.js и render-client.js) и файлы ядра из packages/core/dist — по имени из
-// строчных букв и дефисов, так что за пределы папки не выйти.
+// Сервер песочницы пакета (фаза 3, шаги 2–5): слушает только 127.0.0.1 и сверяет Host, как страница
+// поиска. Отдаёт четыре страницы — загрузку и сеть (/), рендер (/render), тег (/tag) и 5000 иконок
+// (/many), их скрипты (dist/sandbox/*-client.js), файлы ядра из packages/core/dist и пакета тега из
+// packages/icon/dist — по имени из строчных букв и дефисов, так что за пределы папки не выйти.
+// Скрипт тега по ?delay=N приходит на N мс позже: так страница 5000 иконок показывает место до его
+// загрузки.
 
 import { readFile } from "node:fs/promises";
 import { createServer, type Server } from "node:http";
 import { join } from "node:path";
+import { setTimeout as sleep } from "node:timers/promises";
 import { esc, htmlPage } from "../report/html.js";
 import { allowedHost, type Reply } from "../search/server.js";
-import { LIVE_API, LOCAL_API } from "./config.js";
+import { LIVE_API, LOCAL_API, MAX_SCRIPT_DELAY_MS } from "./config.js";
+import { manyData, manySets, renderManyPage } from "./many-page.js";
 import { renderSandboxPage, sandboxData } from "./page.js";
 import { renderData, renderVariantsPage } from "./render-page.js";
+import { renderTagPage, tagData } from "./tag-page.js";
 
 export interface SandboxContext {
   port: number;
   /** Папка packages/core/dist. */
   coreDir: string;
+  /** Папка packages/icon/dist: вывод tsc и скрипт для страниц без сборщика. */
+  iconDir: string;
   /** Скрипт страницы — dist/sandbox/client.js конвейера. */
   clientFile: string;
   /** Скрипт страницы рендера — dist/sandbox/render-client.js конвейера. */
   renderFile: string;
+  /** Скрипт страницы тега — dist/sandbox/tag-client.js конвейера. */
+  tagFile: string;
+  /** Скрипт страницы 5000 иконок — dist/sandbox/many-client.js конвейера. */
+  manyFile: string;
   /** Видимые имена каждого набора, по кодам символов. */
   names: Record<string, string[]>;
 }
 
 const JS = "text/javascript; charset=utf-8";
-const CORE_FILE = /^\/core\/([a-z]+(?:-[a-z]+)*)\.js$/;
+const HTML = "text/html; charset=utf-8";
+const PACKAGE_FILE = /^\/(core|icon)\/([a-z]+(?:-[a-z]+)*)\.js$/;
 
 const text = (status: number, message: string): Reply => ({
   status,
-  type: "text/html; charset=utf-8",
+  type: HTML,
   body: htmlPage(message, "", `<p>${esc(message)}</p>`),
 });
 
@@ -47,6 +59,12 @@ async function file(path: string, missing: string): Promise<Reply> {
   }
 }
 
+/** Задержка скрипта тега из ?delay= — целые мс до MAX_SCRIPT_DELAY_MS; другое — без задержки. */
+export function scriptDelay(value: string | null): number {
+  const ms = /^[0-9]{1,5}$/.test(value ?? "") ? Number(value) : 0;
+  return Math.min(ms, MAX_SCRIPT_DELAY_MS);
+}
+
 export async function reply(
   ctx: SandboxContext,
   method: string | undefined,
@@ -58,7 +76,13 @@ export async function reply(
   }
   if (method !== "GET" && method !== "HEAD") return text(405, "Только GET");
   const parsed = new URL(url ?? "/", `http://127.0.0.1:${ctx.port}`);
-  if (parsed.pathname === "/" || parsed.pathname === "/render") {
+  const page = parsed.pathname;
+  if (
+    page === "/" ||
+    page === "/render" ||
+    page === "/tag" ||
+    page === "/many"
+  ) {
     const api = apiHost(parsed.searchParams.get("api"));
     if (api === null) {
       return text(
@@ -66,26 +90,37 @@ export async function reply(
         `Хост API — только ${LIVE_API} или http://127.0.0.1:порт (pnpm api preview)`,
       );
     }
-    return {
-      status: 200,
-      type: "text/html; charset=utf-8",
-      body:
-        parsed.pathname === "/"
-          ? renderSandboxPage(sandboxData(api, ctx.names))
-          : renderVariantsPage(renderData(api)),
-    };
+    const body =
+      page === "/"
+        ? renderSandboxPage(sandboxData(api, ctx.names))
+        : page === "/render"
+          ? renderVariantsPage(renderData(api))
+          : page === "/tag"
+            ? renderTagPage(tagData(api))
+            : renderManyPage(
+                manyData(api, parsed.searchParams.get("slow-script") === "1"),
+                manySets(ctx.names),
+              );
+    return { status: 200, type: HTML, body };
   }
-  if (parsed.pathname === "/sandbox.js" || parsed.pathname === "/render.js") {
-    return file(
-      parsed.pathname === "/sandbox.js" ? ctx.clientFile : ctx.renderFile,
-      "Нет скрипта песочницы — запустите pnpm sandbox",
-    );
+  const scripts: Record<string, string> = {
+    "/sandbox.js": ctx.clientFile,
+    "/render.js": ctx.renderFile,
+    "/tag.js": ctx.tagFile,
+    "/many.js": ctx.manyFile,
+  };
+  const script = scripts[page];
+  if (script) {
+    return file(script, "Нет скрипта песочницы — запустите pnpm sandbox");
   }
-  const core = CORE_FILE.exec(parsed.pathname);
-  if (core) {
+  const own = PACKAGE_FILE.exec(page);
+  if (own) {
+    const icon = own[1] === "icon";
+    const ms = icon ? scriptDelay(parsed.searchParams.get("delay")) : 0;
+    if (ms > 0) await sleep(ms);
     return file(
-      join(ctx.coreDir, `${core[1]}.js`),
-      "Нет такого файла ядра — запустите pnpm sandbox: он собирает ядро",
+      join(icon ? ctx.iconDir : ctx.coreDir, `${own[2]}.js`),
+      "Нет такого файла пакета — запустите pnpm sandbox: он собирает ядро и тег",
     );
   }
   return text(404, "Нет такой страницы");

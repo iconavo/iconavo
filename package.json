@@ -29,7 +29,8 @@
     "packages": "tsc -b && node packages/pipeline/dist/cli.js packages",
     "api": "tsc -b && node --env-file-if-exists=.env packages/pipeline/dist/cli.js api",
     "sandbox": "tsc -b && node packages/pipeline/dist/cli.js sandbox",
-    "check": "pnpm lint && pnpm typecheck && pnpm api build && pnpm test && pnpm size"
+    "icon": "tsc -b && node packages/pipeline/dist/cli.js icon",
+    "check": "pnpm lint && pnpm typecheck && pnpm api build && pnpm icon build && pnpm test && pnpm size"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.5.15",

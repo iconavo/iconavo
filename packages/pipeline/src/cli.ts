@@ -8,8 +8,10 @@
 // | pnpm cdn build | pnpm cdn upload [--dry-run]
 // | pnpm cdn verify | pnpm cdn check | pnpm packages prepare [id…] [--new] [--force]
 // | pnpm packages verify [id…] [--wait=N] [--plan=…] | pnpm api build | pnpm api preview [--port=N]
-// | pnpm api check [--expect-build=…] | pnpm api bench [--base=…] | pnpm sandbox [--port=N]
+// | pnpm api check [--expect-build=…] | pnpm api bench [--base=…] | pnpm icon build
+// | pnpm sandbox [--port=N] [--browser=chrome|firefox|webkit | --check]
 import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
+import type { AddressInfo } from "node:net";
 import { basename, join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
 import { benchSearch, formatBench, renderBenchPage } from "./api/bench.js";
@@ -108,6 +110,7 @@ import {
   renderJudgePage,
 } from "./eval/report.js";
 import { evalStop, evaluate } from "./eval/run.js";
+import { buildIconScript, SCRIPT_FILE } from "./icon/build.js";
 import { type MeiliClient, meiliClient } from "./meili/client.js";
 import {
   DEFAULT_SEARCH_MAX_RUB,
@@ -139,8 +142,24 @@ import {
 } from "./npm/report.js";
 import { npmVerifyFailed, readPlan, verifyPackages } from "./npm/verify.js";
 import { gitHistory, loadBaseline } from "./qc/baseline.js";
+import {
+  BROWSER_TITLES,
+  BROWSERS,
+  type BrowserName,
+  isBrowserName,
+  launchBrowser,
+} from "./sandbox/browser.js";
+import { checkSandbox, sandboxCheckFailed } from "./sandbox/check.js";
+import {
+  formatSandboxCheck,
+  renderSandboxCheckPage,
+} from "./sandbox/check-report.js";
 import { LIVE_API, SANDBOX_PORT } from "./sandbox/config.js";
-import { startSandbox, visibleNames } from "./sandbox/server.js";
+import {
+  type SandboxContext,
+  startSandbox,
+  visibleNames,
+} from "./sandbox/server.js";
 import {
   formatFixtures,
   formatSanitizeReport,
@@ -284,12 +303,17 @@ const USAGE = `Использование:
                                       цель — 95% ответов не дольше 0,3 с (ADR-0040, ADR-0049);
                                       страница .cache/reports/api/bench.html
       --base=…                        другой адрес API: https://… или http://127.0.0.1:порт (превью)
-  pnpm sandbox                        песочница ядра пакета на 127.0.0.1 (фаза 3): иконки грузит
+  pnpm icon build                     скрипт тега для страниц без сборщика (ADR-0032): ${SCRIPT_FILE} —
+                                      один сжатый ES-модуль с ядром внутри; без изменений не пишет
+  pnpm sandbox                        песочница пакета на 127.0.0.1 (фаза 3): иконки грузит
                                       @iconavo-ui/core — пачки с api.iconavo.dev, при сбое по одной
                                       со статики (или всё с превью API); имитация сбоев хостов и
                                       журнал запросов для сверки с DevTools; /render — сетка
-                                      вариантов рендера
+                                      вариантов рендера; /tag — тег <iconavo-icon>; /many — 5000 иконок
       --port=N                        порт (по умолчанию ${SANDBOX_PORT})
+      --browser=…                     открыть /many в окне chrome, firefox или webkit (Playwright)
+      --check                         проверить тег в Chrome, Firefox и WebKit без интернета: превью
+                                      API на этом компьютере; отчёт .cache/reports/sandbox/check.html
   pnpm packages prepare [id…]       пакеты npm @iconavo-ui/icons-{набор} в ${NPM_OUT_DIR}/ (ADR-0026):
                                       данные, LICENSE, README, типы; версия — по реестру npm (только
                                       чтение, ключи не нужны); план для CI ${NPM_OUT_DIR}/plan.json;
@@ -396,6 +420,8 @@ let waitSeconds = 0;
 let planPath: string | undefined;
 let expectBuild: string | undefined;
 let benchBase: string | undefined;
+let checkBrowsers = false;
+let browserName: BrowserName | undefined;
 const modelKeys = new Set<string>();
 for (const flag of flags) {
   const eq = flag.indexOf("=");
@@ -465,6 +491,16 @@ for (const flag of flags) {
   ) {
     port = Number(value);
     continue;
+  }
+  if (command === "sandbox") {
+    if (flag === "--check") {
+      checkBrowsers = true;
+      continue;
+    }
+    if (name === "--browser" && value !== undefined && isBrowserName(value)) {
+      browserName = value;
+      continue;
+    }
   }
   if (
     command === "api" &&
@@ -1001,20 +1037,87 @@ try {
         console.warn(`${config.id}: не прочитан — ${(e as Error).message}`);
       }
     }
-    await startSandbox({
+    // Скрипт тега для страниц без сборщика — его берут страницы «Тег» и «5000 иконок».
+    const script = await buildIconScript(root);
+    console.log(
+      `Скрипт тега: ${SCRIPT_FILE} — в gzip ${formatBytes(script.gzipBytes)}${script.written ? ", собран заново" : ""}.`,
+    );
+    const client = (name: string) =>
+      fileURLToPath(new URL(`./sandbox/${name}`, import.meta.url));
+    const ctx: SandboxContext = {
       port,
       coreDir: join(root, "packages", "core", "dist"),
-      clientFile: fileURLToPath(
-        new URL("./sandbox/client.js", import.meta.url),
-      ),
-      renderFile: fileURLToPath(
-        new URL("./sandbox/render-client.js", import.meta.url),
-      ),
+      iconDir: join(root, "packages", "icon", "dist"),
+      clientFile: client("client.js"),
+      renderFile: client("render-client.js"),
+      tagFile: client("tag-client.js"),
+      manyFile: client("many-client.js"),
       names,
-    });
+    };
+    if (checkBrowsers) {
+      // Проверка без интернета: API и статика — превью на этом компьютере, всё на свободных портах.
+      const cdn = await buildCdn(configs, { dataDir, outDir: distCdnDir });
+      if (cdnStop(cdn)) {
+        console.error(
+          "Сборка раздачи остановлена — превью API без данных не запустить: pnpm cdn build покажет почему.",
+        );
+        process.exit(1);
+      }
+      const preview = await startApiPreview({
+        root,
+        outDir: distApiDir,
+        cdnDir: distCdnDir,
+        port: 0,
+      });
+      ctx.port = 0;
+      const server = await startSandbox(ctx);
+      ctx.port = (server.address() as AddressInfo).port;
+      const base = `http://127.0.0.1:${ctx.port}`;
+      const api = `http://127.0.0.1:${preview.port}`;
+      const browsers = browserName ? [browserName] : BROWSERS;
+      console.log(
+        `Проверяю тег: ${browsers.map((b) => BROWSER_TITLES[b]).join(", ")} — песочница ${base}, превью API ${api}…`,
+      );
+      const results = await checkSandbox({
+        base,
+        api,
+        browsers,
+        log: (line) => console.log(`  ${line}`),
+      });
+      console.log("");
+      for (const line of formatSandboxCheck(results)) console.log(line);
+      const reportDir = join(reportsDir, "sandbox");
+      await mkdir(reportDir, { recursive: true });
+      const htmlPath = join(reportDir, "check.html");
+      await writeFile(htmlPath, renderSandboxCheckPage(results), "utf8");
+      console.log(`Отчёт: ${htmlPath}`);
+      server.close();
+      await preview.close();
+      process.exit(sandboxCheckFailed(results) ? 1 : 0);
+    }
+    const server = await startSandbox(ctx);
     console.log(
-      `Песочница ядра: http://127.0.0.1:${port}/ — наборов ${Object.keys(names).length}, иконки с ${LIVE_API} и запасных хостов статики; сетка вариантов рендера — http://127.0.0.1:${port}/render. Остановить — Ctrl+C.`,
+      `Песочница: http://127.0.0.1:${port}/ — наборов ${Object.keys(names).length}, иконки с ${LIVE_API} и запасных хостов статики; рендер — /render, тег — /tag, 5000 иконок — /many. Остановить — Ctrl+C.`,
     );
+    if (browserName) {
+      // Окно браузера для ручной проверки: закрыли окно — песочница остановилась.
+      const browser = await launchBrowser(browserName, false);
+      const page = await (
+        await browser.newContext({ viewport: null })
+      ).newPage();
+      const stop = () => {
+        server.close();
+        process.exit(0);
+      };
+      browser.on("disconnected", stop);
+      page.on("close", () => {
+        browser.close().finally(stop);
+      });
+      await page.goto(`http://127.0.0.1:${port}/many`);
+      console.log(
+        `Открыто окно ${BROWSER_TITLES[browserName]}: страница /many, меню песочницы — сверху. Закройте окно, чтобы остановить песочницу.`,
+      );
+    }
   } else if (command === "search-index") {
     if (args.length > 0) {
       usageError(
@@ -1375,6 +1478,18 @@ try {
     console.log(
       `Превью edge API: http://127.0.0.1:${preview.port}/ — сборка ${preview.build}, данные из dist-cdn/. Остановить — Ctrl+C.`,
     );
+  } else if (command === "icon") {
+    if (args.length !== 1 || args[0] !== "build") {
+      usageError("pnpm icon: нужна подкоманда build.");
+    }
+    const report = await buildIconScript(root);
+    console.log(
+      `Скрипт тега: ${SCRIPT_FILE} — ${formatBytes(report.bytes)}, в gzip ${formatBytes(report.gzipBytes)}.`,
+    );
+    console.log(
+      report.written ? "Записан." : "Без изменений: файл на диске тот же.",
+    );
+    process.exit(0);
   } else {
     usageError(
       command ? `Неизвестная команда «${command}».` : "Нужна команда.",

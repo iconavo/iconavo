@@ -71,8 +71,8 @@ export function workerMetadata(): Json {
 const sha256 = (text: string) =>
   createHash("sha256").update(text, "utf8").digest("hex");
 
-/** Импорты, которых в бандле Workers быть не должно: всё внутри одного файла. */
-const IMPORT = /^\s*import[\s{*"']|\bimport\(|\brequire\(/m;
+/** Импорты, которых в бандле быть не должно: всё внутри одного файла (функция и скрипт тега). */
+export const IMPORT = /^\s*import[\s{*"']|\bimport\(|\brequire\(/m;
 
 /** Бандл с заглушкой метки — чистая функция исходников. */
 export async function bundleWorker(root: string): Promise<string> {

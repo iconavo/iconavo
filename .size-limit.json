@@ -7,5 +7,19 @@
     },
     "limit": "5 kB",
     "gzip": true
+  },
+  {
+    "name": "@iconavo-ui/icon",
+    "path": "packages/icon/dist/index.js",
+    "ignore": ["@iconavo-ui/core"],
+    "limit": "2 kB",
+    "gzip": true
+  },
+  {
+    "name": "@iconavo-ui/icon/dist/iconavo-icon.js",
+    "path": "packages/icon/dist/iconavo-icon.js",
+    "rolldown": false,
+    "limit": "7 kB",
+    "gzip": true
   }
 ]
