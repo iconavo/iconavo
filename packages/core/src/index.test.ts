@@ -1,20 +1,53 @@
-import { afterEach, describe, expect, it, vi } from "vitest";
 import {
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  type MockInstance,
+  vi,
+} from "vitest";
+import {
+  type Behavior,
   deferred,
   demoBatch,
+  demoHosts,
   fakeFetch,
+  fakeNet,
+  fakeTime,
   freshCore,
+  hosts,
   idle,
+  realTime,
+  settled,
+  wait,
+  warnings,
 } from "./fake.testing.js";
+import type { IconavoIconSet } from "./icon.js";
 
+let warn: MockInstance;
+beforeEach(() => {
+  fakeTime();
+  warn = warnings();
+});
 afterEach(() => {
-  vi.unstubAllGlobals();
+  realTime();
   delete (globalThis as unknown as Record<symbol, unknown>)[
     Symbol.for("iconavo.core.1")
   ];
 });
 
-const BASE = "https://api.iconavo.dev/demo.json?icons=";
+const API = "https://api.iconavo.dev";
+const BASE = `${API}/demo.json?icons=`;
+
+/** Все четыре наших хоста с одним поведением. */
+const all = (behavior: Behavior) =>
+  hosts({
+    "api.iconavo.dev": behavior,
+    "cdn.iconavo.dev": behavior,
+    "cdn2.iconavo.dev": behavior,
+    "iconavo.b-cdn.net": behavior,
+  });
 
 describe("публичное API", () => {
   it("главный вход — ровно четыре функции README", async () => {
@@ -160,10 +193,53 @@ describe("setLoader", () => {
     expect(core.getIcon("none:a")).toBe("missing");
     expect(core.getIcon("flaky:a")).toBe("error");
     expect(core.getIcon("sync:a")).toBe("error");
+    expect(warn).toHaveBeenCalledWith(
+      'Iconavo: icon "sync:a" failed to load',
+      expect.objectContaining({ message: "bug" }),
+    );
     fail = false;
     core.loadIcon("flaky:a");
     await idle();
     expect(core.getIcon("flaky:a")).toMatchObject({ body: "<g/>" });
+  });
+
+  it("отказ — повторы через 1, 2 и 4 с, пока иконку показывают; null — «нет» без повторов", async () => {
+    const core = await freshCore();
+    const start = Date.now();
+    const at: number[] = [];
+    core.setLoader("acme", async () => {
+      at.push(Date.now() - start);
+      throw new Error("offline");
+    });
+    core.setLoader("none", async () => null);
+    for (const name of ["acme:logo", "none:logo"]) {
+      core.subscribeIcon(name, () => {});
+      core.loadIcon(name);
+    }
+    await wait(10_000);
+    expect(at).toEqual([0, 1000, 3000, 7000]);
+    expect(core.getIcon("acme:logo")).toBe("error");
+    expect(core.getIcon("none:logo")).toBe("missing");
+    expect(vi.getTimerCount()).toBe(0);
+  });
+
+  it("молчит 5 с — повтор; поздний ответ первого вызова принимается", async () => {
+    const core = await freshCore();
+    const first = deferred<IconavoIconSet | null>();
+    const loader = vi
+      .fn<(names: string[]) => Promise<IconavoIconSet | null>>()
+      .mockReturnValueOnce(first.promise)
+      .mockReturnValue(new Promise(() => {}));
+    core.setLoader("acme", loader);
+    core.subscribeIcon("acme:logo", () => {});
+    core.loadIcon("acme:logo");
+    await wait(5999);
+    expect(loader).toHaveBeenCalledTimes(1);
+    await wait(1);
+    expect(loader).toHaveBeenCalledTimes(2);
+    first.resolve({ prefix: "acme", icons: { logo: { body: "<g/>" } } });
+    await idle();
+    expect(core.getIcon("acme:logo")).toMatchObject({ body: "<g/>" });
   });
 
   it("null вместо функции снимает загрузчик; неверный префикс — исключение", async () => {
@@ -183,14 +259,16 @@ describe("loadIcons", () => {
     const requests = fakeFetch();
     const core = await freshCore();
     core.addIcons({ prefix: "acme", icons: { logo: { body: "<g/>" } } });
-    const sets = await core.loadIcons([
-      "demo:house",
-      "acme:logo",
-      "demo:missing-x",
-      "demo:house",
-      "demo:Bad",
-      "nonsense",
-    ]);
+    const sets = await settled(
+      core.loadIcons([
+        "demo:house",
+        "acme:logo",
+        "demo:missing-x",
+        "demo:house",
+        "demo:Bad",
+        "nonsense",
+      ]),
+    );
     expect(sets).toEqual([
       {
         prefix: "demo",
@@ -213,6 +291,11 @@ describe("loadIcons", () => {
       },
     ]);
     expect(requests).toEqual([`${BASE}house,missing-x`]);
+    expect(warn.mock.calls.map(([message]) => message).sort()).toEqual([
+      'Iconavo: icon "demo:missing-x" not found',
+      'Iconavo: invalid icon name "demo:Bad"',
+      'Iconavo: invalid icon name "nonsense"',
+    ]);
     // Ответ — копии: правка не меняет хранилище.
     (sets[0]?.icons.house as { body: string }).body = "<changed/>";
     expect(core.getIcon("demo:house")).toMatchObject({
@@ -227,17 +310,20 @@ describe("loadIcons", () => {
 
   it("не отклоняется: не загрузившихся иконок в ответе нет", async () => {
     fakeFetch((url) =>
-      url.searchParams.get("icons") === "broken"
+      url.searchParams.get("icons") === "broken" ||
+      url.pathname.endsWith("/broken.json")
         ? Promise.reject(new TypeError("Failed to fetch"))
-        : demoBatch(url),
+        : demoHosts(url),
     );
     const core = await freshCore();
-    expect(await core.loadIcons(["demo:broken"])).toEqual([]);
-    expect(await core.loadIcons(["demo:house"])).toEqual([
+    expect(await settled(core.loadIcons(["demo:broken"]))).toEqual([]);
+    expect(await settled(core.loadIcons(["demo:house"]))).toEqual([
       expect.objectContaining({ prefix: "demo" }),
     ]);
-    expect(await core.loadIcons([])).toEqual([]);
-    expect(await core.loadIcons([null as unknown as string])).toEqual([]);
+    expect(await settled(core.loadIcons([]))).toEqual([]);
+    expect(await settled(core.loadIcons([null as unknown as string]))).toEqual(
+      [],
+    );
   });
 
   it("ждёт имя, которое уже грузится, и не запрашивает его второй раз", async () => {
@@ -248,10 +334,57 @@ describe("loadIcons", () => {
     await idle();
     const loading = core.loadIcons(["demo:house"]);
     answer.resolve(demoBatch(new URL(`${BASE}house`)));
-    expect((await loading)[0]?.icons.house).toMatchObject({
+    expect((await settled(loading))[0]?.icons.house).toMatchObject({
       body: '<path d="house"/>',
     });
     expect(requests).toHaveLength(1);
+  });
+
+  it("один проход: хосты отказали — ответ сразу, после него ни таймеров, ни запросов", async () => {
+    const calls = fakeNet(all("down"));
+    const core = await freshCore();
+    expect(await settled(core.loadIcons(["demo:house"]))).toEqual([]);
+    expect(calls).toHaveLength(4);
+    expect(vi.getTimerCount()).toBe(0);
+    await wait(10_000);
+    expect(calls).toHaveLength(4);
+    expect(core.getIcon("demo:house")).toBe("error");
+  });
+
+  it("хосты молчат — ответ ровно через 5 с, без повторов", async () => {
+    const calls = fakeNet(all("silent"));
+    const core = await freshCore();
+    let result: IconavoIconSet[] | undefined;
+    void core.loadIcons(["demo:house"]).then((sets) => {
+      result = sets;
+    });
+    await wait(4999);
+    expect(result).toBeUndefined();
+    await wait(1);
+    expect(result).toEqual([]);
+    await wait(10_000);
+    expect(calls).toHaveLength(4);
+    expect(core.getIcon("demo:house")).toBe("error");
+    expect(vi.getTimerCount()).toBe(0);
+  });
+
+  it("имя повторяют ради иконки на странице — ответ не позже 5 с, своего запроса нет", async () => {
+    const calls = fakeNet(all("down"));
+    const core = await freshCore();
+    core.subscribeIcon("demo:house", () => {});
+    core.loadIcon("demo:house");
+    let result: IconavoIconSet[] | undefined;
+    void core.loadIcons(["demo:house"]).then((sets) => {
+      result = sets;
+    });
+    await wait(4999);
+    expect(result).toBeUndefined();
+    await wait(1);
+    // В полёте имя не «нет»: в not_found его нет.
+    expect(result).toEqual([]);
+    expect(calls.filter((c) => c.url.startsWith(API)).map((c) => c.at)).toEqual(
+      [0, 1000, 3000],
+    );
   });
 });
 
@@ -267,6 +400,20 @@ describe("configure", () => {
       placeholder: "spinner",
       dev: true,
     });
+  });
+
+  it("хосты по умолчанию — четыре адреса ADR-0030; configure их не портит", async () => {
+    const core = await freshCore();
+    expect(core.DEFAULT_API).toEqual(["https://api.iconavo.dev"]);
+    expect(core.DEFAULT_CDN).toEqual([
+      "https://cdn.iconavo.dev",
+      "https://cdn2.iconavo.dev",
+      "https://iconavo.b-cdn.net",
+    ]);
+    expect(core.store.settings.cdn).toEqual(core.DEFAULT_CDN);
+    expect(core.store.settings.cdn).not.toBe(core.DEFAULT_CDN);
+    core.configure({ api: [], cdn: [] });
+    expect(core.DEFAULT_CDN).toHaveLength(3);
   });
 });
 
@@ -295,6 +442,31 @@ describe("общее хранилище", () => {
       body: '<path d="house"/>',
     });
     expect(redraw).toHaveBeenCalled();
+  });
+
+  it("повторяет копия, которая грузила, пока иконку показывает другая", async () => {
+    vi.stubGlobal("document", {});
+    const calls = fakeNet(all("down"));
+    const first = await freshCore();
+    const second = await freshCore();
+    second.subscribeIcon("demo:house", () => {});
+    first.loadIcon("demo:house");
+    second.loadIcon("demo:house");
+    await wait(1000);
+    expect(calls.filter((c) => c.url.startsWith(API)).map((c) => c.at)).toEqual(
+      [0, 1000],
+    );
+  });
+
+  it("предупреждение одно на страницу и при двух копиях ядра", async () => {
+    vi.stubGlobal("document", {});
+    const first = await freshCore();
+    const second = await freshCore();
+    first.loadIcon("Lucide:House");
+    second.loadIcon("Lucide:House");
+    expect(warn.mock.calls).toEqual([
+      ['Iconavo: invalid icon name "Lucide:House"'],
+    ]);
   });
 
   it("на сервере у каждой копии своё, и в globalThis ничего не пишется", async () => {
