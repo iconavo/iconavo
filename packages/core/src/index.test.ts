@@ -305,7 +305,7 @@ describe("loadIcons", () => {
     expect(core.getIcon("demo:house")).toMatchObject({
       body: '<path d="house"/>',
     });
-    // Ответ подходит для addIcons — так его передаст IconavoProvider (шаг 6).
+    // Ответ подходит для addIcons — так его передаст IconavoProvider (шаг 7).
     const other = await freshCore();
     other.addIcons(sets);
     expect(other.getIcon("demo:house")).toMatchObject({ width: 24 });
