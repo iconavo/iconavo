@@ -49816,6 +49816,20 @@
         "contrast"
       ]
     },
+    "contrast-auto": {
+      "fingerprint": "7f8fb80b4b16",
+      "tags": [
+        "contrast",
+        "auto"
+      ]
+    },
+    "contrast-auto-rounded": {
+      "fingerprint": "7f9d01a06f9c",
+      "tags": [
+        "contrast",
+        "auto"
+      ]
+    },
     "contrast-circle": {
       "en": {
         "description": "A circle split diagonally into black and white halves with plus and minus signs, usually meaning contrast adjustment.",
@@ -49857,6 +49871,29 @@
       "tags": [
         "contrast",
         "circle"
+      ]
+    },
+    "contrast-inverse": {
+      "fingerprint": "6862d60987f5",
+      "tags": [
+        "contrast",
+        "inverse"
+      ]
+    },
+    "contrast-inverse-auto": {
+      "fingerprint": "c740ac09fa82",
+      "tags": [
+        "contrast",
+        "inverse",
+        "auto"
+      ]
+    },
+    "contrast-inverse-auto-rounded": {
+      "fingerprint": "c2691408a71a",
+      "tags": [
+        "contrast",
+        "inverse",
+        "auto"
       ]
     },
     "contrast-rtl-off": {
@@ -107176,6 +107213,48 @@
         "input"
       ]
     },
+    "input-search": {
+      "fingerprint": "3e959278b407",
+      "tags": [
+        "input",
+        "search"
+      ]
+    },
+    "input-search-outline": {
+      "fingerprint": "25c83781f24a",
+      "tags": [
+        "input",
+        "search"
+      ]
+    },
+    "input-search-outline-rounded": {
+      "fingerprint": "8066cdc718ad",
+      "tags": [
+        "input",
+        "search"
+      ]
+    },
+    "input-search-outline-sharp": {
+      "fingerprint": "4bac475d8509",
+      "tags": [
+        "input",
+        "search"
+      ]
+    },
+    "input-search-rounded": {
+      "fingerprint": "01baf256a16c",
+      "tags": [
+        "input",
+        "search"
+      ]
+    },
+    "input-search-sharp": {
+      "fingerprint": "033721c1ccf2",
+      "tags": [
+        "input",
+        "search"
+      ]
+    },
     "input-sharp": {
       "fingerprint": "697ae20f9fbb",
       "tags": [
@@ -121283,6 +121362,48 @@
       "fingerprint": "98e6512310b2",
       "tags": [
         "mail"
+      ]
+    },
+    "mail-person": {
+      "fingerprint": "69194d7cb49c",
+      "tags": [
+        "mail",
+        "person"
+      ]
+    },
+    "mail-person-outline": {
+      "fingerprint": "ad6d34c3939d",
+      "tags": [
+        "mail",
+        "person"
+      ]
+    },
+    "mail-person-outline-rounded": {
+      "fingerprint": "bd2ae97e2ed0",
+      "tags": [
+        "mail",
+        "person"
+      ]
+    },
+    "mail-person-outline-sharp": {
+      "fingerprint": "6da21503ea2b",
+      "tags": [
+        "mail",
+        "person"
+      ]
+    },
+    "mail-person-rounded": {
+      "fingerprint": "bf7921372be8",
+      "tags": [
+        "mail",
+        "person"
+      ]
+    },
+    "mail-person-sharp": {
+      "fingerprint": "210e72e47b1f",
+      "tags": [
+        "mail",
+        "person"
       ]
     },
     "mail-rounded": {
