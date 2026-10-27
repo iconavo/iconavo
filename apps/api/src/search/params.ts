@@ -3,7 +3,7 @@
 // результат. Ключ кэша строится из нормализованных значений в постоянном порядке: «Дом» и «дом»
 // дают один ответ.
 
-import { isValidNamePart } from "@iconavo-ui/core";
+import { isValidNamePart } from "@iconavo-ui/core/internal";
 import {
   exactName,
   LIMIT_DEFAULT,

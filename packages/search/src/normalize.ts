@@ -3,7 +3,7 @@
 // дефисы, подчёркивания и пробелы — один пробел. «Shopping-Cart» и «shopping cart» дают один вектор,
 // «Ёлка» и «елка» — одну фразу каталога. Правило «точное имя первым» (ADR-0009, ADR-0048) — тоже здесь.
 
-import { isValidIconName, isValidNamePart } from "@iconavo-ui/core";
+import { isValidIconName, isValidNamePart } from "@iconavo-ui/core/internal";
 
 const CONTROL = /\p{Cc}/gu;
 const SEPARATORS = /[\s_-]+/gu;

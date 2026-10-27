@@ -6,7 +6,7 @@
 import { readdir, readFile } from "node:fs/promises";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { iconData, iconToSvg, svgToString } from "@iconavo-ui/core";
+import { iconData, iconToSvg, svgToString } from "@iconavo-ui/core/internal";
 import type { IconsFile } from "@iconavo-ui/schema";
 import { describe, expect, it } from "vitest";
 import { effectiveIcon } from "./files.js";

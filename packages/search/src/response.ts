@@ -3,7 +3,7 @@
 // и если оно равно limit, есть следующая страница. results и semantic — наши: карточка с вариантами
 // и оттенками и полнота выдачи.
 
-import { isValidIconName, isValidNamePart } from "@iconavo-ui/core";
+import { isValidIconName, isValidNamePart } from "@iconavo-ui/core/internal";
 import { EXACT_LIMIT } from "./config.js";
 import { mainWindow } from "./request.js";
 

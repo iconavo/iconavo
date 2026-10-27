@@ -4,7 +4,8 @@
 // он оборачивается в новый Response; тело собирается строкой, и из неё делаются два ответа: в кэш и
 // клиенту.
 
-import { type IconifySet, isValidNamePart } from "@iconavo-ui/core";
+import type { IconavoIconSet } from "@iconavo-ui/core";
+import { isValidNamePart } from "@iconavo-ui/core/internal";
 import { batchBody } from "./batch.js";
 import { cacheKey } from "./cache.js";
 import { CACHE_OK, SVG_CSP, TYPES } from "./config.js";
@@ -58,7 +59,7 @@ interface Plan {
   names: readonly string[];
   headers: Record<string, string>;
   body: (
-    files: ReadonlyMap<string, IconifySet | null>,
+    files: ReadonlyMap<string, IconavoIconSet | null>,
     entry: SetEntry,
   ) => string | null;
 }

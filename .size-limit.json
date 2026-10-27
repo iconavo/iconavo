@@ -1,7 +1,10 @@
 [
   {
     "name": "@iconavo-ui/core",
-    "path": "packages/core/dist/index.js",
+    "import": {
+      "packages/core/dist/index.js": "{ addIcons, configure, loadIcons, setLoader }",
+      "packages/core/dist/internal.js": "*"
+    },
     "limit": "5 kB",
     "gzip": true
   }

@@ -2,7 +2,7 @@
 // нельзя, как в workerd, — и файлы имён в формате статики (pnpm cdn build, ADR-0022). Для поиска
 // (ADR-0049) — Meilisearch и Polza за подменным fetch и лимит частоты.
 
-import type { IconifyAlias, IconifyIcon } from "@iconavo-ui/core";
+import type { IconavoAlias, IconavoIcon } from "@iconavo-ui/core";
 import type { Bucket, EdgeCache } from "./env.js";
 import { compactJson, type Json } from "./json.js";
 
@@ -12,8 +12,8 @@ export const LAST_MODIFIED = 1792490457;
 /** Файл имени: иконка в конце цепочки и, у алиаса, вся цепочка; размеры набора. */
 export function nameFileText(
   set: string,
-  icons: Record<string, IconifyIcon>,
-  aliases?: Record<string, IconifyAlias>,
+  icons: Record<string, IconavoIcon>,
+  aliases?: Record<string, IconavoAlias>,
   size = 24,
 ): string {
   return compactJson({

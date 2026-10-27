@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { type IconifySet, iconData } from "./icon.js";
+import { type IconavoIconSet, iconData } from "./icon.js";
 
-const SET: IconifySet = {
+const SET: IconavoIconSet = {
   prefix: "demo",
   width: 24,
   height: 24,

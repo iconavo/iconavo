@@ -2,7 +2,7 @@
 // aliases есть всегда, not_found — только если что-то не нашлось. Размеры набора — из файлов имён:
 // у всех имён набора они одинаковые; не нашлось ничего — без размеров.
 
-import type { IconifySet } from "@iconavo-ui/core";
+import type { IconavoIconSet } from "@iconavo-ui/core";
 import { compactJson, type Json } from "./json.js";
 import type { SetEntry } from "./manifest.js";
 
@@ -10,12 +10,12 @@ export function batchBody(
   set: string,
   entry: SetEntry,
   names: readonly string[],
-  files: ReadonlyMap<string, IconifySet | null>,
+  files: ReadonlyMap<string, IconavoIconSet | null>,
 ): string {
   const icons: { [key: string]: Json } = {};
   const aliases: { [key: string]: Json } = {};
   const notFound: string[] = [];
-  let sizes: IconifySet | undefined;
+  let sizes: IconavoIconSet | undefined;
   for (const name of names) {
     const file = files.get(name);
     if (!file) {

@@ -2,7 +2,7 @@
 // неизвестные не читаются и в ключ кэша не входят. Значения проверяются по закрытым правилам: в SVG
 // и CSS попадает только то, что прошло проверку, — так ни цвет, ни размер не подменят разметку.
 
-import { isValidNamePart } from "@iconavo-ui/core";
+import { isValidNamePart } from "@iconavo-ui/core/internal";
 import { MAX_ICONS, MAX_NAME_LENGTH, MAX_VALUE_LENGTH } from "./config.js";
 import { ApiError } from "./http.js";
 
