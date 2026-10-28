@@ -26,4 +26,34 @@ jobs:
       # Скрипт тега для страниц без сборщика — тоже один модуль; его размер меряет pnpm size (ADR-0034).
       - run: pnpm icon build
       - run: pnpm test
-      - run: pnpm size
+      # Бюджеты размера (ADR-0034): size-limit — один раз, таблица — в журнале и в сводке запуска, и при
+      # превышении тоже. Превышение роняет проверку, сломанная таблица — тоже.
+      - name: Размер пакетов
+        run: |
+          set -o pipefail
+          status=0
+          pnpm exec size-limit --json > "$RUNNER_TEMP/size.json" || status=$?
+          node - "$RUNNER_TEMP/size.json" <<'JS' | tee -a "$GITHUB_STEP_SUMMARY"
+          const checks = JSON.parse(require("node:fs").readFileSync(process.argv[2], "utf8"));
+          if (!Array.isArray(checks)) {
+            console.error(checks.error ?? checks);
+            process.exit(1);
+          }
+          const kb = (bytes) => `${(bytes / 1000).toFixed(2).replace(".", ",").replace("-", "−")} КБ`;
+          const row = (c) =>
+            c.sizeLimit === undefined
+              ? `| \`${c.name}\` | — | — | — | нет файла |`
+              : `| \`${c.name}\` | ${kb(c.size)} | ${kb(c.sizeLimit)} | ${kb(c.sizeLimit - c.size)} | ${c.passed ? "ок" : `**превышен на ${kb(c.size - c.sizeLimit)}**`} |`;
+          console.log(
+            [
+              "### Размер пакетов (gzip, ADR-0034)",
+              "",
+              "| Пакет | Размер | Бюджет | Запас | Итог |",
+              "| --- | ---: | ---: | ---: | --- |",
+              ...checks.map(row),
+              "",
+              "Тег и React — сверх ядра, скрипт для страниц без сборщика — с ядром внутри. КБ — 1000 байт, как у size-limit.",
+            ].join("\n"),
+          );
+          JS
+          exit "$status"
