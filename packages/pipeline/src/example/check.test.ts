@@ -7,6 +7,7 @@ import {
   type ExampleNames,
   type ExampleResult,
   expectedWarnings,
+  LIVE_HOSTS,
   networkVerdict,
   type Placeholder,
   placeholderVerdict,
@@ -72,6 +73,22 @@ describe("запросы к хостам иконок", () => {
     expect(bad.note).toContain("дважды: lucide:cat");
     expect(bad.note).toContain("не запрошены: ph:fish, lucide:search");
     expect(bad.note).toContain("запросов к статике: 1");
+    const live = networkVerdict(
+      [`${API}/lucide.json?icons=cat,search`, `${API}/ph.json?icons=fish`],
+      API,
+      NAMES.server,
+      expected,
+      ["https://api.iconavo.dev/lucide.json?icons=bird"],
+    );
+    expect(live.ok).toBe(false);
+    expect(live.note).toBe("к живым хостам: 1 (api.iconavo.dev)");
+    expect(LIVE_HOSTS.test("https://cdn2.iconavo.dev/manifest.json")).toBe(
+      true,
+    );
+    expect(LIVE_HOSTS.test("https://iconavo.b-cdn.net/manifest.json")).toBe(
+      true,
+    );
+    expect(LIVE_HOSTS.test(`${API}/lucide.json`)).toBe(false);
   });
 });
 

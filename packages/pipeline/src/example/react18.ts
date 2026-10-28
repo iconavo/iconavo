@@ -289,11 +289,15 @@ export async function startReact18(o: {
     } catch (e) {
       r = text(500, `Ошибка: ${(e as Error).message}`);
     }
+    // Страница с ?axe=1 — без политики: в неё вставляет свой скрипт проверка доступности (check.ts).
+    const axe = new URL(req.url ?? "/", "http://127.0.0.1").searchParams.has(
+      "axe",
+    );
     res.writeHead(r.status, {
       "content-type": r.type,
       "cache-control": "no-store",
       "x-content-type-options": "nosniff",
-      "content-security-policy": csp,
+      ...(axe ? {} : { "content-security-policy": csp }),
     });
     res.end(req.method === "HEAD" ? undefined : r.body);
   });

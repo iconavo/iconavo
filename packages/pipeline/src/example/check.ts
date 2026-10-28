@@ -170,12 +170,23 @@ export function requested(
   return { names, batches, statics };
 }
 
-/** Сеть: имена обёртки не запрашиваются, ожидаемые — ровно по разу, к статике не ходят. */
+/**
+ * Живые хосты иконок: проверка идёт без интернета, запрос к ним — ошибка настройки страницы. Такие
+ * запросы проверка обрывает и показывает в строке «Сеть».
+ */
+export const LIVE_HOSTS =
+  /^https:\/\/([a-z0-9-]+\.)*(iconavo\.dev|b-cdn\.net)\//;
+
+/**
+ * Сеть: имена обёртки не запрашиваются, ожидаемые — ровно по разу, к статике не ходят, к живым хостам
+ * — тоже.
+ */
 export function networkVerdict(
   urls: string[],
   api: string,
   provided: string[],
   expected: string[],
+  live: string[] = [],
 ): Verdict {
   const { names, batches, statics } = requested(urls, api);
   const unique = (list: string[]) => [...new Set(list)].join(", ");
@@ -187,6 +198,9 @@ export function networkVerdict(
     twice.length > 0 ? `дважды: ${unique(twice)}` : "",
     missed.length > 0 ? `не запрошены: ${missed.join(", ")}` : "",
     statics > 0 ? `запросов к статике: ${statics}` : "",
+    live.length > 0
+      ? `к живым хостам: ${live.length} (${unique(live.map((u) => new URL(u).host))})`
+      : "",
   ].filter(Boolean);
   return problems.length === 0
     ? pass(
@@ -287,6 +301,16 @@ export function canaryVerdict(messages: string[]): Verdict {
 }
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+/** Без интернета: запросы страницы к живым хостам иконок обрываются и записываются. */
+async function offline(page: Page): Promise<string[]> {
+  const live: string[] = [];
+  await page.route(LIVE_HOSTS, (route) => {
+    live.push(route.request().url());
+    return route.abort();
+  });
+  return live;
+}
 
 /**
  * Сторожа до скриптов страницы: изменения в разделе «С сервера» после разбора HTML (разбор только
@@ -495,6 +519,7 @@ async function checkHydration(
   page.on("request", (request) => {
     if (request.url().startsWith(o.api)) urls.push(request.url());
   });
+  const live = await offline(page);
   // Ответы хостов иконок — на SLOW_MS позже: до них место держит резерв.
   await page.route(`${o.api}/**`, async (route) => {
     await sleep(SLOW_MS);
@@ -573,12 +598,13 @@ async function checkHydration(
     o.names,
     { timeout: 60_000 },
   );
-  v.network = networkVerdict(urls, o.api, o.names.server, [
-    ...o.names.browser,
-    o.names.tag,
-    o.names.missing,
-    o.names.missingTag,
-  ]);
+  v.network = networkVerdict(
+    urls,
+    o.api,
+    o.names.server,
+    [...o.names.browser, o.names.tag, o.names.missing, o.names.missingTag],
+    live,
+  );
 
   const outline = await page.evaluate((n) => {
     const svg = document.querySelector(`svg[data-name="${n}"]`);
@@ -824,11 +850,23 @@ const axe = () => {
   return axeSource;
 };
 
+/** Шаг проверки с названием: ошибка говорит, на каком шаге она остановилась. */
+async function step<T>(title: string, run: () => Promise<T>): Promise<T> {
+  try {
+    return await run();
+  } catch (e) {
+    throw new Error(`${title}: ${(e as Error).message.split("\n")[0]}`);
+  }
+}
+
 /**
  * Доступность (ADR-0035): axe-core на главной и на /more после гидратации, когда иконки нарисованы.
- * Контекст — без CSP: иначе строгая политика и Trusted Types не пустят скрипт axe. Подпись тега через
- * ElementInternals axe не видит (Deque: невидимы, пока компонент сам их не откроет) — её проверяет
- * строка «Подпись» по дереву доступности Chrome.
+ * Скрипт axe нужно вставить в страницу, а строгая политика и Trusted Types этого не дают. Поэтому
+ * контекст — с bypassCSP, а адрес — с ?axe=1: по нему страницы React 18 отдаются без политики. WebKit
+ * с bypassCSP политику не снимает — ни Trusted Types, ни connect-src; Next.js параметр не замечает, а
+ * его политика встроенные скрипты разрешает. Подпись тега через ElementInternals axe не видит (Deque:
+ * невидимы, пока компонент сам их не откроет) — её проверяет строка «Подпись» по дереву доступности
+ * Chrome.
  */
 async function checkAxe(
   browser: Browser,
@@ -840,56 +878,100 @@ async function checkAxe(
     bypassCSP: true,
   });
   const page = await context.newPage();
+  const seen = watch(page);
+  const live = await offline(page);
   const source = await axe();
   const pages: { path: string; violations: AxeViolation[] }[] = [];
-  for (const path of ["/", "/more"]) {
-    await page.goto(`${o.base}${path}`, {
-      waitUntil: "load",
-      timeout: 120_000,
-    });
-    await allDrawn(page, BROWSER_ICONS);
-    if (path === "/") {
-      await page.waitForFunction(
-        () =>
-          document
-            .querySelector('svg[data-name="acme:logo"]')
-            ?.hasAttribute("viewBox"),
-        null,
-        { timeout: 120_000 },
-      );
-    }
-    await page.addScriptTag({ content: source });
-    pages.push({
-      path,
-      violations: await page.evaluate(async (tags) => {
-        const { axe } = window as unknown as {
-          axe: {
-            run(
-              context: Document,
-              options: unknown,
-            ): Promise<{
-              violations: {
-                id: string;
-                impact?: string | null;
-                nodes: { target: unknown[] }[];
-              }[];
-            }>;
-          };
-        };
-        const found = await axe.run(document, {
-          runOnly: { type: "tag", values: tags },
-          resultTypes: ["violations"],
+  try {
+    for (const path of ["/", "/more"]) {
+      if (path === "/more" && o.app === "next") {
+        // У Next.js /more — переходом по ссылке, как у пользователя: хосты иконок задаёт клиентский
+        // компонент главной (app/iconavo.ts). Прямой заход взял бы хосты по умолчанию — живые адреса.
+        await step("/more: переход по ссылке", async () => {
+          await page.locator('[data-check="link"]').click();
+          await page.waitForURL(`${o.base}/more`, { timeout: 120_000 });
         });
-        return found.violations.map((v) => ({
-          id: v.id,
-          impact: v.impact ?? "",
-          nodes: v.nodes.slice(0, 3).map((n) => n.target.join(" ")),
-        }));
-      }, AXE_TAGS),
+      } else {
+        await step(`${path}: загрузка`, () =>
+          page.goto(`${o.base}${path}?axe=1`, {
+            waitUntil: "load",
+            timeout: 120_000,
+          }),
+        );
+      }
+      await step(`${path}: иконки из браузера`, () =>
+        allDrawn(page, BROWSER_ICONS),
+      );
+      if (path === "/") {
+        await step("/: гидратация (иконка addIcons)", () =>
+          page.waitForFunction(
+            () =>
+              document
+                .querySelector('svg[data-name="acme:logo"]')
+                ?.hasAttribute("viewBox"),
+            null,
+            { timeout: 120_000 },
+          ),
+        );
+      }
+      await step(`${path}: axe`, () => runAxe(page, source, path, pages));
+    }
+  } catch (e) {
+    result.shots.push({
+      title: "Доступность: страница, на которой проверка остановилась",
+      png: await shot(page, seen).catch(() => ""),
     });
+    throw new Error(
+      `${(e as Error).message}${seen.errors.length > 0 ? `; ошибки страницы: ${[...new Set(seen.errors)].slice(0, 2).join("; ")}` : ""}`,
+    );
+  } finally {
+    await context.close();
   }
-  result.verdicts.axe = axeVerdict(pages);
-  await context.close();
+  result.verdicts.axe =
+    live.length > 0
+      ? fail(`страница ходила к живым хостам: ${live[0]}`)
+      : axeVerdict(pages);
+}
+
+/** axe-core на открытой странице: правила WCAG A и AA, только нарушения. */
+async function runAxe(
+  page: Page,
+  source: string,
+  path: string,
+  pages: { path: string; violations: AxeViolation[] }[],
+): Promise<void> {
+  // После перехода по ссылке внутри Next.js документ тот же — axe в нём уже есть.
+  if (!(await page.evaluate(() => "axe" in window))) {
+    await page.addScriptTag({ content: source });
+  }
+  pages.push({
+    path,
+    violations: await page.evaluate(async (tags) => {
+      const { axe } = window as unknown as {
+        axe: {
+          run(
+            context: Document,
+            options: unknown,
+          ): Promise<{
+            violations: {
+              id: string;
+              impact?: string | null;
+              nodes: { target: unknown[] }[];
+            }[];
+          }>;
+        };
+      };
+      const found = await axe.run(document, {
+        runOnly: { type: "tag", values: tags },
+        resultTypes: ["violations"],
+      });
+      return found.violations.map((v) => ({
+        id: v.id,
+        impact: v.impact ?? "",
+        nodes: v.nodes.slice(0, 3).map((n) => n.target.join(" ")),
+      }));
+    }, AXE_TAGS),
+  });
 }
 
 async function checkBrowser(
@@ -914,7 +996,10 @@ async function checkBrowser(
     o.log?.(`${title}: контрольный запуск…`);
     await checkCanary(browser, o, result);
     o.log?.(`${title}: доступность (axe-core)…`);
-    await checkAxe(browser, o, result);
+    // Сбой axe — «нет» в его строке, остальные строки браузера остаются.
+    await checkAxe(browser, o, result).catch((e: unknown) => {
+      result.verdicts.axe = fail((e as Error).message.split("\n")[0] ?? "");
+    });
   } catch (e) {
     result.failure = (e as Error).message.split("\n")[0];
   } finally {
