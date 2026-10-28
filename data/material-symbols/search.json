@@ -49817,7 +49817,38 @@
       ]
     },
     "contrast-auto": {
+      "en": {
+        "description": "A circle half filled black with a letter A beside it, indicating automatic contrast adjustment.",
+        "synonyms": [
+          "contrast",
+          "auto contrast",
+          "automatic",
+          "brightness",
+          "auto",
+          "image adjustment",
+          "half circle",
+          "theme",
+          "shading",
+          "invert"
+        ]
+      },
       "fingerprint": "7f8fb80b4b16",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Круг, наполовину закрашенный чёрным, с буквой «A» справа; обозначает автоматическую настройку контрастности.",
+        "synonyms": [
+          "контраст",
+          "автоконтраст",
+          "автоматический контраст",
+          "яркость",
+          "авто",
+          "настройка изображения",
+          "половина круга",
+          "тема",
+          "затемнение",
+          "инверсия"
+        ]
+      },
       "tags": [
         "contrast",
         "auto"
@@ -49874,14 +49905,76 @@
       ]
     },
     "contrast-inverse": {
+      "en": {
+        "description": "A circle split into black and white halves, representing contrast or toggling between light and dark display modes.",
+        "synonyms": [
+          "contrast",
+          "inverse",
+          "invert colors",
+          "brightness",
+          "theme",
+          "dark mode",
+          "light mode",
+          "toggle theme",
+          "half circle",
+          "monochrome"
+        ]
+      },
       "fingerprint": "6862d60987f5",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Круг, наполовину залитый чёрным и наполовину белым, обозначает контраст или переключение яркости темы.",
+        "synonyms": [
+          "контраст",
+          "инверсия",
+          "яркость",
+          "тема",
+          "темный режим",
+          "светлый режим",
+          "полутон",
+          "переключить тему",
+          "обратный цвет",
+          "половина круга"
+        ]
+      },
       "tags": [
         "contrast",
         "inverse"
       ]
     },
     "contrast-inverse-auto": {
+      "en": {
+        "description": "A circle half filled with black with a letter A beside it, indicating automatic contrast inversion for a theme.",
+        "synonyms": [
+          "contrast",
+          "inverse",
+          "auto",
+          "auto contrast",
+          "invert",
+          "theme",
+          "brightness",
+          "dark mode",
+          "light mode",
+          "toggle theme"
+        ]
+      },
       "fingerprint": "c740ac09fa82",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Круг, наполовину залитый чёрным, с буквой «A» справа; обозначает автоматическую инверсию контраста темы.",
+        "synonyms": [
+          "контраст",
+          "инверсия",
+          "авто",
+          "автоконтраст",
+          "инвертировать",
+          "тема",
+          "яркость",
+          "темный режим",
+          "светлый режим",
+          "переключить тему"
+        ]
+      },
       "tags": [
         "contrast",
         "inverse",
@@ -107214,7 +107307,36 @@
       ]
     },
     "input-search": {
+      "en": {
+        "description": "Shows a magnifying glass above a rounded rectangle, representing a search action or search input field.",
+        "synonyms": [
+          "search",
+          "magnifier",
+          "find",
+          "search bar",
+          "input field",
+          "lookup",
+          "query",
+          "look up",
+          "textbox"
+        ]
+      },
       "fingerprint": "3e959278b407",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Изображена лупа над прямоугольной фигурой, символизирующая поиск или ввод запроса в поле поиска.",
+        "synonyms": [
+          "поиск",
+          "лупа",
+          "искать",
+          "строка поиска",
+          "поле ввода",
+          "найти",
+          "поиск в поле",
+          "запрос",
+          "ввод"
+        ]
+      },
       "tags": [
         "input",
         "search"
@@ -121365,7 +121487,38 @@
       ]
     },
     "mail-person": {
+      "en": {
+        "description": "A black envelope overlapped by a person silhouette, meaning contact email or messaging a specific user.",
+        "synonyms": [
+          "email",
+          "mail",
+          "envelope",
+          "contact",
+          "message user",
+          "send to person",
+          "inbox",
+          "profile",
+          "recipient",
+          "write to person"
+        ]
+      },
       "fingerprint": "69194d7cb49c",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Изображён конверт с силуэтом человека справа снизу; обозначает контакт или письмо конкретному пользователю.",
+        "synonyms": [
+          "письмо",
+          "почта",
+          "конверт",
+          "контакт",
+          "отправить пользователю",
+          "сообщение",
+          "email",
+          "профиль",
+          "адресат",
+          "написать человеку"
+        ]
+      },
       "tags": [
         "mail",
         "person"

@@ -1994,7 +1994,34 @@
       ]
     },
     "archive-arrow-down": {
+      "en": {
+        "description": "Shows a box-like archive container with a downward arrow inside, meaning archive or save content.",
+        "synonyms": [
+          "archive",
+          "box",
+          "download",
+          "save",
+          "storage",
+          "backup",
+          "store",
+          "arrow down"
+        ]
+      },
       "fingerprint": "2900c8e19b58",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Изображена коробка-архив с открытым низом и стрелкой вниз; означает архивирование или сохранение файлов.",
+        "synonyms": [
+          "архив",
+          "архивировать",
+          "коробка",
+          "скачать",
+          "загрузить",
+          "сохранить",
+          "хранилище",
+          "стрелка вниз"
+        ]
+      },
       "tags": [
         "index",
         "backup",
@@ -4585,7 +4612,38 @@
       ]
     },
     "azerbaijani-manat": {
+      "en": {
+        "description": "Draws an arch with a vertical stroke through the middle, representing the Azerbaijani manat currency symbol for money and payments.",
+        "synonyms": [
+          "manat",
+          "azn",
+          "azerbaijan",
+          "currency",
+          "money",
+          "payment",
+          "exchange rate",
+          "pricing",
+          "banking",
+          "currency symbol"
+        ]
+      },
       "fingerprint": "00d40862854c",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Изображена буква манат в виде арки с вертикальной линией посередине; обозначает азербайджанский манат, валюту и денежные операции.",
+        "synonyms": [
+          "манат",
+          "азн",
+          "азербайджан",
+          "валюта",
+          "деньги",
+          "платеж",
+          "оплата",
+          "курс валют",
+          "цена",
+          "банк"
+        ]
+      },
       "tags": [
         "currency",
         "money",
@@ -5593,7 +5651,38 @@
       ]
     },
     "ball-wave": {
+      "en": {
+        "description": "A striped ball above a wavy line, representing water polo or aquatic sports.",
+        "synonyms": [
+          "water polo",
+          "ball",
+          "sport",
+          "pool",
+          "water",
+          "swimming",
+          "game",
+          "competition",
+          "team sport",
+          "waves"
+        ]
+      },
       "fingerprint": "262525384825",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Круг с диагональными полосами над волнистой линией, обозначает водное поло или водный спорт.",
+        "synonyms": [
+          "водное поло",
+          "мяч",
+          "спорт",
+          "бассейн",
+          "вода",
+          "плавание",
+          "игра",
+          "соревнование",
+          "командный спорт",
+          "волны"
+        ]
+      },
       "tags": [
         "polo",
         "watercraft",
@@ -10553,7 +10642,38 @@
       ]
     },
     "boxes-linked": {
+      "en": {
+        "description": "Two cube-shaped boxes joined by a bent connecting line, representing linked components, dependencies, or a network of objects.",
+        "synonyms": [
+          "cube",
+          "box",
+          "package",
+          "module",
+          "link",
+          "dependency",
+          "network",
+          "integration",
+          "nodes",
+          "logistics"
+        ]
+      },
       "fingerprint": "8967b9c3e9d4",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Два кубика-коробки, соединённые изогнутой линией; обозначает связанные компоненты, зависимости или сеть объектов.",
+        "synonyms": [
+          "кубик",
+          "коробка",
+          "пакет",
+          "модуль",
+          "связь",
+          "зависимость",
+          "сеть",
+          "интеграция",
+          "узлы",
+          "логистика"
+        ]
+      },
       "tags": [
         "cubes",
         "package",
@@ -12372,7 +12492,38 @@
       ]
     },
     "calendar-arrow-left": {
+      "en": {
+        "description": "Outlined calendar with two binder rings and a left arrow, usually meaning go to previous date or move back.",
+        "synonyms": [
+          "calendar",
+          "date",
+          "back",
+          "previous",
+          "arrow left",
+          "reschedule",
+          "backward",
+          "earlier",
+          "navigation",
+          "schedule"
+        ]
+      },
       "fingerprint": "49a646c39f74",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Контур календаря с двумя кольцами сверху и стрелкой влево; обычно означает переход к предыдущей дате или перенос назад.",
+        "synonyms": [
+          "календарь",
+          "дата",
+          "назад",
+          "предыдущий",
+          "стрелка влево",
+          "перенести",
+          "прошлое",
+          "навигация",
+          "расписание",
+          "день"
+        ]
+      },
       "tags": [
         "date",
         "day",
@@ -12395,7 +12546,38 @@
       ]
     },
     "calendar-arrow-right": {
+      "en": {
+        "description": "A calendar icon with binding rings on top and a right arrow at the corner, usually meaning rescheduling, moving forward, or an upcoming date.",
+        "synonyms": [
+          "calendar",
+          "date",
+          "reschedule",
+          "postpone",
+          "defer",
+          "next",
+          "forward",
+          "schedule",
+          "appointment",
+          "upcoming"
+        ]
+      },
       "fingerprint": "4cbb20a79d7c",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Изображена иконка календаря с кольцами сверху и стрелкой вправо в углу; обычно означает перенос даты, переход вперёд или отложенное событие.",
+        "synonyms": [
+          "календарь",
+          "дата",
+          "перенос",
+          "перенести",
+          "отложить",
+          "следующий",
+          "вперёд",
+          "расписание",
+          "событие",
+          "дедлайн"
+        ]
+      },
       "tags": [
         "date",
         "day",
@@ -15473,7 +15655,38 @@
       ]
     },
     "chart-quadrant": {
+      "en": {
+        "description": "Draws an L-shaped axis pair with dots across quadrants, representing a quadrant chart or matrix analysis.",
+        "synonyms": [
+          "quadrant",
+          "scatter plot",
+          "matrix",
+          "2x2 matrix",
+          "diagram",
+          "statistics",
+          "analytics",
+          "segmentation",
+          "correlation",
+          "comparison"
+        ]
+      },
       "fingerprint": "1f594067788e",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Рисует оси координат с тремя точками по квадрантам; обозначает квадрантную диаграмму, матрицу или анализ данных.",
+        "synonyms": [
+          "квадрант",
+          "диаграмма",
+          "график",
+          "матрица",
+          "точечная диаграмма",
+          "статистика",
+          "аналитика",
+          "сегментация",
+          "корреляция",
+          "анализ"
+        ]
+      },
       "tags": [
         "quadrant",
         "chart",
@@ -15494,7 +15707,38 @@
       ]
     },
     "chart-radar": {
+      "en": {
+        "description": "A pentagon with inner crossing lines and extended endpoints, representing a radar chart for comparing multiple metrics.",
+        "synonyms": [
+          "radar",
+          "radar chart",
+          "spider chart",
+          "pentagon",
+          "diagram",
+          "comparison",
+          "metrics",
+          "analytics",
+          "performance",
+          "profile"
+        ]
+      },
       "fingerprint": "d023fb7528a2",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Пятиугольник с перекрестными линиями внутри и выступающими концами, обозначающий лепестковую радарную диаграмму для сравнения показателей.",
+        "synonyms": [
+          "радар",
+          "диаграмма",
+          "паутина",
+          "пятиугольник",
+          "график",
+          "сравнение",
+          "метрики",
+          "аналитика",
+          "показатели",
+          "профиль"
+        ]
+      },
       "tags": [
         "radar",
         "chart",
@@ -24265,7 +24509,38 @@
       ]
     },
     "database-cog": {
+      "en": {
+        "description": "Shows a database cylinder with a gear at the bottom right, representing database settings or storage configuration.",
+        "synonyms": [
+          "database",
+          "db",
+          "storage",
+          "server",
+          "settings",
+          "gear",
+          "configuration",
+          "admin",
+          "sql",
+          "maintenance"
+        ]
+      },
       "fingerprint": "2f6678ed6643",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Изображена стопка-цилиндр базы данных с шестерёнкой в правом нижнем углу; обозначает настройки базы данных или серверного хранилища.",
+        "synonyms": [
+          "база данных",
+          "бд",
+          "настройки бд",
+          "хранилище",
+          "сервер",
+          "шестерёнка",
+          "конфигурация",
+          "администрирование",
+          "sql",
+          "параметры"
+        ]
+      },
       "tags": [
         "db",
         "settings",
@@ -26675,7 +26950,38 @@
       ]
     },
     "earbuds": {
+      "en": {
+        "description": "Two wireless earbuds with stems are drawn; the icon usually represents audio devices or listening to music.",
+        "synonyms": [
+          "earphones",
+          "airpods",
+          "headphones",
+          "wireless earbuds",
+          "headset",
+          "music",
+          "sound",
+          "audio",
+          "in-ear",
+          "hands-free"
+        ]
+      },
       "fingerprint": "93efb3aef6ca",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Изображены два беспроводных наушника-вкладыша с ножками; значок обычно означает аудиоустройство или прослушивание музыки.",
+        "synonyms": [
+          "наушники",
+          "капельки",
+          "беспроводные наушники",
+          "гарнитура",
+          "блютуз наушники",
+          "музыка",
+          "звук",
+          "вкладыши",
+          "аудио",
+          "плеер"
+        ]
+      },
       "tags": [
         "earphones",
         "audio",
@@ -26695,7 +27001,36 @@
       ]
     },
     "earbuds-off": {
+      "en": {
+        "description": "Two earbuds crossed out by a diagonal line, meaning the earphones or audio are turned off or disconnected.",
+        "synonyms": [
+          "earphones off",
+          "headphones disabled",
+          "mute audio",
+          "wireless earbuds",
+          "bluetooth off",
+          "no sound",
+          "disconnect audio",
+          "hands-free off",
+          "crossed earbuds"
+        ]
+      },
       "fingerprint": "7ea08759a8cb",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Изображены два беспроводных наушника-капельки, перечёркнутых диагональной линией; значит звук или наушники отключены.",
+        "synonyms": [
+          "наушники выкл",
+          "беспроводные наушники",
+          "без звука",
+          "выключить звук",
+          "наушники отключены",
+          "блютуз наушники",
+          "музыка выкл",
+          "гарнитура",
+          "перечеркнутые наушники"
+        ]
+      },
       "tags": [
         "earphones",
         "audio",
@@ -27256,7 +27591,38 @@
       ]
     },
     "emirati-dirham": {
+      "en": {
+        "description": "A capital D crossed by two horizontal lines, the UAE dirham currency symbol used for money and prices.",
+        "synonyms": [
+          "dirham",
+          "currency",
+          "money",
+          "payment",
+          "finance",
+          "price",
+          "uae",
+          "aed",
+          "currency symbol",
+          "exchange rate"
+        ]
+      },
       "fingerprint": "8084bf891362",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Изображена буква D с двумя горизонтальными линиями, это знак дирхама ОАЭ, обозначающий валюту и денежные суммы.",
+        "synonyms": [
+          "дирхам",
+          "валюта",
+          "деньги",
+          "оплата",
+          "финансы",
+          "цена",
+          "эмираты",
+          "обмен валют",
+          "знак валюты",
+          "банк"
+        ]
+      },
       "tags": [
         "currency",
         "money",
@@ -38310,7 +38676,38 @@
       ]
     },
     "hockey-stick": {
+      "en": {
+        "description": "Shows a hockey stick beside a puck, representing hockey, sports equipment, or ice sports in an interface.",
+        "synonyms": [
+          "hockey",
+          "puck",
+          "sport",
+          "ice",
+          "stick",
+          "game",
+          "match",
+          "equipment",
+          "player",
+          "goal"
+        ]
+      },
       "fingerprint": "2a205ef5d579",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Изображена клюшка для хоккея и шайба; значок обозначает хоккей, спортивный инвентарь или игровой спорт.",
+        "synonyms": [
+          "хоккей",
+          "клюшка",
+          "шайба",
+          "спорт",
+          "лёд",
+          "хоккеист",
+          "игра",
+          "матч",
+          "спортinventарь",
+          "бита"
+        ]
+      },
       "tags": [
         "sport",
         "campus",
@@ -38456,7 +38853,38 @@
       ]
     },
     "hot-air-balloon": {
+      "en": {
+        "description": "A hot air balloon with a basket, usually representing flight, travel, or adventure.",
+        "synonyms": [
+          "balloon",
+          "air balloon",
+          "aerostat",
+          "flight",
+          "travel",
+          "adventure",
+          "sky",
+          "vacation",
+          "celebration",
+          "basket"
+        ]
+      },
       "fingerprint": "26fc6d70ddae",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Изображён воздушный шар с корзиной, обозначающий полёт, путешествие или приключение.",
+        "synonyms": [
+          "воздушный шар",
+          "шар",
+          "аэростат",
+          "полёт",
+          "путешествие",
+          "приключение",
+          "небо",
+          "отдых",
+          "праздник",
+          "корзина"
+        ]
+      },
       "tags": [
         "aircraft",
         "flight",
@@ -40808,7 +41236,36 @@
       ]
     },
     "laser": {
+      "en": {
+        "description": "A central dot with radiating beams, one extended longer, representing a laser pointer or beam highlight.",
+        "synonyms": [
+          "laser pointer",
+          "beam",
+          "pointer",
+          "highlight",
+          "presentation",
+          "spotlight",
+          "projector",
+          "guide",
+          "annotation"
+        ]
+      },
       "fingerprint": "49e1370a38ab",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Точка в центре с лучами во все стороны, один луч длиннее остальных; обозначает лазерный указатель или подсветку.",
+        "synonyms": [
+          "лазер",
+          "лазерная указка",
+          "указка",
+          "луч",
+          "подсветка",
+          "презентация",
+          "указатель",
+          "проекция",
+          "курсор"
+        ]
+      },
       "tags": [
         "annotation",
         "beam",
@@ -65093,7 +65550,35 @@
       ]
     },
     "siren-off": {
+      "en": {
+        "description": "A siren with light rays crossed out by a diagonal line, indicating a disabled alarm or muted emergency light.",
+        "synonyms": [
+          "alarm off",
+          "mute siren",
+          "silent alarm",
+          "disable alarm",
+          "emergency light off",
+          "no alarm",
+          "silence",
+          "turn off siren"
+        ]
+      },
       "fingerprint": "0cd1e5deb01e",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Изображена сирена с перечёркивающей линией и лучами света, обозначающая отключённую сигнализацию или выключенную мигалку.",
+        "synonyms": [
+          "сирена выкл",
+          "тихий режим",
+          "без звука",
+          "отключить сирену",
+          "выключить сигнал",
+          "сигнализация выкл",
+          "мигалка выкл",
+          "беззвучно",
+          "тревога отключена"
+        ]
+      },
       "tags": [
         "police",
         "ambulance",
@@ -67700,7 +68185,34 @@
       ]
     },
     "square-chevrons-down": {
+      "en": {
+        "description": "A rounded square frame containing two downward chevrons, meaning scroll down or jump to the bottom.",
+        "synonyms": [
+          "scroll down",
+          "bottom",
+          "jump to end",
+          "last page",
+          "double arrow",
+          "descend",
+          "page down",
+          "south"
+        ]
+      },
       "fingerprint": "3e624877184f",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Квадратная рамка с двумя шевронами вниз, означающая прокрутку или переход вниз, к концу списка.",
+        "synonyms": [
+          "вниз",
+          "прокрутка вниз",
+          "в конец",
+          "последняя страница",
+          "двойная стрелка",
+          "скролл вниз",
+          "кнопка вниз",
+          "пагинация"
+        ]
+      },
       "tags": [
         "bottom",
         "descend",
@@ -67733,7 +68245,38 @@
       ]
     },
     "square-chevrons-left": {
+      "en": {
+        "description": "A rounded square button containing two left-pointing chevrons, usually meaning go back, rewind, or jump to start.",
+        "synonyms": [
+          "previous",
+          "back",
+          "rewind",
+          "skip back",
+          "first",
+          "beginning",
+          "double chevron left",
+          "media controls",
+          "previous track",
+          "seek back"
+        ]
+      },
       "fingerprint": "fb4f9fe427c4",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Квадратная кнопка с двумя стрелками-шевронами, указывающими влево; обычно означает переход назад или к началу.",
+        "synonyms": [
+          "назад",
+          "предыдущий",
+          "перемотка назад",
+          "прыгнуть назад",
+          "в начало",
+          "стрелка влево",
+          "кнопка назад",
+          "пропустить назад",
+          "предыдущий трек",
+          "плеер"
+        ]
+      },
       "tags": [
         "previous",
         "back",
@@ -67766,7 +68309,38 @@
       ]
     },
     "square-chevrons-right": {
+      "en": {
+        "description": "A rounded square button containing two right-pointing chevrons; it usually means skip forward, next, or fast forward.",
+        "synonyms": [
+          "forward",
+          "next",
+          "skip",
+          "fast forward",
+          "seek",
+          "double arrow",
+          "button",
+          "navigation",
+          "media controls",
+          "end"
+        ]
+      },
       "fingerprint": "6d14e0404454",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Квадратная кнопка с двумя стрелками вправо внутри; обычно означает переход вперёд, пропуск или перемотку.",
+        "synonyms": [
+          "вперёд",
+          "далее",
+          "следующий",
+          "пропустить",
+          "перемотка",
+          "кнопка",
+          "стрелка вправо",
+          "назад наоборот",
+          "в конец",
+          "плеер"
+        ]
+      },
       "tags": [
         "next",
         "forward",
@@ -67799,7 +68373,34 @@
       ]
     },
     "square-chevrons-up": {
+      "en": {
+        "description": "A rounded square containing two upward chevrons; usually means scroll or jump back to the top.",
+        "synonyms": [
+          "back to top",
+          "scroll up",
+          "arrow up",
+          "go up",
+          "top",
+          "jump to top",
+          "double arrow",
+          "page up"
+        ]
+      },
       "fingerprint": "3ea5c824e1ad",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Квадрат в рамке с двумя стрелками-шевронами вверх; обычно означает прокрутку или переход наверх страницы.",
+        "synonyms": [
+          "наверх",
+          "прокрутка вверх",
+          "стрелка вверх",
+          "вверх",
+          "в начало",
+          "кнопка наверх",
+          "двойная стрелка",
+          "подняться"
+        ]
+      },
       "tags": [
         "top",
         "ascend",
@@ -78280,7 +78881,38 @@
       ]
     },
     "user-round-shield": {
+      "en": {
+        "description": "A user silhouette beside a shield, representing account protection, privileged access, or an administrator role.",
+        "synonyms": [
+          "security",
+          "protection",
+          "admin",
+          "guard",
+          "privacy",
+          "account",
+          "permissions",
+          "profile",
+          "identity",
+          "trusted user"
+        ]
+      },
       "fingerprint": "9cf98c74ab7d",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Изображён силуэт пользователя рядом с щитом; обозначает защиту аккаунта, права доступа или роль администратора.",
+        "synonyms": [
+          "безопасность",
+          "защита",
+          "администратор",
+          "профиль",
+          "аккаунт",
+          "приватность",
+          "доступ",
+          "права",
+          "охрана",
+          "пользователь"
+        ]
+      },
       "tags": [
         "security",
         "protection",
