@@ -1,4 +1,6 @@
 import { describe, expect, it } from "vitest";
+import { CACHE_GENERATION, FILE_CACHE } from "./config.js";
+import { fileKey } from "./data.js";
 import {
   fakeBucket,
   fakeCache,
@@ -348,6 +350,166 @@ describe("кэш: версия набора и сборка — в ключе", 
     expect(res.headers.get("x-cache")).toBe("MISS");
     expect(await res.text()).not.toContain("\n  ");
     expect(cache.answers()).toBe(2);
+  });
+});
+
+/** 100 имён набора demo: n000…n099. */
+const MANY = Array.from(
+  { length: 100 },
+  (_, i) => `n${String(i).padStart(3, "0")}`,
+);
+const withMany = (): Record<string, string> => ({
+  ...FILES,
+  ...Object.fromEntries(
+    MANY.map((n) => [
+      `v/${VERSION}/demo/${n}.json`,
+      nameFileText("demo", { [n]: { body: `<path d="${n}"/>` } }),
+    ]),
+  ),
+});
+const batch = (names: readonly string[]) =>
+  `/demo.json?icons=${names.join(",")}`;
+
+describe("кэш файлов имён: новая пачка из знакомых иконок — без R2", () => {
+  it("новая пачка из 30 имён: проба 6 имён, все 30 файлов — в кэш; 40 обращений с манифестом", async () => {
+    const s = setup(withMany());
+    const res = await s.get(batch(MANY.slice(0, 30)));
+    expect(res.status).toBe(200);
+    expect(s.cache.files()).toBe(30);
+    // Манифест — чтение и запись, ответ — чтение и запись, проба — 6, файлы — 30.
+    expect(s.cache.calls).toBe(40);
+    expect(res.headers.get("server-timing")).toMatch(
+      /files;desc="0\/6";dur=\d+, r2;desc="30";dur=\d+/,
+    );
+  });
+
+  it("знакомые иконки в новой пачке не читают R2, ответ — тот же, что из R2", async () => {
+    const s = setup(withMany());
+    await s.get(batch(MANY.slice(0, 30)));
+    await s.get(batch(MANY.slice(30, 60)));
+    const reads = s.bucket.reads.length;
+    const mixed = MANY.slice(15, 45);
+    const res = await s.get(batch(mixed));
+    expect(res.headers.get("x-cache")).toBe("MISS");
+    expect(s.bucket.reads.length).toBe(reads);
+    expect(res.headers.get("server-timing")).toMatch(
+      /files;desc="30\/30";dur=\d+, r2;desc="0";dur=0/,
+    );
+    const fromR2 = await setup(withMany()).get(batch(mixed));
+    expect(await res.text()).toBe(await fromR2.text());
+  });
+
+  it("не больше 50 обращений за запрос: 100 новых имён с чтением манифеста — в кэш 34 файла", async () => {
+    const s = setup(withMany());
+    const res = await s.get(batch(MANY));
+    expect(res.status).toBe(200);
+    // Манифест — 2, ответ — 2, проба — 6, файлы — сколько осталось от бюджета 40.
+    expect(s.cache.calls).toBe(44);
+    expect(s.cache.files()).toBe(34);
+  });
+
+  it("не больше 50 обращений за запрос: 99 знакомых имён с чтением манифеста — 40 из кэша, остальные из R2", async () => {
+    const s = setup(withMany());
+    for (let i = 0; i < 100; i += 25) await s.get(batch(MANY.slice(i, i + 25)));
+    expect(s.cache.files()).toBe(100);
+    // Манифест устарел и в памяти, и в кэше — его читают в этом же запросе.
+    s.advance(60_000);
+    s.cache.calls = 0;
+    const res = await s.get(batch(MANY.slice(1)));
+    expect(res.status).toBe(200);
+    expect(s.cache.calls).toBe(44);
+    expect(res.headers.get("server-timing")).toMatch(
+      /files;desc="40\/40";dur=\d+, r2;desc="59"/,
+    );
+  });
+
+  it("ключ файла — без метки сборки, срок 30 дней; новая сборка находит файлы прежней", async () => {
+    const s = setup();
+    await s.get("/demo.json?icons=heart");
+    const key = fileKey(VERSION, "demo", "heart").url;
+    expect(key).toBe(
+      `https://api.iconavo.dev/__cache/${CACHE_GENERATION}/file/v/${VERSION}/demo/heart.json`,
+    );
+    expect(s.cache.stored.get(key)?.ttl).toBe(30 * 24 * 3600 * 1000);
+    const reads = s.bucket.reads.length;
+    const res = await s.handlerWith("b2")(
+      new Request("https://api.iconavo.dev/demo/heart.svg?color=red"),
+      () => {},
+    );
+    expect(res.status).toBe(200);
+    expect(res.headers.get("x-cache")).toBe("MISS");
+    expect(s.bucket.reads.length).toBe(reads);
+  });
+
+  it("SVG и CSS берут файлы из кэша", async () => {
+    const s = setup();
+    await s.get("/demo.json?icons=heart,house");
+    const reads = s.bucket.reads.length;
+    expect((await s.get("/demo/heart.svg")).status).toBe(200);
+    expect((await s.get("/demo.css?icons=heart,house")).status).toBe(200);
+    expect(s.bucket.reads.length).toBe(reads);
+  });
+
+  it("файла нет в R2 — в кэш файлов не идёт", async () => {
+    const s = setup();
+    await s.get("/demo/nope.svg");
+    await s.get("/demo.json?icons=nope,heart");
+    expect(s.cache.files()).toBe(1);
+  });
+
+  it("испорченная запись в кэше — файл из R2, запись переписана", async () => {
+    const s = setup();
+    const key = fileKey(VERSION, "demo", "heart");
+    await s.cache.put(
+      key,
+      new Response("{}", { headers: { "cache-control": FILE_CACHE } }),
+    );
+    const res = await s.get("/demo.json?icons=heart");
+    expect(res.status).toBe(200);
+    expect(s.bucket.reads).toContain(`v/${VERSION}/demo/heart.json`);
+    expect(s.logs.some((l) => l.includes("не по формату"))).toBe(true);
+    expect(await (await s.cache.match(key))?.text()).toBe(
+      FILES[`v/${VERSION}/demo/heart.json`],
+    );
+  });
+
+  it("кэш файлов упал — ответ из R2, файлы не пишутся, одна строка в журнале", async () => {
+    const s = setup();
+    s.cache.failing = /\/file\//;
+    const res = await s.get("/demo.json?icons=heart,home");
+    expect(res.status).toBe(200);
+    expect(s.logs).toEqual(["кэш файлов: cache down"]);
+    expect(s.cache.answers()).toBe(1);
+    expect(s.cache.files()).toBe(0);
+  });
+
+  it("кэш упал совсем — ответ 200 из R2, а не ошибка", async () => {
+    const s = setup();
+    s.cache.failing = /./;
+    const res = await s.get("/demo.json?icons=heart,home");
+    expect(res.status).toBe(200);
+    expect(res.headers.get("x-cache")).toBe("MISS");
+    expect(s.logs).toEqual(["кэш не прочитан: cache down"]);
+    expect(s.cache.stored.size).toBe(0);
+  });
+
+  it("Server-Timing — клиенту, мимо кэша и из кэша; в копии в кэше его нет", async () => {
+    const s = setup();
+    const miss = await s.get("/demo.json?icons=heart");
+    expect(miss.headers.get("server-timing")).toMatch(
+      /^manifest;dur=\d+, cache;desc="miss";dur=\d+, files;desc="0\/1";dur=\d+, r2;desc="1";dur=\d+, total;dur=\d+$/,
+    );
+    expect(miss.headers.get("timing-allow-origin")).toBe("*");
+    const hit = await s.get("/demo.json?icons=heart");
+    expect(hit.headers.get("server-timing")).toMatch(
+      /^manifest;dur=\d+, cache;desc="hit";dur=\d+, total;dur=\d+$/,
+    );
+    expect(hit.headers.get("timing-allow-origin")).toBe("*");
+    for (const entry of s.cache.stored.values()) {
+      expect(entry.headers.some(([name]) => name === "server-timing")).toBe(
+        false,
+      );
+    }
   });
 });
 

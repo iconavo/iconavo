@@ -60,8 +60,30 @@ export interface BenchOptions {
   log?: (line: string) => void;
 }
 
-const serverTiming = (header: string | null, name: string) =>
-  new RegExp(`${name};(?:desc="([^"]*)";)?dur=(\\d+)`).exec(header ?? "");
+/**
+ * Server-Timing по записям: имя → desc и dur. Запятая в кавычках — часть описания: свои записи
+ * Cloudflare (cfL4;desc="?proto=…") не ломают разбор. Повтор имени — берётся первая запись.
+ */
+export function parseServerTiming(
+  header: string | null | undefined,
+): Map<string, { desc?: string; dur?: number }> {
+  const out = new Map<string, { desc?: string; dur?: number }>();
+  for (const entry of (header ?? "").match(/(?:[^,"]+|"[^"]*")+/g) ?? []) {
+    const name = /^\s*([^;\s]+)/.exec(entry)?.[1];
+    if (name === undefined || out.has(name)) continue;
+    const value: { desc?: string; dur?: number } = {};
+    for (const m of entry.matchAll(/;\s*(desc|dur)\s*=\s*("([^"]*)"|[^;]*)/g)) {
+      if (m[1] === "desc") {
+        value.desc = m[3] ?? (m[2] ?? "").trim();
+      } else {
+        const dur = Number(m[2]);
+        if (Number.isFinite(dur)) value.dur = dur;
+      }
+    }
+    out.set(name, value);
+  }
+  return out;
+}
 
 export async function benchSearch(o: BenchOptions): Promise<BenchReport> {
   const fetchFn = o.fetch ?? fetch;
@@ -115,11 +137,11 @@ export async function benchSearch(o: BenchOptions): Promise<BenchReport> {
         if (semantic !== undefined) sample.semantic = semantic;
         const cache = r.res.headers.get("x-cache");
         if (cache !== null) sample.cache = cache;
-        const timing = r.res.headers.get("server-timing");
-        const vector = serverTiming(timing, "vector");
-        if (vector?.[1] !== undefined) sample.vector = vector[1];
-        const total = serverTiming(timing, "total");
-        if (total) sample.serverMs = Number(total[2]);
+        const timing = parseServerTiming(r.res.headers.get("server-timing"));
+        const vector = timing.get("vector")?.desc;
+        if (vector !== undefined) sample.vector = vector;
+        const total = timing.get("total")?.dur;
+        if (total !== undefined) sample.serverMs = total;
         if (r.res.status !== 200) sample.error = `ответ ${r.res.status}`;
         // pending — ждать полную выдачу: она досчитывается в фоне и ложится в кэш.
         if (kind === "cold" && semantic === "pending") {

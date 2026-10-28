@@ -8,12 +8,22 @@
 // | pnpm cdn build | pnpm cdn upload [--dry-run]
 // | pnpm cdn verify | pnpm cdn check | pnpm packages prepare [id…] [--new] [--force]
 // | pnpm packages verify [id…] [--wait=N] [--plan=…] | pnpm api build | pnpm api preview [--port=N]
-// | pnpm api check [--expect-build=…] | pnpm api bench [--base=…] | pnpm icon build
+// | pnpm api check [--expect-build=…] | pnpm api bench [--batches] [--base=…] [--seed=N] | pnpm icon build
 // | pnpm sandbox [--port=N] [--browser=chrome|firefox|webkit | --check]
+import { randomInt } from "node:crypto";
 import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import type { AddressInfo } from "node:net";
 import { basename, join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
+import {
+  BATCH_SIZE,
+  batchBenchFailed,
+  benchBatches,
+  fetchTransport,
+  formatBatchBench,
+  http2Transport,
+  renderBatchBenchPage,
+} from "./api/batch-bench.js";
 import { benchSearch, formatBench, renderBenchPage } from "./api/bench.js";
 import { buildApi } from "./api/build.js";
 import { type ApiCheckReport, apiCheckFailed, checkApi } from "./api/check.js";
@@ -154,7 +164,7 @@ import {
   formatSandboxCheck,
   renderSandboxCheckPage,
 } from "./sandbox/check-report.js";
-import { LIVE_API, SANDBOX_PORT } from "./sandbox/config.js";
+import { LIVE_API, MANY_PER_SET, SANDBOX_PORT } from "./sandbox/config.js";
 import {
   type SandboxContext,
   startSandbox,
@@ -302,7 +312,12 @@ const USAGE = `Использование:
                                       /search, холодный проход и повтор, не чаще 46 в минуту;
                                       цель — 95% ответов не дольше 0,3 с (ADR-0040, ADR-0049);
                                       страница .cache/reports/api/bench.html
+      --batches                       скорость пачек (шаг 6 фазы 3, ADR-0030): пачки по ${BATCH_SIZE} имён,
+                                      которых нет в кэше ответов, — новые иконки, знакомые в новой
+                                      пачке, повтор, по 4 сразу; одно соединение HTTP/2; страница
+                                      .cache/reports/api/bench-batches.html и .json
       --base=…                        другой адрес API: https://… или http://127.0.0.1:порт (превью)
+      --seed=N                        номер случая для --batches: те же пачки, что в прошлом замере
   pnpm icon build                     скрипт тега для страниц без сборщика (ADR-0032): ${SCRIPT_FILE} —
                                       один сжатый ES-модуль с ядром внутри; без изменений не пишет
   pnpm sandbox                        песочница пакета на 127.0.0.1 (фаза 3): иконки грузит
@@ -420,6 +435,8 @@ let waitSeconds = 0;
 let planPath: string | undefined;
 let expectBuild: string | undefined;
 let benchBase: string | undefined;
+let benchBatchesMode = false;
+let benchSeed: number | undefined;
 let checkBrowsers = false;
 let browserName: BrowserName | undefined;
 const modelKeys = new Set<string>();
@@ -510,6 +527,18 @@ for (const flag of flags) {
     )
   ) {
     benchBase = value;
+    continue;
+  }
+  if (command === "api" && flag === "--batches") {
+    benchBatchesMode = true;
+    continue;
+  }
+  if (
+    command === "api" &&
+    name === "--seed" &&
+    /^[1-9][0-9]{0,8}$/.test(value ?? "")
+  ) {
+    benchSeed = Number(value);
     continue;
   }
   if (
@@ -1385,10 +1414,11 @@ try {
       rest.length > 0 ||
       (sub !== "preview" && flags.some((f) => f.startsWith("--port="))) ||
       (sub !== "check" && expectBuild !== undefined) ||
-      (sub !== "bench" && benchBase !== undefined)
+      (sub !== "bench" && (benchBase !== undefined || benchBatchesMode)) ||
+      (!benchBatchesMode && benchSeed !== undefined)
     ) {
       usageError(
-        "pnpm api: нужна подкоманда build, preview [--port=N], check [--expect-build=…] или bench [--base=…].",
+        "pnpm api: нужна подкоманда build, preview [--port=N], check [--expect-build=…] или bench [--batches] [--base=…] [--seed=N].",
       );
     }
     if (sub === "build") {
@@ -1420,6 +1450,44 @@ try {
       console.log("");
       for (const line of formatSearchCheck(search)) console.log(line);
       process.exit(apiCheckFailed(report) || searchCheckFailed(search) ? 1 : 0);
+    }
+    if (sub === "bench" && benchBatchesMode) {
+      // Без первой тысячи имён каждого набора: их показывает страница «5000 иконок» песочницы.
+      const pools: Record<string, string[]> = {};
+      for (const config of configs) {
+        pools[config.id] = (await visibleNames(dataDir, config.id)).slice(
+          MANY_PER_SET,
+        );
+      }
+      const base = benchBase ?? `https://${API_HOST}`;
+      const seed = benchSeed ?? randomInt(1, 1_000_000_000);
+      console.log(
+        `Замер скорости пачек: ${base}, по ${BATCH_SIZE} имён, случай ${seed}…`,
+      );
+      const transport = base.startsWith("https://")
+        ? http2Transport(base)
+        : fetchTransport(base);
+      const report = await benchBatches({
+        base,
+        pools,
+        seed,
+        transport,
+        log: (line) => console.log(line),
+      }).finally(() => transport.close());
+      console.log("");
+      for (const line of formatBatchBench(report)) console.log(line);
+      const reportDir = join(reportsDir, "api");
+      await mkdir(reportDir, { recursive: true });
+      const htmlPath = join(reportDir, "bench-batches.html");
+      await writeFile(htmlPath, renderBatchBenchPage(report), "utf8");
+      await writeFile(
+        join(reportDir, "bench-batches.json"),
+        `${JSON.stringify(report, null, 2)}\n`,
+        "utf8",
+      );
+      console.log(`Отчёт: ${htmlPath}`);
+      // Замер — отчёт: код 1, только если ответы не те или сеть подвела.
+      process.exit(batchBenchFailed(report) ? 1 : 0);
     }
     if (sub === "bench") {
       const holdout = (await readQueries(queriesPath)).filter(

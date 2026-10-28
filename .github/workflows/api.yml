@@ -16,6 +16,9 @@ name: Edge API
 # «Выкладка» вписывает в metadata при загрузке (jq читает их из окружения, в аргументы и артефакты они
 # не попадают); нет секрета — выкладка красная. Сменили ключ — ручной запуск с «выложить заново».
 # «Проверка» — и поиск; ручной запуск с «замер скорости» — ещё pnpm api bench.
+# Замер пачек (шаг 6 фазы 3, ADR-0030) — ручной запуск с «замер пачек»: pnpm api bench --batches. Он
+# только читает открытые адреса, поэтому идёт и с ветки или в режиме «только показ» — против того, что
+# сейчас на api.iconavo.dev, без выкладки; на живом запуске — после выкладки и проверки.
 
 on:
   push:
@@ -43,6 +46,10 @@ on:
         default: false
       bench:
         description: После проверки — замер скорости поиска (pnpm api bench)
+        type: boolean
+        default: false
+      bench_batches:
+        description: Замер скорости пачек (pnpm api bench --batches); с ветки или «только показ» — живой API без выкладки
         type: boolean
         default: false
 
@@ -248,4 +255,54 @@ jobs:
           name: bench.html
           path: ${{ steps.pages.outputs.pages }}/bench.html
           archive: false
+          if-no-files-found: ignore
+
+  # Замер скорости пачек (шаг 6 фазы 3, ADR-0030) — только по ручному запуску. Читает только открытые
+  # адреса: ни окружения, ни секретов, ни артефакта функции. На живом запуске ждёт выкладку и проверку;
+  # с ветки и в режиме «только показ» их нет, и замер идёт против того, что сейчас на api.iconavo.dev.
+  bench-batches:
+    name: Замер скорости пачек
+    needs: [build, check]
+    if: ${{ !cancelled() && inputs.bench_batches == true && needs.build.result == 'success' && (needs.check.result == 'success' || needs.build.outputs.live != 'true') }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Замерить скорость пачек
+        run: pnpm api bench --batches | tee "$RUNNER_TEMP/bench-batches.txt"
+      - name: Итог — в сводку запуска
+        if: always()
+        run: |
+          if [ -s "$RUNNER_TEMP/bench-batches.txt" ]; then
+            {
+              echo "### Замер скорости пачек"
+              echo '```'
+              cat "$RUNNER_TEMP/bench-batches.txt"
+              echo '```'
+            } >> "$GITHUB_STEP_SUMMARY"
+          fi
+      - name: Отчёт — вне .cache
+        id: pages
+        if: always()
+        run: |
+          pages="$RUNNER_TEMP/pages"
+          mkdir -p "$pages"
+          cp .cache/reports/api/bench-batches.html .cache/reports/api/bench-batches.json "$pages/" 2> /dev/null || true
+          echo "pages=$pages" >> "$GITHUB_OUTPUT"
+      - name: Отчёт — скорость пачек
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: bench-batches
+          path: ${{ steps.pages.outputs.pages }}/
           if-no-files-found: ignore

@@ -1,8 +1,10 @@
-// Обработчик edge API (ADR-0024): маршрут → параметры → манифест → кэш дата-центра → файлы имён из
-// R2 → ответ. Поиск /search (ADR-0049) — свой путь: search/handler.ts. Новый выпуск набора или новая сборка дают новые ключи кэша, сбрасывать ничего не нужно
-// (ADR-0023). В кэш попадают только ответы, которым понадобился R2. Ответ из кэша менять нельзя —
-// он оборачивается в новый Response; тело собирается строкой, и из неё делаются два ответа: в кэш и
-// клиенту.
+// Обработчик edge API (ADR-0024): маршрут → параметры → манифест → кэш дата-центра → файлы имён (из
+// кэша файлов, затем из R2) → ответ. Поиск /search (ADR-0049) — свой путь: search/handler.ts. Новый
+// выпуск набора или новая сборка дают новые ключи кэша, сбрасывать ничего не нужно (ADR-0023). В кэш
+// попадают только ответы, которым понадобились файлы имён; новые файлы — следом за ответом, в пределах
+// бюджета обращений (data.ts). Сбой кэша — как промах: ответ соберётся из R2. Ответ из кэша менять
+// нельзя — он оборачивается в новый Response; тело собирается строкой, и из неё делаются два ответа: в
+// кэш и клиенту. Server-Timing — только клиенту: где ушло время, без копии в кэше.
 
 import type { IconavoIconSet } from "@iconavo-ui/core";
 import { isValidNamePart } from "@iconavo-ui/core/internal";
@@ -10,7 +12,7 @@ import { batchBody } from "./batch.js";
 import { cacheKey } from "./cache.js";
 import { CACHE_OK, SVG_CSP, TYPES } from "./config.js";
 import { cssBody, cssOptionsKey, parseCssOptions } from "./css.js";
-import { readNames } from "./data.js";
+import { readNames, storeNames } from "./data.js";
 import type { Bucket, EdgeCache } from "./env.js";
 import {
   ApiError,
@@ -151,6 +153,7 @@ export function createHandler(options: HandlerOptions): Handler {
     options.search ?? {},
   );
   return async (request, waitUntil) => {
+    const started = now();
     const head = request.method === "HEAD";
     try {
       if (request.method === "OPTIONS") return preflight();
@@ -168,6 +171,10 @@ export function createHandler(options: HandlerOptions): Handler {
       const plan = planFor(route(url.pathname), url.searchParams);
       const entry = (await manifest()).get(plan.set);
       if (entry === undefined) throw setNotFound(plan.set);
+      // Server-Timing: ожидание манифеста, кэша ответа, кэша файлов и R2 — только латиница.
+      const timings = [`manifest;dur=${Math.round(now() - started)}`];
+      const timing = () =>
+        [...timings, `total;dur=${Math.round(now() - started)}`].join(", ");
       const meta = {
         "x-iconavo-build": options.build,
         "x-iconavo-version": entry.version,
@@ -176,21 +183,39 @@ export function createHandler(options: HandlerOptions): Handler {
         plan.names.length === 0
           ? undefined
           : cacheKey(options.build, entry.version, plan.path, plan.params);
+      // Сбой кэша — как промах; в этом запросе кэш больше не трогаем, ни чтением, ни записью.
+      let cacheOk = true;
       if (key !== undefined) {
-        const hit = await options.cache.match(key);
+        const lookStarted = now();
+        let hit: Response | undefined;
+        try {
+          hit = await options.cache.match(key);
+        } catch (e) {
+          log(`кэш не прочитан: ${(e as Error).message}`);
+          cacheOk = false;
+        }
+        timings.push(
+          `cache;desc="${hit === undefined ? "miss" : "hit"}";dur=${Math.round(now() - lookStarted)}`,
+        );
         if (hit !== undefined) {
           const response = new Response(head ? null : hit.body, hit);
           response.headers.set("x-cache", "HIT");
+          response.headers.set("server-timing", timing());
           return response;
         }
       }
-      const files = await readNames(
+      const read = await readNames(
         options.bucket,
         entry.version,
         plan.set,
         plan.names,
+        { ...(cacheOk ? { cache: options.cache } : {}), now, log },
       );
-      const body = plan.body(files, entry);
+      timings.push(
+        `files;desc="${read.hits}/${read.looked}";dur=${Math.round(read.cacheMs)}`,
+        `r2;desc="${read.r2}";dur=${Math.round(read.r2Ms)}`,
+      );
+      const body = plan.body(read.files, entry);
       if (body === null) {
         return errorResponse(
           new ApiError(
@@ -202,15 +227,28 @@ export function createHandler(options: HandlerOptions): Handler {
           meta,
         );
       }
-      const headers = { ...plan.headers, "cache-control": CACHE_OK, ...meta };
-      if (key !== undefined) {
-        waitUntil(
-          options.cache
+      const headers = {
+        ...plan.headers,
+        "cache-control": CACHE_OK,
+        "timing-allow-origin": "*",
+        ...meta,
+      };
+      if (key !== undefined && cacheOk) {
+        // Сначала ответ целиком — он ценнее всего, затем новые файлы в пределах бюджета.
+        const store = async () => {
+          await options.cache
             .put(key, respond(body, 200, headers, false))
-            .catch((e: Error) => log(`кэш не записан: ${e.message}`)),
-        );
+            .catch((e: Error) => log(`кэш не записан: ${e.message}`));
+          await storeNames(options.cache, entry.version, plan.set, read, log);
+        };
+        waitUntil(store());
       }
-      return respond(body, 200, { ...headers, "x-cache": "MISS" }, head);
+      return respond(
+        body,
+        200,
+        { ...headers, "x-cache": "MISS", "server-timing": timing() },
+        head,
+      );
     } catch (e) {
       if (e instanceof ApiError) {
         // Лимит частоты — ждать минуту; браузеру отказ не запоминать.

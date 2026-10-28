@@ -12,11 +12,16 @@ const data = JSON.parse(
 ) as ManyData;
 const $ = (id: string) => document.getElementById(id) as HTMLElement;
 
-// Запросы ядра — счётчик поверх fetch: столько же строк в DevTools → Network (Fetch/XHR).
-let requests = 0;
+// Запросы ядра — счётчик поверх fetch: столько же строк в DevTools → Network (Fetch/XHR). Пачки к API
+// и запросы по одной к статике — отдельно: так видно, когда ядро переходит на статику (ADR-0030).
+const apiHosts = data.hosts.filter((h) => h.kind === "api").map((h) => h.url);
+let batches = 0;
+let single = 0;
 const original = window.fetch.bind(window);
 window.fetch = (input, init) => {
-  requests++;
+  const url = input instanceof Request ? input.url : String(input);
+  if (apiHosts.some((host) => url.startsWith(`${host}/`))) batches++;
+  else single++;
   return original(input, init);
 };
 
@@ -48,7 +53,8 @@ requestAnimationFrame(frame);
 
 function tick(): void {
   $("drawn").textContent = `Нарисовано ${drawn()} из ${tags.length}`;
-  $("requests").textContent = `запросов ${requests}`;
+  $("requests").textContent =
+    `пачек к API ${batches} · по одной к статике ${single}`;
   $("frames").textContent =
     `кадров в секунду ${frames} · долгих кадров ${long}`;
   frames = 0;

@@ -1,6 +1,7 @@
 // Подделки для тестов функции: R2 из словаря, строгий кэш — только GET, а ответ из кэша менять
-// нельзя, как в workerd, — и файлы имён в формате статики (pnpm cdn build, ADR-0022). Для поиска
-// (ADR-0049) — Meilisearch и Polza за подменным fetch и лимит частоты.
+// нельзя, как в workerd; кэш считает обращения, как лимит Workers, и падает по команде. И файлы имён в
+// формате статики (pnpm cdn build, ADR-0022). Для поиска (ADR-0049) — Meilisearch и Polza за
+// подменным fetch и лимит частоты.
 
 import type { IconavoAlias, IconavoIcon } from "@iconavo-ui/core";
 import type { Bucket, EdgeCache } from "./env.js";
@@ -77,18 +78,34 @@ interface Stored {
 
 export interface FakeCache extends EdgeCache {
   stored: Map<string, Stored>;
-  /** Ответов в кэше — без служебных файлов (манифест, версия индекса). */
+  /** Обращений match и put — их считает лимит Workers (50 за запрос на бесплатном тарифе). */
+  calls: number;
+  /** Обращения к адресам, подходящим под выражение, падают. */
+  failing?: RegExp;
+  /** Ответов в кэше — без служебных файлов (манифест, версия индекса) и файлов имён. */
   answers(): number;
+  /** Файлов имён в кэше. */
+  files(): number;
 }
 
 /** Кэш дата-центра; с часами now записи живут max-age, как в Cache API. */
 export function fakeCache(now: () => number = () => 0): FakeCache {
   const stored = new Map<string, Stored>();
-  return {
+  const count = (url: string) => {
+    cache.calls++;
+    if (cache.failing?.test(url)) throw new Error("cache down");
+  };
+  const cache: FakeCache = {
     stored,
+    calls: 0,
     answers: () =>
-      [...stored.keys()].filter((url) => !url.includes("/meta/")).length,
+      [...stored.keys()].filter(
+        (url) => !url.includes("/meta/") && !url.includes("/file/"),
+      ).length,
+    files: () =>
+      [...stored.keys()].filter((url) => url.includes("/file/")).length,
     async match(request) {
+      count(request.url);
       const entry = stored.get(request.url);
       if (entry === undefined) return undefined;
       if (entry.ttl !== undefined && now() - entry.at >= entry.ttl) {
@@ -109,6 +126,7 @@ export function fakeCache(now: () => number = () => 0): FakeCache {
       return response;
     },
     async put(request, response) {
+      count(request.url);
       if (request.method !== "GET") {
         throw new TypeError("Cannot cache response to non-GET request.");
       }
@@ -129,6 +147,7 @@ export function fakeCache(now: () => number = () => 0): FakeCache {
       });
     },
   };
+  return cache;
 }
 
 /** waitUntil, которого можно дождаться. */
