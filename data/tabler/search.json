@@ -3474,7 +3474,38 @@
       ]
     },
     "alert-octagon": {
+      "en": {
+        "description": "An outlined octagon containing an exclamation mark, usually signaling a warning, error, or important alert in an interface.",
+        "synonyms": [
+          "warning",
+          "error",
+          "attention",
+          "danger",
+          "caution",
+          "exclamation",
+          "notice",
+          "stop sign",
+          "alarm",
+          "octagon"
+        ]
+      },
       "fingerprint": "f171c729ae77",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Восьмиугольник с восклицательным знаком внутри, обозначающий предупреждение, ошибку или важное уведомление в интерфейсе.",
+        "synonyms": [
+          "предупреждение",
+          "ошибка",
+          "внимание",
+          "опасность",
+          "осторожно",
+          "восклицательный знак",
+          "уведомление",
+          "стоп",
+          "тревога",
+          "восьмиугольник"
+        ]
+      },
       "tags": [
         "warning",
         "error",
@@ -7678,7 +7709,38 @@
       ]
     },
     "archive-restore": {
+      "en": {
+        "description": "A box-shaped archive with an upward arrow inside, meaning restoring an item from the archive.",
+        "synonyms": [
+          "archive",
+          "restore",
+          "unarchive",
+          "box",
+          "retrieve",
+          "recover",
+          "storage",
+          "return",
+          "undo",
+          "backup"
+        ]
+      },
       "fingerprint": "c0c02b54929d",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Изображена коробка-архив с стрелкой вверх внутри, означает восстановление элемента из архива.",
+        "synonyms": [
+          "архив",
+          "восстановить",
+          "распаковать",
+          "разархивировать",
+          "коробка",
+          "вернуть",
+          "стрелка вверх",
+          "хранилище",
+          "извлечь",
+          "резервная копия"
+        ]
+      },
       "tags": [
         "archive",
         "restore",
@@ -23636,7 +23698,38 @@
       ]
     },
     "beach-bag": {
+      "en": {
+        "description": "Shows a striped tote bag with a handle, representing a beach bag or shopping bag in interfaces.",
+        "synonyms": [
+          "beach tote",
+          "tote bag",
+          "handbag",
+          "summer bag",
+          "vacation bag",
+          "shopping bag",
+          "holiday bag",
+          "travel bag",
+          "basket",
+          "carryall"
+        ]
+      },
       "fingerprint": "5dd9c28694de",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Изображена пляжная сумка с ручкой и горизонтальными полосами; обозначает сумку для пляжа, покупок или путешествий.",
+        "synonyms": [
+          "пляжная сумка",
+          "сумка",
+          "сумка для пляжа",
+          "тоут",
+          "шоппер",
+          "корзина",
+          "летняя сумка",
+          "отпуск",
+          "путешествие",
+          "авоська"
+        ]
+      },
       "tags": [
         "beach",
         "bag",
@@ -27207,7 +27300,38 @@
       ]
     },
     "book-clone": {
+      "en": {
+        "description": "Draws two overlapping books with text lines, meaning copying or duplicating a book or reading material.",
+        "synonyms": [
+          "book",
+          "copy",
+          "duplicate",
+          "clone",
+          "reading",
+          "library",
+          "study",
+          "literature",
+          "ebook",
+          "education"
+        ]
+      },
       "fingerprint": "24ad626bf33f",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Изображает две книги, одна поверх другой, со строками текста; обозначает копирование или дублирование книги.",
+        "synonyms": [
+          "книга",
+          "копия",
+          "дубликат",
+          "дублировать",
+          "копировать",
+          "чтение",
+          "библиотека",
+          "учеба",
+          "литература",
+          "электронная книга"
+        ]
+      },
       "tags": [
         "book",
         "clone",
@@ -40166,7 +40290,34 @@
       ]
     },
     "brand-misskey": {
+      "en": {
+        "description": "A bold, rounded stylized \"Mi\" letterform, representing the Misskey decentralized social network logo.",
+        "synonyms": [
+          "logo",
+          "brand",
+          "misskey",
+          "social network",
+          "fediverse",
+          "microblogging",
+          "decentralized",
+          "activitypub"
+        ]
+      },
       "fingerprint": "156890ea488a",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Изображена стилизованная буква «Mi» в жирном контуре — логотип платформы Misskey, децентрализованной соцсети.",
+        "synonyms": [
+          "логотип",
+          "бренд",
+          "misskey",
+          "соцсеть",
+          "федиверс",
+          "микроблог",
+          "децентрализованная сеть",
+          "мессенджер"
+        ]
+      },
       "tags": [
         "misskey",
         "fediverse",
@@ -45914,7 +46065,38 @@
       ]
     },
     "brand-upwork": {
+      "en": {
+        "description": "Upwork logo showing stylized lowercase \"up\" letters, representing the freelance marketplace brand.",
+        "synonyms": [
+          "upwork",
+          "freelance",
+          "freelancer",
+          "jobs",
+          "marketplace",
+          "hire",
+          "logo",
+          "brand",
+          "gig work",
+          "job board"
+        ]
+      },
       "fingerprint": "2d19e80de25a",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Логотип Upwork: буквы «up», нарисованные единым штрихом, обозначают биржу фриланса и поиска работы.",
+        "synonyms": [
+          "апворк",
+          "фриланс",
+          "фрилансер",
+          "работа",
+          "вакансии",
+          "биржа фриланса",
+          "найм",
+          "логотип",
+          "бренд",
+          "подработка"
+        ]
+      },
       "tags": [
         "upwork",
         "freelance",
@@ -46074,7 +46256,36 @@
       ]
     },
     "brand-viber": {
+      "en": {
+        "description": "A phone handset with signal waves inside a speech bubble, representing the Viber messaging and calling app logo.",
+        "synonyms": [
+          "viber",
+          "call",
+          "phone",
+          "voip",
+          "messenger",
+          "chat",
+          "voice call",
+          "messaging",
+          "speech bubble"
+        ]
+      },
       "fingerprint": "b5587d1ffb4a",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Чёрная трубка телефона и волны внутри речевого пузыря; обозначает логотип мессенджера Viber для звонков и чатов.",
+        "synonyms": [
+          "вайбер",
+          "звонок",
+          "телефон",
+          "мессенджер",
+          "чат",
+          "голосовой вызов",
+          "связь",
+          "сообщения",
+          "переписка"
+        ]
+      },
       "tags": [
         "viber",
         "chat",
@@ -46709,7 +46920,34 @@
       ]
     },
     "brand-webflow": {
+      "en": {
+        "description": "Draws the Webflow logo, a stylized W outline, representing the no-code website builder brand.",
+        "synonyms": [
+          "webflow",
+          "website builder",
+          "no-code",
+          "web design",
+          "logo",
+          "brand",
+          "site builder",
+          "cms"
+        ]
+      },
       "fingerprint": "b139fd465688",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Рисует логотип Webflow, стилизованную букву W в виде чёрного контура; обозначает бренд конструктора сайтов без кода.",
+        "synonyms": [
+          "вебфлоу",
+          "конструктор сайтов",
+          "сайт без кода",
+          "веб дизайн",
+          "логотип",
+          "бренд",
+          "сайтбилдер",
+          "лого"
+        ]
+      },
       "tags": [
         "webflow",
         "website-builder",
@@ -88746,7 +88984,37 @@
       ]
     },
     "decagram": {
+      "en": {
+        "description": "Outline of a ten-pointed star or seal shape with a scalloped edge, typically used as a badge or verified marker.",
+        "synonyms": [
+          "star",
+          "badge",
+          "seal",
+          "ten-pointed star",
+          "polygon",
+          "shape",
+          "geometry",
+          "verified",
+          "outline star"
+        ]
+      },
       "fingerprint": "5dcffd7abe1d",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Контур десятиконечной звезды или печати с зубчатым краем; обычно обозначает значок, метку или фигуру.",
+        "synonyms": [
+          "звезда",
+          "десятиугольник",
+          "печать",
+          "значок",
+          "бейдж",
+          "фигура",
+          "геометрия",
+          "полигон",
+          "звезда контур",
+          "метка"
+        ]
+      },
       "tags": [
         "decagram",
         "star",
@@ -106115,7 +106383,36 @@
       ]
     },
     "exercise-ball": {
+      "en": {
+        "description": "A round ball with curved stripes, representing an exercise or yoga ball used for fitness, stability and workouts.",
+        "synonyms": [
+          "fitness ball",
+          "yoga ball",
+          "swiss ball",
+          "pilates",
+          "gym",
+          "workout",
+          "balance",
+          "stability ball",
+          "sport"
+        ]
+      },
       "fingerprint": "bcceab5ea252",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Изображена круглая гимнастическая фитбол-мяч с полосами, он обозначает фитнес, растяжку и упражнения на балансе.",
+        "synonyms": [
+          "фитбол",
+          "мяч для фитнеса",
+          "гимнастический мяч",
+          "йога",
+          "пилates",
+          "спорт",
+          "тренировка",
+          "баланс",
+          "зал"
+        ]
+      },
       "tags": [
         "exercise-ball",
         "yoga-ball",
@@ -123880,7 +124177,34 @@
       ]
     },
     "git-merge-ai": {
+      "en": {
+        "description": "Shows a git branch merging into a node beside the letters AI, indicating AI-assisted merging of code branches.",
+        "synonyms": [
+          "git merge",
+          "branch",
+          "merge request",
+          "version control",
+          "artificial intelligence",
+          "ai assistant",
+          "combine",
+          "repository"
+        ]
+      },
       "fingerprint": "3bcbfe221439",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Изображена git-ветвь, сливающаяся в узел, с надписью «AI»; обозначает слияние веток с функциями искусственного интеллекта.",
+        "synonyms": [
+          "слияние веток",
+          "git",
+          "ветка",
+          "объединение",
+          "искусственный интеллект",
+          "ии",
+          "нейросеть",
+          "контроль версий"
+        ]
+      },
       "tags": [
         "git",
         "merge",
@@ -123898,7 +124222,36 @@
       ]
     },
     "git-merge-queue": {
+      "en": {
+        "description": "Icon shows several dots and a line with circle nodes, representing a git merge queue of branch changes.",
+        "synonyms": [
+          "queue",
+          "merge",
+          "git",
+          "branch",
+          "pipeline",
+          "version control",
+          "automation",
+          "ci",
+          "commits"
+        ]
+      },
       "fingerprint": "0d9c368f7454",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Иконка показывает несколько точек и линию с кружками на концах, это элементы очереди слияния веток в git.",
+        "synonyms": [
+          "очередь",
+          "слияние",
+          "git",
+          "ветки",
+          "пайплайн",
+          "конвейер",
+          "автоматизация",
+          "контроль версий",
+          "сборка"
+        ]
+      },
       "tags": [
         "git",
         "merge-queue",
@@ -124002,7 +124355,38 @@
       ]
     },
     "git-pull-request-closed-ai": {
+      "en": {
+        "description": "Shows a git commit node with a cross and AI text, meaning a closed or rejected pull request involving AI.",
+        "synonyms": [
+          "pull request",
+          "merge request",
+          "closed",
+          "rejected",
+          "git",
+          "version control",
+          "ai",
+          "artificial intelligence",
+          "decline",
+          "pr"
+        ]
+      },
       "fingerprint": "1fce6043bb43",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Рисует git-узел с двумя кружками и соединительной линией, справа крестик и надпись «AI»; означает закрытый или отклонённый запрос на слияние с ИИ.",
+        "synonyms": [
+          "пулреквест",
+          "запрос на слияние",
+          "отклонено",
+          "закрыто",
+          "гит",
+          "ии",
+          "искусственный интеллект",
+          "контроль версий",
+          "merge request",
+          "отказ"
+        ]
+      },
       "tags": [
         "git",
         "pull-request",
@@ -124109,7 +124493,38 @@
       ]
     },
     "git-pull-request-draft-ai": {
+      "en": {
+        "description": "Draws two linked commit circles beside an AI label with dots, meaning an AI-assisted draft pull request.",
+        "synonyms": [
+          "draft",
+          "pull request",
+          "merge request",
+          "git branch",
+          "version control",
+          "artificial intelligence",
+          "wip",
+          "work in progress",
+          "commit",
+          "ai assistant"
+        ]
+      },
       "fingerprint": "81f577ce66e0",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Рисует два кружка, соединённых линией, и надпись «AI» с точками рядом; означает черновик запроса на слияние с ИИ.",
+        "synonyms": [
+          "черновик",
+          "запрос на слияние",
+          "пулл реквест",
+          "ветка",
+          "гит",
+          "искусственный интеллект",
+          "нейросеть",
+          "вип",
+          "работа в процессе",
+          "контроль версий"
+        ]
+      },
       "tags": [
         "git",
         "pull-request",
@@ -124173,7 +124588,36 @@
       ]
     },
     "git-pull-request-locked-ai": {
+      "en": {
+        "description": "Shows a git branch with two nodes and a curved arrow beside the letters AI, meaning an AI-assisted pull request.",
+        "synonyms": [
+          "pull request",
+          "git branch",
+          "merge request",
+          "version control",
+          "ai",
+          "artificial intelligence",
+          "code review",
+          "machine learning",
+          "source code"
+        ]
+      },
       "fingerprint": "dd3242d2ece9",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Изображена git-ветка с двумя кружками и стрелкой-изгибом, рядом надпись «AI»; обозначает запрос на слияние с искусственным интеллектом.",
+        "synonyms": [
+          "запрос на слияние",
+          "пулл реквест",
+          "ветка",
+          "гит",
+          "версионирование",
+          "ии",
+          "искусственный интеллект",
+          "нейросеть",
+          "автоматизация кода"
+        ]
+      },
       "tags": [
         "git",
         "pull-request",
@@ -124192,7 +124636,34 @@
       ]
     },
     "git-pull-request-unlisted": {
+      "en": {
+        "description": "Two connected circles, three dots and a short diagonal line, representing a hidden or private pull request in version control.",
+        "synonyms": [
+          "pull request",
+          "merge request",
+          "git",
+          "hidden",
+          "private",
+          "version control",
+          "branch",
+          "unlisted"
+        ]
+      },
       "fingerprint": "2ca2668c9fde",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Изображение показывает два кружка, соединённых линией, три точки и короткую диагональную черту; иконка обозначает скрытый или приватный запрос на слияние в системе контроля версий.",
+        "synonyms": [
+          "пулреквест",
+          "запрос на слияние",
+          "git",
+          "скрытый",
+          "приватный",
+          "контроль версий",
+          "ветка",
+          "закрытый доступ"
+        ]
+      },
       "tags": [
         "git",
         "pull-request",
@@ -129570,7 +130041,38 @@
       ]
     },
     "help-octagon": {
+      "en": {
+        "description": "An outlined octagon containing a question mark; usually means help, support, or frequently asked questions.",
+        "synonyms": [
+          "help",
+          "question",
+          "support",
+          "faq",
+          "question mark",
+          "octagon",
+          "info",
+          "assistance",
+          "hint",
+          "query"
+        ]
+      },
       "fingerprint": "a73aa5ab3cb5",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Восьмиугольник с знаком вопроса внутри; обозначает справку, помощь или часто задаваемые вопросы.",
+        "synonyms": [
+          "справка",
+          "помощь",
+          "вопрос",
+          "знак вопроса",
+          "поддержка",
+          "faq",
+          "восьмиугольник",
+          "инфо",
+          "ассистент",
+          "подсказка"
+        ]
+      },
       "tags": [
         "help",
         "question",
@@ -137621,7 +138123,36 @@
       ]
     },
     "info-octagon": {
+      "en": {
+        "description": "An outlined octagon containing a lowercase letter i, usually meaning information, help, or a notice.",
+        "synonyms": [
+          "information",
+          "info",
+          "help",
+          "tip",
+          "details",
+          "notice",
+          "about",
+          "alert",
+          "hint"
+        ]
+      },
       "fingerprint": "bcda6964321a",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Восьмиугольник с буквой «i» внутри обозначает информацию, справку или уведомление в интерфейсе.",
+        "synonyms": [
+          "информация",
+          "инфо",
+          "справка",
+          "подсказка",
+          "сведения",
+          "уведомление",
+          "помощь",
+          "about",
+          "детали"
+        ]
+      },
       "tags": [
         "info",
         "information",
@@ -151892,7 +152423,38 @@
       ]
     },
     "loop": {
+      "en": {
+        "description": "Shows a circular arrow curving up and to the right, commonly meaning repeat, loop, or run again.",
+        "synonyms": [
+          "repeat",
+          "cycle",
+          "replay",
+          "redo",
+          "circular arrow",
+          "refresh",
+          "again",
+          "iterate",
+          "continuous",
+          "reload"
+        ]
+      },
       "fingerprint": "f01140218e33",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Изображена незамкнутая круглая стрелка, направленная вверх и вправо; обозначает повтор, цикл или повторное действие.",
+        "synonyms": [
+          "повтор",
+          "цикл",
+          "повторить",
+          "зацикливание",
+          "повторение",
+          "стрелка по кругу",
+          "заново",
+          "обновить",
+          "перезапуск",
+          "бесконечный"
+        ]
+      },
       "tags": [
         "loop",
         "repeat",
@@ -155806,7 +156368,34 @@
       ]
     },
     "map-pins-off": {
+      "en": {
+        "description": "Two chain links crossed out by a diagonal line, usually meaning a link is disabled or disconnected.",
+        "synonyms": [
+          "unlink",
+          "broken link",
+          "disconnect",
+          "chain off",
+          "link disabled",
+          "detach",
+          "hide link",
+          "unavailable"
+        ]
+      },
       "fingerprint": "d06430c51a82",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Два звена цепи, перечёркнутые диагональной линией; обычно означает отключённую или разорванную связь.",
+        "synonyms": [
+          "разорвать связь",
+          "отвязать",
+          "отключить ссылку",
+          "цепь",
+          "звено",
+          "разъединить",
+          "сломанная ссылка",
+          "недоступно"
+        ]
+      },
       "tags": [
         "pins",
         "markers",
@@ -158628,7 +159217,36 @@
       ]
     },
     "mcp": {
+      "en": {
+        "description": "A thick, looping paperclip-like shape representing attachment, linking, or connecting context and data.",
+        "synonyms": [
+          "paperclip",
+          "attachment",
+          "attach",
+          "link",
+          "context",
+          "protocol",
+          "integration",
+          "connection",
+          "programming"
+        ]
+      },
       "fingerprint": "8d32cb9b63a9",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Изображена стилизованная скрепка из толстых замкнутых петель, обозначающая вложение или связывание данных и контекста.",
+        "synonyms": [
+          "скрепка",
+          "вложение",
+          "прикрепить",
+          "связь",
+          "контекст",
+          "протокол",
+          "интеграция",
+          "соединение",
+          "программирование"
+        ]
+      },
       "tags": [
         "programming",
         "coding",
@@ -177647,7 +178265,35 @@
       ]
     },
     "octagon": {
+      "en": {
+        "description": "An outlined eight-sided polygon with no fill, often representing a geometric shape or a stop sign.",
+        "synonyms": [
+          "stop sign",
+          "polygon",
+          "shape",
+          "geometry",
+          "eight sides",
+          "outline",
+          "figure",
+          "stop"
+        ]
+      },
       "fingerprint": "8739fd1e94c6",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Контурный восьмиугольник без внутренней заливки; обычно обозначает геометрическую фигуру или знак остановки.",
+        "synonyms": [
+          "восьмиугольник",
+          "фигура",
+          "многоугольник",
+          "стоп",
+          "знак стоп",
+          "геометрия",
+          "восьмигранник",
+          "контур",
+          "стоп-знак"
+        ]
+      },
       "tags": [
         "shape",
         "polygon",
@@ -177677,7 +178323,38 @@
       ]
     },
     "octagon-minus": {
+      "en": {
+        "description": "An outlined octagon containing a horizontal minus sign, usually meaning stop, remove, or blocked.",
+        "synonyms": [
+          "stop",
+          "stop sign",
+          "minus",
+          "remove",
+          "delete",
+          "octagon",
+          "blocked",
+          "subtract",
+          "deny",
+          "forbidden"
+        ]
+      },
       "fingerprint": "535526a34c67",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Восьмиугольник с горизонтальным минусом внутри; обычно означает остановку, запрет или удаление.",
+        "synonyms": [
+          "стоп",
+          "знак стоп",
+          "минус",
+          "удалить",
+          "убрать",
+          "восьмиугольник",
+          "запрет",
+          "заблокировать",
+          "вычесть",
+          "отмена"
+        ]
+      },
       "tags": [
         "stop",
         "remove",
@@ -177690,7 +178367,38 @@
       ]
     },
     "octagon-minus-2": {
+      "en": {
+        "description": "An octagon outline with a horizontal minus bar at the lower right, typically meaning stop, remove or blocked.",
+        "synonyms": [
+          "stop sign",
+          "halt",
+          "remove",
+          "delete",
+          "subtract",
+          "polygon",
+          "shape",
+          "blocked",
+          "forbidden",
+          "cancel"
+        ]
+      },
       "fingerprint": "627e82327f15",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Восьмиугольник с контуром и горизонтальной чертой внутри правого нижнего угла, обозначает остановку или запрет.",
+        "synonyms": [
+          "стоп",
+          "знак стоп",
+          "удалить",
+          "убрать",
+          "минус",
+          "восьмиугольник",
+          "многоугольник",
+          "блокировка",
+          "запрет",
+          "отмена"
+        ]
+      },
       "tags": [
         "stop",
         "remove",
@@ -177716,7 +178424,38 @@
       ]
     },
     "octagon-off": {
+      "en": {
+        "description": "An octagon outline crossed by a diagonal slash, usually meaning disabled, inactive, or a stop-like restriction.",
+        "synonyms": [
+          "octagon",
+          "disabled",
+          "inactive",
+          "turn off",
+          "stop sign",
+          "slash",
+          "polygon",
+          "shape",
+          "forbidden",
+          "geometry"
+        ]
+      },
       "fingerprint": "1ea5bba087bc",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Восьмиугольник, перечёркнутый диагональной линией; обозначает отключённый или неактивный элемент, а также запрет.",
+        "synonyms": [
+          "восьмиугольник",
+          "выключено",
+          "отключено",
+          "неактивно",
+          "запрет",
+          "знак стоп",
+          "перечёркнутый",
+          "фигура",
+          "многоугольник",
+          "геометрия"
+        ]
+      },
       "tags": [
         "shape",
         "polygon",
@@ -177731,7 +178470,34 @@
       ]
     },
     "octagon-plus": {
+      "en": {
+        "description": "An octagon outline containing a plus sign, usually meaning add, create new item, or expand.",
+        "synonyms": [
+          "add",
+          "plus",
+          "create",
+          "new",
+          "octagon",
+          "polygon",
+          "shape",
+          "addition"
+        ]
+      },
       "fingerprint": "c7cfd2e8928b",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Восьмиугольник с крестом plus внутри обозначает добавление, создание нового элемента или расширенное предупреждение.",
+        "synonyms": [
+          "добавить",
+          "плюс",
+          "создать",
+          "новый",
+          "восьмиугольник",
+          "многоугольник",
+          "фигура",
+          "добавление"
+        ]
+      },
       "tags": [
         "add",
         "plus",
@@ -177743,7 +178509,36 @@
       ]
     },
     "octagon-plus-2": {
+      "en": {
+        "description": "An open octagon outline with a plus sign at the bottom right, meaning add or create a new shape.",
+        "synonyms": [
+          "add",
+          "plus",
+          "octagon",
+          "polygon",
+          "shape",
+          "new",
+          "create",
+          "addition",
+          "geometry"
+        ]
+      },
       "fingerprint": "2fae89df22e8",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Контур восьмиугольника с плюсом в правом нижнем углу; обозначает добавление новой фигуры или элемента.",
+        "synonyms": [
+          "добавить",
+          "плюс",
+          "восьмиугольник",
+          "многоугольник",
+          "фигура",
+          "новый",
+          "создать",
+          "добавление",
+          "полигон"
+        ]
+      },
       "tags": [
         "add",
         "plus",
@@ -178151,7 +178946,37 @@
       ]
     },
     "opacity": {
+      "en": {
+        "description": "A rounded square filled with dots fading diagonally from solid to empty, representing opacity or transparency settings.",
+        "synonyms": [
+          "transparency",
+          "alpha",
+          "fade",
+          "gradient",
+          "dots",
+          "blend",
+          "overlap",
+          "layers",
+          "transparent"
+        ]
+      },
       "fingerprint": "8b76e3847c6a",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Квадрат с точками, образующими диагональный градиент от полных к пустым, обозначает прозрачность или непрозрачность объекта.",
+        "synonyms": [
+          "прозрачность",
+          "непрозрачность",
+          "альфа",
+          "затемнение",
+          "градиент",
+          "точки",
+          "растворение",
+          "наложение",
+          "слои",
+          "смешивание"
+        ]
+      },
       "tags": [
         "opacity",
         "transparency",
@@ -181082,7 +181907,38 @@
       ]
     },
     "pencil-ruler": {
+      "en": {
+        "description": "Shows a pencil crossed with a ruler, typically representing drafting, design, drawing, or editing tools.",
+        "synonyms": [
+          "pencil",
+          "ruler",
+          "drafting",
+          "drawing",
+          "sketch",
+          "measure",
+          "edit",
+          "design tools",
+          "draft",
+          "write"
+        ]
+      },
       "fingerprint": "56b0fdabc21f",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Изображены карандаш и линейка, перекрещивающиеся под углом; значок обозначает черчение, рисование или редактирование.",
+        "synonyms": [
+          "карандаш",
+          "линейка",
+          "черчение",
+          "рисование",
+          "чертеж",
+          "измерить",
+          "редактировать",
+          "инструменты",
+          "эскиз",
+          "создать"
+        ]
+      },
       "tags": [
         "pencil",
         "ruler",
@@ -186813,7 +187669,35 @@
       ]
     },
     "pinned-off": {
+      "en": {
+        "description": "A crossed-out pushpin drawing, meaning unpin or disable pinning of an item.",
+        "synonyms": [
+          "unpin",
+          "unpinned",
+          "pushpin",
+          "thumbtack",
+          "detach",
+          "unstick",
+          "disable pin",
+          "remove pin"
+        ]
+      },
       "fingerprint": "92b38b7de21e",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Перечёркнутая иконка кнопки-булавки, означает открепление или отключение закрепления элемента.",
+        "synonyms": [
+          "открепить",
+          "не закреплено",
+          "булавка",
+          "кнопка булавки",
+          "отменить закрепление",
+          "отключить закрепление",
+          "скрыть",
+          "кнопу",
+          "убрать закрепление"
+        ]
+      },
       "tags": [
         "unpin",
         "unpinned",
@@ -211150,7 +212034,38 @@
       ]
     },
     "snail": {
+      "en": {
+        "description": "A snail with a spiral shell and two antennae, usually representing slowness, garden life, or nature.",
+        "synonyms": [
+          "slug",
+          "mollusc",
+          "shell",
+          "slow",
+          "garden",
+          "animal",
+          "nature",
+          "pace",
+          "sea snail",
+          "escargot"
+        ]
+      },
       "fingerprint": "42a08dfafc7c",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Нарисована улитка с спиралевидной раковиной и двумя усиками; обычно означает медленность, природу или животное.",
+        "synonyms": [
+          "улитка",
+          "слизняк",
+          "медленно",
+          "ракушка",
+          "моллюск",
+          "садовый жилец",
+          "животное",
+          "природа",
+          "черепашка",
+          "темп"
+        ]
+      },
       "tags": [
         "snail",
         "slug",
@@ -242690,7 +243605,38 @@
       ]
     },
     "waveform": {
+      "en": {
+        "description": "Five vertical bars of varying heights form a sound wave, usually representing audio, voice or a sound signal.",
+        "synonyms": [
+          "sound",
+          "audio",
+          "wave",
+          "sound wave",
+          "signal",
+          "voice",
+          "music",
+          "frequency",
+          "equalizer",
+          "recording"
+        ]
+      },
       "fingerprint": "2186337727c6",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Изображены пять вертикальных столбиков разной высоты, символизирующих звуковую волну или аудиосигнал.",
+        "synonyms": [
+          "звук",
+          "аудио",
+          "волна",
+          "звуковая волна",
+          "сигнал",
+          "голос",
+          "музыка",
+          "частота",
+          "эквалайзер",
+          "запись"
+        ]
+      },
       "tags": [
         "waveform",
         "audio",
@@ -244687,7 +245633,37 @@
       ]
     },
     "world-map-off": {
+      "en": {
+        "description": "A globe with partial continent outlines crossed by a diagonal line, meaning the world map is disabled or hidden.",
+        "synonyms": [
+          "map disabled",
+          "hide map",
+          "no map",
+          "globe",
+          "atlas",
+          "geography",
+          "planet",
+          "earth",
+          "turn off map"
+        ]
+      },
       "fingerprint": "77dc02dfe75d",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Контурный глобус с фрагментами континентов, перечёркнутый диагональю; обозначает отключённую или недоступную карту мира.",
+        "synonyms": [
+          "карта мира",
+          "глобус",
+          "карта выключена",
+          "без карты",
+          "отключить карту",
+          "география",
+          "атлас",
+          "планета",
+          "земля",
+          "скрыть карту"
+        ]
+      },
       "tags": [
         "world-map",
         "map",
@@ -247696,7 +248672,34 @@
       ]
     },
     "zsh": {
+      "en": {
+        "description": "A rounded square outline with a diagonal slash inside, representing the Zsh shell or a terminal prompt.",
+        "synonyms": [
+          "terminal",
+          "command line",
+          "console",
+          "shell",
+          "prompt",
+          "zsh shell",
+          "cli",
+          "script"
+        ]
+      },
       "fingerprint": "4dd8ba77ab3c",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Изображена квадратная рамка со скошенной линией внутри, она обозначает командную оболочку Zsh и терминал.",
+        "synonyms": [
+          "терминал",
+          "командная строка",
+          "консоль",
+          "оболочка",
+          "shell",
+          "зш",
+          "скрипт",
+          "cli"
+        ]
+      },
       "tags": [
         "zsh",
         "z-shell",
