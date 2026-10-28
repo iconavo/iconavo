@@ -30,6 +30,7 @@
     "api": "tsc -b && node --env-file-if-exists=.env packages/pipeline/dist/cli.js api",
     "sandbox": "tsc -b && node packages/pipeline/dist/cli.js sandbox",
     "icon": "tsc -b && node packages/pipeline/dist/cli.js icon",
+    "example": "tsc -b && node packages/pipeline/dist/cli.js example",
     "check": "pnpm lint && pnpm typecheck && pnpm api build && pnpm icon build && pnpm test && pnpm size"
   },
   "devDependencies": {

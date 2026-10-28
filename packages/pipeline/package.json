@@ -22,6 +22,7 @@
   "devDependencies": {
     "@iconavo-ui/core": "workspace:*",
     "@iconavo-ui/icon": "workspace:*",
+    "@iconavo-ui/react": "workspace:*",
     "@types/node": "^26.6.5"
   }
 }

@@ -16,8 +16,11 @@ afterEach(async () => {
   await rm(dir, { recursive: true, force: true });
 });
 
-/** Сборка проекта разработчика из одной строки import "@iconavo-ui/icon" — с условиями экспорта. */
-async function consumer(conditions?: string[]) {
+/** Сборка проекта разработчика из нескольких строк кода — с условиями экспорта. */
+async function consumer(
+  source = 'import "@iconavo-ui/icon";',
+  conditions?: string[],
+) {
   const { build } = await import("rolldown");
   const result = await build({
     input: "consumer",
@@ -28,9 +31,11 @@ async function consumer(conditions?: string[]) {
       {
         name: "consumer",
         resolveId: (id) => (id === "consumer" ? id : null),
-        load: (id) => (id === "consumer" ? 'import "@iconavo-ui/icon";' : null),
+        load: (id) => (id === "consumer" ? source : null),
       },
     ],
+    // Пометки "use client" сборщик без React Server Components выбрасывает с замечанием.
+    onLog: () => {},
     write: false,
     output: { format: "esm", minify: true },
   });
@@ -79,7 +84,7 @@ describe("пакет в сборке разработчика", () => {
   });
 
   it("условие development — вход для разработки с рамкой по умолчанию", async () => {
-    const { code, modules } = await consumer([
+    const { code, modules } = await consumer(undefined, [
       "development",
       "browser",
       "import",
@@ -87,5 +92,17 @@ describe("пакет в сборке разработчика", () => {
     ]);
     expect(code).toContain("customElements");
     expect(modules.some((id) => id.endsWith("development.js"))).toBe(true);
+  });
+
+  it("React: loadIcons без компонентов — сборщик выбрасывает Icon, обёртку и сам React", async () => {
+    const { code, modules } = await consumer(
+      'import { loadIcons } from "@iconavo-ui/react"; loadIcons(["lucide:house"]);',
+    );
+    expect(code).toContain("https://api.iconavo.dev");
+    expect(code).not.toContain("useSyncExternalStore");
+    expect(code).not.toContain("iconavo-loading");
+    expect(
+      modules.some((id) => /[\\/]react[\\/]dist[\\/]icon\.js$/.test(id)),
+    ).toBe(false);
   });
 });

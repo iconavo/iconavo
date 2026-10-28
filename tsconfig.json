@@ -3,6 +3,7 @@
   "references": [
     { "path": "packages/core" },
     { "path": "packages/icon" },
+    { "path": "packages/react" },
     { "path": "packages/search" },
     { "path": "packages/schema" },
     { "path": "packages/pipeline" },
