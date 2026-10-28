@@ -1,0 +1,28 @@
+# Временная диагностика (не сливать): какой сервер Bunny отвечает машине GitHub и откуда берёт манифест.
+name: Диагностика cdn2
+on: pull_request
+permissions: {}
+jobs:
+  diag:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Манифест с машины GitHub
+        run: |
+          show() {
+            curl -sS --max-time 30 --compressed -H "Accept-Encoding: $2" -H "Origin: https://example.com" -D h.txt -o b.json "$1"
+            echo "$1 [$2] tabler=$(jq -r .sets.tabler.version b.json 2>/dev/null) | $(grep -iE '^(server|cdn-cache|cdn-storageserver|cdn-edgestorageid|cdn-requestcountrycode|cdn-cachedat|last-modified|age|etag|cf-cache-status):' h.txt | tr -d '\r' | tr '\n' ' ')"
+          }
+          for i in 1 2; do
+            for h in cdn2.iconavo.dev iconavo.b-cdn.net cdn.iconavo.dev; do
+              for enc in "br, gzip" "gzip" "identity"; do show "https://$h/manifest.json" "$enc"; done
+            done
+            show "https://cdn2.iconavo.dev/manifest.json?diag=$RANDOM" "gzip"
+            sleep 5
+          done
+          echo "--- DNS"; dig +short cdn2.iconavo.dev; dig +short iconavo.b-cdn.net
+          echo "--- Node fetch, как у pnpm cdn check"
+          node -e '
+            for (const enc of ["br, gzip", "gzip"]) {
+              fetch("https://cdn2.iconavo.dev/manifest.json", { headers: { "accept-encoding": enc, origin: "https://example.com" } })
+                .then(async (r) => console.log(enc, r.status, (await r.json()).sets.tabler.version, [...r.headers].filter(([k]) => /^(server|cdn-cache|cdn-storageserver|last-modified|cdn-cachedat)$/.test(k)).map((p) => p.join(": ")).join(" | ")));
+            }'
