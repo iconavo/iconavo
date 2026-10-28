@@ -18,3 +18,17 @@ export function textTable(
       .trimEnd();
   return [line(head), ...rows.map(line)].join("\n");
 }
+
+/** Та же таблица в Markdown — для сводки запуска CI; «|» и переводы строк в ячейках не ломают её. */
+export function markdownTable(
+  head: readonly string[],
+  rows: readonly (readonly string[])[],
+): string {
+  const line = (cells: readonly string[]) =>
+    `| ${cells.map((cell) => cell.replaceAll("|", "\\|").replace(/\s*\n\s*/g, " ")).join(" | ")} |`;
+  return [
+    line(head),
+    `|${head.map(() => " --- ").join("|")}|`,
+    ...rows.map(line),
+  ].join("\n");
+}

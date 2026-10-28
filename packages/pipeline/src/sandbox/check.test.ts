@@ -8,7 +8,11 @@ import {
   sandboxCheckFailed,
   warningsVerdict,
 } from "./check.js";
-import { formatSandboxCheck, renderSandboxCheckPage } from "./check-report.js";
+import {
+  formatSandboxCheck,
+  markdownSandboxCheck,
+  renderSandboxCheckPage,
+} from "./check-report.js";
 
 describe("разбор проверки в браузерах", () => {
   it("предупреждения: каждое ожидаемое — ровно один раз, чужие предупреждения пакета — проблема", () => {
@@ -119,5 +123,18 @@ describe("отчёт проверки", () => {
     expect(html).toContain('src="data:image/png;base64,iVBORw0KGgo="');
     expect(html).toContain("Тег &lt;начало&gt;");
     expect(html).toContain("<li>WebKit (Safari): WebKit не запустился</li>");
+  });
+
+  it("сводка CI: та же таблица в Markdown, что не так и итог", () => {
+    const md = markdownSandboxCheck(results);
+    expect(md).toContain(
+      "| Проверка | Chrome | Firefox | WebKit (Safari) |\n| --- | --- | --- | --- |",
+    );
+    expect(md).toMatch(/\| Подпись[^|]* \| да \| — \| сбой \|/);
+    expect(md).toContain(
+      "- Firefox — Иконка перекрашивается вслед за цветом текста: цвет иконки rgb(0, 0, 0)",
+    );
+    expect(md).toContain("Итог: есть проблемы.");
+    expect(markdownSandboxCheck(results.slice(0, 1))).not.toContain("Не так:");
   });
 });

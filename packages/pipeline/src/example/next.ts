@@ -1,12 +1,14 @@
 // Next.js для примера (фаза 3, шаг 7): сборка, запуск и остановка из конвейера. Next.js запускается тем
 // же Node, что и конвейер, — бинарником из папки примера. Останавливается со всеми дочерними
-// процессами: на Windows — taskkill /T, иначе рабочие процессы Next.js остались бы сиротами.
+// процессами — иначе рабочие процессы Next.js остались бы сиротами: на Windows — taskkill /T, на
+// Linux и macOS — сигналом своей группе процессов. Остановка ждёт выхода: следующий next build в той
+// же папке не застанет старый процесс.
 
 import { type ChildProcess, spawn, spawnSync } from "node:child_process";
 import { createRequire } from "node:module";
 import { createServer } from "node:net";
 import { join } from "node:path";
-import { START_TIMEOUT_MS } from "./config.js";
+import { START_TIMEOUT_MS, STOP_TIMEOUT_MS } from "./config.js";
 
 export type Mode = "dev" | "prod";
 
@@ -23,26 +25,47 @@ export interface NextRun {
 
 export interface NextServer {
   url: string;
-  stop(): void;
+  /** Остановить Next.js со всеми дочерними процессами и дождаться выхода. */
+  stop(): Promise<void>;
 }
 
 const bin = (dir: string) =>
   createRequire(join(dir, "package.json")).resolve("next/dist/bin/next");
 
-/** Остановить процесс со всеми дочерними. */
-export function stopTree(child: ChildProcess): void {
-  if (child.exitCode !== null || child.pid === undefined) return;
+/** Сигнал группе процессов (на POSIX у Next.js своя группа); не вышло — самому процессу. */
+function signal(child: ChildProcess, name: NodeJS.Signals): void {
+  try {
+    process.kill(-(child.pid as number), name);
+  } catch {
+    child.kill(name);
+  }
+}
+
+/**
+ * Остановить процесс со всеми дочерними и дождаться его выхода. На Windows — taskkill /T /F, иначе
+ * SIGTERM группе; не вышел за STOP_TIMEOUT_MS — SIGKILL.
+ */
+export async function stopTree(child: ChildProcess): Promise<void> {
+  if (
+    child.exitCode !== null ||
+    child.signalCode !== null ||
+    child.pid === undefined
+  ) {
+    return;
+  }
+  const exited = new Promise<void>((resolve) =>
+    child.once("exit", () => resolve()),
+  );
   if (process.platform === "win32") {
     spawnSync("taskkill", ["/pid", String(child.pid), "/T", "/F"], {
       stdio: "ignore",
     });
-    return;
+  } else {
+    signal(child, "SIGTERM");
   }
-  try {
-    process.kill(-child.pid, "SIGTERM");
-  } catch {
-    child.kill("SIGTERM");
-  }
+  const timer = setTimeout(() => signal(child, "SIGKILL"), STOP_TIMEOUT_MS);
+  await exited;
+  clearTimeout(timer);
 }
 
 function spawnNext(args: string[], o: NextRun) {
@@ -133,7 +156,7 @@ export async function startNext(
       // Сервер ещё не слушает порт.
     }
     if (Date.now() > deadline) {
-      stop();
+      await stop();
       throw new Error(
         `next ${command[0]} не ответил за ${START_TIMEOUT_MS / 1000} с\n${output.join("\n")}`,
       );

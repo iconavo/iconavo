@@ -17,5 +17,8 @@ export const SLOW_MS = 800;
 /** Next.js в режиме разработки собирает страницу при первом запросе — на медленном компьютере долго. */
 export const START_TIMEOUT_MS = 180_000;
 
+/** Next.js не вышел за столько после SIGTERM — SIGKILL всей группе процессов (Linux, macOS). */
+export const STOP_TIMEOUT_MS = 10_000;
+
 /** Окно браузера в проверке: раздел «С сервера» целиком на экране. */
 export const VIEWPORT = { width: 1000, height: 1400 };

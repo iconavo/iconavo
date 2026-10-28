@@ -1,9 +1,9 @@
 // Отчёт проверки примера на Next.js (фаза 3, шаг 7): таблица «проверка × браузер и режим» для терминала,
-// ниже — что не так, и страница .cache/reports/example/check.html с той же таблицей, пояснениями и
-// снимками. «—» — не проверялось или только сведения.
+// ниже — что не так, страница .cache/reports/example/check.html с той же таблицей, пояснениями и
+// снимками и сводка check.md для страницы запуска CI. «—» — не проверялось или только сведения.
 
 import { esc, htmlPage } from "../report/html.js";
-import { textTable } from "../report/table.js";
+import { markdownTable, textTable } from "../report/table.js";
 import { BROWSER_TITLES } from "../sandbox/browser.js";
 import type { Verdict } from "../sandbox/check.js";
 import {
@@ -20,30 +20,54 @@ const mark = (v: Verdict | undefined) =>
 const column = (r: ExampleResult) =>
   `${BROWSER_TITLES[r.browser]}, ${MODE_TITLES[r.mode]}`;
 
-export function formatExampleCheck(results: ExampleResult[]): string[] {
-  const table = textTable(
-    ["Проверка", ...results.map(column)],
-    CHECKS.map(([id, title]) => [
-      title,
-      ...results.map((r) => (r.failure ? "сбой" : mark(r.verdicts[id]))),
-    ]),
-  );
-  const lines = [table];
-  const problems = results.flatMap((r) =>
+const tableHead = (results: ExampleResult[]) => [
+  "Проверка",
+  ...results.map(column),
+];
+
+const tableRows = (results: ExampleResult[]) =>
+  CHECKS.map(([id, title]) => [
+    title,
+    ...results.map((r) => (r.failure ? "сбой" : mark(r.verdicts[id]))),
+  ]);
+
+/** Что не так: сбой браузера в режиме или строки «НЕТ» с пояснением. */
+const problems = (results: ExampleResult[]) =>
+  results.flatMap((r) =>
     r.failure
-      ? [`  ${column(r)}: ${r.failure}`]
+      ? [`${column(r)}: ${r.failure}`]
       : CHECKS.filter(([id]) => r.verdicts[id]?.ok === false).map(
-          ([id, title]) => `  ${column(r)} — ${title}: ${r.verdicts[id]?.note}`,
+          ([id, title]) => `${column(r)} — ${title}: ${r.verdicts[id]?.note}`,
         ),
   );
-  if (problems.length > 0) lines.push("", "Не так:", ...problems);
-  lines.push(
-    "",
-    exampleCheckFailed(results)
-      ? "Итог: есть проблемы."
-      : "Итог: пример работает во всех проверенных браузерах и режимах.",
-  );
+
+const summary = (results: ExampleResult[]) =>
+  exampleCheckFailed(results)
+    ? "Итог: есть проблемы."
+    : "Итог: пример работает во всех проверенных браузерах и режимах.";
+
+export function formatExampleCheck(results: ExampleResult[]): string[] {
+  const lines = [textTable(tableHead(results), tableRows(results))];
+  const list = problems(results);
+  if (list.length > 0) lines.push("", "Не так:", ...list.map((p) => `  ${p}`));
+  lines.push("", summary(results));
   return lines;
+}
+
+/** Сводка для страницы запуска CI: та же таблица в Markdown. */
+export function markdownExampleCheck(results: ExampleResult[]): string {
+  const list = problems(results);
+  return [
+    "### React и пример на Next.js (pnpm example --check)",
+    "",
+    markdownTable(tableHead(results), tableRows(results)),
+    "",
+    ...(list.length > 0
+      ? ["Не так:", "", ...list.map((p) => `- ${p}`), ""]
+      : []),
+    summary(results),
+    "",
+  ].join("\n");
 }
 
 const STYLE = `
@@ -93,7 +117,7 @@ export function renderExampleCheckPage(results: ExampleResult[]): string {
     "Пример на Next.js: React в трёх браузерах",
     STYLE,
     `<h1>Пример на Next.js: React в трёх браузерах</h1>
-<p class="muted">pnpm example --check: пример examples/next в режиме разработки (next dev) и в продакшен-сборке (next build и next start), в Chrome, Firefox и WebKit — движке Safari на Windows. Иконки «с сервера» передаёт IconavoProvider, остальные браузер загружает сам; ответы API задержаны, чтобы было видно, что место держит резерв. Сеть не нужна: API и статика — превью на этом компьютере. «—» — не проверялось или только сведения.</p>
+<p class="muted">pnpm example --check: пример examples/next в режиме разработки (next dev) и в продакшен-сборке (next build и next start), в Chrome, Firefox и WebKit — движке Safari. Иконки «с сервера» передаёт IconavoProvider, остальные браузер загружает сам; ответы API задержаны, чтобы было видно, что место держит резерв. Сеть не нужна: API и статика — превью на этом компьютере. «—» — не проверялось или только сведения.</p>
 ${verdict}
 ${failures ? `<ul>${failures}</ul>` : ""}
 <table><thead><tr><th>Проверка</th>${head}</tr></thead><tbody>

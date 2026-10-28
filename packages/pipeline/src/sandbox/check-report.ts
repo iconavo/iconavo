@@ -1,10 +1,10 @@
 // Отчёт проверки тега в браузерах (фаза 3, шаг 5): таблица «проверка × браузер» для терминала, ниже —
-// что не так, и страница .cache/reports/sandbox/check.html с той же таблицей, пояснениями и снимками
-// каждого браузера. «—» — не проверялось или только сведения: подпись в Firefox проверяют Экранным
-// диктором, а в WebKit на Windows скринридера нет.
+// что не так, страница .cache/reports/sandbox/check.html с той же таблицей, пояснениями и снимками
+// каждого браузера и сводка check.md для страницы запуска CI. «—» — не проверялось или только
+// сведения: дерево доступности, по которому проверяется подпись, Playwright даёт только у Chrome.
 
 import { esc, htmlPage } from "../report/html.js";
-import { textTable } from "../report/table.js";
+import { markdownTable, textTable } from "../report/table.js";
 import { BROWSER_TITLES } from "./browser.js";
 import {
   type BrowserResult,
@@ -16,31 +16,55 @@ import {
 const mark = (v: Verdict | undefined) =>
   v === undefined || v.ok === null ? "—" : v.ok ? "да" : "НЕТ";
 
-export function formatSandboxCheck(results: BrowserResult[]): string[] {
-  const table = textTable(
-    ["Проверка", ...results.map((r) => BROWSER_TITLES[r.browser])],
-    CHECKS.map(([id, title]) => [
-      title,
-      ...results.map((r) => (r.failure ? "сбой" : mark(r.verdicts[id]))),
-    ]),
-  );
-  const lines = [table];
-  const problems = results.flatMap((r) =>
+const tableHead = (results: BrowserResult[]) => [
+  "Проверка",
+  ...results.map((r) => BROWSER_TITLES[r.browser]),
+];
+
+const tableRows = (results: BrowserResult[]) =>
+  CHECKS.map(([id, title]) => [
+    title,
+    ...results.map((r) => (r.failure ? "сбой" : mark(r.verdicts[id]))),
+  ]);
+
+/** Что не так: сбой браузера или строки «НЕТ» с пояснением. */
+const problems = (results: BrowserResult[]) =>
+  results.flatMap((r) =>
     r.failure
-      ? [`  ${BROWSER_TITLES[r.browser]}: ${r.failure}`]
+      ? [`${BROWSER_TITLES[r.browser]}: ${r.failure}`]
       : CHECKS.filter(([id]) => r.verdicts[id]?.ok === false).map(
           ([id, title]) =>
-            `  ${BROWSER_TITLES[r.browser]} — ${title}: ${r.verdicts[id]?.note}`,
+            `${BROWSER_TITLES[r.browser]} — ${title}: ${r.verdicts[id]?.note}`,
         ),
   );
-  if (problems.length > 0) lines.push("", "Не так:", ...problems);
-  lines.push(
-    "",
-    sandboxCheckFailed(results)
-      ? "Итог: есть проблемы."
-      : "Итог: тег работает во всех проверенных браузерах.",
-  );
+
+const summary = (results: BrowserResult[]) =>
+  sandboxCheckFailed(results)
+    ? "Итог: есть проблемы."
+    : "Итог: тег работает во всех проверенных браузерах.";
+
+export function formatSandboxCheck(results: BrowserResult[]): string[] {
+  const lines = [textTable(tableHead(results), tableRows(results))];
+  const list = problems(results);
+  if (list.length > 0) lines.push("", "Не так:", ...list.map((p) => `  ${p}`));
+  lines.push("", summary(results));
   return lines;
+}
+
+/** Сводка для страницы запуска CI: та же таблица в Markdown. */
+export function markdownSandboxCheck(results: BrowserResult[]): string {
+  const list = problems(results);
+  return [
+    "### Тег в браузере (pnpm sandbox --check)",
+    "",
+    markdownTable(tableHead(results), tableRows(results)),
+    "",
+    ...(list.length > 0
+      ? ["Не так:", "", ...list.map((p) => `- ${p}`), ""]
+      : []),
+    summary(results),
+    "",
+  ].join("\n");
 }
 
 const STYLE = `
@@ -95,7 +119,7 @@ export function renderSandboxCheckPage(results: BrowserResult[]): string {
     "Песочница: тег в трёх браузерах",
     STYLE,
     `<h1>Песочница: тег в трёх браузерах</h1>
-<p class="muted">pnpm sandbox --check: страницы «Тег» и «5000 иконок» в Chrome, Firefox и WebKit — движке Safari на Windows (по документации Playwright у него отличаются видео, графика и сеть). Сеть не нужна: API и статика — превью на этом компьютере. «—» — не проверялось или только сведения.</p>
+<p class="muted">pnpm sandbox --check: страницы «Тег» и «5000 иконок» в Chrome, Firefox и WebKit — движке Safari (вне Mac, по документации Playwright, у него отличаются видео, графика и сеть). Сеть не нужна: API и статика — превью на этом компьютере. «—» — не проверялось или только сведения.</p>
 ${verdict}
 ${failures ? `<ul>${failures}</ul>` : ""}
 <table><thead><tr><th>Проверка</th>${head}</tr></thead><tbody>

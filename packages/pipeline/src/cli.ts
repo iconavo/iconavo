@@ -131,6 +131,7 @@ import {
 } from "./example/check.js";
 import {
   formatExampleCheck,
+  markdownExampleCheck,
   renderExampleCheckPage,
 } from "./example/check-report.js";
 import { EXAMPLE_DIR, EXAMPLE_PORT, NAMES_FILE } from "./example/config.js";
@@ -177,6 +178,7 @@ import {
 import { checkSandbox, sandboxCheckFailed } from "./sandbox/check.js";
 import {
   formatSandboxCheck,
+  markdownSandboxCheck,
   renderSandboxCheckPage,
 } from "./sandbox/check-report.js";
 import { LIVE_API, MANY_PER_SET, SANDBOX_PORT } from "./sandbox/config.js";
@@ -1160,6 +1162,12 @@ try {
       await mkdir(reportDir, { recursive: true });
       const htmlPath = join(reportDir, "check.html");
       await writeFile(htmlPath, renderSandboxCheckPage(results), "utf8");
+      // Та же таблица в Markdown — её кладёт в сводку запуска CI задача browser (ci.yml).
+      await writeFile(
+        join(reportDir, "check.md"),
+        markdownSandboxCheck(results),
+        "utf8",
+      );
       console.log(`Отчёт: ${htmlPath}`);
       server.close();
       await preview.close();
@@ -1251,7 +1259,7 @@ try {
             })),
           );
         } finally {
-          next.stop();
+          await next.stop();
         }
       }
       console.log("");
@@ -1260,6 +1268,12 @@ try {
       await mkdir(reportDir, { recursive: true });
       const htmlPath = join(reportDir, "check.html");
       await writeFile(htmlPath, renderExampleCheckPage(results), "utf8");
+      // Та же таблица в Markdown — её кладёт в сводку запуска CI задача browser (ci.yml).
+      await writeFile(
+        join(reportDir, "check.md"),
+        markdownExampleCheck(results),
+        "utf8",
+      );
       console.log(`Отчёт: ${htmlPath}`);
       await preview.close();
       process.exit(exampleCheckFailed(results) ? 1 : 0);
@@ -1274,8 +1288,7 @@ try {
       inherit: true,
     });
     const stop = () => {
-      next.stop();
-      process.exit(0);
+      void next.stop().finally(() => process.exit(0));
     };
     process.on("SIGINT", stop);
     process.on("SIGTERM", stop);
