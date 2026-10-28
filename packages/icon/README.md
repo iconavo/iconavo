@@ -366,6 +366,7 @@ The simplest host is a caching reverse proxy to `api.iconavo.dev` and `cdn.icona
 - The last two versions of Chrome, Edge, Firefox and Safari.
 - ES modules only; there is no CommonJS build.
 - React 18 and 19, including the Next.js App Router.
+- Size, gzipped: the tag with its core is at most 7 KB, the React component with the core at most 7.5 KB, not counting React. CI fails if a change goes over.
 
 ## License
 
