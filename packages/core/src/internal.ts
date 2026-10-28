@@ -9,6 +9,7 @@ export {
   parseSize,
   type Rotation,
 } from "./customise.js";
+export { HEAVY } from "./heavy.js";
 export { ALIAS_CHAIN_LIMIT, type IconData, iconData } from "./icon.js";
 export { replaceIds } from "./ids.js";
 export {
