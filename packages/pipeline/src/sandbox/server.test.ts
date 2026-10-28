@@ -96,7 +96,9 @@ describe("сервер песочницы", () => {
       '"missing":["lucide:no-such-icon","nope:house","Lucide:House"]',
     );
     expect(html).toContain('id="missing"');
-    expect(html).toContain("Хост молчит 750 мс");
+    expect(html).toContain(
+      "API молчит 1,5 с — тот же запрос уходит и на статику; хост статики молчит 750 мс",
+    );
     expect(html).toContain("повторяется через 1, 2 и 4 с");
   });
 

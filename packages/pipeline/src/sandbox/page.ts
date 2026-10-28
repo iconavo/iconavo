@@ -9,6 +9,7 @@ import {
   DEFAULT_CDN,
   RETRIES,
   ROTATE,
+  ROTATE_CDN,
   TIMEOUT,
 } from "@iconavo-ui/core/internal";
 import { BASE_STYLE, esc } from "../report/html.js";
@@ -212,7 +213,7 @@ export function renderSandboxPage(data: SandboxData): string {
 ${sandboxNav(data.api, "/")}
 <h1>Песочница ядра</h1>
 <p class="muted">Иконки грузит ядро <code>@iconavo-ui/core</code>. Иконки, запрошенные в один момент, уходят одним запросом на набор; адрес — не длиннее 500 символов, поэтому 100 иконок — это 3–5 запросов. Загруженная иконка и иконка, которой нет, в сеть больше не идут.</p>
-<p class="muted">Хосты — по очереди: пачками через <code>${esc(short(data.api))}</code>, затем по одной иконке со статики ${cdn.map((h) => `<code>${esc(short(h.url))}</code>`).join(" → ")}. Хост молчит ${ROTATE} мс — тот же запрос уходит и на следующий, побеждает первый ответ; попытка — не дольше ${seconds(TIMEOUT)}; неудавшаяся повторяется через ${pauses}, пока иконка на странице.</p>
+<p class="muted">Хосты — по очереди: пачками через <code>${esc(short(data.api))}</code>, затем по одной иконке со статики ${cdn.map((h) => `<code>${esc(short(h.url))}</code>`).join(" → ")}. API молчит ${seconds(ROTATE_CDN)} — тот же запрос уходит и на статику; хост статики молчит ${ROTATE} мс — и на следующий; побеждает первый ответ. Попытка — не дольше ${seconds(TIMEOUT)}; неудавшаяся повторяется через ${pauses}, пока иконка на странице.</p>
 <p class="hosts">Хост API: ${host(LIVE_API, "живой api.iconavo.dev")} ${host(PREVIEW_API, "превью на этом компьютере (pnpm api preview) — и статика тоже")}</p>
 <section class="network">
 <h2>Условия сети — имитация в песочнице</h2>
