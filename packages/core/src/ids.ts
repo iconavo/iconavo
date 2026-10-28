@@ -19,7 +19,7 @@ export function replaceIds(body: string, prefix: () => string): string {
   const renamed = new Map(ids.map((id, i) => [id, `${base}${i}`]));
   const alt = ids.map((id) => id.replace(SPECIAL, "\\$&")).join("|");
   const refs = new RegExp(
-    `(\\sid=["']|url\\(["']?#|href=["']#)(${alt})(?=["')])|([";]\\s*)(${alt})(?=\\.[a-z])`,
+    `(\\sid=["'])(${alt})(?=["')])|([";]\\s*)(${alt})(?=\\.[a-z])`,
     "g",
   );
   return body.replace(
