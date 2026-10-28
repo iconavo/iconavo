@@ -11,6 +11,7 @@
 // | pnpm api check [--expect-build=…] | pnpm api bench [--batches] [--base=…] [--seed=N] | pnpm icon build
 // | pnpm sandbox [--port=N] [--browser=chrome|firefox|webkit | --check]
 // | pnpm example [--port=N] [--prod] [--webpack] | pnpm example --check [--browser=…] [--webpack]
+// | pnpm visual [id…] [--browser=…]
 import { randomInt } from "node:crypto";
 import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import type { AddressInfo } from "node:net";
@@ -68,6 +69,7 @@ import {
   R2_BUCKET,
   R2_ENV,
 } from "./cdn/config.js";
+import { type CdnSet, loadCdnSet } from "./cdn/load.js";
 import {
   formatCdnReport,
   formatCdnSummary,
@@ -225,6 +227,13 @@ import {
   setSummary,
   summaryText,
 } from "./update/summary.js";
+import {
+  formatVisual,
+  markdownVisual,
+  renderVisualReport,
+} from "./visual/report.js";
+import { checkVisual, loadReact, visualFailed } from "./visual/run.js";
+import { startVisualServer } from "./visual/server.js";
 
 const USAGE = `Использование:
   pnpm sources fetch [id…]            скачать все наборы или указанные
@@ -341,7 +350,8 @@ const USAGE = `Использование:
                                       @iconavo-ui/core — пачки с api.iconavo.dev, при сбое по одной
                                       со статики (или всё с превью API); имитация сбоев хостов и
                                       журнал запросов для сверки с DevTools; /render — сетка
-                                      вариантов рендера; /tag — тег <iconavo-icon>; /many — 5000 иконок
+                                      вариантов рендера; /tag — тег <iconavo-icon>; /many — 5000 иконок;
+                                      /net — сбои сети для --check
       --port=N                        порт (по умолчанию ${SANDBOX_PORT})
       --browser=…                     открыть /many в окне chrome, firefox или webkit (Playwright)
       --check                         проверить тег в Chrome, Firefox и WebKit без интернета: превью
@@ -355,6 +365,10 @@ const USAGE = `Использование:
                                       разработки и в продакшене, без интернета: превью API на этом
                                       компьютере; отчёт .cache/reports/example/check.html
       --browser=…                     с --check: только chrome, firefox или webkit
+  pnpm visual [id…]                   визуальное сравнение (фаза 3, шаг 9; ADR-0035): каждое имя набора
+                                      через тег и React рядом с SVG статики, в Chrome, Firefox и WebKit;
+                                      расхождение — хоть один пиксель; отчёт .cache/reports/visual/index.html
+      --browser=…                     только chrome, firefox или webkit
   pnpm packages prepare [id…]       пакеты npm @iconavo-ui/icons-{набор} в ${NPM_OUT_DIR}/ (ADR-0026):
                                       данные, LICENSE, README, типы; версия — по реестру npm (только
                                       чтение, ключи не нужны); план для CI ${NPM_OUT_DIR}/plan.json;
@@ -542,8 +556,8 @@ for (const flag of flags) {
     port = Number(value);
     continue;
   }
-  if (command === "sandbox" || command === "example") {
-    if (flag === "--check") {
+  if (command === "sandbox" || command === "example" || command === "visual") {
+    if (flag === "--check" && command !== "visual") {
       checkBrowsers = true;
       continue;
     }
@@ -1306,6 +1320,46 @@ try {
     console.log(
       `Пример: ${next.url}/ — ${exampleProd ? "продакшен-сборка" : "режим разработки"} (${bundler}), иконки с живых хостов. Остановить — Ctrl+C.`,
     );
+  } else if (command === "visual") {
+    // Сеть не нужна: эталон — SVG статики из data/, пакет получает те же данные через addIcons.
+    const script = await buildIconScript(root);
+    console.log(
+      `Скрипт тега: ${SCRIPT_FILE} — в gzip ${formatBytes(script.gzipBytes)}${script.written ? ", собран заново" : ""}.`,
+    );
+    const sets: CdnSet[] = [];
+    for (const config of pick(args)) {
+      sets.push(await loadCdnSet(config, dataDir));
+    }
+    const server = await startVisualServer({
+      clientFile: fileURLToPath(new URL("./visual/client.js", import.meta.url)),
+      iconScript: join(root, SCRIPT_FILE),
+    });
+    const browsers = browserName ? [browserName] : BROWSERS;
+    console.log(
+      `Сравниваю: ${sets.map((s) => s.id).join(", ")} — ${browsers.map((b) => BROWSER_TITLES[b]).join(", ")}…`,
+    );
+    const results = await checkVisual({
+      sets,
+      browsers,
+      server,
+      react: await loadReact(root),
+      log: (line) => console.log(`  ${line}`),
+    });
+    await server.close();
+    console.log("");
+    for (const line of formatVisual(results)) console.log(line);
+    const reportDir = join(reportsDir, "visual");
+    await mkdir(reportDir, { recursive: true });
+    const htmlPath = join(reportDir, "index.html");
+    await writeFile(htmlPath, renderVisualReport(results), "utf8");
+    // Та же таблица в Markdown — её кладёт в сводку запуска CI задача browser (ci.yml).
+    await writeFile(
+      join(reportDir, "summary.md"),
+      markdownVisual(results),
+      "utf8",
+    );
+    console.log(`Отчёт: ${htmlPath}`);
+    process.exit(visualFailed(results) ? 1 : 0);
   } else if (command === "search-index") {
     if (args.length > 0) {
       usageError(

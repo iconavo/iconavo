@@ -149,10 +149,14 @@ jobs:
       - name: React и пример на Next.js (pnpm example --check)
         if: success() || failure()
         run: pnpm example --check --browser="$BROWSER"
+      # Каждое имя пяти наборов через тег и React рядом с SVG статики (ADR-0035).
+      - name: Визуальное сравнение (pnpm visual)
+        if: success() || failure()
+        run: pnpm visual --browser="$BROWSER"
       - name: Сводка
         if: success() || failure()
         run: |
-          for file in .cache/reports/sandbox/check.md .cache/reports/example/check.md; do
+          for file in .cache/reports/sandbox/check.md .cache/reports/example/check.md .cache/reports/visual/summary.md; do
             if [ -f "$file" ]; then cat "$file" >> "$GITHUB_STEP_SUMMARY"; fi
           done
       # Страницы без архива открываются в браузере. Копии — вне .cache: скрытые папки upload-artifact
@@ -165,6 +169,7 @@ jobs:
           mkdir -p "$pages"
           cp .cache/reports/sandbox/check.html "$pages/sandbox-$BROWSER.html" 2> /dev/null || true
           cp .cache/reports/example/check.html "$pages/example-$BROWSER.html" 2> /dev/null || true
+          cp .cache/reports/visual/index.html "$pages/visual-$BROWSER.html" 2> /dev/null || true
           echo "pages=$pages" >> "$GITHUB_OUTPUT"
       - name: Отчёт — тег
         if: always()
@@ -181,6 +186,15 @@ jobs:
         with:
           name: example-${{ matrix.browser }}.html
           path: ${{ steps.pages.outputs.pages }}/example-${{ matrix.browser }}.html
+          archive: false
+          if-no-files-found: ignore
+          retention-days: 14
+      - name: Отчёт — визуальное сравнение
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: visual-${{ matrix.browser }}.html
+          path: ${{ steps.pages.outputs.pages }}/visual-${{ matrix.browser }}.html
           archive: false
           if-no-files-found: ignore
           retention-days: 14
