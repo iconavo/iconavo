@@ -1,6 +1,7 @@
 packages:
   - packages/*
   - apps/*
+  - examples/*
   - sources
 
 # Версия Node не из engines в package.json останавливает pnpm install понятной ошибкой:

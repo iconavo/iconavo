@@ -16,6 +16,15 @@
     "gzip": true
   },
   {
+    "name": "@iconavo-ui/react",
+    "import": {
+      "packages/react/dist/index.js": "{ Icon, IconavoProvider }"
+    },
+    "ignore": ["@iconavo-ui/core", "react"],
+    "limit": "2.5 kB",
+    "gzip": true
+  },
+  {
     "name": "@iconavo-ui/icon/dist/iconavo-icon.js",
     "path": "packages/icon/dist/iconavo-icon.js",
     "rolldown": false,

@@ -121,11 +121,11 @@ export function errorsVerdict(errors: string[], violations: string[]): Verdict {
     : { ok: false, note: [...new Set(all)].slice(0, 5).join("; ") };
 }
 
-const pass = (note: string): Verdict => ({ ok: true, note });
-const fail = (note: string): Verdict => ({ ok: false, note });
+export const pass = (note: string): Verdict => ({ ok: true, note });
+export const fail = (note: string): Verdict => ({ ok: false, note });
 
 /** Что пишет страница: предупреждения, ошибки (кроме сетевых 404 — иконок, которых нет). */
-function watch(page: Page) {
+export function watch(page: Page) {
   const warnings: string[] = [];
   const errors: string[] = [];
   page.on("console", (message) => {
@@ -143,7 +143,7 @@ function watch(page: Page) {
 }
 
 /** Нарушения CSP — слушатель до скриптов страницы. */
-async function recordViolations(page: Page): Promise<void> {
+export async function recordViolations(page: Page): Promise<void> {
   await page.addInitScript(() => {
     const list: string[] = [];
     (window as unknown as { violations: string[] }).violations = list;
@@ -159,7 +159,7 @@ async function recordViolations(page: Page): Promise<void> {
  * Снимок страницы или её части. Для снимка Playwright вставляет в страницу свой стиль, и строгая
  * политика WebKit его отклоняет: нарушения и ошибки, пришедшие во время снимка, не в счёт.
  */
-async function shot(
+export async function shot(
   page: Page,
   seen: { errors: string[] },
   selector?: string,
@@ -178,7 +178,7 @@ async function shot(
   return png.toString("base64");
 }
 
-const violations = (page: Page) =>
+export const violations = (page: Page) =>
   page.evaluate(
     () => (window as unknown as { violations?: string[] }).violations ?? [],
   );

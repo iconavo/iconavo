@@ -1,0 +1,26 @@
+{
+  "server": [
+    "lucide:house",
+    "lucide:heart",
+    "lucide:trash",
+    "lucide:arrow-right",
+    "tabler:star",
+    "material-symbols:home-rounded",
+    "ph:smiley",
+    "fluent-emoji-flat:rocket",
+    "fluent-emoji-flat:violin"
+  ],
+  "browser": [
+    "lucide:cat",
+    "tabler:dog",
+    "material-symbols:pets",
+    "ph:fish",
+    "fluent-emoji-flat:dog-face"
+  ],
+  "toggle": ["lucide:sun", "lucide:moon", "lucide:cloud"],
+  "more": ["lucide:leaf", "tabler:leaf", "ph:leaf"],
+  "moreBrowser": ["lucide:bird", "lucide:rabbit", "fluent-emoji-flat:rainbow"],
+  "tag": "lucide:search",
+  "missing": "lucide:no-such-icon",
+  "missingTag": "lucide:no-such-tag-icon"
+}

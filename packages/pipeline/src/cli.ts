@@ -10,6 +10,7 @@
 // | pnpm packages verify [id…] [--wait=N] [--plan=…] | pnpm api build | pnpm api preview [--port=N]
 // | pnpm api check [--expect-build=…] | pnpm api bench [--batches] [--base=…] [--seed=N] | pnpm icon build
 // | pnpm sandbox [--port=N] [--browser=chrome|firefox|webkit | --check]
+// | pnpm example [--port=N] [--prod] [--webpack] | pnpm example --check [--browser=…] [--webpack]
 import { randomInt } from "node:crypto";
 import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import type { AddressInfo } from "node:net";
@@ -120,6 +121,20 @@ import {
   renderJudgePage,
 } from "./eval/report.js";
 import { evalStop, evaluate } from "./eval/run.js";
+import {
+  checkExample,
+  type ExampleNames,
+  type ExampleResult,
+  exampleCheckFailed,
+  MODE_TITLES,
+  MODES,
+} from "./example/check.js";
+import {
+  formatExampleCheck,
+  renderExampleCheckPage,
+} from "./example/check-report.js";
+import { EXAMPLE_DIR, EXAMPLE_PORT, NAMES_FILE } from "./example/config.js";
+import { buildNext, freePort, startNext } from "./example/next.js";
 import { buildIconScript, SCRIPT_FILE } from "./icon/build.js";
 import { type MeiliClient, meiliClient } from "./meili/client.js";
 import {
@@ -329,6 +344,15 @@ const USAGE = `Использование:
       --browser=…                     открыть /many в окне chrome, firefox или webkit (Playwright)
       --check                         проверить тег в Chrome, Firefox и WebKit без интернета: превью
                                       API на этом компьютере; отчёт .cache/reports/sandbox/check.html
+  pnpm example                        пример на Next.js (${EXAMPLE_DIR}, фаза 3, шаг 7): next dev на
+                                      127.0.0.1 с живыми хостами иконок; остановить — Ctrl+C
+      --port=N                        порт (по умолчанию ${EXAMPLE_PORT})
+      --prod                          продакшен-сборка: next build, затем next start
+      --webpack                       сборщик webpack вместо Turbopack
+      --check                         проверить пример в Chrome, Firefox и WebKit — в режиме
+                                      разработки и в продакшене, без интернета: превью API на этом
+                                      компьютере; отчёт .cache/reports/example/check.html
+      --browser=…                     с --check: только chrome, firefox или webkit
   pnpm packages prepare [id…]       пакеты npm @iconavo-ui/icons-{набор} в ${NPM_OUT_DIR}/ (ADR-0026):
                                       данные, LICENSE, README, типы; версия — по реестру npm (только
                                       чтение, ключи не нужны); план для CI ${NPM_OUT_DIR}/plan.json;
@@ -430,7 +454,9 @@ let port =
     ? PREVIEW_PORT
     : command === "sandbox"
       ? SANDBOX_PORT
-      : PAGE_PORT;
+      : command === "example"
+        ? EXAMPLE_PORT
+        : PAGE_PORT;
 let waitSeconds = 0;
 let planPath: string | undefined;
 let expectBuild: string | undefined;
@@ -439,6 +465,8 @@ let benchBatchesMode = false;
 let benchSeed: number | undefined;
 let checkBrowsers = false;
 let browserName: BrowserName | undefined;
+let exampleProd = false;
+let exampleWebpack = false;
 const modelKeys = new Set<string>();
 for (const flag of flags) {
   const eq = flag.indexOf("=");
@@ -501,7 +529,10 @@ for (const flag of flags) {
     }
   }
   if (
-    (command === "search-page" || command === "api" || command === "sandbox") &&
+    (command === "search-page" ||
+      command === "api" ||
+      command === "sandbox" ||
+      command === "example") &&
     name === "--port" &&
     /^[1-9][0-9]{3,4}$/.test(value ?? "") &&
     Number(value) <= 65535
@@ -509,13 +540,23 @@ for (const flag of flags) {
     port = Number(value);
     continue;
   }
-  if (command === "sandbox") {
+  if (command === "sandbox" || command === "example") {
     if (flag === "--check") {
       checkBrowsers = true;
       continue;
     }
     if (name === "--browser" && value !== undefined && isBrowserName(value)) {
       browserName = value;
+      continue;
+    }
+  }
+  if (command === "example") {
+    if (flag === "--prod") {
+      exampleProd = true;
+      continue;
+    }
+    if (flag === "--webpack") {
+      exampleWebpack = true;
       continue;
     }
   }
@@ -1147,6 +1188,100 @@ try {
         `Открыто окно ${BROWSER_TITLES[browserName]}: страница /many, меню песочницы — сверху. Закройте окно, чтобы остановить песочницу.`,
       );
     }
+  } else if (command === "example") {
+    if (args.length > 0) usageError("pnpm example принимает только флаги.");
+    if (checkBrowsers && exampleProd) {
+      usageError(
+        "--check сам проверяет и разработку, и продакшен: без --prod.",
+      );
+    }
+    if (browserName && !checkBrowsers) {
+      usageError("--browser — только вместе с --check.");
+    }
+    const dir = join(root, EXAMPLE_DIR);
+    const bundler = exampleWebpack ? "webpack" : "Turbopack";
+    if (checkBrowsers) {
+      // Проверка без интернета: хосты иконок — превью API на этом компьютере, всё на свободных портах.
+      const cdn = await buildCdn(configs, { dataDir, outDir: distCdnDir });
+      if (cdnStop(cdn)) {
+        console.error(
+          "Сборка раздачи остановлена — превью API без данных не запустить: pnpm cdn build покажет почему.",
+        );
+        process.exit(1);
+      }
+      const preview = await startApiPreview({
+        root,
+        outDir: distApiDir,
+        cdnDir: distCdnDir,
+        port: 0,
+      });
+      const api = `http://127.0.0.1:${preview.port}`;
+      const env = {
+        NEXT_PUBLIC_ICONAVO_API: api,
+        NEXT_PUBLIC_ICONAVO_CDN: `${api}/_static`,
+      };
+      const names = JSON.parse(
+        await readFile(join(dir, NAMES_FILE), "utf8"),
+      ) as ExampleNames;
+      const browsers = browserName ? [browserName] : BROWSERS;
+      const results: ExampleResult[] = [];
+      for (const mode of MODES) {
+        if (mode === "prod") {
+          console.log(`Собираю пример: next build (${bundler})…`);
+          await buildNext({ dir, env, webpack: exampleWebpack });
+        }
+        console.log(`Запускаю пример: ${MODE_TITLES[mode]} (${bundler})…`);
+        const next = await startNext(mode, await freePort(), {
+          dir,
+          env,
+          webpack: exampleWebpack,
+        });
+        try {
+          console.log(
+            `Проверяю: ${browsers.map((b) => BROWSER_TITLES[b]).join(", ")} — пример ${next.url}, превью API ${api}…`,
+          );
+          results.push(
+            ...(await checkExample({
+              base: next.url,
+              api,
+              mode,
+              names,
+              browsers,
+              log: (line) => console.log(`  ${line}`),
+            })),
+          );
+        } finally {
+          next.stop();
+        }
+      }
+      console.log("");
+      for (const line of formatExampleCheck(results)) console.log(line);
+      const reportDir = join(reportsDir, "example");
+      await mkdir(reportDir, { recursive: true });
+      const htmlPath = join(reportDir, "check.html");
+      await writeFile(htmlPath, renderExampleCheckPage(results), "utf8");
+      console.log(`Отчёт: ${htmlPath}`);
+      await preview.close();
+      process.exit(exampleCheckFailed(results) ? 1 : 0);
+    }
+    // Ручной запуск: вывод Next.js — в этот терминал, хосты иконок — живые.
+    if (exampleProd) {
+      await buildNext({ dir, webpack: exampleWebpack, inherit: true });
+    }
+    const next = await startNext(exampleProd ? "prod" : "dev", port, {
+      dir,
+      webpack: exampleWebpack,
+      inherit: true,
+    });
+    const stop = () => {
+      next.stop();
+      process.exit(0);
+    };
+    process.on("SIGINT", stop);
+    process.on("SIGTERM", stop);
+    console.log(
+      `Пример: ${next.url}/ — ${exampleProd ? "продакшен-сборка" : "режим разработки"} (${bundler}), иконки с живых хостов. Остановить — Ctrl+C.`,
+    );
   } else if (command === "search-index") {
     if (args.length > 0) {
       usageError(

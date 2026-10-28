@@ -152,6 +152,7 @@ Without a build step, import `configure` from the same address as the script, in
 - **`inline`** lowers the icon by `0.125em`, so it sits on the text baseline like a letter.
 - **Invalid values** are ignored: the icon renders without that setting, and the console shows one warning with the allowed values.
 - **In React**, sizes also take numbers (`width={32}`), and `rotate` also takes the numbers `1`–`3`. The component always renders an `<svg>`, also while the icon loads, and other props such as `className`, `style`, event handlers and `ref` go to it.
+- **Color in React** is an attribute of the `<svg>`, so CSS that targets the `<svg>` itself, such as a `text-*` class in `className`, takes precedence over it.
 
 ## Functions
 
@@ -262,6 +263,7 @@ Passes icons loaded on the server (`IconavoIconSet[]`, as returned by `loadIcons
 - The icon keeps a `1em` × `1em` square, or the size you set, so the text around it does not jump. With only one side set, the square has that side; with `auto`, it is `1em` until the icon's own size is known.
 - If loading takes longer than 150 ms, a placeholder appears: a skeleton by default, a spinner with `placeholder="spinner"`, nothing with `placeholder="none"`. When the system asks to reduce motion, placeholders do not animate.
 - The tag loads an icon when it comes within half a screen of the visible part of the page, so it is usually ready when you scroll to it; `noobserver` turns this off. The React component loads it when it mounts.
+- In React, placeholders, `inline` and the development frame come from a stylesheet that the package adds when the page's scripts run. Until then, server-rendered HTML keeps an empty box of the icon's size, and `inline` icons sit on the baseline.
 
 ### Batches and hosts
 
@@ -325,7 +327,7 @@ import { Icon } from "@iconavo-ui/react";
 - Icons passed to `IconavoProvider` are in the server HTML, so there is no flash.
 - Other icons render the placeholder on the server and load in the browser after hydration. The server and the browser draw the same markup, so there are no hydration warnings.
 - Icons added with `addIcons` at the top level of a module appear right after hydration. Do not call `addIcons` during rendering: on the server, memory is shared by all requests.
-- `setLoader` takes a function, which cannot be passed from the server, so call it in a Client Component module.
+- Next.js builds Server Components and Client Components separately, and each build has its own copy of the icon store. Call `configure`, `setLoader` and top-level `addIcons` in a module that both your layout and a Client Component import: the layout's copy serves `loadIcons` on the server, the other one serves the browser.
 
 ### What your own host must serve
 
