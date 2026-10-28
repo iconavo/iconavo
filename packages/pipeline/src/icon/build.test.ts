@@ -94,6 +94,18 @@ describe("пакет в сборке разработчика", () => {
     expect(modules.some((id) => id.endsWith("development.js"))).toBe(true);
   });
 
+  it("ничего не хранит в браузере (README): ни cookie, ни localStorage, ни других хранилищ", async () => {
+    const storage =
+      /\b(localStorage|sessionStorage|indexedDB|cookieStore)\b|\.cookie\b|caches\.open/;
+    expect(await bundleIconScript(ROOT)).not.toMatch(storage);
+    // Сборка компонентов React — вместе с самим React: и он ничего не хранит.
+    const { code } = await consumer(
+      'export { Icon, IconavoProvider, loadIcons } from "@iconavo-ui/react";',
+    );
+    expect(code).toContain("useSyncExternalStore");
+    expect(code).not.toMatch(storage);
+  });
+
   it("React: loadIcons без компонентов — сборщик выбрасывает Icon, обёртку и сам React", async () => {
     const { code, modules } = await consumer(
       'import { loadIcons } from "@iconavo-ui/react"; loadIcons(["lucide:house"]);',

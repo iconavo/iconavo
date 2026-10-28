@@ -253,7 +253,7 @@ const settled = (page: Page, timeout: number) =>
 async function scenario(
   browser: Browser,
   o: NetCheckOptions,
-  rules: (page: Page, h: NetHosts) => Promise<unknown>,
+  rules: (page: Page) => Promise<unknown>,
   during?: (page: Page) => Promise<void>,
 ): Promise<NetOutcome> {
   const h = netHosts(o.api, o.static2);
@@ -271,7 +271,7 @@ async function scenario(
         requests.push({ url, at: Date.now() - start });
       }
     });
-    await rules(page, h);
+    await rules(page);
     const url = `${o.base}/net?api=${encodeURIComponent(o.api)}&cdn2=${encodeURIComponent(o.static2)}`;
     await page.goto(url, { waitUntil: "load", timeout: 60_000 });
     await page.waitForFunction(
