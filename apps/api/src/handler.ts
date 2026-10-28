@@ -185,7 +185,7 @@ export function createHandler(options: HandlerOptions): Handler {
         }
       }
       const files = await readNames(
-        options.bucket,
+        { bucket: options.bucket, cache: options.cache, waitUntil },
         entry.version,
         plan.set,
         plan.names,

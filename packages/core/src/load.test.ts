@@ -384,17 +384,18 @@ describe("запасные хосты", () => {
     }
   });
 
-  it("edge API молчит — в 750 мс тот же запрос уходит на статику; первый ответ побеждает, запрос к API отменён", async () => {
+  it("edge API молчит — в 1500 мс тот же запрос уходит на статику; первый ответ побеждает, запрос к API отменён", async () => {
+    // Переход с API на CDN — ROTATE_TO_CDN (1500 мс), а не ROTATE (750 мс): шаг 6 фазы 3, ADR-0030.
     const calls = fakeNet(hosts({ "api.iconavo.dev": "silent" }));
     const core = await freshCore();
     show(core, ["demo:house"]);
-    await wait(749);
+    await wait(1499);
     expect(calls.map((c) => c.url)).toEqual([`${BASE}house`]);
     await wait(1);
     expect(calls.map((c) => [c.url, c.at])).toEqual([
       [`${BASE}house`, 0],
-      [`${CDN}/manifest.json`, 750],
-      [file(CDN, "house"), 750],
+      [`${CDN}/manifest.json`, 1500],
+      [file(CDN, "house"), 1500],
     ]);
     expect(calls[0]?.signal?.aborted).toBe(true);
     expect(core.getIcon("demo:house")).toMatchObject({
@@ -406,7 +407,7 @@ describe("запасные хосты", () => {
   it("edge API ответил после начала статики — побеждает он, запросы статики отменены", async () => {
     const calls = fakeNet(
       hosts({
-        "api.iconavo.dev": later(1000),
+        "api.iconavo.dev": later(2000),
         "cdn.iconavo.dev": (url) =>
           url.pathname === "/manifest.json"
             ? demoStatic(url)
@@ -415,11 +416,11 @@ describe("запасные хосты", () => {
     );
     const core = await freshCore();
     show(core, ["demo:house"]);
-    await wait(1000);
+    await wait(2000);
     expect(calls.map((c) => [c.url, c.at])).toEqual([
       [`${BASE}house`, 0],
-      [`${CDN}/manifest.json`, 750],
-      [file(CDN, "house"), 750],
+      [`${CDN}/manifest.json`, 1500],
+      [file(CDN, "house"), 1500],
     ]);
     expect(core.getIcon("demo:house")).toMatchObject({
       body: '<path d="house"/>',
@@ -457,16 +458,17 @@ describe("запасные хосты", () => {
     });
   });
 
-  it("хосты молчат — следующий каждые 750 мс; через 5 с запрос отменён, повтор — через 1 с", async () => {
+  it("хосты молчат — следующий через ROTATE_TO_CDN и ROTATE; через 5 с запрос отменён, повтор — через 1 с", async () => {
+    // Переход с API на CDN — 1500 мс, между CDN хостами — 750 мс (шаг 6 фазы 3, ADR-0030).
     const calls = fakeNet(all("silent"));
     const core = await freshCore();
     show(core, ["demo:house"]);
     await wait(4999);
     expect(calls.map((c) => [c.url, c.at])).toEqual([
       [`${BASE}house`, 0],
-      [`${CDN}/manifest.json`, 750],
-      [`${CDN2}/manifest.json`, 1500],
-      [`${BCDN}/manifest.json`, 2250],
+      [`${CDN}/manifest.json`, 1500],
+      [`${CDN2}/manifest.json`, 2250],
+      [`${BCDN}/manifest.json`, 3000],
     ]);
     expect(calls[0]?.signal?.aborted).toBe(false);
     await wait(1);
@@ -508,6 +510,8 @@ describe("запасные хосты", () => {
   });
 
   it("addIcons во время попытки — следующий хост не спрашивают, пустых запросов нет", async () => {
+    // Переход на CDN через ROTATE_TO_CDN (1500 мс): в этот момент step() проверяет, что все имена
+    // загружены, и отменяет запрос без обращения к CDN (шаг 6 фазы 3, ADR-0030).
     const calls = fakeNet(hosts({ "api.iconavo.dev": "silent" }));
     const core = await freshCore();
     show(core, ["demo:heart", "demo:house"]);
@@ -516,7 +520,7 @@ describe("запасные хосты", () => {
       prefix: "demo",
       icons: { heart: { body: "<g/>" }, house: { body: "<g/>" } },
     });
-    await wait(250);
+    await wait(1000);
     expect(calls.map((c) => c.url)).toEqual([`${BASE}heart,house`]);
     expect(calls[0]?.signal?.aborted).toBe(true);
     expect(vi.getTimerCount()).toBe(0);
@@ -566,25 +570,24 @@ describe("статика", () => {
   });
 
   it("попытка кончилась, пока ждали манифест, — файлы не запрашиваются, манифест пригодится потом", async () => {
+    // Переход с API на CDN — ROTATE_TO_CDN (1500 мс): шаг 6 фазы 3, ADR-0030.
     let apiDown = false;
     const calls = fakeNet(
       hosts({
         "api.iconavo.dev": (url) =>
           apiDown
             ? Promise.reject(new TypeError("Failed to fetch"))
-            : later(1000)(url),
+            : later(2000)(url),
         "cdn.iconavo.dev": (url) =>
-          url.pathname === "/manifest.json"
-            ? later(1200)(url)
-            : demoStatic(url),
+          url.pathname === "/manifest.json" ? later(700)(url) : demoStatic(url),
       }),
     );
     const core = await freshCore();
     show(core, ["demo:house"]);
-    await wait(2000);
+    await wait(2500);
     expect(calls.map((c) => [c.url, c.at])).toEqual([
       [`${BASE}house`, 0],
-      [`${CDN}/manifest.json`, 750],
+      [`${CDN}/manifest.json`, 1500],
     ]);
     expect(core.getIcon("demo:house")).toMatchObject({
       body: '<path d="house"/>',

@@ -340,6 +340,23 @@ describe("кэш: версия набора и сборка — в ключе", 
     expect(res.headers.get("x-iconavo-build")).toBe("b2");
   });
 
+  it("файлы иконок кэшируются: повторная пачка — из кэша, без R2", async () => {
+    const { get, bucket, cache } = setup();
+    // Первый запрос: читаем из R2, кладём в кэш файлов и ответов.
+    await get("/demo.json?icons=heart,house");
+    expect(bucket.reads.length).toBe(3); // манифест + heart + house
+    expect(cache.answers()).toBe(3); // 2 файла + 1 ответ
+    // Повторный запрос: ответ из кэша (HIT).
+    const hit = await get("/demo.json?icons=heart,house");
+    expect(hit.headers.get("x-cache")).toBe("HIT");
+    expect(bucket.reads.length).toBe(3);
+    // Другая пачка с одной из тех же иконок: файл heart из кэша, только home из R2.
+    const other = await get("/demo.json?icons=home,heart");
+    expect(other.headers.get("x-cache")).toBe("MISS");
+    expect(bucket.reads.length).toBe(4); // +home из R2
+    expect(cache.answers()).toBe(5); // +1 файл home + 1 ответ
+  });
+
   it("значения параметров не подделывают чужой ключ", async () => {
     const { get, cache } = setup();
     // Имя «x&format=compressed» склеилось бы с ключом как формат CSS.
@@ -347,7 +364,8 @@ describe("кэш: версия набора и сборка — в ключе", 
     const res = await get("/demo.css?icons=heart,x&format=compressed");
     expect(res.headers.get("x-cache")).toBe("MISS");
     expect(await res.text()).not.toContain("\n  ");
-    expect(cache.answers()).toBe(2);
+    // 3 записи: файл heart + два CSS ответа.
+    expect(cache.answers()).toBe(3);
   });
 });
 

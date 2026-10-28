@@ -28,6 +28,11 @@ export const MAX_URL = 500;
 export const MAX_NAMES = 100;
 /** Источник молчит столько — тот же запрос уходит и на следующий (rotate у Iconify). */
 export const ROTATE = 750;
+/**
+ * Порог перехода с API на статику (шаг 6 фазы 3, ADR-0030). API собирает пачку на сервере, статика —
+ * запрос на каждую иконку, поэтому переход стоит делать осторожнее, чем между равными хостами.
+ */
+export const ROTATE_TO_CDN = 1500;
 /** Вся попытка: дольше — её запросы отменяются, попытка не удалась. */
 export const TIMEOUT = 5000;
 /** Повторов неудавшейся попытки; пауза перед n-м — 2^(n−1) с: 1, 2 и 4 с. */
@@ -253,11 +258,15 @@ function fail(
  * Одна попытка для куска имён. Открытые имена — те, что в хранилище всё ещё «загружается»: ответ
  * другого источника, addIcons и другая копия ядра сами сокращают список. Конец — у всех имён есть
  * ответ, источники кончились или прошло TIMEOUT: тогда запросы отменяются, открытые имена — в повтор.
+ *
+ * apiCount — количество API источников в начале списка: при переходе с последнего API на CDN порог
+ * ROTATE_TO_CDN вместо ROTATE (шаг 6 фазы 3, ADR-0030).
  */
 function attempt(
   prefix: string,
   names: string[],
   sources: Source[],
+  apiCount: number,
   tries: number,
 ): void {
   const controller = new AbortController();
@@ -280,11 +289,15 @@ function attempt(
       finish();
       return;
     }
-    // Источник ещё может ответить: ждать его или порога ROTATE.
+    // Источник ещё может ответить: ждать его или порога ROTATE / ROTATE_TO_CDN.
     if (running > 0 && !hedge) return;
     const source = sources[next++] as Source;
     clearTimeout(rotate);
-    if (next < sources.length) rotate = setTimeout(step, ROTATE, true);
+    if (next < sources.length) {
+      // Переход с последнего API на CDN — дольше: статика даёт запрос на каждую иконку.
+      const delay = next === apiCount ? ROTATE_TO_CDN : ROTATE;
+      rotate = setTimeout(step, delay, true);
+    }
     running++;
     source(prefix, rest, signal)
       .catch((e: unknown) => {
@@ -322,7 +335,9 @@ function send(prefix: string, names: string[], tries: number): void {
   const chunks = loader
     ? [names]
     : batches(`${longest}/${prefix}.json?icons=`, names);
-  for (const chunk of chunks) attempt(prefix, chunk, sources, tries);
+  // Загрузчик — один источник; иначе — количество API хостов.
+  const apiCount = loader ? 1 : api.length;
+  for (const chunk of chunks) attempt(prefix, chunk, sources, apiCount, tries);
 }
 
 function flush(): void {

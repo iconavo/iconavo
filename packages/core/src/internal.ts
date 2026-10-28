@@ -17,6 +17,7 @@ export {
   MAX_URL,
   RETRIES,
   ROTATE,
+  ROTATE_TO_CDN,
   TIMEOUT,
   warn,
 } from "./load.js";
