@@ -267,7 +267,7 @@ Passes icons loaded on the server (`IconavoIconSet[]`, as returned by `loadIcons
 
 - Icons requested at the same moment (in one tick of the event loop) go out together: one request per set, with sorted names, split into several requests when the address would be longer than 500 characters or hold more than 100 names. For example, 100 Lucide icons take 4 requests. An icon that is already loading is not requested again.
 - The hosts are tried in order: `api.iconavo.dev` sends batches, then `cdn.iconavo.dev`, `cdn2.iconavo.dev` and `iconavo.b-cdn.net` send one icon per request, using their `manifest.json` to find the current version of a set.
-- If a host does not answer within 750 ms, the same request also goes to the next host, and the first answer wins. After 5 seconds without an answer, the attempt has failed.
+- If `api.iconavo.dev` does not answer within 1.5 seconds, the same icons are also requested from the static hosts. Static hosts send one icon per request, so the core waits longer before switching to them. Between hosts of the same kind (API hosts or static hosts), the wait is 750 ms. A host that fails outright is not waited for. The first answer wins. After 5 seconds without an answer, the attempt has failed.
 - A failed attempt is repeated after 1, 2 and 4 seconds while the icon is on the page, and the placeholder stays meanwhile. After the last attempt, the icon looks like a missing one and the console shows one warning with the error, but the icon is requested again the next time it appears.
 
 ### Missing icons

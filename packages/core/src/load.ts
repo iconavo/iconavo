@@ -5,8 +5,9 @@
 //
 // Попытка устроена как sendQuery у Iconify: источники по очереди — пачкой через каждый хост api,
 // затем по одной иконке со статики каждого хоста cdn, у набора с setLoader — только загрузчик.
-// Источник молчит ROTATE — следующий спрашивается параллельно; отказал, а ждать больше некого, —
-// сразу. Первый ответ на имя побеждает; когда ответ есть у всех имён, остальные запросы отменяются.
+// Источник молчит ROTATE — следующий спрашивается параллельно; последний хост api молчит ROTATE_CDN —
+// и первый хост статики; отказал, а ждать больше некого, — сразу. Первый ответ на имя побеждает;
+// когда ответ есть у всех имён, остальные запросы отменяются.
 // Вся попытка — не дольше TIMEOUT. Неудавшаяся повторяется через 1, 2 и 4 с, пока иконку кто-то
 // показывает; потом — «ошибка», которую запросят снова при следующем показе. Отмена — AbortController
 // с setTimeout, а не AbortSignal.timeout: тот же контроллер отменяет проигравших, а таймеры
@@ -28,6 +29,11 @@ export const MAX_URL = 500;
 export const MAX_NAMES = 100;
 /** Источник молчит столько — тот же запрос уходит и на следующий (rotate у Iconify). */
 export const ROTATE = 750;
+/**
+ * С API на статику — позже: статика просит по запросу на иконку, а новая пачка edge API собирается
+ * из R2 дольше 750 мс (замер шага 6 фазы 3: P95 — 0,74 с из Европы, ADR-0030).
+ */
+export const ROTATE_CDN = 1500;
 /** Вся попытка: дольше — её запросы отменяются, попытка не удалась. */
 export const TIMEOUT = 5000;
 /** Повторов неудавшейся попытки; пауза перед n-м — 2^(n−1) с: 1, 2 и 4 с. */
@@ -253,12 +259,14 @@ function fail(
  * Одна попытка для куска имён. Открытые имена — те, что в хранилище всё ещё «загружается»: ответ
  * другого источника, addIcons и другая копия ядра сами сокращают список. Конец — у всех имён есть
  * ответ, источники кончились или прошло TIMEOUT: тогда запросы отменяются, открытые имена — в повтор.
+ * firstCdn — номер первого источника статики: до него ждут ROTATE_CDN, а не ROTATE.
  */
 function attempt(
   prefix: string,
   names: string[],
   sources: Source[],
   tries: number,
+  firstCdn: number,
 ): void {
   const controller = new AbortController();
   const { signal } = controller;
@@ -280,11 +288,13 @@ function attempt(
       finish();
       return;
     }
-    // Источник ещё может ответить: ждать его или порога ROTATE.
+    // Источник ещё может ответить: ждать его или порога ROTATE (до статики — ROTATE_CDN).
     if (running > 0 && !hedge) return;
     const source = sources[next++] as Source;
     clearTimeout(rotate);
-    if (next < sources.length) rotate = setTimeout(step, ROTATE, true);
+    if (next < sources.length) {
+      rotate = setTimeout(step, next === firstCdn ? ROTATE_CDN : ROTATE, true);
+    }
     running++;
     source(prefix, rest, signal)
       .catch((e: unknown) => {
@@ -322,7 +332,15 @@ function send(prefix: string, names: string[], tries: number): void {
   const chunks = loader
     ? [names]
     : batches(`${longest}/${prefix}.json?icons=`, names);
-  for (const chunk of chunks) attempt(prefix, chunk, sources, tries);
+  for (const chunk of chunks) {
+    attempt(
+      prefix,
+      chunk,
+      sources,
+      tries,
+      loader ? sources.length : api.length,
+    );
+  }
 }
 
 function flush(): void {
