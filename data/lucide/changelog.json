@@ -3,6 +3,34 @@
   "releases": [
     {
       "added": [
+        "archive-arrow-down",
+        "boxes-linked",
+        "calendar-arrow-left",
+        "calendar-arrow-right",
+        "chart-quadrant",
+        "chart-radar",
+        "database-cog",
+        "earbuds",
+        "earbuds-off",
+        "laser",
+        "siren-off",
+        "square-chevrons-down",
+        "square-chevrons-left",
+        "square-chevrons-right",
+        "square-chevrons-up",
+        "user-round-shield"
+      ],
+      "date": "2026-10-28T09:40:08Z",
+      "previous": "01c7796f",
+      "renamed": {
+        "archive-restore": "archive-arrow-up"
+      },
+      "revision": "2ca268e74888d3506b3319fb8f94aaaaf70ceca9",
+      "total": 1924,
+      "version": "c3b3f7a7"
+    },
+    {
+      "added": [
         "azerbaijani-manat",
         "ball-wave",
         "emirati-dirham",
