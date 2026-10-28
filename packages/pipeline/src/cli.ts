@@ -1124,6 +1124,7 @@ try {
       renderFile: client("render-client.js"),
       tagFile: client("tag-client.js"),
       manyFile: client("many-client.js"),
+      netFile: client("net-client.js"),
       names,
     };
     if (checkBrowsers) {
@@ -1141,18 +1142,27 @@ try {
         cdnDir: distCdnDir,
         port: 0,
       });
+      // Второй хост статики страницы сбоев сети: та же раздача у второго превью на другом порту.
+      const second = await startApiPreview({
+        root,
+        outDir: distApiDir,
+        cdnDir: distCdnDir,
+        port: 0,
+      });
       ctx.port = 0;
       const server = await startSandbox(ctx);
       ctx.port = (server.address() as AddressInfo).port;
       const base = `http://127.0.0.1:${ctx.port}`;
       const api = `http://127.0.0.1:${preview.port}`;
+      const static2 = `http://127.0.0.1:${second.port}`;
       const browsers = browserName ? [browserName] : BROWSERS;
       console.log(
-        `Проверяю тег: ${browsers.map((b) => BROWSER_TITLES[b]).join(", ")} — песочница ${base}, превью API ${api}…`,
+        `Проверяю тег: ${browsers.map((b) => BROWSER_TITLES[b]).join(", ")} — песочница ${base}, превью API ${api}, второй хост статики ${static2}…`,
       );
       const results = await checkSandbox({
         base,
         api,
+        static2,
         browsers,
         log: (line) => console.log(`  ${line}`),
       });
@@ -1171,6 +1181,7 @@ try {
       console.log(`Отчёт: ${htmlPath}`);
       server.close();
       await preview.close();
+      await second.close();
       process.exit(sandboxCheckFailed(results) ? 1 : 0);
     }
     const server = await startSandbox(ctx);

@@ -23,7 +23,7 @@ import {
   type Verdict,
   violations,
   watch,
-} from "../sandbox/check.js";
+} from "../sandbox/verdict.js";
 import { SLOW_MS, VIEWPORT } from "./config.js";
 import type { Mode } from "./next.js";
 
@@ -199,25 +199,26 @@ export function consoleVerdict(
     : fail(problems.slice(0, 6).join("; "));
 }
 
-/** Заглушка иконки из браузера в момент замера: класс, нарисована ли иконка, видимость, анимации. */
+/** Заглушка иконки из браузера: класс, нарисована ли иконка, видимость в начале и после задержки. */
 export interface Placeholder {
   name: string;
   className: string;
+  /** Иконка уже нарисована — заглушки нет. */
   drawn: boolean;
+  /** Видимость в первом кадре анимации задержки iconavo-h, раньше 140 мс от её старта; null — не застали. */
+  early: string | null;
+  /** Видимость и анимации после конца задержки. */
   visibility: string;
   animation: string;
 }
 
 /**
- * Заглушки: класс есть уже в серверном HTML, а стили приходят с гидратацией, и первые 150 мс заглушка
- * скрыта. early — сразу после гидратации, late — через 0,3 с: ещё не пришедшие иконки видны и
- * анимированы — скелетон мерцает (iconavo-p), спиннер крутится (iconavo-s).
+ * Заглушки: класс есть уже в серверном HTML, а стили приходят с гидратацией. Первые 150 мс анимации
+ * iconavo-h заглушка скрыта, потом видна и анимирована — скелетон мерцает (iconavo-p), спиннер
+ * крутится (iconavo-s).
  */
-export function placeholderVerdict(
-  early: Placeholder[],
-  late: Placeholder[],
-): Verdict {
-  const waiting = late.filter((p) => !p.drawn);
+export function placeholderVerdict(measured: Placeholder[]): Verdict {
+  const waiting = measured.filter((p) => !p.drawn);
   if (waiting.length === 0) {
     return { ok: null, note: "иконки пришли раньше замера" };
   }
@@ -226,15 +227,15 @@ export function placeholderVerdict(
       ? p.animation.includes("iconavo-s")
       : p.animation.includes("iconavo-p");
   const problems = waiting
-    .filter((p) => p.visibility !== "visible" || !motion(p))
+    .filter(
+      (p) => p.early === "visible" || p.visibility !== "visible" || !motion(p),
+    )
     .map(
       (p) =>
-        `${p.name} (${p.className}): ${p.visibility}, анимации «${p.animation}»`,
+        `${p.name} (${p.className}): ${p.early === "visible" ? "видна раньше 150 мс, " : ""}потом ${p.visibility}, анимации «${p.animation}»`,
     );
   if (problems.length > 0) return fail(problems.join("; "));
-  const hidden = early.filter(
-    (p) => !p.drawn && p.visibility === "hidden",
-  ).length;
+  const judged = waiting.filter((p) => p.early !== null).length;
   const kinds = [
     ...new Set(
       waiting.map((p) =>
@@ -243,7 +244,7 @@ export function placeholderVerdict(
     ),
   ].join(" и ");
   return pass(
-    `${waiting.length} заглушек (${kinds}) видны и анимированы; сразу после гидратации скрыто ${hidden} из ${early.length}`,
+    `${waiting.length} заглушек (${kinds}): ${judged > 0 ? `первые 150 мс скрыты (застали ${judged} из ${waiting.length}), ` : ""}потом видны и анимированы`,
   );
 }
 
@@ -331,22 +332,49 @@ const allDrawn = (page: Page, selector: string) =>
     { timeout: 120_000 },
   );
 
-/** Заглушки иконок из браузера: класс, видимость и анимации. */
-const placeholders = (page: Page): Promise<Placeholder[]> =>
-  page.evaluate(
-    (selector) =>
-      [...document.querySelectorAll<SVGElement>(selector)].map((svg) => {
-        const style = getComputedStyle(svg);
-        return {
-          name: svg.dataset.name ?? "",
-          className: svg.getAttribute("class") ?? "",
-          drawn: svg.hasAttribute("viewBox"),
-          visibility: style.visibility,
-          animation: style.animationName,
-        };
-      }),
-    BROWSER_ICONS,
-  );
+/**
+ * Заглушки иконок из браузера — по их собственной анимации задержки iconavo-h (Web Animations API): в
+ * первом кадре после её старта заглушка скрыта, после её конца — видна и анимирована. Таймером от
+ * гидратации мерить нельзя: WebKit запускает CSS-анимацию на ближайшей отрисовке кадра, а на медленной
+ * машине она приходит позже. Задержки уже нет — заглушку застали после неё: early — null.
+ */
+const measurePlaceholders = (page: Page): Promise<Placeholder[]> =>
+  page.evaluate(async (selector) => {
+    const frame = () =>
+      new Promise((resolve) => requestAnimationFrame(resolve));
+    const within = (promise: Promise<unknown>, ms: number) =>
+      Promise.race([
+        promise.catch(() => {}),
+        new Promise((resolve) => setTimeout(resolve, ms)),
+      ]);
+    const one = async (svg: SVGElement) => {
+      const hide = svg
+        .getAnimations()
+        .find((a) => (a as CSSAnimation).animationName === "iconavo-h");
+      let early: string | null = null;
+      if (hide) {
+        await within(hide.ready, 5000);
+        await frame();
+        if (Number(hide.currentTime ?? 0) < 140) {
+          early = getComputedStyle(svg).visibility;
+        }
+        await within(hide.finished, 5000);
+        await frame();
+      }
+      const style = getComputedStyle(svg);
+      return {
+        name: svg.dataset.name ?? "",
+        className: svg.getAttribute("class") ?? "",
+        drawn: svg.hasAttribute("viewBox"),
+        early,
+        visibility: style.visibility,
+        animation: style.animationName,
+      };
+    };
+    return Promise.all(
+      [...document.querySelectorAll<SVGElement>(selector)].map(one),
+    );
+  }, BROWSER_ICONS);
 
 /** Положение подписей рядом с иконками из браузера. */
 const spots = (page: Page): Promise<Spot[]> =>
@@ -453,8 +481,8 @@ async function checkHydration(
   const spotsBefore = await spots(page);
   const early = await drawn(page, BROWSER_ICONS);
 
-  // Заглушки: стили приходят с гидратацией — её видно по иконке addIcons. Замер сразу и через
-  // 0,25 с, пока ответы API (задержка SLOW_MS) ещё не пришли.
+  // Заглушки: стили приходят с гидратацией — её видно по иконке addIcons. Замер — пока ответы API
+  // (задержка SLOW_MS) ещё не пришли.
   await page.waitForFunction(
     () =>
       document
@@ -463,10 +491,7 @@ async function checkHydration(
     null,
     { timeout: 120_000 },
   );
-  const placeholdersEarly = await placeholders(page);
-  await page.waitForTimeout(250);
-  const placeholdersLate = await placeholders(page);
-  v.placeholders = placeholderVerdict(placeholdersEarly, placeholdersLate);
+  v.placeholders = placeholderVerdict(await measurePlaceholders(page));
   result.shots.push({
     title: `Пока иконки из браузера грузятся (ответы API задержаны на ${SLOW_MS} мс): заглушки — скелетон и спиннер`,
     png: await shot(page, seen, '[data-check="browser"]'),

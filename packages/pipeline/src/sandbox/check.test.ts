@@ -4,7 +4,6 @@ import {
   CHECKS,
   EXPECTED_WARNINGS,
   errorsVerdict,
-  layoutVerdict,
   sandboxCheckFailed,
   warningsVerdict,
 } from "./check.js";
@@ -13,6 +12,7 @@ import {
   markdownSandboxCheck,
   renderSandboxCheckPage,
 } from "./check-report.js";
+import { isRequestFailure, layoutVerdict } from "./verdict.js";
 
 describe("разбор проверки в браузерах", () => {
   it("предупреждения: каждое ожидаемое — ровно один раз, чужие предупреждения пакета — проблема", () => {
@@ -59,6 +59,25 @@ describe("разбор проверки в браузерах", () => {
       ok: false,
       note: "boom; CSP: require-trusted-types-for trusted-types-sink",
     });
+  });
+
+  it("записи о неудавшихся запросах — не ошибки страницы, настоящая ошибка CORS — ошибка", () => {
+    expect(
+      isRequestFailure(
+        "Failed to load resource: the server responded with a status of 404 (Not Found)",
+      ),
+    ).toBe(true);
+    expect(
+      isRequestFailure(
+        "Cross-Origin Request Blocked: The Same Origin Policy disallows reading the remote resource at http://127.0.0.1:1/x.json. (Reason: CORS request did not succeed). Status code: (null).",
+      ),
+    ).toBe(true);
+    expect(
+      isRequestFailure(
+        "Cross-Origin Request Blocked: The Same Origin Policy disallows reading the remote resource at http://127.0.0.1:1/x.json. (Reason: CORS header ‘Access-Control-Allow-Origin’ missing). Status code: 200.",
+      ),
+    ).toBe(false);
+    expect(isRequestFailure("TypeError: boom")).toBe(false);
   });
 });
 

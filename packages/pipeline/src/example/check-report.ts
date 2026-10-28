@@ -5,7 +5,7 @@
 import { esc, htmlPage } from "../report/html.js";
 import { markdownTable, textTable } from "../report/table.js";
 import { BROWSER_TITLES } from "../sandbox/browser.js";
-import type { Verdict } from "../sandbox/check.js";
+import type { Verdict } from "../sandbox/verdict.js";
 import {
   CHECKS,
   type CheckId,

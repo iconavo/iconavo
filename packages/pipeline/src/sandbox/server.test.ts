@@ -5,6 +5,7 @@ import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { esc } from "../report/html.js";
 import { MANY_STYLE, manyImportMap } from "./many-page.js";
+import { NET_IMPORT_MAP, NET_STYLE, netHosts } from "./net-page.js";
 import { cspHash, IMPORT_MAP, IMPORT_MAP_HASH, sandboxHosts } from "./page.js";
 import { VARIANTS } from "./render-page.js";
 import {
@@ -31,6 +32,7 @@ beforeEach(async () => {
   await writeFile(join(root, "render-client.js"), "console.log(2);");
   await writeFile(join(root, "tag-client.js"), "console.log(3);");
   await writeFile(join(root, "many-client.js"), "console.log(4);");
+  await writeFile(join(root, "net-client.js"), "console.log(5);");
   await writeFile(join(root, "secret.js"), "не отдавать");
   ctx = {
     port: 4282,
@@ -40,6 +42,7 @@ beforeEach(async () => {
     renderFile: join(root, "render-client.js"),
     tagFile: join(root, "tag-client.js"),
     manyFile: join(root, "many-client.js"),
+    netFile: join(root, "net-client.js"),
     names: { lucide: ["heart", "house"], ph: ["x"] },
   };
 });
@@ -239,6 +242,41 @@ describe("сервер песочницы", () => {
       '<div class="c"><iconavo-icon icon="lucide:heart"></iconavo-icon><span>heart</span></div>',
     );
     expect(many).toContain('<a href="/many?slow-script=1">');
+  });
+
+  it("страница сбоев сети: строгая CSP со вторым хостом статики, теги ставит скрипт страницы", async () => {
+    const api = "http://127.0.0.1:4281";
+    const cdn2 = "http://127.0.0.1:4290";
+    const r = await reply(
+      ctx,
+      "GET",
+      `/net?api=${encodeURIComponent(api)}&cdn2=${encodeURIComponent(cdn2)}`,
+      HOST,
+    );
+    expect(r.status).toBe(200);
+    const html = body(r);
+    expect(html).toContain(
+      esc(
+        `default-src 'none'; script-src 'self' '${cspHash(NET_IMPORT_MAP)}'; connect-src ${api} ${cdn2}; img-src data:; style-src '${cspHash(NET_STYLE)}'; base-uri 'none'; form-action 'none'; require-trusted-types-for 'script'; trusted-types iconavo`,
+      ),
+    );
+    expect(html).toContain('<script type="module" src="/net.js">');
+    expect(html).toContain(`"url":"${cdn2}/_static","kind":"cdn"`);
+    expect(html).not.toContain("<iconavo-icon");
+    expect(html).not.toMatch(/\sstyle="/);
+    expect(body(await reply(ctx, "GET", "/net.js", HOST))).toBe(
+      "console.log(5);",
+    );
+    for (const bad of ["https://evil.example", "http://localhost:4290"]) {
+      const page = await reply(
+        ctx,
+        "GET",
+        `/net?api=${encodeURIComponent(api)}&cdn2=${encodeURIComponent(bad)}`,
+        HOST,
+      );
+      expect(page.status, bad).toBe(400);
+    }
+    expect(netHosts(api, null)).toEqual(sandboxHosts(api));
   });
 
   it("медленный скрипт и превью: адрес скрипта с задержкой, ссылки с тем же хостом API", async () => {

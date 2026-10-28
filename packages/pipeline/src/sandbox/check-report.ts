@@ -6,12 +6,8 @@
 import { esc, htmlPage } from "../report/html.js";
 import { markdownTable, textTable } from "../report/table.js";
 import { BROWSER_TITLES } from "./browser.js";
-import {
-  type BrowserResult,
-  CHECKS,
-  sandboxCheckFailed,
-  type Verdict,
-} from "./check.js";
+import { type BrowserResult, CHECKS, sandboxCheckFailed } from "./check.js";
+import type { Verdict } from "./verdict.js";
 
 const mark = (v: Verdict | undefined) =>
   v === undefined || v.ok === null ? "—" : v.ok ? "да" : "НЕТ";

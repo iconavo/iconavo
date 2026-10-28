@@ -75,41 +75,34 @@ describe("заглушки", () => {
     name: "lucide:cat",
     className: "iconavo-skeleton",
     drawn: false,
+    early: "hidden",
     visibility: "visible",
     animation: "iconavo-h, iconavo-p",
     ...over,
   });
 
-  it("видны и анимированы: скелетон мерцает, спиннер крутится; ранний замер — сколько было скрыто", () => {
-    const late = [
+  it("первые 150 мс скрыты, потом видны и анимированы: скелетон мерцает, спиннер крутится", () => {
+    const v = placeholderVerdict([
       p({}),
       p({ className: "iconavo-spinner", animation: "iconavo-h, iconavo-s" }),
-    ];
-    const v = placeholderVerdict(
-      late.map((x) => ({ ...x, visibility: "hidden" })),
-      late,
-    );
+      p({ early: null }),
+    ]);
     expect(v.ok).toBe(true);
     expect(v.note).toContain("скелетон и спиннер");
-    expect(v.note).toContain("скрыто 2 из 2");
+    expect(v.note).toContain("застали 2 из 3");
   });
 
-  it("скрытая или неподвижная заглушка — проблема; все иконки уже пришли — только сведения", () => {
-    expect(placeholderVerdict([], [p({ visibility: "hidden" })]).ok).toBe(
-      false,
-    );
+  it("видна раньше 150 мс, скрыта потом или неподвижна — проблема; все иконки уже пришли — только сведения", () => {
+    const early = placeholderVerdict([p({ early: "visible" })]);
+    expect(early.ok).toBe(false);
+    expect(early.note).toContain("видна раньше 150 мс");
+    expect(placeholderVerdict([p({ visibility: "hidden" })]).ok).toBe(false);
     expect(
-      placeholderVerdict(
-        [],
-        [
-          p({
-            className: "iconavo-spinner",
-            animation: "iconavo-h, iconavo-p",
-          }),
-        ],
-      ).ok,
+      placeholderVerdict([
+        p({ className: "iconavo-spinner", animation: "iconavo-h, iconavo-p" }),
+      ]).ok,
     ).toBe(false);
-    expect(placeholderVerdict([], [p({ drawn: true })]).ok).toBeNull();
+    expect(placeholderVerdict([p({ drawn: true })]).ok).toBeNull();
   });
 });
 

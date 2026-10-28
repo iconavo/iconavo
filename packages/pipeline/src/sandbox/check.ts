@@ -9,12 +9,17 @@
 
 import type { Browser, Page } from "playwright";
 import { BROWSERS, type BrowserName, launchBrowser } from "./browser.js";
-
-/** Итог проверки в браузере: true — да, false — нет, null — только сведения или не проверялось. */
-export interface Verdict {
-  ok: boolean | null;
-  note: string;
-}
+import { checkNetwork, NET_CHECKS } from "./net-check.js";
+import {
+  fail,
+  layoutVerdict,
+  pass,
+  recordViolations,
+  shot,
+  type Verdict,
+  violations,
+  watch,
+} from "./verdict.js";
 
 export const CHECKS = [
   [
@@ -35,6 +40,7 @@ export const CHECKS = [
   ["label", "Подпись: обе кнопки из README называются «Delete»"],
   ["reserve", "Место до загрузки: имена рядом с иконками не сдвигаются"],
   ["lazy", "Лениво: сначала только иконки у экрана, после прокрутки — все"],
+  ...NET_CHECKS,
 ] as const;
 
 export type CheckId = (typeof CHECKS)[number][0];
@@ -53,6 +59,8 @@ export interface SandboxCheckOptions {
   base: string;
   /** Хост API превью — для ?api=. */
   api: string;
+  /** Второе превью — второй хост статики страницы сбоев сети. */
+  static2: string;
   browsers?: readonly BrowserName[];
   log?: (line: string) => void;
 }
@@ -91,29 +99,6 @@ export function warningsVerdict(messages: string[]): Verdict {
     : { ok: false, note: problems.join("; ") };
 }
 
-/** Положение текста: левый верхний угол в CSS-пикселях. */
-export interface Spot {
-  left: number;
-  top: number;
-}
-
-/** Текст не сдвинулся — с точностью до полпикселя. */
-export function layoutVerdict(before: Spot[], after: Spot[]): Verdict {
-  if (before.length === 0 || before.length !== after.length) {
-    return { ok: false, note: "положение текста не измерено" };
-  }
-  const moved = before.filter((spot, i) => {
-    const later = after[i] as Spot;
-    return (
-      Math.abs(spot.left - later.left) > 0.5 ||
-      Math.abs(spot.top - later.top) > 0.5
-    );
-  }).length;
-  return moved === 0
-    ? { ok: true, note: `${before.length} имён на месте` }
-    : { ok: false, note: `сдвинулось ${moved} из ${before.length} имён` };
-}
-
 /** Ошибки страницы и нарушения CSP. */
 export function errorsVerdict(errors: string[], violations: string[]): Verdict {
   const all = [...errors, ...violations.map((v) => `CSP: ${v}`)];
@@ -121,68 +106,6 @@ export function errorsVerdict(errors: string[], violations: string[]): Verdict {
     ? { ok: true, note: "нет" }
     : { ok: false, note: [...new Set(all)].slice(0, 5).join("; ") };
 }
-
-export const pass = (note: string): Verdict => ({ ok: true, note });
-export const fail = (note: string): Verdict => ({ ok: false, note });
-
-/** Что пишет страница: предупреждения, ошибки (кроме сетевых 404 — иконок, которых нет). */
-export function watch(page: Page) {
-  const warnings: string[] = [];
-  const errors: string[] = [];
-  page.on("console", (message) => {
-    const text = message.text();
-    if (message.type() === "warning") warnings.push(text);
-    else if (
-      message.type() === "error" &&
-      !text.startsWith("Failed to load resource")
-    ) {
-      errors.push(text);
-    }
-  });
-  page.on("pageerror", (error) => errors.push(error.message));
-  return { warnings, errors };
-}
-
-/** Нарушения CSP — слушатель до скриптов страницы. */
-export async function recordViolations(page: Page): Promise<void> {
-  await page.addInitScript(() => {
-    const list: string[] = [];
-    (window as unknown as { violations: string[] }).violations = list;
-    document.addEventListener("securitypolicyviolation", (e) =>
-      list.push(
-        `${e.violatedDirective} ${e.blockedURI} ${e.sourceFile}:${e.lineNumber} ${e.sample}`.trim(),
-      ),
-    );
-  });
-}
-
-/**
- * Снимок страницы или её части. Для снимка Playwright вставляет в страницу свой стиль, и строгая
- * политика WebKit его отклоняет: нарушения и ошибки, пришедшие во время снимка, не в счёт.
- */
-export async function shot(
-  page: Page,
-  seen: { errors: string[] },
-  selector?: string,
-): Promise<string> {
-  const before = (await violations(page)).length;
-  const errors = seen.errors.length;
-  const png = await (selector ? page.locator(selector) : page).screenshot({
-    caret: "initial",
-  });
-  await page.waitForTimeout(200);
-  seen.errors.length = errors;
-  await page.evaluate((n) => {
-    const list = (window as unknown as { violations?: string[] }).violations;
-    if (list) list.length = n;
-  }, before);
-  return png.toString("base64");
-}
-
-export const violations = (page: Page) =>
-  page.evaluate(
-    () => (window as unknown as { violations?: string[] }).violations ?? [],
-  );
 
 async function open(page: Page, url: string): Promise<void> {
   await page.goto(url, { waitUntil: "load", timeout: 60_000 });
@@ -200,13 +123,22 @@ const scrollThrough = (page: Page, pause: number) =>
     }
   }, pause);
 
-/** Заглушка в первом теге раздела после «Показать заново»: класс, видимость рано и позже, анимации. */
+/**
+ * Заглушка в первом теге раздела после «Показать заново» — по её собственной анимации задержки h (Web
+ * Animations API): видимость в первом кадре после старта анимации, после её конца и анимации. Таймером
+ * от смены класса мерить нельзя: WebKit запускает CSS-анимацию на ближайшей отрисовке кадра, а на
+ * медленной машине она приходит позже 50 мс. earlyAt — время анимации в этом кадре; null — анимации
+ * задержки нет.
+ */
 function measurePlaceholder(page: Page) {
   return page.evaluate(async () => {
     const frame = () =>
       new Promise((resolve) => requestAnimationFrame(resolve));
-    const wait = (ms: number) =>
-      new Promise((resolve) => setTimeout(resolve, ms));
+    const within = (promise: Promise<unknown>, ms: number) =>
+      Promise.race([
+        promise.catch(() => {}),
+        new Promise((resolve) => setTimeout(resolve, ms)),
+      ]);
     document.getElementById("placeholders")?.scrollIntoView();
     (document.getElementById("again") as HTMLButtonElement).click();
     const tags = [
@@ -225,12 +157,20 @@ function measurePlaceholder(page: Page) {
       if (performance.now() - start > 10_000) return null;
       await frame();
     }
-    const shown = performance.now();
-    await wait(50);
-    const early = svg(skeleton);
-    const earlyAt = performance.now() - shown;
-    const earlyVisibility = early ? getComputedStyle(early).visibility : "";
-    await wait(350);
+    const node = svg(skeleton) as SVGElement;
+    const hide = node
+      .getAnimations()
+      .find((a) => (a as CSSAnimation).animationName === "h");
+    let earlyAt: number | null = null;
+    let earlyVisibility = "";
+    if (hide) {
+      await within(hide.ready, 5000);
+      await frame();
+      earlyAt = Number(hide.currentTime ?? 0);
+      earlyVisibility = getComputedStyle(node).visibility;
+      await within(hide.finished, 5000);
+      await frame();
+    }
     const late = svg(skeleton);
     return {
       earlyAt,
@@ -238,8 +178,8 @@ function measurePlaceholder(page: Page) {
       lateVisibility: late ? getComputedStyle(late).visibility : "",
       skeleton: late ? getComputedStyle(late).animationName : "",
       spinner: (() => {
-        const node = svg(spinner);
-        return node ? getComputedStyle(node).animationName : "";
+        const element = svg(spinner);
+        return element ? getComputedStyle(element).animationName : "";
       })(),
     };
   });
@@ -268,11 +208,16 @@ async function checkTagPage(
       ? pass("регистрирует скрипт без сборщика, копия сборщика пропускает")
       : fail(`${first} / ${second}`);
 
-  // Заглушка: класс при активации, видимость через 150 мс, анимации.
+  // Заглушка: класс при активации, скрыта первые 150 мс своей анимации, потом видна и анимирована.
   const placeholder = await measurePlaceholder(page);
   if (!placeholder) {
     v.delay = fail("класс skeleton не появился за 10 с");
+  } else if (placeholder.earlyAt === null) {
+    v.delay = fail(
+      `у заглушки нет анимации задержки h; анимации ${placeholder.skeleton}`,
+    );
   } else {
+    const at = Math.round(placeholder.earlyAt);
     const early =
       placeholder.earlyAt < 140
         ? placeholder.earlyVisibility === "hidden"
@@ -282,14 +227,14 @@ async function checkTagPage(
     v.delay =
       early === false || placeholder.lateVisibility !== "visible" || !animated
         ? fail(
-            `через ${Math.round(placeholder.earlyAt)} мс — ${placeholder.earlyVisibility}, через 400 мс — ${placeholder.lateVisibility}; анимации ${placeholder.skeleton} / ${placeholder.spinner}`,
+            `на ${at} мс анимации — ${placeholder.earlyVisibility}, после задержки — ${placeholder.lateVisibility}; анимации ${placeholder.skeleton} / ${placeholder.spinner}`,
           )
         : {
             ok: early === null ? null : true,
             note:
               early === null
-                ? `ранний замер опоздал (${Math.round(placeholder.earlyAt)} мс), позже — видна; анимации ${placeholder.skeleton} / ${placeholder.spinner}`
-                : `через ${Math.round(placeholder.earlyAt)} мс скрыта, через 400 мс видна; анимации ${placeholder.skeleton} / ${placeholder.spinner}`,
+                ? `первый кадр анимации пришёл поздно (${at} мс), после задержки — видна; анимации ${placeholder.skeleton} / ${placeholder.spinner}`
+                : `на ${at} мс анимации скрыта, после 150 мс видна; анимации ${placeholder.skeleton} / ${placeholder.spinner}`,
           };
   }
   result.shots.push({
@@ -434,7 +379,9 @@ async function checkMotion(
   const placeholder = await measurePlaceholder(page);
   result.verdicts.motion = !placeholder
     ? fail("класс skeleton не появился за 10 с")
-    : placeholder.skeleton === "h" && placeholder.spinner === "h"
+    : placeholder.earlyAt !== null &&
+        placeholder.skeleton === "h" &&
+        placeholder.spinner === "h"
       ? pass("остаётся только задержка показа")
       : fail(`анимации ${placeholder.skeleton} / ${placeholder.spinner}`);
   await context.close();
@@ -542,6 +489,10 @@ async function checkBrowser(
     result.verdicts.errors = errorsVerdict(
       [...tag.errors, ...many.errors],
       [...tag.violations, ...many.violations],
+    );
+    Object.assign(
+      result.verdicts,
+      await checkNetwork(browser, o, (line) => o.log?.(`${name}: ${line}`)),
     );
   } catch (e) {
     result.failure = (e as Error).message.split("\n")[0];

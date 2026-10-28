@@ -1,8 +1,10 @@
+import { readFile } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import { EXPECTED_WARNINGS } from "./check.js";
 import { MANY_PER_SET } from "./config.js";
 import { manySets } from "./many-page.js";
+import { NET_NAMES } from "./net-page.js";
 import { visibleNames } from "./server.js";
 import {
   ATTRIBUTE_CELLS,
@@ -66,6 +68,20 @@ describe("страница тега", () => {
       ...fromCells,
       ...fromMissing,
     ]);
+  });
+});
+
+describe("страница сбоев сети", () => {
+  it("иконки и алиас есть в data/, последняя — нарочно отсутствующая", async () => {
+    const file = JSON.parse(
+      await readFile(`${DATA}lucide/icons.json`, "utf8"),
+    ) as { icons: Record<string, unknown>; aliases: Record<string, unknown> };
+    const present = NET_NAMES.slice(0, -1).map((name) => name.split(":")[1]);
+    expect(
+      present.filter((n) => !(n in file.icons) && !(n in file.aliases)),
+    ).toEqual([]);
+    expect(present.filter((n) => n in file.aliases)).toEqual(["home"]);
+    expect(NET_NAMES.at(-1)).toBe("lucide:no-such-icon");
   });
 });
 
