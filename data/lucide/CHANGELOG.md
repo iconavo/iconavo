@@ -4,6 +4,18 @@
 Имена не пропадают: иконка, которую удалил автор, скрыта, но работает по имени, а старое имя переименованной ведёт на новое (ADR-0005).
 Скрытия и переименования вы одобряете лично в pull request (ADR-0019). Полные списки — в `changelog.json`.
 
+## 28 октября 2026 · версия c3b3f7a7
+
+Прошлая версия: 01c7796f · источник: 2ca268e · иконок: 1 924.
+
+**Требуют вашего одобрения**
+
+- Переименованы — старое имя ведёт на новое (1): `archive-restore` → `archive-arrow-up`
+
+**Изменения**
+
+- Добавлены (16): `archive-arrow-down`, `boxes-linked`, `calendar-arrow-left`, `calendar-arrow-right`, `chart-quadrant`, `chart-radar`, `database-cog`, `earbuds`, `earbuds-off`, `laser`, `siren-off`, `square-chevrons-down`, `square-chevrons-left`, `square-chevrons-right`, `square-chevrons-up`, `user-round-shield`
+
 ## 27 октября 2026 · версия 01c7796f
 
 Прошлая версия: dbde54d2 · источник: 03f11e2 · иконок: 1 908.

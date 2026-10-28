@@ -1993,7 +1993,20 @@
         "records"
       ]
     },
-    "archive-restore": {
+    "archive-arrow-down": {
+      "fingerprint": "2900c8e19b58",
+      "tags": [
+        "index",
+        "backup",
+        "box",
+        "storage",
+        "records",
+        "email",
+        "download",
+        "save"
+      ]
+    },
+    "archive-arrow-up": {
       "en": {
         "description": "A box-shaped archive with a top lid and an upward arrow, usually meaning restore an item from archive.",
         "synonyms": [
@@ -2032,7 +2045,11 @@
         "backup",
         "box",
         "storage",
-        "records"
+        "records",
+        "restore",
+        "retrieve",
+        "recover",
+        "reactivate"
       ]
     },
     "archive-x": {
@@ -10535,6 +10552,31 @@
         "geometry"
       ]
     },
+    "boxes-linked": {
+      "fingerprint": "8967b9c3e9d4",
+      "tags": [
+        "cubes",
+        "package",
+        "module",
+        "dependencies",
+        "link",
+        "chain",
+        "blockchain",
+        "network",
+        "nodes",
+        "supply chain",
+        "integration",
+        "component",
+        "logistics",
+        "distributed",
+        "interconnected",
+        "relationship",
+        "coupling",
+        "system architecture",
+        "distributed systems",
+        "inventory"
+      ]
+    },
     "braces": {
       "en": {
         "description": "Two curly braces, opening and closing, representing code blocks, objects, or JSON data.",
@@ -12327,6 +12369,53 @@
         "decreasing",
         "rising",
         "falling"
+      ]
+    },
+    "calendar-arrow-left": {
+      "fingerprint": "49a646c39f74",
+      "tags": [
+        "date",
+        "day",
+        "month",
+        "year",
+        "event",
+        "arrow",
+        "direction",
+        "navigation",
+        "previous",
+        "back",
+        "backward",
+        "past",
+        "earlier",
+        "reschedule",
+        "postpone",
+        "schedule",
+        "timeline",
+        "date picker"
+      ]
+    },
+    "calendar-arrow-right": {
+      "fingerprint": "4cbb20a79d7c",
+      "tags": [
+        "date",
+        "day",
+        "month",
+        "year",
+        "event",
+        "arrow",
+        "direction",
+        "navigation",
+        "next",
+        "forward",
+        "future",
+        "upcoming",
+        "later",
+        "reschedule",
+        "postpone",
+        "defer",
+        "schedule",
+        "timeline",
+        "appointment"
       ]
     },
     "calendar-arrow-up": {
@@ -15381,6 +15470,47 @@
         "analytics",
         "diagram",
         "presentation"
+      ]
+    },
+    "chart-quadrant": {
+      "fingerprint": "1f594067788e",
+      "tags": [
+        "quadrant",
+        "chart",
+        "diagram",
+        "statistics",
+        "analytics",
+        "graph",
+        "chart-scatter",
+        "scatter plot",
+        "2x2",
+        "matrix",
+        "segmentation",
+        "correlation",
+        "comparison",
+        "risk",
+        "swot",
+        "clustering"
+      ]
+    },
+    "chart-radar": {
+      "fingerprint": "d023fb7528a2",
+      "tags": [
+        "radar",
+        "chart",
+        "diagram",
+        "shape",
+        "gem",
+        "mineral",
+        "pentagon",
+        "multidimensional",
+        "metrics",
+        "performance",
+        "comparison",
+        "profile",
+        "analytics",
+        "visualization",
+        "attributes"
       ]
     },
     "chart-scatter": {
@@ -24134,6 +24264,24 @@
         "complete"
       ]
     },
+    "database-cog": {
+      "fingerprint": "2f6678ed6643",
+      "tags": [
+        "db",
+        "settings",
+        "configuration",
+        "preferences",
+        "gear",
+        "admin",
+        "sql",
+        "storage",
+        "server",
+        "maintenance",
+        "schema",
+        "query",
+        "relational"
+      ]
+    },
     "database-minus": {
       "en": {
         "description": "A database cylinder with a minus bar at the bottom right; it usually means removing or reducing stored data.",
@@ -26524,6 +26672,49 @@
         "silence",
         "audio",
         "accessibility"
+      ]
+    },
+    "earbuds": {
+      "fingerprint": "93efb3aef6ca",
+      "tags": [
+        "earphones",
+        "audio",
+        "sound",
+        "bluetooth",
+        "wireless",
+        "music",
+        "noise cancelling",
+        "acoustics",
+        "stereo",
+        "media",
+        "listen",
+        "pairing",
+        "hands-free",
+        "speaker",
+        "volume"
+      ]
+    },
+    "earbuds-off": {
+      "fingerprint": "7ea08759a8cb",
+      "tags": [
+        "earphones",
+        "audio",
+        "sound",
+        "bluetooth",
+        "wireless",
+        "music",
+        "noise cancelling",
+        "acoustics",
+        "stereo",
+        "media",
+        "listen",
+        "pairing",
+        "hands-free",
+        "speaker",
+        "volume",
+        "disconnected",
+        "disabled",
+        "inactive"
       ]
     },
     "earth": {
@@ -40614,6 +40805,22 @@
         "tick",
         "complete",
         "task"
+      ]
+    },
+    "laser": {
+      "fingerprint": "49e1370a38ab",
+      "tags": [
+        "annotation",
+        "beam",
+        "draw",
+        "guide",
+        "highlight",
+        "pointer",
+        "presentation",
+        "screen",
+        "spotlight",
+        "pointer device",
+        "projection"
       ]
     },
     "lasso": {
@@ -64885,6 +65092,23 @@
         "light"
       ]
     },
+    "siren-off": {
+      "fingerprint": "0cd1e5deb01e",
+      "tags": [
+        "police",
+        "ambulance",
+        "emergency",
+        "security",
+        "alert",
+        "alarm",
+        "light",
+        "disabled",
+        "mute",
+        "silent",
+        "silence",
+        "inactive"
+      ]
+    },
     "sixteenth-notes": {
       "en": {
         "description": "Two beamed musical notes with a double beam, representing music, sound or audio playback in an interface.",
@@ -67473,6 +67697,143 @@
         "menu",
         "panel",
         "^"
+      ]
+    },
+    "square-chevrons-down": {
+      "fingerprint": "3e624877184f",
+      "tags": [
+        "bottom",
+        "descend",
+        "page",
+        "page down",
+        "scroll",
+        "jump",
+        "south",
+        "caret",
+        "button",
+        "keyboard",
+        "skip",
+        "end",
+        "last page",
+        "latest",
+        "feed",
+        "chat",
+        "pagination",
+        "fast",
+        "media",
+        "menu",
+        "panel",
+        "double-arrow",
+        "outlined",
+        "border",
+        "seek",
+        "rewind",
+        "controls",
+        "fast-forward"
+      ]
+    },
+    "square-chevrons-left": {
+      "fingerprint": "fb4f9fe427c4",
+      "tags": [
+        "previous",
+        "back",
+        "rewind",
+        "backward",
+        "first",
+        "beginning",
+        "start",
+        "west",
+        "music",
+        "caret",
+        "button",
+        "keyboard",
+        "menu",
+        "panel",
+        "pagination",
+        "skip",
+        "skip-back",
+        "seek-back",
+        "media-controls",
+        "player",
+        "playlist",
+        "track",
+        "chapter",
+        "jump",
+        "timeline",
+        "controls",
+        "seek",
+        "media"
+      ]
+    },
+    "square-chevrons-right": {
+      "fingerprint": "6d14e0404454",
+      "tags": [
+        "next",
+        "forward",
+        "skip",
+        "fast forward",
+        "last",
+        "end",
+        "east",
+        "music",
+        "caret",
+        "button",
+        "keyboard",
+        "menu",
+        "panel",
+        "pagination",
+        "jump",
+        "seek",
+        "seek forward",
+        "player control",
+        "chapter",
+        "track",
+        "timeline",
+        "navigation control",
+        "double arrow",
+        "media controls",
+        "toolbar",
+        "keyboard shortcut",
+        "skip-to-end",
+        "end-of-list"
+      ]
+    },
+    "square-chevrons-up": {
+      "fingerprint": "3ea5c824e1ad",
+      "tags": [
+        "top",
+        "ascend",
+        "page",
+        "page up",
+        "back to top",
+        "scroll",
+        "jump",
+        "north",
+        "caret",
+        "button",
+        "keyboard",
+        "skip",
+        "pagination",
+        "first page",
+        "fast",
+        "fast scroll",
+        "rewind",
+        "jump to start",
+        "floating action button",
+        "anchor",
+        "mac",
+        "control",
+        "ctrl",
+        "menu",
+        "panel",
+        "timeline",
+        "start",
+        "first",
+        "return",
+        "double arrow",
+        "seek",
+        "playlist",
+        "floating action"
       ]
     },
     "square-code": {
@@ -77916,6 +78277,22 @@
         "magnifier",
         "magnifying glass",
         "lens"
+      ]
+    },
+    "user-round-shield": {
+      "fingerprint": "9cf98c74ab7d",
+      "tags": [
+        "security",
+        "protection",
+        "admin",
+        "guard",
+        "privacy",
+        "account",
+        "role",
+        "permissions",
+        "profile",
+        "identity",
+        "trusted"
       ]
     },
     "user-round-star": {
