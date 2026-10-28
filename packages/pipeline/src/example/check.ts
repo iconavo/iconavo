@@ -1,11 +1,15 @@
-// Проверка примера на Next.js в трёх браузерах (фаза 3, шаг 7; ADR-0033, ADR-0035): pnpm example --check
-// открывает пример в режиме разработки и в продакшен-сборке — Chrome, Firefox и WebKit по очереди, чтобы
-// не съесть память, — и проверяет обещания шага: иконки обёртки — в серверном HTML и не мигают при
-// гидратации, остальные догружаются в браузере, в консоли нет предупреждений о гидратации. Сеть не
-// нужна: хосты иконок — превью API на этом компьютере. Контрольный запуск сам портит HTML страницы и
-// ждёт предупреждения — так видно, что проверка не слепая. Чистые части — разбор запросов к API и
-// консоли — проверяются тестами без браузера.
+// Проверка примера на Next.js в трёх браузерах (фаза 3, шаги 7 и 9; ADR-0033, ADR-0035): pnpm example
+// --check открывает пример в режиме разработки и в продакшен-сборке — Chrome, Firefox и WebKit по
+// очереди, чтобы не съесть память, — и проверяет обещания шага: иконки обёртки — в серверном HTML и не
+// мигают при гидратации, остальные догружаются в браузере, в консоли нет предупреждений о гидратации,
+// axe-core не находит нарушений доступности. Те же страницы на React 18 без Next.js (react18.ts)
+// проверяются теми же функциями. Сеть не нужна: хосты иконок — превью API на этом компьютере.
+// Контрольный запуск сам портит HTML страницы и ждёт предупреждения — так видно, что проверка не
+// слепая. Чистые части — разбор запросов к API, консоли и находок axe — проверяются тестами без
+// браузера.
 
+import { readFile } from "node:fs/promises";
+import { createRequire } from "node:module";
 import type { Browser, Page } from "playwright";
 import {
   BROWSER_TITLES,
@@ -34,6 +38,14 @@ export const MODE_TITLES: Record<Mode, string> = {
   prod: "продакшен",
 };
 
+/** Что проверяется: пример на Next.js (React 19) или те же страницы на React 18 без Next.js. */
+export type App = "next" | "react18";
+
+export const APP_TITLES: Record<App, string> = {
+  next: "Next.js",
+  react18: "React 18",
+};
+
 export const CHECKS = [
   [
     "html",
@@ -47,7 +59,10 @@ export const CHECKS = [
     "console",
     "Консоль: ни ошибок, ни предупреждений о гидратации — только два ожидаемых, про иконки, которых нет",
   ],
-  ["csp", "Строгая CSP продакшена (style-src 'self'): ни одного нарушения"],
+  [
+    "csp",
+    "Строгая CSP (style-src 'self'; у React 18 — и Trusted Types): ни одного нарушения",
+  ],
   ["browser", "Иконки из браузера появились после гидратации"],
   [
     "reserve",
@@ -73,6 +88,10 @@ export const CHECKS = [
   ["trusted", "Trusted Types: рисунок уходит в innerHTML объектом TrustedHTML"],
   ["frame", "Иконки нет: пунктирная рамка — только в режиме разработки"],
   ["tag", "Тег <iconavo-icon> в React нарисован"],
+  [
+    "axe",
+    "Доступность (axe-core, WCAG 2.2 A и AA): ни одного нарушения на обеих страницах",
+  ],
   [
     "canary",
     "Контрольный запуск: испорченный HTML — предупреждение о гидратации замечено",
@@ -103,6 +122,7 @@ export interface ExampleNames {
 }
 
 export interface ExampleResult {
+  app: App;
   mode: Mode;
   browser: BrowserName;
   /** Браузер не запустился или страница не открылась — почему. */
@@ -117,7 +137,10 @@ export interface ExampleCheckOptions {
   base: string;
   /** Превью API — оно же хост статики (/_static/). */
   api: string;
+  app: App;
   mode: Mode;
+  /** Страницы отдают политику CSP: у Next.js — только продакшен, у React 18 — оба режима. */
+  csp: boolean;
   names: ExampleNames;
   browsers?: readonly BrowserName[];
   log?: (line: string) => void;
@@ -672,8 +695,10 @@ async function checkHydration(
     png: await shot(page, seen),
   });
 
-  // Переход по ссылке: страница рисуется уже в браузере, без гидратации.
+  // Переход по ссылке: у Next.js страница рисуется уже в браузере, без гидратации; у React 18 — новая
+  // страница с сервера, поэтому нарушения CSP первой страницы снимаются до перехода.
   const sent = urls.length;
+  const earlier = await violations(page);
   await page.locator('[data-check="link"]').click();
   await page.waitForURL(`${o.base}/more`, { timeout: 120_000 });
   await page.waitForSelector('[data-check="nested"] svg[data-name]', {
@@ -713,13 +738,14 @@ async function checkHydration(
     seen.errors,
     expectedWarnings(o.names),
   );
-  const found = await violations(page);
-  v.csp =
-    o.mode === "prod"
-      ? found.length === 0
-        ? pass("ни одного нарушения")
-        : fail([...new Set(found)].slice(0, 4).join("; "))
-      : { ok: null, note: "в режиме разработки политики нет" };
+  // У Next.js документ после перехода тот же — в нём и нарушения первой страницы.
+  const later = await violations(page);
+  const found = o.app === "react18" ? [...earlier, ...later] : later;
+  v.csp = o.csp
+    ? found.length === 0
+      ? pass("ни одного нарушения")
+      : fail([...new Set(found)].slice(0, 4).join("; "))
+    : { ok: null, note: "в режиме разработки политики нет" };
   await context.close();
 }
 
@@ -755,17 +781,129 @@ async function checkCanary(
   await context.close();
 }
 
+/** Нарушение axe: правило, важность и первые элементы. */
+export interface AxeViolation {
+  id: string;
+  impact: string;
+  nodes: string[];
+}
+
+/** Правила axe — только WCAG уровней A и AA, как требует ADR-0038 для сайта: без рекомендаций axe. */
+export const AXE_TAGS = [
+  "wcag2a",
+  "wcag2aa",
+  "wcag21a",
+  "wcag21aa",
+  "wcag22a",
+  "wcag22aa",
+];
+
+/** Доступность: ни одного нарушения ни на одной странице. */
+export function axeVerdict(
+  pages: { path: string; violations: AxeViolation[] }[],
+): Verdict {
+  const problems = pages.flatMap((p) =>
+    p.violations.map(
+      (v) => `${p.path}: ${v.id} (${v.impact}) — ${v.nodes.join(", ")}`,
+    ),
+  );
+  return problems.length === 0
+    ? pass(
+        `нарушений нет: ${pages.map((p) => p.path).join(" и ")}, правила WCAG 2.2 A и AA`,
+      )
+    : fail(problems.slice(0, 5).join("; "));
+}
+
+/** Текст axe-core — его вставляет на страницу проверка. */
+let axeSource: Promise<string> | undefined;
+const axe = () => {
+  axeSource ??= readFile(
+    createRequire(import.meta.url).resolve("axe-core/axe.min.js"),
+    "utf8",
+  );
+  return axeSource;
+};
+
+/**
+ * Доступность (ADR-0035): axe-core на главной и на /more после гидратации, когда иконки нарисованы.
+ * Контекст — без CSP: иначе строгая политика и Trusted Types не пустят скрипт axe. Подпись тега через
+ * ElementInternals axe не видит (Deque: невидимы, пока компонент сам их не откроет) — её проверяет
+ * строка «Подпись» по дереву доступности Chrome.
+ */
+async function checkAxe(
+  browser: Browser,
+  o: ExampleCheckOptions,
+  result: ExampleResult,
+): Promise<void> {
+  const context = await browser.newContext({
+    viewport: VIEWPORT,
+    bypassCSP: true,
+  });
+  const page = await context.newPage();
+  const source = await axe();
+  const pages: { path: string; violations: AxeViolation[] }[] = [];
+  for (const path of ["/", "/more"]) {
+    await page.goto(`${o.base}${path}`, {
+      waitUntil: "load",
+      timeout: 120_000,
+    });
+    await allDrawn(page, BROWSER_ICONS);
+    if (path === "/") {
+      await page.waitForFunction(
+        () =>
+          document
+            .querySelector('svg[data-name="acme:logo"]')
+            ?.hasAttribute("viewBox"),
+        null,
+        { timeout: 120_000 },
+      );
+    }
+    await page.addScriptTag({ content: source });
+    pages.push({
+      path,
+      violations: await page.evaluate(async (tags) => {
+        const { axe } = window as unknown as {
+          axe: {
+            run(
+              context: Document,
+              options: unknown,
+            ): Promise<{
+              violations: {
+                id: string;
+                impact?: string | null;
+                nodes: { target: unknown[] }[];
+              }[];
+            }>;
+          };
+        };
+        const found = await axe.run(document, {
+          runOnly: { type: "tag", values: tags },
+          resultTypes: ["violations"],
+        });
+        return found.violations.map((v) => ({
+          id: v.id,
+          impact: v.impact ?? "",
+          nodes: v.nodes.slice(0, 3).map((n) => n.target.join(" ")),
+        }));
+      }, AXE_TAGS),
+    });
+  }
+  result.verdicts.axe = axeVerdict(pages);
+  await context.close();
+}
+
 async function checkBrowser(
   name: BrowserName,
   o: ExampleCheckOptions,
 ): Promise<ExampleResult> {
   const result: ExampleResult = {
+    app: o.app,
     mode: o.mode,
     browser: name,
     verdicts: {},
     shots: [],
   };
-  const title = `${BROWSER_TITLES[name]}, ${MODE_TITLES[o.mode]}`;
+  const title = `${BROWSER_TITLES[name]}, ${o.app === "react18" ? `${APP_TITLES.react18}, ` : ""}${MODE_TITLES[o.mode]}`;
   let browser: Browser | undefined;
   try {
     browser = await launchBrowser(name, true);
@@ -775,6 +913,8 @@ async function checkBrowser(
     await checkHydration(browser, name, o, result, before);
     o.log?.(`${title}: контрольный запуск…`);
     await checkCanary(browser, o, result);
+    o.log?.(`${title}: доступность (axe-core)…`);
+    await checkAxe(browser, o, result);
   } catch (e) {
     result.failure = (e as Error).message.split("\n")[0];
   } finally {

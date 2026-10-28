@@ -7,6 +7,7 @@ import { markdownTable, textTable } from "../report/table.js";
 import { BROWSER_TITLES } from "../sandbox/browser.js";
 import type { Verdict } from "../sandbox/verdict.js";
 import {
+  APP_TITLES,
   CHECKS,
   type CheckId,
   type ExampleResult,
@@ -17,8 +18,9 @@ import {
 const mark = (v: Verdict | undefined) =>
   v === undefined || v.ok === null ? "—" : v.ok ? "да" : "НЕТ";
 
+/** Столбец: браузер и режим; у React 18 — ещё и «React 18», пример на Next.js — без пометки. */
 const column = (r: ExampleResult) =>
-  `${BROWSER_TITLES[r.browser]}, ${MODE_TITLES[r.mode]}`;
+  `${BROWSER_TITLES[r.browser]}, ${r.app === "react18" ? `${APP_TITLES.react18}, ` : ""}${MODE_TITLES[r.mode]}`;
 
 const tableHead = (results: ExampleResult[]) => [
   "Проверка",
@@ -58,7 +60,7 @@ export function formatExampleCheck(results: ExampleResult[]): string[] {
 export function markdownExampleCheck(results: ExampleResult[]): string {
   const list = problems(results);
   return [
-    "### React и пример на Next.js (pnpm example --check)",
+    "### React: пример на Next.js и React 18 (pnpm example --check)",
     "",
     markdownTable(tableHead(results), tableRows(results)),
     "",
@@ -114,10 +116,10 @@ export function renderExampleCheckPage(results: ExampleResult[]): string {
     ? '<p class="stop">Есть проблемы — строки «НЕТ» и сбои ниже.</p>'
     : '<p class="ok">Пример работает во всех проверенных браузерах и режимах.</p>';
   return htmlPage(
-    "Пример на Next.js: React в трёх браузерах",
+    "Пример на Next.js и React 18 в трёх браузерах",
     STYLE,
-    `<h1>Пример на Next.js: React в трёх браузерах</h1>
-<p class="muted">pnpm example --check: пример examples/next в режиме разработки (next dev) и в продакшен-сборке (next build и next start), в Chrome, Firefox и WebKit — движке Safari. Иконки «с сервера» передаёт IconavoProvider, остальные браузер загружает сам; ответы API задержаны, чтобы было видно, что место держит резерв. Сеть не нужна: API и статика — превью на этом компьютере. «—» — не проверялось или только сведения.</p>
+    `<h1>Пример на Next.js и React 18 в трёх браузерах</h1>
+<p class="muted">pnpm example --check: пример examples/next в режиме разработки (next dev) и в продакшен-сборке (next build и next start), в Chrome, Firefox и WebKit — движке Safari. Столбцы «React 18» — те же страницы на React 18.3.1 без Next.js (он работает только с React 19): сервер — renderToString, браузер — hydrateRoot, политика — строгая, с Trusted Types. Доступность проверяет axe-core по правилам WCAG 2.2 A и AA; подпись тега через ElementInternals axe не видит — её проверяет строка «Подпись» по дереву доступности Chrome. Иконки «с сервера» передаёт IconavoProvider, остальные браузер загружает сам; ответы API задержаны, чтобы было видно, что место держит резерв. Сеть не нужна: API и статика — превью на этом компьютере. «—» — не проверялось или только сведения.</p>
 ${verdict}
 ${failures ? `<ul>${failures}</ul>` : ""}
 <table><thead><tr><th>Проверка</th>${head}</tr></thead><tbody>

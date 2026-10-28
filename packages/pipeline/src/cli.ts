@@ -138,6 +138,7 @@ import {
 } from "./example/check-report.js";
 import { EXAMPLE_DIR, EXAMPLE_PORT, NAMES_FILE } from "./example/config.js";
 import { buildNext, freePort, startNext } from "./example/next.js";
+import { REACT18, startReact18 } from "./example/react18.js";
 import { buildIconScript, SCRIPT_FILE } from "./icon/build.js";
 import { type MeiliClient, meiliClient } from "./meili/client.js";
 import {
@@ -1277,7 +1278,10 @@ try {
             ...(await checkExample({
               base: next.url,
               api,
+              app: "next",
               mode,
+              // Политику Next.js пример отдаёт только в продакшене (next.config.ts).
+              csp: mode === "prod",
               names,
               browsers,
               log: (line) => console.log(`  ${line}`),
@@ -1285,6 +1289,38 @@ try {
           );
         } finally {
           await next.stop();
+        }
+      }
+      // Те же страницы на React 18 без Next.js (react18.ts): сборщик — rolldown, а не webpack.
+      for (const mode of exampleWebpack ? [] : MODES) {
+        console.log(
+          `Собираю и запускаю пример на React ${REACT18}: ${MODE_TITLES[mode]}…`,
+        );
+        const react18 = await startReact18({
+          dir,
+          mode,
+          api,
+          outDir: join(root, ".cache", "example"),
+          port: 0,
+        });
+        try {
+          console.log(
+            `Проверяю: ${browsers.map((b) => BROWSER_TITLES[b]).join(", ")} — React ${REACT18} ${react18.url}…`,
+          );
+          results.push(
+            ...(await checkExample({
+              base: react18.url,
+              api,
+              app: "react18",
+              mode,
+              csp: true,
+              names,
+              browsers,
+              log: (line) => console.log(`  ${line}`),
+            })),
+          );
+        } finally {
+          await react18.stop();
         }
       }
       console.log("");
