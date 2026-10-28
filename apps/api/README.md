@@ -139,4 +139,5 @@ These are not supported:
 - Successful responses are cached for a week (`Cache-Control: public, max-age=604800`), search results for 5 minutes. Errors are cached for 5 minutes, outages and rate limits not at all.
 - A new release of a set is served within a minute; the edge cache needs no purge.
 - `X-Iconavo-Version` is the data version of the set, `X-Iconavo-Build` is the API build, and `X-Cache` says `HIT` or `MISS`.
+- `Server-Timing` on icon, SVG and CSS responses shows where the time went: `cache` (`hit` or `miss`), `files` (icon files found in the edge cache / looked up), `r2` (files read from storage) and `total`, all in milliseconds. `Timing-Allow-Origin: *` lets pages read it.
 - Every response allows any origin (`Access-Control-Allow-Origin: *`). SVG responses carry a strict `Content-Security-Policy`.
