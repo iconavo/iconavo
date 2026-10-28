@@ -3474,38 +3474,7 @@
       ]
     },
     "alert-octagon": {
-      "en": {
-        "description": "An octagon containing an exclamation mark; it usually signals a warning, important notice, or danger.",
-        "synonyms": [
-          "warning",
-          "error",
-          "caution",
-          "danger",
-          "attention",
-          "exclamation",
-          "notice",
-          "alert",
-          "stop sign",
-          "important"
-        ]
-      },
-      "fingerprint": "1df78ce67ee7",
-      "promptVersion": 1,
-      "ru": {
-        "description": "Восьмиугольник с восклицательным знаком внутри; обозначает предупреждение, важное уведомление или опасность.",
-        "synonyms": [
-          "предупреждение",
-          "ошибка",
-          "внимание",
-          "опасность",
-          "осторожно",
-          "восклицательный знак",
-          "уведомление",
-          "важно",
-          "стоп",
-          "тревога"
-        ]
-      },
+      "fingerprint": "f171c729ae77",
       "tags": [
         "warning",
         "error",
@@ -3521,7 +3490,7 @@
       ]
     },
     "alert-octagon-filled": {
-      "fingerprint": "c56d6ca1715a",
+      "fingerprint": "ec030a9e23f4",
       "tags": [
         "warning",
         "error",
@@ -7706,6 +7675,22 @@
         "inactive",
         "archive",
         "off"
+      ]
+    },
+    "archive-restore": {
+      "fingerprint": "c0c02b54929d",
+      "tags": [
+        "archive",
+        "restore",
+        "unarchive",
+        "box",
+        "storage",
+        "retrieve",
+        "recover",
+        "undo",
+        "return",
+        "backup",
+        "files"
       ]
     },
     "armchair": {
@@ -23650,6 +23635,21 @@
         "beach"
       ]
     },
+    "beach-bag": {
+      "fingerprint": "5dd9c28694de",
+      "tags": [
+        "beach",
+        "bag",
+        "tote",
+        "summer",
+        "vacation",
+        "holiday",
+        "sea",
+        "travel",
+        "shopping",
+        "basket"
+      ]
+    },
     "beach-off": {
       "en": {
         "description": "Shows a beach umbrella above waves crossed by a diagonal line, meaning beach or seaside leisure is unavailable or disabled.",
@@ -27204,6 +27204,22 @@
         "novel",
         "ebook",
         "book"
+      ]
+    },
+    "book-clone": {
+      "fingerprint": "24ad626bf33f",
+      "tags": [
+        "book",
+        "clone",
+        "copy",
+        "duplicate",
+        "read",
+        "reading",
+        "library",
+        "education",
+        "study",
+        "literature",
+        "ebook"
       ]
     },
     "book-download": {
@@ -40149,6 +40165,21 @@
         "brand"
       ]
     },
+    "brand-misskey": {
+      "fingerprint": "156890ea488a",
+      "tags": [
+        "misskey",
+        "fediverse",
+        "social",
+        "network",
+        "decentralized",
+        "microblogging",
+        "activitypub",
+        "mastodon",
+        "logo",
+        "brand"
+      ]
+    },
     "brand-mixpanel": {
       "en": {
         "description": "Three concentric circles of decreasing size in a row, resembling the Mixpanel analytics brand logo.",
@@ -45883,36 +45914,7 @@
       ]
     },
     "brand-upwork": {
-      "en": {
-        "description": "A stylized letter U merged with a p, the Upwork logo, representing the freelance marketplace for hiring and jobs.",
-        "synonyms": [
-          "upwork",
-          "freelance",
-          "freelancer",
-          "jobs",
-          "marketplace",
-          "hire",
-          "logo",
-          "brand",
-          "job search"
-        ]
-      },
-      "fingerprint": "355d04784702",
-      "promptVersion": 1,
-      "ru": {
-        "description": "Изображена стилизованная буква U и p в виде логотипа Upwork, обозначающего фриланс-биржу и поиск работы.",
-        "synonyms": [
-          "апворк",
-          "фриланс",
-          "фрилансер",
-          "работа",
-          "биржа фриланса",
-          "найм",
-          "поиск работы",
-          "логотип",
-          "подработка"
-        ]
-      },
+      "fingerprint": "2d19e80de25a",
       "tags": [
         "upwork",
         "freelance",
@@ -46067,6 +46069,21 @@
         "frontend",
         "cloud",
         "triangle",
+        "logo",
+        "brand"
+      ]
+    },
+    "brand-viber": {
+      "fingerprint": "b5587d1ffb4a",
+      "tags": [
+        "viber",
+        "chat",
+        "messaging",
+        "call",
+        "voip",
+        "phone",
+        "messenger",
+        "rakuten",
         "logo",
         "brand"
       ]
@@ -46692,36 +46709,7 @@
       ]
     },
     "brand-webflow": {
-      "en": {
-        "description": "Bold outlined stylized letter W, the logo of the Webflow no-code website builder platform.",
-        "synonyms": [
-          "website builder",
-          "no-code",
-          "logo",
-          "web design",
-          "cms",
-          "brand",
-          "site builder",
-          "website",
-          "letter w"
-        ]
-      },
-      "fingerprint": "170c30a5944f",
-      "promptVersion": 1,
-      "ru": {
-        "description": "Жирный контур стилизованной буквы W — логотип платформы Webflow для создания сайтов без кода.",
-        "synonyms": [
-          "конструктор сайтов",
-          "логотип",
-          "вебфлоу",
-          "no-code",
-          "сайт",
-          "веб-дизайн",
-          "cms",
-          "бренд",
-          "буква w"
-        ]
-      },
+      "fingerprint": "b139fd465688",
       "tags": [
         "webflow",
         "website-builder",
@@ -88757,6 +88745,19 @@
         "sign-language"
       ]
     },
+    "decagram": {
+      "fingerprint": "5dcffd7abe1d",
+      "tags": [
+        "decagram",
+        "star",
+        "ten-pointed-star",
+        "shape",
+        "geometry",
+        "polygon",
+        "badge",
+        "seal"
+      ]
+    },
     "decimal": {
       "en": {
         "description": "Shows a dot followed by two zeros, representing a decimal point and decimal number formatting.",
@@ -106114,38 +106115,7 @@
       ]
     },
     "exercise-ball": {
-      "en": {
-        "description": "A circle with two curved stripes showing a fitness exercise ball, used for workouts, pilates, and balance training.",
-        "synonyms": [
-          "fitness ball",
-          "swiss ball",
-          "yoga ball",
-          "pilates ball",
-          "gym",
-          "workout",
-          "balance",
-          "stability",
-          "exercise",
-          "sport"
-        ]
-      },
-      "fingerprint": "9a3cd5baf43d",
-      "promptVersion": 1,
-      "ru": {
-        "description": "Круг с двумя изогнутыми полосами, изображающий гимнастический мяч для фитнеса, пилатеса и упражнений на баланс.",
-        "synonyms": [
-          "фитбол",
-          "гимнастический мяч",
-          "мяч для йоги",
-          "мяч для пилатеса",
-          "фитнес",
-          "спорт",
-          "тренировка",
-          "баланс",
-          "упражнения",
-          "зал"
-        ]
-      },
+      "fingerprint": "bcceab5ea252",
       "tags": [
         "exercise-ball",
         "yoga-ball",
@@ -123909,37 +123879,26 @@
         "repository"
       ]
     },
+    "git-merge-ai": {
+      "fingerprint": "3bcbfe221439",
+      "tags": [
+        "git",
+        "merge",
+        "branch",
+        "combine",
+        "version-control",
+        "vcs",
+        "github",
+        "gitlab",
+        "repository",
+        "ai",
+        "artificial-intelligence",
+        "smart",
+        "sparkle"
+      ]
+    },
     "git-merge-queue": {
-      "en": {
-        "description": "Shows three dots and a node connected by a line, representing a merge queue for git branch merging.",
-        "synonyms": [
-          "merge queue",
-          "branch merge",
-          "git",
-          "queue",
-          "merge",
-          "pipeline",
-          "version control",
-          "automation",
-          "ci"
-        ]
-      },
-      "fingerprint": "279b28ea929a",
-      "promptVersion": 1,
-      "ru": {
-        "description": "Изображены три точки и узел с линией, символizing очередь слияния веток в git; иконка обозначает очередь слияния кода.",
-        "synonyms": [
-          "очередь слияния",
-          "слияние веток",
-          "git",
-          "очередь",
-          "слияние",
-          "ветки",
-          "конвейер",
-          "автоматизация",
-          "контроль версий"
-        ]
-      },
+      "fingerprint": "0d9c368f7454",
       "tags": [
         "git",
         "merge-queue",
@@ -124042,6 +124001,25 @@
         "request"
       ]
     },
+    "git-pull-request-closed-ai": {
+      "fingerprint": "1fce6043bb43",
+      "tags": [
+        "git",
+        "pull-request",
+        "pr",
+        "closed",
+        "merge-request",
+        "rejected",
+        "version-control",
+        "github",
+        "gitlab",
+        "pull",
+        "request",
+        "ai",
+        "artificial-intelligence",
+        "sparkle"
+      ]
+    },
     "git-pull-request-conflict": {
       "en": {
         "description": "Shows two git branch endpoints with a cross between them, indicating a merge conflict in a pull request.",
@@ -124130,6 +124108,25 @@
         "request"
       ]
     },
+    "git-pull-request-draft-ai": {
+      "fingerprint": "81f577ce66e0",
+      "tags": [
+        "git",
+        "pull-request",
+        "pr",
+        "draft",
+        "work-in-progress",
+        "wip",
+        "version-control",
+        "github",
+        "gitlab",
+        "pull",
+        "request",
+        "ai",
+        "artificial-intelligence",
+        "sparkle"
+      ]
+    },
     "git-pull-request-locked": {
       "en": {
         "description": "Shows two connected nodes, a curved return arrow and a padlock, meaning a locked or protected pull request.",
@@ -124175,39 +124172,27 @@
         "request"
       ]
     },
+    "git-pull-request-locked-ai": {
+      "fingerprint": "dd3242d2ece9",
+      "tags": [
+        "git",
+        "pull-request",
+        "pr",
+        "locked",
+        "protected",
+        "secure",
+        "version-control",
+        "github",
+        "gitlab",
+        "pull",
+        "request",
+        "ai",
+        "artificial-intelligence",
+        "sparkle"
+      ]
+    },
     "git-pull-request-unlisted": {
-      "en": {
-        "description": "Shows a git pull request diagram with connected commit dots and a diagonal line, meaning an unlisted or hidden pull request.",
-        "synonyms": [
-          "pull request",
-          "merge request",
-          "git",
-          "version control",
-          "hidden pr",
-          "private request",
-          "unlisted",
-          "branch",
-          "merge",
-          "github"
-        ]
-      },
-      "fingerprint": "aa4365072856",
-      "promptVersion": 1,
-      "ru": {
-        "description": "Изображена схема запроса на слияние в git: две точки соединены линией, рядом две точки и диагональная черта; значок обозначает скрытый или приватный pull request.",
-        "synonyms": [
-          "пулл реквест",
-          "запрос на слияние",
-          "git",
-          "гит",
-          "скрытый запрос",
-          "приватный запрос",
-          "контроль версий",
-          "ветка",
-          "слияние",
-          "гитхаб"
-        ]
-      },
+      "fingerprint": "2ca2668c9fde",
       "tags": [
         "git",
         "pull-request",
@@ -129585,38 +129570,7 @@
       ]
     },
     "help-octagon": {
-      "en": {
-        "description": "An octagon outline containing a question mark; it usually signals help, support, or frequently asked questions.",
-        "synonyms": [
-          "help",
-          "question",
-          "support",
-          "faq",
-          "question mark",
-          "info",
-          "assistance",
-          "octagon",
-          "hint",
-          "query"
-        ]
-      },
-      "fingerprint": "1d051fcf31ef",
-      "promptVersion": 1,
-      "ru": {
-        "description": "Восьмиугольник с знаком вопроса внутри; обозначает помощь, справку или часто задаваемые вопросы.",
-        "synonyms": [
-          "помощь",
-          "вопрос",
-          "справка",
-          "поддержка",
-          "faq",
-          "вопросик",
-          "знак вопроса",
-          "информация",
-          "подсказка",
-          "восьмиугольник"
-        ]
-      },
+      "fingerprint": "a73aa5ab3cb5",
       "tags": [
         "help",
         "question",
@@ -129629,7 +129583,7 @@
       ]
     },
     "help-octagon-filled": {
-      "fingerprint": "789bb0ce0d6a",
+      "fingerprint": "4f0890597e5d",
       "tags": [
         "help",
         "question",
@@ -137667,36 +137621,7 @@
       ]
     },
     "info-octagon": {
-      "en": {
-        "description": "An octagon outline containing a lowercase letter i, usually meaning information, help, or a notice in an interface.",
-        "synonyms": [
-          "information",
-          "info",
-          "help",
-          "tip",
-          "about",
-          "details",
-          "notice",
-          "octagon",
-          "i letter"
-        ]
-      },
-      "fingerprint": "4d8757fb5468",
-      "promptVersion": 1,
-      "ru": {
-        "description": "Восьмиугольник с буквой «i» внутри обозначает информацию, справку или подсказку в интерфейсе.",
-        "synonyms": [
-          "информация",
-          "инфо",
-          "справка",
-          "подсказка",
-          "о программе",
-          "детали",
-          "помощь",
-          "уведомление",
-          "восьмиугольник"
-        ]
-      },
+      "fingerprint": "bcda6964321a",
       "tags": [
         "info",
         "information",
@@ -137710,7 +137635,7 @@
       ]
     },
     "info-octagon-filled": {
-      "fingerprint": "8e398548e07f",
+      "fingerprint": "997844b5f36a",
       "tags": [
         "info",
         "information",
@@ -151966,6 +151891,21 @@
         "off"
       ]
     },
+    "loop": {
+      "fingerprint": "f01140218e33",
+      "tags": [
+        "loop",
+        "repeat",
+        "cycle",
+        "iterate",
+        "again",
+        "replay",
+        "arrow",
+        "curve",
+        "continuous",
+        "infinite"
+      ]
+    },
     "luggage": {
       "en": {
         "description": "A wheeled suitcase with a top handle and two horizontal bands, representing luggage and travel.",
@@ -155865,6 +155805,21 @@
         "destinations"
       ]
     },
+    "map-pins-off": {
+      "fingerprint": "d06430c51a82",
+      "tags": [
+        "pins",
+        "markers",
+        "locations",
+        "places",
+        "multiple",
+        "map",
+        "navigation",
+        "disabled",
+        "off-state",
+        "off"
+      ]
+    },
     "map-plus": {
       "en": {
         "description": "A folded map with a plus sign in the corner, usually meaning add a new map or location.",
@@ -158670,6 +158625,26 @@
         "slash",
         "maximize",
         "off"
+      ]
+    },
+    "mcp": {
+      "fingerprint": "8d32cb9b63a9",
+      "tags": [
+        "programming",
+        "coding",
+        "program",
+        "code",
+        "configuration",
+        "api",
+        "software",
+        "technical",
+        "developer",
+        "interface",
+        "opensource",
+        "mcp",
+        "model",
+        "context",
+        "protocol"
       ]
     },
     "meat": {
@@ -177672,35 +177647,7 @@
       ]
     },
     "octagon": {
-      "en": {
-        "description": "An outlined eight-sided polygon with no inner details, usually representing a shape, stop sign, or geometry element.",
-        "synonyms": [
-          "polygon",
-          "shape",
-          "stop sign",
-          "geometry",
-          "eight sides",
-          "outline",
-          "figure",
-          "stop"
-        ]
-      },
-      "fingerprint": "56e5357e2a95",
-      "promptVersion": 1,
-      "ru": {
-        "description": "Контурный восьмиугольник без внутренних деталей; обычно означает фигуру, знак стоп или элемент геометрии.",
-        "synonyms": [
-          "восьмиугольник",
-          "многоугольник",
-          "фигура",
-          "геометрия",
-          "знак стоп",
-          "стоп",
-          "восьмигранник",
-          "контур",
-          "форма"
-        ]
-      },
+      "fingerprint": "8739fd1e94c6",
       "tags": [
         "shape",
         "polygon",
@@ -177715,7 +177662,7 @@
       ]
     },
     "octagon-filled": {
-      "fingerprint": "1c089dde7db1",
+      "fingerprint": "7685be76f629",
       "tags": [
         "shape",
         "polygon",
@@ -177730,36 +177677,7 @@
       ]
     },
     "octagon-minus": {
-      "en": {
-        "description": "An outlined octagon with a horizontal bar inside, usually signaling stop, removal, or blocked action.",
-        "synonyms": [
-          "minus",
-          "remove",
-          "stop",
-          "octagon",
-          "delete",
-          "blocked",
-          "subtract",
-          "decrease",
-          "reduce"
-        ]
-      },
-      "fingerprint": "12e0467b51d0",
-      "promptVersion": 1,
-      "ru": {
-        "description": "Восьмиугольник с горизонтальной чертой внутри, обозначает остановку, удаление или отказ.",
-        "synonyms": [
-          "минус",
-          "удалить",
-          "стоп",
-          "восьмиугольник",
-          "убрать",
-          "запрет",
-          "блокировка",
-          "уменьшить",
-          "вычесть"
-        ]
-      },
+      "fingerprint": "535526a34c67",
       "tags": [
         "stop",
         "remove",
@@ -177772,36 +177690,7 @@
       ]
     },
     "octagon-minus-2": {
-      "en": {
-        "description": "An octagon outline with a horizontal minus bar at its lower right, usually meaning stop, remove, or block.",
-        "synonyms": [
-          "octagon",
-          "stop sign",
-          "minus",
-          "remove",
-          "delete",
-          "block",
-          "polygon",
-          "shape",
-          "disable"
-        ]
-      },
-      "fingerprint": "d384bb9d3c3c",
-      "promptVersion": 1,
-      "ru": {
-        "description": "Контур восьмиугольника с горизонтальной чертой внутри правого нижнего угла, означает остановку или удаление.",
-        "synonyms": [
-          "восьмиугольник",
-          "стоп",
-          "минус",
-          "удалить",
-          "убрать",
-          "блокировка",
-          "многоугольник",
-          "знак остановки",
-          "фигура"
-        ]
-      },
+      "fingerprint": "627e82327f15",
       "tags": [
         "stop",
         "remove",
@@ -177814,7 +177703,7 @@
       ]
     },
     "octagon-minus-filled": {
-      "fingerprint": "7e9fa528785c",
+      "fingerprint": "a907aba4c813",
       "tags": [
         "stop",
         "remove",
@@ -177827,38 +177716,7 @@
       ]
     },
     "octagon-off": {
-      "en": {
-        "description": "An octagon crossed by a diagonal slash, indicating a disabled, inactive, or turned-off shape or stop sign.",
-        "synonyms": [
-          "octagon",
-          "polygon",
-          "stop sign",
-          "disabled",
-          "inactive",
-          "slash",
-          "turn off",
-          "forbidden",
-          "shape",
-          "geometry"
-        ]
-      },
-      "fingerprint": "2823104fb341",
-      "promptVersion": 1,
-      "ru": {
-        "description": "Восьмиугольник с диагональной перечеркивающей линией, означает отключённый или неактивный элемент фигуры.",
-        "synonyms": [
-          "восьмиугольник",
-          "многоугольник",
-          "знак стоп",
-          "отключено",
-          "выключено",
-          "перечеркнуто",
-          "запрет",
-          "неактивно",
-          "фигура",
-          "геометрия"
-        ]
-      },
+      "fingerprint": "1ea5bba087bc",
       "tags": [
         "shape",
         "polygon",
@@ -177873,36 +177731,7 @@
       ]
     },
     "octagon-plus": {
-      "en": {
-        "description": "An octagon outline containing a plus sign, usually meaning add, create, or new item.",
-        "synonyms": [
-          "plus",
-          "add",
-          "create",
-          "new",
-          "octagon",
-          "polygon",
-          "add item",
-          "shape",
-          "insert"
-        ]
-      },
-      "fingerprint": "5789d5468677",
-      "promptVersion": 1,
-      "ru": {
-        "description": "Восьмиугольник с крестом plus внутри; обозначает добавление, создание нового элемента.",
-        "synonyms": [
-          "плюс",
-          "добавить",
-          "создать",
-          "новый",
-          "восьмиугольник",
-          "многоугольник",
-          "знак плюс",
-          "добавление",
-          "создание"
-        ]
-      },
+      "fingerprint": "c7cfd2e8928b",
       "tags": [
         "add",
         "plus",
@@ -177914,36 +177743,7 @@
       ]
     },
     "octagon-plus-2": {
-      "en": {
-        "description": "An octagon outline with a plus sign at the lower right, usually meaning add or create a new shape.",
-        "synonyms": [
-          "add",
-          "plus",
-          "octagon",
-          "polygon",
-          "create",
-          "new",
-          "shape",
-          "addition",
-          "insert"
-        ]
-      },
-      "fingerprint": "3a4668f0c438",
-      "promptVersion": 1,
-      "ru": {
-        "description": "Изображен восьмиугольник с плюсом в правом нижнем углу, что обозначает добавление новой фигуры или создание объекта.",
-        "synonyms": [
-          "добавить",
-          "плюс",
-          "восьмиугольник",
-          "многоугольник",
-          "создать",
-          "новый",
-          "фигура",
-          "добавление",
-          "создание"
-        ]
-      },
+      "fingerprint": "2fae89df22e8",
       "tags": [
         "add",
         "plus",
@@ -177955,7 +177755,7 @@
       ]
     },
     "octagon-plus-filled": {
-      "fingerprint": "a31623e37f00",
+      "fingerprint": "0cf796270d46",
       "tags": [
         "add",
         "plus",
@@ -178348,6 +178148,20 @@
         "physics",
         "character",
         "omega"
+      ]
+    },
+    "opacity": {
+      "fingerprint": "8b76e3847c6a",
+      "tags": [
+        "opacity",
+        "transparency",
+        "alpha",
+        "transparent",
+        "fade",
+        "overlap",
+        "layers",
+        "design",
+        "blend"
       ]
     },
     "option": {
@@ -181265,6 +181079,24 @@
         "ask",
         "update",
         "change"
+      ]
+    },
+    "pencil-ruler": {
+      "fingerprint": "56b0fdabc21f",
+      "tags": [
+        "pencil",
+        "ruler",
+        "design",
+        "draw",
+        "sketch",
+        "draft",
+        "measure",
+        "edit",
+        "write",
+        "compose",
+        "create",
+        "tools",
+        "drafting"
       ]
     },
     "pencil-search": {
@@ -186981,36 +186813,7 @@
       ]
     },
     "pinned-off": {
-      "en": {
-        "description": "A pushpin crossed out by a diagonal line, meaning unpin or pinning turned off or disabled.",
-        "synonyms": [
-          "unpin",
-          "unstick",
-          "detach",
-          "thumbtack",
-          "pushpin",
-          "disable pin",
-          "remove pin",
-          "not pinned",
-          "crossed out pin"
-        ]
-      },
-      "fingerprint": "5f1d5b9ac6c4",
-      "promptVersion": 1,
-      "ru": {
-        "description": "Изображение канцелярской кнопки или булавки перечёркнутой диагональной линией; означает откреплённое или отключённое закрепление.",
-        "synonyms": [
-          "открепить",
-          "не закреплено",
-          "отменить закрепление",
-          "кнопка",
-          "булавка",
-          "перечёркнутая кнопка",
-          "отключить закрепление",
-          "убрать закреп",
-          "скрыть"
-        ]
-      },
+      "fingerprint": "92b38b7de21e",
       "tags": [
         "unpin",
         "unpinned",
@@ -211344,6 +211147,20 @@
         "ban",
         "smoking",
         "no"
+      ]
+    },
+    "snail": {
+      "fingerprint": "42a08dfafc7c",
+      "tags": [
+        "snail",
+        "slug",
+        "shell",
+        "slow",
+        "animal",
+        "nature",
+        "garden",
+        "mollusc",
+        "pace"
       ]
     },
     "snowboarding": {
@@ -242872,6 +242689,21 @@
         "square"
       ]
     },
+    "waveform": {
+      "fingerprint": "2186337727c6",
+      "tags": [
+        "waveform",
+        "audio",
+        "sound",
+        "wave",
+        "signal",
+        "voice",
+        "music",
+        "frequency",
+        "sound-wave",
+        "bars"
+      ]
+    },
     "waves-electricity": {
       "en": {
         "description": "Three wavy lines beside a lightning bolt, representing electric current, power, or signal waves.",
@@ -244852,6 +244684,22 @@
         "travel",
         "planet",
         "world"
+      ]
+    },
+    "world-map-off": {
+      "fingerprint": "77dc02dfe75d",
+      "tags": [
+        "world-map",
+        "map",
+        "atlas",
+        "earth",
+        "globe",
+        "geography",
+        "travel",
+        "planet",
+        "world",
+        "disabled",
+        "off"
       ]
     },
     "world-minus": {
@@ -247845,6 +247693,23 @@
         "focus",
         "analyze",
         "inspect"
+      ]
+    },
+    "zsh": {
+      "fingerprint": "4dd8ba77ab3c",
+      "tags": [
+        "zsh",
+        "z-shell",
+        "shell",
+        "terminal",
+        "command-line",
+        "cli",
+        "console",
+        "prompt",
+        "bash",
+        "unix",
+        "macos",
+        "linux"
       ]
     },
     "zzz": {

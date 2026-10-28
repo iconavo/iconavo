@@ -19,7 +19,7 @@
   },
   "tabler": {
     "type": "npm",
-    "version": "3.49.0",
-    "integrity": "sha512-l+GnSkFETx0U26icxv1VUFnxxiTqXfCcVRiRAnyMwibupM2S2L/hSaZ9gmSgz01rkrsH/93NvLsxykqdanc6lw=="
+    "version": "3.50.0",
+    "integrity": "sha512-HflLxyrH1cqC7s7jzQGSjpsTAVIoaf7+/yHjbdM59rJQBMjliibp+LYhDPFxOMcwa1M8DNpOk6ENzQiWn9a1Dg=="
   }
 }
