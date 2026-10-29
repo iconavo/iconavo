@@ -2,6 +2,8 @@ packages:
   - packages/*
   - apps/*
   - examples/*
+  # Живые примеры — не пакеты рабочего пространства: они ставят пакеты из npm, как у разработчика (ADR-0050).
+  - "!examples/starters/**"
   - sources
 
 # Версия Node не из engines в package.json останавливает pnpm install понятной ошибкой:

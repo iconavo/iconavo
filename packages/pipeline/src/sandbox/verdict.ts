@@ -79,6 +79,18 @@ export const violations = (page: Page) =>
     () => (window as unknown as { violations?: string[] }).violations ?? [],
   );
 
+/** Шаг проверки с названием: ошибка говорит, на каком шаге она остановилась. */
+export async function step<T>(
+  title: string,
+  run: () => Promise<T>,
+): Promise<T> {
+  try {
+    return await run();
+  } catch (e) {
+    throw new Error(`${title}: ${(e as Error).message.split("\n")[0]}`);
+  }
+}
+
 /**
  * Снимок страницы или её части. Для снимка Playwright вставляет в страницу свой стиль, и строгая
  * политика WebKit его отклоняет: нарушения и ошибки, пришедшие во время снимка, не в счёт.

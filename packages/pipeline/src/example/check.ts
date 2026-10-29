@@ -8,15 +8,15 @@
 // слепая. Чистые части — разбор запросов к API, консоли и находок axe — проверяются тестами без
 // браузера.
 
-import { readFile } from "node:fs/promises";
-import { createRequire } from "node:module";
 import type { Browser, Page } from "playwright";
+import { type AxeViolation, axe, axeVerdict, runAxe } from "../sandbox/axe.js";
 import {
   BROWSER_TITLES,
   BROWSERS,
   type BrowserName,
   launchBrowser,
 } from "../sandbox/browser.js";
+import { allDrawn, drawn } from "../sandbox/icons.js";
 import {
   fail,
   layoutVerdict,
@@ -24,12 +24,19 @@ import {
   recordViolations,
   type Spot,
   shot,
+  step,
   type Verdict,
   violations,
   watch,
 } from "../sandbox/verdict.js";
 import { SLOW_MS, VIEWPORT } from "./config.js";
 import type { Mode } from "./next.js";
+
+export {
+  AXE_TAGS,
+  type AxeViolation,
+  axeVerdict,
+} from "../sandbox/axe.js";
 
 export const MODES: readonly Mode[] = ["dev", "prod"];
 
@@ -355,29 +362,6 @@ function watchers(): void {
     });
   }
 }
-
-/** Нарисована ли иконка: у <svg> есть viewBox и рисунок. */
-const drawn = (page: Page, selector: string) =>
-  page.evaluate(
-    (s) =>
-      [...document.querySelectorAll(s)].map(
-        (svg) => svg.hasAttribute("viewBox") && svg.childNodes.length > 0,
-      ),
-    selector,
-  );
-
-/** Ждать, пока все иконки по селектору нарисуются. */
-const allDrawn = (page: Page, selector: string) =>
-  page.waitForFunction(
-    (s) => {
-      const list = [...document.querySelectorAll(s)];
-      return (
-        list.length > 0 && list.every((svg) => svg.hasAttribute("viewBox"))
-      );
-    },
-    selector,
-    { timeout: 120_000 },
-  );
 
 /**
  * Заглушки иконок из браузера — по их собственной анимации задержки iconavo-h (Web Animations API): в
@@ -807,58 +791,6 @@ async function checkCanary(
   await context.close();
 }
 
-/** Нарушение axe: правило, важность и первые элементы. */
-export interface AxeViolation {
-  id: string;
-  impact: string;
-  nodes: string[];
-}
-
-/** Правила axe — только WCAG уровней A и AA, как требует ADR-0038 для сайта: без рекомендаций axe. */
-export const AXE_TAGS = [
-  "wcag2a",
-  "wcag2aa",
-  "wcag21a",
-  "wcag21aa",
-  "wcag22a",
-  "wcag22aa",
-];
-
-/** Доступность: ни одного нарушения ни на одной странице. */
-export function axeVerdict(
-  pages: { path: string; violations: AxeViolation[] }[],
-): Verdict {
-  const problems = pages.flatMap((p) =>
-    p.violations.map(
-      (v) => `${p.path}: ${v.id} (${v.impact}) — ${v.nodes.join(", ")}`,
-    ),
-  );
-  return problems.length === 0
-    ? pass(
-        `нарушений нет: ${pages.map((p) => p.path).join(" и ")}, правила WCAG 2.2 A и AA`,
-      )
-    : fail(problems.slice(0, 5).join("; "));
-}
-
-/** Текст axe-core — его вставляет на страницу проверка. */
-let axeSource: Promise<string> | undefined;
-const axe = () => {
-  axeSource ??= readFile(
-    createRequire(import.meta.url).resolve("axe-core/axe.min.js"),
-    "utf8",
-  );
-  return axeSource;
-};
-
-/** Шаг проверки с названием: ошибка говорит, на каком шаге она остановилась. */
-async function step<T>(title: string, run: () => Promise<T>): Promise<T> {
-  try {
-    return await run();
-  } catch (e) {
-    throw new Error(`${title}: ${(e as Error).message.split("\n")[0]}`);
-  }
-}
-
 /**
  * Доступность (ADR-0035): axe-core на главной и на /more после гидратации, когда иконки нарисованы.
  * Скрипт axe нужно вставить в страницу, а строгая политика и Trusted Types этого не дают. Поэтому
@@ -931,47 +863,6 @@ async function checkAxe(
     live.length > 0
       ? fail(`страница ходила к живым хостам: ${live[0]}`)
       : axeVerdict(pages);
-}
-
-/** axe-core на открытой странице: правила WCAG A и AA, только нарушения. */
-async function runAxe(
-  page: Page,
-  source: string,
-  path: string,
-  pages: { path: string; violations: AxeViolation[] }[],
-): Promise<void> {
-  // После перехода по ссылке внутри Next.js документ тот же — axe в нём уже есть.
-  if (!(await page.evaluate(() => "axe" in window))) {
-    await page.addScriptTag({ content: source });
-  }
-  pages.push({
-    path,
-    violations: await page.evaluate(async (tags) => {
-      const { axe } = window as unknown as {
-        axe: {
-          run(
-            context: Document,
-            options: unknown,
-          ): Promise<{
-            violations: {
-              id: string;
-              impact?: string | null;
-              nodes: { target: unknown[] }[];
-            }[];
-          }>;
-        };
-      };
-      const found = await axe.run(document, {
-        runOnly: { type: "tag", values: tags },
-        resultTypes: ["violations"],
-      });
-      return found.violations.map((v) => ({
-        id: v.id,
-        impact: v.impact ?? "",
-        nodes: v.nodes.slice(0, 3).map((n) => n.target.join(" ")),
-      }));
-    }, AXE_TAGS),
-  });
 }
 
 async function checkBrowser(

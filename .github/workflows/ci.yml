@@ -199,16 +199,149 @@ jobs:
           if-no-files-found: ignore
           retention-days: 14
 
-  # Итог трёх браузеров — одно имя для защиты main. Запускается и после отмены или сбоя: иначе
-  # пропущенная задача считалась бы зелёной.
+  # Живые примеры (ADR-0050, шаг 10 фазы 3): архивы пакетов этой ветки (pnpm pack) npm ставит в копию
+  # каждого примера — как у разработчика; хосты иконок — превью API на этой машине. Сеть нужна только npm
+  # — за сторонними пакетами примеров, их держит кэш ~/.npm. Идёт параллельно задаче browser.
+  starters:
+    name: starters (${{ matrix.browser }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        browser: [chrome, firefox, webkit]
+    env:
+      BROWSER: ${{ matrix.browser }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Кэш npm примеров
+        uses: actions/cache@v6
+        with:
+          path: ~/.npm
+          key: npm-starters-${{ hashFiles('examples/starters/*/package.json', 'examples/starters/*/package-lock.json') }}
+          restore-keys: npm-starters-
+      - name: Кэш браузеров Playwright
+        if: matrix.browser != 'chrome'
+        uses: actions/cache@v6
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ matrix.browser }}-${{ hashFiles('packages/pipeline/package.json') }}
+      - name: Браузер
+        run: |
+          if [ "$BROWSER" = chrome ]; then
+            google-chrome --version
+          else
+            pnpm --filter @iconavo-ui/pipeline exec playwright install --with-deps "$BROWSER"
+          fi
+      - name: Живые примеры (pnpm starters --check)
+        run: pnpm starters --check --browser="$BROWSER"
+      - name: Сводка
+        if: success() || failure()
+        run: |
+          file=.cache/reports/starters/check.md
+          if [ -f "$file" ]; then cat "$file" >> "$GITHUB_STEP_SUMMARY"; fi
+      - name: Отчёт — вне .cache
+        id: pages
+        if: always()
+        run: |
+          pages="$RUNNER_TEMP/pages"
+          mkdir -p "$pages"
+          cp .cache/reports/starters/check.html "$pages/starters-$BROWSER.html" 2> /dev/null || true
+          echo "pages=$pages" >> "$GITHUB_OUTPUT"
+      - name: Отчёт — живые примеры
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: starters-${{ matrix.browser }}.html
+          path: ${{ steps.pages.outputs.pages }}/starters-${{ matrix.browser }}.html
+          archive: false
+          if-no-files-found: ignore
+          retention-days: 14
+
+  # Сайт документации (ADR-0050): продакшен-сборка apps/site, хосты иконок — превью API на этой машине;
+  # обход страниц, заголовки, ссылки, разделы README, доступность и ширина телефона. Параллельно browser.
+  site:
+    name: site (${{ matrix.browser }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        browser: [chrome, firefox, webkit]
+    env:
+      BROWSER: ${{ matrix.browser }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      # Кэша .next нет: сайт собирается с чистого листа — кэш Turbopack от другой сборки ронял next build.
+      - name: Кэш браузеров Playwright
+        if: matrix.browser != 'chrome'
+        uses: actions/cache@v6
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ matrix.browser }}-${{ hashFiles('packages/pipeline/package.json') }}
+      - name: Браузер
+        run: |
+          if [ "$BROWSER" = chrome ]; then
+            google-chrome --version
+          else
+            pnpm --filter @iconavo-ui/pipeline exec playwright install --with-deps "$BROWSER"
+          fi
+      - name: Сайт (pnpm site --check)
+        run: pnpm site --check --browser="$BROWSER"
+      - name: Сводка
+        if: success() || failure()
+        run: |
+          file=.cache/reports/site/check.md
+          if [ -f "$file" ]; then cat "$file" >> "$GITHUB_STEP_SUMMARY"; fi
+      - name: Отчёт — вне .cache
+        id: pages
+        if: always()
+        run: |
+          pages="$RUNNER_TEMP/pages"
+          mkdir -p "$pages"
+          cp .cache/reports/site/check.html "$pages/site-$BROWSER.html" 2> /dev/null || true
+          echo "pages=$pages" >> "$GITHUB_OUTPUT"
+      - name: Отчёт — сайт
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: site-${{ matrix.browser }}.html
+          path: ${{ steps.pages.outputs.pages }}/site-${{ matrix.browser }}.html
+          archive: false
+          if-no-files-found: ignore
+          retention-days: 14
+
+  # Итог браузерных проверок — одно имя для защиты main: тег, пример и сравнение (browser), живые примеры
+  # (starters) и сайт (site). Запускается и после отмены или сбоя: иначе пропущенная задача считалась бы
+  # зелёной.
   browsers:
     if: always()
-    needs: browser
+    needs: [browser, starters, site]
     runs-on: ubuntu-latest
     steps:
-      - name: Все три браузера зелёные
+      - name: Все браузерные проверки зелёные
         env:
-          RESULT: ${{ needs.browser.result }}
+          BROWSER_RESULT: ${{ needs.browser.result }}
+          STARTERS_RESULT: ${{ needs.starters.result }}
+          SITE_RESULT: ${{ needs.site.result }}
         run: |
-          echo "Браузерные проверки: $RESULT"
-          test "$RESULT" = success
+          echo "Тег, пример и сравнение: $BROWSER_RESULT; живые примеры: $STARTERS_RESULT; сайт: $SITE_RESULT"
+          test "$BROWSER_RESULT" = success
+          test "$STARTERS_RESULT" = success
+          test "$SITE_RESULT" = success

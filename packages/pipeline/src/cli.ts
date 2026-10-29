@@ -12,6 +12,9 @@
 // | pnpm sandbox [--port=N] [--browser=chrome|firefox|webkit | --check]
 // | pnpm example [--port=N] [--prod] [--webpack] | pnpm example --check [--browser=…] [--webpack]
 // | pnpm visual [id…] [--browser=…]
+// | pnpm starters <пример> [--browser=…] | pnpm starters [пример…] --check [--browser=…] [--npm]
+// | pnpm starters [пример…] --lock
+// | pnpm site [--port=N] [--prod] | pnpm site --check [--browser=…] | pnpm site --live [--expect-build=…] [--base=…]
 import { randomInt } from "node:crypto";
 import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import type { AddressInfo } from "node:net";
@@ -171,6 +174,7 @@ import {
 } from "./npm/report.js";
 import { npmVerifyFailed, readPlan, verifyPackages } from "./npm/verify.js";
 import { gitHistory, loadBaseline } from "./qc/baseline.js";
+import { markdownTable, textTable } from "./report/table.js";
 import {
   BROWSER_TITLES,
   BROWSERS,
@@ -205,6 +209,15 @@ import { MODEL_SEARCH, PAGE_PORT } from "./search/config.js";
 import { startSearchServer } from "./search/server.js";
 import { buildTextIndex } from "./search/text.js";
 import { loadModelVectors, type ModelVectors } from "./search/vectors.js";
+import { checkSite, siteCheckFailed } from "./site/check.js";
+import {
+  formatSiteCheck,
+  markdownSiteCheck,
+  renderSiteCheckPage,
+} from "./site/check-report.js";
+import { DOC_SOURCES, LIVE_SITE, SITE_DIR, SITE_PORT } from "./site/config.js";
+import { crawl, readmeSections } from "./site/crawl.js";
+import { checkLiveSite, liveFailed } from "./site/live.js";
 import {
   cachedSourceDir,
   fetchSource,
@@ -220,6 +233,25 @@ import {
 import { lockFileSchema, readLock, writeLock } from "./sources/lock.js";
 import { loadRegistry } from "./sources/registry.js";
 import { fetchStop, formatBytes, formatReport } from "./sources/report.js";
+import { startersCheckFailed } from "./starters/check.js";
+import {
+  formatStartersCheck,
+  markdownStartersCheck,
+  renderStartersCheckPage,
+} from "./starters/check-report.js";
+import {
+  isStarterId,
+  STARTER_IDS,
+  STARTER_TITLES,
+  STARTERS_DIR,
+  type StarterId,
+} from "./starters/config.js";
+import {
+  checkStarters,
+  lockStarters,
+  openStarter,
+  unpublished,
+} from "./starters/run.js";
 import { type PrLinks, prText } from "./update/pr.js";
 import {
   buildSummarySchema,
@@ -370,6 +402,28 @@ const USAGE = `Использование:
                                       через тег и React рядом с SVG статики, в Chrome, Firefox и WebKit;
                                       расхождение — хоть один пиксель; отчёт .cache/reports/visual/index.html
       --browser=…                     только chrome, firefox или webkit
+  pnpm starters <пример>              живой пример (${STARTERS_DIR}, фаза 3, шаг 10; ADR-0050): html, react
+                                      или next на пакетах этой ветки (pnpm pack) в окне браузера
+                                      Playwright; иконки — с живых хостов; закрыть окно — остановить
+      --browser=…                     окно chrome (по умолчанию), firefox или webkit
+  pnpm starters [пример…] --check     примеры в Chrome, Firefox и WebKit: архивы пакетов этой ветки,
+                                      npm install в копию, сборка, разработка и продакшен; хосты
+                                      иконок — превью API; отчёт .cache/reports/starters/check.html
+      --browser=…                     только chrome, firefox или webkit
+      --npm                           после публикации (шаг 11): пример как есть — npm ci из
+                                      lock-файла, живые хосты, jsDelivr, npm audit signatures
+  pnpm starters [пример…] --lock      после публикации: package-lock.json примеров по реестру npm
+  pnpm site                           сайт (${SITE_DIR}, фаза 3, шаг 10; ADR-0050): next dev на 127.0.0.1
+                                      с живыми хостами иконок; документация /docs — из README
+      --port=N                        порт (по умолчанию ${SITE_PORT})
+      --prod                          продакшен-сборка: next build, затем next start
+      --check                         проверить сайт: продакшен-сборка, хосты иконок — превью API;
+                                      обход страниц, заголовки, ссылки, разделы README; Chrome,
+                                      Firefox и WebKit; отчёт .cache/reports/site/check.html
+      --browser=…                     с --check: только chrome, firefox или webkit
+      --live                          живой ${LIVE_SITE}: страницы, заголовки, noindex, переходы
+      --expect-build=…                с --live: ждать до 3 минут сборку с этой меткой
+      --base=…                        с --live: другой адрес, https://…
   pnpm packages prepare [id…]       пакеты npm @iconavo-ui/icons-{набор} в ${NPM_OUT_DIR}/ (ADR-0026):
                                       данные, LICENSE, README, типы; версия — по реестру npm (только
                                       чтение, ключи не нужны); план для CI ${NPM_OUT_DIR}/plan.json;
@@ -473,7 +527,9 @@ let port =
       ? SANDBOX_PORT
       : command === "example"
         ? EXAMPLE_PORT
-        : PAGE_PORT;
+        : command === "site"
+          ? SITE_PORT
+          : PAGE_PORT;
 let waitSeconds = 0;
 let planPath: string | undefined;
 let expectBuild: string | undefined;
@@ -484,6 +540,10 @@ let checkBrowsers = false;
 let browserName: BrowserName | undefined;
 let exampleProd = false;
 let exampleWebpack = false;
+let startersNpm = false;
+let startersLock = false;
+let siteLive = false;
+let siteBase: string | undefined;
 const modelKeys = new Set<string>();
 for (const flag of flags) {
   const eq = flag.indexOf("=");
@@ -545,11 +605,38 @@ for (const flag of flags) {
       continue;
     }
   }
+  if (command === "site") {
+    if (flag === "--prod") {
+      exampleProd = true;
+      continue;
+    }
+    if (flag === "--check") {
+      checkBrowsers = true;
+      continue;
+    }
+    if (flag === "--live") {
+      siteLive = true;
+      continue;
+    }
+    if (name === "--browser" && value !== undefined && isBrowserName(value)) {
+      browserName = value;
+      continue;
+    }
+    if (name === "--expect-build" && /^[0-9a-f]{8}$/.test(value ?? "")) {
+      expectBuild = value;
+      continue;
+    }
+    if (name === "--base" && /^https:\/\/[a-z0-9.-]+$/.test(value ?? "")) {
+      siteBase = value;
+      continue;
+    }
+  }
   if (
     (command === "search-page" ||
       command === "api" ||
       command === "sandbox" ||
-      command === "example") &&
+      command === "example" ||
+      command === "site") &&
     name === "--port" &&
     /^[1-9][0-9]{3,4}$/.test(value ?? "") &&
     Number(value) <= 65535
@@ -557,7 +644,22 @@ for (const flag of flags) {
     port = Number(value);
     continue;
   }
-  if (command === "sandbox" || command === "example" || command === "visual") {
+  if (command === "starters") {
+    if (flag === "--npm") {
+      startersNpm = true;
+      continue;
+    }
+    if (flag === "--lock") {
+      startersLock = true;
+      continue;
+    }
+  }
+  if (
+    command === "sandbox" ||
+    command === "example" ||
+    command === "visual" ||
+    command === "starters"
+  ) {
     if (flag === "--check" && command !== "visual") {
       checkBrowsers = true;
       continue;
@@ -1396,6 +1498,248 @@ try {
     );
     console.log(`Отчёт: ${htmlPath}`);
     process.exit(visualFailed(results) ? 1 : 0);
+  } else if (command === "site") {
+    if (args.length > 0) usageError("pnpm site принимает только флаги.");
+    if ([checkBrowsers, siteLive, exampleProd].filter(Boolean).length > 1) {
+      usageError("--check, --live и --prod — по одному.");
+    }
+    if (browserName && !checkBrowsers) {
+      usageError("--browser — только вместе с --check.");
+    }
+    if ((expectBuild || siteBase) && !siteLive) {
+      usageError("--expect-build и --base — только вместе с --live.");
+    }
+    const dir = join(root, SITE_DIR);
+    const sections: string[] = [];
+    for (const file of DOC_SOURCES) {
+      sections.push(
+        ...readmeSections(await readFile(join(root, file), "utf8")),
+      );
+    }
+    if (siteLive) {
+      const base = siteBase ?? LIVE_SITE;
+      const rows = await checkLiveSite({
+        base,
+        expectBuild,
+        sections,
+        log: (line) => console.log(line),
+      });
+      console.log("");
+      console.log(
+        textTable(
+          ["Проверка", "Итог", "Подробности"],
+          rows.map((r) => [
+            r.what,
+            r.verdict.ok === null ? "—" : r.verdict.ok ? "да" : "НЕТ",
+            r.verdict.note,
+          ]),
+        ),
+      );
+      const reportDir = join(reportsDir, "site");
+      await mkdir(reportDir, { recursive: true });
+      // Та же таблица в Markdown — её кладёт в сводку запуска CI задача «Проверка» (site.yml).
+      await writeFile(
+        join(reportDir, "live.md"),
+        [
+          `### Живой сайт ${base}${expectBuild ? `, сборка ${expectBuild}` : ""}`,
+          "",
+          markdownTable(
+            ["Проверка", "Итог", "Подробности"],
+            rows.map((r) => [
+              r.what,
+              r.verdict.ok === null ? "—" : r.verdict.ok ? "да" : "НЕТ",
+              r.verdict.note,
+            ]),
+          ),
+          "",
+        ].join("\n"),
+        "utf8",
+      );
+      console.log(
+        `\n${liveFailed(rows) ? "Итог: есть проблемы." : `Итог: ${base} отвечает как надо.`}`,
+      );
+      process.exit(liveFailed(rows) ? 1 : 0);
+    }
+    if (checkBrowsers) {
+      // Проверка без интернета: иконки сайта — из превью API этой ветки, и при сборке, и в браузере.
+      const cdn = await buildCdn(configs, { dataDir, outDir: distCdnDir });
+      if (cdnStop(cdn)) {
+        console.error(
+          "Сборка раздачи остановлена — превью API без данных не запустить: pnpm cdn build покажет почему.",
+        );
+        process.exit(1);
+      }
+      const preview = await startApiPreview({
+        root,
+        outDir: distApiDir,
+        cdnDir: distCdnDir,
+        port: 0,
+      });
+      const api = `http://127.0.0.1:${preview.port}`;
+      const env = {
+        NEXT_PUBLIC_ICONAVO_API: api,
+        NEXT_PUBLIC_ICONAVO_CDN: `${api}/_static`,
+        SITE_BUILD: "check",
+      };
+      // Сборка — с чистого листа: кэш Turbopack от сборки с другим окружением (pnpm site --prod, vercel
+      // build) ронял next build внутренней ошибкой.
+      console.log("Собираю сайт: next build…");
+      await rm(join(dir, ".next"), { recursive: true, force: true });
+      await buildNext({ dir, env });
+      const manifest = JSON.parse(
+        await readFile(join(dir, ".next", "prerender-manifest.json"), "utf8"),
+      ) as { routes?: Record<string, unknown> };
+      const next = await startNext("prod", await freePort(), { dir, env });
+      const browsers = browserName ? [browserName] : BROWSERS;
+      let results: Awaited<ReturnType<typeof checkSite>>;
+      try {
+        console.log(`Обхожу страницы ${next.url}…`);
+        const pages = await crawl(next.url, ["/__missing__", "/robots.txt"]);
+        console.log(
+          `Проверяю: ${browsers.map((b) => BROWSER_TITLES[b]).join(", ")} — ${pages.length} адресов, превью API ${api}…`,
+        );
+        results = await checkSite({
+          base: next.url,
+          hosts: [api],
+          pages,
+          prerendered: Object.keys(manifest.routes ?? {}),
+          sections,
+          browsers,
+          log: (line) => console.log(`  ${line}`),
+        });
+      } finally {
+        await next.stop();
+        await preview.close();
+      }
+      console.log("");
+      for (const line of formatSiteCheck(results)) console.log(line);
+      const reportDir = join(reportsDir, "site");
+      await mkdir(reportDir, { recursive: true });
+      const htmlPath = join(reportDir, "check.html");
+      await writeFile(htmlPath, renderSiteCheckPage(results), "utf8");
+      // Та же таблица в Markdown — её кладёт в сводку запуска CI задача site (ci.yml).
+      await writeFile(
+        join(reportDir, "check.md"),
+        markdownSiteCheck(results),
+        "utf8",
+      );
+      console.log(`Отчёт: ${htmlPath}`);
+      process.exit(siteCheckFailed(results) ? 1 : 0);
+    }
+    // Ручной запуск: вывод Next.js — в этот терминал, хосты иконок — живые.
+    if (exampleProd) await buildNext({ dir, inherit: true });
+    const next = await startNext(exampleProd ? "prod" : "dev", port, {
+      dir,
+      inherit: true,
+    });
+    const stop = () => {
+      void next.stop().finally(() => process.exit(0));
+    };
+    process.on("SIGINT", stop);
+    process.on("SIGTERM", stop);
+    console.log(
+      `Сайт: ${next.url}/docs — ${exampleProd ? "продакшен-сборка" : "режим разработки"}, иконки с живых хостов. Остановить — Ctrl+C.`,
+    );
+  } else if (command === "starters") {
+    for (const id of args) {
+      if (!isStarterId(id)) {
+        usageError(`Примера «${id}» нет. Есть: ${STARTER_IDS.join(", ")}.`);
+      }
+    }
+    const ids = args.length > 0 ? (args as StarterId[]) : STARTER_IDS;
+    if (startersLock) {
+      if (checkBrowsers || startersNpm || browserName) {
+        usageError("--lock — без других флагов.");
+      }
+      const missing = await unpublished(root, ids);
+      if (missing.length > 0) {
+        console.error(
+          `СТОП: ${missing.join(", ")} — нет в npm. lock-файлы примеров создаются после публикации беты (шаг 11).`,
+        );
+        process.exit(1);
+      }
+      const written = await lockStarters(root, ids, (line) =>
+        console.log(line),
+      );
+      for (const file of written)
+        console.log(`Записан ${relative(root, file)}`);
+      process.exit(0);
+    }
+    if (startersNpm && !checkBrowsers) {
+      usageError("--npm — только вместе с --check.");
+    }
+    // Скрипт тега: он попадает в архив пакета, и его же получает HTML-пример вместо jsDelivr.
+    const script = await buildIconScript(root);
+    console.log(
+      `Скрипт тега: ${SCRIPT_FILE} — в gzip ${formatBytes(script.gzipBytes)}${script.written ? ", собран заново" : ""}.`,
+    );
+    if (!checkBrowsers) {
+      if (ids.length !== 1) {
+        usageError(
+          "Вручную — один пример: pnpm starters html, react или next.",
+        );
+      }
+      await openStarter({
+        root,
+        id: ids[0] as StarterId,
+        browser: browserName ?? "chrome",
+        log: (line) => console.log(line),
+      });
+    } else {
+      const browsers = browserName ? [browserName] : BROWSERS;
+      let preview: Awaited<ReturnType<typeof startApiPreview>> | undefined;
+      if (startersNpm) {
+        const missing = await unpublished(root, ids);
+        if (missing.length > 0) {
+          console.error(
+            `СТОП: ${missing.join(", ")} — нет в npm. Проверка с --npm — после публикации беты (шаг 11).`,
+          );
+          process.exit(1);
+        }
+      } else {
+        // Без интернета для иконок: хосты — превью API этой ветки. npm install в копии примера сеть
+        // всё же нужна — за сторонними пакетами.
+        const cdn = await buildCdn(configs, { dataDir, outDir: distCdnDir });
+        if (cdnStop(cdn)) {
+          console.error(
+            "Сборка раздачи остановлена — превью API без данных не запустить: pnpm cdn build покажет почему.",
+          );
+          process.exit(1);
+        }
+        preview = await startApiPreview({
+          root,
+          outDir: distApiDir,
+          cdnDir: distCdnDir,
+          port: 0,
+        });
+      }
+      const api = preview ? `http://127.0.0.1:${preview.port}` : undefined;
+      console.log(
+        `Проверяю примеры ${ids.map((id) => STARTER_TITLES[id]).join(", ")}: ${browsers.map((b) => BROWSER_TITLES[b]).join(", ")} — ${api ? `пакеты этой ветки, превью API ${api}` : "пакеты из npm, живые хосты"}…`,
+      );
+      const report = await checkStarters({
+        root,
+        ids,
+        browsers,
+        api,
+        log: (line) => console.log(`  ${line}`),
+      });
+      await preview?.close();
+      console.log("");
+      for (const line of formatStartersCheck(report)) console.log(line);
+      const reportDir = join(reportsDir, "starters");
+      await mkdir(reportDir, { recursive: true });
+      const htmlPath = join(reportDir, "check.html");
+      await writeFile(htmlPath, renderStartersCheckPage(report), "utf8");
+      // Та же таблица в Markdown — её кладёт в сводку запуска CI задача starters (ci.yml).
+      await writeFile(
+        join(reportDir, "check.md"),
+        markdownStartersCheck(report),
+        "utf8",
+      );
+      console.log(`Отчёт: ${htmlPath}`);
+      process.exit(startersCheckFailed(report.results) ? 1 : 0);
+    }
   } else if (command === "search-index") {
     if (args.length > 0) {
       usageError(
