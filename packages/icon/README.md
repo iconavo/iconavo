@@ -2,7 +2,7 @@
 
 Any icon from the [Iconavo](https://iconavo.dev) catalog by its name, with one HTML tag or one React component. Only the icons on the page are loaded, in batches, and if a host fails, they come from the next one.
 
-> **Beta.** Versions 0.x are published under the `next` tag. The API may still change before 1.0.
+> **Beta.** Versions 0.x are published under the `next` tag. The API may still change before 1.0. See the [changelog](https://iconavo.dev/docs/changelog).
 
 | Package | What it is |
 | --- | --- |
@@ -16,11 +16,11 @@ Icon names are `set:icon`, for example `lucide:house`. Both parts use lowercase 
 **Without a build step**, add two lines to `<head>`:
 
 ```html
-<script type="module" src="https://cdn.jsdelivr.net/npm/@iconavo-ui/icon@0.1.0/dist/iconavo-icon.js"></script>
+<script type="module" src="https://cdn.jsdelivr.net/npm/@iconavo-ui/icon@0.1.0/dist/iconavo-icon.js" integrity="sha384-y7v/hUpp8D+NY4QN2QXydnzn81/hAFqrzQhbdWZzdX+8m91qorvf5wk/hOh5ZbiG"></script>
 <style>iconavo-icon:not(:defined) { display: inline-block; width: 1em; height: 1em; }</style>
 ```
 
-The script is a single ES module with everything inside. The style keeps a `1em` square for each icon until the script has run, so the text next to icons does not jump; it does not know about the `width` and `height` attributes.
+The script is a single ES module with everything inside. With the `integrity` hash, the browser runs it only if it is exactly the published file. The style keeps a `1em` square for each icon until the script has run, so the text next to icons does not jump; it does not know about the `width` and `height` attributes.
 
 **With npm**:
 
@@ -49,7 +49,7 @@ With pnpm or yarn: `pnpm add @iconavo-ui/react@next`, `yarn add @iconavo-ui/reac
 <html lang="en">
   <head>
     <meta charset="utf-8">
-    <script type="module" src="https://cdn.jsdelivr.net/npm/@iconavo-ui/icon@0.1.0/dist/iconavo-icon.js"></script>
+    <script type="module" src="https://cdn.jsdelivr.net/npm/@iconavo-ui/icon@0.1.0/dist/iconavo-icon.js" integrity="sha384-y7v/hUpp8D+NY4QN2QXydnzn81/hAFqrzQhbdWZzdX+8m91qorvf5wk/hOh5ZbiG"></script>
     <style>iconavo-icon:not(:defined) { display: inline-block; width: 1em; height: 1em; }</style>
   </head>
   <body>
@@ -381,6 +381,7 @@ The full reference of our API, with the SVG and CSS addresses, is in the [edge A
   ```
 
   `script-src` is needed only for the script tag, and `trusted-types` only if you enforce Trusted Types.
+- **Script integrity.** The script line from [Install](#install) has an exact version and an `integrity` hash: if jsDelivr ever served different bytes, the browser would not run them. When you move to a new version, copy the whole line again.
 - **Trust.** Icon data becomes part of your page as SVG markup. Load icons only from hosts, files and loaders that you trust as much as your scripts.
 
 ## Coming from Iconify

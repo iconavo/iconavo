@@ -13,13 +13,19 @@ import { isValidIconName, isValidNamePart } from "./name.js";
 /** Состояние имени: данные загруженной иконки или что с ней. */
 export type IconState = IconData | "loading" | "missing" | "error";
 
-/** Свой источник набора (setLoader): имена без повторов → IconifyJSON или null. */
+// Loader и поля Settings видят разработчики в подсказках setLoader и configure — описания по-английски.
+
+/** Your own source of one icon set, for `setLoader`: unique names → IconifyJSON, or `null`. */
 export type Loader = (names: string[]) => Promise<IconavoIconSet | null>;
 
 export interface Settings {
+  /** Hosts that answer batch requests, tried in order. `[]` turns them off. */
   api: string[];
+  /** Hosts with the static layout of `cdn.iconavo.dev`, one icon per request, tried in order. */
   cdn: string[];
+  /** What icons show while they load. Default: `skeleton`. */
   placeholder: "skeleton" | "spinner" | "none";
+  /** Development mode: a dashed frame in place of a missing icon. Default: detected. */
   dev?: boolean;
 }
 

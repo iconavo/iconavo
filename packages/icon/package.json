@@ -1,7 +1,29 @@
 {
   "name": "@iconavo-ui/icon",
-  "version": "0.0.0",
-  "private": true,
+  "version": "0.1.0",
+  "description": "The <iconavo-icon> web component: any icon from the Iconavo catalog by its name, for plain HTML and any framework.",
+  "keywords": [
+    "iconavo",
+    "icons",
+    "svg",
+    "web-component",
+    "custom-element",
+    "iconify",
+    "lucide",
+    "tabler",
+    "material-symbols",
+    "phosphor"
+  ],
+  "license": "MIT",
+  "homepage": "https://iconavo.dev/docs",
+  "bugs": {
+    "url": "https://github.com/iconavo/iconavo/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/iconavo/iconavo.git",
+    "directory": "packages/icon"
+  },
   "type": "module",
   "sideEffects": [
     "./dist/index.js",
@@ -13,7 +35,8 @@
       "types": "./dist/index.d.ts",
       "development": "./dist/development.js",
       "default": "./dist/index.js"
-    }
+    },
+    "./package.json": "./package.json"
   },
   "types": "./dist/index.d.ts",
   "files": [
@@ -24,5 +47,10 @@
   },
   "dependencies": {
     "@iconavo-ui/core": "workspace:*"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true,
+    "tag": "next"
   }
 }

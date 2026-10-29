@@ -38,7 +38,7 @@ import { clientState, serverState } from "./state.js";
 import { adopt, css } from "./style.js";
 import { trusted } from "./trusted.js";
 
-/** Пропсы Icon: свои и атрибуты <svg>, кроме содержимого. */
+/** Props of `Icon`: its own options and the attributes of `<svg>`, except its content. */
 export type IconProps = IconOptions &
   Omit<
     SVGProps<SVGSVGElement>,

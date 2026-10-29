@@ -1,14 +1,37 @@
 {
   "name": "@iconavo-ui/react",
-  "version": "0.0.0",
-  "private": true,
+  "version": "0.1.0",
+  "description": "The Icon component for React and Next.js: any icon from the Iconavo catalog by its name.",
+  "keywords": [
+    "iconavo",
+    "icons",
+    "svg",
+    "react",
+    "nextjs",
+    "iconify",
+    "lucide",
+    "tabler",
+    "material-symbols",
+    "phosphor"
+  ],
+  "license": "MIT",
+  "homepage": "https://iconavo.dev/docs",
+  "bugs": {
+    "url": "https://github.com/iconavo/iconavo/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/iconavo/iconavo.git",
+    "directory": "packages/react"
+  },
   "type": "module",
   "sideEffects": false,
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
-    }
+    },
+    "./package.json": "./package.json"
   },
   "types": "./dist/index.d.ts",
   "files": [
@@ -34,5 +57,10 @@
     "@types/react-dom": "19.3.0",
     "react": "19.3.1",
     "react-dom": "19.3.1"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true,
+    "tag": "next"
   }
 }

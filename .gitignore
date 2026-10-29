@@ -8,6 +8,7 @@ dist/
 dist-cdn/
 dist-npm/
 dist-api/
+dist-release/
 .next/
 next-env.d.ts
 .vercel/

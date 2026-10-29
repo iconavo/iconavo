@@ -34,12 +34,13 @@ function links(blocks: DocBlock[]): string[] {
   });
 }
 
-/** Свой корень с двумя README — для случаев, которых в настоящих README нет. */
+/** Свой корень с README и журналом — для случаев, которых в настоящих файлах нет. */
 function fakeRoot(icon: string, api = "# API\n\n## Errors\n\nText.\n"): string {
   const dir = mkdtempSync(join(tmpdir(), "iconavo-docs-"));
   for (const [source, text] of [
     [SOURCES.icon, icon],
     [SOURCES.api, api],
+    [SOURCES.changelog, "# Changelog\n\n## 0.1.0 — 2026-10-29\n\nText.\n"],
   ] as const) {
     mkdirSync(join(dir, source, ".."), { recursive: true });
     writeFileSync(join(dir, source), text);
@@ -66,7 +67,25 @@ describe("страницы документации из README", () => {
       "/docs/iconify",
       "/docs/security",
       "/docs/api",
+      "/docs/changelog",
     ]);
+  });
+
+  it("журнал изменений — своя страница: раздел на версию, правка — в CHANGELOG.md", () => {
+    const changelog = pages.find((p) => p.slug === "changelog");
+    const text = readFileSync(join(root, SOURCES.changelog), "utf8");
+    const versions = [...text.matchAll(/^## (\d+\.\d+\.\d+) — /gm)].map(
+      (m) => m[1] as string,
+    );
+    expect(versions.length).toBeGreaterThan(0);
+    expect(
+      changelog?.headings
+        .filter((h) => h.depth === 2)
+        .map((h) => h.text.split(" ")[0]),
+    ).toEqual(versions);
+    expect(changelog?.edit).toBe(
+      "https://github.com/iconavo/iconavo/edit/main/packages/icon/CHANGELOG.md",
+    );
   });
 
   it("раздел, совпавший с названием страницы, становится её заголовком", () => {

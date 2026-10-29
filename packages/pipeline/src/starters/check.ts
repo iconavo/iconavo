@@ -2,8 +2,8 @@
 // Chrome, Firefox и WebKit по очереди. Примеры без меток для проверки — она смотрит, как разработчик:
 // все иконки нарисованы, текст не прыгает, у Next.js иконки обёртки уже в серверном HTML и не мигают,
 // консоль чистая, запросы — только к хостам иконок (за них отвечает превью API) и к скрипту тега.
-// Контрольные запуски — хосты иконок не отвечают и испорченный HTML до гидратации — должны быть
-// замечены: так видно, что проверка не слепая.
+// Контрольные запуски — хосты иконок не отвечают, испорченный HTML до гидратации и скрипт тега не с тем
+// хэшем — должны быть замечены: так видно, что проверка не слепая.
 
 import type { Browser, BrowserContext, Page } from "playwright";
 import { canaryVerdict } from "../example/check.js";
@@ -86,6 +86,10 @@ export const CHECKS = [
   [
     "canaryHydration",
     "Контрольный запуск: испорченный HTML до гидратации — ошибка замечена",
+  ],
+  [
+    "canarySri",
+    "Контрольный запуск: скрипт тега с другим содержимым — браузер его не запустил (хэш integrity)",
   ],
 ] as const;
 
@@ -570,6 +574,48 @@ async function checkHydrationCanary(
   await context.close();
 }
 
+/**
+ * Контрольный запуск хэша (HTML, ADR-0051): вместо скрипта тега — тот же файл с лишней строкой. Браузер
+ * обязан его не запустить: иначе у строки подключения нет integrity или он не работает.
+ */
+async function checkSriCanary(
+  browser: Browser,
+  o: PageCheckOptions,
+  result: StarterResult,
+): Promise<void> {
+  const url = o.script?.url ?? o.liveScript;
+  if (url === undefined) return;
+  const body =
+    o.script?.body ?? Buffer.from(await (await fetch(url)).arrayBuffer());
+  const context = await browser.newContext({ viewport: VIEWPORT });
+  const page = await context.newPage();
+  const seen = watch(page);
+  await routeHosts(page, {
+    map: o.map,
+    script: {
+      url,
+      body: Buffer.concat([body, Buffer.from("\n// changed\n")]),
+      delayMs: 0,
+    },
+  });
+  await page.goto(`${o.base}/`, { waitUntil: "load", timeout: 120_000 });
+  await page.waitForTimeout(2000);
+  const defined = await page.evaluate(() =>
+    Boolean(customElements.get("iconavo-icon")),
+  );
+  const reported = [...seen.errors, ...seen.warnings].some((m) =>
+    /integrity/i.test(m),
+  );
+  result.verdicts.canarySri = defined
+    ? fail(
+        "проверка слепая: скрипт с другим содержимым запустился — у строки подключения нет integrity?",
+      )
+    : pass(
+        `скрипт с другим содержимым браузер не запустил${reported ? ", в консоли — ошибка integrity" : ""}`,
+      );
+  await context.close();
+}
+
 /** Один пример в одном режиме — во всех браузерах по очереди. */
 export async function checkStarterPages(
   o: PageCheckOptions,
@@ -597,6 +643,7 @@ export async function checkStarterPages(
       o.log?.(`${title}: контрольный запуск…`);
       await checkCanary(browser, o, result);
       if (o.starter === "next") await checkHydrationCanary(browser, o, result);
+      if (o.starter === "html") await checkSriCanary(browser, o, result);
     } catch (e) {
       result.failure = (e as Error).message.split("\n")[0];
     } finally {

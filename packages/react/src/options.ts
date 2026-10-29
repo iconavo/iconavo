@@ -13,7 +13,8 @@ import {
 
 export type Placeholder = "skeleton" | "spinner" | "none";
 
-/** Пропсы, которые разбирает компонент; остальные уходят на <svg>. Описания видят разработчики. */
+// Описания пропсов видят разработчики в подсказках редактора — поэтому по-английски.
+/** Props that `Icon` reads itself; other props go to the `<svg>`. */
 export interface IconOptions {
   /** Icon name, `set:icon`, for example `lucide:house`. */
   icon: string;

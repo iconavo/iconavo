@@ -1,7 +1,7 @@
 // Проверка живых примеров целиком (фаза 3, шаг 10; ADR-0050): архивы пакетов этой ветки → рабочая копия
 // каждого примера с этими архивами → npm install → сборка → сервер в каждом режиме → браузеры. С --npm —
 // пример как есть из lock-файла, пакеты из реестра npm, живые хосты и настоящий jsDelivr: так его
-// получит разработчик после публикации (шаг 11).
+// получит разработчик после публикации (ADR-0051).
 
 import { access, readFile, rm, writeFile } from "node:fs/promises";
 import { basename, join } from "node:path";
@@ -29,6 +29,7 @@ import {
   installVerdict,
   type LsNode,
   useLocalPacks,
+  useLocalScript,
 } from "./install.js";
 import { hostMap } from "./origins.js";
 import { type Pack, packPackages, packVerdict, run } from "./pack.js";
@@ -181,7 +182,7 @@ export async function inRegistry(
   return version in (doc.versions ?? {});
 }
 
-/** Наши пакеты примеров, которых ещё нет в npm, — до публикации беты (шаг 11) их нет. */
+/** Наши пакеты примеров, которых ещё нет в npm: версия README выходит после слияния выпуска. */
 export async function unpublished(
   root: string,
   ids: readonly StarterId[],
@@ -206,7 +207,7 @@ export async function unpublished(
 }
 
 /**
- * lock-файлы примеров после публикации (шаг 11): npm сам решает дерево по реестру в копии примера, а
+ * lock-файлы примеров после публикации (ADR-0051): npm сам решает дерево по реестру в копии примера, а
  * package-lock.json возвращается в папку примера. Все адреса пакетов — реестр npm.
  */
 export async function lockStarters(
@@ -276,7 +277,9 @@ export async function openStarter(o: {
   const dir = join(work, "local", o.id);
   o.log(`${STARTER_TITLES[o.id]}: копия и установка…`);
   await copyStarter(join(o.root, STARTERS_DIR, o.id), dir);
-  if (o.id !== "html") {
+  if (o.id === "html") {
+    await useLocalScript(dir, await readFile(join(o.root, SCRIPT_FILE)));
+  } else {
     const installed = await install(dir, packs, false);
     if (installed.ok === false) throw new Error(installed.note);
   }
@@ -329,6 +332,9 @@ export async function checkStarters(
     const dir = join(work, npm ? "npm" : "local", id);
     o.log(`${STARTER_TITLES[id]}: копия и установка…`);
     await copyStarter(join(o.root, STARTERS_DIR, id), dir);
+    if (id === "html" && !npm) {
+      await useLocalScript(dir, await readFile(join(o.root, SCRIPT_FILE)));
+    }
     const installed =
       id === "html"
         ? { ok: null, note: "без установки: скрипт тега — с jsDelivr" }

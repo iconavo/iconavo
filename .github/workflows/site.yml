@@ -20,6 +20,7 @@ on:
     paths:
       - "apps/site/**"
       - "packages/icon/README.md"
+      - "packages/icon/CHANGELOG.md"
       - "apps/api/README.md"
       - "packages/core/**"
       - "packages/react/**"
@@ -86,7 +87,7 @@ jobs:
           live=false
           if [ "$GITHUB_REF" = refs/heads/main ] && [ "$EVENT" != pull_request ] && [ "$DRY_RUN" != true ]; then
             git fetch --quiet --no-tags --depth=1 origin "+refs/heads/main:refs/remotes/origin/main"
-            if ! git diff --quiet origin/main HEAD -- apps/site/ packages/icon/README.md apps/api/README.md packages/core/ packages/react/ pnpm-lock.yaml .github/workflows/site.yml; then
+            if ! git diff --quiet origin/main HEAD -- apps/site/ packages/icon/README.md packages/icon/CHANGELOG.md apps/api/README.md packages/core/ packages/react/ pnpm-lock.yaml .github/workflows/site.yml; then
               echo "::warning::main ушёл вперёд — этот запуск только показывает; выкладывает запуск от свежего main."
             elif [ "$SITE_DEPLOY" != on ]; then
               echo "::notice::Выкладка выключена: переменная репозитория SITE_DEPLOY не on — разовая настройка в ADR-0050."

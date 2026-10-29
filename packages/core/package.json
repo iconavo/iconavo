@@ -1,7 +1,23 @@
 {
   "name": "@iconavo-ui/core",
-  "version": "0.0.0",
-  "private": true,
+  "version": "0.1.0",
+  "description": "The shared core of the Iconavo icon packages: loading, the icon store and rendering. Install @iconavo-ui/icon or @iconavo-ui/react instead.",
+  "keywords": [
+    "iconavo",
+    "icons",
+    "svg",
+    "iconify"
+  ],
+  "license": "MIT",
+  "homepage": "https://iconavo.dev/docs",
+  "bugs": {
+    "url": "https://github.com/iconavo/iconavo/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/iconavo/iconavo.git",
+    "directory": "packages/core"
+  },
   "type": "module",
   "sideEffects": false,
   "exports": {
@@ -12,7 +28,8 @@
     "./internal": {
       "types": "./dist/internal.d.ts",
       "default": "./dist/internal.js"
-    }
+    },
+    "./package.json": "./package.json"
   },
   "types": "./dist/index.d.ts",
   "files": [
@@ -20,5 +37,10 @@
   ],
   "scripts": {
     "build": "tsc -b"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true,
+    "tag": "next"
   }
 }

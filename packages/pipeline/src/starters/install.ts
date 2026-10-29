@@ -6,6 +6,7 @@
 
 import { cp, readFile, rm, writeFile } from "node:fs/promises";
 import { join, relative, sep } from "node:path";
+import { scriptRefs, setScriptRefs, sri } from "../release/text.js";
 import { fail, pass, type Verdict } from "../sandbox/verdict.js";
 import type { Pack } from "./pack.js";
 
@@ -72,6 +73,18 @@ export async function useLocalPacks(dir: string, packs: Pack[]): Promise<void> {
     "utf8",
   );
   await rm(join(dir, "package-lock.json"), { force: true });
+}
+
+/**
+ * HTML-пример на скрипте этой ветки: в строке подключения копии — хэш этого файла (ADR-0051). С хэшем
+ * из README браузер отверг бы скрипт после первой же правки кода; сам хэш README проверяет --npm.
+ */
+export async function useLocalScript(dir: string, body: Buffer): Promise<void> {
+  const path = join(dir, "index.html");
+  const text = await readFile(path, "utf8");
+  const version = scriptRefs(text).tags[0]?.version;
+  if (version === undefined) return;
+  await writeFile(path, setScriptRefs(text, version, sri(body)), "utf8");
 }
 
 /** Узел дерева npm ls --all --json. */
