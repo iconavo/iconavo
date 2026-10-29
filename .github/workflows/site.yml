@@ -117,7 +117,14 @@ jobs:
           cat > .vercel/project.json <<'JSON'
           {"projectId":"prj_build_only","orgId":"team_build_only","settings":{"framework":"nextjs","installCommand":"","buildCommand":"next build","devCommand":null,"outputDirectory":null,"rootDirectory":null,"nodeVersion":"24.x"}}
           JSON
-          npx --yes "$VERCEL_CLI" build --prod --yes
+          # --standalone: зависимости функций — внутри сборки. Без него сборка ссылается на файлы
+          # node_modules репозитория (filePathMap), а «Выкладка» идёт без репозитория — Vercel CLI там
+          # останавливается: «Please ensure project dependencies have been installed».
+          npx --yes "$VERCEL_CLI" build --prod --yes --standalone
+          if grep -rlq '"filePathMap"' --include=.vc-config.json .vercel/output/functions; then
+            echo "::error::сборка ссылается на файлы вне .vercel/output — нужен vercel build --standalone"
+            exit 1
+          fi
           # Заголовки сайта — в сборке: noindex и политика со стилями только файлами.
           jq -e '[.routes[] | select(.headers["X-Robots-Tag"] == "noindex, nofollow" and ((.headers["Content-Security-Policy"] // "") | contains("style-src '"'"'self'"'"';")))] | length > 0' .vercel/output/config.json > /dev/null || {
             echo "::error::в сборке нет заголовков X-Robots-Tag и Content-Security-Policy сайта"

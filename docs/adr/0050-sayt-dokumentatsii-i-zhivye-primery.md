@@ -106,7 +106,10 @@
   - на машине CI уже стоит pnpm 12, а Vercel его не обещает;
   - выкладка идёт только из `main` через окружение GitHub `site`, как у edge API (ADR-0024);
   - ключ видит только задача, которая не ставит наши зависимости и не собирает код.
-- **«Сборка» — без ключа.** `vercel build --prod` берёт настройки проекта из `.vercel/project.json`, который пишет сам workflow. Проверено 29 октября 2026 на компьютере владельца: Vercel CLI 65.7.0, без ключа, рабочее пространство pnpm 12. Готовая сборка уходит в артефакт архивом tar: он сохраняет символические ссылки функций Next.js.
+- **«Сборка» — без ключа.** `vercel build --prod --standalone` берёт настройки проекта из `.vercel/project.json`, который пишет сам workflow. Проверено 29 октября 2026 на компьютере владельца: Vercel CLI 65.7.0, без ключа, рабочее пространство pnpm 12. Готовая сборка уходит в артефакт архивом tar: он сохраняет символические ссылки функций Next.js.
+  - `--standalone` кладёт зависимости функций внутрь сборки (около 6 МБ).
+  - Без него сборка ссылается на файлы `node_modules` репозитория (`filePathMap`), а «Выкладка» идёт без репозитория. Так и случилось на первой выкладке 29 октября 2026: проект создался, а выкладка остановилась на «Please ensure project dependencies have been installed».
+  - Теперь «Сборка» сама проверяет, что ссылок наружу нет.
 - **«Выкладка»** — окружение `site`, свежий Vercel CLI из реестра, `vercel deploy --prebuilt --prod --project iconavo-site --create-if-missing`. Проект создаёт первая выкладка. `apps/site/vercel.json` выключает выкладку Vercel из Git.
 - **«Проверка»** — `pnpm site --live --expect-build`.
 - **Включение.** Выкладку включает переменная репозитория `SITE_DEPLOY` со значением `on`. Метка сборки — 8 знаков коммита.
@@ -119,12 +122,16 @@
 3. **GitHub, окружение:** Settings → Environments → New environment `site`. Deployment branches and tags: Selected branches → `main`; обход администратором — выключен. Environment secrets → `VERCEL_TOKEN`. Environment variables → `VERCEL_SCOPE` = слаг команды.
 4. **GitHub, переменная:** Settings → Secrets and variables → Actions → Variables → New repository variable `SITE_DEPLOY` = `on`.
 5. **Первая выкладка:** Actions → «Сайт» → Run workflow (main). «Выкладка» создаст проект `iconavo-site` и выложит сайт на адрес вида `iconavo-site.vercel.app` (он будет в сводке запуска). «Проверка» пока будет красной: домена ещё нет.
-6. **Домен:** Vercel → iconavo-site → Settings → Domains → Add `iconavo.dev`; согласиться добавить `www.iconavo.dev` с переходом на `iconavo.dev` (308). Значения записей — с карточки домена.
-7. **Cloudflare:** зона `iconavo.dev` → DNS → Records → Add record:
-   - `A`, Name `@`, IPv4 — с карточки Vercel, Proxy status — **DNS only**;
+6. **Домен:** Vercel → iconavo-site → Settings → Domains → Add `iconavo.dev`. Основной адрес — `iconavo.dev`.
+   - У карточки `iconavo.dev` — окружение **Production**.
+   - У карточки `www.iconavo.dev` — **Redirect** на `iconavo.dev` (308).
+
+   Vercel может предложить и обратное — `iconavo.dev` → `www`, так случилось 29 октября 2026. Тогда **Edit** у обеих карточек. Значения записей — с карточек доменов.
+7. **Cloudflare:** зона `iconavo.dev` → DNS → Records → Add record. Записи — те, что на карточках Vercel. На 29 октября 2026 Vercel рекомендует для обоих имён одну цель вида `…vercel-dns-017.com`:
+   - `CNAME`, Name `@`, Target — с карточки, Proxy status — **DNS only**. CNAME на корне домена Cloudflare разрешает: он сам заменяет её адресами (CNAME flattening);
    - `CNAME`, Name `www`, Target — с карточки, **DNS only**.
 
-   AAAA не добавлять. Записи CAA в зоне нет (проверено 29 октября 2026), поэтому Let's Encrypt разрешён.
+   Прежние записи Vercel — `A 76.76.21.21` и `CNAME cname.vercel-dns.com` — по его словам, тоже работают. AAAA не добавлять. Записи CAA в зоне нет (проверено 29 октября 2026), поэтому Let's Encrypt разрешён.
 8. Дождаться «Valid Configuration» на карточке домена в Vercel.
 9. Actions → «Сайт» → Run workflow: «Сборка», «Выкладка» и «Проверка» зелёные, https://iconavo.dev/docs открывается.
 

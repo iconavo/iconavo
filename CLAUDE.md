@@ -521,7 +521,7 @@ React (ADR-0033, ADR-0031, шаг 7 фазы 3): `packages/react` — `@iconavo-
   WebKit по Tab ходит только по полям форм, как Safari: там «Skip to content» проверяется как первый элемент в порядке фокуса.
 - **`pnpm site --live`** (`live.ts`) — живой сайт после выкладки: метка сборки (до 3 минут), страницы, заголовки с хостами по умолчанию, noindex, иконки в HTML, ссылки, сервер Vercel, `robots.txt`, переход с `www` и с `http`. Таблица — и в `.cache/reports/site/live.md`.
 - **Выкладка** — workflow «Сайт» (`.github/workflows/site.yml`), Vercel CLI 65.7.0 из Actions, а не Git-интеграция Vercel:
-  - «Сборка» — без ключа: `vercel build --prod` по `.vercel/project.json`, который пишет сам workflow, затем архив tar (символические ссылки функций Next.js);
+  - «Сборка» — без ключа: `vercel build --prod --standalone` по `.vercel/project.json`, который пишет сам workflow, затем архив tar (символические ссылки функций Next.js). `--standalone` кладёт зависимости функций внутрь сборки — без него «Выкладка», которая идёт без репозитория, останавливается;
   - «Выкладка» — окружение `site` (только `main`), без checkout и установки: `vercel deploy --prebuilt --prod --project iconavo-site --create-if-missing`;
   - «Проверка» — `pnpm site --live --expect-build`.
 
