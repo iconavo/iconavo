@@ -1,0 +1,202 @@
+name: Сайт
+
+# Сайт iconavo.dev на Vercel (ADR-0050, шаг 10 фазы 3): главная и документация /docs, собранная из README.
+# Три задачи. «Сборка» — без ключей: pnpm install, tsc, затем Vercel CLI `vercel build --prod` по
+# настройкам проекта из этого файла (.vercel/project.json пишет шаг сборки, apps/site/vercel.json
+# выключает выкладку Vercel из Git); готовая сборка — артефакт-архив: tar сохраняет символические ссылки
+# функций Next.js. «Выкладка» — из окружения site (выкладывать из него можно только из main), без
+# checkout и pnpm install: Vercel CLI точной версии — свежий из реестра, `vercel deploy --prebuilt
+# --prod`; ключ VERCEL_TOKEN видит только он, а код зависимостей сайта с ключом не встречается.
+# «Проверка» — pnpm site --live: iconavo.dev отвечает этой сборкой, noindex, заголовки, ссылки, переходы
+# с www и с http. Выкладывает только «живой» запуск — из main, не «только показ», main не ушёл вперёд,
+# и переменная репозитория SITE_DEPLOY — on (её включает владелец после разовой настройки, ADR-0050).
+# Проект iconavo-site создаёт первая выкладка. Откат — откат PR: запуск от main выложит прежнюю сборку.
+# Что сайт собирается и работает, на каждом PR проверяет CI (задача site); PR с правкой этого файла —
+# только показ.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "apps/site/**"
+      - "packages/icon/README.md"
+      - "apps/api/README.md"
+      - "packages/core/**"
+      - "packages/react/**"
+      - "pnpm-lock.yaml"
+      - ".github/workflows/site.yml"
+  # Проверка самого workflow на PR — только показ: секретов и права выкладывать там нет.
+  pull_request:
+    paths:
+      - ".github/workflows/site.yml"
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: Только собрать и показать, ничего не выкладывать
+        type: boolean
+        default: false
+
+permissions: {}
+
+# Выкладки из main не пересекаются и не прерываются: следующая ждёт текущую. Показы с веток и PR — в
+# своих группах.
+concurrency:
+  group: ${{ github.ref == 'refs/heads/main' && github.event_name != 'pull_request' && 'site' || format('site-{0}', github.ref) }}
+  cancel-in-progress: false
+
+defaults:
+  run:
+    shell: bash
+
+env:
+  # Vercel CLI — точная версия, одна и для сборки, и для выкладки.
+  VERCEL_CLI: vercel@65.7.0
+  VERCEL_TELEMETRY_DISABLED: "1"
+  NEXT_TELEMETRY_DISABLED: "1"
+
+jobs:
+  build:
+    name: Сборка
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+    outputs:
+      live: ${{ steps.live.outputs.live }}
+      build: ${{ steps.label.outputs.build }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      # «Живой» запуск: main, не «только показ», main за это время не ушёл вперёд — иначе запоздавший
+      # запуск выложил бы старую сборку поверх новой, — и выкладка включена владельцем.
+      - name: Живой запуск?
+        id: live
+        env:
+          EVENT: ${{ github.event_name }}
+          DRY_RUN: ${{ inputs.dry_run == true }}
+          SITE_DEPLOY: ${{ vars.SITE_DEPLOY }}
+        run: |
+          live=false
+          if [ "$GITHUB_REF" = refs/heads/main ] && [ "$EVENT" != pull_request ] && [ "$DRY_RUN" != true ]; then
+            git fetch --quiet --no-tags --depth=1 origin "+refs/heads/main:refs/remotes/origin/main"
+            if ! git diff --quiet origin/main HEAD -- apps/site/ packages/icon/README.md apps/api/README.md packages/core/ packages/react/ pnpm-lock.yaml .github/workflows/site.yml; then
+              echo "::warning::main ушёл вперёд — этот запуск только показывает; выкладывает запуск от свежего main."
+            elif [ "$SITE_DEPLOY" != on ]; then
+              echo "::notice::Выкладка выключена: переменная репозитория SITE_DEPLOY не on — разовая настройка в ADR-0050."
+            else
+              live=true
+            fi
+          fi
+          echo "live=$live" >> "$GITHUB_OUTPUT"
+      # Метка сборки — 8 знаков коммита: её отдаёт заголовок X-Iconavo-Build, по ней «Проверка» узнаёт,
+      # что отвечает именно эта сборка.
+      - name: Метка сборки
+        id: label
+        run: echo "build=${GITHUB_SHA::8}" >> "$GITHUB_OUTPUT"
+      - run: pnpm typecheck
+      - name: Собрать сайт (vercel build)
+        env:
+          SITE_BUILD: ${{ steps.label.outputs.build }}
+        run: |
+          # Хосты иконок — только по умолчанию: свои из окружения попали бы в CSP и в страницы сайта.
+          if [ -n "${NEXT_PUBLIC_ICONAVO_API:-}${NEXT_PUBLIC_ICONAVO_CDN:-}" ]; then
+            echo "::error::NEXT_PUBLIC_ICONAVO_API и NEXT_PUBLIC_ICONAVO_CDN задаёт только проверка pnpm site --check"
+            exit 1
+          fi
+          cd apps/site
+          mkdir -p .vercel
+          # Настройки проекта — здесь, а не из Vercel: сборке не нужны ни ключ, ни настоящие ID проекта.
+          # Установки нет — зависимости уже поставил pnpm 12 этой машины.
+          cat > .vercel/project.json <<'JSON'
+          {"projectId":"prj_build_only","orgId":"team_build_only","settings":{"framework":"nextjs","installCommand":"","buildCommand":"next build","devCommand":null,"outputDirectory":null,"rootDirectory":null,"nodeVersion":"24.x"}}
+          JSON
+          npx --yes "$VERCEL_CLI" build --prod --yes
+          # Заголовки сайта — в сборке: noindex и политика со стилями только файлами.
+          jq -e '[.routes[] | select(.headers["X-Robots-Tag"] == "noindex, nofollow" and ((.headers["Content-Security-Policy"] // "") | contains("style-src '"'"'self'"'"';")))] | length > 0' .vercel/output/config.json > /dev/null || {
+            echo "::error::в сборке нет заголовков X-Robots-Tag и Content-Security-Policy сайта"
+            exit 1
+          }
+          tar -czf "$RUNNER_TEMP/site-output.tgz" -C .vercel output
+          {
+            echo "### Сборка сайта"
+            echo "- метка: $SITE_BUILD"
+            echo "- архив: $(du -h "$RUNNER_TEMP/site-output.tgz" | cut -f1)"
+          } >> "$GITHUB_STEP_SUMMARY"
+      # Готовая сборка — для задачи «Выкладка»: она ничего не собирает сама.
+      - uses: actions/upload-artifact@v7
+        with:
+          name: site-output
+          path: ${{ runner.temp }}/site-output.tgz
+          if-no-files-found: error
+          retention-days: 14
+
+  deploy:
+    name: Выкладка
+    needs: build
+    if: needs.build.outputs.live == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    # Окружение site: выкладывать из него можно только из main; ключ Vercel — его секрет.
+    environment: site
+    permissions: {}
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          name: site-output
+          path: ${{ runner.temp }}/artifact
+      - name: Выложить на Vercel
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_SCOPE: ${{ vars.VERCEL_SCOPE }}
+          BUILD: ${{ needs.build.outputs.build }}
+        run: |
+          if [ -z "$VERCEL_TOKEN" ] || [ -z "$VERCEL_SCOPE" ]; then
+            echo "::error::Нет секрета VERCEL_TOKEN или переменной VERCEL_SCOPE окружения site (ADR-0050)"
+            exit 1
+          fi
+          # CLI — свежий из реестра, точной версии: из артефакта задача ничего не запускает, только
+          # распаковывает файлы в новую папку.
+          npm install --global --ignore-scripts --no-audit --no-fund "$VERCEL_CLI"
+          site="$RUNNER_TEMP/site"
+          mkdir -p "$site/.vercel"
+          tar -xzf "$RUNNER_TEMP/artifact/site-output.tgz" -C "$site/.vercel" --no-same-owner
+          cd "$site"
+          vercel deploy --prebuilt --prod --yes --project iconavo-site --create-if-missing \
+            --scope "$VERCEL_SCOPE" --token "$VERCEL_TOKEN" | tee "$RUNNER_TEMP/deploy.txt"
+          echo "- выложена сборка $BUILD: $(tail -n 1 "$RUNNER_TEMP/deploy.txt")" >> "$GITHUB_STEP_SUMMARY"
+
+  check:
+    name: Проверка
+    needs: [build, deploy]
+    if: ${{ !cancelled() && needs.build.outputs.live == 'true' && needs.deploy.result == 'success' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      # Только чтение открытых адресов, ключи не нужны. Ждёт до 3 минут, пока ответит новая сборка.
+      - name: Проверить iconavo.dev
+        env:
+          BUILD: ${{ needs.build.outputs.build }}
+        run: pnpm site --live --expect-build="$BUILD"
+      - name: Сводка
+        if: success() || failure()
+        run: |
+          file=.cache/reports/site/live.md
+          if [ -f "$file" ]; then cat "$file" >> "$GITHUB_STEP_SUMMARY"; fi

@@ -32,6 +32,8 @@
     "icon": "tsc -b && node packages/pipeline/dist/cli.js icon",
     "example": "tsc -b && node packages/pipeline/dist/cli.js example",
     "visual": "tsc -b && node packages/pipeline/dist/cli.js visual",
+    "starters": "tsc -b && node packages/pipeline/dist/cli.js starters",
+    "site": "tsc -b && node packages/pipeline/dist/cli.js site",
     "check": "pnpm lint && pnpm typecheck && pnpm api build && pnpm icon build && pnpm test --coverage && pnpm size"
   },
   "devDependencies": {

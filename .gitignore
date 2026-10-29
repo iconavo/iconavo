@@ -10,3 +10,4 @@ dist-npm/
 dist-api/
 .next/
 next-env.d.ts
+.vercel/

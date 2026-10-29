@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Iconavo without a build step</title>
+    <script type="module" src="https://cdn.jsdelivr.net/npm/@iconavo-ui/icon@0.1.0/dist/iconavo-icon.js"></script>
+    <style>iconavo-icon:not(:defined) { display: inline-block; width: 1em; height: 1em; }</style>
+    <style>
+      body { margin: 2rem auto; max-width: 40rem; padding: 0 1rem; font: 18px/1.6 system-ui, sans-serif; }
+      button { font: inherit; padding: 0.25rem 0.75rem; }
+      .sets { font-size: 2rem; }
+    </style>
+  </head>
+  <body>
+    <h1>Iconavo without a build step</h1>
+    <p>The two lines in <code>&lt;head&gt;</code> load the <code>&lt;iconavo-icon&gt;</code> tag. Change an icon name below, for example <code>lucide:house</code> to <code>lucide:rocket</code>, and the preview updates.</p>
+
+    <h2>A link with an icon</h2>
+    <p><a href="/"><iconavo-icon icon="lucide:house"></iconavo-icon> Home</a></p>
+
+    <h2>Size and color</h2>
+    <p>An icon is as tall as the text and takes the text color:</p>
+    <p style="font-size: 32px; color: crimson"><iconavo-icon icon="lucide:heart"></iconavo-icon> Favorites</p>
+    <p>Or set them on the icon:</p>
+    <p><iconavo-icon icon="lucide:heart" width="32" color="crimson" stroke-width="1.5"></iconavo-icon></p>
+
+    <h2>A label for screen readers</h2>
+    <p>A screen reader announces both buttons as “Delete”.</p>
+    <p>
+      <button type="button"><iconavo-icon icon="lucide:trash" label="Delete"></iconavo-icon></button>
+      <button type="button"><iconavo-icon icon="lucide:trash"></iconavo-icon> Delete</button>
+    </p>
+
+    <h2>Five icon sets</h2>
+    <p class="sets">
+      <iconavo-icon icon="lucide:house"></iconavo-icon>
+      <iconavo-icon icon="tabler:star"></iconavo-icon>
+      <iconavo-icon icon="material-symbols:home-rounded"></iconavo-icon>
+      <iconavo-icon icon="ph:smiley"></iconavo-icon>
+      <iconavo-icon icon="fluent-emoji-flat:rocket"></iconavo-icon>
+    </p>
+
+    <p><a href="https://iconavo.dev/docs">Read the documentation</a></p>
+  </body>
+</html>

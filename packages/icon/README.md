@@ -132,6 +132,25 @@ Without a build step, import `configure` from the same address as the script, in
 </script>
 ```
 
+## Live examples
+
+Open an example in the browser, change the code, and the preview updates:
+
+| Example | What it shows |
+| --- | --- |
+| [HTML](https://stackblitz.com/github/iconavo/iconavo/tree/main/examples/starters/html?file=index.html&template=html) | The tag without a build step: size, color and a label |
+| [React](https://stackblitz.com/github/iconavo/iconavo/tree/main/examples/starters/react?file=src%2FApp.tsx&startScript=dev) | The `Icon` component in a Vite app, and an icon that changes with state |
+
+The examples run on [StackBlitz](https://stackblitz.com).
+
+The Next.js example shows icons in the server HTML with `IconavoProvider`, and icons loaded in the browser. StackBlitz can't run Next.js 16 yet, so create a project from it on your computer:
+
+```sh
+npx create-next-app@latest --example https://github.com/iconavo/iconavo/tree/main/examples/starters/next my-icons
+```
+
+The code of all examples is in [`examples/starters`](https://github.com/iconavo/iconavo/tree/main/examples/starters).
+
 ## Attributes and props
 
 | Attribute | React prop | Values | Default |
@@ -153,6 +172,7 @@ Without a build step, import `configure` from the same address as the script, in
 - **Invalid values** are ignored: the icon renders without that setting, and the console shows one warning with the allowed values.
 - **In React**, sizes also take numbers (`width={32}`), and `rotate` also takes the numbers `1`–`3`. The component always renders an `<svg>`, also while the icon loads, and other props such as `className`, `style`, event handlers and `ref` go to it.
 - **Color in React** is an attribute of the `<svg>`, so CSS that targets the `<svg>` itself, such as a `text-*` class in `className`, takes precedence over it.
+- **With Tailwind CSS**, its base styles make every `<svg>` a block, so an `Icon` sits on a line of its own. Add `className="inline-block"` to the icon, or `svg { display: inline-block; }` to your base styles. The `<iconavo-icon>` tag is not affected.
 
 ## Functions
 
@@ -263,6 +283,8 @@ Passes icons loaded on the server (`IconavoIconSet[]`, as returned by `loadIcons
 - The icon keeps a `1em` × `1em` square, or the size you set, so the text around it does not jump. With only one side set, the square has that side; with `auto`, it is `1em` until the icon's own size is known.
 - If loading takes longer than 150 ms, a placeholder appears: a skeleton by default, a spinner with `placeholder="spinner"`, nothing with `placeholder="none"`. When the system asks to reduce motion, placeholders do not animate.
 - The tag loads an icon when it comes within half a screen of the visible part of the page, so it is usually ready when you scroll to it; `noobserver` turns this off. The React component loads it when it mounts.
+- Inside a scrolling container, and in an iframe from another site, such as a live example's preview, the half-screen margin does not apply: the tag loads an icon when it becomes visible.
+- A tag that has never come near the visible part of the page prints empty. Add `noobserver` to icons that must print.
 - In React, placeholders, `inline` and the development frame come from a stylesheet that the package adds when the page's scripts run. Until then, server-rendered HTML keeps an empty box of the icon's size, and `inline` icons sit on the baseline.
 
 ### Batches and hosts
@@ -329,6 +351,13 @@ import { Icon } from "@iconavo-ui/react";
 - Icons added with `addIcons` at the top level of a module appear right after hydration. Do not call `addIcons` during rendering: on the server, memory is shared by all requests.
 - Next.js builds Server Components and Client Components separately, and each build has its own copy of the icon store. Call `configure`, `setLoader` and top-level `addIcons` in a module that both your layout and a Client Component import: the layout's copy serves `loadIcons` on the server, the other one serves the browser.
 
+### `loadIcons` on the server
+
+- `loadIcons` waits for the hosts, at most 5 seconds, so a page rendered on request sends its first byte only after the icons arrive.
+- Loaded icons stay in the server's memory: later calls return them without a request.
+- In the Next.js App Router, a layout that reads no request data, such as cookies or headers, is rendered at build time, so its icons load once, during the build.
+- On pages rendered on request, pass to `IconavoProvider` only the icons above the fold; the others load in the browser.
+
 ### What your own host must serve
 
 - **`api`**: `GET {host}/{set}.json?icons=a,b` returns IconifyJSON with the requested icons, the alias chains of the requested aliases, and the missing names in `not_found`. An unknown set is a 404.
@@ -336,6 +365,8 @@ import { Icon } from "@iconavo-ui/react";
 - **Both** answer plain `GET` requests with `Access-Control-Allow-Origin` that allows your site. The core sends no custom headers, so there are no preflight requests.
 
 The simplest host is a caching reverse proxy to `api.iconavo.dev` and `cdn.iconavo.dev`. A self-hosted [Iconify API](https://iconify.design/docs/api/hosting.html) answers batches too.
+
+The full reference of our API, with the SVG and CSS addresses, is in the [edge API documentation](https://github.com/iconavo/iconavo/blob/main/apps/api/README.md).
 
 ## Hosts, privacy and security
 

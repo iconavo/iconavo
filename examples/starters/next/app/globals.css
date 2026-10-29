@@ -1,0 +1,17 @@
+body {
+  margin: 2rem auto;
+  max-width: 40rem;
+  padding: 0 1rem;
+  font:
+    18px / 1.6 system-ui,
+    sans-serif;
+}
+
+button {
+  font: inherit;
+  padding: 0.25rem 0.75rem;
+}
+
+.large {
+  font-size: 2rem;
+}

@@ -38,8 +38,8 @@ export default async function RootLayout({ children }: { children: React.ReactNo
 }
 ```
 
-Works with React 18 and 19, including the Next.js App Router. Props, the functions `configure`, `addIcons`, `setLoader` and `loadIcons`, and recipes are in the [full documentation](https://github.com/iconavo/iconavo/blob/main/packages/icon/README.md).
+Works with React 18 and 19, including the Next.js App Router. Props, the functions `configure`, `addIcons`, `setLoader` and `loadIcons`, and recipes are in the [full documentation](https://iconavo.dev/docs).
 
 ## License
 
-The package code is [MIT](https://github.com/iconavo/iconavo/blob/main/LICENSE). The icons keep their authors' licenses, listed in the [full documentation](https://github.com/iconavo/iconavo/blob/main/packages/icon/README.md#license).
+The package code is [MIT](https://github.com/iconavo/iconavo/blob/main/LICENSE). The icons keep their authors' licenses, listed in the [full documentation](https://iconavo.dev/docs/security#license).
