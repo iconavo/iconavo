@@ -23,6 +23,9 @@
     "@iconavo-ui/core": "workspace:*",
     "@iconavo-ui/icon": "workspace:*",
     "@iconavo-ui/react": "workspace:*",
-    "@types/node": "^26.6.5"
+    "@types/node": "^26.6.5",
+    "axe-core": "4.14.0",
+    "react-18": "npm:react@18.3.1",
+    "react-dom-18": "npm:react-dom@18.3.1"
   }
 }

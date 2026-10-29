@@ -11,6 +11,7 @@
 // | pnpm api check [--expect-build=…] | pnpm api bench [--batches] [--base=…] [--seed=N] | pnpm icon build
 // | pnpm sandbox [--port=N] [--browser=chrome|firefox|webkit | --check]
 // | pnpm example [--port=N] [--prod] [--webpack] | pnpm example --check [--browser=…] [--webpack]
+// | pnpm visual [id…] [--browser=…]
 import { randomInt } from "node:crypto";
 import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import type { AddressInfo } from "node:net";
@@ -68,6 +69,7 @@ import {
   R2_BUCKET,
   R2_ENV,
 } from "./cdn/config.js";
+import { type CdnSet, loadCdnSet } from "./cdn/load.js";
 import {
   formatCdnReport,
   formatCdnSummary,
@@ -131,10 +133,12 @@ import {
 } from "./example/check.js";
 import {
   formatExampleCheck,
+  markdownExampleCheck,
   renderExampleCheckPage,
 } from "./example/check-report.js";
 import { EXAMPLE_DIR, EXAMPLE_PORT, NAMES_FILE } from "./example/config.js";
 import { buildNext, freePort, startNext } from "./example/next.js";
+import { REACT18, startReact18 } from "./example/react18.js";
 import { buildIconScript, SCRIPT_FILE } from "./icon/build.js";
 import { type MeiliClient, meiliClient } from "./meili/client.js";
 import {
@@ -177,6 +181,7 @@ import {
 import { checkSandbox, sandboxCheckFailed } from "./sandbox/check.js";
 import {
   formatSandboxCheck,
+  markdownSandboxCheck,
   renderSandboxCheckPage,
 } from "./sandbox/check-report.js";
 import { LIVE_API, MANY_PER_SET, SANDBOX_PORT } from "./sandbox/config.js";
@@ -223,6 +228,13 @@ import {
   setSummary,
   summaryText,
 } from "./update/summary.js";
+import {
+  formatVisual,
+  markdownVisual,
+  renderVisualReport,
+} from "./visual/report.js";
+import { checkVisual, loadReact, visualFailed } from "./visual/run.js";
+import { startVisualServer } from "./visual/server.js";
 
 const USAGE = `Использование:
   pnpm sources fetch [id…]            скачать все наборы или указанные
@@ -339,7 +351,8 @@ const USAGE = `Использование:
                                       @iconavo-ui/core — пачки с api.iconavo.dev, при сбое по одной
                                       со статики (или всё с превью API); имитация сбоев хостов и
                                       журнал запросов для сверки с DevTools; /render — сетка
-                                      вариантов рендера; /tag — тег <iconavo-icon>; /many — 5000 иконок
+                                      вариантов рендера; /tag — тег <iconavo-icon>; /many — 5000 иконок;
+                                      /net — сбои сети для --check
       --port=N                        порт (по умолчанию ${SANDBOX_PORT})
       --browser=…                     открыть /many в окне chrome, firefox или webkit (Playwright)
       --check                         проверить тег в Chrome, Firefox и WebKit без интернета: превью
@@ -353,6 +366,10 @@ const USAGE = `Использование:
                                       разработки и в продакшене, без интернета: превью API на этом
                                       компьютере; отчёт .cache/reports/example/check.html
       --browser=…                     с --check: только chrome, firefox или webkit
+  pnpm visual [id…]                   визуальное сравнение (фаза 3, шаг 9; ADR-0035): каждое имя набора
+                                      через тег и React рядом с SVG статики, в Chrome, Firefox и WebKit;
+                                      расхождение — хоть один пиксель; отчёт .cache/reports/visual/index.html
+      --browser=…                     только chrome, firefox или webkit
   pnpm packages prepare [id…]       пакеты npm @iconavo-ui/icons-{набор} в ${NPM_OUT_DIR}/ (ADR-0026):
                                       данные, LICENSE, README, типы; версия — по реестру npm (только
                                       чтение, ключи не нужны); план для CI ${NPM_OUT_DIR}/plan.json;
@@ -540,8 +557,8 @@ for (const flag of flags) {
     port = Number(value);
     continue;
   }
-  if (command === "sandbox" || command === "example") {
-    if (flag === "--check") {
+  if (command === "sandbox" || command === "example" || command === "visual") {
+    if (flag === "--check" && command !== "visual") {
       checkBrowsers = true;
       continue;
     }
@@ -1122,6 +1139,7 @@ try {
       renderFile: client("render-client.js"),
       tagFile: client("tag-client.js"),
       manyFile: client("many-client.js"),
+      netFile: client("net-client.js"),
       names,
     };
     if (checkBrowsers) {
@@ -1139,18 +1157,27 @@ try {
         cdnDir: distCdnDir,
         port: 0,
       });
+      // Второй хост статики страницы сбоев сети: та же раздача у второго превью на другом порту.
+      const second = await startApiPreview({
+        root,
+        outDir: distApiDir,
+        cdnDir: distCdnDir,
+        port: 0,
+      });
       ctx.port = 0;
       const server = await startSandbox(ctx);
       ctx.port = (server.address() as AddressInfo).port;
       const base = `http://127.0.0.1:${ctx.port}`;
       const api = `http://127.0.0.1:${preview.port}`;
+      const static2 = `http://127.0.0.1:${second.port}`;
       const browsers = browserName ? [browserName] : BROWSERS;
       console.log(
-        `Проверяю тег: ${browsers.map((b) => BROWSER_TITLES[b]).join(", ")} — песочница ${base}, превью API ${api}…`,
+        `Проверяю тег: ${browsers.map((b) => BROWSER_TITLES[b]).join(", ")} — песочница ${base}, превью API ${api}, второй хост статики ${static2}…`,
       );
       const results = await checkSandbox({
         base,
         api,
+        static2,
         browsers,
         log: (line) => console.log(`  ${line}`),
       });
@@ -1160,9 +1187,16 @@ try {
       await mkdir(reportDir, { recursive: true });
       const htmlPath = join(reportDir, "check.html");
       await writeFile(htmlPath, renderSandboxCheckPage(results), "utf8");
+      // Та же таблица в Markdown — её кладёт в сводку запуска CI задача browser (ci.yml).
+      await writeFile(
+        join(reportDir, "check.md"),
+        markdownSandboxCheck(results),
+        "utf8",
+      );
       console.log(`Отчёт: ${htmlPath}`);
       server.close();
       await preview.close();
+      await second.close();
       process.exit(sandboxCheckFailed(results) ? 1 : 0);
     }
     const server = await startSandbox(ctx);
@@ -1244,14 +1278,49 @@ try {
             ...(await checkExample({
               base: next.url,
               api,
+              app: "next",
               mode,
+              // Политику Next.js пример отдаёт только в продакшене (next.config.ts).
+              csp: mode === "prod",
               names,
               browsers,
               log: (line) => console.log(`  ${line}`),
             })),
           );
         } finally {
-          next.stop();
+          await next.stop();
+        }
+      }
+      // Те же страницы на React 18 без Next.js (react18.ts): сборщик — rolldown, а не webpack.
+      for (const mode of exampleWebpack ? [] : MODES) {
+        console.log(
+          `Собираю и запускаю пример на React ${REACT18}: ${MODE_TITLES[mode]}…`,
+        );
+        const react18 = await startReact18({
+          dir,
+          mode,
+          api,
+          outDir: join(root, ".cache", "example"),
+          port: 0,
+        });
+        try {
+          console.log(
+            `Проверяю: ${browsers.map((b) => BROWSER_TITLES[b]).join(", ")} — React ${REACT18} ${react18.url}…`,
+          );
+          results.push(
+            ...(await checkExample({
+              base: react18.url,
+              api,
+              app: "react18",
+              mode,
+              csp: true,
+              names,
+              browsers,
+              log: (line) => console.log(`  ${line}`),
+            })),
+          );
+        } finally {
+          await react18.stop();
         }
       }
       console.log("");
@@ -1260,6 +1329,12 @@ try {
       await mkdir(reportDir, { recursive: true });
       const htmlPath = join(reportDir, "check.html");
       await writeFile(htmlPath, renderExampleCheckPage(results), "utf8");
+      // Та же таблица в Markdown — её кладёт в сводку запуска CI задача browser (ci.yml).
+      await writeFile(
+        join(reportDir, "check.md"),
+        markdownExampleCheck(results),
+        "utf8",
+      );
       console.log(`Отчёт: ${htmlPath}`);
       await preview.close();
       process.exit(exampleCheckFailed(results) ? 1 : 0);
@@ -1274,14 +1349,53 @@ try {
       inherit: true,
     });
     const stop = () => {
-      next.stop();
-      process.exit(0);
+      void next.stop().finally(() => process.exit(0));
     };
     process.on("SIGINT", stop);
     process.on("SIGTERM", stop);
     console.log(
       `Пример: ${next.url}/ — ${exampleProd ? "продакшен-сборка" : "режим разработки"} (${bundler}), иконки с живых хостов. Остановить — Ctrl+C.`,
     );
+  } else if (command === "visual") {
+    // Сеть не нужна: эталон — SVG статики из data/, пакет получает те же данные через addIcons.
+    const script = await buildIconScript(root);
+    console.log(
+      `Скрипт тега: ${SCRIPT_FILE} — в gzip ${formatBytes(script.gzipBytes)}${script.written ? ", собран заново" : ""}.`,
+    );
+    const sets: CdnSet[] = [];
+    for (const config of pick(args)) {
+      sets.push(await loadCdnSet(config, dataDir));
+    }
+    const server = await startVisualServer({
+      clientFile: fileURLToPath(new URL("./visual/client.js", import.meta.url)),
+      iconScript: join(root, SCRIPT_FILE),
+    });
+    const browsers = browserName ? [browserName] : BROWSERS;
+    console.log(
+      `Сравниваю: ${sets.map((s) => s.id).join(", ")} — ${browsers.map((b) => BROWSER_TITLES[b]).join(", ")}…`,
+    );
+    const results = await checkVisual({
+      sets,
+      browsers,
+      server,
+      react: await loadReact(root),
+      log: (line) => console.log(`  ${line}`),
+    });
+    await server.close();
+    console.log("");
+    for (const line of formatVisual(results)) console.log(line);
+    const reportDir = join(reportsDir, "visual");
+    await mkdir(reportDir, { recursive: true });
+    const htmlPath = join(reportDir, "index.html");
+    await writeFile(htmlPath, renderVisualReport(results), "utf8");
+    // Та же таблица в Markdown — её кладёт в сводку запуска CI задача browser (ci.yml).
+    await writeFile(
+      join(reportDir, "summary.md"),
+      markdownVisual(results),
+      "utf8",
+    );
+    console.log(`Отчёт: ${htmlPath}`);
+    process.exit(visualFailed(results) ? 1 : 0);
   } else if (command === "search-index") {
     if (args.length > 0) {
       usageError(

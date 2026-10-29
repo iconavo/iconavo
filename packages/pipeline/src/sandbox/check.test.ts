@@ -4,11 +4,15 @@ import {
   CHECKS,
   EXPECTED_WARNINGS,
   errorsVerdict,
-  layoutVerdict,
   sandboxCheckFailed,
   warningsVerdict,
 } from "./check.js";
-import { formatSandboxCheck, renderSandboxCheckPage } from "./check-report.js";
+import {
+  formatSandboxCheck,
+  markdownSandboxCheck,
+  renderSandboxCheckPage,
+} from "./check-report.js";
+import { isRequestFailure, layoutVerdict } from "./verdict.js";
 
 describe("разбор проверки в браузерах", () => {
   it("предупреждения: каждое ожидаемое — ровно один раз, чужие предупреждения пакета — проблема", () => {
@@ -55,6 +59,25 @@ describe("разбор проверки в браузерах", () => {
       ok: false,
       note: "boom; CSP: require-trusted-types-for trusted-types-sink",
     });
+  });
+
+  it("записи о неудавшихся запросах — не ошибки страницы, настоящая ошибка CORS — ошибка", () => {
+    expect(
+      isRequestFailure(
+        "Failed to load resource: the server responded with a status of 404 (Not Found)",
+      ),
+    ).toBe(true);
+    expect(
+      isRequestFailure(
+        "Cross-Origin Request Blocked: The Same Origin Policy disallows reading the remote resource at http://127.0.0.1:1/x.json. (Reason: CORS request did not succeed). Status code: (null).",
+      ),
+    ).toBe(true);
+    expect(
+      isRequestFailure(
+        "Cross-Origin Request Blocked: The Same Origin Policy disallows reading the remote resource at http://127.0.0.1:1/x.json. (Reason: CORS header ‘Access-Control-Allow-Origin’ missing). Status code: 200.",
+      ),
+    ).toBe(false);
+    expect(isRequestFailure("TypeError: boom")).toBe(false);
   });
 });
 
@@ -119,5 +142,18 @@ describe("отчёт проверки", () => {
     expect(html).toContain('src="data:image/png;base64,iVBORw0KGgo="');
     expect(html).toContain("Тег &lt;начало&gt;");
     expect(html).toContain("<li>WebKit (Safari): WebKit не запустился</li>");
+  });
+
+  it("сводка CI: та же таблица в Markdown, что не так и итог", () => {
+    const md = markdownSandboxCheck(results);
+    expect(md).toContain(
+      "| Проверка | Chrome | Firefox | WebKit (Safari) |\n| --- | --- | --- | --- |",
+    );
+    expect(md).toMatch(/\| Подпись[^|]* \| да \| — \| сбой \|/);
+    expect(md).toContain(
+      "- Firefox — Иконка перекрашивается вслед за цветом текста: цвет иконки rgb(0, 0, 0)",
+    );
+    expect(md).toContain("Итог: есть проблемы.");
+    expect(markdownSandboxCheck(results.slice(0, 1))).not.toContain("Не так:");
   });
 });

@@ -110,6 +110,7 @@ export const SANDBOX_PAGES = [
   ["/render", "Рендер"],
   ["/tag", "Тег"],
   ["/many", "5000 иконок"],
+  ["/net", "Сбои сети"],
 ] as const;
 
 export type SandboxPage = (typeof SANDBOX_PAGES)[number][0];

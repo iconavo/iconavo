@@ -8,6 +8,11 @@ on:
 permissions:
   contents: read
 
+# Браузерные проверки идут долго: новый пуш в PR отменяет прошлый запуск. На main — не отменяет.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 jobs:
   check:
     runs-on: ubuntu-latest
@@ -25,7 +30,49 @@ jobs:
       - run: pnpm api build
       # Скрипт тега для страниц без сборщика — тоже один модуль; его размер меряет pnpm size (ADR-0034).
       - run: pnpm icon build
-      - run: pnpm test
+      # С покрытием (ADR-0035): у ядра меньше 90% строк, веток или функций — тесты красные (vitest.config.ts).
+      - run: pnpm test --coverage
+      # Таблица покрытия — в сводке запуска, и когда тесты упали: видно, порог ли это.
+      - name: Покрытие тестами
+        if: success() || failure()
+        run: |
+          set -o pipefail
+          node - .cache/reports/coverage/coverage-summary.json <<'JS' | tee -a "$GITHUB_STEP_SUMMARY"
+          const fs = require("node:fs");
+          const file = process.argv[2];
+          if (!fs.existsSync(file)) {
+            console.log("### Покрытие тестами\n\nОтчёта нет: тесты не дошли до замера.");
+            process.exit(0);
+          }
+          const summary = JSON.parse(fs.readFileSync(file, "utf8"));
+          const kinds = ["lines", "branches", "functions"];
+          // Доля — вниз до десятых, как её сравнивает порог: 89,96% не покажется как 90,0%.
+          const pct = (covered, total) =>
+            total === 0 ? "—" : `${(Math.floor((covered / total) * 1000) / 10).toFixed(1).replace(".", ",")}%`;
+          const row = ([dir, title]) => {
+            const files = Object.entries(summary).filter(([path]) =>
+              path.replaceAll("\\", "/").includes(`/packages/${dir}/src/`),
+            );
+            const cells = kinds.map((kind) =>
+              pct(
+                files.reduce((sum, [, f]) => sum + f[kind].covered, 0),
+                files.reduce((sum, [, f]) => sum + f[kind].total, 0),
+              ),
+            );
+            return `| ${title} | ${cells.join(" | ")} |`;
+          };
+          console.log(
+            [
+              "### Покрытие тестами (ADR-0035)",
+              "",
+              "| Пакет | Строки | Ветки | Функции |",
+              "| --- | ---: | ---: | ---: |",
+              ...[["core", "Ядро (порог 90%)"], ["icon", "Тег"], ["react", "React"]].map(row),
+              "",
+              "Порог — только у ядра. У тега и React часть кода проверяют браузеры (задача browser): эффекты и гидратацию модульные тесты в Node не запускают.",
+            ].join("\n"),
+          );
+          JS
       # Бюджеты размера (ADR-0034): size-limit — один раз, таблица — в журнале и в сводке запуска, и при
       # превышении тоже. Превышение роняет проверку, сломанная таблица — тоже.
       - name: Размер пакетов
@@ -57,3 +104,111 @@ jobs:
           );
           JS
           exit "$status"
+
+  # Браузерные проверки (ADR-0035, шаг 9 фазы 3): каждый браузер — своей задачей, параллельно. Сеть не
+  # нужна: хосты иконок — превью API на этой же машине. Chrome — установленный в образе ubuntu-latest
+  # (channel: "chrome"), Firefox и WebKit — сборки Playwright с системными библиотеками.
+  browser:
+    name: browser (${{ matrix.browser }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        browser: [chrome, firefox, webkit]
+    env:
+      BROWSER: ${{ matrix.browser }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      # Сборки браузеров Playwright — по его версии в package.json конвейера. Системные библиотеки
+      # (--with-deps, apt) ставятся при каждом запуске: их кэш не хранит.
+      - name: Кэш браузеров Playwright
+        if: matrix.browser != 'chrome'
+        uses: actions/cache@v6
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ matrix.browser }}-${{ hashFiles('packages/pipeline/package.json') }}
+      - name: Браузер
+        run: |
+          if [ "$BROWSER" = chrome ]; then
+            google-chrome --version
+          else
+            pnpm --filter @iconavo-ui/pipeline exec playwright install --with-deps "$BROWSER"
+          fi
+      - name: Тег (pnpm sandbox --check)
+        run: pnpm sandbox --check --browser="$BROWSER"
+      # Каждая проверка идёт, даже если предыдущая упала: на странице запуска видно всё сразу.
+      - name: React и пример на Next.js (pnpm example --check)
+        if: success() || failure()
+        run: pnpm example --check --browser="$BROWSER"
+      # Каждое имя пяти наборов через тег и React рядом с SVG статики (ADR-0035).
+      - name: Визуальное сравнение (pnpm visual)
+        if: success() || failure()
+        run: pnpm visual --browser="$BROWSER"
+      - name: Сводка
+        if: success() || failure()
+        run: |
+          for file in .cache/reports/sandbox/check.md .cache/reports/example/check.md .cache/reports/visual/summary.md; do
+            if [ -f "$file" ]; then cat "$file" >> "$GITHUB_STEP_SUMMARY"; fi
+          done
+      # Страницы без архива открываются в браузере. Копии — вне .cache: скрытые папки upload-artifact
+      # пропускает.
+      - name: Отчёты — вне .cache
+        id: pages
+        if: always()
+        run: |
+          pages="$RUNNER_TEMP/pages"
+          mkdir -p "$pages"
+          cp .cache/reports/sandbox/check.html "$pages/sandbox-$BROWSER.html" 2> /dev/null || true
+          cp .cache/reports/example/check.html "$pages/example-$BROWSER.html" 2> /dev/null || true
+          cp .cache/reports/visual/index.html "$pages/visual-$BROWSER.html" 2> /dev/null || true
+          echo "pages=$pages" >> "$GITHUB_OUTPUT"
+      - name: Отчёт — тег
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: sandbox-${{ matrix.browser }}.html
+          path: ${{ steps.pages.outputs.pages }}/sandbox-${{ matrix.browser }}.html
+          archive: false
+          if-no-files-found: ignore
+          retention-days: 14
+      - name: Отчёт — пример
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: example-${{ matrix.browser }}.html
+          path: ${{ steps.pages.outputs.pages }}/example-${{ matrix.browser }}.html
+          archive: false
+          if-no-files-found: ignore
+          retention-days: 14
+      - name: Отчёт — визуальное сравнение
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: visual-${{ matrix.browser }}.html
+          path: ${{ steps.pages.outputs.pages }}/visual-${{ matrix.browser }}.html
+          archive: false
+          if-no-files-found: ignore
+          retention-days: 14
+
+  # Итог трёх браузеров — одно имя для защиты main. Запускается и после отмены или сбоя: иначе
+  # пропущенная задача считалась бы зелёной.
+  browsers:
+    if: always()
+    needs: browser
+    runs-on: ubuntu-latest
+    steps:
+      - name: Все три браузера зелёные
+        env:
+          RESULT: ${{ needs.browser.result }}
+        run: |
+          echo "Браузерные проверки: $RESULT"
+          test "$RESULT" = success

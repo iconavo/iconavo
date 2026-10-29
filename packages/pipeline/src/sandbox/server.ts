@@ -1,9 +1,9 @@
-// Сервер песочницы пакета (фаза 3, шаги 2–5): слушает только 127.0.0.1 и сверяет Host, как страница
-// поиска. Отдаёт четыре страницы — загрузку и сеть (/), рендер (/render), тег (/tag) и 5000 иконок
-// (/many), их скрипты (dist/sandbox/*-client.js), файлы ядра из packages/core/dist и пакета тега из
-// packages/icon/dist — по имени из строчных букв и дефисов, так что за пределы папки не выйти.
-// Скрипт тега по ?delay=N приходит на N мс позже: так страница 5000 иконок показывает место до его
-// загрузки.
+// Сервер песочницы пакета (фаза 3, шаги 2–5 и 9): слушает только 127.0.0.1 и сверяет Host, как
+// страница поиска. Отдаёт пять страниц — загрузку и сеть (/), рендер (/render), тег (/tag), 5000 иконок
+// (/many) и сбои сети (/net), их скрипты (dist/sandbox/*-client.js), файлы ядра из packages/core/dist и
+// пакета тега из packages/icon/dist — по имени из строчных букв и дефисов, так что за пределы папки не
+// выйти. Скрипт тега по ?delay=N приходит на N мс позже: так страница 5000 иконок показывает место до
+// его загрузки.
 
 import { readFile } from "node:fs/promises";
 import { createServer, type Server } from "node:http";
@@ -13,6 +13,7 @@ import { esc, htmlPage } from "../report/html.js";
 import { allowedHost, type Reply } from "../search/server.js";
 import { LIVE_API, LOCAL_API, MAX_SCRIPT_DELAY_MS } from "./config.js";
 import { manyData, manySets, renderManyPage } from "./many-page.js";
+import { netData, renderNetPage } from "./net-page.js";
 import { renderSandboxPage, sandboxData } from "./page.js";
 import { renderData, renderVariantsPage } from "./render-page.js";
 import { renderTagPage, tagData } from "./tag-page.js";
@@ -31,6 +32,8 @@ export interface SandboxContext {
   tagFile: string;
   /** Скрипт страницы 5000 иконок — dist/sandbox/many-client.js конвейера. */
   manyFile: string;
+  /** Скрипт страницы сбоев сети — dist/sandbox/net-client.js конвейера. */
+  netFile: string;
   /** Видимые имена каждого набора, по кодам символов. */
   names: Record<string, string[]>;
 }
@@ -81,7 +84,8 @@ export async function reply(
     page === "/" ||
     page === "/render" ||
     page === "/tag" ||
-    page === "/many"
+    page === "/many" ||
+    page === "/net"
   ) {
     const api = apiHost(parsed.searchParams.get("api"));
     if (api === null) {
@@ -90,6 +94,11 @@ export async function reply(
         `Хост API — только ${LIVE_API} или http://127.0.0.1:порт (pnpm api preview)`,
       );
     }
+    // Второй хост статики страницы сбоев — тоже только превью на этом компьютере.
+    const cdn2 = parsed.searchParams.get("cdn2");
+    if (page === "/net" && cdn2 !== null && !LOCAL_API.test(cdn2)) {
+      return text(400, "Второй хост статики — только http://127.0.0.1:порт");
+    }
     const body =
       page === "/"
         ? renderSandboxPage(sandboxData(api, ctx.names))
@@ -97,10 +106,12 @@ export async function reply(
           ? renderVariantsPage(renderData(api))
           : page === "/tag"
             ? renderTagPage(tagData(api))
-            : renderManyPage(
-                manyData(api, parsed.searchParams.get("slow-script") === "1"),
-                manySets(ctx.names),
-              );
+            : page === "/net"
+              ? renderNetPage(netData(api, cdn2))
+              : renderManyPage(
+                  manyData(api, parsed.searchParams.get("slow-script") === "1"),
+                  manySets(ctx.names),
+                );
     return { status: 200, type: HTML, body };
   }
   const scripts: Record<string, string> = {
@@ -108,6 +119,7 @@ export async function reply(
     "/render.js": ctx.renderFile,
     "/tag.js": ctx.tagFile,
     "/many.js": ctx.manyFile,
+    "/net.js": ctx.netFile,
   };
   const script = scripts[page];
   if (script) {

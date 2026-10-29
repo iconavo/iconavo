@@ -1,11 +1,15 @@
-// Проверка примера на Next.js в трёх браузерах (фаза 3, шаг 7; ADR-0033, ADR-0035): pnpm example --check
-// открывает пример в режиме разработки и в продакшен-сборке — Chrome, Firefox и WebKit по очереди, чтобы
-// не съесть память, — и проверяет обещания шага: иконки обёртки — в серверном HTML и не мигают при
-// гидратации, остальные догружаются в браузере, в консоли нет предупреждений о гидратации. Сеть не
-// нужна: хосты иконок — превью API на этом компьютере. Контрольный запуск сам портит HTML страницы и
-// ждёт предупреждения — так видно, что проверка не слепая. Чистые части — разбор запросов к API и
-// консоли — проверяются тестами без браузера.
+// Проверка примера на Next.js в трёх браузерах (фаза 3, шаги 7 и 9; ADR-0033, ADR-0035): pnpm example
+// --check открывает пример в режиме разработки и в продакшен-сборке — Chrome, Firefox и WebKit по
+// очереди, чтобы не съесть память, — и проверяет обещания шага: иконки обёртки — в серверном HTML и не
+// мигают при гидратации, остальные догружаются в браузере, в консоли нет предупреждений о гидратации,
+// axe-core не находит нарушений доступности. Те же страницы на React 18 без Next.js (react18.ts)
+// проверяются теми же функциями. Сеть не нужна: хосты иконок — превью API на этом компьютере.
+// Контрольный запуск сам портит HTML страницы и ждёт предупреждения — так видно, что проверка не
+// слепая. Чистые части — разбор запросов к API, консоли и находок axe — проверяются тестами без
+// браузера.
 
+import { readFile } from "node:fs/promises";
+import { createRequire } from "node:module";
 import type { Browser, Page } from "playwright";
 import {
   BROWSER_TITLES,
@@ -23,7 +27,7 @@ import {
   type Verdict,
   violations,
   watch,
-} from "../sandbox/check.js";
+} from "../sandbox/verdict.js";
 import { SLOW_MS, VIEWPORT } from "./config.js";
 import type { Mode } from "./next.js";
 
@@ -32,6 +36,14 @@ export const MODES: readonly Mode[] = ["dev", "prod"];
 export const MODE_TITLES: Record<Mode, string> = {
   dev: "разработка",
   prod: "продакшен",
+};
+
+/** Что проверяется: пример на Next.js (React 19) или те же страницы на React 18 без Next.js. */
+export type App = "next" | "react18";
+
+export const APP_TITLES: Record<App, string> = {
+  next: "Next.js",
+  react18: "React 18",
 };
 
 export const CHECKS = [
@@ -47,7 +59,10 @@ export const CHECKS = [
     "console",
     "Консоль: ни ошибок, ни предупреждений о гидратации — только два ожидаемых, про иконки, которых нет",
   ],
-  ["csp", "Строгая CSP продакшена (style-src 'self'): ни одного нарушения"],
+  [
+    "csp",
+    "Строгая CSP (style-src 'self'; у React 18 — и Trusted Types): ни одного нарушения",
+  ],
   ["browser", "Иконки из браузера появились после гидратации"],
   [
     "reserve",
@@ -73,6 +88,10 @@ export const CHECKS = [
   ["trusted", "Trusted Types: рисунок уходит в innerHTML объектом TrustedHTML"],
   ["frame", "Иконки нет: пунктирная рамка — только в режиме разработки"],
   ["tag", "Тег <iconavo-icon> в React нарисован"],
+  [
+    "axe",
+    "Доступность (axe-core, WCAG 2.2 A и AA): ни одного нарушения на обеих страницах",
+  ],
   [
     "canary",
     "Контрольный запуск: испорченный HTML — предупреждение о гидратации замечено",
@@ -103,6 +122,7 @@ export interface ExampleNames {
 }
 
 export interface ExampleResult {
+  app: App;
   mode: Mode;
   browser: BrowserName;
   /** Браузер не запустился или страница не открылась — почему. */
@@ -117,7 +137,10 @@ export interface ExampleCheckOptions {
   base: string;
   /** Превью API — оно же хост статики (/_static/). */
   api: string;
+  app: App;
   mode: Mode;
+  /** Страницы отдают политику CSP: у Next.js — только продакшен, у React 18 — оба режима. */
+  csp: boolean;
   names: ExampleNames;
   browsers?: readonly BrowserName[];
   log?: (line: string) => void;
@@ -147,12 +170,23 @@ export function requested(
   return { names, batches, statics };
 }
 
-/** Сеть: имена обёртки не запрашиваются, ожидаемые — ровно по разу, к статике не ходят. */
+/**
+ * Живые хосты иконок: проверка идёт без интернета, запрос к ним — ошибка настройки страницы. Такие
+ * запросы проверка обрывает и показывает в строке «Сеть».
+ */
+export const LIVE_HOSTS =
+  /^https:\/\/([a-z0-9-]+\.)*(iconavo\.dev|b-cdn\.net)\//;
+
+/**
+ * Сеть: имена обёртки не запрашиваются, ожидаемые — ровно по разу, к статике не ходят, к живым хостам
+ * — тоже.
+ */
 export function networkVerdict(
   urls: string[],
   api: string,
   provided: string[],
   expected: string[],
+  live: string[] = [],
 ): Verdict {
   const { names, batches, statics } = requested(urls, api);
   const unique = (list: string[]) => [...new Set(list)].join(", ");
@@ -164,6 +198,9 @@ export function networkVerdict(
     twice.length > 0 ? `дважды: ${unique(twice)}` : "",
     missed.length > 0 ? `не запрошены: ${missed.join(", ")}` : "",
     statics > 0 ? `запросов к статике: ${statics}` : "",
+    live.length > 0
+      ? `к живым хостам: ${live.length} (${unique(live.map((u) => new URL(u).host))})`
+      : "",
   ].filter(Boolean);
   return problems.length === 0
     ? pass(
@@ -199,25 +236,26 @@ export function consoleVerdict(
     : fail(problems.slice(0, 6).join("; "));
 }
 
-/** Заглушка иконки из браузера в момент замера: класс, нарисована ли иконка, видимость, анимации. */
+/** Заглушка иконки из браузера: класс, нарисована ли иконка, видимость в начале и после задержки. */
 export interface Placeholder {
   name: string;
   className: string;
+  /** Иконка уже нарисована — заглушки нет. */
   drawn: boolean;
+  /** Видимость в первом кадре анимации задержки iconavo-h, раньше 140 мс от её старта; null — не застали. */
+  early: string | null;
+  /** Видимость и анимации после конца задержки. */
   visibility: string;
   animation: string;
 }
 
 /**
- * Заглушки: класс есть уже в серверном HTML, а стили приходят с гидратацией, и первые 150 мс заглушка
- * скрыта. early — сразу после гидратации, late — через 0,3 с: ещё не пришедшие иконки видны и
- * анимированы — скелетон мерцает (iconavo-p), спиннер крутится (iconavo-s).
+ * Заглушки: класс есть уже в серверном HTML, а стили приходят с гидратацией. Первые 150 мс анимации
+ * iconavo-h заглушка скрыта, потом видна и анимирована — скелетон мерцает (iconavo-p), спиннер
+ * крутится (iconavo-s).
  */
-export function placeholderVerdict(
-  early: Placeholder[],
-  late: Placeholder[],
-): Verdict {
-  const waiting = late.filter((p) => !p.drawn);
+export function placeholderVerdict(measured: Placeholder[]): Verdict {
+  const waiting = measured.filter((p) => !p.drawn);
   if (waiting.length === 0) {
     return { ok: null, note: "иконки пришли раньше замера" };
   }
@@ -226,15 +264,15 @@ export function placeholderVerdict(
       ? p.animation.includes("iconavo-s")
       : p.animation.includes("iconavo-p");
   const problems = waiting
-    .filter((p) => p.visibility !== "visible" || !motion(p))
+    .filter(
+      (p) => p.early === "visible" || p.visibility !== "visible" || !motion(p),
+    )
     .map(
       (p) =>
-        `${p.name} (${p.className}): ${p.visibility}, анимации «${p.animation}»`,
+        `${p.name} (${p.className}): ${p.early === "visible" ? "видна раньше 150 мс, " : ""}потом ${p.visibility}, анимации «${p.animation}»`,
     );
   if (problems.length > 0) return fail(problems.join("; "));
-  const hidden = early.filter(
-    (p) => !p.drawn && p.visibility === "hidden",
-  ).length;
+  const judged = waiting.filter((p) => p.early !== null).length;
   const kinds = [
     ...new Set(
       waiting.map((p) =>
@@ -243,7 +281,7 @@ export function placeholderVerdict(
     ),
   ].join(" и ");
   return pass(
-    `${waiting.length} заглушек (${kinds}) видны и анимированы; сразу после гидратации скрыто ${hidden} из ${early.length}`,
+    `${waiting.length} заглушек (${kinds}): ${judged > 0 ? `первые 150 мс скрыты (застали ${judged} из ${waiting.length}), ` : ""}потом видны и анимированы`,
   );
 }
 
@@ -263,6 +301,16 @@ export function canaryVerdict(messages: string[]): Verdict {
 }
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+/** Без интернета: запросы страницы к живым хостам иконок обрываются и записываются. */
+async function offline(page: Page): Promise<string[]> {
+  const live: string[] = [];
+  await page.route(LIVE_HOSTS, (route) => {
+    live.push(route.request().url());
+    return route.abort();
+  });
+  return live;
+}
 
 /**
  * Сторожа до скриптов страницы: изменения в разделе «С сервера» после разбора HTML (разбор только
@@ -331,22 +379,49 @@ const allDrawn = (page: Page, selector: string) =>
     { timeout: 120_000 },
   );
 
-/** Заглушки иконок из браузера: класс, видимость и анимации. */
-const placeholders = (page: Page): Promise<Placeholder[]> =>
-  page.evaluate(
-    (selector) =>
-      [...document.querySelectorAll<SVGElement>(selector)].map((svg) => {
-        const style = getComputedStyle(svg);
-        return {
-          name: svg.dataset.name ?? "",
-          className: svg.getAttribute("class") ?? "",
-          drawn: svg.hasAttribute("viewBox"),
-          visibility: style.visibility,
-          animation: style.animationName,
-        };
-      }),
-    BROWSER_ICONS,
-  );
+/**
+ * Заглушки иконок из браузера — по их собственной анимации задержки iconavo-h (Web Animations API): в
+ * первом кадре после её старта заглушка скрыта, после её конца — видна и анимирована. Таймером от
+ * гидратации мерить нельзя: WebKit запускает CSS-анимацию на ближайшей отрисовке кадра, а на медленной
+ * машине она приходит позже. Задержки уже нет — заглушку застали после неё: early — null.
+ */
+const measurePlaceholders = (page: Page): Promise<Placeholder[]> =>
+  page.evaluate(async (selector) => {
+    const frame = () =>
+      new Promise((resolve) => requestAnimationFrame(resolve));
+    const within = (promise: Promise<unknown>, ms: number) =>
+      Promise.race([
+        promise.catch(() => {}),
+        new Promise((resolve) => setTimeout(resolve, ms)),
+      ]);
+    const one = async (svg: SVGElement) => {
+      const hide = svg
+        .getAnimations()
+        .find((a) => (a as CSSAnimation).animationName === "iconavo-h");
+      let early: string | null = null;
+      if (hide) {
+        await within(hide.ready, 5000);
+        await frame();
+        if (Number(hide.currentTime ?? 0) < 140) {
+          early = getComputedStyle(svg).visibility;
+        }
+        await within(hide.finished, 5000);
+        await frame();
+      }
+      const style = getComputedStyle(svg);
+      return {
+        name: svg.dataset.name ?? "",
+        className: svg.getAttribute("class") ?? "",
+        drawn: svg.hasAttribute("viewBox"),
+        early,
+        visibility: style.visibility,
+        animation: style.animationName,
+      };
+    };
+    return Promise.all(
+      [...document.querySelectorAll<SVGElement>(selector)].map(one),
+    );
+  }, BROWSER_ICONS);
 
 /** Положение подписей рядом с иконками из браузера. */
 const spots = (page: Page): Promise<Spot[]> =>
@@ -444,6 +519,7 @@ async function checkHydration(
   page.on("request", (request) => {
     if (request.url().startsWith(o.api)) urls.push(request.url());
   });
+  const live = await offline(page);
   // Ответы хостов иконок — на SLOW_MS позже: до них место держит резерв.
   await page.route(`${o.api}/**`, async (route) => {
     await sleep(SLOW_MS);
@@ -453,8 +529,8 @@ async function checkHydration(
   const spotsBefore = await spots(page);
   const early = await drawn(page, BROWSER_ICONS);
 
-  // Заглушки: стили приходят с гидратацией — её видно по иконке addIcons. Замер сразу и через
-  // 0,25 с, пока ответы API (задержка SLOW_MS) ещё не пришли.
+  // Заглушки: стили приходят с гидратацией — её видно по иконке addIcons. Замер — пока ответы API
+  // (задержка SLOW_MS) ещё не пришли.
   await page.waitForFunction(
     () =>
       document
@@ -463,10 +539,7 @@ async function checkHydration(
     null,
     { timeout: 120_000 },
   );
-  const placeholdersEarly = await placeholders(page);
-  await page.waitForTimeout(250);
-  const placeholdersLate = await placeholders(page);
-  v.placeholders = placeholderVerdict(placeholdersEarly, placeholdersLate);
+  v.placeholders = placeholderVerdict(await measurePlaceholders(page));
   result.shots.push({
     title: `Пока иконки из браузера грузятся (ответы API задержаны на ${SLOW_MS} мс): заглушки — скелетон и спиннер`,
     png: await shot(page, seen, '[data-check="browser"]'),
@@ -525,12 +598,13 @@ async function checkHydration(
     o.names,
     { timeout: 60_000 },
   );
-  v.network = networkVerdict(urls, o.api, o.names.server, [
-    ...o.names.browser,
-    o.names.tag,
-    o.names.missing,
-    o.names.missingTag,
-  ]);
+  v.network = networkVerdict(
+    urls,
+    o.api,
+    o.names.server,
+    [...o.names.browser, o.names.tag, o.names.missing, o.names.missingTag],
+    live,
+  );
 
   const outline = await page.evaluate((n) => {
     const svg = document.querySelector(`svg[data-name="${n}"]`);
@@ -647,8 +721,10 @@ async function checkHydration(
     png: await shot(page, seen),
   });
 
-  // Переход по ссылке: страница рисуется уже в браузере, без гидратации.
+  // Переход по ссылке: у Next.js страница рисуется уже в браузере, без гидратации; у React 18 — новая
+  // страница с сервера, поэтому нарушения CSP первой страницы снимаются до перехода.
   const sent = urls.length;
+  const earlier = await violations(page);
   await page.locator('[data-check="link"]').click();
   await page.waitForURL(`${o.base}/more`, { timeout: 120_000 });
   await page.waitForSelector('[data-check="nested"] svg[data-name]', {
@@ -688,13 +764,14 @@ async function checkHydration(
     seen.errors,
     expectedWarnings(o.names),
   );
-  const found = await violations(page);
-  v.csp =
-    o.mode === "prod"
-      ? found.length === 0
-        ? pass("ни одного нарушения")
-        : fail([...new Set(found)].slice(0, 4).join("; "))
-      : { ok: null, note: "в режиме разработки политики нет" };
+  // У Next.js документ после перехода тот же — в нём и нарушения первой страницы.
+  const later = await violations(page);
+  const found = o.app === "react18" ? [...earlier, ...later] : later;
+  v.csp = o.csp
+    ? found.length === 0
+      ? pass("ни одного нарушения")
+      : fail([...new Set(found)].slice(0, 4).join("; "))
+    : { ok: null, note: "в режиме разработки политики нет" };
   await context.close();
 }
 
@@ -730,17 +807,185 @@ async function checkCanary(
   await context.close();
 }
 
+/** Нарушение axe: правило, важность и первые элементы. */
+export interface AxeViolation {
+  id: string;
+  impact: string;
+  nodes: string[];
+}
+
+/** Правила axe — только WCAG уровней A и AA, как требует ADR-0038 для сайта: без рекомендаций axe. */
+export const AXE_TAGS = [
+  "wcag2a",
+  "wcag2aa",
+  "wcag21a",
+  "wcag21aa",
+  "wcag22a",
+  "wcag22aa",
+];
+
+/** Доступность: ни одного нарушения ни на одной странице. */
+export function axeVerdict(
+  pages: { path: string; violations: AxeViolation[] }[],
+): Verdict {
+  const problems = pages.flatMap((p) =>
+    p.violations.map(
+      (v) => `${p.path}: ${v.id} (${v.impact}) — ${v.nodes.join(", ")}`,
+    ),
+  );
+  return problems.length === 0
+    ? pass(
+        `нарушений нет: ${pages.map((p) => p.path).join(" и ")}, правила WCAG 2.2 A и AA`,
+      )
+    : fail(problems.slice(0, 5).join("; "));
+}
+
+/** Текст axe-core — его вставляет на страницу проверка. */
+let axeSource: Promise<string> | undefined;
+const axe = () => {
+  axeSource ??= readFile(
+    createRequire(import.meta.url).resolve("axe-core/axe.min.js"),
+    "utf8",
+  );
+  return axeSource;
+};
+
+/** Шаг проверки с названием: ошибка говорит, на каком шаге она остановилась. */
+async function step<T>(title: string, run: () => Promise<T>): Promise<T> {
+  try {
+    return await run();
+  } catch (e) {
+    throw new Error(`${title}: ${(e as Error).message.split("\n")[0]}`);
+  }
+}
+
+/**
+ * Доступность (ADR-0035): axe-core на главной и на /more после гидратации, когда иконки нарисованы.
+ * Скрипт axe нужно вставить в страницу, а строгая политика и Trusted Types этого не дают. Поэтому
+ * контекст — с bypassCSP, а адрес — с ?axe=1: по нему страницы React 18 отдаются без политики. WebKit
+ * с bypassCSP политику не снимает — ни Trusted Types, ни connect-src; Next.js параметр не замечает, а
+ * его политика встроенные скрипты разрешает. Подпись тега через ElementInternals axe не видит (Deque:
+ * невидимы, пока компонент сам их не откроет) — её проверяет строка «Подпись» по дереву доступности
+ * Chrome.
+ */
+async function checkAxe(
+  browser: Browser,
+  o: ExampleCheckOptions,
+  result: ExampleResult,
+): Promise<void> {
+  const context = await browser.newContext({
+    viewport: VIEWPORT,
+    bypassCSP: true,
+  });
+  const page = await context.newPage();
+  const seen = watch(page);
+  const live = await offline(page);
+  const source = await axe();
+  const pages: { path: string; violations: AxeViolation[] }[] = [];
+  try {
+    for (const path of ["/", "/more"]) {
+      if (path === "/more" && o.app === "next") {
+        // У Next.js /more — переходом по ссылке, как у пользователя: хосты иконок задаёт клиентский
+        // компонент главной (app/iconavo.ts). Прямой заход взял бы хосты по умолчанию — живые адреса.
+        await step("/more: переход по ссылке", async () => {
+          await page.locator('[data-check="link"]').click();
+          await page.waitForURL(`${o.base}/more`, { timeout: 120_000 });
+        });
+      } else {
+        await step(`${path}: загрузка`, () =>
+          page.goto(`${o.base}${path}?axe=1`, {
+            waitUntil: "load",
+            timeout: 120_000,
+          }),
+        );
+      }
+      await step(`${path}: иконки из браузера`, () =>
+        allDrawn(page, BROWSER_ICONS),
+      );
+      if (path === "/") {
+        await step("/: гидратация (иконка addIcons)", () =>
+          page.waitForFunction(
+            () =>
+              document
+                .querySelector('svg[data-name="acme:logo"]')
+                ?.hasAttribute("viewBox"),
+            null,
+            { timeout: 120_000 },
+          ),
+        );
+      }
+      await step(`${path}: axe`, () => runAxe(page, source, path, pages));
+    }
+  } catch (e) {
+    result.shots.push({
+      title: "Доступность: страница, на которой проверка остановилась",
+      png: await shot(page, seen).catch(() => ""),
+    });
+    throw new Error(
+      `${(e as Error).message}${seen.errors.length > 0 ? `; ошибки страницы: ${[...new Set(seen.errors)].slice(0, 2).join("; ")}` : ""}`,
+    );
+  } finally {
+    await context.close();
+  }
+  result.verdicts.axe =
+    live.length > 0
+      ? fail(`страница ходила к живым хостам: ${live[0]}`)
+      : axeVerdict(pages);
+}
+
+/** axe-core на открытой странице: правила WCAG A и AA, только нарушения. */
+async function runAxe(
+  page: Page,
+  source: string,
+  path: string,
+  pages: { path: string; violations: AxeViolation[] }[],
+): Promise<void> {
+  // После перехода по ссылке внутри Next.js документ тот же — axe в нём уже есть.
+  if (!(await page.evaluate(() => "axe" in window))) {
+    await page.addScriptTag({ content: source });
+  }
+  pages.push({
+    path,
+    violations: await page.evaluate(async (tags) => {
+      const { axe } = window as unknown as {
+        axe: {
+          run(
+            context: Document,
+            options: unknown,
+          ): Promise<{
+            violations: {
+              id: string;
+              impact?: string | null;
+              nodes: { target: unknown[] }[];
+            }[];
+          }>;
+        };
+      };
+      const found = await axe.run(document, {
+        runOnly: { type: "tag", values: tags },
+        resultTypes: ["violations"],
+      });
+      return found.violations.map((v) => ({
+        id: v.id,
+        impact: v.impact ?? "",
+        nodes: v.nodes.slice(0, 3).map((n) => n.target.join(" ")),
+      }));
+    }, AXE_TAGS),
+  });
+}
+
 async function checkBrowser(
   name: BrowserName,
   o: ExampleCheckOptions,
 ): Promise<ExampleResult> {
   const result: ExampleResult = {
+    app: o.app,
     mode: o.mode,
     browser: name,
     verdicts: {},
     shots: [],
   };
-  const title = `${BROWSER_TITLES[name]}, ${MODE_TITLES[o.mode]}`;
+  const title = `${BROWSER_TITLES[name]}, ${o.app === "react18" ? `${APP_TITLES.react18}, ` : ""}${MODE_TITLES[o.mode]}`;
   let browser: Browser | undefined;
   try {
     browser = await launchBrowser(name, true);
@@ -750,6 +995,11 @@ async function checkBrowser(
     await checkHydration(browser, name, o, result, before);
     o.log?.(`${title}: контрольный запуск…`);
     await checkCanary(browser, o, result);
+    o.log?.(`${title}: доступность (axe-core)…`);
+    // Сбой axe — «нет» в его строке, остальные строки браузера остаются.
+    await checkAxe(browser, o, result).catch((e: unknown) => {
+      result.verdicts.axe = fail((e as Error).message.split("\n")[0] ?? "");
+    });
   } catch (e) {
     result.failure = (e as Error).message.split("\n")[0];
   } finally {

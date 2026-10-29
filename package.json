@@ -31,11 +31,13 @@
     "sandbox": "tsc -b && node packages/pipeline/dist/cli.js sandbox",
     "icon": "tsc -b && node packages/pipeline/dist/cli.js icon",
     "example": "tsc -b && node packages/pipeline/dist/cli.js example",
-    "check": "pnpm lint && pnpm typecheck && pnpm api build && pnpm icon build && pnpm test && pnpm size"
+    "visual": "tsc -b && node packages/pipeline/dist/cli.js visual",
+    "check": "pnpm lint && pnpm typecheck && pnpm api build && pnpm icon build && pnpm test --coverage && pnpm size"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.5.15",
     "@size-limit/preset-small-lib": "^14.2.0",
+    "@vitest/coverage-v8": "^5.0.5",
     "size-limit": "^14.2.0",
     "typescript": "^7.0.2",
     "vitest": "^5.0.5"

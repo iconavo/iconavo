@@ -1,7 +1,8 @@
 // Браузеры для песочницы (фаза 3, шаг 5; ADR-0035): Playwright запускает установленный Google Chrome, а
 // Firefox и WebKit — свои сборки, их ставит pnpm exec playwright install webkit firefox (около 190 МБ,
-// в %LOCALAPPDATA%\ms-playwright). WebKit на Windows — движок Safari, но не сам Safari: по
-// документации Playwright отличаются видео, графика и сеть. playwright грузится только здесь.
+// на Windows — в %LOCALAPPDATA%\ms-playwright; на Linux ещё нужны системные библиотеки — флаг
+// --with-deps, так их ставит CI). WebKit вне Mac — движок Safari, но не сам Safari: по документации
+// Playwright отличаются видео, графика и сеть. playwright грузится только здесь.
 
 import type { Browser } from "playwright";
 
