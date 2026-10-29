@@ -381,7 +381,20 @@ async function checkCanary(
   const page = await context.newPage();
   await recordViolations(page);
   await page.goto(`${o.base}/docs`, { waitUntil: "load" });
-  // Поломки — по очереди: нарушение CSP Firefox сообщает и в чужой вызов — в вставку скрипта axe.
+  // Поломки — после гидратации: иначе React убрал бы чужие узлы из main раньше, чем их увидит axe (так
+  // было на машине CI). Гидратация закончилась — у main есть данные React.
+  await page.waitForFunction(
+    () => {
+      const main = document.querySelector("main");
+      return (
+        main !== null &&
+        Object.keys(main).some((key) => key.startsWith("__reactFiber$"))
+      );
+    },
+    null,
+    { timeout: 60_000 },
+  );
+  // И по очереди: нарушение CSP Firefox сообщает и в чужой вызов — во вставку скрипта axe.
   const insert = (html: string) =>
     page.evaluate((h) => {
       document.querySelector("main")?.insertAdjacentHTML("beforeend", h);
