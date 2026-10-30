@@ -18,13 +18,15 @@ export function cacheKey(
 }
 
 /**
- * Небольшой файл хранилища через кэш дата-центра (META_CACHE): сначала кэш, затем read и запись в
- * кэш. Файла нет — undefined, в кэш ничего не пишется. Сбой кэша чтение не останавливает.
+ * Небольшой файл хранилища через кэш дата-центра (META_CACHE, или cacheControl у неизменяемого файла):
+ * сначала кэш, затем read и запись в кэш. Файла нет — undefined, в кэш ничего не пишется. Сбой кэша
+ * чтение не останавливает.
  */
 export async function sharedText(
   cache: EdgeCache | undefined,
   name: string,
   read: () => Promise<string | undefined>,
+  cacheControl = META_CACHE,
 ): Promise<string | undefined> {
   const key = new Request(`${CACHE_ORIGIN}/${CACHE_GENERATION}/meta/${name}`);
   const hit = await cache?.match(key).catch(() => undefined);
@@ -34,7 +36,7 @@ export async function sharedText(
     await cache
       .put(
         key,
-        new Response(text, { headers: { "cache-control": META_CACHE } }),
+        new Response(text, { headers: { "cache-control": cacheControl } }),
       )
       .catch(() => {});
   }

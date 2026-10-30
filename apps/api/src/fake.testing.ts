@@ -26,13 +26,18 @@ export function nameFileText(
   });
 }
 
-/** manifest.json: набор → версия. */
-export function manifestText(sets: Record<string, string>): string {
+/** manifest.json: набор → версия; catalog — отпечаток оглавления каталога наборов. */
+export function manifestText(
+  sets: Record<string, string>,
+  catalog?: string,
+): string {
   const out: { [key: string]: Json } = {};
   for (const [id, version] of Object.entries(sets)) {
     out[id] = { version, lastModified: LAST_MODIFIED };
   }
-  return compactJson({ sets: out });
+  return compactJson(
+    catalog === undefined ? { sets: out } : { catalog, sets: out },
+  );
 }
 
 export interface FakeBucket extends Bucket {

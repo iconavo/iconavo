@@ -1,5 +1,6 @@
 // Обработчик edge API (ADR-0024): маршрут → параметры → манифест → кэш дата-центра → файлы имён (из
-// кэша файлов, затем из R2) → ответ. Поиск /search (ADR-0049) — свой путь: search/handler.ts. Новый
+// кэша файлов, затем из R2) → ответ. Поиск /search (ADR-0049) — свой путь: search/handler.ts; каталог
+// наборов /collections, /collection, /last-modified и /changelog (шаг 2 фазы 4) — catalog.ts. Новый
 // выпуск набора или новая сборка дают новые ключи кэша, сбрасывать ничего не нужно (ADR-0023). В кэш
 // попадают только ответы, которым понадобились файлы имён; новые файлы — следом за ответом, в пределах
 // бюджета обращений (data.ts). Сбой кэша — как промах: ответ соберётся из R2. Ответ из кэша менять
@@ -10,6 +11,7 @@ import type { IconavoIconSet } from "@iconavo-ui/core";
 import { isValidNamePart } from "@iconavo-ui/core/internal";
 import { batchBody } from "./batch.js";
 import { cacheKey } from "./cache.js";
+import { CATALOG_ROUTES, createCatalog } from "./catalog.js";
 import { CACHE_OK, SVG_CSP, TYPES } from "./config.js";
 import { cssBody, cssOptionsKey, parseCssOptions } from "./css.js";
 import { readNames, storeNames } from "./data.js";
@@ -83,7 +85,7 @@ function route(pathname: string): Route {
     throw new ApiError(
       404,
       "not_found",
-      "Unknown address: use /{set}.json?icons=a,b, /{set}/{icon}.svg, /{set}.css?icons=a,b or /search?query=…",
+      "Unknown address: use /{set}.json?icons=a,b, /{set}/{icon}.svg, /{set}.css?icons=a,b, /search?query=…, /collections, /collection?prefix=…, /last-modified or /changelog",
     );
   }
   if (!isValidNamePart(set)) throw setNotFound(set);
@@ -152,6 +154,13 @@ export function createHandler(options: HandlerOptions): Handler {
     { cache: options.cache, build: options.build, manifest, now, log },
     options.search ?? {},
   );
+  const catalog = createCatalog({
+    bucket: options.bucket,
+    cache: options.cache,
+    build: options.build,
+    manifest,
+    log,
+  });
   return async (request, waitUntil) => {
     const started = now();
     const head = request.method === "HEAD";
@@ -167,6 +176,10 @@ export function createHandler(options: HandlerOptions): Handler {
       const url = new URL(request.url);
       if (url.pathname === "/search") {
         return await search(request, url, waitUntil, head);
+      }
+      const catalogKind = CATALOG_ROUTES.get(url.pathname);
+      if (catalogKind !== undefined) {
+        return await catalog(catalogKind, url.searchParams, head, waitUntil);
       }
       const plan = planFor(route(url.pathname), url.searchParams);
       const entry = (await manifest()).get(plan.set);

@@ -20,7 +20,8 @@ import { sha256Hex } from "./sigv4.js";
 import { contentTypeOf } from "./upload.js";
 
 const HOST = "cdn.test";
-const CF: CdnHost = { ...R2_CDN, host: HOST };
+/** Основной хост без каталога — как до шага 2 фазы 4; каталог проверяют отдельные тесты ниже. */
+const CF: CdnHost = { ...R2_CDN, host: HOST, catalog: false };
 const BUNNY: CdnHost = { ...BUNNY_CDN, host: "cdn2.test" };
 const VERSION = "abcd1234";
 const SUMS = `v/${VERSION}/demo.checksums.json`;
@@ -740,5 +741,87 @@ describe("compareHostManifests", () => {
     expect(empty.report.manifest).toBeUndefined();
     expect(checkFailed(empty.report)).toBe(true);
     expect(compareHostManifests([first.report, empty.report])).toEqual([]);
+  });
+});
+
+describe("checkCdn: каталог наборов на основном хосте", () => {
+  const WITH_CATALOG: CdnHost = { ...R2_CDN, host: HOST };
+  const INDEX = JSON.stringify({
+    changelog: "aaaaaaaaaaaa",
+    sets: {
+      demo: {
+        collection: "bbbbbbbbbbbb",
+        info: {
+          name: "Demo",
+          total: 1,
+          version: "1.0.0",
+          author: { name: "Demo" },
+          license: { title: "MIT", spdx: "MIT" },
+          height: 24,
+          palette: false,
+        },
+        license: {
+          text: "MIT License",
+          source: "https://example.com/demo",
+          revision: "1.0.0",
+        },
+      },
+    },
+  });
+  const HASH = sha256Hex(bytes(INDEX)).slice(0, 12);
+  const INDEX_PATH = `catalog/${HASH}.json`;
+  /** Бакет с каталогом: оглавление на месте, его отпечаток — в манифесте. */
+  const withCatalog = (index = INDEX) => {
+    const files = bucket();
+    files.set(
+      MANIFEST_FILE,
+      bytes(
+        manifestText([{ id: "demo", version: VERSION, lastModified: 1 }], HASH),
+      ),
+    );
+    files.set(INDEX_PATH, bytes(index));
+    return files;
+  };
+
+  it("оглавление — файл версии: кэш на год, отпечаток сходится, наборы — как в манифесте", async () => {
+    const { report } = await check(undefined, withCatalog(), WITH_CATALOG);
+    expect(checkFailed(report)).toBe(false);
+    expect(report.targets.slice(0, 2).map((t) => [t.kind, t.path])).toEqual([
+      ["manifest", MANIFEST_FILE],
+      ["catalog", INDEX_PATH],
+    ]);
+    expect(target(report, INDEX_PATH)?.checked).toContain("body");
+  });
+
+  it("в манифесте нет catalog — проблема манифеста", async () => {
+    const { report } = await check(undefined, bucket(), WITH_CATALOG);
+    expect(issuesOf(report, MANIFEST_FILE)).toEqual([
+      {
+        group: "body",
+        message:
+          "в манифесте нет поля catalog — каталог наборов для edge API не выложен (pnpm cdn upload)",
+      },
+    ]);
+    expect(target(report, INDEX_PATH)).toBeUndefined();
+  });
+
+  it("оглавление не по отпечатку и не с теми наборами — проблемы тела", async () => {
+    const other = JSON.parse(INDEX);
+    other.sets.other = other.sets.demo;
+    const files = withCatalog(JSON.stringify(other));
+    const { report } = await check(undefined, files, WITH_CATALOG);
+    expect(issuesOf(report, INDEX_PATH)).toEqual([
+      {
+        group: "body",
+        message: "содержимое не совпадает с отпечатком в имени",
+      },
+    ]);
+  });
+
+  it("оглавления нет на хосте — 404", async () => {
+    const files = withCatalog();
+    files.delete(INDEX_PATH);
+    const { report } = await check(undefined, files, WITH_CATALOG);
+    expect(groupsOf(report, INDEX_PATH)).toEqual(["status"]);
   });
 });

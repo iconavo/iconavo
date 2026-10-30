@@ -2,8 +2,9 @@
 // же версии на cdn.iconavo.dev. Сначала — ожидание: функция перечитывает манифест раз в минуту, а
 // при первой выкладке её на адресе может ещё не быть. Затем пачка в двух порядках (второй ответ — из
 // кэша и побайтно тот же), SVG без параметров (равен файлу статики), с цветом и размером, с поворотом
-// и отражением, CSS, два ответа 404 и переход с http. К каждому ответу 200 — два запроса, как у
-// статики: с Origin и «br, gzip» и без Origin только с gzip. Ключи не нужны.
+// и отражением, CSS, каталог наборов (шаг 2 фазы 4: /collections, /collection, /last-modified,
+// /changelog — сверка с манифестом), ответы 400 и 404 и переход с http. К каждому ответу 200 — два
+// запроса, как у статики: с Origin и «br, gzip» и без Origin только с gzip. Ключи не нужны.
 
 import { isDeepStrictEqual } from "node:util";
 import {
@@ -30,6 +31,7 @@ import {
 import { manifestSchema } from "../cdn/files.js";
 import type { FetchFn } from "../sources/npm.js";
 import {
+  API_CACHE_CATALOG,
   API_CACHE_OK,
   API_CHECK_ABSENT,
   API_CHECK_ALIAS,
@@ -55,8 +57,14 @@ export type ApiCheckKind =
   | "svg-params"
   | "svg-transform"
   | "css"
+  | "collections"
+  | "collection"
+  | "last-modified"
+  | "changelog"
   | "missing-set"
   | "missing-icon"
+  | "missing-collection"
+  | "collection-prefix"
   | "redirect";
 
 export interface ApiTarget {
@@ -78,8 +86,12 @@ export interface ApiCheckReport {
   /** Сборка, которая ответила (X-Iconavo-Build). */
   build?: string;
   expectBuild?: string;
+  /** Отпечаток оглавления каталога в манифесте R2; нет — каталог ещё не выложен. */
+  catalog?: string;
   targets: ApiTarget[];
   stop: string[];
+  /** Что не проверялось и почему — не проблема. */
+  notes: string[];
   requests: number;
   ms: number;
   /** Сколько ждали, пока API отдаст версию из манифеста. */
@@ -149,9 +161,13 @@ export async function checkApi(
   const set = API_CHECK_SET;
   const targets: ApiTarget[] = [];
   const stop: string[] = [];
+  const notes: string[] = [];
   let version: string | undefined;
   let lastModified: number | undefined;
   let build: string | undefined;
+  let catalog: string | undefined;
+  /** Наборы манифеста R2: набор → время выпуска — с ними сверяется каталог. */
+  let sets: Record<string, number> = {};
   let waitedMs = 0;
   const report = (): ApiCheckReport => ({
     host: API_HOST,
@@ -161,8 +177,10 @@ export async function checkApi(
     ...(options.expectBuild === undefined
       ? {}
       : { expectBuild: options.expectBuild }),
+    ...(catalog === undefined ? {} : { catalog }),
     targets,
     stop,
+    notes,
     requests,
     ms: now() - started,
     waitedMs,
@@ -231,12 +249,20 @@ export async function checkApi(
     }
   }
 
-  /** Ответ 200: тип, кэш, версия и сборка, сжатие; второй запрос — gzip без Origin. */
+  /**
+   * Ответ 200: тип, кэш, версия и сборка, сжатие; второй запрос — gzip без Origin. У каталога свой
+   * Cache-Control и своя версия — отпечаток оглавления.
+   */
   async function check200(
     kind: ApiCheckKind,
     path: string,
     type: string,
-    expect: { csp?: boolean; hit?: boolean } = {},
+    expect: {
+      csp?: boolean;
+      hit?: boolean;
+      cache?: string;
+      version?: string;
+    } = {},
   ): Promise<{ target: ApiTarget; body?: Uint8Array }> {
     const target: ApiTarget = { kind, path, checked: ["status"], issues: [] };
     const headers = { origin: CHECK_ORIGIN, "accept-encoding": "br, gzip" };
@@ -270,7 +296,7 @@ export async function checkApi(
     addIssue(
       target,
       "cache",
-      mismatch(first.headers, "cache-control", API_CACHE_OK),
+      mismatch(first.headers, "cache-control", expect.cache ?? API_CACHE_OK),
     );
     const server = first.headers.get("server");
     if (!server?.toLowerCase().startsWith("cloudflare")) {
@@ -286,8 +312,10 @@ export async function checkApi(
       mismatch(
         first.headers,
         "x-iconavo-version",
-        version as string,
-        " — версия набора не та, что в манифесте R2",
+        expect.version ?? (version as string),
+        expect.version === catalog && catalog !== undefined
+          ? " — каталог не тот, что в манифесте R2"
+          : " — версия набора не та, что в манифесте R2",
       ),
     );
     if (options.expectBuild !== undefined) {
@@ -367,11 +395,12 @@ export async function checkApi(
     return { target, body: first.body };
   }
 
-  /** Ошибка функции: 404 с JSON и кодом ошибки, CORS и защита. */
+  /** Ошибка функции: 404 (или другой код) с JSON и кодом ошибки, CORS и защита. */
   async function check404(
     kind: ApiCheckKind,
     path: string,
     code: string,
+    status = 404,
   ): Promise<ApiTarget> {
     const target: ApiTarget = { kind, path, checked: ["status"], issues: [] };
     const res = await api(path, { origin: CHECK_ORIGIN });
@@ -381,8 +410,8 @@ export async function checkApi(
     }
     target.status = res.status;
     corsAndSecurity(target, res, false);
-    if (res.status !== 404) {
-      addIssue(target, "status", `ответ ${res.status} вместо 404`);
+    if (res.status !== status) {
+      addIssue(target, "status", `ответ ${res.status} вместо ${status}`);
       return target;
     }
     target.checked.push("type", "body");
@@ -400,6 +429,182 @@ export async function checkApi(
       );
     }
     return target;
+  }
+
+  /**
+   * Ожидание каталога: функция и «Выкладка» после слияния выкладываются параллельно, а манифест
+   * функция перечитывает раз в минуту. Ждём, пока /collections отдаст оглавление из манифеста R2.
+   */
+  async function waitCatalog(hash: string): Promise<boolean> {
+    const waitMs = options.waitMs ?? API_WAIT_MS;
+    const step = options.waitStepMs ?? API_WAIT_STEP_MS;
+    const start = now();
+    for (;;) {
+      const res = await api("collections");
+      let last: string;
+      if ("error" in res) {
+        last = res.error;
+      } else {
+        const v = res.headers.get("x-iconavo-version");
+        if (res.status === 200 && v === hash) {
+          waitedMs += now() - start;
+          return true;
+        }
+        last = `ответ ${res.status}, X-Iconavo-Version ${shown(v)}`;
+      }
+      if (now() - start + step > waitMs) {
+        waitedMs += now() - start;
+        stop.push(
+          `API не отдал каталог ${hash} за ${Math.round(waitMs / 1000)} с; последний ответ — ${last}`,
+        );
+        return false;
+      }
+      options.log?.(`жду каталог ${hash}: ${last}`);
+      await sleep(step);
+    }
+  }
+
+  /** Каталог наборов: сверка с манифестом R2, у набора-образца — тело /collection и выпуски. */
+  async function checkCatalog(hash: string, setVersion: string) {
+    const ids = Object.keys(sets).sort();
+    const atCatalog = { cache: API_CACHE_CATALOG, version: hash };
+
+    const all = await check200(
+      "collections",
+      "collections",
+      API_TYPES.json,
+      atCatalog,
+    );
+    let listedInfo: unknown;
+    if (all.body !== undefined) {
+      all.target.checked.push("body");
+      const data = parse(all.body);
+      const listed =
+        typeof data === "object" && data !== null
+          ? Object.keys(data).sort()
+          : [];
+      if (listed.join(",") !== ids.join(",")) {
+        addIssue(
+          all.target,
+          "body",
+          `наборы ${listed.join(", ") || "—"} вместо наборов манифеста ${ids.join(", ")}`,
+        );
+      }
+      const broken = listed.find((id) => {
+        const info = field(data, id);
+        return (
+          typeof field(info, "name") !== "string" ||
+          typeof field(info, "total") !== "number" ||
+          typeof field(field(info, "license"), "title") !== "string"
+        );
+      });
+      if (broken !== undefined) {
+        addIssue(
+          all.target,
+          "body",
+          `у «${broken}» нет name, total или license.title — не IconifyInfo`,
+        );
+      }
+      listedInfo = field(data, set);
+    }
+    done(all.target);
+
+    const one = await check200(
+      "collection",
+      `collection?prefix=${set}&info=true`,
+      API_TYPES.json,
+      { cache: API_CACHE_CATALOG, version: setVersion },
+    );
+    if (one.body !== undefined) {
+      one.target.checked.push("body");
+      const data = parse(one.body);
+      const info = field(data, "info");
+      const total = field(data, "total");
+      const categories = field(data, "categories");
+      const uncategorized = field(data, "uncategorized");
+      const names = new Set([
+        ...(Array.isArray(uncategorized) ? uncategorized : []),
+        ...(typeof categories === "object" && categories !== null
+          ? Object.values(categories).flat()
+          : []),
+      ]);
+      if (field(data, "prefix") !== set) {
+        addIssue(one.target, "body", `prefix не «${set}»`);
+      }
+      if (total !== field(info, "total") || names.size !== total) {
+        addIssue(
+          one.target,
+          "body",
+          `в категориях и uncategorized ${names.size} имён, total ${String(total)}, info.total ${String(field(info, "total"))} — должны совпасть`,
+        );
+      }
+      if (typeof field(field(info, "license"), "text") !== "string") {
+        addIssue(one.target, "body", "в info.license нет полного текста");
+      }
+      for (const key of ["name", "total", "version"]) {
+        if (field(info, key) !== field(listedInfo, key)) {
+          addIssue(one.target, "body", `info.${key} не как в /collections`);
+        }
+      }
+    }
+    done(one.target);
+
+    const modified = await check200(
+      "last-modified",
+      "last-modified",
+      API_TYPES.json,
+      atCatalog,
+    );
+    if (modified.body !== undefined) {
+      modified.target.checked.push("body");
+      if (
+        !isDeepStrictEqual(field(parse(modified.body), "lastModified"), sets)
+      ) {
+        addIssue(modified.target, "body", "lastModified не как в манифесте R2");
+      }
+    }
+    done(modified.target);
+
+    const changes = await check200(
+      "changelog",
+      `changelog?prefix=${set}`,
+      API_TYPES.json,
+      atCatalog,
+    );
+    if (changes.body !== undefined) {
+      changes.target.checked.push("body");
+      const releases = field(parse(changes.body), "releases");
+      if (!Array.isArray(releases) || releases.length === 0) {
+        addIssue(changes.target, "body", "выпусков нет");
+      } else {
+        if (releases.some((r) => field(r, "prefix") !== set)) {
+          addIssue(changes.target, "body", `есть выпуски не «${set}»`);
+        }
+        if (field(releases[0], "version") !== setVersion) {
+          addIssue(
+            changes.target,
+            "body",
+            `свежий выпуск — не версия ${setVersion} из манифеста`,
+          );
+        }
+        const dates = releases.map((r) => Date.parse(String(field(r, "date"))));
+        if (dates.some((d, i) => i > 0 && d >= (dates[i - 1] as number))) {
+          addIssue(changes.target, "body", "выпуски не от свежих к старым");
+        }
+      }
+    }
+    done(changes.target);
+
+    done(
+      await check404(
+        "missing-collection",
+        `collection?prefix=${API_CHECK_ABSENT}`,
+        "set_not_found",
+      ),
+    );
+    done(
+      await check404("collection-prefix", "collection", "prefix_required", 400),
+    );
   }
 
   // Манифест R2: версия набора-образца.
@@ -425,6 +630,12 @@ export async function checkApi(
     } else {
       version = entry.version;
       lastModified = entry.lastModified;
+    }
+    if (parsed.success) {
+      catalog = parsed.data.catalog;
+      sets = Object.fromEntries(
+        Object.entries(parsed.data.sets).map(([id, e]) => [id, e.lastModified]),
+      );
     }
   }
   if (version === undefined) {
@@ -609,6 +820,14 @@ export async function checkApi(
     }
   }
   done(css.target);
+
+  if (catalog === undefined) {
+    notes.push(
+      "каталог наборов не проверялся: в манифесте R2 ещё нет поля catalog — его выложит «Выкладка» (pnpm cdn upload)",
+    );
+  } else if (await waitCatalog(catalog)) {
+    await checkCatalog(catalog, version);
+  }
 
   done(
     await check404(

@@ -56,6 +56,18 @@ export const FILE_CACHE = "public, max-age=2592000";
 export const MANIFEST_KEY = "manifest.json";
 export const VERSION_PATTERN = /^[0-9a-f]{8}$/;
 
+/**
+ * Каталог наборов (шаг 2 фазы 4): /collections, /collection, /last-modified и /changelog. Файлы —
+ * catalog/… в R2 (pnpm cdn build); оглавление — по полю catalog манифеста, имя каждого файла — отпечаток
+ * содержимого, 12 знаков SHA-256.
+ */
+export const CATALOG_DIR = "catalog";
+export const CATALOG_PATTERN = /^[0-9a-f]{12}$/;
+/** Каталог не меняется по своему адресу: в кэше дата-центра — 30 дней, как файлы имён. */
+export const CATALOG_CACHE_EDGE = "public, max-age=2592000";
+/** Адреса каталога без версии: браузеру — 5 минут, как манифест (ADR-0023). */
+export const CATALOG_CACHE_BROWSER = "public, max-age=300";
+
 /** Cache-Control: ответ — неделя, как у Iconify; ошибка запроса — 5 минут; сбой — без кэша. */
 export const CACHE_OK = "public, max-age=604800";
 export const CACHE_CLIENT_ERROR = "public, max-age=300";

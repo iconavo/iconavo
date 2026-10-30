@@ -2,11 +2,18 @@
 // последнего выпуска, проверка, что файлы от одной сборки. Читается «сырой» IconsFile, а не
 // состояние журнала: записи иконок и алиасов уходят в файлы раздачи как есть, с left, top и прочими
 // полями. Общая часть — loadSetData: её же читают пакеты npm (ADR-0026), а запрет поворотов и
-// отражений — только у раздачи.
+// отражений — только у раздачи. Каталогу edge API нужны ещё metadata.json и changelog.json
+// (loadCatalogSet, шаг 2 фазы 4).
 
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
-import { type IconsFile, type InfoFile, validate } from "@iconavo-ui/schema";
+import {
+  type ChangelogFile,
+  type IconsFile,
+  type InfoFile,
+  type MetadataFile,
+  validate,
+} from "@iconavo-ui/schema";
 import type { Json } from "../build/json.js";
 import { versionOf } from "../changelog/state.js";
 import type { SourceConfig } from "../sources/config.js";
@@ -26,6 +33,12 @@ export interface SetData {
 
 /** Набор для раздачи — те же данные. */
 export type CdnSet = SetData;
+
+/** Набор для каталога edge API (шаг 2 фазы 4): ещё категории, карта вариантов и журнал выпусков. */
+export interface CatalogSet extends CdnSet {
+  metadata: MetadataFile;
+  changelog: ChangelogFile;
+}
 
 const order = (a: string, b: string) => (a < b ? -1 : a > b ? 1 : 0);
 
@@ -120,6 +133,41 @@ export async function loadSetData(
     info,
     bytes: { icons: icons.bytes, info: infoFile.bytes },
   };
+}
+
+/**
+ * Набор для каталога: metadata.json и changelog.json по схемам; свежий выпуск журнала — версия этого
+ * icons.json, иначе файлы не от одной сборки.
+ */
+export async function loadCatalogSet(
+  set: CdnSet,
+  dataDir: string,
+): Promise<CatalogSet> {
+  const dir = join(dataDir, set.id);
+  const hint = rebuildHint(set.id);
+  const metadata = (await readSetFile(dir, "metadata.json", hint)).data;
+  const metadataIssues = validate("metadata", metadata);
+  if (metadataIssues.length > 0) {
+    throw new Error(issuesText("metadata.json", metadataIssues));
+  }
+  const changelog = (await readSetFile(dir, "changelog.json", hint)).data;
+  const changelogIssues = validate("changelog", changelog);
+  if (changelogIssues.length > 0) {
+    throw new Error(issuesText("changelog.json", changelogIssues));
+  }
+  const journal = changelog as ChangelogFile;
+  if (journal.prefix !== set.id) {
+    throw new Error(
+      `changelog.json — от набора «${journal.prefix}», а не «${set.id}»`,
+    );
+  }
+  const latest = journal.releases[0]?.version;
+  if (latest !== set.version) {
+    throw new Error(
+      `свежий выпуск в changelog.json (${latest}) — не версия icons.json (${set.version}) — ${hint}`,
+    );
+  }
+  return { ...set, metadata: metadata as MetadataFile, changelog: journal };
 }
 
 /** Набор для раздачи: общие проверки и запрет поворотов и отражений — статический SVG их не умеет. */

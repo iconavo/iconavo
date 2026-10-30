@@ -1,11 +1,17 @@
-// Манифест раздачи (ADR-0022) из R2: набор → версия и время выпуска. В памяти функции — минуту, в кэше
-// дата-центра — 30 секунд, чтобы холодная копия функции не ждала R2; одновременные запросы ждут одну
-// загрузку; если R2 не ответил, служит прежняя копия. Наборы — в Map: имя «constructor» проходит
-// правило имён, но не должно найти что-то в прототипе объекта.
+// Манифест раздачи (ADR-0022) из R2: набор → версия и время выпуска; catalog — отпечаток оглавления
+// каталога наборов (шаг 2 фазы 4). В памяти функции — минуту, в кэше дата-центра — 30 секунд, чтобы
+// холодная копия функции не ждала R2; одновременные запросы ждут одну загрузку; если R2 не ответил,
+// служит прежняя копия. Наборы — в Map: имя «constructor» проходит правило имён, но не должно найти
+// что-то в прототипе объекта.
 
 import { isValidNamePart } from "@iconavo-ui/core/internal";
 import { sharedText } from "./cache.js";
-import { MANIFEST_KEY, MANIFEST_TTL_MS, VERSION_PATTERN } from "./config.js";
+import {
+  CATALOG_PATTERN,
+  MANIFEST_KEY,
+  MANIFEST_TTL_MS,
+  VERSION_PATTERN,
+} from "./config.js";
 import type { Bucket, EdgeCache } from "./env.js";
 import { StorageError } from "./http.js";
 
@@ -14,7 +20,10 @@ export interface SetEntry {
   lastModified: number;
 }
 
-export type Manifest = ReadonlyMap<string, SetEntry>;
+/** Наборы манифеста; catalog — отпечаток оглавления каталога, у манифеста до шага 2 фазы 4 его нет. */
+export type Manifest = ReadonlyMap<string, SetEntry> & {
+  readonly catalog?: string;
+};
 
 const isObject = (value: unknown): value is Record<string, unknown> =>
   typeof value === "object" && value !== null && !Array.isArray(value);
@@ -30,7 +39,14 @@ export function parseManifest(text: string): Manifest {
   if (!isObject(data) || !isObject(data.sets)) {
     throw new StorageError("в манифесте нет sets");
   }
-  const sets = new Map<string, SetEntry>();
+  if (
+    data.catalog !== undefined &&
+    (typeof data.catalog !== "string" || !CATALOG_PATTERN.test(data.catalog))
+  ) {
+    throw new StorageError("в манифесте неверное поле catalog");
+  }
+  const sets: Map<string, SetEntry> & { catalog?: string } = new Map();
+  if (typeof data.catalog === "string") sets.catalog = data.catalog;
   for (const [id, entry] of Object.entries(data.sets)) {
     if (
       !isValidNamePart(id) ||

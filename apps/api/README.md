@@ -107,6 +107,109 @@ GET https://api.iconavo.dev/search?query=trash%20can&limit=4
 - **Caching.** Full results are cached for 5 minutes in browsers (`Cache-Control: public, max-age=300`); `pending` and `text` results are not cached. `X-Iconavo-Index` is the version of the search index.
 - **Privacy.** Queries are not logged and IP addresses are not stored.
 
+## Icon sets: `/collections`
+
+Lists the icon sets with their author, license and showcase icons, as on Iconify: an object of [IconifyInfo](https://iconify.design/docs/types/iconify-info.html) by set prefix.
+
+```
+GET https://api.iconavo.dev/collections?prefix=lucide
+```
+
+```json
+{
+  "lucide": {
+    "author": { "name": "Lucide Contributors", "url": "https://github.com/lucide-icons/lucide" },
+    "height": 24,
+    "license": { "spdx": "ISC", "title": "ISC", "url": "https://spdx.org/licenses/ISC.html" },
+    "name": "Lucide",
+    "palette": false,
+    "samples": ["house", "search", "settings", "user", "heart", "star"],
+    "total": 1998,
+    "version": "81875c8"
+  }
+}
+```
+
+- **`total`** counts visible icons, style variants included; aliases and hidden icons are not counted.
+- **`version`** is the author's version: the npm package version, or the first 7 characters of the git commit.
+- **`palette`** is `true` for multicolor sets.
+
+| Parameter | Values |
+| --- | --- |
+| `prefix` | One set prefix. |
+| `prefixes` | Several prefixes separated by commas. A prefix ending with `-` matches the start of a name: `mdi-` finds `mdi-light`. |
+
+## Icons of a set: `/collection?prefix=…`
+
+Lists all icon names of one set, as on Iconify: visible icons by the author's categories, hidden icons and aliases.
+
+```
+GET https://api.iconavo.dev/collection?prefix=ph&info=true
+```
+
+```json
+{
+  "info": { "name": "Phosphor", "license": { "spdx": "MIT", "text": "MIT License…", "title": "MIT" } },
+  "aliases": { "activity-bold": "pulse-bold" },
+  "categories": { "arrows": ["arrow-arc-left", "arrow-arc-left-bold"] },
+  "prefix": "ph",
+  "suffixes": { "": "Regular", "bold": "Bold", "thin": "Thin" },
+  "title": "Phosphor",
+  "total": 9072
+}
+```
+
+- **Visible icons** are the names in `categories` plus `uncategorized`. An icon can be in several categories. Sets without the author's categories have only `uncategorized`.
+- **`hidden`** lists icons the author removed: they still work by name but are not listed.
+- **`aliases`** maps an old name or an identical variant to its icon.
+- **`suffixes`** names the style variants: `house-bold` is the `Bold` variant of `house`.
+- **`info`**, with `info=true`, is the set's IconifyInfo plus the full license: `license.text`, `license.notice` when the author has one, `license.source` and `license.revision`. It comes as the first field.
+
+| Parameter | Values |
+| --- | --- |
+| `prefix` | Required, the set prefix. |
+| `info` | `1` or `true` adds `info`. |
+| `chars` | Accepted and ignored: no set here is an icon font. |
+
+## Last modified: `/last-modified`
+
+When each set was last released, in Unix seconds, as on Iconify. The same `prefix` and `prefixes` parameters as `/collections`; unknown sets give an empty object.
+
+```json
+{ "lastModified": { "lucide": 1793359690, "tabler": 1793180395 } }
+```
+
+## Changelog: `/changelog`
+
+What changed in recent releases of the sets, newest first: up to the 100 latest releases. This address is Iconavo's own; Iconify has none.
+
+```
+GET https://api.iconavo.dev/changelog?prefix=lucide
+```
+
+```json
+{
+  "releases": [
+    {
+      "added": ["circle-letter-a", "circle-letter-b"],
+      "changed": ["dollar-sign"],
+      "date": "2026-10-30T11:28:10Z",
+      "hidden": ["circle-parking"],
+      "prefix": "lucide",
+      "previous": "c3b3f7a7",
+      "renamed": { "bold": "letter-b" },
+      "revision": "81875c8c42d2320fa5123b37fee3554f4ca2bddc",
+      "total": 1998,
+      "version": "8d1ee623"
+    }
+  ]
+}
+```
+
+- **Lists** appear only when not empty: `added`, `changed` (the drawing changed), `restored`, `hidden`, `renamed` (old name → new name) and `aliases` (new alias → its icon).
+- **`version`** is the data version of the set, `previous` the one before it, and `revision` the author's npm version or git commit.
+- The same `prefix` and `prefixes` parameters as `/collections`.
+
 ## Errors
 
 Errors are short JSON with an HTTP status:
@@ -117,7 +220,7 @@ Errors are short JSON with an HTTP status:
 
 | Status | Codes |
 | --- | --- |
-| 400 | `icons_required`, `too_many_icons`, `duplicate_parameter`, `invalid_parameter`, `invalid_color`, `invalid_size`, `invalid_rotate`, `invalid_flip`, `invalid_mode`, `invalid_format`; search: `query_required`, `invalid_limit`, `invalid_start`, `invalid_prefix`, `invalid_license` |
+| 400 | `icons_required`, `too_many_icons`, `duplicate_parameter`, `invalid_parameter`, `invalid_color`, `invalid_size`, `invalid_rotate`, `invalid_flip`, `invalid_mode`, `invalid_format`; search: `query_required`, `invalid_limit`, `invalid_start`, `invalid_prefix`, `invalid_license`; `/collection`: `prefix_required` |
 | 404 | `not_found` (unknown address), `set_not_found`, `icon_not_found` |
 | 405 | `method_not_allowed`: only `GET`, `HEAD` and `OPTIONS` are allowed |
 | 429 | `rate_limited`: too many searches, retry after a minute |
@@ -130,14 +233,15 @@ Invalid values are rejected with 400 instead of being silently ignored. Search r
 These are not supported:
 - custom CSS selectors, `pseudo` and `var`;
 - JSONP;
-- the legacy `/{set}/icons.json` address.
+- the legacy `/{set}/icons.json` address;
+- the `pretty` parameter: responses are always compact.
 
-`/collections`, `/collection` and `/last-modified` are planned.
+In `/collection?info=true`, `info.license` also carries the full license text; `/changelog` is Iconavo's own address.
 
 ## Caching and headers
 
-- Successful responses are cached for a week (`Cache-Control: public, max-age=604800`), search results for 5 minutes. Errors are cached for 5 minutes, outages and rate limits not at all.
+- Successful responses are cached for a week (`Cache-Control: public, max-age=604800`); search results and `/collections`, `/collection`, `/last-modified` and `/changelog` for 5 minutes, because their addresses carry no version. Errors are cached for 5 minutes, outages and rate limits not at all.
 - A new release of a set is served within a minute; the edge cache needs no purge.
-- `X-Iconavo-Version` is the data version of the set, `X-Iconavo-Build` is the API build, and `X-Cache` says `HIT` or `MISS`.
+- `X-Iconavo-Version` is the data version of the set (on `/collections`, `/last-modified` and `/changelog` — of the whole catalog), `X-Iconavo-Build` is the API build, and `X-Cache` says `HIT` or `MISS`.
 - `Server-Timing` on icon, SVG and CSS responses shows where the time went: `cache` (`hit` or `miss`), `files` (icon files found in the edge cache / looked up), `r2` (files read from storage) and `total`, all in milliseconds. `Timing-Allow-Origin: *` lets pages read it.
 - Every response allows any origin (`Access-Control-Allow-Origin: *`). SVG responses carry a strict `Content-Security-Policy`.

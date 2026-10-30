@@ -56,7 +56,9 @@ describe("отчёт раздачи", () => {
       /^Набор\s+Версия\s+Иконок\s+Алиасов\s+Файлов\s+Размер\s+Итог$/,
     );
     expect(table).toContain("записано");
+    const catalog = report.catalog;
     expect(formatCdnSummary(report)).toEqual([
+      `Каталог для edge API: dist-cdn/catalog/${catalog?.hash}.json и ещё 3 файлов (${catalog?.bytes} Б) — записано 4`,
       "Манифест: dist-cdn/manifest.json — записан",
       "Удалено устаревших: нет",
     ]);
@@ -64,9 +66,10 @@ describe("отчёт раздачи", () => {
     expect(formatCdnReport(again.sets[0] as typeof first)).toContain(
       "без изменений",
     );
-    expect(formatCdnSummary(again)[0]).toBe(
+    expect(formatCdnSummary(again).slice(0, 2)).toEqual([
+      `Каталог для edge API: dist-cdn/catalog/${catalog?.hash}.json и ещё 3 файлов (${catalog?.bytes} Б) — без изменений`,
       "Манифест: dist-cdn/manifest.json — без изменений",
-    );
+    ]);
   });
 
   it("страница: дерево, примеры с адресами и превью, без абсолютных путей", async () => {

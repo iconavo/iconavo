@@ -82,6 +82,8 @@ describe("конфиг набора", () => {
   it.each([
     ["лишнее поле", { ...baseConfig, extra: 1 }],
     ["id не по правилу", { ...baseConfig, id: "Demo_1" }],
+    ["id — служебное слово сайта", { ...baseConfig, id: "changelog" }],
+    ["id — русская версия сайта", { ...baseConfig, id: "ru" }],
     ["нет папок", { ...baseConfig, svgFolders: [] }],
     ["пустой путь папки", { ...baseConfig, svgFolders: [{ path: "" }] }],
     ["путь папки с ..", { ...baseConfig, svgFolders: [{ path: "../icons" }] }],

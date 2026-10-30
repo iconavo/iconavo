@@ -84,11 +84,27 @@ export const METADATA_FILES: Record<MetadataFormat, readonly string[]> = {
 /** Файл NOTICE в корне источника, если автор его положил: берётся первый найденный (ADR-0017). */
 export const NOTICE_FILES = ["NOTICE", "NOTICE.txt", "NOTICE.md"] as const;
 
+/**
+ * Служебные слова сайта (ADR-0037): адрес набора — /{префикс}, поэтому префикс не может совпасть со
+ * страницей сайта. На changelog держится и путь выпусков в каталоге раздачи (catalog/changelog/…).
+ */
+export const RESERVED_PREFIXES: readonly string[] = [
+  "sets",
+  "search",
+  "docs",
+  "changelog",
+  "licenses",
+  "ru",
+];
+
 /** Конфиг одного набора: `sources/{id}.ts` (ADR-0012). */
 export const sourceConfigSchema = z
   .strictObject({
-    /** Префикс набора, он же имя файла конфига (ADR-0001). */
-    id: nameSchema,
+    /** Префикс набора, он же имя файла конфига (ADR-0001); не служебное слово сайта (ADR-0037). */
+    id: nameSchema.refine(
+      (id) => !RESERVED_PREFIXES.includes(id),
+      `префикс занят сайтом — служебные слова: ${RESERVED_PREFIXES.join(", ")} (ADR-0037)`,
+    ),
     name: z.string().min(1),
     /** Автор набора и ссылка на него — как у Iconify (ADR-0017). */
     author: z.strictObject({
