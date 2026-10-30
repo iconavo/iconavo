@@ -18,6 +18,7 @@ import {
   type RegistryClient,
 } from "../npm/registry.js";
 import type { FetchFn } from "../sources/npm.js";
+import { compareVersions, parseVersion } from "../sources/version.js";
 import { installVerdict, npmTree } from "../starters/install.js";
 import { run } from "../starters/pack.js";
 import {
@@ -166,11 +167,27 @@ export function publicationProblems(o: {
       );
     }
   }
-  if (entry.latest !== undefined && entry.latest !== doc.version) {
-    entry.notes.push(
-      `latest → ${entry.latest}: до запуска так и есть, свежая версия — под тегом ${o.tag}`,
+  // latest — за каждой бетой (решение владельца 30 октября 2026, ADR-0051): его переставляет
+  // «Публикация» после выхода всех пакетов. Новее этой версии — уже вышла следующая, не ошибка.
+  if (latestBehind(entry.latest, doc.version)) {
+    entry.problems.push(
+      `latest → ${entry.latest ?? "ничего"}, а не ${doc.version}: «Публикация» не переставила тег — у пакета на npmjs.com в Trusted Publisher должно быть включено «Allow npm dist-tag»; повторите запуск «Выпуска пакетов» без флажков`,
     );
+  } else if (entry.latest !== doc.version) {
+    entry.notes.push(`latest → ${entry.latest}: уже вышла версия новее`);
   }
+}
+
+/** latest отстаёт от версии: тега нет или под ним версия ниже. */
+export function latestBehind(
+  latest: string | undefined,
+  version: string,
+): boolean {
+  if (latest === undefined) return true;
+  if (latest === version) return false;
+  const a = parseVersion(latest);
+  const b = parseVersion(version);
+  return a === undefined || b === undefined || compareVersions(a, b) < 0;
 }
 
 /** Скрипт чистого проекта: иконка из npm-пакета React, данные — с живых хостов, HTML — в stdout. */
@@ -339,11 +356,13 @@ export async function verifyRelease(
         if (arrived && doc?.attestationsUrl !== undefined) {
           prov = await o.registry.provenance(doc);
         }
-        if (arrived && prov !== undefined) break;
+        // latest «Публикация» переставляет после выхода всех пакетов — его тоже ждём до срока.
+        const tagged = !latestBehind(p?.distTags.latest, plan.version);
+        if (arrived && prov !== undefined && tagged) break;
         const left = deadline - now();
         if (left <= 0) break;
         log(
-          `${planned.name}: жду, пока реестр покажет ${plan.version} и её подпись…`,
+          `${planned.name}: жду, пока реестр покажет ${plan.version}, её подпись и latest…`,
         );
         await sleep(Math.min(o.pollMs ?? NPM_POLL_MS, left));
       }

@@ -17,6 +17,7 @@ import {
   readReleasePlan,
   releaseStop,
 } from "./prepare.js";
+import { prepareVerdict } from "./report.js";
 import { sri } from "./text.js";
 
 async function prepare(
@@ -102,12 +103,58 @@ describe("pnpm release prepare", () => {
     const registry = fakeRegistry(
       publishedAll([{ version: "0.1.0", token: true }]),
     );
-    const { report } = await prepare(root, registry);
+    const { report, plan } = await prepare(root, registry);
     expect(problems(report)).toEqual([]);
-    expect(report.packages.map((p) => [p.action, p.publish, p.base])).toEqual([
-      ["release", true, "0.1.0"],
-      ["release", true, "0.1.0"],
-      ["release", true, "0.1.0"],
+    expect(
+      report.packages.map((p) => [p.action, p.publish, p.base, p.promote]),
+    ).toEqual([
+      ["release", true, "0.1.0", true],
+      ["release", true, "0.1.0", true],
+      ["release", true, "0.1.0", true],
+    ]);
+    // latest — за каждой бетой: «Публикация» переставит его после выхода всех пакетов.
+    const planned = await readReleasePlan(plan);
+    expect(planned.packages.map((p) => [p.latest, p.promote])).toEqual([
+      ["0.1.0", true],
+      ["0.1.0", true],
+      ["0.1.0", true],
+    ]);
+  });
+
+  it("версия вышла, а latest отстал — план без публикации, но с latest; назад latest не двигается", async () => {
+    const root = await writeReleaseRepo({ version: "0.1.1" });
+    const behind = fakeRegistry(
+      publishedAll(
+        [{ version: "0.1.0" }, { version: "0.1.1" }],
+        "0.1.1",
+        "0.1.0",
+      ),
+    );
+    const { report, plan } = await prepare(root, behind);
+    expect(problems(report)).toEqual([]);
+    expect(report.planned).toBe(false);
+    const planned = await readReleasePlan(plan);
+    expect(planned.packages.map((p) => [p.publish, p.promote])).toEqual([
+      [false, true],
+      [false, true],
+      [false, true],
+    ]);
+    expect(prepareVerdict(report)).toContain("переставит на неё latest");
+    expect(report.packages[0]?.notes).toContain(
+      "0.1.1 уже в npm, а latest — 0.1.0: запуск переставит latest на 0.1.1",
+    );
+    const ahead = fakeRegistry(
+      publishedAll(
+        [{ version: "0.1.1" }, { version: "0.2.0" }],
+        "0.1.1",
+        "0.2.0",
+      ),
+    );
+    const later = await prepare(root, ahead);
+    expect(later.report.packages.map((p) => p.promote)).toEqual([
+      false,
+      false,
+      false,
     ]);
   });
 

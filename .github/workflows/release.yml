@@ -5,7 +5,8 @@ name: Выпуск пакетов
 # одобрение. Три задачи: «Подготовка» — pnpm release prepare: проверка выпуска, архивы pnpm pack и план
 # в dist-release/ (реестр npm только читается); «Публикация» — npm publish архивов из плана, по порядку
 # ядро → тег → React, из окружения npm (публиковать из него можно только из main) с подписью provenance
-# через доверенную публикацию; «Проверка» — pnpm release verify: в npm ровно эти архивы, jsDelivr отдаёт
+# через доверенную публикацию, затем тег latest на версию плана: до запуска он идёт за каждой бетой
+# (решение владельца 30 октября 2026); «Проверка» — pnpm release verify: в npm ровно эти архивы, jsDelivr отдаёт
 # скрипт с хэшем из README, пакеты ставятся в чистый проект и рисуют иконку, а HTML-пример с настоящего
 # jsDelivr работает в Chrome. В задаче с правом публиковать нет ни checkout, ни pnpm install: там не
 # работает ничей код, кроме npm. Публикует только «живой» запуск — из main, не PR и не «только показ».
@@ -104,7 +105,8 @@ jobs:
         run: |
           if [ -f .cache/reports/release/prepare.md ]; then cat .cache/reports/release/prepare.md >> "$GITHUB_STEP_SUMMARY"; fi
           if [ -f dist-release/plan.json ]; then
-            echo "publish=$(jq '[.packages[] | select(.publish)] | length > 0' dist-release/plan.json)" >> "$GITHUB_OUTPUT"
+            # «Публикации» есть дело, если нужно выпустить пакет или переставить на версию latest.
+            echo "publish=$(jq '[.packages[] | select(.publish or .promote)] | length > 0' dist-release/plan.json)" >> "$GITHUB_OUTPUT"
             jq -r '.packages[] | select(.action == "awaiting") | "::warning::\(.name) ждёт первой публикации: ручной запуск «Выпуска пакетов» с «Первой публикацией» (ADR-0051)"' dist-release/plan.json
           else
             echo "publish=false" >> "$GITHUB_OUTPUT"
@@ -232,6 +234,63 @@ jobs:
             npm publish "./dist-release/$file" --tag "$tag" --access public --provenance --ignore-scripts
             echo "- $name@$version — опубликован под тегом $tag" >> "$GITHUB_STEP_SUMMARY"
           done < <(jq -r '.packages[] | select(.publish) | [.id, .name, .version, (.base // "-"), .action, .file, .integrity] | @tsv' dist-release/plan.json)
+      # latest — за каждой бетой (решение владельца 30 октября 2026, ADR-0051): когда все пакеты плана
+      # вышли, latest переставляется на версию плана доверенной публикацией с правом «Allow npm
+      # dist-tag». Ей нужен npm 11.21 и новее, а Node несёт 11.20 — ставится точная версия. Назад latest не
+      # двигается; свежую версию npm показывает не сразу — её ждём до 5 минут.
+      - name: Тег latest
+        env:
+          FIRST_PUBLISH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          # У первой публикации latest ставит сам npm; токен — на случай, если его ещё не видно.
+          if [ -n "$FIRST_PUBLISH_TOKEN" ]; then export NODE_AUTH_TOKEN="$FIRST_PUBLISH_TOKEN"; fi
+          need=11.21.0
+          have=$(npm --version)
+          if [ "$(printf '%s\n' "$need" "$have" | sort -V | head -n1)" != "$need" ]; then
+            npm install --global npm@11.21.1 --ignore-scripts --no-audit --no-fund
+          fi
+          while IFS=$'\t' read -r id name version; do
+            if ! [[ $id =~ ^(core|icon|react)$ && $name == "@iconavo-ui/$id" && $version =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+              echo "::error::Странная строка плана: $id $name $version"
+              exit 1
+            fi
+            seen=false
+            latest=""
+            for attempt in $(seq 1 20); do
+              code=$(curl -sS --retry 3 --max-time 60 -H "accept: application/json" -H "cache-control: no-cache" -o "$RUNNER_TEMP/doc.json" -w "%{http_code}" "https://registry.npmjs.org/${name/\//%2F}" || echo 000)
+              if [ "$code" = 200 ] && jq -e --arg v "$version" '.versions[$v] != null' "$RUNNER_TEMP/doc.json" > /dev/null; then
+                latest=$(jq -r '."dist-tags".latest // ""' "$RUNNER_TEMP/doc.json")
+                seen=true
+                break
+              fi
+              sleep 15
+            done
+            if [ "$seen" != true ]; then
+              echo "::error::$name@$version за 5 минут не появился в npm — повторите запуск «Выпуска пакетов» без флажков"
+              exit 1
+            fi
+            if [ "$latest" = "$version" ]; then
+              echo "$name: latest уже $version"
+              continue
+            fi
+            if [ -n "$latest" ] && [ "$(printf '%s\n' "$latest" "$version" | sort -V | tail -n1)" != "$version" ]; then
+              echo "::warning::$name: под latest уже $latest — новее $version, не трогаю"
+              continue
+            fi
+            moved=false
+            for attempt in 1 2 3; do
+              if npm dist-tag add "$name@$version" latest; then
+                moved=true
+                break
+              fi
+              sleep 30
+            done
+            if [ "$moved" != true ]; then
+              echo "::error::$name: latest не переставлен — у пакета на npmjs.com в Trusted Publisher включите «Allow npm dist-tag» и повторите запуск «Выпуска пакетов» без флажков"
+              exit 1
+            fi
+            echo "- $name: latest → $version" >> "$GITHUB_STEP_SUMMARY"
+          done < <(jq -r '.packages[] | select(.promote) | [.id, .name, .version] | @tsv' dist-release/plan.json)
 
   verify:
     name: Проверка
