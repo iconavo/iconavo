@@ -4,6 +4,20 @@
 Имена не пропадают: иконка, которую удалил автор, скрыта, но работает по имени, а старое имя переименованной ведёт на новое (ADR-0005).
 Скрытия и переименования вы одобряете лично в pull request (ADR-0019). Полные списки — в `changelog.json`.
 
+## 30 октября 2026 · версия 8d1ee623
+
+Прошлая версия: c3b3f7a7 · источник: 81875c8 · иконок: 1 998.
+
+**Требуют вашего одобрения**
+
+- Скрыты — автор удалил, имя продолжает работать (5): `circle-parking`, `copyright`, `heading`, `square-m`, `square-parking`
+- Переименованы — старое имя ведёт на новое (3): `bold` → `letter-b`, `circle-parking-off` → `circle-letter-p-off`, `square-parking-off` → `square-letter-p-off`
+
+**Изменения**
+
+- Добавлены (79): `circle-letter-a`, `circle-letter-b`, `circle-letter-c`, `circle-letter-d`, `circle-letter-e`, `circle-letter-f`, `circle-letter-g`, `circle-letter-h`, `circle-letter-i`, `circle-letter-j`, `circle-letter-k`, `circle-letter-l`, `circle-letter-m`, `circle-letter-n`, `circle-letter-o`, `circle-letter-p`, `circle-letter-q`, `circle-letter-r`, `circle-letter-s`, `circle-letter-t`, `circle-letter-u`, `circle-letter-v`, `circle-letter-w`, `circle-letter-x`, `circle-letter-y`, `circle-letter-z`, `letter-a`, `letter-c`, `letter-d`, `letter-e`, `letter-f`, `letter-g`, `letter-h`, `letter-i`, `letter-j`, `letter-k`, `letter-l`, `letter-m`, `letter-n`, `letter-o`, `letter-p`, `letter-q`, `letter-r`, `letter-s`, `letter-t`, `letter-u`, `letter-v`, `letter-w`, `letter-x`, `letter-y` … и ещё 29 — полный список в changelog.json
+- Изменены (11): `dollar-sign`, `georgian-lari`, `indian-rupee`, `japanese-yen`, `nepali-rupee`, `philippine-peso`, `pound-sterling`, `russian-ruble`, `saudi-riyal`, `swiss-franc`, `turkish-lira`
+
 ## 28 октября 2026 · версия c3b3f7a7
 
 Прошлая версия: 01c7796f · источник: 2ca268e · иконок: 1 924.
