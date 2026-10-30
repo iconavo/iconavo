@@ -331,15 +331,19 @@ export function fakeRegistry(
   };
 }
 
-/** Реестр, где эта версия трёх пакетов уже вышла, — версии и тег next. */
+/**
+ * Реестр, где эта версия трёх пакетов уже вышла, — версии, тег next и latest (latest идёт за каждой
+ * бетой, ADR-0051; latest — свой, если тест проверяет отставший).
+ */
 export function publishedAll(
   versions: FakeVersion[],
   tag = versions.at(-1)?.version ?? "0.1.0",
+  latest = tag,
 ): Record<string, FakePackage> {
   return Object.fromEntries(
     PACKAGES.map((id) => [
       packageName(id),
-      { versions, tags: { latest: versions[0]?.version ?? tag, next: tag } },
+      { versions, tags: { latest, next: tag } },
     ]),
   );
 }

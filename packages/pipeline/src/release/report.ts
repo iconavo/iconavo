@@ -31,6 +31,7 @@ const prepareRows = (r: ReleasePrepareReport) =>
     p.action ? (ACTIONS[p.action] ?? p.action) : "—",
     p.publish ? "да" : "нет",
     p.base ?? "—",
+    p.promote ? `${p.latest ?? "—"} → ${p.version}` : (p.latest ?? "—"),
     String(p.files.length),
     kb(p.bytes),
     p.problems.length > 0 ? "СТОП" : "ок",
@@ -42,6 +43,7 @@ const PREPARE_HEAD = [
   "Что",
   "Публиковать",
   "Сейчас под тегом",
+  "latest",
   "Файлов",
   "Архив",
   "Итог",
@@ -84,6 +86,10 @@ export function prepareVerdict(r: ReleasePrepareReport): string {
   }
   if (r.packages.some((p) => p.action === "awaiting")) {
     return "пакеты ждут первой публикации: ручной запуск «Выпуска пакетов» с «Первой публикацией» и временным токеном (ADR-0051).";
+  }
+  const promote = r.packages.filter((p) => p.promote);
+  if (promote.length > 0) {
+    return `${r.version} уже в npm — «Публикация» переставит на неё latest: ${promote.map((p) => p.name).join(", ")}.`;
   }
   return `всё в порядке, публиковать нечего: ${r.version} уже в npm.`;
 }

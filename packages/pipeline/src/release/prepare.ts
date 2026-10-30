@@ -60,6 +60,13 @@ export interface ReleaseEntry {
   /** Версия под тегом в npm до этого запуска: по ней «Публикация» видит устаревший план. */
   base: string | null;
   publish: boolean;
+  /** Версия под latest в npm до этого запуска. */
+  latest: string | null;
+  /**
+   * Переставить latest на эту версию: latest идёт за каждой бетой (решение владельца 30 октября 2026,
+   * ADR-0051), и только вперёд.
+   */
+  promote: boolean;
   /** Архив в dist-release/ и его SHA-512 «sha512-…». */
   file?: string;
   integrity?: string;
@@ -110,6 +117,8 @@ export interface ReleasePlan {
     action: ReleaseAction;
     base: string | null;
     publish: boolean;
+    latest: string | null;
+    promote: boolean;
     file: string;
     integrity: string;
     files: string[];
@@ -158,22 +167,30 @@ function registryState(
   version: string,
   first: boolean,
   tag: string,
-): { action?: ReleaseAction; base: string | null; problem?: string } {
+): {
+  action?: ReleaseAction;
+  base: string | null;
+  latest: string | null;
+  problem?: string;
+} {
   if (p === undefined)
-    return { action: first ? "new" : "awaiting", base: null };
+    return { action: first ? "new" : "awaiting", base: null, latest: null };
   const base = p.distTags[tag] ?? null;
+  const latest = p.distTags.latest ?? null;
   const stable = everPublished(p);
   if (stable.length === 0) {
     return {
       base,
+      latest,
       problem:
         "в npm у пакета только заготовка 0.0.0-stage: npm ещё обрабатывает первую публикацию — повторите через 5 минут",
     };
   }
-  if (p.versions.has(version)) return { action: "published", base };
+  if (p.versions.has(version)) return { action: "published", base, latest };
   if (p.times.has(version)) {
     return {
       base,
+      latest,
       problem: `номер ${version} уже был в npm и снят — выпустить его снова нельзя: pnpm release bump с новой версией`,
     };
   }
@@ -181,10 +198,11 @@ function registryState(
   if (compareVersions(ORDER(version), ORDER(highest)) <= 0) {
     return {
       base,
+      latest,
       problem: `версия ${version} не выше уже вышедшей ${highest} — pnpm release bump с версией выше`,
     };
   }
-  return { action: "release", base };
+  return { action: "release", base, latest };
 }
 
 export async function prepareRelease(
@@ -220,6 +238,8 @@ export async function prepareRelease(
       version: String(manifests.get(id)?.version),
       base: null,
       publish: false,
+      latest: null,
+      promote: false,
       files: [],
       problems: [],
       notes: [],
@@ -388,6 +408,7 @@ export async function prepareRelease(
     docs.set(entry.id, p);
     const state = registryState(p, version, first, tag);
     entry.base = state.base;
+    entry.latest = state.latest;
     if (state.problem) entry.problems.push(state.problem);
     if (state.action) entry.action = state.action;
   }
@@ -478,8 +499,22 @@ export async function prepareRelease(
         "ждёт первой публикации остальных: пакеты выходят вместе",
       );
     }
+    // latest — за каждой бетой и только вперёд (ADR-0051): у новой версии его переставит «Публикация»
+    // после выхода всех пакетов. Первую версию нового пакета npm ставит под latest сам.
+    entry.promote =
+      !awaiting &&
+      (entry.action === "new" ||
+        entry.action === "release" ||
+        entry.action === "published") &&
+      entry.latest !== version &&
+      (entry.latest === null ||
+        compareVersions(ORDER(version), ORDER(entry.latest)) > 0);
     if (entry.action === "published" && pending.length === 0) {
-      entry.notes.push(`${version} уже в npm — публиковать нечего`);
+      entry.notes.push(
+        entry.promote
+          ? `${version} уже в npm, а latest — ${entry.latest ?? "нет"}: запуск переставит latest на ${version}`
+          : `${version} уже в npm — публиковать нечего`,
+      );
     }
   }
 
@@ -498,6 +533,8 @@ export async function prepareRelease(
         action: e.action as ReleaseAction,
         base: e.base,
         publish: e.publish,
+        latest: e.latest,
+        promote: e.promote,
         file: e.file as string,
         integrity: e.integrity as string,
         files: e.files,
@@ -521,6 +558,7 @@ export async function readReleasePlan(path: string): Promise<ReleasePlan> {
   }
   const good =
     typeof plan.version === "string" &&
+    VERSION_FORMAT.test(plan.version) &&
     typeof plan.tag === "string" &&
     typeof plan.script?.integrity === "string" &&
     Array.isArray(plan.packages) &&
@@ -533,7 +571,9 @@ export async function readReleasePlan(path: string): Promise<ReleasePlan> {
         p.name === packageName(p.id) &&
         p.version === plan.version &&
         typeof p.integrity === "string" &&
-        typeof p.publish === "boolean",
+        typeof p.publish === "boolean" &&
+        typeof p.promote === "boolean" &&
+        (p.latest === null || typeof p.latest === "string"),
     );
   if (!good)
     throw new Error(

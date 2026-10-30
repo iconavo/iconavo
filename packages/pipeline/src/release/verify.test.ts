@@ -101,6 +101,43 @@ describe("pnpm release verify", () => {
     expect(report.clean.status).toBe("skipped");
   });
 
+  it("latest отстал — проблема с подсказкой; latest на версии новее — только пометка", async () => {
+    const { root, plan } = await planOf(
+      "0.1.1",
+      publishedAll([{ version: "0.1.0" }]),
+    );
+    const versions: FakeVersion[] = [
+      { version: "0.1.0" },
+      { version: "0.1.1", provenance: { commit: COMMIT } },
+    ];
+    const behind = await verifyRelease({
+      root,
+      plan,
+      registry: fakeRegistry(publishedAll(versions, "0.1.1", "0.1.0")),
+      fetch: jsdelivr(script()),
+      clean: false,
+    });
+    expect(behind.packages[0]?.problems).toEqual([
+      expect.stringContaining(
+        "latest → 0.1.0, а не 0.1.1: «Публикация» не переставила тег",
+      ),
+    ]);
+    expect(releaseVerifyFailed(behind)).toBe(true);
+    const newer = await verifyRelease({
+      root,
+      plan,
+      registry: fakeRegistry(
+        publishedAll([...versions, { version: "0.1.2" }], "0.1.1", "0.1.2"),
+      ),
+      fetch: jsdelivr(script()),
+      clean: false,
+    });
+    expect(newer.packages[0]?.problems).toEqual([]);
+    expect(newer.packages[0]?.notes).toContain(
+      "latest → 0.1.2: уже вышла версия новее",
+    );
+  });
+
   it("не тот workflow, коммит и архив, токен у второй версии — проблемы", async () => {
     const { root, plan } = await planOf(
       "0.1.1",
