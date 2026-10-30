@@ -21875,7 +21875,38 @@
       ]
     },
     "circle-letter-a": {
+      "en": {
+        "description": "An uppercase letter A inside a circle, typically representing a letter, grade, rating or category.",
+        "synonyms": [
+          "letter a",
+          "alphabet",
+          "character",
+          "font",
+          "text",
+          "grade",
+          "rating",
+          "blood type",
+          "uppercase",
+          "typography"
+        ]
+      },
       "fingerprint": "ed30e31c90a1",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Капитальная буква А внутри круга, обозначающая букву, категорию, оценку или тип.",
+        "synonyms": [
+          "буква а",
+          "алфавит",
+          "буква",
+          "шрифт",
+          "текст",
+          "оценка",
+          "рейтинг",
+          "группа крови",
+          "символ",
+          "заглавная буква"
+        ]
+      },
       "tags": [
         "alphabet",
         "character",
@@ -21894,7 +21925,38 @@
       ]
     },
     "circle-letter-b": {
+      "en": {
+        "description": "A bold capital letter B inside a circle, usually representing bold text formatting or the letter B.",
+        "synonyms": [
+          "bold",
+          "bold text",
+          "letter b",
+          "format text",
+          "typography",
+          "alphabet",
+          "character",
+          "font",
+          "blood type",
+          "emphasis"
+        ]
+      },
       "fingerprint": "525d07731a35",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Буква «B» внутри круга, обозначает жирный шрифт, форматирование текста или букву B.",
+        "synonyms": [
+          "буква b",
+          "жирный",
+          "жирный шрифт",
+          "форматирование",
+          "текст",
+          "алфавит",
+          "шрифт",
+          "группа крови",
+          "символ",
+          "полужирный"
+        ]
+      },
       "tags": [
         "strong",
         "emphasis",
@@ -21915,7 +21977,38 @@
       ]
     },
     "circle-letter-c": {
+      "en": {
+        "description": "A letter C inside a circle, usually representing copyright or a letter-based label in an interface.",
+        "synonyms": [
+          "copyright",
+          "copyright symbol",
+          "license",
+          "letter",
+          "alphabet",
+          "character",
+          "typography",
+          "font",
+          "celsius",
+          "carbon"
+        ]
+      },
       "fingerprint": "8e6c0cb972fd",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Буква «C» внутри круга; обычно обозначает авторское право, а также буквенный значок или градус Цельсия.",
+        "synonyms": [
+          "буква c",
+          "копирайт",
+          "знак авторского права",
+          "лицензия",
+          "символ",
+          "алфавит",
+          "текст",
+          "шрифт",
+          "температура",
+          "углерод"
+        ]
+      },
       "tags": [
         "alphabet",
         "character",
@@ -21934,7 +22027,34 @@
       ]
     },
     "circle-letter-d": {
+      "en": {
+        "description": "The letter D inside a circle, usually representing the letter D, a grade, or a vitamin D label.",
+        "synonyms": [
+          "letter d",
+          "alphabet",
+          "character",
+          "text",
+          "font",
+          "grade",
+          "rating",
+          "circle"
+        ]
+      },
       "fingerprint": "f96446a28cf5",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Буква D внутри круглой окружности, обозначает букву «D» или вариант «D» в рейтинге и обозначении.",
+        "synonyms": [
+          "буква d",
+          "буква д",
+          "алфавит",
+          "символ",
+          "текст",
+          "шрифт",
+          "оценка",
+          "круг"
+        ]
+      },
       "tags": [
         "alphabet",
         "character",
@@ -21952,7 +22072,38 @@
       ]
     },
     "circle-letter-e": {
+      "en": {
+        "description": "A capital letter E inside a circle, usually signaling an explicit content rating or a letter grade.",
+        "synonyms": [
+          "letter e",
+          "alphabet",
+          "character",
+          "font",
+          "typography",
+          "uppercase",
+          "explicit",
+          "content rating",
+          "east",
+          "energy"
+        ]
+      },
       "fingerprint": "cafd692fa6cf",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Изображена буква E внутри круга; обозначает букву «Е», рейтинг или ограничение контента.",
+        "synonyms": [
+          "буква e",
+          "буква е",
+          "алфавит",
+          "символ",
+          "шрифт",
+          "текст",
+          "рейтинг",
+          "возрастное ограничение",
+          "восток",
+          "энергия"
+        ]
+      },
       "tags": [
         "alphabet",
         "character",
@@ -21970,7 +22121,38 @@
       ]
     },
     "circle-letter-f": {
+      "en": {
+        "description": "A black circle enclosing a bold letter F; it represents the letter F, a typography character, or a failing grade.",
+        "synonyms": [
+          "letter f",
+          "alphabet",
+          "character",
+          "typography",
+          "font",
+          "uppercase",
+          "fahrenheit",
+          "grade",
+          "rating",
+          "f-stop"
+        ]
+      },
       "fingerprint": "432b97cb3494",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Черный круг с крупной буквой F внутри; обозначает букву F, шрифт или оценку «F».",
+        "synonyms": [
+          "буква f",
+          "буква эф",
+          "латинская f",
+          "алфавит",
+          "символ",
+          "шрифт",
+          "текст",
+          "температура",
+          "фаренгейт",
+          "двойка"
+        ]
+      },
       "tags": [
         "alphabet",
         "character",
@@ -21991,7 +22173,38 @@
       ]
     },
     "circle-letter-g": {
+      "en": {
+        "description": "The letter G inside a circular outline, typically used to represent the letter, text characters, or gravity.",
+        "synonyms": [
+          "letter g",
+          "letter",
+          "alphabet",
+          "character",
+          "font",
+          "text",
+          "gravity",
+          "circle",
+          "symbol",
+          "typography"
+        ]
+      },
       "fingerprint": "602ec9c87eee",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Буква G внутри круглой рамки; обозначает букву «G», символ текста или гравитации.",
+        "synonyms": [
+          "буква g",
+          "буква",
+          "алфавит",
+          "символ",
+          "шрифт",
+          "текст",
+          "гравитация",
+          "круг",
+          "знак",
+          "типографика"
+        ]
+      },
       "tags": [
         "alphabet",
         "character",
@@ -22006,7 +22219,38 @@
       ]
     },
     "circle-letter-h": {
+      "en": {
+        "description": "A circle enclosing a bold capital letter H; it usually marks a helipad or hospital, or represents the letter H.",
+        "synonyms": [
+          "letter h",
+          "helipad",
+          "hospital",
+          "heading",
+          "uppercase",
+          "alphabet",
+          "character",
+          "typography",
+          "hydrogen",
+          "height"
+        ]
+      },
       "fingerprint": "dd21592d61f1",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Круг с заглавной буквой H внутри; обычно обозначает вертолётную площадку или больницу, а также букву H.",
+        "synonyms": [
+          "буква h",
+          "вертолетная площадка",
+          "больница",
+          "медицина",
+          "заглавная буква",
+          "алфавит",
+          "шрифт",
+          "высота",
+          "водород",
+          "текст"
+        ]
+      },
       "tags": [
         "h1",
         "html",
@@ -22029,7 +22273,38 @@
       ]
     },
     "circle-letter-i": {
+      "en": {
+        "description": "A circle containing a vertical bar resembling the letter I; usually signals information or a hint.",
+        "synonyms": [
+          "letter i",
+          "information",
+          "info",
+          "hint",
+          "alphabet",
+          "character",
+          "font",
+          "typography",
+          "uppercase",
+          "help icon"
+        ]
+      },
       "fingerprint": "c133a900fde2",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Круг с вертикальной чертой внутри, похожий на букву «I»; обычно обозначает информацию или подсказку.",
+        "synonyms": [
+          "буква i",
+          "информация",
+          "инфо",
+          "подсказка",
+          "символ",
+          "алфавит",
+          "шрифт",
+          "типографика",
+          "текст",
+          "заглавная буква"
+        ]
+      },
       "tags": [
         "alphabet",
         "character",
@@ -22045,7 +22320,38 @@
       ]
     },
     "circle-letter-j": {
+      "en": {
+        "description": "A letter J drawn inside a circle, representing the letter J or a character label in an interface.",
+        "synonyms": [
+          "letter j",
+          "alphabet",
+          "character",
+          "text",
+          "font",
+          "uppercase",
+          "typography",
+          "joule",
+          "energy",
+          "circle letter"
+        ]
+      },
       "fingerprint": "bba7a3140a4d",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Изображена буква J внутри круга; обозначает букву J или текстовый символ в интерфейсе.",
+        "synonyms": [
+          "буква j",
+          "буква дж",
+          "алфавит",
+          "символ",
+          "текст",
+          "шрифт",
+          "заглавная буква",
+          "типографика",
+          "джоуль",
+          "энергия"
+        ]
+      },
       "tags": [
         "alphabet",
         "character",
@@ -22061,7 +22367,38 @@
       ]
     },
     "circle-letter-k": {
+      "en": {
+        "description": "The uppercase letter K inside a circle, representing the letter itself or abbreviations like kilo and Kelvin.",
+        "synonyms": [
+          "letter k",
+          "alphabet",
+          "character",
+          "text",
+          "font",
+          "typography",
+          "uppercase",
+          "kilo",
+          "kelvin",
+          "potassium"
+        ]
+      },
       "fingerprint": "96787bed10a0",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Буква «K» внутри круга; обозначает букву К, а также кило или калий в контексте.",
+        "synonyms": [
+          "буква к",
+          "буква k",
+          "алфавит",
+          "символ",
+          "текст",
+          "шрифт",
+          "типографика",
+          "кило",
+          "калий",
+          "кельвин"
+        ]
+      },
       "tags": [
         "alphabet",
         "character",
@@ -22078,7 +22415,36 @@
       ]
     },
     "circle-letter-l": {
+      "en": {
+        "description": "A circle containing a capital letter L, used to represent the letter, litres, or learner drivers.",
+        "synonyms": [
+          "letter l",
+          "litre",
+          "alphabet",
+          "character",
+          "uppercase",
+          "learner driver",
+          "typography",
+          "font",
+          "length"
+        ]
+      },
       "fingerprint": "78aa709454e8",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Окружность с заглавной буквой L внутри; обозначает букву L, литр или учебного водителя.",
+        "synonyms": [
+          "буква л",
+          "литр",
+          "алфавит",
+          "символ",
+          "шрифт",
+          "текст",
+          "учебный водитель",
+          "длина",
+          "заглавная буква"
+        ]
+      },
       "tags": [
         "alphabet",
         "character",
@@ -22095,7 +22461,38 @@
       ]
     },
     "circle-letter-m": {
+      "en": {
+        "description": "The letter M drawn inside a circle, usually representing the letter M or a medium or male label.",
+        "synonyms": [
+          "letter m",
+          "alphabet",
+          "character",
+          "text",
+          "font",
+          "uppercase",
+          "typography",
+          "million",
+          "metre",
+          "male"
+        ]
+      },
       "fingerprint": "01fe4ade8300",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Буква «M» внутри окружности; обозначает букву М, метро, мегабайт или мужской пол в интерфейсе.",
+        "synonyms": [
+          "буква м",
+          "буква",
+          "алфавит",
+          "символ",
+          "текст",
+          "шрифт",
+          "заглавная буква",
+          "мужской",
+          "метр",
+          "мега"
+        ]
+      },
       "tags": [
         "alphabet",
         "character",
@@ -22113,7 +22510,38 @@
       ]
     },
     "circle-letter-n": {
+      "en": {
+        "description": "The letter N inside a circle, usually representing north, neutral, or a letter in text.",
+        "synonyms": [
+          "letter n",
+          "north",
+          "neutral",
+          "alphabet",
+          "character",
+          "circle",
+          "typography",
+          "uppercase",
+          "symbol",
+          "compass"
+        ]
+      },
       "fingerprint": "83611e0fcea8",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Буква N внутри круга, обозначающая север, нейтральное значение или букву алфавита.",
+        "synonyms": [
+          "буква n",
+          "буква эн",
+          "север",
+          "нейтраль",
+          "круг",
+          "алфавит",
+          "символ",
+          "шрифт",
+          "текст",
+          "знак"
+        ]
+      },
       "tags": [
         "alphabet",
         "character",
@@ -22134,7 +22562,37 @@
       ]
     },
     "circle-letter-o": {
+      "en": {
+        "description": "Shows two concentric circles forming a ring, resembling the letter O; it represents the letter O, zero, or an off state.",
+        "synonyms": [
+          "letter o",
+          "zero",
+          "circle",
+          "ring",
+          "target",
+          "radio button",
+          "oxygen",
+          "blood type",
+          "off",
+          "marker"
+        ]
+      },
       "fingerprint": "0c05ce315ef8",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Изображена кольцевая фигура из двух концентрических окружностей, похожая на букву «O» внутри круга; обозначает букву О, нуль или переключатель «выключено».",
+        "synonyms": [
+          "буква о",
+          "буква o",
+          "нуль",
+          "кружок",
+          "круг",
+          "кольцо",
+          "ноль",
+          "мишень",
+          "радиокнопка"
+        ]
+      },
       "tags": [
         "alphabet",
         "character",
@@ -22151,7 +22609,38 @@
       ]
     },
     "circle-letter-p": {
+      "en": {
+        "description": "A letter P inside a circle, usually representing parking or a page-related letter label in an interface.",
+        "synonyms": [
+          "parking",
+          "letter p",
+          "circle letter",
+          "alphabet",
+          "text",
+          "font",
+          "character",
+          "uppercase",
+          "typography",
+          "parking sign"
+        ]
+      },
       "fingerprint": "118835aa0878",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Буква P внутри круга, символ парковки или обозначение буквы «П» в интерфейсе.",
+        "synonyms": [
+          "парковка",
+          "буква п",
+          "буква р",
+          "круг",
+          "алфавит",
+          "текст",
+          "шрифт",
+          "символ парковки",
+          "знак парковки",
+          "стоянка"
+        ]
+      },
       "tags": [
         "alphabet",
         "character",
@@ -22247,7 +22736,38 @@
       ]
     },
     "circle-letter-q": {
+      "en": {
+        "description": "A capital letter Q inside a circular outline, representing the letter Q or a quality or queue label.",
+        "synonyms": [
+          "letter q",
+          "alphabet",
+          "character",
+          "font",
+          "uppercase",
+          "typography",
+          "question mark",
+          "quality",
+          "queue",
+          "rating"
+        ]
+      },
       "fingerprint": "34381fcfef3c",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Буква Q внутри круглой рамки; обозначает букву Q, а также может использоваться как символ вопроса или качества.",
+        "synonyms": [
+          "буква q",
+          "буква ку",
+          "алфавит",
+          "шрифт",
+          "символ",
+          "заглавная буква",
+          "знак вопроса",
+          "качество",
+          "рейтинг",
+          "очередь"
+        ]
+      },
       "tags": [
         "alphabet",
         "character",
@@ -22265,7 +22785,38 @@
       ]
     },
     "circle-letter-r": {
+      "en": {
+        "description": "A capital letter R inside a circle, usually meaning a registered trademark or a letter character.",
+        "synonyms": [
+          "registered trademark",
+          "registered mark",
+          "trademark symbol",
+          "letter r",
+          "alphabet",
+          "character",
+          "typography",
+          "uppercase",
+          "font",
+          "text"
+        ]
+      },
       "fingerprint": "7bb95af9e554",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Буква R внутри круга, обозначающая зарегистрированный товарный знак или букву алфавита.",
+        "synonyms": [
+          "зарегистрированный товарный знак",
+          "знак охраны",
+          "товарный знак",
+          "буква r",
+          "символ r",
+          "алфавит",
+          "текст",
+          "шрифт",
+          "заглавная буква",
+          "рейтинг"
+        ]
+      },
       "tags": [
         "alphabet",
         "character",
@@ -22287,7 +22838,36 @@
       ]
     },
     "circle-letter-s": {
+      "en": {
+        "description": "Outline icon showing the letter S inside a circle, representing a character, text, or font.",
+        "synonyms": [
+          "letter s",
+          "alphabet",
+          "character",
+          "text",
+          "font",
+          "typography",
+          "symbol",
+          "initial",
+          "circled letter"
+        ]
+      },
       "fingerprint": "91f93c187716",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Линейный значок: буква S внутри окружности, обозначает букву, текст или шрифт.",
+        "synonyms": [
+          "буква s",
+          "буква с",
+          "алфавит",
+          "символ",
+          "текст",
+          "шрифт",
+          "литера",
+          "знак",
+          "типографика"
+        ]
+      },
       "tags": [
         "alphabet",
         "character",
@@ -22308,7 +22888,36 @@
       ]
     },
     "circle-letter-t": {
+      "en": {
+        "description": "A bold uppercase letter T inside a circular outline, usually representing text, font, or the letter T.",
+        "synonyms": [
+          "letter t",
+          "text",
+          "font",
+          "typography",
+          "uppercase",
+          "alphabet",
+          "character",
+          "symbol",
+          "tonne"
+        ]
+      },
       "fingerprint": "9b434c44b4d1",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Чёрная буква «T» внутри круглой рамки; обозначает текст, шрифт или букву Т.",
+        "synonyms": [
+          "буква т",
+          "буква",
+          "текст",
+          "шрифт",
+          "типографика",
+          "заглавная буква",
+          "символ",
+          "алфавит",
+          "тонна"
+        ]
+      },
       "tags": [
         "alphabet",
         "character",
@@ -22325,7 +22934,34 @@
       ]
     },
     "circle-letter-u": {
+      "en": {
+        "description": "Shows the uppercase letter U inside a circle, typically representing a letter, alphabet character, or text symbol.",
+        "synonyms": [
+          "letter u",
+          "alphabet",
+          "character",
+          "font",
+          "typography",
+          "text",
+          "uppercase",
+          "symbol"
+        ]
+      },
       "fingerprint": "a91f2b2e9ea6",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Изображение показывает букву U внутри круга; обычно обозначает символ буквы U, алфавит или текст.",
+        "synonyms": [
+          "буква u",
+          "буква ю",
+          "алфавит",
+          "символ",
+          "шрифт",
+          "текст",
+          "заглавная буква",
+          "знак"
+        ]
+      },
       "tags": [
         "alphabet",
         "character",
@@ -22341,7 +22977,38 @@
       ]
     },
     "circle-letter-v": {
+      "en": {
+        "description": "A black circle enclosing the letter V, typically used for the letter itself, voltage, or volume.",
+        "synonyms": [
+          "letter v",
+          "alphabet",
+          "character",
+          "voltage",
+          "volt",
+          "electricity",
+          "uppercase",
+          "vegan",
+          "victory",
+          "typography"
+        ]
+      },
       "fingerprint": "b7b96af97600",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Черный круг с буквой V внутри; обозначает букву V, вольты или напряжение.",
+        "synonyms": [
+          "буква v",
+          "буква в",
+          "вольт",
+          "напряжение",
+          "электричество",
+          "символ",
+          "алфавит",
+          "вегетарианство",
+          "победа",
+          "текст"
+        ]
+      },
       "tags": [
         "alphabet",
         "character",
@@ -22361,7 +23028,34 @@
       ]
     },
     "circle-letter-w": {
+      "en": {
+        "description": "A circle enclosing an uppercase letter W, typically representing the letter itself or the west direction.",
+        "synonyms": [
+          "letter w",
+          "uppercase w",
+          "circle letter",
+          "alphabet",
+          "character",
+          "west",
+          "typography",
+          "font"
+        ]
+      },
       "fingerprint": "6ad6998fd72d",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Круг с заглавной буквой W внутри, обозначающий букву «В» латиницы или символ западного направления.",
+        "synonyms": [
+          "буква w",
+          "буква в",
+          "латинская w",
+          "круг с буквой",
+          "алфавит",
+          "символ запад",
+          "запад",
+          "ватт"
+        ]
+      },
       "tags": [
         "alphabet",
         "character",
@@ -22380,7 +23074,34 @@
       ]
     },
     "circle-letter-x": {
+      "en": {
+        "description": "A letter X drawn inside a circle, usually meaning close, cancel, or dismiss.",
+        "synonyms": [
+          "close",
+          "cancel",
+          "cross",
+          "delete",
+          "dismiss",
+          "letter x",
+          "circled x",
+          "remove"
+        ]
+      },
       "fingerprint": "1832e3033fbd",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Изображена буква X внутри круга, что обычно означает закрытие, отмену или удаление.",
+        "synonyms": [
+          "закрыть",
+          "отмена",
+          "крестик",
+          "удалить",
+          "буква икс",
+          "круг с крестом",
+          "отменить",
+          "отклонить"
+        ]
+      },
       "tags": [
         "alphabet",
         "character",
@@ -22402,7 +23123,38 @@
       ]
     },
     "circle-letter-y": {
+      "en": {
+        "description": "A black outlined circle containing a capital letter Y, representing the letter Y or alphabetic text characters.",
+        "synonyms": [
+          "letter y",
+          "alphabet",
+          "character",
+          "symbol",
+          "text",
+          "font",
+          "typography",
+          "uppercase",
+          "y-axis",
+          "capital letter"
+        ]
+      },
       "fingerprint": "4cc56562a9bb",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Черный круг с буквой Y внутри; обозначает букву Y, а также алфавит или текстовый символ.",
+        "synonyms": [
+          "буква y",
+          "буква игрек",
+          "символ",
+          "алфавит",
+          "буква",
+          "шрифт",
+          "типографика",
+          "заглавная буква",
+          "ось y",
+          "текст"
+        ]
+      },
       "tags": [
         "alphabet",
         "character",
@@ -22420,7 +23172,38 @@
       ]
     },
     "circle-letter-z": {
+      "en": {
+        "description": "A capital letter Z inside a circular outline, representing a letter, alphabet character, or text label.",
+        "synonyms": [
+          "letter z",
+          "alphabet",
+          "character",
+          "symbol",
+          "text",
+          "font",
+          "uppercase",
+          "circle",
+          "typography",
+          "sign"
+        ]
+      },
       "fingerprint": "dbe8b157e51c",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Буква Z внутри круглой рамки; обозначает букву зет, символ текста или алфавита.",
+        "synonyms": [
+          "буква z",
+          "буква зет",
+          "алфавит",
+          "символ",
+          "текст",
+          "шрифт",
+          "заглавная буква",
+          "круг",
+          "знак",
+          "типографика"
+        ]
+      },
       "tags": [
         "alphabet",
         "character",
@@ -31016,7 +31799,38 @@
       ]
     },
     "dollar-sign": {
+      "en": {
+        "description": "A dollar sign: an S shape with a vertical line through its center, meaning money, price, or payment.",
+        "synonyms": [
+          "dollar",
+          "money",
+          "currency",
+          "price",
+          "cost",
+          "payment",
+          "finance",
+          "cash",
+          "funds",
+          "pricing"
+        ]
+      },
       "fingerprint": "f0477509367e",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Знак доллара: буква S с вертикальной чертой посередине; обозначает деньги, стоимость и оплату.",
+        "synonyms": [
+          "доллар",
+          "деньги",
+          "валюта",
+          "цена",
+          "стоимость",
+          "оплата",
+          "финансы",
+          "платеж",
+          "счет",
+          "знак доллара"
+        ]
+      },
       "tags": [
         "currency",
         "money",
@@ -40614,7 +41428,36 @@
       ]
     },
     "georgian-lari": {
+      "en": {
+        "description": "A stylized Georgian lari currency sign drawn with two vertical strokes over a curved bowl and base line, representing the Georgian lari currency.",
+        "synonyms": [
+          "currency",
+          "money",
+          "lari",
+          "georgia currency",
+          "finance",
+          "price",
+          "cost",
+          "payment",
+          "exchange rate"
+        ]
+      },
       "fingerprint": "43deefd39cf3",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Изображена большая буква лари с двумя вертикальными штрихами сверху и дугой, символ грузинской валюты лари.",
+        "synonyms": [
+          "лари",
+          "валюта",
+          "деньги",
+          "грузинский лари",
+          "финансы",
+          "цена",
+          "стоимость",
+          "оплата",
+          "курс"
+        ]
+      },
       "tags": [
         "currency",
         "money",
@@ -46507,7 +47350,37 @@
       ]
     },
     "indian-rupee": {
+      "en": {
+        "description": "A bold Indian rupee sign with two horizontal strokes and a curved diagonal stroke, representing Indian currency and money amounts.",
+        "synonyms": [
+          "rupee",
+          "inr",
+          "currency",
+          "money",
+          "price",
+          "cost",
+          "finance",
+          "payment",
+          "cash"
+        ]
+      },
       "fingerprint": "d6a83d49f16a",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Изображён знак индийской рупии: две горизонтальные черты и изогнутая линия с наклонным штрихом. Обозначает валюту Индии и денежные суммы.",
+        "synonyms": [
+          "рупия",
+          "индийская рупия",
+          "валюта",
+          "деньги",
+          "деньги индия",
+          "цена",
+          "стоимость",
+          "финансы",
+          "оплата",
+          "платёж"
+        ]
+      },
       "tags": [
         "currency",
         "money",
@@ -46838,7 +47711,38 @@
       ]
     },
     "japanese-yen": {
+      "en": {
+        "description": "Draws the Japanese yen sign, a Y-like glyph with two horizontal bars and a vertical stroke, representing the yen currency.",
+        "synonyms": [
+          "yen",
+          "currency",
+          "money",
+          "japanese currency",
+          "currency sign",
+          "finance",
+          "price",
+          "payment",
+          "cash",
+          "exchange"
+        ]
+      },
       "fingerprint": "78f430c9131d",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Изображён знак японской иены: символ Y с двумя горизонтальными черточками и вертикальной линией, обозначающий валюту иену.",
+        "synonyms": [
+          "иена",
+          "йена",
+          "валюта",
+          "деньги",
+          "японская валюта",
+          "знак валюты",
+          "финансы",
+          "цена",
+          "оплата",
+          "наличные"
+        ]
+      },
       "tags": [
         "currency",
         "money",
@@ -49285,7 +50189,37 @@
       ]
     },
     "letter-a": {
+      "en": {
+        "description": "Draws an uppercase letter A with a crossbar, usually representing text, font, or alphabet settings in an interface.",
+        "synonyms": [
+          "alphabet",
+          "font",
+          "text",
+          "typography",
+          "uppercase",
+          "character",
+          "symbol",
+          "capital a",
+          "typeface"
+        ]
+      },
       "fingerprint": "733f1cbe0159",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Изображена заглавная буква А с перекладиной, обозначающая текст, алфавит или шрифт в интерфейсе.",
+        "synonyms": [
+          "буква а",
+          "алфавит",
+          "шрифт",
+          "текст",
+          "типографика",
+          "заглавная буква",
+          "символ",
+          "знак",
+          "письмо",
+          "надпись"
+        ]
+      },
       "tags": [
         "alphabet",
         "character",
@@ -49355,7 +50289,38 @@
       ]
     },
     "letter-c": {
+      "en": {
+        "description": "Draws a large uppercase letter C as an open arc, representing the letter, text character or typography.",
+        "synonyms": [
+          "alphabet",
+          "character",
+          "font",
+          "typography",
+          "text",
+          "uppercase",
+          "symbol",
+          "celsius",
+          "temperature",
+          "carbon"
+        ]
+      },
       "fingerprint": "c140faba9f7b",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Изображена крупная буква C в виде открытой дуги; обозначает букву «C», текст или шрифт.",
+        "synonyms": [
+          "буква c",
+          "буква це",
+          "латинская c",
+          "алфавит",
+          "символ",
+          "шрифт",
+          "типографика",
+          "текст",
+          "заглавная буква",
+          "цельсий"
+        ]
+      },
       "tags": [
         "alphabet",
         "character",
@@ -49372,7 +50337,37 @@
       ]
     },
     "letter-d": {
+      "en": {
+        "description": "Outlined uppercase Latin letter D, representing the character itself, often used for text, fonts or a drive label.",
+        "synonyms": [
+          "alphabet",
+          "character",
+          "typography",
+          "uppercase",
+          "font",
+          "text",
+          "symbol",
+          "capital d",
+          "grade d"
+        ]
+      },
       "fingerprint": "565386f5c6f2",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Изображена заглавная латинская буква D в виде простого контура; обозначает букву или текстовый символ.",
+        "synonyms": [
+          "буква d",
+          "буква д",
+          "латиница",
+          "алфавит",
+          "символ",
+          "шрифт",
+          "текст",
+          "заглавная буква",
+          "типографика",
+          "витамин d"
+        ]
+      },
       "tags": [
         "alphabet",
         "character",
@@ -49390,7 +50385,37 @@
       ]
     },
     "letter-e": {
+      "en": {
+        "description": "Draws the uppercase letter E with rounded corners, representing the letter E or text typography.",
+        "synonyms": [
+          "alphabet",
+          "character",
+          "font",
+          "typography",
+          "uppercase",
+          "text",
+          "symbol",
+          "explicit",
+          "rating"
+        ]
+      },
       "fingerprint": "206ef43dd699",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Изображена заглавная буква «E» с закруглёнными углами; обозначает букву E, текст или текстовый шрифт.",
+        "synonyms": [
+          "буква е",
+          "буква e",
+          "латинская e",
+          "алфавит",
+          "символ",
+          "шрифт",
+          "типографика",
+          "заглавная буква",
+          "текст",
+          "восток"
+        ]
+      },
       "tags": [
         "alphabet",
         "character",
@@ -49408,7 +50433,33 @@
       ]
     },
     "letter-f": {
+      "en": {
+        "description": "Draws the uppercase letter F made of rounded strokes, representing the letter or font and text formatting.",
+        "synonyms": [
+          "uppercase f",
+          "alphabet",
+          "character",
+          "font",
+          "typography",
+          "text",
+          "symbol"
+        ]
+      },
       "fingerprint": "e39e32c531da",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Изображена заглавная буква F, составленная из линий с закруглёнными концами; обозначает букву или текстовое форматирование.",
+        "synonyms": [
+          "буква f",
+          "буква эф",
+          "большая буква",
+          "шрифт",
+          "типографика",
+          "текст",
+          "алфавит",
+          "символ"
+        ]
+      },
       "tags": [
         "alphabet",
         "character",
@@ -49429,7 +50480,37 @@
       ]
     },
     "letter-g": {
+      "en": {
+        "description": "A large uppercase letter G drawn as a rounded stroke with a horizontal bar; it represents the Latin letter G.",
+        "synonyms": [
+          "capital g",
+          "alphabet",
+          "character",
+          "text",
+          "font",
+          "typography",
+          "uppercase",
+          "symbol",
+          "gram"
+        ]
+      },
       "fingerprint": "ee2178b43d9f",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Изображена крупная буква G в виде округлой линии с горизонтальной перекладиной; обозначает букву латинского алфавита G.",
+        "synonyms": [
+          "буква g",
+          "буква джи",
+          "латинская буква",
+          "алфавит",
+          "символ",
+          "текст",
+          "шрифт",
+          "типографика",
+          "заглавная буква",
+          "знак"
+        ]
+      },
       "tags": [
         "alphabet",
         "character",
@@ -49444,7 +50525,37 @@
       ]
     },
     "letter-h": {
+      "en": {
+        "description": "Shows the uppercase letter H made of two vertical strokes and a crossbar, often representing a heading or the letter itself.",
+        "synonyms": [
+          "uppercase h",
+          "heading",
+          "alphabet",
+          "character",
+          "font",
+          "text",
+          "typography",
+          "markup",
+          "symbol"
+        ]
+      },
       "fingerprint": "af881340e555",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Изображена заглавная латинская буква H из двух вертикальных линий и перекладины; обозначает букву H или заголовок в тексте.",
+        "synonyms": [
+          "буква h",
+          "латинская h",
+          "заглавная h",
+          "заголовок",
+          "текст",
+          "шрифт",
+          "алфавит",
+          "символ",
+          "типографика",
+          "разметка"
+        ]
+      },
       "tags": [
         "html",
         "markup",
@@ -49466,7 +50577,37 @@
       ]
     },
     "letter-i": {
+      "en": {
+        "description": "A thick vertical line representing the uppercase letter I, often used to signal information or text.",
+        "synonyms": [
+          "alphabet",
+          "character",
+          "text",
+          "font",
+          "typography",
+          "uppercase",
+          "information",
+          "help",
+          "input"
+        ]
+      },
       "fingerprint": "c9deb91fdaed",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Изображена вертикальная толстая линия, представляющая букву «I» — символ текста, алфавита или информации.",
+        "synonyms": [
+          "буква i",
+          "буква и",
+          "латинская i",
+          "алфавит",
+          "текст",
+          "шрифт",
+          "типографика",
+          "заглавная буква",
+          "информация",
+          "помощь"
+        ]
+      },
       "tags": [
         "alphabet",
         "character",
@@ -49482,7 +50623,37 @@
       ]
     },
     "letter-j": {
+      "en": {
+        "description": "Draws the uppercase letter J as a thick black stroke curving at the bottom, representing a letter or text character.",
+        "synonyms": [
+          "alphabet",
+          "character",
+          "typography",
+          "uppercase",
+          "font",
+          "text symbol",
+          "joule",
+          "energy",
+          "javascript"
+        ]
+      },
       "fingerprint": "8611b26b5656",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Изображена заглавная буква J в виде тонкой чёрной линии с изгибом внизу; обозначает букву или текстовый символ.",
+        "synonyms": [
+          "буква j",
+          "буква дж",
+          "латинская буква",
+          "алфавит",
+          "символ",
+          "шрифт",
+          "текст",
+          "заглавная буква",
+          "джоуль",
+          "энергия"
+        ]
+      },
       "tags": [
         "alphabet",
         "character",
@@ -49498,7 +50669,37 @@
       ]
     },
     "letter-k": {
+      "en": {
+        "description": "Shows the uppercase Latin letter K drawn with three straight strokes, representing the letter or a text character.",
+        "synonyms": [
+          "uppercase k",
+          "alphabet",
+          "character",
+          "typography",
+          "font",
+          "text symbol",
+          "kilo",
+          "kelvin",
+          "potassium"
+        ]
+      },
       "fingerprint": "f33042346fe0",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Изображена заглавная латинская буква K, составленная из трёх линий; обозначает букву К или текстовый символ.",
+        "synonyms": [
+          "буква k",
+          "латинская k",
+          "заглавная k",
+          "буква",
+          "символ",
+          "шрифт",
+          "текст",
+          "алфавит",
+          "типографика",
+          "кило"
+        ]
+      },
       "tags": [
         "alphabet",
         "character",
@@ -49515,7 +50716,37 @@
       ]
     },
     "letter-l": {
+      "en": {
+        "description": "Draws the uppercase letter L with rounded strokes, representing the letter itself in text, alphabets, or typography.",
+        "synonyms": [
+          "uppercase l",
+          "alphabet",
+          "character",
+          "text",
+          "font",
+          "typography",
+          "litre",
+          "length",
+          "learner"
+        ]
+      },
       "fingerprint": "3574c73e9614",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Изображена заглавная буква L из толстых скруглённых линий; обозначает букву «эл» в тексте и шрифтах.",
+        "synonyms": [
+          "буква л",
+          "буква l",
+          "заглавная л",
+          "алфавит",
+          "символ",
+          "текст",
+          "шрифт",
+          "типографика",
+          "литр",
+          "длина"
+        ]
+      },
       "tags": [
         "alphabet",
         "character",
@@ -49532,7 +50763,35 @@
       ]
     },
     "letter-m": {
+      "en": {
+        "description": "Draws the uppercase Latin letter M with thick strokes, representing the letter or a text character.",
+        "synonyms": [
+          "letter",
+          "character",
+          "font",
+          "text",
+          "uppercase",
+          "alphabet",
+          "typography",
+          "male"
+        ]
+      },
       "fingerprint": "34b242fd7485",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Изображена заглавная латинская буква M из толстых линий; обозначает букву M или текстовый символ.",
+        "synonyms": [
+          "буква м",
+          "буква",
+          "символ",
+          "шрифт",
+          "текст",
+          "заглавная буква",
+          "алфавит",
+          "типографика",
+          "мужской"
+        ]
+      },
       "tags": [
         "alphabet",
         "character",
@@ -49550,7 +50809,36 @@
       ]
     },
     "letter-n": {
+      "en": {
+        "description": "Draws the uppercase Latin letter N with rounded stroke ends, representing the letter, text, or typography.",
+        "synonyms": [
+          "alphabet",
+          "character",
+          "text",
+          "font",
+          "uppercase",
+          "typography",
+          "north",
+          "letter",
+          "symbol"
+        ]
+      },
       "fingerprint": "5bb5d2f802a2",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Изображена заглавная латинская буква N с закруглёнными концами; обозначает букву N, текст или шрифт.",
+        "synonyms": [
+          "буква n",
+          "латинская буква",
+          "алфавит",
+          "символ",
+          "текст",
+          "шрифт",
+          "север",
+          "заглавная буква",
+          "типографика"
+        ]
+      },
       "tags": [
         "alphabet",
         "character",
@@ -49571,7 +50859,37 @@
       ]
     },
     "letter-o": {
+      "en": {
+        "description": "A thick black circle outline on white, representing the letter O or a zero character.",
+        "synonyms": [
+          "alphabet",
+          "character",
+          "font",
+          "typography",
+          "circle",
+          "ring",
+          "zero",
+          "uppercase",
+          "oval"
+        ]
+      },
       "fingerprint": "3571c7801ee5",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Изображена толстая черная окружность на белом фоне, обозначающая букву «О» или нулевой символ.",
+        "synonyms": [
+          "буква о",
+          "буква",
+          "алфавит",
+          "символ",
+          "шрифт",
+          "типографика",
+          "круг",
+          "кольцо",
+          "ноль",
+          "нуль"
+        ]
+      },
       "tags": [
         "alphabet",
         "character",
@@ -49588,7 +50906,37 @@
       ]
     },
     "letter-p": {
+      "en": {
+        "description": "Draws the uppercase letter P in a simple outline stroke, representing the letter itself or parking in interfaces.",
+        "synonyms": [
+          "uppercase p",
+          "alphabet",
+          "character",
+          "text",
+          "font",
+          "parking",
+          "typography",
+          "symbol",
+          "capital p"
+        ]
+      },
       "fingerprint": "ef7825ce092a",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Изображена заглавная буква «P» простым линейным контуром; обозначает букву P, а также парковку в интерфейсах.",
+        "synonyms": [
+          "буква p",
+          "буква пэ",
+          "заглавная p",
+          "алфавит",
+          "текст",
+          "шрифт",
+          "парковка",
+          "парковочное место",
+          "типографика",
+          "символ"
+        ]
+      },
       "tags": [
         "alphabet",
         "character",
@@ -49610,7 +50958,35 @@
       ]
     },
     "letter-q": {
+      "en": {
+        "description": "Shows the uppercase letter Q drawn as a circle with a diagonal tail, representing the letter or a text character.",
+        "synonyms": [
+          "alphabet",
+          "character",
+          "font",
+          "typography",
+          "text",
+          "uppercase",
+          "symbol",
+          "quality"
+        ]
+      },
       "fingerprint": "25449f0e04df",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Изображена заглавная буква Q в виде круга с хвостиком; символ означает букву Q или текстовый знак.",
+        "synonyms": [
+          "буква q",
+          "буква ку",
+          "латинская буква",
+          "алфавит",
+          "шрифт",
+          "текст",
+          "символ",
+          "заглавная буква",
+          "качество"
+        ]
+      },
       "tags": [
         "alphabet",
         "character",
@@ -49628,7 +51004,35 @@
       ]
     },
     "letter-r": {
+      "en": {
+        "description": "Draws the uppercase letter R with rounded strokes, representing the letter or text characters in an interface.",
+        "synonyms": [
+          "uppercase r",
+          "alphabet",
+          "character",
+          "font",
+          "typography",
+          "text",
+          "trademark",
+          "registered"
+        ]
+      },
       "fingerprint": "090871aca162",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Изображена заглавная буква R, выполненная линиями с закруглёнными концами; обозначает букву «эр» или текстовый символ.",
+        "synonyms": [
+          "буква r",
+          "буква эр",
+          "латинская буква",
+          "алфавит",
+          "шрифт",
+          "заглавная буква",
+          "знак товарный",
+          "текст",
+          "типографика"
+        ]
+      },
       "tags": [
         "alphabet",
         "character",
@@ -49650,7 +51054,38 @@
       ]
     },
     "letter-s": {
+      "en": {
+        "description": "Shows the uppercase letter S drawn as a thick rounded stroke, representing a text character or the letter S.",
+        "synonyms": [
+          "letter",
+          "alphabet",
+          "character",
+          "font",
+          "text",
+          "typography",
+          "uppercase",
+          "south",
+          "sulfur",
+          "symbol"
+        ]
+      },
       "fingerprint": "e714c820ed8f",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Изображена буква S в виде тонкой линии с закруглёнными концами; обозначает букву или символ текста.",
+        "synonyms": [
+          "буква s",
+          "буква с",
+          "алфавит",
+          "шрифт",
+          "текст",
+          "символ",
+          "типографика",
+          "заглавная буква",
+          "юг",
+          "сера"
+        ]
+      },
       "tags": [
         "alphabet",
         "character",
@@ -49718,7 +51153,35 @@
       ]
     },
     "letter-t": {
+      "en": {
+        "description": "Shows an uppercase letter T with rounded ends, representing text, typography, or the letter T.",
+        "synonyms": [
+          "alphabet",
+          "character",
+          "font",
+          "text",
+          "typography",
+          "uppercase",
+          "symbol",
+          "capital t"
+        ]
+      },
       "fingerprint": "9b5b1c2d9000",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Изображена заглавная буква T с закруглёнными концами; обозначает текст, шрифт или букву «т».",
+        "synonyms": [
+          "буква т",
+          "буква",
+          "символ",
+          "шрифт",
+          "текст",
+          "типографика",
+          "заглавная буква",
+          "алфавит",
+          "знак"
+        ]
+      },
       "tags": [
         "alphabet",
         "character",
@@ -49735,7 +51198,37 @@
       ]
     },
     "letter-u": {
+      "en": {
+        "description": "Draws the uppercase letter U with a rounded bottom, representing the letter, alphabet text or typography.",
+        "synonyms": [
+          "uppercase u",
+          "alphabet",
+          "character",
+          "font",
+          "text",
+          "typography",
+          "symbol",
+          "capital u",
+          "latin letter"
+        ]
+      },
       "fingerprint": "4274035dc418",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Изображена заглавная буква U с закруглённым низом; обозначает букву U, текст или шрифт.",
+        "synonyms": [
+          "буква u",
+          "буква ю",
+          "заглавная u",
+          "алфавит",
+          "символ",
+          "шрифт",
+          "текст",
+          "типографика",
+          "знак u",
+          "латинская буква"
+        ]
+      },
       "tags": [
         "alphabet",
         "character",
@@ -49751,7 +51244,38 @@
       ]
     },
     "letter-v": {
+      "en": {
+        "description": "Draws the uppercase letter V from two strokes, representing the letter or a text character in interfaces.",
+        "synonyms": [
+          "alphabet",
+          "character",
+          "text",
+          "font",
+          "typography",
+          "uppercase",
+          "voltage",
+          "volume",
+          "victory",
+          "success"
+        ]
+      },
       "fingerprint": "75f87c71dcdc",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Изображена заглавная буква V, нарисованная двумя линиями; обозначает букву V или текстовый символ.",
+        "synonyms": [
+          "буква v",
+          "буква в",
+          "латинская v",
+          "алфавит",
+          "символ",
+          "текст",
+          "шрифт",
+          "типографика",
+          "заглавная буква",
+          "вольт"
+        ]
+      },
       "tags": [
         "alphabet",
         "character",
@@ -49771,7 +51295,37 @@
       ]
     },
     "letter-w": {
+      "en": {
+        "description": "A bold uppercase Latin letter W, representing a character in text or typography.",
+        "synonyms": [
+          "alphabet",
+          "character",
+          "font",
+          "text",
+          "uppercase",
+          "typography",
+          "symbol",
+          "capital w",
+          "west"
+        ]
+      },
       "fingerprint": "9f264b4fe412",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Изображена заглавная латинская буква W, обозначающая букву в тексте или шрифте.",
+        "synonyms": [
+          "буква w",
+          "буква в",
+          "латиница",
+          "алфавит",
+          "символ",
+          "шрифт",
+          "текст",
+          "заглавная",
+          "типографика",
+          "запад"
+        ]
+      },
       "tags": [
         "alphabet",
         "character",
@@ -49790,7 +51344,33 @@
       ]
     },
     "letter-x": {
+      "en": {
+        "description": "Shows the uppercase letter X formed by two crossing strokes, commonly used to mean close or dismiss.",
+        "synonyms": [
+          "close",
+          "cross",
+          "multiply",
+          "dismiss",
+          "delete",
+          "cancel",
+          "exit"
+        ]
+      },
       "fingerprint": "51e54af41c33",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Изображена прописная латинская буква X из двух пересекающихся линий; обычно означает закрытие или отмену.",
+        "synonyms": [
+          "крестик",
+          "закрыть",
+          "закрыть окно",
+          "буква икс",
+          "отмена",
+          "удалить",
+          "перечеркнуть",
+          "крест"
+        ]
+      },
       "tags": [
         "alphabet",
         "character",
@@ -49812,7 +51392,35 @@
       ]
     },
     "letter-y": {
+      "en": {
+        "description": "Shows the uppercase letter Y drawn with simple strokes, representing a character, text, or typography.",
+        "synonyms": [
+          "uppercase y",
+          "alphabet",
+          "character",
+          "font",
+          "text",
+          "typography",
+          "symbol",
+          "y-axis"
+        ]
+      },
       "fingerprint": "0c3ecc71e219",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Изображена заглавная буква Y из простых линий; иконка обозначает букву, текст или шрифт.",
+        "synonyms": [
+          "буква y",
+          "буква игрек",
+          "литера",
+          "символ",
+          "алфавит",
+          "текст",
+          "шрифт",
+          "заглавная буква",
+          "типографика"
+        ]
+      },
       "tags": [
         "alphabet",
         "character",
@@ -49830,7 +51438,37 @@
       ]
     },
     "letter-z": {
+      "en": {
+        "description": "Shows the uppercase Latin letter Z, used for text characters, the alphabet, or a Z-axis label.",
+        "synonyms": [
+          "uppercase z",
+          "character",
+          "alphabet",
+          "text",
+          "font",
+          "typography",
+          "symbol",
+          "z-axis",
+          "capital letter"
+        ]
+      },
       "fingerprint": "cb0f175a1704",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Изображена прописная латинская буква Z, обозначающая букву Z в тексте или алфавите.",
+        "synonyms": [
+          "буква z",
+          "латинская z",
+          "буква",
+          "алфавит",
+          "символ",
+          "текст",
+          "шрифт",
+          "заглавная буква",
+          "знак",
+          "типографика"
+        ]
+      },
       "tags": [
         "alphabet",
         "character",
@@ -59791,7 +61429,37 @@
       ]
     },
     "nepali-rupee": {
+      "en": {
+        "description": "Draws the Nepali rupee currency sign, a stylized letter with a horizontal top bar; it represents Nepalese money and currency.",
+        "synonyms": [
+          "rupee",
+          "npr",
+          "currency",
+          "money",
+          "cash",
+          "finance",
+          "price",
+          "payment",
+          "nepal"
+        ]
+      },
       "fingerprint": "71c9d8410f27",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Изображён знак непальской рупии в виде стилизованной буквы «रु» с горизонтальной чертой сверху; обозначает валюту Непала и деньги.",
+        "synonyms": [
+          "рупия",
+          "непальская рупия",
+          "валюта",
+          "деньги",
+          "наличные",
+          "финансы",
+          "цена",
+          "платёж",
+          "непал",
+          "знак валюты"
+        ]
+      },
       "tags": [
         "currency",
         "money",
@@ -60472,7 +62140,35 @@
       ]
     },
     "numbers": {
+      "en": {
+        "description": "Draws the digits 1, 2 and 3 arranged together; it usually represents numbers, numbering, or numeric content.",
+        "synonyms": [
+          "digits",
+          "numeral",
+          "counting",
+          "sequence",
+          "math",
+          "quantity",
+          "numeric",
+          "123"
+        ]
+      },
       "fingerprint": "f57ec46c5ed9",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Изображены цифры 1, 2 и 3, расположенные в виде группы; обозначает числа, нумерацию или числовые данные.",
+        "synonyms": [
+          "цифры",
+          "числа",
+          "нумерация",
+          "счет",
+          "порядок",
+          "математика",
+          "последовательность",
+          "количество",
+          "números"
+        ]
+      },
       "tags": [
         "digit",
         "number",
@@ -64060,7 +65756,38 @@
       ]
     },
     "philippine-peso": {
+      "en": {
+        "description": "Draws a letter P with two horizontal strokes through its bowl, the Philippine peso currency sign, meaning money or pricing.",
+        "synonyms": [
+          "peso",
+          "currency sign",
+          "money",
+          "currency",
+          "philippine currency",
+          "price",
+          "cash",
+          "finance",
+          "payment",
+          "cost"
+        ]
+      },
       "fingerprint": "47bc4b017c99",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Изображена буква P с двумя горизонтальными перечёркивающими линиями, символ филиппинского песо, обозначающий валюту и деньги.",
+        "synonyms": [
+          "песо",
+          "филиппинское песо",
+          "валюта",
+          "деньги",
+          "знак валюты",
+          "финансы",
+          "цена",
+          "платёж",
+          "стоимость",
+          "наличные"
+        ]
+      },
       "tags": [
         "currency",
         "money",
@@ -66017,7 +67744,36 @@
       ]
     },
     "pound-sterling": {
+      "en": {
+        "description": "A bold pound sterling sign with a horizontal bar through its upright stroke; it represents British pound currency, prices, or money amounts.",
+        "synonyms": [
+          "pound",
+          "gbp",
+          "currency",
+          "money",
+          "price",
+          "cost",
+          "payment",
+          "finance",
+          "sterling"
+        ]
+      },
       "fingerprint": "ae848cb11ef6",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Изображён знак английского фунта стерлингов «£» в виде жирной буквы L с горизонтальной перекладиной; обозначает валюту, цену или денежные суммы.",
+        "synonyms": [
+          "фунт",
+          "фунт стерлингов",
+          "валюта",
+          "деньги",
+          "знак фунта",
+          "цена",
+          "стоимость",
+          "оплата",
+          "финансы"
+        ]
+      },
       "tags": [
         "currency",
         "money",
@@ -70142,7 +71898,38 @@
       ]
     },
     "russian-ruble": {
+      "en": {
+        "description": "A Russian ruble sign: a letter P with two horizontal strokes crossing its vertical stem, meaning the ruble currency and money.",
+        "synonyms": [
+          "ruble",
+          "rouble",
+          "currency",
+          "money",
+          "cash",
+          "price",
+          "cost",
+          "payment",
+          "finance",
+          "exchange"
+        ]
+      },
       "fingerprint": "fdc05bdd38ec",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Знак российского рубля: буква «Р» с двумя горизонтальными черточками через вертикальную линию, обозначает валюту и деньги.",
+        "synonyms": [
+          "рубль",
+          "валюта",
+          "деньги",
+          "знак рубля",
+          "рублёвый знак",
+          "финансы",
+          "цена",
+          "стоимость",
+          "оплата",
+          "наличные"
+        ]
+      },
       "tags": [
         "currency",
         "money",
@@ -70377,7 +72164,36 @@
       ]
     },
     "saudi-riyal": {
+      "en": {
+        "description": "Saudi riyal currency sign drawn as two vertical strokes with crossing horizontal bars, representing Saudi Arabian money and currency.",
+        "synonyms": [
+          "currency",
+          "money",
+          "riyal",
+          "saudi currency",
+          "finance",
+          "payment",
+          "price",
+          "cost",
+          "cash"
+        ]
+      },
       "fingerprint": "3f883174b52e",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Знак саудовского риала: две вертикальные линии с перекрещивающимися горизонтальными штрихами, обозначает валюту Саудовской Аравии и деньги.",
+        "synonyms": [
+          "валюта",
+          "деньги",
+          "риал",
+          "саудовский риал",
+          "финансы",
+          "оплата",
+          "цена",
+          "стоимость",
+          "наличные"
+        ]
+      },
       "tags": [
         "currency",
         "money",
@@ -80455,7 +82271,38 @@
       ]
     },
     "square-kanban-plus": {
+      "en": {
+        "description": "A rounded square frame with three vertical column bars and a plus sign at the lower right, meaning add a new board or task.",
+        "synonyms": [
+          "add board",
+          "new board",
+          "kanban",
+          "create task",
+          "plus",
+          "project",
+          "columns",
+          "tickets",
+          "task tracker",
+          "workflow"
+        ]
+      },
       "fingerprint": "c53859207d8a",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Квадратная рамка с тремя вертикальными полосами-колонками и знаком плюс внизу справа; обозначает создание новой доски или задачи.",
+        "synonyms": [
+          "добавить доску",
+          "новая доска",
+          "канбан",
+          "создать задачу",
+          "плюс",
+          "проект",
+          "колонки",
+          "задачи",
+          "трекер задач",
+          "планирование"
+        ]
+      },
       "tags": [
         "board",
         "project",
@@ -80476,7 +82323,38 @@
       ]
     },
     "square-letter-a": {
+      "en": {
+        "description": "A rounded square outline enclosing a bold uppercase letter A, usually representing text, font, or an alphabet character.",
+        "synonyms": [
+          "letter a",
+          "letter",
+          "alphabet",
+          "font",
+          "text",
+          "uppercase",
+          "character",
+          "typography",
+          "grade",
+          "symbol"
+        ]
+      },
       "fingerprint": "e3d521eab6cb",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Квадратная рамка с заглавной буквой А внутри; обозначает букву, текст, шрифт или оценку «А».",
+        "synonyms": [
+          "буква а",
+          "буква",
+          "алфавит",
+          "шрифт",
+          "текст",
+          "заглавная буква",
+          "типографика",
+          "оценка",
+          "символ",
+          "квадрат"
+        ]
+      },
       "tags": [
         "alphabet",
         "character",
@@ -80495,7 +82373,38 @@
       ]
     },
     "square-letter-b": {
+      "en": {
+        "description": "A bold uppercase letter B inside a rounded square frame, usually representing bold text formatting in an editor.",
+        "synonyms": [
+          "bold",
+          "bold text",
+          "format",
+          "emphasis",
+          "font",
+          "text style",
+          "typography",
+          "uppercase letter",
+          "letter b",
+          "editor"
+        ]
+      },
       "fingerprint": "9ee6fdc03e9a",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Буква «B» жирным шрифтом внутри квадратной рамки, обозначает полужирное начертание текста или форматирование.",
+        "synonyms": [
+          "полужирный",
+          "жирный",
+          "буква б",
+          "форматирование",
+          "шрифт",
+          "текст",
+          "выделение",
+          "типографика",
+          "заглавная буква",
+          "алфавит"
+        ]
+      },
       "tags": [
         "strong",
         "emphasis",
@@ -80516,7 +82425,38 @@
       ]
     },
     "square-letter-c": {
+      "en": {
+        "description": "A letter C drawn inside a rounded square, representing the uppercase character C or a grade-like label.",
+        "synonyms": [
+          "letter c",
+          "square",
+          "alphabet",
+          "character",
+          "font",
+          "typography",
+          "text",
+          "celsius",
+          "temperature",
+          "grade"
+        ]
+      },
       "fingerprint": "85afc85d8627",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Изображена буква C внутри квадрата со скруглёнными углами; обозначает букву или символ C, например шкалу Цельсия.",
+        "synonyms": [
+          "буква c",
+          "буква ц",
+          "квадрат",
+          "алфавит",
+          "символ",
+          "шрифт",
+          "текст",
+          "градусы цельсия",
+          "температура",
+          "литера"
+        ]
+      },
       "tags": [
         "alphabet",
         "character",
@@ -80533,7 +82473,36 @@
       ]
     },
     "square-letter-d": {
+      "en": {
+        "description": "A bold uppercase letter D inside a rounded square outline, representing a letter, text character, or typography.",
+        "synonyms": [
+          "letter d",
+          "letter",
+          "square",
+          "frame",
+          "alphabet",
+          "character",
+          "text",
+          "font",
+          "uppercase"
+        ]
+      },
       "fingerprint": "0add171ac737",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Изображена буква D внутри квадратной рамки; обозначает букву «D», текст или шрифт.",
+        "synonyms": [
+          "буква d",
+          "буква",
+          "квадрат",
+          "рамка",
+          "алфавит",
+          "символ",
+          "текст",
+          "шрифт",
+          "заглавная буква"
+        ]
+      },
       "tags": [
         "alphabet",
         "character",
@@ -80551,7 +82520,38 @@
       ]
     },
     "square-letter-e": {
+      "en": {
+        "description": "A bold letter E inside a rounded square frame, often used to represent an explicit content rating or a letter.",
+        "synonyms": [
+          "letter e",
+          "alphabet",
+          "character",
+          "font",
+          "typography",
+          "square",
+          "explicit",
+          "rating",
+          "uppercase",
+          "text"
+        ]
+      },
       "fingerprint": "ebfd3da7a685",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Изображена буква E внутри квадратной рамки; обозначает букву «Е», код или категорию, например рейтинг контента.",
+        "synonyms": [
+          "буква е",
+          "буква",
+          "алфавит",
+          "символ",
+          "шрифт",
+          "квадрат",
+          "рейтинг",
+          "текст",
+          "заглавная буква",
+          "знак"
+        ]
+      },
       "tags": [
         "alphabet",
         "character",
@@ -80569,7 +82569,38 @@
       ]
     },
     "square-letter-f": {
+      "en": {
+        "description": "Uppercase letter F inside a rounded square outline, typically representing a letter, font character or text.",
+        "synonyms": [
+          "letter f",
+          "alphabet",
+          "font",
+          "typography",
+          "character",
+          "text",
+          "uppercase",
+          "symbol",
+          "square frame",
+          "initial"
+        ]
+      },
       "fingerprint": "086bc37b0232",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Letter F inside a rounded square outline, usually representing the letter F, a font or text character.",
+        "synonyms": [
+          "буква f",
+          "буква эф",
+          "буква ф",
+          "квадрат",
+          "рамка",
+          "шрифт",
+          "текст",
+          "символ",
+          "алфавит",
+          "заглавная буква"
+        ]
+      },
       "tags": [
         "alphabet",
         "character",
@@ -80590,7 +82621,38 @@
       ]
     },
     "square-letter-g": {
+      "en": {
+        "description": "A bold letter G inside a rounded square, usually representing a text character, alphabet letter, or font option.",
+        "synonyms": [
+          "letter g",
+          "letter",
+          "alphabet",
+          "character",
+          "font",
+          "text",
+          "typography",
+          "uppercase",
+          "square",
+          "gram"
+        ]
+      },
       "fingerprint": "60a3beb2217b",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Буква G в рамке со скруглёнными углами; обозначает букву, текст или шрифт в интерфейсе.",
+        "synonyms": [
+          "буква g",
+          "буква",
+          "алфавит",
+          "символ",
+          "шрифт",
+          "текст",
+          "заглавная буква",
+          "квадрат",
+          "гравитация",
+          "грам"
+        ]
+      },
       "tags": [
         "alphabet",
         "character",
@@ -80605,7 +82667,38 @@
       ]
     },
     "square-letter-h": {
+      "en": {
+        "description": "A rounded square outline containing a bold uppercase letter H, usually representing a heading or the letter H.",
+        "synonyms": [
+          "letter h",
+          "heading",
+          "header",
+          "markup",
+          "font",
+          "character",
+          "hydrogen",
+          "hospital",
+          "height",
+          "typography"
+        ]
+      },
       "fingerprint": "47d7fd521cbc",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Квадратная рамка с крупной буквой H внутри; обозначает заголовок первого уровня, букву H или больницу.",
+        "synonyms": [
+          "буква h",
+          "заголовок",
+          "хедер",
+          "разметка",
+          "шрифт",
+          "символ",
+          "водород",
+          "больница",
+          "высота",
+          "текст"
+        ]
+      },
       "tags": [
         "h1",
         "html",
@@ -80628,7 +82721,38 @@
       ]
     },
     "square-letter-i": {
+      "en": {
+        "description": "A rounded square outline containing a vertical bar, representing the letter I; in interfaces it often signals information or help.",
+        "synonyms": [
+          "letter i",
+          "alphabet",
+          "character",
+          "text",
+          "font",
+          "typography",
+          "uppercase",
+          "information",
+          "help",
+          "input"
+        ]
+      },
       "fingerprint": "5cc4fc3ffdc5",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Квадратная рамка с вертикальной чертой внутри, обозначающая букву I; в интерфейсе часто означает информацию или справку.",
+        "synonyms": [
+          "буква i",
+          "буква и",
+          "квадрат",
+          "алфавит",
+          "символ",
+          "текст",
+          "шрифт",
+          "информация",
+          "справка",
+          "инфо"
+        ]
+      },
       "tags": [
         "alphabet",
         "character",
@@ -80644,7 +82768,36 @@
       ]
     },
     "square-letter-j": {
+      "en": {
+        "description": "Draws the letter J inside a rounded square, representing the character J in text or alphabet contexts.",
+        "synonyms": [
+          "letter j",
+          "character",
+          "alphabet",
+          "text",
+          "font",
+          "typography",
+          "uppercase",
+          "latin letter",
+          "boxed letter"
+        ]
+      },
       "fingerprint": "261ef8d6dc19",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Изображена буква J внутри квадрата с закруглёнными углами; обозначает букву или символ «J» в тексте.",
+        "synonyms": [
+          "буква j",
+          "буква",
+          "алфавит",
+          "символ",
+          "текст",
+          "шрифт",
+          "латиница",
+          "заглавная буква",
+          "квадрат с буквой"
+        ]
+      },
       "tags": [
         "alphabet",
         "character",
@@ -80660,7 +82813,38 @@
       ]
     },
     "square-letter-k": {
+      "en": {
+        "description": "A rounded square outline containing the letter K, representing the letter, a character, or the kilo abbreviation.",
+        "synonyms": [
+          "letter k",
+          "alphabet",
+          "character",
+          "square letter",
+          "font",
+          "typography",
+          "uppercase",
+          "kilo",
+          "kelvin",
+          "potassium"
+        ]
+      },
       "fingerprint": "4d05a88851bd",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Квадратная рамка с буквой K внутри; обозначает букву K, символ или текстовый знак.",
+        "synonyms": [
+          "буква k",
+          "буква к",
+          "квадрат",
+          "рамка",
+          "символ",
+          "шрифт",
+          "текст",
+          "алфавит",
+          "кило",
+          "калий"
+        ]
+      },
       "tags": [
         "alphabet",
         "character",
@@ -80677,7 +82861,38 @@
       ]
     },
     "square-letter-l": {
+      "en": {
+        "description": "Draws the uppercase letter L inside a rounded square outline, representing a letter or character in text interfaces.",
+        "synonyms": [
+          "letter l",
+          "alphabet",
+          "character",
+          "text",
+          "font",
+          "uppercase",
+          "typography",
+          "symbol",
+          "glyph",
+          "learner"
+        ]
+      },
       "fingerprint": "77e1cfa7e772",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Изображена буква L внутри квадратной рамки; обозначает букву «эль» или текстовый символ в интерфейсе.",
+        "synonyms": [
+          "буква l",
+          "буква эль",
+          "алфавит",
+          "текст",
+          "шрифт",
+          "заглавная буква",
+          "символ",
+          "литера",
+          "типографика",
+          "левый"
+        ]
+      },
       "tags": [
         "alphabet",
         "character",
@@ -80694,7 +82909,38 @@
       ]
     },
     "square-letter-m": {
+      "en": {
+        "description": "A bold letter M inside a rounded square, usually representing metro, a letter, or medium size.",
+        "synonyms": [
+          "metro",
+          "subway",
+          "letter m",
+          "square",
+          "alphabet",
+          "font",
+          "text",
+          "typography",
+          "uppercase",
+          "underground"
+        ]
+      },
       "fingerprint": "5aee57e640d8",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Изображение буквы М внутри квадрата с закруглёнными углами; обозначает метро, букву или метр в интерфейсе.",
+        "synonyms": [
+          "метро",
+          "буква м",
+          "квадрат",
+          "буква",
+          "алфавит",
+          "шрифт",
+          "текст",
+          "метр",
+          "мужской",
+          "средний размер"
+        ]
+      },
       "tags": [
         "metro",
         "subway",
@@ -80717,7 +82963,38 @@
       ]
     },
     "square-letter-n": {
+      "en": {
+        "description": "A rounded square outline containing the uppercase letter N, used for the letter N, north, or neutral options.",
+        "synonyms": [
+          "letter n",
+          "square",
+          "frame",
+          "alphabet",
+          "character",
+          "text",
+          "north",
+          "neutral",
+          "font",
+          "uppercase"
+        ]
+      },
       "fingerprint": "616209e94c59",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Квадратная рамка с буквой N внутри, обозначает букву N, север или нейтральный вариант.",
+        "synonyms": [
+          "буква n",
+          "квадрат",
+          "рамка",
+          "алфавит",
+          "символ",
+          "текст",
+          "север",
+          "нейтральный",
+          "шрифт",
+          "заглавная буква"
+        ]
+      },
       "tags": [
         "alphabet",
         "character",
@@ -80738,7 +83015,38 @@
       ]
     },
     "square-letter-o": {
+      "en": {
+        "description": "A rounded square outline containing a circle, representing the letter O in a boxed style, often used for zero or off.",
+        "synonyms": [
+          "letter o",
+          "square",
+          "alphabet",
+          "character",
+          "text",
+          "font",
+          "zero",
+          "uppercase",
+          "blood type",
+          "marker"
+        ]
+      },
       "fingerprint": "bccbe2186718",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Квадратная рамка с кругом внутри, обозначающая букву «O» в квадрате, часто используется как символ нуля или выключения.",
+        "synonyms": [
+          "буква о",
+          "квадрат",
+          "буква",
+          "алфавит",
+          "символ",
+          "ноль",
+          "кнопка",
+          "текст",
+          "шрифт",
+          "заглавная буква"
+        ]
+      },
       "tags": [
         "alphabet",
         "character",
@@ -80755,7 +83063,34 @@
       ]
     },
     "square-letter-p": {
+      "en": {
+        "description": "The letter P inside a rounded square, commonly used to indicate a parking area.",
+        "synonyms": [
+          "parking",
+          "car park",
+          "parking lot",
+          "letter p",
+          "square",
+          "parking sign",
+          "park",
+          "garage"
+        ]
+      },
       "fingerprint": "45b3c1acc296",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Буква «P» внутри квадратной рамки, обозначает парковку или парковочное место.",
+        "synonyms": [
+          "парковка",
+          "парковочное место",
+          "стоянка",
+          "паркинг",
+          "буква п",
+          "квадрат",
+          "знак парковки",
+          "авто"
+        ]
+      },
       "tags": [
         "parking lot",
         "car park",
@@ -80855,7 +83190,38 @@
       ]
     },
     "square-letter-q": {
+      "en": {
+        "description": "Shows the letter Q inside a rounded square frame, representing a letter, text character, or quality label.",
+        "synonyms": [
+          "letter q",
+          "alphabet",
+          "character",
+          "text",
+          "font",
+          "uppercase",
+          "square",
+          "typography",
+          "question",
+          "quality"
+        ]
+      },
       "fingerprint": "c42c7d9b475d",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Изображена буква Q внутри квадратной рамки; обозначает букву Q или текстовый символ в интерфейсе.",
+        "synonyms": [
+          "буква q",
+          "буква ку",
+          "квадрат",
+          "символ",
+          "алфавит",
+          "текст",
+          "шрифт",
+          "заглавная буква",
+          "качество",
+          "вопрос"
+        ]
+      },
       "tags": [
         "alphabet",
         "character",
@@ -80873,7 +83239,38 @@
       ]
     },
     "square-letter-r": {
+      "en": {
+        "description": "The letter R inside a rounded square, usually representing a letter or a registered trademark symbol.",
+        "synonyms": [
+          "letter r",
+          "square letter",
+          "letter in square",
+          "registered trademark",
+          "trademark",
+          "alphabet",
+          "character",
+          "uppercase",
+          "typography",
+          "font"
+        ]
+      },
       "fingerprint": "17cd4c93453e",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Буква R внутри закруглённого квадрата, обозначающая букву или символ регистрации товарного знака.",
+        "synonyms": [
+          "буква r",
+          "квадрат с буквой",
+          "буква в квадрате",
+          "товарный знак",
+          "алфавит",
+          "шрифт",
+          "заглавная буква",
+          "символ",
+          "текст",
+          "типографика"
+        ]
+      },
       "tags": [
         "alphabet",
         "character",
@@ -80895,7 +83292,38 @@
       ]
     },
     "square-letter-s": {
+      "en": {
+        "description": "A rounded square containing the letter S, typically representing a text character or the letter S in an interface.",
+        "synonyms": [
+          "letter s",
+          "alphabet",
+          "character",
+          "text",
+          "font",
+          "square",
+          "symbol",
+          "uppercase",
+          "typography",
+          "south"
+        ]
+      },
       "fingerprint": "828ecc5dd466",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Изображение квадрата с буквой S внутри; обозначает букву «эс» или текстовый символ в интерфейсе.",
+        "synonyms": [
+          "буква s",
+          "буква эс",
+          "алфавит",
+          "текст",
+          "шрифт",
+          "квадрат",
+          "символ",
+          "заглавная буква",
+          "типографика",
+          "знак"
+        ]
+      },
       "tags": [
         "alphabet",
         "character",
@@ -80916,7 +83344,34 @@
       ]
     },
     "square-letter-t": {
+      "en": {
+        "description": "A rounded square outline containing a bold uppercase letter T; usually represents text, font or typography settings.",
+        "synonyms": [
+          "letter t",
+          "text",
+          "font",
+          "typography",
+          "uppercase",
+          "character",
+          "alphabet",
+          "square"
+        ]
+      },
       "fingerprint": "df7083df3432",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Квадратная рамка с крупной буквой T внутри; обозначает текст, шрифт или букву Т.",
+        "synonyms": [
+          "буква т",
+          "текст",
+          "шрифт",
+          "типографика",
+          "заглавная буква",
+          "символ",
+          "алфавит",
+          "квадрат"
+        ]
+      },
       "tags": [
         "alphabet",
         "character",
@@ -80933,7 +83388,38 @@
       ]
     },
     "square-letter-u": {
+      "en": {
+        "description": "A rounded square outline containing a large uppercase letter U, representing the letter U or a character in text.",
+        "synonyms": [
+          "letter u",
+          "uppercase u",
+          "alphabet",
+          "character",
+          "text",
+          "font",
+          "typography",
+          "square letter",
+          "symbol",
+          "capital letter"
+        ]
+      },
       "fingerprint": "2e929cbfb923",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Квадратная рамка с крупной буквой U внутри; обозначает букву U или текстовый символ.",
+        "synonyms": [
+          "буква u",
+          "буква ю",
+          "символ",
+          "алфавит",
+          "текст",
+          "шрифт",
+          "заглавная буква",
+          "квадрат с буквой",
+          "типографика",
+          "знак"
+        ]
+      },
       "tags": [
         "alphabet",
         "character",
@@ -80949,7 +83435,38 @@
       ]
     },
     "square-letter-v": {
+      "en": {
+        "description": "A capital letter V inside a rounded square, representing the letter V or a keyboard key with that character.",
+        "synonyms": [
+          "letter v",
+          "square letter",
+          "alphabet",
+          "character",
+          "uppercase",
+          "font",
+          "typography",
+          "text",
+          "key",
+          "symbol"
+        ]
+      },
       "fingerprint": "4a61d1a54a80",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Изображена буква V внутри скруглённого квадрата; обозначает букву «V» или клавишу с этим символом.",
+        "synonyms": [
+          "буква v",
+          "латинская v",
+          "квадрат",
+          "буква в квадрате",
+          "алфавит",
+          "шрифт",
+          "заглавная буква",
+          "символ",
+          "клавиша",
+          "текст"
+        ]
+      },
       "tags": [
         "alphabet",
         "character",
@@ -80969,7 +83486,38 @@
       ]
     },
     "square-letter-w": {
+      "en": {
+        "description": "A bold letter W inside a rounded square frame, representing a text character or keyboard key.",
+        "synonyms": [
+          "letter w",
+          "square",
+          "frame",
+          "alphabet",
+          "character",
+          "keyboard key",
+          "text",
+          "typography",
+          "uppercase",
+          "font"
+        ]
+      },
       "fingerprint": "7183982774c3",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Изображена буква W внутри квадратной рамки со скруглёнными углами; обозначает букву или символ текста.",
+        "synonyms": [
+          "буква w",
+          "буква в",
+          "квадрат",
+          "рамка",
+          "символ",
+          "алфавит",
+          "текст",
+          "клавиша",
+          "шрифт",
+          "заглавная буква"
+        ]
+      },
       "tags": [
         "alphabet",
         "character",
@@ -80988,7 +83536,36 @@
       ]
     },
     "square-letter-x": {
+      "en": {
+        "description": "A rounded square outline containing a bold letter X; usually means close, dismiss, or cancel.",
+        "synonyms": [
+          "letter x",
+          "square",
+          "cross",
+          "close",
+          "dismiss",
+          "cancel",
+          "multiply",
+          "uppercase x",
+          "delete"
+        ]
+      },
       "fingerprint": "a7d3b9cd51e1",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Изображена квадратная рамка с буквой X внутри; обычно означает закрытие, отмену или удаление.",
+        "synonyms": [
+          "буква x",
+          "квадрат",
+          "крестик",
+          "закрыть",
+          "отмена",
+          "удалить",
+          "неизвестно",
+          "умножение",
+          "кнопка закрытия"
+        ]
+      },
       "tags": [
         "alphabet",
         "character",
@@ -81010,7 +83587,36 @@
       ]
     },
     "square-letter-y": {
+      "en": {
+        "description": "A rounded square outline containing a capital letter Y, representing the letter Y or a text character.",
+        "synonyms": [
+          "letter y",
+          "alphabet",
+          "character",
+          "text",
+          "font",
+          "typography",
+          "uppercase",
+          "capital letter",
+          "square letter"
+        ]
+      },
       "fingerprint": "554fa31d090f",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Квадратная рамка с заглавной буквой Y внутри; обозначает букву Y или текстовый символ.",
+        "synonyms": [
+          "буква y",
+          "буква игрек",
+          "алфавит",
+          "символ",
+          "текст",
+          "шрифт",
+          "типографика",
+          "заглавная буква",
+          "квадрат с буквой"
+        ]
+      },
       "tags": [
         "alphabet",
         "character",
@@ -81028,7 +83634,38 @@
       ]
     },
     "square-letter-z": {
+      "en": {
+        "description": "A rounded square outline containing a bold uppercase letter Z, representing the letter Z or a text character.",
+        "synonyms": [
+          "letter z",
+          "uppercase z",
+          "alphabet",
+          "character",
+          "text",
+          "font",
+          "typography",
+          "square letter",
+          "z symbol",
+          "capital z"
+        ]
+      },
       "fingerprint": "2795450fb281",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Квадратная рамка с заглавной латинской буквой Z внутри; обозначает букву Z или текстовый символ.",
+        "synonyms": [
+          "буква z",
+          "латинская z",
+          "алфавит",
+          "символ",
+          "текст",
+          "шрифт",
+          "заглавная буква",
+          "квадрат с буквой",
+          "типографика",
+          "знак z"
+        ]
+      },
       "tags": [
         "alphabet",
         "character",
@@ -84571,7 +87208,37 @@
       ]
     },
     "swiss-franc": {
+      "en": {
+        "description": "A Swiss franc currency sign, drawn as a capital F with a double-crossed stroke. It represents Swiss francs and money in general.",
+        "synonyms": [
+          "franc",
+          "currency",
+          "money",
+          "finance",
+          "payment",
+          "price",
+          "cost",
+          "exchange",
+          "chf"
+        ]
+      },
       "fingerprint": "23d4a21af6e6",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Изображён знак швейцарского франка: большая буква F с двумя горизонтальными перекладинами и вертикальной чертой. Обозначает валюту и деньги.",
+        "synonyms": [
+          "франк",
+          "швейцарский франк",
+          "валюта",
+          "деньги",
+          "финансы",
+          "оплата",
+          "деньги знак",
+          "курс",
+          "цена",
+          "стоимость"
+        ]
+      },
       "tags": [
         "currency",
         "money",
@@ -89547,7 +92214,37 @@
       ]
     },
     "turkish-lira": {
+      "en": {
+        "description": "Draws the Turkish lira sign, a currency symbol with two horizontal strokes and a curved tail, representing Turkish money.",
+        "synonyms": [
+          "lira",
+          "currency",
+          "money",
+          "currency sign",
+          "finance",
+          "payment",
+          "price",
+          "cost",
+          "exchange rate"
+        ]
+      },
       "fingerprint": "86ff7f53e45a",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Изображена буква лиры «₺» с двумя горизонтальными черточками и изогнутым хвостом; обозначает турецкую валюту лиру.",
+        "synonyms": [
+          "турецкая лира",
+          "лира",
+          "валюта",
+          "деньги",
+          "знак валюты",
+          "финансы",
+          "оплата",
+          "цена",
+          "стоимость",
+          "курс"
+        ]
+      },
       "tags": [
         "currency",
         "money",
