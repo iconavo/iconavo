@@ -70,4 +70,22 @@ describe("рисунок для innerHTML", () => {
       'Iconavo: Trusted Types blocked icons, allow "trusted-types iconavo"',
     );
   });
+
+  it("политика страницы по умолчанию пропускает только пустую строку — проба самим рисунком: null, а не падение React", async () => {
+    vi.stubGlobal("trustedTypes", {
+      createPolicy: () => {
+        throw new TypeError("Policy iconavo disallowed");
+      },
+    });
+    vi.stubGlobal("document", {
+      createElement: () => ({
+        set innerHTML(value: string) {
+          if (value !== "") throw new TypeError("default policy rejected");
+        },
+      }),
+    });
+    const trusted = await load();
+    expect(trusted("<g/>")).toBeNull();
+    expect(warn).toHaveBeenCalledTimes(1);
+  });
 });

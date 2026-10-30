@@ -260,4 +260,30 @@ describe("pnpm release prepare", () => {
     ]);
     expect(releaseStop(report)).toBe(true);
   });
+
+  it("раздел журнала версии, которой нет в npm, — СТОП: выпуск передумали, а раздел забыли", async () => {
+    const root = await writeReleaseRepo({
+      version: "0.1.2",
+      changelog:
+        "# Changelog\n\n## 0.1.2 — 2026-11-05\n\n- C.\n\n## 0.1.1 — 2026-11-02\n\n- B.\n\n## 0.1.0 — 2026-10-29\n\n- A.\n",
+    });
+    const { report, plan } = await prepare(
+      root,
+      fakeRegistry(publishedAll([{ version: "0.1.0" }])),
+    );
+    expect(problems(report)).toEqual([
+      "журнал: разделы 0.1.1 — этих версий нет в npm: перенесите их текст в раздел 0.1.2 и уберите",
+    ]);
+    expect(existsSync(plan)).toBe(false);
+  });
+
+  it("в плане — хэш README: его «Проверка» сверяет с jsDelivr", async () => {
+    const root = await writeReleaseRepo({ version: "0.1.0" });
+    const { report, plan } = await prepare(root, fakeRegistry({}), {
+      first: true,
+    });
+    expect((await readReleasePlan(plan)).script.integrity).toBe(
+      report.script?.readme,
+    );
+  });
 });

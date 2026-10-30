@@ -30,6 +30,7 @@ import {
   SCRIPT_LINE_FILES,
   SCRIPT_PATH,
   UNRELEASED,
+  VERSION_FORMAT,
 } from "./config.js";
 import {
   distProblems,
@@ -37,7 +38,13 @@ import {
   manifestPaths,
   manifestProblems,
 } from "./manifest.js";
-import { changelogProblems, SRI_FORMAT, scriptRefs, sri } from "./text.js";
+import {
+  changelogProblems,
+  changelogSections,
+  SRI_FORMAT,
+  scriptRefs,
+  sri,
+} from "./text.js";
 
 /**
  * new — пакета нет, этот запуск выпустит первую версию; awaiting — пакета нет, а первой публикации не
@@ -245,7 +252,7 @@ export async function prepareRelease(
     );
     return report;
   }
-  if (!/^\d+\.\d+\.\d+$/.test(version) || ORDER(version)[0] !== RELEASE_MAJOR) {
+  if (!VERSION_FORMAT.test(version) || ORDER(version)[0] !== RELEASE_MAJOR) {
     lockstep.problems.push(
       `версия ${version}: до запуска — только ${RELEASE_MAJOR}.x вида X.Y.Z (ADR-0005)`,
     );
@@ -264,12 +271,8 @@ export async function prepareRelease(
   }
 
   const changelog = check(`Журнал изменений ${CHANGELOG_FILE}`);
-  changelog.problems.push(
-    ...changelogProblems(
-      await readFile(join(o.root, CHANGELOG_FILE), "utf8"),
-      version,
-    ),
-  );
+  const changelogText = await readFile(join(o.root, CHANGELOG_FILE), "utf8");
+  changelog.problems.push(...changelogProblems(changelogText, version));
   if (changelog.problems.length === 0)
     changelog.notes.push(`раздел ${version} на месте`);
 
@@ -389,6 +392,19 @@ export async function prepareRelease(
     if (state.action) entry.action = state.action;
   }
 
+  // Разделы журнала ниже первого — только вышедшие версии, в том числе снятые: иначе в журнале
+  // осталась версия, которой нет в npm, — выпуск передумали, а раздел забыли.
+  const iconDoc = docs.get("icon");
+  const phantom = changelogSections(changelogText)
+    .sections.slice(1)
+    .map((s) => s.version)
+    .filter((v) => !(iconDoc?.versions.has(v) || iconDoc?.times.has(v)));
+  if (phantom.length > 0) {
+    changelog.problems.push(
+      `журнал: разделы ${phantom.join(", ")} — этих версий нет в npm: перенесите их текст в раздел ${version} и уберите`,
+    );
+  }
+
   const actions = report.packages.map((e) => e.action);
   const published = report.packages.filter((e) => e.action === "published");
   const pending = report.packages.filter(
@@ -473,7 +489,8 @@ export async function prepareRelease(
       tag,
       first,
       commit: report.commit,
-      script: { path: SCRIPT_PATH, integrity: local },
+      // Хэш README: его сверяет с jsDelivr «Проверка». У выпуска он равен свежей сборке — это выше.
+      script: { path: SCRIPT_PATH, integrity: readme ?? local },
       packages: report.packages.map((e) => ({
         id: e.id,
         name: e.name,

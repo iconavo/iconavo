@@ -153,6 +153,32 @@ describe("остальное на сервере — заглушка или «�
     }
   });
 
+  it("размеры строкой в данных обёртки — «нет», а не падение отрисовки", () => {
+    const odd = {
+      prefix: "odd",
+      width: "24",
+      height: "24",
+      icons: { logo: { body: "<path/>" } },
+    } as unknown as IconavoIconSet;
+    expect(html(icon({ icon: "odd:logo" }), [odd])).toContain(
+      'class="iconavo-missing"',
+    );
+  });
+
+  it("из JS — дети и подпись числом: дети отброшены, подпись не строка — иконка декоративная", () => {
+    const child = h("title", null, "Info");
+    const loaded = html(
+      h(Icon, { icon: "demo:house", label: 5 as unknown as string }, child),
+    );
+    expect(loaded).not.toContain("<title>");
+    expect(loaded).toContain('aria-hidden="true"');
+    const waiting = html(
+      h(Icon, { icon: "demo:later", label: 5 as unknown as string }, child),
+    );
+    expect(waiting).not.toContain("<title>");
+    expect(waiting).toContain('aria-hidden="true"');
+  });
+
   it("вложенная обёртка: своя иконка, иконки внешней, свой not_found не заслоняет внешнюю", () => {
     const inner: IconavoIconSet = {
       prefix: "demo",

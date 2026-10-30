@@ -24,6 +24,8 @@ export interface RouteOptions {
   script?: { url: string; body: Buffer; delayMs: number };
   /** Скрипт тега с настоящего jsDelivr (--npm): его адрес пропускается как есть. */
   liveScript?: string;
+  /** Задержка запроса настоящего скрипта — как у файла ветки: видно, что место держит стиль. */
+  liveDelayMs?: number;
   /** Контрольный запуск: хосты иконок не отвечают. */
   refuse?: boolean;
 }
@@ -60,6 +62,7 @@ export async function routeHosts(
       }
       if (o.liveScript && url === o.liveScript) {
         traffic.scripts.push(url);
+        await sleep(o.liveDelayMs ?? 0);
         return route.continue();
       }
       const ours = isOurHost(new URL(url).hostname);

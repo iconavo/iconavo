@@ -52,6 +52,10 @@ export const scriptUrl = (version: string) =>
 /** До запуска — только 0.x: 1.0 выходит в день запуска (ADR-0005). */
 export const RELEASE_MAJOR = 0;
 
+/** Номер вида X.Y.Z без ведущих нулей. */
+export const VERSION_FORMAT =
+  /^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$/;
+
 /** Версия без выпуска: пакеты ещё ни разу не выходили. */
 export const UNRELEASED = "0.0.0";
 
@@ -94,6 +98,9 @@ export const CLEAN_DIR = ".cache/release/clean";
 export const CLEAN_REACT = "19.3.1";
 /** Иконка, которую рисует чистый проект; её рисунок сверяется с data/. */
 export const CLEAN_ICON = "lucide:house";
+/** npm install чистого проекта сразу после публикации: попытки и пауза между ними. */
+export const CLEAN_ATTEMPTS = 4;
+export const CLEAN_RETRY_MS = 30_000;
 
 /** jsDelivr берёт новую версию из npm не сразу: сколько ждать и как часто спрашивать. */
 export const JSDELIVR_POLL_MS = 20_000;

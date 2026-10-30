@@ -52,7 +52,12 @@ export function commandLine(
   };
 }
 
-/** Запуск команды; код не 0 — ошибка с последними строками вывода. */
+/** Ошибка команды: в сообщении — хвост вывода, в output — весь вывод (npm ls --json при коде 1). */
+export interface RunError extends Error {
+  output: string;
+}
+
+/** Запуск команды; код не 0 — ошибка с последними строками вывода и всем выводом в output. */
 export function run(
   command: string,
   args: string[],
@@ -76,7 +81,12 @@ export function run(
       if (code === 0) resolve(output);
       else {
         const tail = output.trim().split(/\r?\n/).slice(-20).join("\n");
-        reject(new Error(`${command} ${args.join(" ")}: код ${code}\n${tail}`));
+        reject(
+          Object.assign(
+            new Error(`${command} ${args.join(" ")}: код ${code}\n${tail}`),
+            { output },
+          ),
+        );
       }
     });
   });

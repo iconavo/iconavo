@@ -72,8 +72,11 @@ export const Icon = forwardRef<SVGSVGElement, IconProps>(
       label,
       placeholder,
       className,
+      // Своё содержимое у <svg> иконки — рисунок через innerHTML, а детей вместе с ним React не
+      // рисует и падает: из JS их могут передать в обход типов — они отбрасываются.
+      children: _children,
       ...rest
-    } = props;
+    } = props as IconProps & { children?: unknown };
     const scope = useContext(Icons);
     const provided = isValidIconName(icon) ? lookup(scope, icon) : undefined;
     const state = useSyncExternalStore(
@@ -109,7 +112,13 @@ export const Icon = forwardRef<SVGSVGElement, IconProps>(
           : null,
       [state, o, color, label, id],
     );
-    const html = useMemo(() => parts && trusted(parts.body), [parts]);
+    // Один объект TrustedHTML на строку рисунка: смена цвета, подписи или размера рисунок не меняет,
+    // а новый объект с тем же текстом React переписал бы в innerHTML — он сравнивает __html по ссылке.
+    const body = parts?.body;
+    const html = useMemo(
+      () => (body === undefined ? null : trusted(body)),
+      [body],
+    );
     // Рисунка нет — резерв: заглушка, пока грузится, иначе «нет» (и запрет Trusted Types).
     const drawn = parts !== null && html !== null;
     const own = [
@@ -119,7 +128,7 @@ export const Icon = forwardRef<SVGSVGElement, IconProps>(
     ]
       .filter(Boolean)
       .join(" ");
-    const name = label?.trim();
+    const name = typeof label === "string" ? label.trim() : undefined;
     return createElement("svg", {
       ...(drawn
         ? parts.attributes

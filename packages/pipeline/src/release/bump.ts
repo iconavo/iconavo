@@ -2,18 +2,23 @@
 // примерам React и Next.js, в журнал — раздел с датой и заготовкой, в README и HTML-пример — адрес
 // скрипта тега с этой версией и хэш его свежей сборки. lock-файлы примеров с прошлой версией удаляются:
 // новые пишет pnpm starters --lock после публикации. Без версии — только хэш и дата раздела: после
-// правок кода до слияния. Сеть не нужна; вывод tsc — до запуска (pnpm release собирает его сам).
+// правок кода до слияния, пока версия не вышла. Реестр npm только читается: вышла ли нынешняя версия.
+// Сначала — сборка скрипта и все проверки, потом запись: сбой не оставляет выпуск наполовину. Вывод
+// tsc — до запуска (pnpm release собирает его сам).
 
 import { readFile, rm, writeFile } from "node:fs/promises";
 import { join } from "node:path";
+import { type RegistryClient, registryClient } from "../npm/registry.js";
 import { compareVersions, parseVersion } from "../sources/version.js";
 import {
   CHANGELOG_FILE,
   PACKAGES,
+  packageName,
   RELEASE_MAJOR,
   SCRIPT_LINE_FILES,
   STARTER_DIRS,
   UNRELEASED,
+  VERSION_FORMAT,
 } from "./config.js";
 import type { Manifest } from "./manifest.js";
 import { buildScript, type ScriptBuild } from "./prepare.js";
@@ -31,6 +36,8 @@ export interface BumpOptions {
   version?: string;
   /** Дата раздела журнала, ГГГГ-ММ-ДД. */
   date: string;
+  /** Реестр npm — только чтение; в тестах свой. */
+  registry?: RegistryClient;
   /** Сборка скрипта тега — в тестах своя: без tsc и rolldown. */
   buildScript?: (root: string) => Promise<ScriptBuild>;
 }
@@ -68,7 +75,7 @@ export function versionProblem(
   from: string,
   version: string,
 ): string | undefined {
-  if (!/^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$/.test(version)) {
+  if (!VERSION_FORMAT.test(version)) {
     return `версия «${version}» — нужен вид X.Y.Z`;
   }
   const [major] = parseVersion(version) ?? [];
@@ -83,25 +90,19 @@ export function versionProblem(
   return undefined;
 }
 
-/** Записать файл, только если текст изменился; путь — в changed. */
-async function update(
-  root: string,
-  path: string,
-  change: (text: string) => string,
-  changed: string[],
-): Promise<void> {
-  const file = join(root, path);
-  const text = await readFile(file, "utf8");
-  const next = change(text);
-  if (next !== text) {
-    await writeFile(file, next, "utf8");
-    changed.push(path);
-  }
+/** Вышла ли версия тега в npm, в том числе снятая: номер занят навсегда. */
+async function released(
+  registry: RegistryClient,
+  version: string,
+): Promise<boolean> {
+  const p = await registry.packument(packageName("icon"));
+  return p !== undefined && (p.versions.has(version) || p.times.has(version));
 }
 
 export async function bumpRelease(o: BumpOptions): Promise<BumpReport> {
   const from = await currentVersion(o.root);
   const version = o.version ?? from;
+  const registry = o.registry ?? registryClient();
   if (o.version !== undefined) {
     const problem = versionProblem(from, o.version);
     if (problem) throw new Error(problem);
@@ -110,45 +111,42 @@ export async function bumpRelease(o: BumpOptions): Promise<BumpReport> {
       "пакеты ещё не выпускались — нужна версия: pnpm release bump 0.1.0",
     );
   }
-  const changed: string[] = [];
-  const removed: string[] = [];
-
-  for (const id of PACKAGES) {
-    await update(
-      o.root,
-      `packages/${id}/package.json`,
-      (text) => {
-        const m = JSON.parse(text) as Manifest;
-        m.version = version;
-        delete m.private;
-        return json(m);
-      },
-      changed,
+  // Нынешняя версия уже в npm — её хэш и раздел журнала не меняются; не вышла — её раздел переходит
+  // к новой версии, если выпуск передумали на другую.
+  const fromReleased = from !== UNRELEASED && (await released(registry, from));
+  if (o.version === undefined && fromReleased) {
+    throw new Error(
+      `${from} уже в npm: хэш её скрипта и раздел журнала не меняются — для правок нужна новая версия, pnpm release bump X.Y.Z`,
     );
   }
 
+  // Сначала всё, что может упасть: сборка скрипта и чтение файлов. Записи — потом.
+  const integrity = sri((await (o.buildScript ?? buildScript)(o.root)).body);
+  const read = (path: string) => readFile(join(o.root, path), "utf8");
+  const next = new Map<string, string>();
+  const removed: string[] = [];
+
+  for (const id of PACKAGES) {
+    const path = `packages/${id}/package.json`;
+    const m = JSON.parse(await read(path)) as Manifest;
+    m.version = version;
+    delete m.private;
+    next.set(path, json(m));
+  }
   for (const dir of STARTER_DIRS) {
-    await update(
-      o.root,
-      `${dir}/package.json`,
-      (text) => {
-        const m = JSON.parse(text) as Manifest & {
-          dependencies?: Record<string, string>;
-        };
-        for (const name of Object.keys(m.dependencies ?? {})) {
-          if (name.startsWith("@iconavo-ui/") && m.dependencies) {
-            m.dependencies[name] = version;
-          }
-        }
-        return json(m);
-      },
-      changed,
-    );
+    const path = `${dir}/package.json`;
+    const m = JSON.parse(await read(path)) as Manifest & {
+      dependencies?: Record<string, string>;
+    };
+    for (const name of Object.keys(m.dependencies ?? {})) {
+      if (name.startsWith("@iconavo-ui/") && m.dependencies) {
+        m.dependencies[name] = version;
+      }
+    }
+    next.set(path, json(m));
     // lock-файл с другой версией наших пакетов устарел: npm ci с ним не поставит пример.
     const lockPath = `${dir}/package-lock.json`;
-    const lock = await readFile(join(o.root, lockPath), "utf8").catch(
-      () => undefined,
-    );
+    const lock = await read(lockPath).catch(() => undefined);
     if (lock !== undefined) {
       const packages =
         (
@@ -156,44 +154,48 @@ export async function bumpRelease(o: BumpOptions): Promise<BumpReport> {
             packages?: Record<string, { version?: string }>;
           }
         ).packages ?? {};
-      const stale = Object.entries(packages).some(
-        ([path, p]) =>
-          path.includes("node_modules/@iconavo-ui/") && p.version !== version,
-      );
-      if (stale) {
-        await rm(join(o.root, lockPath));
+      if (
+        Object.entries(packages).some(
+          ([p, entry]) =>
+            p.includes("node_modules/@iconavo-ui/") &&
+            entry.version !== version,
+        )
+      ) {
         removed.push(lockPath);
       }
     }
   }
-
-  // Новая версия — новый раздел с заготовкой; та же — только дата, если раздел этой версии первый.
-  await update(
-    o.root,
+  // Новая версия — новый раздел с заготовкой, а невышедший раздел прошлой попытки переходит к ней;
+  // та же — только дата, если раздел этой версии первый.
+  const changelog = await read(CHANGELOG_FILE);
+  next.set(
     CHANGELOG_FILE,
-    (text) =>
-      o.version !== undefined ||
-      changelogSections(text).sections[0]?.version === version
-        ? addChangelogSection(text, version, o.date)
-        : text,
-    changed,
+    o.version !== undefined ||
+      changelogSections(changelog).sections[0]?.version === version
+      ? addChangelogSection(
+          changelog,
+          version,
+          o.date,
+          fromReleased ? undefined : from,
+        )
+      : changelog,
   );
-
-  const integrity = sri((await (o.buildScript ?? buildScript)(o.root)).body);
   for (const path of SCRIPT_LINE_FILES) {
-    await update(
-      o.root,
-      path,
-      (text) => {
-        if (scriptRefs(text).tags.length === 0) {
-          throw new Error(
-            `${path}: нет строки подключения скрипта тега с jsDelivr`,
-          );
-        }
-        return setScriptRefs(text, version, integrity);
-      },
-      changed,
-    );
+    const text = await read(path);
+    if (scriptRefs(text).tags.length === 0) {
+      throw new Error(
+        `${path}: нет строки подключения скрипта тега с jsDelivr`,
+      );
+    }
+    next.set(path, setScriptRefs(text, version, integrity));
   }
+
+  const changed: string[] = [];
+  for (const [path, text] of next) {
+    if ((await read(path)) === text) continue;
+    await writeFile(join(o.root, path), text, "utf8");
+    changed.push(path);
+  }
+  for (const path of removed) await rm(join(o.root, path));
   return { from, version, integrity, changed, removed };
 }

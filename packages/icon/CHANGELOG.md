@@ -2,7 +2,7 @@
 
 `@iconavo-ui/icon`, `@iconavo-ui/react` and `@iconavo-ui/core` are released together, with one version. Versions 0.x are betas under the `next` tag: the API may still change before 1.0. The documentation is at [iconavo.dev/docs](https://iconavo.dev/docs).
 
-## 0.1.0 — 2026-10-29
+## 0.1.0 — 2026-10-30
 
 The first public beta.
 

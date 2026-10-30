@@ -66,7 +66,9 @@ const DEFAULT_SIZE = 16;
 /**
  * Иконка по имени: размеры свои, иначе набора, иначе 16 (left и top — 0); алиасы цепочки могут их
  * переопределить — ближний к имени главнее. Повороты иконки и алиасов складываются, отражения
- * взаимно гасятся; нецелый поворот не учитывается, как у Iconify. Имени нет — null.
+ * взаимно гасятся; нецелый поворот не учитывается, как у Iconify. Имени нет — null. Рисунок не строка
+ * или размеры не числа (например, "24" из чужого JSON) — ошибка: хранилище и обёртка React считают
+ * такое имя «нет», а не роняют отрисовку.
  */
 export function iconData(set: IconavoIconSet, name: string): IconData | null {
   const aliases = set.aliases ?? {};
@@ -107,6 +109,14 @@ export function iconData(set: IconavoIconSet, name: string): IconData | null {
     if (alias.top !== undefined) out.top = alias.top;
     if (alias.width !== undefined) out.width = alias.width;
     if (alias.height !== undefined) out.height = alias.height;
+  }
+  if (
+    typeof out.body !== "string" ||
+    ![out.left, out.top, out.width, out.height].every(Number.isFinite) ||
+    out.width <= 0 ||
+    out.height <= 0
+  ) {
+    throw new Error(`Icon "${name}" has an invalid body or size`);
   }
   rotate = ((rotate % 4) + 4) % 4;
   return rotate || hFlip || vFlip

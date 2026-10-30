@@ -15,24 +15,25 @@ name: Выпуск пакетов
 # публикация на npmjs.com (ADR-0051).
 
 on:
+  # Слияние PR выпуска — версия в package.json. Правка README, журнала или HTML-примера — тоже: так
+  # выпуск, остановленный «СТОП» (например, хэш устарел), продолжается PR с исправлением. Вышедшую версию
+  # подготовка не выпустит второй раз.
   push:
     branches: [main]
     paths:
       - "packages/core/package.json"
       - "packages/icon/package.json"
       - "packages/react/package.json"
-      - ".github/workflows/release.yml"
-  # На PR — только показ: секретов и права публиковать там нет. Хэш скрипта в README сверяется со
-  # сборкой на Linux, а у вышедшей версии — со скриптом в npm.
-  pull_request:
-    paths:
-      - "packages/core/**"
-      - "packages/icon/**"
-      - "packages/react/**"
+      - "packages/icon/README.md"
+      - "packages/icon/CHANGELOG.md"
       - "examples/starters/html/index.html"
       - "README.md"
+      - ".github/workflows/release.yml"
+  # На PR — только показ правки самого выпуска: секретов и права публиковать там нет. Подготовку на
+  # каждом PR делает обязательная задача check (ci.yml).
+  pull_request:
+    paths:
       - "packages/pipeline/src/release/**"
-      - "packages/pipeline/src/starters/pack.ts"
       - ".github/workflows/release.yml"
   workflow_dispatch:
     inputs:
@@ -47,10 +48,10 @@ on:
 
 permissions: {}
 
-# Выпуски из main не пересекаются и не прерываются: следующий ждёт текущий. Показы с веток и PR — в своих
-# группах: в общей они отменяли бы ждущий выпуск.
+# Выпуски из main не пересекаются и не прерываются: следующий ждёт текущий. Показы — с веток, PR и
+# «Только показ» на main — каждый в своей группе: в общей GitHub отменил бы ждущий выпуск.
 concurrency:
-  group: ${{ github.ref == 'refs/heads/main' && github.event_name != 'pull_request' && 'release' || format('release-{0}', github.ref) }}
+  group: ${{ github.ref == 'refs/heads/main' && github.event_name != 'pull_request' && inputs.dry_run != true && 'release' || format('release-show-{0}', github.run_id) }}
   cancel-in-progress: false
 
 defaults:
@@ -194,8 +195,9 @@ jobs:
               echo "::error::$file: внутри $inner, а в плане $name@$version"
               exit 1
             fi
-            # Перед публикацией — реестр ещё раз: номер уже занят, в том числе снятой версией, — пропуск;
-            # под тегом не та версия, от которой считал план, — план устарел.
+            # Перед публикацией — реестр ещё раз. Версия уже вышла этим же архивом (повтор запуска) —
+            # пропуск; другим архивом — стоп: пакеты, которые от неё зависят, собраны из другого кода. Номер
+            # снят — стоп: npm его не отдаст. Под тегом не та версия, от которой считал план, — план устарел.
             code=$(curl -sS --retry 3 --max-time 60 -H "accept: application/json" -o "$RUNNER_TEMP/doc.json" -w "%{http_code}" "https://registry.npmjs.org/${name/\//%2F}" || echo 000)
             case $code in
               200) doc=$(cat "$RUNNER_TEMP/doc.json") ;;
@@ -205,9 +207,18 @@ jobs:
                 exit 1
                 ;;
             esac
-            if jq -e --arg v "$version" '(.versions[$v] // .time[$v]) != null' <<< "$doc" > /dev/null; then
-              echo "$name@$version уже в npm — пропускаю"
+            existing=$(jq -r --arg v "$version" '.versions[$v].dist.integrity // ""' <<< "$doc")
+            if [ -n "$existing" ]; then
+              if [ "$existing" != "$integrity" ]; then
+                echo "::error::$name@$version уже в npm с другим архивом — план устарел: повторите запуск через 5 минут"
+                exit 1
+              fi
+              echo "$name@$version уже в npm этим архивом — пропускаю"
               continue
+            fi
+            if jq -e --arg v "$version" '.time[$v] != null' <<< "$doc" > /dev/null; then
+              echo "::error::$name@$version был в npm и снят — номер не выпустить снова: pnpm release bump с новой версией"
+              exit 1
             fi
             current=$(jq -r --arg t "$tag" '."dist-tags"[$t] // ""' <<< "$doc")
             if [ "$current" != "$base" ]; then

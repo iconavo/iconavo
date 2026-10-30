@@ -6,15 +6,16 @@
 // Попытка устроена как sendQuery у Iconify: источники по очереди — пачкой через каждый хост api,
 // затем по одной иконке со статики каждого хоста cdn, у набора с setLoader — только загрузчик.
 // Источник молчит ROTATE — следующий спрашивается параллельно; последний хост api молчит ROTATE_CDN —
-// и первый хост статики; отказал, а ждать больше некого, — сразу. Первый ответ на имя побеждает;
-// когда ответ есть у всех имён, остальные запросы отменяются.
+// и первый хост статики; отказал — следующий сразу. Первый ответ с иконкой побеждает; когда иконка
+// есть у всех имён, остальные запросы отменяются. «Нет» — только когда так ответили все источники:
+// свой хост и наш могут хранить разное, а манифест статики живёт в кэше до 5 минут (ADR-0030).
 // Вся попытка — не дольше TIMEOUT. Неудавшаяся повторяется через 1, 2 и 4 с, пока иконку кто-то
 // показывает; потом — «ошибка», которую запросят снова при следующем показе. Отмена — AbortController
 // с setTimeout, а не AbortSignal.timeout: тот же контроллер отменяет проигравших, а таймеры
 // подчиняются поддельному времени тестов.
 
 import type { IconavoIconSet } from "./icon.js";
-import { isValidIconName, isValidNamePart } from "./name.js";
+import { isValidIconName } from "./name.js";
 import {
   addSet,
   type IconState,
@@ -42,11 +43,22 @@ export const RETRIES = 3;
 /** Слушатели ожидания loadIcons: у него один проход, ради него не повторяют. */
 export const passive = new WeakSet<() => void>();
 
-/** Источник имён набора: пишет ответы в хранилище; отказ — сбой источника. */
+/** Что источники попытки сказали об именах, у которых иконки ещё нет. */
+interface Report {
+  /** Источник ответил, что имени у него нет. */
+  missing: Set<string>;
+  /** Источник не ответил об имени: сбой сети, ошибка хоста, не тот ответ. */
+  failed: Set<string>;
+  /** Последняя ошибка — для предупреждения «failed to load». */
+  error?: unknown;
+}
+
+/** Источник имён набора: иконки — в хранилище, «нет» и частичные сбои — в отчёт; отказ — сбой всех имён. */
 type Source = (
   prefix: string,
   names: string[],
   signal: AbortSignal,
+  report: Report,
 ) => Promise<void>;
 
 /** Наборы манифеста хоста статики. */
@@ -101,48 +113,54 @@ const isSet = (data: unknown, prefix: string): data is IconavoIconSet =>
   typeof (data as IconavoIconSet).icons === "object" &&
   (data as IconavoIconSet).icons !== null;
 
+/** Статика отвечает так, что файла нет: 404, а у бакета без права на список (S3) — 403. */
+const NO_FILE = [403, 404];
+
 /**
- * JSON с хоста. Тело читается всегда: так Node освобождает соединение. Ответ 404 — число 404, как
- * тело ответа Iconify API на неизвестный набор. Другой код и не JSON — сбой.
+ * JSON с хоста. Тело читается всегда: так Node освобождает соединение. Ответ «нет» (по умолчанию 404,
+ * как тело ответа Iconify API на неизвестный набор) — число 404. Другой код и не JSON — сбой.
  */
-async function fetchJson(url: string, signal: AbortSignal): Promise<unknown> {
+async function fetchJson(
+  url: string,
+  signal: AbortSignal,
+  none: number[] = [404],
+): Promise<unknown> {
   const response = await fetch(url, { signal });
   const text = await response.text();
-  if (response.status === 404) return 404;
+  if (none.includes(response.status)) return 404;
   if (!response.ok) throw new Error(`HTTP ${response.status}`);
   return JSON.parse(text);
 }
 
-/** IconifyJSON набора; 404 — null, то есть «нет» для всех имён запроса. Чужой набор — сбой. */
+/** IconifyJSON набора; «нет» — null, то есть «нет» для всех имён запроса. Чужой набор — сбой. */
 async function fetchSet(
   url: string,
   prefix: string,
   signal: AbortSignal,
+  none?: number[],
 ): Promise<IconavoIconSet | null> {
-  const data = await fetchJson(url, signal);
+  const data = await fetchJson(url, signal, none);
   if (data === 404) return null;
   if (!isSet(data, prefix)) throw new Error("Not an icon set");
   return data;
 }
 
-/** Ответ источника на имена: данные — в хранилище; кого в нём нет, тот «нет», с предупреждением. */
+/** Ответ источника на имена: иконки — в хранилище; запрошенные, которых в нём нет, — «нет» этого источника. */
 function answer(
   prefix: string,
   names: string[],
   data: IconavoIconSet | null,
+  report: Report,
 ): void {
-  if (data) addSet(prefix, data, false);
-  const changes = new Map<string, IconState>();
+  if (data) addSet(prefix, data, false, report.missing);
   for (const name of names) {
-    const full = `${prefix}:${name}`;
-    const state = store.icons.get(full);
-    if (state === "loading") changes.set(full, "missing");
-    if (state === "loading" || state === "missing") {
-      warn(`icon "${full}" not found`);
-    }
+    if (loading(`${prefix}:${name}`)) report.missing.add(name);
   }
-  update(changes);
 }
+
+/** Версия набора в манифесте своей статики — часть адреса: буквы, цифры, «.», «_» и «-». */
+const isVersion = (value: unknown): value is string =>
+  typeof value === "string" && /^[A-Za-z0-9][\w.-]{0,63}$/.test(value);
 
 /**
  * Манифест хоста статики. Запрос общий для всех попыток этой копии ядра, поэтому у него свой
@@ -174,7 +192,7 @@ function manifest(host: string): Promise<Sets> {
 /** Пачка с хоста API: IconifyJSON с not_found, неизвестный набор — 404. */
 const fromApi =
   (host: string): Source =>
-  async (prefix, names, signal) =>
+  async (prefix, names, signal, report) =>
     answer(
       prefix,
       names,
@@ -183,38 +201,65 @@ const fromApi =
         prefix,
         signal,
       ),
+      report,
     );
 
 /**
  * Статика: версия набора — из манифеста хоста, затем файл на имя. Набора нет в манифесте — «нет».
- * Каждый файл пишет свой ответ сразу; не пришедший оставляет имя открытым для следующего хоста.
+ * Каждый файл пишет свой ответ сразу; не пришедший — сбой этого имени, оно остаётся открытым для
+ * следующего хоста. Не пришёл ни один — отказ хоста: следующий спрашивается сразу.
  */
 const fromCdn =
   (host: string): Source =>
-  async (prefix, names, signal) => {
+  async (prefix, names, signal, report) => {
     const sets = await manifest(host);
     if (signal.aborted) return;
-    if (!Object.hasOwn(sets, prefix)) return answer(prefix, names, null);
-    const version = sets[prefix]?.version as string;
-    if (!isValidNamePart(version)) throw new Error("Not a manifest");
-    let error: unknown;
+    if (!Object.hasOwn(sets, prefix)) {
+      answer(prefix, names, null, report);
+      return;
+    }
+    const version = sets[prefix]?.version;
+    if (!isVersion(version)) throw new Error("Not a manifest");
+    let failed = 0;
     await Promise.all(
       names.map((name) =>
-        fetchSet(`${host}/v/${version}/${prefix}/${name}.json`, prefix, signal)
-          .then((data) => answer(prefix, [name], data))
+        fetchSet(
+          `${host}/v/${version}/${prefix}/${name}.json`,
+          prefix,
+          signal,
+          NO_FILE,
+        )
+          .then((data) => answer(prefix, [name], data, report))
           .catch((e: unknown) => {
-            error = e;
+            failed++;
+            report.failed.add(name);
+            report.error = e;
           }),
       ),
     );
-    if (error !== undefined) throw error;
+    if (failed === names.length) throw report.error;
   };
 
-/** Свой источник набора (setLoader): ответ — как у хоста, null — «нет» для всех имён. */
+/**
+ * Свой источник набора (setLoader): ответ — как у хоста, null — «нет» для всех имён. Набор без icons
+ * («ничего не нашлось», только not_found) — тоже ответ; не набор или чужой префикс — сбой.
+ */
 const fromLoader =
   (loader: Loader): Source =>
-  async (prefix, names) =>
-    answer(prefix, names, await loader(names));
+  async (prefix, names, _signal, report) => {
+    const data: unknown = await loader(names);
+    if (data === null) return answer(prefix, names, null, report);
+    const set = data as Partial<IconavoIconSet>;
+    if (
+      typeof data !== "object" ||
+      set.prefix !== prefix ||
+      (set.icons !== undefined &&
+        (typeof set.icons !== "object" || set.icons === null))
+    ) {
+      throw new Error("Not an icon set");
+    }
+    answer(prefix, names, { ...set, prefix, icons: set.icons ?? {} }, report);
+  };
 
 /**
  * Имена, которые всё ещё грузятся: ждут повтора, если повторы не кончились и иконку показывают, иначе
@@ -255,11 +300,19 @@ function fail(
   }
 }
 
+/** «Нет» окончательно: так ответили все источники попытки. Предупреждение — одно на имя. */
+function gone(prefix: string, names: string[]): void {
+  update(new Map(names.map((name) => [`${prefix}:${name}`, "missing"])));
+  for (const name of names) warn(`icon "${prefix}:${name}" not found`);
+}
+
 /**
- * Одна попытка для куска имён. Открытые имена — те, что в хранилище всё ещё «загружается»: ответ
- * другого источника, addIcons и другая копия ядра сами сокращают список. Конец — у всех имён есть
- * ответ, источники кончились или прошло TIMEOUT: тогда запросы отменяются, открытые имена — в повтор.
- * firstCdn — номер первого источника статики: до него ждут ROTATE_CDN, а не ROTATE.
+ * Одна попытка для куска имён. Открытые имена — те, что в хранилище всё ещё «загружается»: иконка от
+ * источника, addIcons и другая копия ядра сами сокращают список, а «нет» одного источника — нет:
+ * имя спрашивается у следующих. Конец — у всех имён есть иконка, источники кончились или прошло
+ * TIMEOUT: тогда запросы отменяются. Источники кончились — имена, о которых все ответили «нет»
+ * (и никто не отказал), — «нет»; остальные открытые — в повтор. firstCdn — номер первого источника
+ * статики: до него ждут ROTATE_CDN, а не ROTATE.
  */
 function attempt(
   prefix: string,
@@ -272,42 +325,56 @@ function attempt(
   const { signal } = controller;
   let next = 0;
   let running = 0;
-  let error: unknown;
+  const report: Report = { missing: new Set(), failed: new Set() };
   let rotate: ReturnType<typeof setTimeout> | undefined;
   const open = () => names.filter((name) => loading(`${prefix}:${name}`));
-  const finish = () => {
+  const finish = (exhausted: boolean) => {
     clearTimeout(rotate);
     clearTimeout(deadline);
     controller.abort();
-    fail(prefix, open(), tries, error);
+    const rest = open();
+    const missing = exhausted
+      ? rest.filter((n) => report.missing.has(n) && !report.failed.has(n))
+      : [];
+    gone(prefix, missing);
+    fail(
+      prefix,
+      rest.filter((n) => !missing.includes(n)),
+      tries,
+      report.error,
+    );
   };
   const step = (hedge?: boolean): void => {
     if (signal.aborted) return;
     const rest = open();
     if (rest.length === 0 || (running === 0 && next === sources.length)) {
-      finish();
+      finish(true);
       return;
     }
     // Источник ещё может ответить: ждать его или порога ROTATE (до статики — ROTATE_CDN).
-    if (running > 0 && !hedge) return;
+    if ((running > 0 && !hedge) || next === sources.length) return;
     const source = sources[next++] as Source;
     clearTimeout(rotate);
     if (next < sources.length) {
       rotate = setTimeout(step, next === firstCdn ? ROTATE_CDN : ROTATE, true);
     }
     running++;
-    source(prefix, rest, signal)
+    let failed = false;
+    source(prefix, rest, signal, report)
       .catch((e: unknown) => {
-        error = e;
+        // Отказ источника — сбой всех его имён; следующий источник — сразу, без порога.
+        failed = true;
+        report.error = e;
+        for (const name of rest) report.failed.add(name);
       })
       .then(() => {
         running--;
-        step();
+        step(failed);
       });
   };
   const deadline = setTimeout(() => {
-    error ??= new Error(`No answer in ${TIMEOUT / 1000} s`);
-    finish();
+    report.error ??= new Error(`No answer in ${TIMEOUT / 1000} s`);
+    finish(false);
   }, TIMEOUT);
   step();
 }

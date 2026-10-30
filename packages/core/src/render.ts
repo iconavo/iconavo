@@ -51,7 +51,9 @@ export function renderIcon(
 ): SvgParts {
   const parts = iconToSvg(icon, options);
   const { color, strokeWidth, idPrefix } = options;
-  const label = options.label?.trim();
+  // Подпись из JS может прийти не строкой (label={count}): такая иконка — декоративная, а не сбой.
+  const label =
+    typeof options.label === "string" ? options.label.trim() : undefined;
   if (strokeWidth !== undefined) {
     parts.body = setStrokeWidth(parts.body, strokeWidth);
   }

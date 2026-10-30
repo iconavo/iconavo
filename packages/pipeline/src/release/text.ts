@@ -67,6 +67,16 @@ export function setScriptRefs(
     .replace(SCRIPT_URL, url);
 }
 
+/**
+ * Только значение хэша в строках подключения, у которых он есть; адрес, остальные атрибуты и строки
+ * без integrity — как были. Так рабочая копия HTML-примера проверяется с той строкой, что в README.
+ */
+export function setScriptIntegrity(text: string, integrity: string): string {
+  return text.replace(SCRIPT_TAG, (tag) =>
+    tag.replace(/(\sintegrity=")[^"]*"/, `$1${integrity}"`),
+  );
+}
+
 /** Раздел журнала: «## 0.1.0 — 2026-10-30». */
 const SECTION = /^## (\d+\.\d+\.\d+) — (\d{4}-\d{2}-\d{2})$/;
 /** Заготовка, которую оставляет pnpm release bump: с ней выпуск не идёт. */
@@ -108,27 +118,39 @@ export function changelogSections(text: string): {
 }
 
 /**
- * Новый раздел журнала с заготовкой — перед первым разделом, после вступления. Раздел этой версии уже
- * первый — меняется только дата: например, когда выпуск сливают на следующий день.
+ * Раздел журнала для выпуска — перед первым разделом, после вступления; блоки кода не в счёт.
+ * - Раздел этой версии уже первый — меняется только дата: например, выпуск сливают на следующий день.
+ * - Первый раздел — версия replace, которая так и не вышла (выпуск передумали на другую версию), — он
+ *   получает новую версию и дату, текст остаётся: в журнале не остаётся версии, которой нет в npm.
+ * - Иначе — новый раздел с заготовкой TODO.
  */
 export function addChangelogSection(
   text: string,
   version: string,
   date: string,
+  replace?: string,
 ): string {
-  const lines = text.split("\n");
-  const first = lines.findIndex((l) => l.startsWith("## "));
-  if (first !== -1 && SECTION.exec(lines[first] as string)?.[1] === version) {
-    lines[first] = `## ${version} — ${date}`;
-    return lines.join("\n");
+  const eol = text.includes("\r\n") ? "\r\n" : "\n";
+  const lines = text.split(/\r?\n/);
+  let fence = false;
+  const first = lines.findIndex((line) => {
+    if (line.startsWith("```")) fence = !fence;
+    return !fence && line.startsWith("## ");
+  });
+  const heading = `## ${version} — ${date}`;
+  const current =
+    first === -1 ? undefined : SECTION.exec(lines[first] as string)?.[1];
+  if (current !== undefined && (current === version || current === replace)) {
+    lines[first] = heading;
+    return lines.join(eol);
   }
-  const section = [`## ${version} — ${date}`, "", `- ${TODO}`, ""];
+  const section = [heading, "", `- ${TODO}`, ""];
   if (first === -1) {
     const body = text.replace(/\s*$/, "");
-    return `${body}\n\n${section.join("\n")}`;
+    return `${body}${eol}${eol}${section.join(eol)}`;
   }
   lines.splice(first, 0, ...section);
-  return lines.join("\n");
+  return lines.join(eol);
 }
 
 const isDate = (date: string) =>
@@ -154,15 +176,13 @@ export function changelogProblems(text: string, version: string): string[] {
     );
   }
   const own = sections.find((s) => s.version === version);
-  if (own !== undefined) {
-    if (own.body === "") problems.push(`журнал: раздел ${version} пуст`);
-    if (own.body.includes(TODO)) {
+  if (own?.body === "") problems.push(`журнал: раздел ${version} пуст`);
+  for (const s of sections) {
+    if (s.body.includes(TODO)) {
       problems.push(
-        `журнал: в разделе ${version} осталась заготовка ${TODO} — допишите, что изменилось`,
+        `журнал: в разделе ${s.version} осталась заготовка ${TODO} — допишите, что изменилось`,
       );
     }
-  }
-  for (const s of sections) {
     if (!isDate(s.date)) {
       problems.push(`журнал: у раздела ${s.version} неверная дата ${s.date}`);
     }

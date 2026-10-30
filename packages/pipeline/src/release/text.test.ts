@@ -7,6 +7,7 @@ import {
   changelogSections,
   SRI_FORMAT,
   scriptRefs,
+  setScriptIntegrity,
   setScriptRefs,
   sri,
 } from "./text.js";
@@ -147,5 +148,54 @@ describe("журнал изменений", () => {
   it("«##» внутри блока кода — не раздел", () => {
     const text = `${CHANGELOG}\n\`\`\`md\n## not a section\n\`\`\`\n`;
     expect(changelogSections(text).bad).toEqual([]);
+  });
+
+  it("новый раздел — после блока кода вступления, а не внутри него", () => {
+    const text =
+      "# Changelog\n\n```md\n## example\n```\n\n## 0.1.0 — 2026-10-29\n\n- A.\n";
+    const next = addChangelogSection(text, "0.1.1", "2026-11-02");
+    expect(changelogSections(next).sections.map((s) => s.version)).toEqual([
+      "0.1.1",
+      "0.1.0",
+    ]);
+    expect(next).toContain("## example\n```\n\n## 0.1.1 — 2026-11-02");
+  });
+
+  it("журнал с CRLF — та же версия первой меняет только дату, концы строк остаются", () => {
+    const crlf = CHANGELOG.replaceAll("\n", "\r\n");
+    const next = addChangelogSection(crlf, "0.1.1", "2026-11-03");
+    expect(next).toBe(crlf.replace("2026-11-02", "2026-11-03"));
+  });
+
+  it("выпуск передумали: невышедший первый раздел переходит к новой версии с текстом", () => {
+    const next = addChangelogSection(CHANGELOG, "0.2.0", "2026-11-05", "0.1.1");
+    expect(changelogSections(next).sections).toEqual([
+      { version: "0.2.0", date: "2026-11-05", body: "- Fixed." },
+      { version: "0.1.0", date: "2026-10-29", body: "The first beta." },
+    ]);
+  });
+
+  it("заготовка TODO в любом разделе — проблема", () => {
+    const text = CHANGELOG.replace("The first beta.", "- TODO");
+    expect(changelogProblems(text, "0.1.1")).toEqual([
+      "журнал: в разделе 0.1.0 осталась заготовка TODO — допишите, что изменилось",
+    ]);
+  });
+});
+
+describe("хэш в рабочей копии HTML-примера", () => {
+  it("меняется только значение integrity; строка без него и другие атрибуты — как были", () => {
+    const line = (attrs: string) =>
+      `<script type="module" src="${scriptUrl("0.1.0")}"${attrs}></script>`;
+    const text = [
+      line(` integrity="sha384-old" data-x="1"`),
+      line(""),
+      `import { configure } from "${scriptUrl("0.1.0")}";`,
+    ].join("\n");
+    expect(setScriptIntegrity(text, HASH).split("\n")).toEqual([
+      line(` integrity="${HASH}" data-x="1"`),
+      line(""),
+      `import { configure } from "${scriptUrl("0.1.0")}";`,
+    ]);
   });
 });

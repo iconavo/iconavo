@@ -18,12 +18,14 @@ import {
   type RegistryClient,
 } from "../npm/registry.js";
 import type { FetchFn } from "../sources/npm.js";
-import { installVerdict, type LsNode } from "../starters/install.js";
+import { installVerdict, npmTree } from "../starters/install.js";
 import { run } from "../starters/pack.js";
 import {
+  CLEAN_ATTEMPTS,
   CLEAN_DIR,
   CLEAN_ICON,
   CLEAN_REACT,
+  CLEAN_RETRY_MS,
   JSDELIVR_POLL_MS,
   RELEASE_WORKFLOW,
   scriptUrl,
@@ -171,16 +173,6 @@ export function publicationProblems(o: {
   }
 }
 
-/** npm ls --all --json: дерево зависимостей, даже если npm вышел с кодом 1. */
-async function npmTree(dir: string): Promise<LsNode> {
-  const output = await run("npm", ["ls", "--all", "--json"], dir).catch(
-    (e: Error) => e.message.slice(e.message.indexOf("\n") + 1),
-  );
-  return JSON.parse(
-    output.slice(output.indexOf("{"), output.lastIndexOf("}") + 1),
-  ) as LsNode;
-}
-
 /** Скрипт чистого проекта: иконка из npm-пакета React, данные — с живых хостов, HTML — в stdout. */
 const RENDER = (icon: string) => `import { createElement } from "react";
 import server from "react-dom/server";
@@ -214,18 +206,29 @@ async function cleanProject(
     `react@${CLEAN_REACT}`,
     `react-dom@${CLEAN_REACT}`,
   ];
-  o.log?.(`Чистый проект: npm install ${wanted.join(" ")}…`);
-  try {
-    await run(
-      "npm",
-      ["install", "--no-audit", "--no-fund", "--ignore-scripts", ...wanted],
-      dir,
-    );
-  } catch (e) {
-    part.problems.push(
-      `npm install не удался: ${(e as Error).message.split("\n").slice(0, 4).join(" ")}`,
-    );
-    return;
+  // npm ищет точную версию по сокращённому описанию пакета, а его CDN реестра обновляет позже полного:
+  // сразу после публикации install может не найти версию — тогда пауза и ещё раз.
+  const sleep =
+    o.sleep ?? ((ms) => new Promise((resolve) => setTimeout(resolve, ms)));
+  for (let attempt = 1; ; attempt++) {
+    o.log?.(`Чистый проект: npm install ${wanted.join(" ")}…`);
+    try {
+      await run(
+        "npm",
+        ["install", "--no-audit", "--no-fund", "--ignore-scripts", ...wanted],
+        dir,
+      );
+      break;
+    } catch (e) {
+      if (attempt < CLEAN_ATTEMPTS) {
+        await sleep(CLEAN_RETRY_MS);
+        continue;
+      }
+      part.problems.push(
+        `npm install не удался за ${CLEAN_ATTEMPTS} попытки: ${(e as Error).message.split("\n").slice(0, 4).join(" ")}`,
+      );
+      return;
+    }
   }
   const fromRegistry = (r: string) =>
     r.startsWith("https://registry.npmjs.org/");
@@ -368,6 +371,7 @@ export async function verifyRelease(
 
   // jsDelivr берёт новую версию из npm по первому запросу и не сразу: 404 — подождать и спросить снова.
   const js = report.jsdelivr;
+  let last = "";
   for (;;) {
     try {
       const res = await fetchFn(js.url, {
@@ -388,17 +392,19 @@ export async function verifyRelease(
         }
         break;
       }
-      if (res.status !== 404) {
+      // 404 и временные ответы (429, 5xx) — подождать: jsDelivr ещё забирает версию из npm.
+      if (res.status !== 404 && res.status !== 429 && res.status < 500) {
         js.problems.push(`jsDelivr ответил ${res.status}`);
         break;
       }
+      last = `ответ ${res.status}`;
     } catch (e) {
-      js.notes.push(`сбой сети: ${(e as Error).message}`);
+      last = `сбой сети: ${(e as Error).message}`;
     }
     const left = deadline - now();
     if (left <= 0) {
       js.problems.push(
-        "jsDelivr не отдаёт скрипт этой версии: он берёт её из npm не сразу — повторите «Проверку» позже; если не поможет — purge.jsdelivr.net",
+        `jsDelivr не отдаёт скрипт этой версии (${last}): он берёт её из npm не сразу — повторите «Проверку» позже; если не поможет — purge.jsdelivr.net`,
       );
       break;
     }

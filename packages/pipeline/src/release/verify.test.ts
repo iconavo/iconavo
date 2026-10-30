@@ -194,4 +194,28 @@ describe("pnpm release verify", () => {
       "jsDelivr без Access-Control-Allow-Origin: * — модульный скрипт с другого сайта не загрузится",
     ]);
   });
+
+  it("jsDelivr отвечает временной ошибкой — проверка ждёт, а не сдаётся", async () => {
+    const { root, plan } = await planOf("0.1.0", {});
+    const { now, sleep } = clock();
+    const fetchFn = jsdelivr(
+      new Response("busy", { status: 503 }),
+      new Response("slow", { status: 429 }),
+      script(),
+    );
+    const report = await verifyRelease({
+      root,
+      plan,
+      registry: after([
+        { version: "0.1.0", token: true, provenance: { commit: COMMIT } },
+      ]),
+      waitMs: 300_000,
+      fetch: fetchFn,
+      clean: false,
+      now,
+      sleep,
+    });
+    expect(report.jsdelivr.status).toBe("ok");
+    expect(fetchFn.calls).toBe(3);
+  });
 });

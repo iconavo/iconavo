@@ -411,15 +411,17 @@ async function checkPage(
     map: o.map,
     script: o.script && { ...o.script, delayMs: SCRIPT_DELAY_MS },
     liveScript: o.liveScript,
+    liveDelayMs: SCRIPT_DELAY_MS,
   });
   await page.goto(`${o.base}/`, { waitUntil: "commit", timeout: 120_000 });
 
   if (o.starter === "html") {
-    // Скрипт тега задержан: пока его нет, место держит строка :not(:defined) из README.
+    // Скрипт тега задержан: пока его нет, место держит строка :not(:defined) из README. Успел раньше
+    // замера — так и сказано в строке, а не сбой.
     await page.waitForFunction(
       () =>
-        document.readyState !== "loading" &&
-        !customElements.get("iconavo-icon"),
+        document.readyState !== "loading" ||
+        Boolean(customElements.get("iconavo-icon")),
       null,
       { timeout: 60_000 },
     );
@@ -585,8 +587,26 @@ async function checkSriCanary(
 ): Promise<void> {
   const url = o.script?.url ?? o.liveScript;
   if (url === undefined) return;
-  const body =
-    o.script?.body ?? Buffer.from(await (await fetch(url)).arrayBuffer());
+  // С --npm основа — настоящий файл с jsDelivr. Не скачался — проверять нечем: подмена ответа 404
+  // тоже не запустилась бы, и проверка прошла бы вслепую.
+  let body = o.script?.body;
+  if (body === undefined) {
+    try {
+      const res = await fetch(url, { signal: AbortSignal.timeout(60_000) });
+      if (!res.ok) {
+        result.verdicts.canarySri = fail(
+          `скрипт с jsDelivr не скачался: HTTP ${res.status}`,
+        );
+        return;
+      }
+      body = Buffer.from(await res.arrayBuffer());
+    } catch (e) {
+      result.verdicts.canarySri = fail(
+        `скрипт с jsDelivr не скачался: ${(e as Error).message}`,
+      );
+      return;
+    }
+  }
   const context = await browser.newContext({ viewport: VIEWPORT });
   const page = await context.newPage();
   const seen = watch(page);

@@ -8,6 +8,7 @@ import { basename, join } from "node:path";
 import { pathToFileURL } from "node:url";
 import { buildNext, freePort, startNext } from "../example/next.js";
 import { SCRIPT_FILE } from "../icon/build.js";
+import { scriptRefs } from "../release/text.js";
 import type { BrowserName } from "../sandbox/browser.js";
 import { fail, pass, type Verdict } from "../sandbox/verdict.js";
 import {
@@ -27,7 +28,7 @@ import {
 import {
   copyStarter,
   installVerdict,
-  type LsNode,
+  npmTree,
   useLocalPacks,
   useLocalScript,
 } from "./install.js";
@@ -64,16 +65,6 @@ const exists = (path: string) =>
 /** Сообщение об ошибке без лишнего: первая строка и хвост вывода команды. */
 const short = (e: unknown) =>
   (e as Error).message.split("\n").slice(0, 6).join(" ").slice(0, 400);
-
-/** npm ls --all --json рабочей копии: дерево зависимостей. */
-async function npmTree(dir: string): Promise<LsNode> {
-  // npm ls выходит с кодом 1 и при лишних или неудовлетворённых зависимостях — дерево всё равно нужно.
-  const output = await run("npm", ["ls", "--all", "--json"], dir).catch(
-    (e: Error) => e.message.slice(e.message.indexOf("\n") + 1),
-  );
-  const start = output.indexOf("{");
-  return JSON.parse(output.slice(start, output.lastIndexOf("}") + 1)) as LsNode;
-}
 
 /** Поставить рабочую копию: архивы этой ветки — npm install, --npm — npm ci из lock-файла. */
 async function install(
@@ -182,25 +173,40 @@ export async function inRegistry(
   return version in (doc.versions ?? {});
 }
 
-/** Наши пакеты примеров, которых ещё нет в npm: версия README выходит после слияния выпуска. */
+/**
+ * Наши пакеты примеров, которых ещё нет в npm: версия README выходит после слияния выпуска. У HTML-
+ * примера пакета нет — есть адрес скрипта тега с версией: её и ищем.
+ */
 export async function unpublished(
   root: string,
   ids: readonly StarterId[],
 ): Promise<string[]> {
   const missing: string[] = [];
   for (const id of ids) {
+    const wanted: [string, string][] = [];
     const path = join(root, STARTERS_DIR, id, "package.json");
-    if (!(await exists(path))) continue;
-    const manifest = JSON.parse(await readFile(path, "utf8")) as {
-      dependencies?: Record<string, string>;
-    };
-    for (const [name, version] of Object.entries(manifest.dependencies ?? {})) {
-      if (
-        name.startsWith("@iconavo-ui/") &&
-        !(await inRegistry(name, version))
-      ) {
-        missing.push(`${name}@${version}`);
+    if (await exists(path)) {
+      const manifest = JSON.parse(await readFile(path, "utf8")) as {
+        dependencies?: Record<string, string>;
+      };
+      wanted.push(
+        ...Object.entries(manifest.dependencies ?? {}).filter(([name]) =>
+          name.startsWith("@iconavo-ui/"),
+        ),
+      );
+    }
+    if (id === "html") {
+      const page = await readFile(
+        join(root, STARTERS_DIR, id, "index.html"),
+        "utf8",
+      );
+      for (const version of new Set(scriptRefs(page).versions)) {
+        wanted.push(["@iconavo-ui/icon", version]);
       }
+    }
+    for (const [name, version] of wanted) {
+      if (!(await inRegistry(name, version)))
+        missing.push(`${name}@${version}`);
     }
   }
   return [...new Set(missing)];
