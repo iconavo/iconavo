@@ -2,6 +2,12 @@
 
 `@iconavo-ui/icon`, `@iconavo-ui/react` and `@iconavo-ui/core` are released together, with one version. Versions 0.x are betas under the `next` tag: the API may still change before 1.0. The documentation is at [iconavo.dev/docs](https://iconavo.dev/docs).
 
+## 0.1.1 — 2026-10-30
+
+Documentation only, no code changes.
+
+- The HTML live example on StackBlitz now shows its icons: it runs on a small static server instead of the StackBlitz static template.
+
 ## 0.1.0 — 2026-10-30
 
 The first public beta.
