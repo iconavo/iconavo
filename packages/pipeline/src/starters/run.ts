@@ -8,6 +8,7 @@ import { basename, join } from "node:path";
 import { pathToFileURL } from "node:url";
 import { buildNext, freePort, startNext } from "../example/next.js";
 import { SCRIPT_FILE } from "../icon/build.js";
+import { registryClient } from "../npm/registry.js";
 import { scriptRefs } from "../release/text.js";
 import type { BrowserName } from "../sandbox/browser.js";
 import { fail, pass, type Verdict } from "../sandbox/verdict.js";
@@ -158,19 +159,17 @@ async function build(
   }
 }
 
-/** Есть ли версия пакета в реестре npm. */
+/**
+ * Есть ли версия пакета в реестре npm. Карточка — полная и без кэша, как у pnpm release verify:
+ * сокращённую CDN npm до 5 минут отдаёт из кэша, и сразу после публикации версии в ней ещё нет
+ * (выпуск 0.1.0, 30 октября 2026).
+ */
 export async function inRegistry(
   name: string,
   version: string,
 ): Promise<boolean> {
-  const response = await fetch(
-    `https://registry.npmjs.org/${name.replace("/", "%2F")}`,
-    { headers: { accept: "application/vnd.npm.install-v1+json" } },
-  );
-  if (response.status === 404) return false;
-  if (!response.ok) throw new Error(`реестр npm: ${response.status}`);
-  const doc = (await response.json()) as { versions?: Record<string, unknown> };
-  return version in (doc.versions ?? {});
+  const doc = await registryClient().packument(name);
+  return doc?.versions.has(version) ?? false;
 }
 
 /**

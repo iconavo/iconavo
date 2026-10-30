@@ -138,7 +138,7 @@ Open an example in the browser, change the code, and the preview updates:
 
 | Example | What it shows |
 | --- | --- |
-| [HTML](https://stackblitz.com/github/iconavo/iconavo/tree/main/examples/starters/html?file=index.html&template=html) | The tag without a build step: size, color and a label |
+| [HTML](https://stackblitz.com/github/iconavo/iconavo/tree/main/examples/starters/html?file=index.html&startScript=dev) | The tag without a build step: size, color and a label |
 | [React](https://stackblitz.com/github/iconavo/iconavo/tree/main/examples/starters/react?file=src%2FApp.tsx&startScript=dev) | The `Icon` component in a Vite app, and an icon that changes with state |
 
 The examples run on [StackBlitz](https://stackblitz.com).
