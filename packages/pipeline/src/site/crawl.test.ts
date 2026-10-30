@@ -3,6 +3,7 @@ import {
   anchorsOf,
   type CrawledPage,
   counterpartOf,
+  freshnessVerdict,
   headersVerdict,
   headingsOf,
   htmlLang,
@@ -16,6 +17,7 @@ import {
   sectionsVerdict,
   statusVerdict,
   switchVerdict,
+  versionMetaOf,
 } from "./crawl.js";
 
 const page = (
@@ -182,6 +184,44 @@ describe("коды ответов", () => {
     expect(v.note).toContain("/ — 500");
     expect(v.note).toContain("/ru/docs — 308 → /ru, а ждали 307 → /docs");
     expect(v.note).toContain("/__missing__ не открыт");
+  });
+});
+
+describe("свежесть данных наборов", () => {
+  const meta = (version: string) =>
+    `<head><meta name="robots" content="noindex, nofollow"/><meta name="iconavo-version" content="${version}"/></head>`;
+
+  it("метка версии — из <meta name=iconavo-version>, в любом порядке атрибутов", () => {
+    expect(versionMetaOf(meta("8d1ee623"))).toBe("8d1ee623");
+    expect(versionMetaOf('<meta content="abc" name="iconavo-version">')).toBe(
+      "abc",
+    );
+    expect(versionMetaOf('<meta name="robots" content="x">')).toBeUndefined();
+  });
+
+  it("страницы наборов на обоих языках — с версиями манифеста", () => {
+    const sets = { lucide: { version: "8d1ee623" }, ph: { version: "aa" } };
+    const pages = [
+      page("/lucide", meta("8d1ee623")),
+      page("/ru/lucide", meta("8d1ee623")),
+      page("/ph", meta("aa")),
+      page("/ru/ph", meta("aa")),
+    ];
+    expect(freshnessVerdict(pages, sets).ok).toBe(true);
+    const stale = freshnessVerdict(
+      [
+        page("/lucide", meta("c3b3f7a7")),
+        page("/ru/lucide", "<head></head>"),
+        page("/ph", "", 404),
+      ],
+      sets,
+    );
+    expect(stale.ok).toBe(false);
+    expect(stale.note).toContain("/lucide: c3b3f7a7, а в манифесте 8d1ee623");
+    expect(stale.note).toContain("/ru/lucide: без метки версии");
+    expect(stale.note).toContain("/ph: ответ 404");
+    expect(stale.note).toContain("/ru/ph: страницы нет");
+    expect(stale.note).toContain("пересборка после «Выкладки»");
   });
 });
 

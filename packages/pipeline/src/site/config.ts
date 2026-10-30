@@ -1,6 +1,6 @@
 // Сайт (фаза 3, шаг 10; ADR-0050): папка, порт и ожидания проверки. Сайт — Next.js на Vercel,
-// iconavo.dev: главная на двух языках (/ и /ru, фаза 4, шаг 1), заглушка поиска и документация /docs,
-// собранная из README.
+// iconavo.dev: главная на двух языках (/ и /ru, фаза 4, шаг 1), заглушка поиска, документация /docs,
+// собранная из README, и каталог — наборы, лента «Что нового», лицензии (фаза 4, шаг 2).
 
 import { join } from "node:path";
 
@@ -31,11 +31,18 @@ export const DOC_SOURCES = [
   "packages/icon/CHANGELOG.md",
 ];
 
-/** Несуществующие адреса: на каждый — общая страница 404 (app/global-not-found.tsx, ADR-0037). */
+/**
+ * Несуществующие адреса — 404. Неизвестный набор или страница документации — страница 404 в раскладке
+ * своего языка (not-found.tsx), незнакомый адрес из нескольких частей — общая (app/global-not-found.tsx,
+ * ADR-0037).
+ */
 export const MISSING_PATHS = [
   "/__missing__",
   "/ru/__missing__",
   "/docs/__missing__",
+  "/no-such-set",
+  "/ru/no-such-set",
+  "/__missing__/__missing__/__missing__",
 ];
 
 /** Документации на русском пока нет: /ru/docs… временно ведут на английскую (next.config.ts). */
@@ -65,6 +72,17 @@ export const SKIP_TEXT = {
   ru: "Перейти к содержимому",
 } as const;
 export const THEME_LABEL = { en: "Theme", ru: "Тема" } as const;
+
+/** Набор для сценария «Каталог» (шаг 2 фазы 4): с категориями автора и больше чем тремя страницами сетки. */
+export const CATALOG_SET = "lucide";
+/** Иконок на странице сетки — как PAGE_SIZE сайта (apps/site/lib/catalog.ts, ADR-0040). */
+export const CATALOG_PAGE_SIZE = 96;
+/** Сетка показывает нужную страницу не дольше: список имён и иконки браузер берёт у превью API. */
+export const CATALOG_WAIT_MS = 20_000;
+/** Метка версии данных набора на его странице (apps/site/lib/catalog-view.ts) — по ней --live видит свежесть. */
+export const VERSION_META = "iconavo-version";
+/** Манифест раздачи: версии наборов, с которыми сравнивается сайт. */
+export const LIVE_MANIFEST = "https://cdn.iconavo.dev/manifest.json";
 
 /** Окна проверки: компьютер и телефон (ширина 375 — ADR-0038). */
 export const DESKTOP = { width: 1280, height: 900 };

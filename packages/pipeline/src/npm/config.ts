@@ -25,6 +25,10 @@ export const npmPage = (name: string) =>
 export const NPM_REPOSITORY = "https://github.com/iconavo/iconavo";
 export const NPM_REPOSITORY_URL = "git+https://github.com/iconavo/iconavo.git";
 export const NPM_BUGS_URL = "https://github.com/iconavo/iconavo/issues";
+/** Страница набора на сайте — homepage пакета; лента выпусков набора — ссылка в README (ADR-0026, ADR-0037). */
+export const npmSetPage = (id: string) => `https://iconavo.dev/${id}`;
+export const npmChangelogPage = (id: string) =>
+  `https://iconavo.dev/changelog?set=${id}`;
 /** Workflow и ветка, из которых выходят пакеты: так настроена доверенная публикация на npmjs.com. */
 export const NPM_WORKFLOW = ".github/workflows/publish.yml";
 export const NPM_PUBLISH_REF = "refs/heads/main";

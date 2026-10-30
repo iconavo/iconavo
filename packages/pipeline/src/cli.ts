@@ -1653,6 +1653,7 @@ try {
         results = await checkSite({
           base: next.url,
           hosts: [api],
+          api,
           pages,
           prerendered: Object.keys(manifest.routes ?? {}),
           sections,

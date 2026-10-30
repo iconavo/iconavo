@@ -207,13 +207,6 @@
     font-weight: 600;
     text-decoration: none;
   }
-  .showcase {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 1.5rem;
-    font-size: 2.5rem;
-    margin-top: 2.5rem;
-  }
 
   /* Документация: меню, текст и оглавление; на узком экране — меню в <details>, без оглавления. */
   .docs {
@@ -435,5 +428,286 @@
   }
   .edit a {
     color: var(--color-muted);
+  }
+
+  .footer-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.25rem 1.25rem;
+  }
+  /* Ссылки без текста вокруг — цели не меньше 24 px (WCAG 2.2, 2.5.8). */
+  .footer-links a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 1.5rem;
+  }
+
+  /* Страницы каталога (шаг 2 фазы 4): главная, наборы, набор, лента, лицензии — во всю колонку сайта. */
+  .page {
+    padding-block: 2rem 1rem;
+  }
+  .page h1 {
+    font-size: 2.25rem;
+    font-weight: 700;
+    line-height: 1.2;
+    margin-bottom: 0.75rem;
+  }
+  .page p {
+    margin-block: 0.75rem;
+  }
+  .page-section {
+    margin-top: 2.5rem;
+  }
+  .page-section > h2,
+  .license > h2 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    line-height: 1.3;
+    margin-bottom: 0.75rem;
+  }
+  .crumbs {
+    font-size: 0.875rem;
+    margin-bottom: 0.25rem;
+  }
+  .home-search {
+    margin-block: 1.5rem;
+    max-width: var(--width-text);
+  }
+  .home-search-form {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  /* Карточки наборов. */
+  .set-grid {
+    display: grid;
+    gap: 1rem;
+    grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr));
+    margin-block: 1rem;
+  }
+  .set-card {
+    border: 1px solid var(--color-line);
+    border-radius: var(--radius-md);
+    padding: 1rem;
+  }
+  .set-card-title {
+    font-size: 1.125rem;
+    font-weight: 600;
+  }
+  .page .set-card-samples {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    font-size: 1.75rem;
+    margin-block: 0.75rem;
+  }
+  .page .set-card-meta {
+    color: var(--color-muted);
+    font-size: 0.875rem;
+    margin-block: 0.25rem;
+  }
+
+  /* Фильтры «чипсами»: ссылки с параметрами адреса. */
+  .filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0 2rem;
+  }
+  .chips-nav {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+    margin-block: 0.75rem;
+  }
+  .chips-label {
+    color: var(--color-muted);
+    font-size: 0.875rem;
+  }
+  .chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.375rem;
+    list-style: none;
+    padding: 0;
+  }
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    min-height: 2rem;
+    padding: 0.25rem 0.75rem;
+    border: 1px solid var(--color-control);
+    border-radius: 999px;
+    color: var(--color-fg);
+    font-size: 0.875rem;
+    text-decoration: none;
+  }
+  .chip:hover {
+    background: var(--color-surface);
+  }
+  .chip[aria-current="true"] {
+    background: var(--color-accent);
+    border-color: var(--color-accent);
+    color: var(--color-bg);
+  }
+  .chip-count {
+    color: var(--color-muted);
+    font-variant-numeric: tabular-nums;
+  }
+  .chip[aria-current="true"] .chip-count {
+    color: inherit;
+  }
+
+  /* Страница набора: сведения, витрина, сетка и номера страниц. */
+  .set-facts {
+    display: grid;
+    grid-template-columns: max-content minmax(0, 1fr);
+    gap: 0.25rem 1.5rem;
+    margin-block: 1rem;
+  }
+  .set-facts > div {
+    display: contents;
+  }
+  .set-facts dt {
+    color: var(--color-muted);
+  }
+  .set-facts dd {
+    overflow-wrap: anywhere;
+  }
+  .page .set-samples {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    font-size: 2.5rem;
+    margin-block: 1.5rem;
+  }
+  .icon-grid {
+    display: grid;
+    gap: 0.5rem;
+    grid-template-columns: repeat(auto-fill, minmax(6.5rem, 1fr));
+    list-style: none;
+    padding: 0;
+    margin-block: 1rem;
+  }
+  .icon-cell {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 0.25rem;
+    border-radius: var(--radius-md);
+    text-align: center;
+  }
+  .icon-cell:hover {
+    background: var(--color-surface);
+  }
+  .icon-cell-svg {
+    font-size: 2rem;
+  }
+  .icon-cell-name {
+    color: var(--color-muted);
+    font-size: 0.75rem;
+    line-height: 1.3;
+    overflow-wrap: anywhere;
+  }
+  .page .grid-status {
+    color: var(--color-muted);
+    margin-block: 2rem;
+  }
+  .pagination-list {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.25rem;
+    list-style: none;
+    padding: 0;
+    margin-block: 1.5rem;
+  }
+  .pagination a,
+  .pagination-off,
+  .pagination-gap {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 2.25rem;
+    min-height: 2.25rem;
+    padding: 0 0.5rem;
+    border-radius: var(--radius-md);
+    color: var(--color-fg);
+    text-decoration: none;
+  }
+  .pagination a:hover {
+    background: var(--color-surface);
+  }
+  .pagination a[aria-current="page"] {
+    background: var(--color-accent);
+    color: var(--color-bg);
+  }
+  .pagination-off {
+    color: var(--color-muted);
+  }
+
+  /* Лента «Что нового» и короткий список на главной. */
+  .news-lines {
+    list-style: none;
+    padding: 0;
+  }
+  .news-lines li {
+    border-bottom: 1px solid var(--color-line);
+    padding-block: 0.5rem;
+  }
+  .release {
+    border-bottom: 1px solid var(--color-line);
+    padding-block: 1.25rem;
+    scroll-margin-top: 1rem;
+  }
+  .release-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+  }
+  .page .release-meta {
+    color: var(--color-muted);
+    font-size: 0.875rem;
+    margin-block: 0.25rem;
+  }
+  .page .release-icons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    font-size: 1.5rem;
+  }
+  .release-lists {
+    list-style: none;
+    padding: 0;
+  }
+  .release-lists summary,
+  .license summary {
+    cursor: pointer;
+    margin-block: 0.25rem;
+  }
+  .page .release-names {
+    color: var(--color-muted);
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    overflow-wrap: anywhere;
+    margin-block: 0.25rem 0.75rem;
+  }
+
+  /* Лицензии наборов. */
+  .license {
+    border-top: 1px solid var(--color-line);
+    margin-top: 1.5rem;
+    padding-top: 1rem;
+    scroll-margin-top: 1rem;
+  }
+  .license-text {
+    background: var(--color-surface);
+    border-radius: var(--radius-md);
+    font-size: 0.8rem;
+    overflow-wrap: anywhere;
+    padding: 0.75rem 1rem;
+    white-space: pre-wrap;
   }
 }
