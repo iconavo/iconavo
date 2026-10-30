@@ -2,7 +2,8 @@
 // API. Сначала обход по HTTP — коды, заголовки, языки, ссылки, разделы README, — затем каждая страница в
 // Chrome, Firefox и WebKit по очереди: иконки в серверном HTML, консоль и нарушения CSP, заголовки
 // страницы, ссылка «к содержимому», axe-core в светлой и тёмной теме, ширина телефона, меню темы
-// (фаза 4, шаг 1). Контрольный запуск подкладывает поломки — каждую проверка обязана заметить.
+// (фаза 4, шаг 1), сетка набора и фильтр наборов (фаза 4, шаг 2). Контрольный запуск подкладывает
+// поломки — каждую проверка обязана заметить.
 
 import type { Browser, Page } from "playwright";
 import { canaryVerdict } from "../example/check.js";
@@ -22,6 +23,9 @@ import {
   watch,
 } from "../sandbox/verdict.js";
 import {
+  CATALOG_PAGE_SIZE,
+  CATALOG_SET,
+  CATALOG_WAIT_MS,
   DESKTOP,
   MISSING_PATHS,
   PHONE,
@@ -41,6 +45,7 @@ import {
   sectionsVerdict,
   statusVerdict,
   switchVerdict,
+  versionMetaOf,
 } from "./crawl.js";
 
 export const CHECKS = [
@@ -86,6 +91,10 @@ export const CHECKS = [
     "Меню темы с клавиатуры: светлая, тёмная, как в системе; тема — до отрисовки, без <style> и нарушений CSP, axe с открытым меню",
   ],
   ["copy", "Кнопка Copy копирует код"],
+  [
+    "catalog",
+    "Каталог: сетка набора — страницы, категория, «назад», ссылка на страницу; фильтр наборов",
+  ],
   ["canary", "Контрольный запуск: каждая подложенная поломка замечена"],
 ] as const;
 
@@ -102,6 +111,8 @@ export interface SiteCheckOptions {
   base: string;
   /** Хосты иконок, к которым страница может обращаться: превью API. */
   hosts: string[];
+  /** Превью API: из него — ожидания сценария «Каталог»; его /collection обрывает контрольный запуск. */
+  api: string;
   pages: CrawledPage[];
   /** Пути, которые Next.js собрал заранее (prerender-manifest.json). */
   prerendered: string[];
@@ -397,6 +408,259 @@ async function checkPages(
   }
 }
 
+/** Чего ждать от каталога: имена набора CATALOG_SET по порядку сетки, его категории, число наборов. */
+export interface CatalogExpect {
+  names: string[];
+  /** Название категории → её имена по порядку сетки. */
+  categories: Record<string, string[]>;
+  /** Версия данных набора (X-Iconavo-Version) — её показывает метка на странице набора. */
+  version: string;
+  sets: number;
+  /** Наборов с цветными иконками — столько карточек оставляет фильтр «цветные». */
+  colorSets: number;
+}
+
+const byCode = (a: string, b: string) => (a < b ? -1 : a > b ? 1 : 0);
+
+/** Ожидания — из превью API, тем же порядком, что у сетки сайта: без повторов, по кодам символов. */
+export function catalogExpectOf(
+  sets: Record<string, { palette?: boolean }>,
+  collection: {
+    categories?: Record<string, string[]>;
+    uncategorized?: string[];
+  },
+  version: string,
+): CatalogExpect {
+  const categories = collection.categories ?? {};
+  return {
+    version,
+    names: [
+      ...new Set([
+        ...(collection.uncategorized ?? []),
+        ...Object.values(categories).flat(),
+      ]),
+    ].sort(byCode),
+    categories: Object.fromEntries(
+      Object.entries(categories).map(([title, names]) => [
+        title,
+        [...new Set(names)].sort(byCode),
+      ]),
+    ),
+    sets: Object.keys(sets).length,
+    colorSets: Object.values(sets).filter((s) => s.palette === true).length,
+  };
+}
+
+async function catalogExpect(api: string): Promise<CatalogExpect> {
+  const get = async (path: string) => {
+    const response = await fetch(`${api}${path}`);
+    if (!response.ok) {
+      throw new Error(`${api}${path} ответил ${response.status}`);
+    }
+    return {
+      data: await response.json(),
+      version: response.headers.get("x-iconavo-version") ?? "",
+    };
+  };
+  const collection = await get(`/collection?prefix=${CATALOG_SET}`);
+  return catalogExpectOf(
+    (await get("/collections")).data,
+    collection.data,
+    collection.version,
+  );
+}
+
+/** Сетка набора: имена ячеек, нарисованные иконки, сообщение об ошибке, параметры адреса. Выполняется в браузере. */
+function gridFacts() {
+  const cells = [...document.querySelectorAll(".icon-grid .icon-cell")];
+  return {
+    names: cells.map(
+      (c) => c.querySelector(".icon-cell-name")?.textContent ?? "",
+    ),
+    drawn: cells.filter((c) => {
+      const svg = c.querySelector("svg");
+      return svg?.hasAttribute("viewBox") === true && svg.childNodes.length > 0;
+    }).length,
+    error:
+      document.querySelector(".grid-status[role='alert']")?.textContent ?? "",
+    search: location.search,
+  };
+}
+
+/**
+ * Ждать, пока адрес — с этими параметрами, а сетка — ровно эти имена с нарисованными иконками; сообщение
+ * об ошибке сетки — сразу. Проблема — строкой, всё как надо — undefined.
+ */
+async function gridShows(
+  page: Page,
+  step: string,
+  names: string[],
+  search: string,
+): Promise<string | undefined> {
+  const shown = await page
+    .waitForFunction(
+      ([expected, query]) => {
+        if (document.querySelector(".grid-status[role='alert']")) return true;
+        const cells = [...document.querySelectorAll(".icon-grid .icon-cell")];
+        return (
+          location.search === query &&
+          cells.length === expected.length &&
+          cells.every((cell, i) => {
+            const svg = cell.querySelector("svg");
+            return (
+              cell.querySelector(".icon-cell-name")?.textContent ===
+                expected[i] &&
+              svg !== null &&
+              svg.hasAttribute("viewBox") &&
+              svg.childNodes.length > 0
+            );
+          })
+        );
+      },
+      [names, search] as const,
+      { timeout: CATALOG_WAIT_MS },
+    )
+    .then(
+      () => true,
+      () => false,
+    );
+  const f = await page.evaluate(gridFacts);
+  if (f.error !== "") return `${step}: «${f.error}»`;
+  if (shown) return undefined;
+  return `${step}: адрес «${f.search}», а ждали «${search}»; ячеек ${f.names.length} из ${names.length}, нарисовано ${f.drawn}, первая — ${f.names[0] ?? "нет"} (ждали ${names[0] ?? "нет"})`;
+}
+
+/**
+ * Сетка набора CATALOG_SET: первая страница — из серверного HTML, затем страница 2, категория автора,
+ * «назад» и ссылка сразу на страницу 3. Имена и порядок — как в /collection, иконки нарисованы. Первая
+ * проблема останавливает сценарий: дальше шаги от неё зависят.
+ */
+async function gridProblems(
+  page: Page,
+  base: string,
+  e: CatalogExpect,
+): Promise<string[]> {
+  const pageOf = (names: string[], n: number) =>
+    names.slice((n - 1) * CATALOG_PAGE_SIZE, n * CATALOG_PAGE_SIZE);
+  const path = `${base}/${CATALOG_SET}`;
+  await page.goto(path, { waitUntil: "load" });
+  await waitForHydration(page);
+  let problem = await gridShows(
+    page,
+    "первая страница",
+    pageOf(e.names, 1),
+    "",
+  );
+  if (problem) return [problem];
+  await page.locator('.pagination a[href$="?page=2"]').first().click();
+  problem = await gridShows(page, "страница 2", pageOf(e.names, 2), "?page=2");
+  if (problem) return [problem];
+  const chip = page.locator('.chips-nav a.chip[href*="?category="]').first();
+  const title = await chip.evaluate((a) => a.firstChild?.textContent ?? "");
+  const slug =
+    new URL((await chip.getAttribute("href")) ?? "", base).searchParams.get(
+      "category",
+    ) ?? "";
+  const names = e.categories[title];
+  if (names === undefined) {
+    return [`категория «${title}»: такой нет в /collection набора`];
+  }
+  await chip.click();
+  problem = await gridShows(
+    page,
+    `категория «${title}»`,
+    pageOf(names, 1),
+    `?category=${slug}`,
+  );
+  if (problem) return [problem];
+  await page.goBack();
+  problem = await gridShows(page, "«назад»", pageOf(e.names, 2), "?page=2");
+  if (problem) return [problem];
+  // Ссылка сразу на страницу 3: сервер отдаёт первую, браузер после гидратации показывает третью.
+  await page.goto(`${path}?page=3`, { waitUntil: "load" });
+  problem = await gridShows(
+    page,
+    "ссылка на страницу 3",
+    pageOf(e.names, 3),
+    "?page=3",
+  );
+  return problem ? [problem] : [];
+}
+
+/** Фильтр /sets: все наборы карточками, «цветные» — только наборы с цветными иконками. */
+async function setsProblems(
+  page: Page,
+  base: string,
+  e: CatalogExpect,
+): Promise<string[]> {
+  await page.goto(`${base}/sets`, { waitUntil: "load" });
+  await waitForHydration(page);
+  const cards = () => page.locator(".set-card").count();
+  const problems: string[] = [];
+  const all = await cards();
+  if (all !== e.sets) {
+    problems.push(`/sets: карточек ${all}, а наборов ${e.sets}`);
+  }
+  await page.locator('.chips-nav a.chip[href$="?palette=color"]').click();
+  const shown = await page
+    .waitForFunction(
+      ([n]) =>
+        location.search === "?palette=color" &&
+        document.querySelectorAll(".set-card").length === n,
+      [e.colorSets] as const,
+      { timeout: CATALOG_WAIT_MS },
+    )
+    .then(
+      () => true,
+      () => false,
+    );
+  if (!shown) {
+    problems.push(
+      `/sets, «цветные»: адрес «${await page.evaluate(() => location.search)}», карточек ${await cards()}, а ждали ${e.colorSets}`,
+    );
+  }
+  return problems;
+}
+
+/** Каталог в браузере: сетка набора и фильтр наборов; ошибки страницы и нарушения CSP — тоже проблемы. */
+async function checkCatalog(
+  browser: Browser,
+  o: SiteCheckOptions,
+  e: CatalogExpect,
+  result: SiteResult,
+) {
+  const context = await browser.newContext({ viewport: DESKTOP });
+  const page = await context.newPage();
+  const seen = watch(page);
+  await recordViolations(page);
+  const problems = await gridProblems(page, o.base, e);
+  // Метка версии данных — по ней pnpm site --live видит, что сайт собран со свежими данными.
+  const setPage = o.pages.find((p) => p.path === `/${CATALOG_SET}`);
+  const meta = setPage && versionMetaOf(setPage.html);
+  if (meta !== e.version) {
+    problems.push(
+      `/${CATALOG_SET}: метка версии ${meta ?? "нет"}, а API отдаёт ${e.version}`,
+    );
+  }
+  result.shots.push({
+    title: `/${CATALOG_SET} — сетка набора в конце сценария`,
+    png: await shot(page, seen),
+  });
+  problems.push(
+    ...(await violations(page)).map((x) => `CSP: ${x}`),
+    ...(await setsProblems(page, o.base, e)),
+    ...(await violations(page)).map((x) => `/sets, CSP: ${x}`),
+    ...[...new Set(seen.errors)].map((x) => `ошибка: ${x}`),
+  );
+  result.verdicts.catalog =
+    problems.length === 0
+      ? pass(
+          `/${CATALOG_SET}: страница 1 с сервера, 2, категория, «назад», ссылка на 3 — имена и иконки как в /collection; /sets: «цветные» — ${e.colorSets} из ${e.sets}`,
+        )
+      : fail(problems.slice(0, 3).join("; "));
+  await context.close();
+}
+
 /** Гидратация закончилась — у main есть данные React. */
 async function waitForHydration(page: Page) {
   await page.waitForFunction(
@@ -475,10 +739,22 @@ async function checkTheme(
       exact: true,
     });
     const menu = page.getByRole("menu");
+    // Открытое меню Radix ставит фокус на первый пункт, а иногда — на само меню: так бывает в WebKit на
+    // Windows, и первое ↓ тогда только переводит фокус на первый пункт. Home ведёт на первый пункт в обоих
+    // случаях, и счёт нажатий ↓ ниже не зависит от браузера.
     const open = async () => {
       await trigger.focus();
       await page.keyboard.press("Enter");
       await menu.waitFor();
+      await page.keyboard.press("Home");
+      await page.waitForFunction(
+        () =>
+          document.activeElement?.getAttribute("role") === "menuitemradio" &&
+          document.activeElement.parentElement?.firstElementChild ===
+            document.activeElement,
+        null,
+        { timeout: 5000 },
+      );
     };
     // Фокус на кнопку Radix возвращает на следующем такте после закрытия меню — ждём до 2 с.
     const triggerFocused = async () =>
@@ -564,12 +840,13 @@ async function checkTheme(
 /**
  * Контрольный запуск: поломки, которые проверки обязаны заметить, — кнопка без подписи (axe), атрибут
  * style (CSP), слишком широкий блок (телефон), убранная метка robots, битая ссылка, испорченный
- * заголовок до гидратации; с фазы 4 — чужой lang, страница без ссылки на другой язык, переход не туда и
- * страница без скрипта темы.
+ * заголовок до гидратации; с фазы 4 — чужой lang, страница без ссылки на другой язык, переход не туда,
+ * страница без скрипта темы и (шаг 2) сетка набора без списка имён.
  */
 async function checkCanary(
   browser: Browser,
   o: SiteCheckOptions,
+  e: CatalogExpect,
   result: SiteResult,
 ) {
   const missed: string[] = [];
@@ -701,10 +978,24 @@ async function checkCanary(
     missed.push("испорченный заголовок до гидратации");
   }
   await spoiled.close();
+
+  // Браузер не получает список имён набора (/collection у превью API обрывается): сценарий «Каталог»
+  // обязан это заметить.
+  const blind = await browser.newContext({ viewport: DESKTOP });
+  const blindPage = await blind.newPage();
+  const api = new URL(o.api);
+  await blindPage.route(
+    (url) => url.origin === api.origin && url.pathname === "/collection",
+    (route) => route.abort(),
+  );
+  if ((await gridProblems(blindPage, o.base, e)).length === 0) {
+    missed.push("сетка набора без списка имён");
+  }
+  await blind.close();
   result.verdicts.canary =
     missed.length === 0
       ? pass(
-          "замечены все одиннадцать: кнопка без подписи, style, ширина, иконка-блок, robots, битая ссылка, гидратация, чужой lang, нет ссылки на другой язык, переход не туда, нет скрипта темы",
+          "замечены все двенадцать: кнопка без подписи, style, ширина, иконка-блок, robots, битая ссылка, гидратация, чужой lang, нет ссылки на другой язык, переход не туда, нет скрипта темы, сетка без списка имён",
         )
       : fail(`проверка слепая: не замечено — ${missed.join(", ")}`);
 }
@@ -720,6 +1011,7 @@ export async function checkSite(o: SiteCheckOptions): Promise<SiteResult[]> {
     };
     let browser: Browser | undefined;
     try {
+      const expected = await catalogExpect(o.api);
       browser = await launchBrowser(name, true);
       o.log?.(`${BROWSER_TITLES[name]}: серверный HTML…`);
       await checkServerHtml(browser, o, result);
@@ -727,8 +1019,10 @@ export async function checkSite(o: SiteCheckOptions): Promise<SiteResult[]> {
       await checkPages(browser, name, o, result);
       o.log?.(`${BROWSER_TITLES[name]}: меню темы…`);
       await checkTheme(browser, o, result);
+      o.log?.(`${BROWSER_TITLES[name]}: каталог…`);
+      await checkCatalog(browser, o, expected, result);
       o.log?.(`${BROWSER_TITLES[name]}: контрольный запуск…`);
-      await checkCanary(browser, o, result);
+      await checkCanary(browser, o, expected, result);
     } catch (e) {
       result.failure = (e as Error).message.split("\n")[0];
     } finally {

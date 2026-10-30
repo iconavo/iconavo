@@ -1,12 +1,14 @@
 // Проверка живого сайта iconavo.dev (ADR-0050): после выкладки — та ли сборка отвечает, все страницы,
-// коды и переходы, заголовки и noindex, языки (фаза 4, шаг 1), иконки в HTML, ссылки, переход с www и с
-// http, robots.txt. Только HTTP, ключи не нужны; запускает workflow «Сайт» после «Выкладки» и
-// pnpm site --live.
+// коды и переходы, свежесть данных наборов (фаза 4, шаг 2), заголовки и noindex, языки (фаза 4, шаг 1),
+// иконки в HTML, ссылки, переход с www и с http, robots.txt. Только HTTP, ключи не нужны; запускает
+// задача «Проверка» workflow «Сайт» и pnpm site --live.
 
+import { manifestSchema } from "../cdn/files.js";
 import { fail, pass, type Verdict } from "../sandbox/verdict.js";
 import {
   CRAWL_EXTRAS,
   DEFAULT_ICON_HOSTS,
+  LIVE_MANIFEST,
   LIVE_WAIT_MS,
   MISSING_PATHS,
   REDIRECT_STATUS,
@@ -15,6 +17,7 @@ import {
 import {
   type CrawledPage,
   crawl,
+  freshnessVerdict,
   headersVerdict,
   htmlPages,
   langVerdict,
@@ -42,6 +45,21 @@ async function redirectVerdict(from: string, to: string): Promise<Verdict> {
       : fail(`${response.status} → ${location || "без адреса"}, а нужно ${to}`);
   } catch (e) {
     return fail((e as Error).message);
+  }
+}
+
+/** Свежесть данных: версии наборов на страницах сайта против живого манифеста раздачи. */
+async function liveFreshness(pages: CrawledPage[]): Promise<Verdict> {
+  try {
+    const response = await fetch(LIVE_MANIFEST, { cache: "no-store" });
+    if (!response.ok)
+      return fail(`${LIVE_MANIFEST} ответил ${response.status}`);
+    return freshnessVerdict(
+      pages,
+      manifestSchema.parse(await response.json()).sets,
+    );
+  } catch (e) {
+    return fail(`${LIVE_MANIFEST}: ${(e as Error).message.split("\n")[0]}`);
   }
 }
 
@@ -94,6 +112,7 @@ export async function checkLiveSite(o: {
       redirect: REDIRECT_STATUS,
     }),
   });
+  rows.push({ what: "Свежесть данных", verdict: await liveFreshness(pages) });
   // Переходы — без заголовков сайта: их код и адрес проверяет строка «Страницы».
   const headerProblems = pages
     .filter(

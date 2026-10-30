@@ -1,6 +1,7 @@
 // Иконки самого сайта (ADR-0038: сайт показывает иконки своим же пакетом). Все они грузятся на сервере и
 // попадают в IconavoProvider — в HTML страниц, без мигания. Страницы статические, поэтому не загрузилась
-// хоть одна — ошибка сборки: иначе на сайт ушла бы страница с вечными заглушками.
+// хоть одна — ошибка сборки: иначе на сайт ушла бы страница с вечными заглушками. Так же — иконки
+// страниц каталога (шаг 2 фазы 4): витрины наборов, первая страница сетки, превью выпусков.
 
 import { type IconavoIconSet, loadIcons } from "@iconavo-ui/react";
 import "./iconavo";
@@ -18,19 +19,21 @@ export const SITE_ICONS = [
   "lucide:monitor",
   "lucide:sun",
   "lucide:moon",
-  // Витрина главной: по иконке из каждого набора.
-  "lucide:house",
-  "tabler:star",
-  "material-symbols:home-rounded",
-  "ph:smiley",
-  "fluent-emoji-flat:rocket",
+  // Номера страниц сетки набора.
+  "lucide:chevron-left",
+  "lucide:chevron-right",
 ] as const;
 
 export type SiteIcon = (typeof SITE_ICONS)[number];
 
-/** Все иконки сайта; не хватает хоть одной — ошибка. */
-export async function loadSiteIcons(): Promise<IconavoIconSet[]> {
-  const sets = await loadIcons([...SITE_ICONS]);
+/** Иконки по именам «набор:иконка»; не хватает хоть одной — ошибка. */
+async function loadAll(
+  names: readonly string[],
+  what: string,
+): Promise<IconavoIconSet[]> {
+  const wanted = [...new Set(names)];
+  if (wanted.length === 0) return [];
+  const sets = await loadIcons(wanted);
   const got = new Set(
     sets.flatMap((set) =>
       [...Object.keys(set.icons), ...Object.keys(set.aliases ?? {})].map(
@@ -38,11 +41,20 @@ export async function loadSiteIcons(): Promise<IconavoIconSet[]> {
       ),
     ),
   );
-  const missing = SITE_ICONS.filter((name) => !got.has(name));
+  const missing = wanted.filter((name) => !got.has(name));
   if (missing.length > 0) {
     throw new Error(
-      `СТОП: иконки сайта не загрузились: ${missing.join(", ")} — хосты иконок не ответили или имени нет`,
+      `СТОП: ${what} не загрузились: ${missing.slice(0, 10).join(", ")}${missing.length > 10 ? "…" : ""} — хосты иконок не ответили или имени нет`,
     );
   }
   return sets;
 }
+
+/** Все иконки сайта; не хватает хоть одной — ошибка. */
+export const loadSiteIcons = (): Promise<IconavoIconSet[]> =>
+  loadAll(SITE_ICONS, "иконки сайта");
+
+/** Иконки страницы каталога — для вложенного IconavoProvider; не хватает хоть одной — ошибка. */
+export const loadPageIcons = (
+  names: readonly string[],
+): Promise<IconavoIconSet[]> => loadAll(names, "иконки страницы каталога");

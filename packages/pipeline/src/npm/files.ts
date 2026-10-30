@@ -9,7 +9,9 @@ import {
   NPM_BUGS_URL,
   NPM_REPOSITORY,
   NPM_REPOSITORY_URL,
+  npmChangelogPage,
   npmPackageName,
+  npmSetPage,
 } from "./config.js";
 import type { NpmSet } from "./load.js";
 
@@ -176,6 +178,8 @@ export function readmeText(set: NpmSet, tag: string): string {
     "",
     `${info.name} in IconifyJSON format: ${counts}, ready to use without a network. Part of ${link("Iconavo", NPM_REPOSITORY)}.`,
     "",
+    `Browse the icons on ${link(`iconavo.dev/${set.id}`, npmSetPage(set.id))}. What changed in each version of the set is in the ${link("changelog", npmChangelogPage(set.id))}.`,
+    "",
   ];
   if (tag !== "latest") {
     lines.push(
@@ -259,6 +263,7 @@ function manifestText(
   if (version !== undefined) m.version = version;
   m.description = `${set.info.name} in IconifyJSON format: icons, metadata and the author's license, packaged by Iconavo`;
   m.keywords = ["icons", "svg", "iconify", "iconify-json", set.id, "iconavo"];
+  m.homepage = npmSetPage(set.id);
   m.license = set.info.license.spdx;
   m.repository = {
     type: "git",

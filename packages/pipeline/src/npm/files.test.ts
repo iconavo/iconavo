@@ -115,6 +115,7 @@ describe("packageJsonOf", () => {
       "version",
       "description",
       "keywords",
+      "homepage",
       "license",
       "repository",
       "bugs",
@@ -130,6 +131,7 @@ describe("packageJsonOf", () => {
     expect(manifest).toMatchObject({
       name: "@iconavo-ui/icons-demo",
       version: "1.2.3",
+      homepage: "https://iconavo.dev/demo",
       license: "MIT",
       repository: {
         type: "git",
@@ -179,6 +181,13 @@ describe("readmeText", () => {
     expect(readme).toContain("licensed under MIT.");
     expect(readme).toContain(`Set version \`${set.version}\``);
     expect(readme).toContain("Until the public launch");
+    // Страница набора и лента его выпусков на сайте (ADR-0026, ADR-0037).
+    expect(readme).toContain(
+      "Browse the icons on [iconavo.dev/demo](https://iconavo.dev/demo).",
+    );
+    expect(readme).toContain(
+      "[changelog](https://iconavo.dev/changelog?set=demo)",
+    );
   });
 
   it("в день запуска — без тега и без пометки о предварительных версиях", async () => {

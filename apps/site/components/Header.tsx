@@ -25,6 +25,9 @@ export function Header({
         </PageLink>
         <SearchField lang={lang} />
         <nav aria-label={t.mainNav} className="header-nav">
+          <PageLink lang={lang} path="/sets">
+            {t.navSets}
+          </PageLink>
           <PageLink lang={lang} path="/docs">
             {t.docs}
           </PageLink>

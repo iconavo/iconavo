@@ -12,9 +12,14 @@ name: Сайт
 # и переменная репозитория SITE_DEPLOY — on (её включает владелец после разовой настройки, ADR-0050).
 # Проект iconavo-site создаёт первая выкладка. Откат — откат PR: запуск от main выложит прежнюю сборку.
 # Что сайт собирается и работает, на каждом PR проверяет CI (задача site); PR с правкой этого файла —
-# только показ.
+# только показ. Страницы каталога берут данные наборов из edge API при сборке (шаг 2 фазы 4, ADR-0039),
+# поэтому после каждой успешной «Выкладки» на main сайт собирается заново — от свежего main.
 
 on:
+  workflow_run:
+    workflows: ["Выкладка"]
+    types: [completed]
+    branches: [main]
   push:
     branches: [main]
     paths:
@@ -40,9 +45,16 @@ on:
 permissions: {}
 
 # Выкладки из main не пересекаются и не прерываются: следующая ждёт текущую. Показы с веток и PR — в
-# своих группах.
+# своих группах. Запуск после «Выкладки», которую задача «Сборка» пропустит (условие у неё), — в своей
+# группе: иначе он встал бы в очередь site и отменил бы ждущую там выкладку.
 concurrency:
-  group: ${{ github.ref == 'refs/heads/main' && github.event_name != 'pull_request' && 'site' || format('site-{0}', github.ref) }}
+  group: >-
+    ${{ github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+    && (github.event_name != 'workflow_run' || (github.event.workflow_run.conclusion == 'success'
+    && github.event.workflow_run.head_repository.full_name == github.repository
+    && (github.event.workflow_run.event == 'push' || github.event.workflow_run.event == 'workflow_dispatch')
+    && github.event.workflow_run.head_branch == 'main'))
+    && 'site' || format('site-{0}', github.event_name == 'workflow_run' && github.run_id || github.ref) }}
   cancel-in-progress: false
 
 defaults:
@@ -58,6 +70,14 @@ env:
 jobs:
   build:
     name: Сборка
+    # После «Выкладки» — только если она удалась (иначе сайт показал бы данные, которых нет на раздаче) и
+    # шла в этом репозитории от push или ручного запуска на main: workflow с тем же именем из PR форка
+    # тоже вызывает workflow_run (как у поискового индекса, search.yml). Собирается свежий main.
+    if: >-
+      github.event_name != 'workflow_run' || (github.event.workflow_run.conclusion == 'success'
+      && github.event.workflow_run.head_repository.full_name == github.repository
+      && (github.event.workflow_run.event == 'push' || github.event.workflow_run.event == 'workflow_dispatch')
+      && github.event.workflow_run.head_branch == 'main')
     runs-on: ubuntu-latest
     timeout-minutes: 20
     permissions:
@@ -198,7 +218,8 @@ jobs:
           node-version: 24
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      # Только чтение открытых адресов, ключи не нужны. Ждёт до 3 минут, пока ответит новая сборка.
+      # Только чтение открытых адресов, ключи не нужны. Ждёт до 3 минут, пока ответит новая сборка; версии
+      # наборов на их страницах — как в живом манифесте раздачи («Свежесть данных»).
       - name: Проверить iconavo.dev
         env:
           BUILD: ${{ needs.build.outputs.build }}

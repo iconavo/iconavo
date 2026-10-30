@@ -4,7 +4,7 @@
 
 import { fail, pass, type Verdict } from "../sandbox/verdict.js";
 import { STACKBLITZ_LINKS } from "../starters/links.js";
-import { ROBOTS, UNTRANSLATED } from "./config.js";
+import { ROBOTS, UNTRANSLATED, VERSION_META } from "./config.js";
 
 export interface CrawledPage {
   path: string;
@@ -310,6 +310,49 @@ export function robotsMetaVerdict(html: string): Verdict {
         metas.length === 0
           ? "метки robots нет"
           : `меток robots: ${metas.length} (${content.join("; ")})`,
+      );
+}
+
+/** Версия данных набора на его странице — метка <meta name="iconavo-version">; нет метки — undefined. */
+export function versionMetaOf(html: string): string | undefined {
+  for (const m of html.matchAll(/<meta\b[^>]*>/g)) {
+    if (m[0].includes(`name="${VERSION_META}"`)) {
+      return /\bcontent="([^"]*)"/.exec(m[0])?.[1];
+    }
+  }
+  return undefined;
+}
+
+/**
+ * Свежесть данных (фаза 4, шаг 2): страница каждого набора из манифеста раздачи, на обоих языках,
+ * показывает его версию. Иначе сайт собран со старыми данными — пересборка после «Выкладки» (site.yml)
+ * это исправит.
+ */
+export function freshnessVerdict(
+  pages: CrawledPage[],
+  sets: Record<string, { version: string }>,
+): Verdict {
+  const byPath = new Map(pages.map((p) => [p.path, p]));
+  const problems: string[] = [];
+  for (const [id, { version }] of Object.entries(sets)) {
+    for (const path of [`/${id}`, `/ru/${id}`]) {
+      const page = byPath.get(path);
+      const seen =
+        page === undefined
+          ? "страницы нет"
+          : page.status !== 200
+            ? `ответ ${page.status}`
+            : (versionMetaOf(page.html) ?? "без метки версии");
+      if (seen !== version) {
+        problems.push(`${path}: ${seen}, а в манифесте ${version}`);
+      }
+    }
+  }
+  const total = Object.keys(sets).length;
+  return problems.length === 0
+    ? pass(`страницы ${total} наборов — версии из манифеста раздачи`)
+    : fail(
+        `${problems.slice(0, 4).join("; ")} — сайт собран со старыми данными: пересборка после «Выкладки» это исправит`,
       );
 }
 
