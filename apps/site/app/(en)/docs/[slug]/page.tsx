@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { DocPage } from "../../../components/DocPage";
-import { docPage, docPages } from "../../../lib/docs";
+import { DocPage } from "../../../../components/DocPage";
+import { docPage, docPages } from "../../../../lib/docs";
 
 // Страницы документации собираются при сборке; другого адреса под /docs нет.
 export const dynamicParams = false;

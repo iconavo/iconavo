@@ -13,6 +13,11 @@ export const SITE_ICONS = [
   "lucide:arrow-right",
   "lucide:pencil",
   "tabler:brand-github",
+  // Шапка: поиск и меню темы.
+  "lucide:search",
+  "lucide:monitor",
+  "lucide:sun",
+  "lucide:moon",
   // Витрина главной: по иконке из каждого набора.
   "lucide:house",
   "tabler:star",

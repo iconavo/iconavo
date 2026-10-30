@@ -1,24 +1,20 @@
 import { Icon } from "@iconavo-ui/react";
-import Link from "next/link";
+import { DICTIONARIES, type Lang } from "../../lib/i18n";
+import { PageLink } from "../PageLink";
 
-// Главная — пока минимальная: настоящая, с поиском и наборами, — в фазе 4 (ADR-0037).
-export default function Home() {
+// Главная — пока минимальная: настоящая, с поиском, наборами и «Что нового», — шаг 2 фазы 4 (ADR-0037).
+export function Home({ lang }: { lang: Lang }) {
+  const t = DICTIONARIES[lang];
   return (
     <main id="content" className="container home">
       <h1>Iconavo</h1>
-      <p className="lead">
-        Any icon from open icon sets by its name, with one HTML tag or one React
-        component.
-      </p>
+      <p className="lead">{t.homeLead}</p>
+      <p>{t.homeBeta}</p>
       <p>
-        The packages are in beta: install them with the <code>next</code> tag.
-        The catalog with search in English and Russian is coming in 2027.
-      </p>
-      <p>
-        <Link href="/docs" className="button">
-          Read the docs{" "}
+        <PageLink lang={lang} path="/docs" className="button">
+          {t.homeDocs}{" "}
           <Icon icon="lucide:arrow-right" className="inline-block" />
-        </Link>
+        </PageLink>
       </p>
       <div className="showcase" aria-hidden="true">
         <Icon icon="lucide:house" className="inline-block" />

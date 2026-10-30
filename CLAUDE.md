@@ -24,6 +24,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Фаза 3 закрыта 30 октября 2026, чек-лист готовности в `docs/phase-3.md` отмечен.
 
+Фаза 4, сайт MVP и MCP-сервер (`docs/phase-4.md`): шаг 1 — каркас сайта (ниже, ADR-0037, ADR-0038, ADR-0050): русская версия `/ru`, шапка с поиском, переключатели языка и темы, компоненты shadcn/ui на `radix-ui`, Storybook. Решения владельца 30 октября 2026: только `radix-ui`, Storybook, документация пока только английская, файл стилей React — не сейчас, скрипт установки esbuild запрещён.
+
 План и решения — в `docs/`, ADR — в `docs/adr/`. Начинай с `docs/README.md`: там оглавление, а `docs/roadmap.md` даёт фазы и сроки (запуск 1 июня 2027). Фазы 0–4 подробно расписаны в `docs/phase-0.md` … `docs/phase-4.md` вместе с готовыми промптами. Если нужного решения в ADR нет — спроси, не придумывай.
 
 ## Что строим
@@ -103,8 +105,9 @@ pnpm starters <html|react|next> [--browser=…]   # живой пример на
 pnpm starters [id…] --check [--browser=…] [--npm]   # живые примеры в Chrome, Firefox и WebKit: архивы пакетов → npm install в копию → сборка, разработка и продакшен; хосты иконок — превью API; .cache/reports/starters/check.html и check.md для CI; --npm — после публикации: npm ci из lock-файла, живые хосты, jsDelivr
 pnpm starters [id…] --lock        # после публикации: package-lock.json примеров по реестру npm
 pnpm site [--port=N] [--prod]     # сайт apps/site на 127.0.0.1:4284 с живыми хостами: next dev; --prod — next build и next start (ADR-0050)
-pnpm site --check [--browser=…]   # сайт в Chrome, Firefox и WebKit: продакшен-сборка с превью хостов, обход страниц, заголовки, ссылки, разделы README, axe, телефон; .cache/reports/site/check.html и check.md для CI
-pnpm site --live [--expect-build=…] [--base=…]   # живой iconavo.dev: сборка, страницы, заголовки, noindex, переходы с www и http; ключи не нужны
+pnpm site --check [--browser=…]   # сайт в Chrome, Firefox и WebKit: продакшен-сборка с превью хостов, обход страниц, коды и переходы, заголовки, языки, ссылки, разделы README, axe, телефон, меню темы; .cache/reports/site/check.html и check.md для CI
+pnpm site --live [--expect-build=…] [--base=…]   # живой iconavo.dev: сборка, страницы и переходы, заголовки, noindex, языки, переходы с www и http; ключи не нужны
+pnpm storybook                    # витрина компонентов сайта (Storybook) на 127.0.0.1:6006, без открытия браузера; только для разработки (шаг 1 фазы 4, ADR-0038)
 pnpm release bump [версия]        # выпуск пакетов для разработчиков (ADR-0051): версия ядра, тега, React и примеров, раздел журнала с TODO, адрес и хэш скрипта в README и HTML-примере; без версии — только хэш и дата, пока версия не вышла; реестр npm — только чтение
 pnpm release prepare [--first]    # проверка выпуска и архивы pnpm pack с планом в dist-release/ (не в git): поля, журнал, хэш, состав архивов, реестр npm — только чтение; .cache/reports/release/prepare.html; код 1 — «СТОП»; в CI — шаг задачи check на каждом PR
 pnpm release verify --plan=… [--wait=N]   # после публикации: версия под next, архив из плана, provenance из release.yml, доверенная публикация, jsDelivr, чистый проект рисует иконку; .cache/reports/release/verify.html
@@ -511,14 +514,19 @@ React (ADR-0033, ADR-0031, шаг 7 фазы 3): `packages/react` — `@iconavo-
 - **`--npm`** — после публикации: `npm ci` из lock-файла, живые хосты, jsDelivr с хэшем README, `npm audit signatures`; пакетов этой версии нет в npm — «СТОП».
 - 29 октября 2026 — все строки «да» в трёх браузерах на компьютере владельца, около 10 минут на браузер. Рабочие копии и архивы — в `.cache/starters`, 0,5–1 ГБ.
 
-Сайт (ADR-0050, шаг 10 фазы 3): `apps/site` — пакет `@iconavo-ui/site`, Next.js 16.4.3, React 19.3.1, Tailwind CSS 4.3.3, иконки — `@iconavo-ui/react` из рабочего пространства. Адрес — `iconavo.dev`, пока главная и `/docs`.
+Сайт (ADR-0050, шаг 10 фазы 3; каркас каталога — шаг 1 фазы 4, ADR-0037, ADR-0038): `apps/site` — пакет `@iconavo-ui/site`, Next.js 16.4.3, React 19.3.1, Tailwind CSS 4.3.3, `radix-ui` 1.8.1, иконки — `@iconavo-ui/react` из рабочего пространства. Адрес — `iconavo.dev`: главная `/` и `/ru`, заглушки поиска `/search` и `/ru/search`, документация `/docs` (только английская).
+- **Языки** — две корневые раскладки: `app/(en)` (`<html lang="en">`) и `app/(ru)` (страницы в `app/(ru)/ru`). Без proxy и rewrites — всё статическое, `usePathname()` одинаков на сервере и в браузере. Ссылки между языками — обычные `<a>` (полная загрузка). Тексты — словари `lib/i18n.ts` (`href`, `counterpart`). Общее у раскладок — `components/Shell.tsx`: «к содержимому», шапка (`Header`: поиск, документация, GitHub, язык, тема), подвал.
+- **404** — одна на оба языка: `app/global-not-found.tsx` (`experimental.globalNotFound`), со ссылками на обе главные, без переключателя языка. `/ru/docs…` → 307 на английскую документацию (`next.config.ts`, решение владельца 30 октября 2026).
+- **Тема** — как в системе, светлая или тёмная (`lib/theme.ts`): скрипт в `<head>` ставит `data-theme` до отрисовки, токены — пары `light-dark()`. Меню темы — Radix `DropdownMenu`, всегда `modal={false}`: модальные компоненты Radix вставляют `<style>`, а CSP пускает стили только файлами (список таких компонентов — ADR-0038).
+- **Компоненты** — `components/ui/` по образцу shadcn/ui (код скопирован, лицензия MIT в файлах), на токенах; `lib/cn.ts` вместо clsx. Новых пакетов для них не ставить: решение владельца — только `radix-ui`.
+- **Storybook** — `pnpm storybook`, 127.0.0.1:6006: `.storybook/` в `apps/site`, истории `components/**/*.stories.tsx`, типы проверяет `next build`. Версия 10.6.3, `vite` 8.3.4. Скрипт установки esbuild запрещён (`allowBuilds` в `pnpm-workspace.yaml`): pnpm 12 иначе не ставит пакеты.
 - **Документация из README** (`lib/docs.ts`). Источники — `packages/icon/README.md`, `apps/api/README.md` и журнал пакетов `packages/icon/CHANGELOG.md` (шаг 11, ADR-0051). Страницы: `/docs` (Quick start), `/docs/reference`, `/docs/recipes`, `/docs/iconify`, `/docs/security`, `/docs/api`, `/docs/changelog`.
   - Каждый раздел «##» README пакета — ровно на одной странице, иначе «СТОП» сборки с подсказкой.
   - Раздел с названием страницы становится её заголовком.
   - Ссылки README переписываются на страницы. Неизвестный якорь, относительный адрес или не https — «СТОП».
   - README правится — сайт меняется сам, отдельных текстов у документации нет.
 - **Свой строгий разбор Markdown** (`lib/markdown.ts`) — только то, что есть в README. Незнакомая разметка — ошибка с номером строки. Якоря — как у GitHub (`lib/slug.ts`). Результат — элементы React, без вставки HTML. Подсветки кода нет — фаза 6.
-- **Токены** — CSS-переменные в `app/globals.css`, светлая и тёмная тема по системе. Тест `lib/tokens.test.ts` не пускает цвета, свои значения Tailwind и `style` в страницы и компоненты (ADR-0038).
+- **Токены** — CSS-переменные в одном блоке `@theme` в `app/globals.css`: цвет — пара `light-dark(светлая, тёмная)`, палитра и тени Tailwind сброшены, рамка полей — токен `control`. Тест `lib/tokens.test.ts` не пускает цвета, свои значения Tailwind (`[…]`, `(--…)` — и в `cn(…)`), классы палитры и `style` в страницы, компоненты и истории и считает контраст токенов в обеих темах (ADR-0038).
 - **Иконки сайта** — `lib/icons.ts`, `loadIcons` в layout → `IconavoProvider`. Не загрузилась хоть одна — ошибка сборки. У иконок `className="inline-block"` (базовые стили Tailwind).
 - **Заголовки** — `lib/headers.ts`:
   - CSP в продакшене: стили только файлами, `connect-src` — хосты иконок;
@@ -529,12 +537,12 @@ React (ADR-0033, ADR-0031, шаг 7 фазы 3): `packages/react` — `@iconavo-
 - **`pnpm site`** — `next dev` на 127.0.0.1:4284 с живыми хостами; `--prod` — сборка и `next start`.
 - **`pnpm site --check`** (`src/site/`):
   - сборка с чистого листа: кэш Turbopack от другой сборки ронял `next build`;
-  - хосты — превью API; обход всех страниц по HTTP (`crawl.ts`): коды, заголовки, метка robots, разделы README, ссылки и якоря, статичность по `prerender-manifest.json`;
-  - в каждом браузере — серверный HTML, иконки в строке, консоль и CSP, заголовки страниц, «Skip to content», axe в светлой и тёмной теме, 375 px без прокрутки, Copy (Chrome);
-  - контрольный запуск — семь подложенных поломок.
+  - хосты — превью API; обход всех страниц по HTTP (`crawl.ts`) с адресами `CRAWL_EXTRAS` из `config.ts`: коды (`statusVerdict`: 200, три несуществующих — 404, `/ru/docs…` — 307), заголовки (у переходов не смотрятся), метка robots, `<html lang>` по адресу, переключатель языка, поиск в шапке, разделы README, ссылки и якоря, статичность по `prerender-manifest.json`;
+  - в каждом браузере — серверный HTML, иконки в строке, консоль и CSP, заголовки страниц, «к содержимому» на `/docs` и `/ru`, axe в светлой и тёмной теме, 375 px без прокрутки, меню темы с клавиатуры (своим контекстом: тема до `<body>`, фокус, без `<style>`, axe с открытым меню), Copy (Chrome);
+  - контрольный запуск — одиннадцать подложенных поломок.
 
-  WebKit по Tab ходит только по полям форм, как Safari: там «Skip to content» проверяется как первый элемент в порядке фокуса.
-- **`pnpm site --live`** (`live.ts`) — живой сайт после выкладки: метка сборки (до 3 минут), страницы, заголовки с хостами по умолчанию, noindex, иконки в HTML, ссылки, сервер Vercel, `robots.txt`, переход с `www` и с `http`. Таблица — и в `.cache/reports/site/live.md`.
+  WebKit по Tab ходит только по полям форм, как Safari: там «к содержимому» проверяется как первый элемент в порядке фокуса — поэтому ссылка стоит в документе первой.
+- **`pnpm site --live`** (`live.ts`) — живой сайт после выкладки: метка сборки (до 3 минут), страницы и переходы, заголовки с хостами по умолчанию, noindex, язык, переключатель, поиск в шапке, иконки в HTML, ссылки, сервер Vercel, `robots.txt`, переход с `www` и с `http`. Таблица — и в `.cache/reports/site/live.md`.
 - **Выкладка** — workflow «Сайт» (`.github/workflows/site.yml`), Vercel CLI 65.7.0 из Actions, а не Git-интеграция Vercel:
   - «Сборка» — без ключа: `vercel build --prod --standalone` по `.vercel/project.json`, который пишет сам workflow, затем архив tar (символические ссылки функций Next.js). `--standalone` кладёт зависимости функций внутрь сборки — без него «Выкладка», которая идёт без репозитория, останавливается;
   - «Выкладка» — окружение `site` (только `main`), без checkout и установки: `vercel deploy --prebuilt --prod --project iconavo-site --create-if-missing`;

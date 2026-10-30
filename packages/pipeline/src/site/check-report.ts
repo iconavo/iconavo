@@ -55,7 +55,7 @@ export function formatSiteCheck(results: SiteResult[]): string[] {
 export function markdownSiteCheck(results: SiteResult[]): string {
   const list = problems(results);
   return [
-    "### Сайт документации (pnpm site --check)",
+    "### Сайт (pnpm site --check)",
     "",
     markdownTable(tableHead(results), tableRows(results)),
     "",
@@ -116,10 +116,10 @@ export function renderSiteCheckPage(results: SiteResult[]): string {
     ? '<p class="stop">Есть проблемы — строки «НЕТ» и сбои ниже.</p>'
     : '<p class="ok">Сайт работает во всех проверенных браузерах.</p>';
   return htmlPage(
-    "Сайт документации в трёх браузерах",
+    "Сайт в трёх браузерах",
     STYLE,
-    `<h1>Сайт документации в трёх браузерах</h1>
-<p class="muted">pnpm site --check: продакшен-сборка apps/site (next build, next start) на этом компьютере; иконки сайта отдаёт превью API этой ветки. Сначала обход всех страниц по HTTP — коды, заголовки, ссылки, разделы README, — затем каждая страница в Chrome, Firefox и WebKit, движке Safari. Доступность проверяет axe-core по правилам WCAG 2.2 A и AA в светлой и тёмной теме. «—» — не проверялось или только сведения.</p>
+    `<h1>Сайт в трёх браузерах</h1>
+<p class="muted">pnpm site --check: продакшен-сборка apps/site (next build, next start) на этом компьютере; иконки сайта отдаёт превью API этой ветки. Сначала обход всех страниц по HTTP — коды, заголовки, языки, ссылки, разделы README, — затем каждая страница в Chrome, Firefox и WebKit, движке Safari, и меню темы. Доступность проверяет axe-core по правилам WCAG 2.2 A и AA в светлой и тёмной теме. «—» — не проверялось или только сведения.</p>
 ${verdict}
 ${failures ? `<ul>${failures}</ul>` : ""}
 <table><thead><tr><th>Проверка</th>${head}</tr></thead><tbody>

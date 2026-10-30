@@ -2,32 +2,40 @@
 
 /*
  * Дизайн-токены (ADR-0038): имена — договор с переменными Figma, значения прототипа заменит фаза 6.
- * Цвета вписываются только здесь — тест lib/tokens.test.ts не пускает их в страницы и компоненты.
+ * Цвета вписываются только здесь, в одном блоке @theme, — тест lib/tokens.test.ts не пускает их в
+ * страницы и компоненты. Цвет — пара light-dark(светлая, тёмная), как переменная Figma с двумя
+ * режимами; режим выбирает color-scheme ниже. Стандартные палитра и тени Tailwind сброшены: классы
+ * вроде bg-zinc-900 или shadow-lg ничего не красят.
  */
 @theme {
-  --color-bg: #ffffff;
-  --color-fg: #18181b;
-  --color-muted: #52525b;
-  --color-line: #e4e4e7;
-  --color-surface: #f4f4f5;
-  --color-accent: #4338ca;
-  --color-focus: #2563eb;
+  --color-*: initial;
+  --shadow-*: initial;
+  --inset-shadow-*: initial;
+  --drop-shadow-*: initial;
+  --text-shadow-*: initial;
+  --color-bg: light-dark(#ffffff, #0f0f12);
+  --color-fg: light-dark(#18181b, #ececf1);
+  --color-muted: light-dark(#52525b, #a1a1aa);
+  --color-line: light-dark(#e4e4e7, #2e2e35);
+  --color-control: light-dark(#71717a, #8b8b94);
+  --color-surface: light-dark(#f4f4f5, #1b1b20);
+  --color-accent: light-dark(#4338ca, #a5b4fc);
+  --color-focus: light-dark(#2563eb, #93c5fd);
+  --shadow-md: 0 4px 12px light-dark(rgb(0 0 0 / 0.12), rgb(0 0 0 / 0.5));
   --font-sans: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   --font-mono: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
   --radius-md: 0.5rem;
 }
 
-/* Тёмная тема — по настройке системы. */
-@media (prefers-color-scheme: dark) {
-  :root {
-    --color-bg: #0f0f12;
-    --color-fg: #ececf1;
-    --color-muted: #a1a1aa;
-    --color-line: #2e2e35;
-    --color-surface: #1b1b20;
-    --color-accent: #a5b4fc;
-    --color-focus: #93c5fd;
-  }
+/*
+ * Тема: по умолчанию — как в системе; выбор в меню шапки ставит data-theme у <html> (lib/theme.ts),
+ * и color-scheme переключает все пары light-dark().
+ */
+:root[data-theme="light"] {
+  color-scheme: light;
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
 }
 
 /* Размеры раскладки. */
@@ -84,32 +92,81 @@
     top: 1rem;
   }
 
+  /*
+   * Шапка: на телефоне — три строки (имя и переключатели, поиск во всю ширину, ссылки), с 64rem —
+   * одна строка.
+   */
   .site-header {
     border-bottom: 1px solid var(--color-line);
   }
   .header-row {
-    display: flex;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas:
+      "brand tools"
+      "search search"
+      "nav nav";
     align-items: center;
-    justify-content: space-between;
-    gap: 1rem;
-    min-height: 3.5rem;
+    gap: 0.5rem 1rem;
+    padding-block: 0.5rem;
   }
   .brand {
+    grid-area: brand;
+    justify-self: start;
     color: var(--color-fg);
     font-weight: 700;
     font-size: 1.125rem;
     text-decoration: none;
   }
-  .header-nav {
-    display: flex;
-    gap: 1.25rem;
+  .header-search {
+    grid-area: search;
+    min-width: 0;
   }
-  .header-nav a {
+  .header-search-form {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+  }
+  .header-nav {
+    grid-area: nav;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.25rem 1.25rem;
+  }
+  .header-nav a,
+  .lang-switch {
     color: var(--color-fg);
     text-decoration: none;
   }
-  .header-nav a:hover {
+  .header-nav a:hover,
+  .lang-switch:hover {
     text-decoration: underline;
+  }
+  .header-tools {
+    grid-area: tools;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+  @media (min-width: 64rem) {
+    .header-row {
+      grid-template-columns: auto minmax(0, 28rem) minmax(0, 1fr) auto;
+      grid-template-areas: "brand search nav tools";
+      min-height: 3.5rem;
+    }
+    .header-nav {
+      justify-content: flex-end;
+    }
+  }
+
+  /* Иконка на кнопке темы — по выбранной теме, без JavaScript (lib/theme.ts). */
+  .theme-icon {
+    display: none;
+  }
+  :root:not([data-theme]) .theme-icon-system,
+  :root[data-theme="light"] .theme-icon-light,
+  :root[data-theme="dark"] .theme-icon-dark {
+    display: inline-block;
   }
 
   .site-footer {
