@@ -40,11 +40,14 @@ describe("сбои сети: разбор", () => {
     expect(isBatch(`${h.cdn2}/manifest.json`, h)).toBe(false);
   });
 
-  it("API отказал: иконки с первого хоста статики, со второго — ни одной", () => {
+  it("API отказал: иконки с первого хоста статики, со второго — только та, которой нет", () => {
+    const absent = file(h.cdn2, ABSENT.split(":")[1] as string);
     const requests = [
       { url: BATCH, at: 0 },
       { url: `${h.cdn}/manifest.json`, at: 5 },
       { url: file(h.cdn, "bell"), at: 9 },
+      { url: `${h.cdn2}/manifest.json`, at: 12 },
+      { url: absent, at: 14 },
     ];
     const ok = fallbackVerdict(
       outcome({ requests }),
@@ -57,6 +60,7 @@ describe("сбои сети: разбор", () => {
     expect(ok.note).toContain(
       "иконки нарисованы с первого хоста статики (файлов: 1)",
     );
+    expect(ok.note).toContain("её спросили и у другого хоста (запросов: 1)");
     const both = fallbackVerdict(
       outcome({
         requests: [...requests, { url: file(h.cdn2, "bell"), at: 9 }],
@@ -68,6 +72,18 @@ describe("сбои сети: разбор", () => {
     );
     expect(both.ok).toBe(false);
     expect(both.note).toContain("файлы и с другого хоста статики: 1");
+    // «Нет» первого хоста статики стало окончательным: второго не спросили.
+    const once = fallbackVerdict(
+      outcome({ requests: requests.filter((r) => r.url !== absent) }),
+      h,
+      h.cdn,
+      "с первого",
+      h.cdn2,
+    );
+    expect(once.ok).toBe(false);
+    expect(once.note).toContain(
+      "иконку, которой нет, у другого хоста статики не спросили",
+    );
     const none = fallbackVerdict(outcome({}), h, h.cdn2, "со второго");
     expect(none.note).toContain("пачка к API не уходила");
     expect(none.note).toContain("ни одного файла со второго хоста статики");

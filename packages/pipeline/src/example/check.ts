@@ -81,7 +81,7 @@ export const CHECKS = [
   ],
   [
     "network",
-    "Сеть: только имена не из обёртки, каждое по разу; иконки обёртки — ни одного запроса",
+    "Сеть: только имена не из обёртки, каждое по разу; иконки обёртки — ни одного запроса; у статики — только иконки, которых нет у API",
   ],
   [
     "client",
@@ -153,19 +153,22 @@ export interface ExampleCheckOptions {
   log?: (line: string) => void;
 }
 
-/** Имена из адресов пачек API: /{набор}.json?icons=a,b → набор:a, набор:b; запросы к статике — счётом. */
+/**
+ * Имена из адресов пачек API: /{набор}.json?icons=a,b → набор:a, набор:b; запросы к статике — путями
+ * после /_static.
+ */
 export function requested(
   urls: string[],
   api: string,
-): { names: string[]; batches: number; statics: number } {
+): { names: string[]; batches: number; statics: string[] } {
   const names: string[] = [];
   let batches = 0;
-  let statics = 0;
+  const statics: string[] = [];
   for (const url of urls) {
     if (!url.startsWith(api)) continue;
     const parsed = new URL(url);
     if (parsed.pathname.startsWith("/_static/")) {
-      statics++;
+      statics.push(parsed.pathname.slice("/_static".length));
       continue;
     }
     const set = /^\/([a-z0-9-]+)\.json$/.exec(parsed.pathname)?.[1];
@@ -184,15 +187,24 @@ export function requested(
 export const LIVE_HOSTS =
   /^https:\/\/([a-z0-9-]+\.)*(iconavo\.dev|b-cdn\.net)\//;
 
+/** Имя из пути файла иконки статики: /v/{версия}/{набор}/{иконка}.json → набор:иконка; другой путь — "". */
+const staticName = (path: string): string => {
+  const parts = /^\/v\/[^/]+\/([a-z0-9-]+)\/([a-z0-9-]+)\.json$/.exec(path);
+  return parts ? `${parts[1]}:${parts[2]}` : "";
+};
+
 /**
- * Сеть: имена обёртки не запрашиваются, ожидаемые — ровно по разу, к статике не ходят, к живым хостам
- * — тоже.
+ * Сеть: имена обёртки не запрашиваются, ожидаемые — ровно по разу, к живым хостам — ни одного запроса.
+ * К статике — только манифест и по файлу на имя, которого нет у API: «нет» одного хоста не
+ * окончательно, имя спрашивают и у следующих (ADR-0030). Иконку, которая есть у API, статика не
+ * получает: API отвечает раньше порога ROTATE_CDN.
  */
 export function networkVerdict(
   urls: string[],
   api: string,
   provided: string[],
   expected: string[],
+  missing: string[],
   live: string[] = [],
 ): Verdict {
   const { names, batches, statics } = requested(urls, api);
@@ -200,18 +212,28 @@ export function networkVerdict(
   const own = names.filter((n) => provided.includes(n));
   const twice = names.filter((n, i) => names.indexOf(n) !== i);
   const missed = expected.filter((n) => !names.includes(n));
+  const files = statics.map(staticName);
+  const stray = statics.filter(
+    (path, i) =>
+      path !== "/manifest.json" && !missing.includes(files[i] as string),
+  );
+  const again = files.filter((n, i) => n !== "" && files.indexOf(n) !== i);
   const problems = [
     own.length > 0 ? `запрошены иконки обёртки: ${unique(own)}` : "",
     twice.length > 0 ? `дважды: ${unique(twice)}` : "",
     missed.length > 0 ? `не запрошены: ${missed.join(", ")}` : "",
-    statics > 0 ? `запросов к статике: ${statics}` : "",
+    stray.length > 0
+      ? `к статике не за иконками, которых нет: ${unique(stray)}`
+      : "",
+    again.length > 0 ? `у статики дважды: ${unique(again)}` : "",
     live.length > 0
       ? `к живым хостам: ${live.length} (${unique(live.map((u) => new URL(u).host))})`
       : "",
   ].filter(Boolean);
+  const asked = files.filter(Boolean).length;
   return problems.length === 0
     ? pass(
-        `${batches} пачек, ${names.length} имён; иконки обёртки — ни одного запроса`,
+        `${batches} пачек, ${names.length} имён; иконки обёртки — ни одного запроса; у статики — только иконки, которых нет у API (${asked})`,
       )
     : fail(problems.join("; "));
 }
@@ -587,6 +609,7 @@ async function checkHydration(
     o.api,
     o.names.server,
     [...o.names.browser, o.names.tag, o.names.missing, o.names.missingTag],
+    [o.names.missing, o.names.missingTag],
     live,
   );
 
