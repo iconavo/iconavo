@@ -1,7 +1,8 @@
-// Страницы документации из README (ADR-0050, ADR-0036): README пакета и edge API — единственный
-// источник, сайт их только раскладывает по страницам. Каждый раздел «##» README пакета попадает ровно на
-// одну страницу, якоря — как у GitHub, ссылки README переписываются на страницы сайта. Раздел без
-// страницы, неизвестный якорь, ссылка не по https или относительная — остановка сборки с подсказкой.
+// Страницы документации из README (ADR-0050, ADR-0036): README пакета, edge API и журнал изменений
+// пакетов (ADR-0051) — единственный источник, сайт их только раскладывает по страницам. Каждый раздел
+// «##» README пакета попадает ровно на одну страницу, якоря — как у GitHub, ссылки README переписываются
+// на страницы сайта. Раздел без страницы, неизвестный якорь, ссылка не по https или относительная —
+// остановка сборки с подсказкой.
 
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
@@ -14,13 +15,16 @@ import {
 } from "./markdown";
 import { slugger } from "./slug";
 
-export type Source = "icon" | "api";
+export type Source = "icon" | "api" | "changelog";
 
 /** Файлы источников от корня репозитория. */
 export const SOURCES: Record<Source, string> = {
   icon: "packages/icon/README.md",
   api: "apps/api/README.md",
+  changelog: "packages/icon/CHANGELOG.md",
 };
+
+const SOURCE_IDS = Object.keys(SOURCES) as Source[];
 
 export interface PageDef {
   /** Адрес: /docs или /docs/{slug}. */
@@ -82,6 +86,14 @@ export const PAGES: readonly PageDef[] = [
     title: "Edge API",
     description: "Icon data, SVG, CSS and search addresses of api.iconavo.dev.",
     source: "api",
+    sections: ["*"],
+  },
+  {
+    slug: "changelog",
+    title: "Changelog",
+    description:
+      "What changed in each version of @iconavo-ui/icon, @iconavo-ui/react and @iconavo-ui/core.",
+    source: "changelog",
     sections: ["*"],
   },
 ];
@@ -160,19 +172,16 @@ function load(root: string, source: Source): Block[] {
 
 /** Страницы из источников, без переписанных ссылок. */
 function layout(root: string): DocPage[] {
-  const parsed: Record<Source, Block[]> = {
-    icon: load(root, "icon"),
-    api: load(root, "api"),
-  };
-  const ids: Record<Source, Map<Block, string>> = {
-    icon: anchors(parsed.icon),
-    api: anchors(parsed.api),
-  };
-  const split: Record<Source, { title: string; blocks: Block[] }[]> = {
-    icon: sections(parsed.icon),
-    api: sections(parsed.api),
-  };
-  for (const source of ["icon", "api"] as const) {
+  const parsed = Object.fromEntries(
+    SOURCE_IDS.map((s) => [s, load(root, s)]),
+  ) as Record<Source, Block[]>;
+  const ids = Object.fromEntries(
+    SOURCE_IDS.map((s) => [s, anchors(parsed[s])]),
+  ) as Record<Source, Map<Block, string>>;
+  const split = Object.fromEntries(
+    SOURCE_IDS.map((s) => [s, sections(parsed[s])]),
+  ) as Record<Source, { title: string; blocks: Block[] }[]>;
+  for (const source of SOURCE_IDS) {
     const used = PAGES.filter((p) => p.source === source).flatMap(
       (p) => p.sections,
     );
@@ -269,7 +278,7 @@ function rewrite(href: string, page: DocPage, pages: DocPage[]): string | null {
     return t === page ? `#${anchor}` : `${t.path}#${anchor}`;
   };
   if (href.startsWith("#")) return where(page.source, href.slice(1));
-  for (const source of ["icon", "api"] as const) {
+  for (const source of SOURCE_IDS) {
     const blob = `${REPO}/blob/main/${SOURCES[source]}`;
     if (href === blob || href.startsWith(`${blob}#`)) {
       return where(source, href.slice(blob.length + 1));

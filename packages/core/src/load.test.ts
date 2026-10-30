@@ -122,7 +122,7 @@ describe("пачки", () => {
     const core = await freshCore();
     show(core, ["beta:b", "alpha:z", "beta:a", "alpha:y"]);
     await idle();
-    expect(requests.sort()).toEqual([
+    expect(requests.filter((url) => url.startsWith(API)).sort()).toEqual([
       `${API}/alpha.json?icons=y,z`,
       `${API}/beta.json?icons=a,b`,
     ]);
@@ -178,10 +178,13 @@ describe("без повторов", () => {
     const core = await freshCore();
     const stops = show(core, ["demo:house", "demo:heart", "demo:missing-x"]);
     await idle();
+    expect(requests[0]).toBe(`${BASE}heart,house,missing-x`);
+    expect(core.getIcon("demo:missing-x")).toBe("missing");
+    const first = [...requests];
     for (const stop of stops) stop();
     show(core, ["demo:heart", "demo:house", "demo:missing-x"]);
     await idle();
-    expect(requests).toEqual([`${BASE}heart,house,missing-x`]);
+    expect(requests).toEqual(first);
   });
 
   it("иконка из addIcons, добавленная до отправки очереди, в запрос не попадает", async () => {
@@ -222,6 +225,8 @@ describe("ответы хоста", () => {
         : demoBatch(url),
     );
     const core = await freshCore();
+    // Только edge API: «нет» единственного источника — окончательное.
+    core.configure({ cdn: [] });
     show(core, ["demo:missing-one", "demo:house"]);
     await idle();
     show(core, ["demo:lost"]);
@@ -249,7 +254,7 @@ describe("ответы хоста", () => {
     expect(requests).toEqual([`${BASE}alias-star`]);
   });
 
-  it("неизвестный набор: 404 и ответ 200 с телом 404, как у Iconify API, — «нет», статику не спрашивают", async () => {
+  it("неизвестный набор: 404 и ответ 200 с телом 404, как у Iconify API, — «нет», когда и у статики набора нет", async () => {
     const requests = fakeFetch((url) =>
       url.pathname === "/iconify.json" ? Response.json(404) : demoHosts(url),
     );
@@ -258,11 +263,55 @@ describe("ответы хоста", () => {
     await idle();
     expect(core.getIcon("nope:house")).toBe("missing");
     expect(core.getIcon("iconify:house")).toBe("missing");
-    expect(requests).toEqual([
-      `${API}/nope.json?icons=house`,
+    // Статика спрошена по манифесту — по разу на хост; файлов набора, которого нет, не просят.
+    expect(requests.sort()).toEqual([
       `${API}/iconify.json?icons=house`,
+      `${API}/nope.json?icons=house`,
+      `${CDN}/manifest.json`,
+      `${CDN2}/manifest.json`,
+      `${BCDN}/manifest.json`,
     ]);
     expect(vi.getTimerCount()).toBe(0);
+  });
+
+  it("свой хост и наш хранят разное: «нет» нашей статики не отменяет иконку своего API", async () => {
+    // Свой API для своего набора — отвечает за 2 с; статика — наша по умолчанию, в ней этого набора нет.
+    const calls = fakeNet((url) =>
+      url.host === "icons.example.com"
+        ? later(2000, demoBatch)(url)
+        : Response.json({ sets: {} }),
+    );
+    const core = await freshCore();
+    core.configure({ api: ["https://icons.example.com"] });
+    show(core, ["demo:house"]);
+    await wait(1500);
+    expect(calls.map((c) => c.url)).toContain(`${CDN}/manifest.json`);
+    await wait(500);
+    expect(core.getIcon("demo:house")).toMatchObject({
+      body: '<path d="house"/>',
+    });
+    expect(warn).not.toHaveBeenCalled();
+  });
+
+  it("свой API отказал, а статика говорит «нет» — не «нет», а повтор: API мог знать иконку", async () => {
+    let down = true;
+    fakeNet((url) =>
+      url.host === "icons.example.com"
+        ? down
+          ? Promise.reject(new TypeError("Failed to fetch"))
+          : demoBatch(url)
+        : Response.json({ sets: {} }),
+    );
+    const core = await freshCore();
+    core.configure({ api: ["https://icons.example.com"], cdn: [CDN] });
+    show(core, ["demo:house"]);
+    await idle();
+    expect(core.getIcon("demo:house")).toBe("loading");
+    down = false;
+    await wait(1000);
+    expect(core.getIcon("demo:house")).toMatchObject({
+      body: '<path d="house"/>',
+    });
   });
 
   it("сбой у всех хостов — «ошибка», а новый показ запрашивает снова", async () => {
@@ -309,7 +358,9 @@ describe("ответы хоста", () => {
   });
 
   it("свой хост: адрес без лишнего «/» в конце; хостов нет совсем — «ошибка» без запроса", async () => {
-    const requests = fakeFetch();
+    const requests = fakeFetch((url) =>
+      url.host === "icons.example.com" ? demoBatch(url) : demoHosts(url),
+    );
     const core = await freshCore();
     core.configure({ api: ["https://icons.example.com/api/"] });
     show(core, ["demo:house"]);
@@ -334,14 +385,13 @@ describe("запасные хосты", () => {
   it("edge API отказал — те же имена сразу со статики: манифест, затем файл на иконку", async () => {
     const calls = fakeNet(hosts({ "api.iconavo.dev": "down" }));
     const core = await freshCore();
-    show(core, ["demo:house", "demo:alias-star", "demo:missing-x"]);
+    show(core, ["demo:house", "demo:alias-star"]);
     await idle();
     expect(calls.map((c) => c.url)).toEqual([
-      `${BASE}alias-star,house,missing-x`,
+      `${BASE}alias-star,house`,
       `${CDN}/manifest.json`,
       file(CDN, "alias-star"),
       file(CDN, "house"),
-      file(CDN, "missing-x"),
     ]);
     expect(calls.every((c) => c.at === 0)).toBe(true);
     expect(core.getIcon("demo:house")).toMatchObject({
@@ -355,8 +405,25 @@ describe("запасные хосты", () => {
     expect(core.getIcon("demo:star")).toMatchObject({
       body: fromHost("star", CDN),
     });
-    expect(core.getIcon("demo:missing-x")).toBe("missing");
     expect(vi.getTimerCount()).toBe(0);
+  });
+
+  it("хост статики отказал, пока edge API молчит, — следующий сразу, без порога", async () => {
+    const calls = fakeNet(
+      hosts({ "api.iconavo.dev": "silent", "cdn.iconavo.dev": "down" }),
+    );
+    const core = await freshCore();
+    show(core, ["demo:house"]);
+    await wait(1500);
+    expect(calls.map((c) => [c.url, c.at])).toEqual([
+      [`${BASE}house`, 0],
+      [`${CDN}/manifest.json`, 1500],
+      [`${CDN2}/manifest.json`, 1500],
+      [file(CDN2, "house"), 1500],
+    ]);
+    expect(core.getIcon("demo:house")).toMatchObject({
+      body: fromHost("house", CDN2),
+    });
   });
 
   it("edge API: 5xx, другой 4xx, не JSON, чужой набор — тоже сразу статика", async () => {
@@ -670,20 +737,53 @@ describe("статика", () => {
     });
   });
 
-  it("набора нет в манифесте — «нет» без запросов файлов; 404 файла — «нет» навсегда", async () => {
-    const calls = fakeNet(hosts({ "api.iconavo.dev": "down" }));
+  it("набора нет в манифесте — «нет» без запросов файлов; 404 файла у всех хостов — «нет» навсегда", async () => {
+    const calls = fakeNet();
     const core = await freshCore();
     const stops = show(core, ["other:house", "demo:missing-x"]);
     await idle();
     expect(core.getIcon("other:house")).toBe("missing");
     expect(core.getIcon("demo:missing-x")).toBe("missing");
     expect(calls.some((c) => c.url.includes("/other/"))).toBe(false);
-    expect(calls.filter((c) => c.url.startsWith(CDN2))).toEqual([]);
+    // «Нет» одного хоста — не «нет»: файл спрошен у каждого хоста статики.
+    expect(
+      calls.filter((c) => c.url.endsWith("/missing-x.json")).map((c) => c.url),
+    ).toEqual([
+      file(CDN, "missing-x"),
+      file(CDN2, "missing-x"),
+      file(BCDN, "missing-x"),
+    ]);
     for (const stop of stops) stop();
     const before = calls.length;
     show(core, ["other:house", "demo:missing-x"]);
     await idle();
     expect(calls).toHaveLength(before);
+    expect(vi.getTimerCount()).toBe(0);
+  });
+
+  it("своя статика: версия набора вида 1.2.0; 403 на файл, которого нет, — «нет», как 404", async () => {
+    const calls = fakeNet((url) => {
+      if (url.pathname.endsWith("/manifest.json")) {
+        return Response.json({ sets: { demo: { version: "1.2.0" } } });
+      }
+      if (url.pathname.endsWith("/missing-x.json")) {
+        return new Response("AccessDenied", { status: 403 });
+      }
+      return demoStatic(
+        new URL(url.href.replace("/v/1.2.0/", `/v/${DEMO_VERSION}/`)),
+      );
+    });
+    const core = await freshCore();
+    core.configure({ api: [], cdn: ["https://static.example.com"] });
+    show(core, ["demo:house", "demo:missing-x"]);
+    await idle();
+    expect(calls.map((c) => c.url)).toContain(
+      "https://static.example.com/v/1.2.0/demo/house.json",
+    );
+    expect(core.getIcon("demo:house")).toMatchObject({
+      body: fromHost("house", "https://static.example.com"),
+    });
+    expect(core.getIcon("demo:missing-x")).toBe("missing");
     expect(vi.getTimerCount()).toBe(0);
   });
 
@@ -807,12 +907,15 @@ describe("повторы", () => {
     ).toEqual([`${BASE}heart,house`, `${BASE}heart`]);
   });
 
-  it("«нет» и 404 edge API не повторяются", async () => {
+  it("«нет» и 404 у всех хостов не повторяются", async () => {
     const calls = fakeNet();
     const core = await freshCore();
     show(core, ["demo:missing-x", "nope:house"]);
+    await idle();
+    const first = calls.map((c) => c.url);
     await wait(10_000);
-    expect(calls.map((c) => c.url)).toEqual([
+    expect(calls.map((c) => c.url)).toEqual(first);
+    expect(first.filter((url) => url.startsWith(API))).toEqual([
       `${BASE}missing-x`,
       `${API}/nope.json?icons=house`,
     ]);

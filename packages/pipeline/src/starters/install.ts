@@ -6,8 +6,9 @@
 
 import { cp, readFile, rm, writeFile } from "node:fs/promises";
 import { join, relative, sep } from "node:path";
+import { setScriptIntegrity, sri } from "../release/text.js";
 import { fail, pass, type Verdict } from "../sandbox/verdict.js";
-import type { Pack } from "./pack.js";
+import { type Pack, type RunError, run } from "./pack.js";
 
 export type Manifest = Record<string, unknown> & {
   dependencies?: Record<string, string>;
@@ -74,11 +75,36 @@ export async function useLocalPacks(dir: string, packs: Pack[]): Promise<void> {
   await rm(join(dir, "package-lock.json"), { force: true });
 }
 
+/**
+ * HTML-пример на скрипте этой ветки: в строке подключения копии меняется только значение хэша — на
+ * хэш этого файла (ADR-0051). С хэшем из README браузер отверг бы скрипт после первой же правки кода;
+ * сам хэш README проверяет --npm. Строку без integrity копия оставляет как есть — её заметит
+ * контрольный запуск.
+ */
+export async function useLocalScript(dir: string, body: Buffer): Promise<void> {
+  const path = join(dir, "index.html");
+  const text = await readFile(path, "utf8");
+  await writeFile(path, setScriptIntegrity(text, sri(body)), "utf8");
+}
+
 /** Узел дерева npm ls --all --json. */
 export interface LsNode {
   version?: string;
   resolved?: string;
   dependencies?: Record<string, LsNode>;
+}
+
+/**
+ * npm ls --all --json: дерево зависимостей, и когда npm вышел с кодом 1 — при лишних или
+ * неудовлетворённых зависимостях дерево тоже нужно. Его даёт весь вывод команды, а не хвост ошибки.
+ */
+export async function npmTree(dir: string): Promise<LsNode> {
+  const output = await run("npm", ["ls", "--all", "--json"], dir).catch(
+    (e: RunError) => e.output ?? "",
+  );
+  const start = output.indexOf("{");
+  if (start === -1) throw new Error("npm ls не вывел дерево зависимостей");
+  return JSON.parse(output.slice(start, output.lastIndexOf("}") + 1)) as LsNode;
 }
 
 /** Все копии наших пакетов в дереве зависимостей: имя, версия, откуда. */

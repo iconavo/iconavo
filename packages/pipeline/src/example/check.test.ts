@@ -30,7 +30,7 @@ const NAMES: ExampleNames = {
 };
 
 describe("запросы к хостам иконок", () => {
-  it("имена из пачек API, статика — счётом, чужие адреса не в счёт", () => {
+  it("имена из пачек API, статика — путями, чужие адреса не в счёт", () => {
     expect(
       requested(
         [
@@ -44,40 +44,57 @@ describe("запросы к хостам иконок", () => {
     ).toEqual({
       names: ["lucide:cat", "lucide:search", "ph:fish"],
       batches: 2,
-      statics: 1,
+      statics: ["/manifest.json"],
     });
   });
 
-  it("сеть: иконки обёртки, повторы, пропуски и статика — проблемы", () => {
+  it("сеть: иконки обёртки, повторы, пропуски и статика не за иконками, которых нет, — проблемы", () => {
     const expected = [...NAMES.browser, NAMES.tag];
-    expect(
-      networkVerdict(
-        [`${API}/lucide.json?icons=cat,search`, `${API}/ph.json?icons=fish`],
-        API,
-        NAMES.server,
-        expected,
-      ).ok,
-    ).toBe(true);
+    const missing = [NAMES.missing, NAMES.missingTag];
+    const ok = networkVerdict(
+      [
+        `${API}/lucide.json?icons=cat,no-such-icon,search`,
+        `${API}/ph.json?icons=fish`,
+        `${API}/_static/manifest.json`,
+        `${API}/_static/v/c3b3f7a7/lucide/no-such-icon.json`,
+      ],
+      API,
+      NAMES.server,
+      expected,
+      missing,
+    );
+    expect(ok.ok).toBe(true);
+    expect(ok.note).toContain(
+      "у статики — только иконки, которых нет у API (1)",
+    );
     const bad = networkVerdict(
       [
         `${API}/lucide.json?icons=cat,house`,
         `${API}/lucide.json?icons=cat`,
         `${API}/_static/manifest.json`,
+        `${API}/_static/v/c3b3f7a7/lucide/cat.json`,
+        `${API}/_static/v/c3b3f7a7/lucide/no-such-icon.json`,
+        `${API}/_static/v/c3b3f7a7/lucide/no-such-icon.json`,
       ],
       API,
       NAMES.server,
       expected,
+      missing,
     );
     expect(bad.ok).toBe(false);
     expect(bad.note).toContain("запрошены иконки обёртки: lucide:house");
     expect(bad.note).toContain("дважды: lucide:cat");
     expect(bad.note).toContain("не запрошены: ph:fish, lucide:search");
-    expect(bad.note).toContain("запросов к статике: 1");
+    expect(bad.note).toContain(
+      "к статике не за иконками, которых нет: /v/c3b3f7a7/lucide/cat.json",
+    );
+    expect(bad.note).toContain("у статики дважды: lucide:no-such-icon");
     const live = networkVerdict(
       [`${API}/lucide.json?icons=cat,search`, `${API}/ph.json?icons=fish`],
       API,
       NAMES.server,
       expected,
+      missing,
       ["https://api.iconavo.dev/lucide.json?icons=bird"],
     );
     expect(live.ok).toBe(false);

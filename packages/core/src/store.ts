@@ -13,13 +13,19 @@ import { isValidIconName, isValidNamePart } from "./name.js";
 /** Состояние имени: данные загруженной иконки или что с ней. */
 export type IconState = IconData | "loading" | "missing" | "error";
 
-/** Свой источник набора (setLoader): имена без повторов → IconifyJSON или null. */
+// Loader и поля Settings видят разработчики в подсказках setLoader и configure — описания по-английски.
+
+/** Your own source of one icon set, for `setLoader`: unique names → IconifyJSON, or `null`. */
 export type Loader = (names: string[]) => Promise<IconavoIconSet | null>;
 
 export interface Settings {
+  /** Hosts that answer batch requests, tried in order. `[]` turns them off. */
   api: string[];
+  /** Hosts with the static layout of `cdn.iconavo.dev`, one icon per request, tried in order. */
   cdn: string[];
+  /** What icons show while they load. Default: `skeleton`. */
   placeholder: "skeleton" | "spinner" | "none";
+  /** Development mode: a dashed frame in place of a missing icon. Default: detected. */
   dev?: boolean;
 }
 
@@ -125,24 +131,29 @@ function resolve(data: IconavoIconSet, name: string): IconData | null {
 /**
  * Иконки набора в хранилище — каждое имя разрешается сразу, по цепочке алиасов внутри этих данных,
  * как у Iconify. replace (addIcons) заменяет загруженные иконки; ответ хоста и загрузчика заполняет
- * только незагруженные. Имя, которое не разрешилось (петля алиасов, алиас в никуда), и not_found —
- * «нет»; «нет» загруженную иконку не заменяет никогда.
+ * только незагруженные. Имя, которое не разрешилось (петля алиасов, алиас в никуда, неверные
+ * размеры), и not_found — «нет»; «нет» загруженную иконку не заменяет никогда. С missing (ответ
+ * источника в попытке, load.ts) «нет» не записывается, а копится там: окончательно имя «нет», когда
+ * так ответили все источники.
  */
 export function addSet(
   prefix: string,
   data: IconavoIconSet,
   replace: boolean,
+  missing?: Set<string>,
 ): void {
   const changes = new Map<string, IconState>();
   const put = (name: string, state: IconState) => {
     const full = `${prefix}:${name}`;
     const loaded = typeof store.icons.get(full) === "object";
-    if (
-      isValidNamePart(name) &&
-      (!loaded || (replace && typeof state === "object"))
-    ) {
-      changes.set(full, state);
+    if (!isValidNamePart(name) || loaded) {
+      if (loaded && replace && typeof state === "object") {
+        changes.set(full, state);
+      }
+      return;
     }
+    if (state === "missing" && missing) missing.add(name);
+    else changes.set(full, state);
   };
   for (const name of [
     ...Object.keys(data.icons),

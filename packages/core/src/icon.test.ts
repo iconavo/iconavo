@@ -71,6 +71,18 @@ describe("iconData", () => {
       ),
     ).toThrow(/loops/);
   });
+
+  it("размеры не числа, нулевые или рисунок не строка — ошибка, а не рисунок с NaN", () => {
+    const broken = [
+      { prefix: "x", width: "24", icons: { a: { body: "<g/>" } } },
+      { prefix: "x", icons: { a: { body: "<g/>", height: 0 } } },
+      { prefix: "x", icons: { a: { body: "<g/>", left: Number.NaN } } },
+      { prefix: "x", icons: { a: { body: 42 } } },
+    ];
+    for (const set of broken) {
+      expect(() => iconData(set as never, "a")).toThrow(/invalid body or size/);
+    }
+  });
 });
 
 describe("iconData: повороты и отражения в данных, как у Iconify", () => {

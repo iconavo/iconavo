@@ -15,6 +15,7 @@
 // | pnpm starters <пример> [--browser=…] | pnpm starters [пример…] --check [--browser=…] [--npm]
 // | pnpm starters [пример…] --lock
 // | pnpm site [--port=N] [--prod] | pnpm site --check [--browser=…] | pnpm site --live [--expect-build=…] [--base=…]
+// | pnpm release bump [версия] | pnpm release prepare [--first] | pnpm release verify --plan=… [--wait=N]
 import { randomInt } from "node:crypto";
 import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import type { AddressInfo } from "node:net";
@@ -174,6 +175,26 @@ import {
 } from "./npm/report.js";
 import { npmVerifyFailed, readPlan, verifyPackages } from "./npm/verify.js";
 import { gitHistory, loadBaseline } from "./qc/baseline.js";
+import { bumpRelease } from "./release/bump.js";
+import {
+  CHANGELOG_FILE,
+  RELEASE_OUT_DIR,
+  RELEASE_PLAN_FILE,
+} from "./release/config.js";
+import {
+  prepareRelease,
+  readReleasePlan,
+  releaseStop,
+} from "./release/prepare.js";
+import {
+  formatReleasePrepare,
+  formatReleaseVerify,
+  markdownReleasePrepare,
+  markdownReleaseVerify,
+  renderReleasePreparePage,
+  renderReleaseVerifyPage,
+} from "./release/report.js";
+import { releaseVerifyFailed, verifyRelease } from "./release/verify.js";
 import { markdownTable, textTable } from "./report/table.js";
 import {
   BROWSER_TITLES,
@@ -410,8 +431,8 @@ const USAGE = `Использование:
                                       npm install в копию, сборка, разработка и продакшен; хосты
                                       иконок — превью API; отчёт .cache/reports/starters/check.html
       --browser=…                     только chrome, firefox или webkit
-      --npm                           после публикации (шаг 11): пример как есть — npm ci из
-                                      lock-файла, живые хосты, jsDelivr, npm audit signatures
+      --npm                           после публикации: пример как есть — npm ci из lock-файла,
+                                      живые хосты, jsDelivr, npm audit signatures
   pnpm starters [пример…] --lock      после публикации: package-lock.json примеров по реестру npm
   pnpm site                           сайт (${SITE_DIR}, фаза 3, шаг 10; ADR-0050): next dev на 127.0.0.1
                                       с живыми хостами иконок; документация /docs — из README
@@ -434,7 +455,20 @@ const USAGE = `Использование:
                                       из data/, файлы те же, provenance из main, доверенная
                                       публикация; отчёт .cache/reports/npm/verify.html
       --wait=N                        ждать до N секунд, пока реестр покажет новую версию и её подпись
-      --plan=…                        план подготовки (dist-npm/plan.json): ждать ровно выпущенные версии`;
+      --plan=…                        план подготовки (dist-npm/plan.json): ждать ровно выпущенные версии
+  pnpm release bump [версия]          выпуск пакетов для разработчиков (ADR-0051): версия ядра, тега и
+                                      React и примеров, раздел журнала с датой и заготовкой TODO,
+                                      адрес и хэш скрипта тега в README и HTML-примере; устаревшие
+                                      lock-файлы примеров удаляются; без версии — только хэш и дата
+  pnpm release prepare                проверка выпуска и архивы для CI в ${RELEASE_OUT_DIR}/: одна версия, поля
+                                      package.json, журнал, хэш скрипта, состав архивов, реестр npm
+                                      (только чтение); план ${RELEASE_OUT_DIR}/${RELEASE_PLAN_FILE}; отчёт
+                                      .cache/reports/release/prepare.html
+      --first                         пакетов нет в npm — первая публикация (ручной запуск в CI)
+  pnpm release verify --plan=…        после публикации: версия под тегом next, архив из плана,
+                                      provenance из release.yml, доверенная публикация, jsDelivr,
+                                      чистый проект с иконкой; отчёт .cache/reports/release/verify.html
+      --wait=N                        ждать до N секунд, пока npm и jsDelivr покажут новую версию`;
 
 /** Флаги pnpm pr со ссылками: флаг → поле PrLinks. */
 const LINK_FLAGS: Record<string, keyof PrLinks> = {
@@ -594,6 +628,17 @@ for (const flag of flags) {
     }
   }
   if (command === "cdn" && flag === "--dry-run") continue;
+  if (command === "release") {
+    if (flag === "--first") continue;
+    if (name === "--plan" && value !== undefined && value !== "") {
+      planPath = value;
+      continue;
+    }
+    if (name === "--wait" && /^(0|[1-9][0-9]{0,4})$/.test(value ?? "")) {
+      waitSeconds = Number(value);
+      continue;
+    }
+  }
   if (command === "packages") {
     if (flag === "--new" || flag === "--force") continue;
     if (name === "--plan" && value !== undefined && value !== "") {
@@ -1654,7 +1699,7 @@ try {
       const missing = await unpublished(root, ids);
       if (missing.length > 0) {
         console.error(
-          `СТОП: ${missing.join(", ")} — нет в npm. lock-файлы примеров создаются после публикации беты (шаг 11).`,
+          `СТОП: ${missing.join(", ")} — нет в npm. lock-файлы примеров создаются после публикации этой версии (ADR-0051).`,
         );
         process.exit(1);
       }
@@ -1692,7 +1737,7 @@ try {
         const missing = await unpublished(root, ids);
         if (missing.length > 0) {
           console.error(
-            `СТОП: ${missing.join(", ")} — нет в npm. Проверка с --npm — после публикации беты (шаг 11).`,
+            `СТОП: ${missing.join(", ")} — нет в npm. Проверка с --npm — после публикации этой версии (ADR-0051).`,
           );
           process.exit(1);
         }
@@ -1935,6 +1980,100 @@ try {
     );
     console.log(`Отчёт: ${pagePath}`);
     process.exit((verify ? verifyFailed(upload) : uploadStop(upload)) ? 1 : 0);
+  } else if (command === "release") {
+    const [sub, version, ...extra] = args;
+    const first = flags.includes("--first");
+    const verifyFlags = flags.some(
+      (f) => f.startsWith("--wait=") || f.startsWith("--plan="),
+    );
+    if (
+      (sub !== "bump" && sub !== "prepare" && sub !== "verify") ||
+      extra.length > 0 ||
+      (sub !== "bump" && version !== undefined) ||
+      (sub !== "prepare" && first) ||
+      (sub !== "verify" && verifyFlags) ||
+      (sub === "verify" && planPath === undefined)
+    ) {
+      usageError(
+        "pnpm release: нужна подкоманда bump [версия], prepare [--first] или verify --plan=… [--wait=N].",
+      );
+    }
+    const reportDir = join(reportsDir, "release");
+    await mkdir(reportDir, { recursive: true });
+    if (sub === "bump") {
+      const report = await bumpRelease({
+        root,
+        ...(version === undefined ? {} : { version }),
+        date: new Date().toISOString().slice(0, 10),
+      });
+      console.log(
+        `Выпуск ${report.version}${report.from === report.version ? "" : ` (было ${report.from})`}: хэш скрипта тега ${report.integrity}.`,
+      );
+      for (const file of report.changed) console.log(`Изменён ${file}`);
+      for (const file of report.removed) {
+        console.log(
+          `Удалён ${file} — новый запишет pnpm starters --lock после публикации`,
+        );
+      }
+      if (report.changed.length + report.removed.length === 0) {
+        console.log("Без изменений.");
+      }
+      if (version !== undefined) {
+        console.log(
+          `Дальше: впишите в ${CHANGELOG_FILE} вместо TODO, что изменилось в ${report.version}, и проверьте выпуск — pnpm release prepare.`,
+        );
+      }
+      process.exit(0);
+    }
+    const registry = registryClient();
+    if (sub === "prepare") {
+      const sha = process.env.GITHUB_SHA ?? "";
+      console.log(
+        `Готовлю выпуск в ${RELEASE_OUT_DIR}/ и сверяюсь с реестром npm — только чтение, ничего не публикую…`,
+      );
+      const report = await prepareRelease({
+        root,
+        outDir: join(root, RELEASE_OUT_DIR),
+        registry,
+        first,
+        commit: /^[0-9a-f]{40}$/.test(sha) ? sha : null,
+        log: (line) => console.log(line),
+      });
+      console.log("");
+      for (const line of formatReleasePrepare(report)) console.log(line);
+      const htmlPath = join(reportDir, "prepare.html");
+      await writeFile(htmlPath, renderReleasePreparePage(report), "utf8");
+      // Та же таблица в Markdown — её кладёт в сводку запуска workflow «Выпуск пакетов».
+      await writeFile(
+        join(reportDir, "prepare.md"),
+        markdownReleasePrepare(report),
+        "utf8",
+      );
+      console.log(`Отчёт: ${htmlPath}`);
+      process.exit(releaseStop(report) ? 1 : 0);
+    }
+    const plan = await readReleasePlan(planPath as string);
+    console.log(
+      `Проверяю выпуск ${plan.version}: реестр npm, jsDelivr и чистый проект…`,
+    );
+    const report = await verifyRelease({
+      root,
+      plan,
+      registry,
+      waitMs: waitSeconds * 1000,
+      log: (line) => console.log(line),
+    });
+    console.log("");
+    for (const line of formatReleaseVerify(report)) console.log(line);
+    const htmlPath = join(reportDir, "verify.html");
+    await writeFile(htmlPath, renderReleaseVerifyPage(report), "utf8");
+    await writeFile(
+      join(reportDir, "verify.md"),
+      markdownReleaseVerify(report),
+      "utf8",
+    );
+    console.log(`Отчёт: ${htmlPath}`);
+    process.exit(releaseVerifyFailed(report) ? 1 : 0);
   } else if (command === "packages") {
     const [sub, ...ids] = args;
     const allowNew = flags.includes("--new");

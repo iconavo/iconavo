@@ -1,10 +1,14 @@
-// Согласованность живых примеров с README и пакетами (ADR-0050): одна версия скрипта тега во всём
-// README, HTML-пример подключает его теми же строками, что README, примеры просят ту же версию пакетов,
-// версии всех зависимостей примеров — точные, ссылки — из starters/links.ts, имена иконок — есть в data/.
+// Согласованность живых примеров с README и пакетами (ADR-0050, ADR-0051): одна версия скрипта тега во
+// всём README, HTML-пример подключает его теми же строками, что README, с одним хэшем integrity, примеры
+// просят ту же версию пакетов, у выпущенной версии есть раздел журнала, версии всех зависимостей
+// примеров — точные, ссылки — из starters/links.ts, имена иконок — есть в data/. lock-файлы примеров
+// необязательны: выпуск удаляет устаревшие, а новые pnpm starters --lock пишет после публикации.
 
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
+import { CHANGELOG_FILE, SCRIPT_LINE_FILES } from "../release/config.js";
+import { changelogProblems, SRI_FORMAT, scriptRefs } from "../release/text.js";
 import { PACKAGES, STARTER_IDS } from "./config.js";
 import { CREATE_NEXT_APP, STACKBLITZ_LINKS } from "./links.js";
 
@@ -32,6 +36,10 @@ const starters = STARTER_IDS.filter((id) =>
 );
 const manifest = (id: string) =>
   json(`examples/starters/${id}/package.json`) as Manifest;
+/** Пакеты уже выпускаются: версия не 0.0.0. */
+const released = PACKAGES.some(
+  (id) => (json(`packages/${id}/package.json`) as Manifest).version !== "0.0.0",
+);
 
 describe("живые примеры согласованы с README и пакетами", () => {
   it("в README одна версия скрипта тега", () => {
@@ -91,18 +99,33 @@ describe("живые примеры согласованы с README и паке
     }
   });
 
-  it("lock-файлы: после публикации обязательны и совпадают с package.json", () => {
-    const published =
-      (json("packages/react/package.json") as Manifest).version !== "0.0.0";
+  it("строки подключения: у выпущенной версии — один хэш integrity верного вида", () => {
+    const hashes = SCRIPT_LINE_FILES.flatMap((file) =>
+      scriptRefs(read(file)).tags.map((t) => ({
+        file,
+        integrity: t.integrity,
+      })),
+    );
+    expect(hashes.length).toBeGreaterThan(0);
+    if (!released) return;
+    for (const h of hashes) {
+      expect(
+        h.integrity,
+        `${h.file}: нет integrity — pnpm release bump`,
+      ).toMatch(SRI_FORMAT);
+    }
+    expect(new Set(hashes.map((h) => h.integrity)).size).toBe(1);
+  });
+
+  it("журнал: у выпущенной версии — свой раздел без заготовки", () => {
+    if (!released) return;
+    expect(changelogProblems(read(CHANGELOG_FILE), version)).toEqual([]);
+  });
+
+  it("lock-файлы: если есть — совпадают с package.json и берут наши пакеты из npm", () => {
     for (const id of starters) {
       const path = `examples/starters/${id}/package-lock.json`;
-      if (!existsSync(join(root, path))) {
-        expect(
-          published,
-          `${path}: нет, а пакеты уже опубликованы — pnpm starters --lock`,
-        ).toBe(false);
-        continue;
-      }
+      if (!existsSync(join(root, path))) continue;
       const lock = json(path) as {
         packages: Record<
           string,

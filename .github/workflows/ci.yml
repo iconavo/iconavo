@@ -104,6 +104,16 @@ jobs:
           );
           JS
           exit "$status"
+      # Выпуск пакетов (ADR-0051): одна версия, поля package.json, журнал, хэш скрипта в README и
+      # HTML-примере, состав архивов pnpm pack и реестр npm — только чтение. Хэш вышедшей версии
+      # сверяется со скриптом в npm, невышедшей — со сборкой на этой машине. Публикует не эта задача, а
+      # workflow «Выпуск пакетов» после слияния.
+      - name: Выпуск пакетов
+        run: |
+          status=0
+          pnpm release prepare || status=$?
+          if [ -f .cache/reports/release/prepare.md ]; then cat .cache/reports/release/prepare.md >> "$GITHUB_STEP_SUMMARY"; fi
+          exit "$status"
 
   # Браузерные проверки (ADR-0035, шаг 9 фазы 3): каждый браузер — своей задачей, параллельно. Сеть не
   # нужна: хосты иконок — превью API на этой же машине. Chrome — установленный в образе ubuntu-latest

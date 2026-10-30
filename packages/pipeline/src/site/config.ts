@@ -24,7 +24,11 @@ export const DEFAULT_ICON_HOSTS = [
 ];
 
 /** Источники документации: из их разделов «##» собраны страницы. */
-export const DOC_SOURCES = ["packages/icon/README.md", "apps/api/README.md"];
+export const DOC_SOURCES = [
+  "packages/icon/README.md",
+  "apps/api/README.md",
+  "packages/icon/CHANGELOG.md",
+];
 
 /** Окна проверки: компьютер и телефон (ширина 375 — ADR-0038). */
 export const DESKTOP = { width: 1280, height: 900 };

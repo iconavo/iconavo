@@ -246,6 +246,29 @@ describe("setLoader", () => {
     expect(core.getIcon("acme:logo")).toMatchObject({ body: "<g/>" });
   });
 
+  it("ответ без icons — «ничего не нашлось», «нет»; не набор или чужой префикс — «ошибка»", async () => {
+    const core = await freshCore();
+    core.setLoader(
+      "empty",
+      async (names) =>
+        ({
+          prefix: "empty",
+          not_found: names,
+        }) as unknown as IconavoIconSet,
+    );
+    core.setLoader("other", async () => ({ prefix: "acme", icons: {} }));
+    core.setLoader("odd", async () => "nothing" as unknown as IconavoIconSet);
+    for (const name of ["empty:a", "other:a", "odd:a"]) core.loadIcon(name);
+    await idle();
+    expect(core.getIcon("empty:a")).toBe("missing");
+    expect(core.getIcon("other:a")).toBe("error");
+    expect(core.getIcon("odd:a")).toBe("error");
+    expect(warn).toHaveBeenCalledWith(
+      'Iconavo: icon "odd:a" failed to load',
+      expect.objectContaining({ message: "Not an icon set" }),
+    );
+  });
+
   it("null вместо функции снимает загрузчик; неверный префикс — исключение", async () => {
     const requests = fakeFetch();
     const core = await freshCore();
@@ -294,7 +317,16 @@ describe("loadIcons", () => {
         },
       },
     ]);
-    expect(requests).toEqual([`${BASE}house,missing-x`]);
+    // «Нет» edge API — ещё не «нет»: то же имя спрошено и у статики, у своего хоста могло быть другое.
+    expect(requests[0]).toBe(`${BASE}house,missing-x`);
+    expect(
+      requests
+        .slice(1)
+        .every(
+          (url) =>
+            url.endsWith("/manifest.json") || url.endsWith("/missing-x.json"),
+        ),
+    ).toBe(true);
     expect(warn.mock.calls.map(([message]) => message).sort()).toEqual([
       'Iconavo: icon "demo:missing-x" not found',
       'Iconavo: invalid icon name "demo:Bad"',

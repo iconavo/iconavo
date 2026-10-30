@@ -2,7 +2,7 @@
 
 The `Icon` component for React and Next.js: any icon from the [Iconavo](https://iconavo.dev) catalog by its name. Only the icons on the page are loaded, in batches, and if a host fails, they come from the next one.
 
-> **Beta.** Versions 0.x are published under the `next` tag. The API may still change before 1.0.
+> **Beta.** Versions 0.x are published under the `next` tag. The API may still change before 1.0. See the [changelog](https://iconavo.dev/docs/changelog).
 
 ```sh
 npm install @iconavo-ui/react@next

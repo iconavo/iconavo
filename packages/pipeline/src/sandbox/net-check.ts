@@ -78,6 +78,10 @@ const files = (o: NetOutcome, host: string) =>
     (r) => r.url.startsWith(`${host}/v/`) && r.url.endsWith(".json"),
   );
 
+/** Файл иконки, которой нет нарочно: …/v/{версия}/{набор}/{иконка}.json. */
+const isAbsent = (url: string) =>
+  url.endsWith(`/${ABSENT.replace(":", "/")}.json`);
+
 /** Иконки, кроме нарочно отсутствующей, нарисованы, а у той — рамка. */
 function iconsProblems(o: NetOutcome): string[] {
   const present = o.icons.filter((i) => i.icon !== ABSENT);
@@ -92,7 +96,8 @@ function iconsProblems(o: NetOutcome): string[] {
 }
 
 /**
- * Хост ответил вместо упавших: иконки — с хоста from (файлами статики), с хоста not — ни одной.
+ * Хост ответил вместо упавших: иконки — с хоста from (файлами статики), с хоста not — ни одной, кроме
+ * той, которой нет: «нет» одного хоста не окончательно, её спрашивают и у следующего (ADR-0030).
  * Пачка к API уходила (её уронили правила). which — «с первого» или «со второго», для пояснения.
  */
 export function fallbackVerdict(
@@ -103,17 +108,21 @@ export function fallbackVerdict(
   not?: string,
 ): Verdict {
   const own = files(o, from).length;
+  const other = not ? files(o, not) : [];
+  const stray = other.filter((r) => !isAbsent(r.url)).length;
+  const asked = other.length - stray;
   const problems = [
     ...iconsProblems(o),
     o.requests.some((r) => isBatch(r.url, h)) ? "" : "пачка к API не уходила",
     own === 0 ? `ни одного файла ${which} хоста статики` : "",
-    not && files(o, not).length > 0
-      ? `файлы и с другого хоста статики: ${files(o, not).length}`
+    stray > 0 ? `файлы и с другого хоста статики: ${stray}` : "",
+    not && asked === 0
+      ? `иконку, которой нет, у другого хоста статики не спросили — «нет» от одного хоста`
       : "",
   ].filter(Boolean);
   return problems.length === 0
     ? pass(
-        `иконки нарисованы ${which} хоста статики (файлов: ${own}); у иконки, которой нет, — рамка`,
+        `иконки нарисованы ${which} хоста статики (файлов: ${own}); у иконки, которой нет, — рамка${not ? `, её спросили и у другого хоста (запросов: ${asked})` : ""}`,
       )
     : fail(problems.join("; "));
 }

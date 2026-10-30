@@ -2,7 +2,7 @@
 
 Any icon from the [Iconavo](https://iconavo.dev) catalog by its name, with one HTML tag or one React component. Only the icons on the page are loaded, in batches, and if a host fails, they come from the next one.
 
-> **Beta.** Versions 0.x are published under the `next` tag. The API may still change before 1.0.
+> **Beta.** Versions 0.x are published under the `next` tag. The API may still change before 1.0. See the [changelog](https://iconavo.dev/docs/changelog).
 
 | Package | What it is |
 | --- | --- |
@@ -16,11 +16,11 @@ Icon names are `set:icon`, for example `lucide:house`. Both parts use lowercase 
 **Without a build step**, add two lines to `<head>`:
 
 ```html
-<script type="module" src="https://cdn.jsdelivr.net/npm/@iconavo-ui/icon@0.1.0/dist/iconavo-icon.js"></script>
+<script type="module" src="https://cdn.jsdelivr.net/npm/@iconavo-ui/icon@0.1.0/dist/iconavo-icon.js" integrity="sha384-4jwgOS9euDQZj2iLfo9bjbv1WQK9EisJKx++vmGcOJPvz8bhFi0CB3Xs56eAxak3"></script>
 <style>iconavo-icon:not(:defined) { display: inline-block; width: 1em; height: 1em; }</style>
 ```
 
-The script is a single ES module with everything inside. The style keeps a `1em` square for each icon until the script has run, so the text next to icons does not jump; it does not know about the `width` and `height` attributes.
+The script is a single ES module with everything inside. With the `integrity` hash, the browser runs it only if it is exactly the published file. The style keeps a `1em` square for each icon until the script has run, so the text next to icons does not jump; it does not know about the `width` and `height` attributes.
 
 **With npm**:
 
@@ -49,7 +49,7 @@ With pnpm or yarn: `pnpm add @iconavo-ui/react@next`, `yarn add @iconavo-ui/reac
 <html lang="en">
   <head>
     <meta charset="utf-8">
-    <script type="module" src="https://cdn.jsdelivr.net/npm/@iconavo-ui/icon@0.1.0/dist/iconavo-icon.js"></script>
+    <script type="module" src="https://cdn.jsdelivr.net/npm/@iconavo-ui/icon@0.1.0/dist/iconavo-icon.js" integrity="sha384-4jwgOS9euDQZj2iLfo9bjbv1WQK9EisJKx++vmGcOJPvz8bhFi0CB3Xs56eAxak3"></script>
     <style>iconavo-icon:not(:defined) { display: inline-block; width: 1em; height: 1em; }</style>
   </head>
   <body>
@@ -240,7 +240,7 @@ function loadIcons(names: string[]): Promise<IconavoIconSet[]>;
 
 Loads icons ahead of time: before a menu opens, or on the server for [server rendering](#nextjs-and-server-rendering). It resolves with one IconifyJSON object per set, holding the loaded icons and, in `not_found`, the missing names.
 
-It never rejects. It makes one pass over the hosts, at most 5 seconds, and leaves out icons that failed to load; components in the browser retry them later. An invalid name goes to `not_found` with a warning.
+It never rejects. It makes one pass over the hosts, at most 5 seconds, and leaves out icons that failed to load; components in the browser retry them later. An invalid name goes to `not_found` of its set with a warning; a name without a valid set prefix gets only the warning.
 
 ### `setLoader(prefix, loader)`
 
@@ -291,12 +291,12 @@ Passes icons loaded on the server (`IconavoIconSet[]`, as returned by `loadIcons
 
 - Icons requested at the same moment (in one tick of the event loop) go out together: one request per set, with sorted names, split into several requests when the address would be longer than 500 characters or hold more than 100 names. For example, 100 Lucide icons take 4 requests. An icon that is already loading is not requested again.
 - The hosts are tried in order: `api.iconavo.dev` sends batches, then `cdn.iconavo.dev`, `cdn2.iconavo.dev` and `iconavo.b-cdn.net` send one icon per request, using their `manifest.json` to find the current version of a set.
-- If `api.iconavo.dev` does not answer within 1.5 seconds, the same icons are also requested from the static hosts. Static hosts send one icon per request, so the core waits longer before switching to them. Between hosts of the same kind (API hosts or static hosts), the wait is 750 ms. A host that fails outright is not waited for. The first answer wins. After 5 seconds without an answer, the attempt has failed.
+- If `api.iconavo.dev` does not answer within 1.5 seconds, the same icons are also requested from the static hosts. Static hosts send one icon per request, so the core waits longer before switching to them. Between hosts of the same kind (API hosts or static hosts), the wait is 750 ms. A host that fails outright is not waited for. The first host that has the icon wins; an icon counts as missing only when every host says it does not have it. After 5 seconds without an answer, the attempt has failed.
 - A failed attempt is repeated after 1, 2 and 4 seconds while the icon is on the page, and the placeholder stays meanwhile. After the last attempt, the icon looks like a missing one and the console shows one warning with the error, but the icon is requested again the next time it appears.
 
 ### Missing icons
 
-- If a set has no such icon, its place stays empty, and the console shows one warning per name.
+- If no host has the icon, its place stays empty, and the console shows one warning per name.
 - A missing name is remembered and not requested again while the page is open.
 - In development mode, a dashed frame marks the place. Development mode is on in the development build of your bundler (for example Vite or webpack) and, without a bundler, on pages opened from `localhost`, `127.0.0.1`, `[::1]` or a `file:` address. `configure({ dev: true })` or `configure({ dev: false })` overrides it.
 - Names never break: renamed icons still answer to their old names, and icons that their authors removed still render.
@@ -361,7 +361,7 @@ import { Icon } from "@iconavo-ui/react";
 ### What your own host must serve
 
 - **`api`**: `GET {host}/{set}.json?icons=a,b` returns IconifyJSON with the requested icons, the alias chains of the requested aliases, and the missing names in `not_found`. An unknown set is a 404.
-- **`cdn`**: `GET {host}/manifest.json` returns `{"sets": {"lucide": {"version": "…"}}}`, and `GET {host}/v/{version}/{set}/{icon}.json` returns IconifyJSON with one icon.
+- **`cdn`**: `GET {host}/manifest.json` returns `{"sets": {"lucide": {"version": "…"}}}`, and `GET {host}/v/{version}/{set}/{icon}.json` returns IconifyJSON with one icon. A version is made of letters, digits, `.`, `_` and `-`, for example `1.2.0`. A missing icon file is a 404; a 403 counts as missing too, as on S3 without list access.
 - **Both** answer plain `GET` requests with `Access-Control-Allow-Origin` that allows your site. The core sends no custom headers, so there are no preflight requests.
 
 The simplest host is a caching reverse proxy to `api.iconavo.dev` and `cdn.iconavo.dev`. A self-hosted [Iconify API](https://iconify.design/docs/api/hosting.html) answers batches too.
@@ -370,7 +370,7 @@ The full reference of our API, with the SVG and CSS addresses, is in the [edge A
 
 ## Hosts, privacy and security
 
-- **Requests** go to `https://api.iconavo.dev`, `https://cdn.iconavo.dev`, `https://cdn2.iconavo.dev` and `https://iconavo.b-cdn.net`, in this order, and to the next host only if the previous one fails. They are plain `GET` requests for icon data, without cookies.
+- **Requests** go to `https://api.iconavo.dev`, `https://cdn.iconavo.dev`, `https://cdn2.iconavo.dev` and `https://iconavo.b-cdn.net`, in this order, and to the next host only if the previous one fails, is slow or does not have the icon. They are plain `GET` requests for icon data, without cookies.
 - **Nothing is stored** in the browser: no cookies, no localStorage, only the browser's HTTP cache.
 - **Content Security Policy.** With a strict policy, allow:
 
@@ -381,6 +381,7 @@ The full reference of our API, with the SVG and CSS addresses, is in the [edge A
   ```
 
   `script-src` is needed only for the script tag, and `trusted-types` only if you enforce Trusted Types.
+- **Script integrity.** The script line from [Install](#install) has an exact version and an `integrity` hash: if jsDelivr ever served different bytes, the browser would not run them. When you move to a new version, copy the whole line again.
 - **Trust.** Icon data becomes part of your page as SVG markup. Load icons only from hosts, files and loaders that you trust as much as your scripts.
 
 ## Coming from Iconify

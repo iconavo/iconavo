@@ -1,0 +1,305 @@
+name: Выпуск пакетов
+
+# Пакеты для разработчиков @iconavo-ui/core, @iconavo-ui/icon и @iconavo-ui/react в npm (ADR-0051, шаг 11
+# фазы 3). Три пакета выходят одной версией; выпуск — PR от pnpm release bump, его слияние в main и есть
+# одобрение. Три задачи: «Подготовка» — pnpm release prepare: проверка выпуска, архивы pnpm pack и план
+# в dist-release/ (реестр npm только читается); «Публикация» — npm publish архивов из плана, по порядку
+# ядро → тег → React, из окружения npm (публиковать из него можно только из main) с подписью provenance
+# через доверенную публикацию; «Проверка» — pnpm release verify: в npm ровно эти архивы, jsDelivr отдаёт
+# скрипт с хэшем из README, пакеты ставятся в чистый проект и рисуют иконку, а HTML-пример с настоящего
+# jsDelivr работает в Chrome. В задаче с правом публиковать нет ни checkout, ни pnpm install: там не
+# работает ничей код, кроме npm. Публикует только «живой» запуск — из main, не PR и не «только показ».
+# Новый пакет — только ручным запуском с «Первой публикацией»: доверенную публикацию npm включает лишь у
+# существующего пакета, поэтому первую версию выкладывает временный секрет NPM_TOKEN окружения npm;
+# затем секрет удаляется. Не переименовывайте этот файл и окружение npm: к ним привязана доверенная
+# публикация на npmjs.com (ADR-0051).
+
+on:
+  # Слияние PR выпуска — версия в package.json. Правка README, журнала или HTML-примера — тоже: так
+  # выпуск, остановленный «СТОП» (например, хэш устарел), продолжается PR с исправлением. Вышедшую версию
+  # подготовка не выпустит второй раз.
+  push:
+    branches: [main]
+    paths:
+      - "packages/core/package.json"
+      - "packages/icon/package.json"
+      - "packages/react/package.json"
+      - "packages/icon/README.md"
+      - "packages/icon/CHANGELOG.md"
+      - "examples/starters/html/index.html"
+      - "README.md"
+      - ".github/workflows/release.yml"
+  # На PR — только показ правки самого выпуска: секретов и права публиковать там нет. Подготовку на
+  # каждом PR делает обязательная задача check (ci.yml).
+  pull_request:
+    paths:
+      - "packages/pipeline/src/release/**"
+      - ".github/workflows/release.yml"
+  workflow_dispatch:
+    inputs:
+      first_publish:
+        description: Первая публикация новых пакетов (нужен временный секрет NPM_TOKEN окружения npm)
+        type: boolean
+        default: false
+      dry_run:
+        description: Только показать, что будет опубликовано
+        type: boolean
+        default: false
+
+permissions: {}
+
+# Выпуски из main не пересекаются и не прерываются: следующий ждёт текущий. Показы — с веток, PR и
+# «Только показ» на main — каждый в своей группе: в общей GitHub отменил бы ждущий выпуск.
+concurrency:
+  group: ${{ github.ref == 'refs/heads/main' && github.event_name != 'pull_request' && inputs.dry_run != true && 'release' || format('release-show-{0}', github.run_id) }}
+  cancel-in-progress: false
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  prepare:
+    name: Подготовка
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+    outputs:
+      live: ${{ steps.live.outputs.live }}
+      publish: ${{ steps.plan.outputs.publish }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      # «Живой» запуск: main, не PR и не «только показ». Запоздавший запуск публиковать может: он собирает
+      # свой коммит, а версию, которая уже вышла или не выше вышедшей, подготовка не пропустит.
+      - name: Живой запуск?
+        id: live
+        env:
+          EVENT: ${{ github.event_name }}
+          DRY_RUN: ${{ inputs.dry_run == true }}
+        run: |
+          live=false
+          if [ "$GITHUB_REF" = refs/heads/main ] && [ "$EVENT" != pull_request ] && [ "$DRY_RUN" != true ]; then
+            live=true
+          fi
+          echo "live=$live" >> "$GITHUB_OUTPUT"
+      - name: Подготовить выпуск
+        env:
+          FIRST: ${{ inputs.first_publish == true }}
+        run: |
+          args=()
+          if [ "$FIRST" = true ]; then args+=(--first); fi
+          pnpm release prepare "${args[@]}"
+      - name: План
+        id: plan
+        if: always()
+        run: |
+          if [ -f .cache/reports/release/prepare.md ]; then cat .cache/reports/release/prepare.md >> "$GITHUB_STEP_SUMMARY"; fi
+          if [ -f dist-release/plan.json ]; then
+            echo "publish=$(jq '[.packages[] | select(.publish)] | length > 0' dist-release/plan.json)" >> "$GITHUB_OUTPUT"
+            jq -r '.packages[] | select(.action == "awaiting") | "::warning::\(.name) ждёт первой публикации: ручной запуск «Выпуска пакетов» с «Первой публикацией» (ADR-0051)"' dist-release/plan.json
+          else
+            echo "publish=false" >> "$GITHUB_OUTPUT"
+          fi
+      # Архивы и план — для задачи «Публикация»: она не собирает ничего сама. Плана нет — выпускать нечего.
+      - uses: actions/upload-artifact@v7
+        if: hashFiles('dist-release/plan.json') != ''
+        with:
+          name: dist-release
+          path: |
+            dist-release/*.tgz
+            dist-release/plan.json
+          if-no-files-found: error
+      # Страница без архива открывается в браузере. Копия — вне .cache: скрытые папки upload-artifact пропускает.
+      - name: Отчёт — вне .cache
+        id: pages
+        if: always()
+        run: |
+          pages="$RUNNER_TEMP/pages"
+          mkdir -p "$pages"
+          cp .cache/reports/release/prepare.html "$pages/prepare.html" 2> /dev/null || true
+          echo "pages=$pages" >> "$GITHUB_OUTPUT"
+      - name: Отчёт — подготовка
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: prepare.html
+          path: ${{ steps.pages.outputs.pages }}/prepare.html
+          archive: false
+          if-no-files-found: ignore
+
+  publish:
+    name: Публикация
+    needs: prepare
+    if: needs.prepare.outputs.live == 'true' && needs.prepare.outputs.publish == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    # Окружение npm: публиковать из него можно только из main; доверенная публикация на npmjs.com
+    # привязана к нему и к этому файлу, а временный NPM_TOKEN первой публикации — его секрет.
+    environment: npm
+    permissions:
+      id-token: write
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          name: dist-release
+          path: dist-release
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          registry-url: https://registry.npmjs.org
+          package-manager-cache: false
+      - name: Опубликовать по плану
+        env:
+          FIRST_PUBLISH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          # Токен — только на время первой публикации. Пустое значение мешало бы доверенной публикации,
+          # поэтому без секрета NODE_AUTH_TOKEN не трогаем.
+          if [ -n "$FIRST_PUBLISH_TOKEN" ]; then export NODE_AUTH_TOKEN="$FIRST_PUBLISH_TOKEN"; fi
+          need=11.5.1
+          have=$(npm --version)
+          if [ "$(printf '%s\n' "$need" "$have" | sort -V | head -n1)" != "$need" ]; then
+            echo "::error::npm $have старше $need: доверенной публикации нужен npm $need и новее"
+            exit 1
+          fi
+          tag=$(jq -r .tag dist-release/plan.json)
+          if ! [[ $tag =~ ^[a-z]+$ ]]; then
+            echo "::error::Странный тег в плане: $tag"
+            exit 1
+          fi
+          # Порядок плана — порядок публикации: ядро первым, иначе тег и React вышли бы без своего ядра. На
+          # первом сбое — стоп: повторный запуск пропустит вышедшее и выпустит остальное. У нового пакета
+          # базовой версии нет — в строке «-»: пустое поле read склеил бы с соседним.
+          while IFS=$'\t' read -r id name version base action file integrity; do
+            if [ "$base" = - ]; then base=""; fi
+            if ! [[ $id =~ ^(core|icon|react)$ && $name == "@iconavo-ui/$id" && $version =~ ^[0-9]+\.[0-9]+\.[0-9]+$ && $file == "iconavo-ui-$id-$version.tgz" && $integrity =~ ^sha512-[A-Za-z0-9+/]+=*$ ]]; then
+              echo "::error::Странная строка плана: $id $name $version $file"
+              exit 1
+            fi
+            # Архив — тот, что собрала «Подготовка»: SHA-512 и имя с версией внутри.
+            got="sha512-$(openssl dgst -sha512 -binary "dist-release/$file" | base64 -w0)"
+            if [ "$got" != "$integrity" ]; then
+              echo "::error::$file: SHA-512 архива не совпадает с планом"
+              exit 1
+            fi
+            inner=$(tar -xzOf "dist-release/$file" package/package.json | jq -r '"\(.name)@\(.version)"')
+            if [ "$inner" != "$name@$version" ]; then
+              echo "::error::$file: внутри $inner, а в плане $name@$version"
+              exit 1
+            fi
+            # Перед публикацией — реестр ещё раз. Версия уже вышла этим же архивом (повтор запуска) —
+            # пропуск; другим архивом — стоп: пакеты, которые от неё зависят, собраны из другого кода. Номер
+            # снят — стоп: npm его не отдаст. Под тегом не та версия, от которой считал план, — план устарел.
+            code=$(curl -sS --retry 3 --max-time 60 -H "accept: application/json" -o "$RUNNER_TEMP/doc.json" -w "%{http_code}" "https://registry.npmjs.org/${name/\//%2F}" || echo 000)
+            case $code in
+              200) doc=$(cat "$RUNNER_TEMP/doc.json") ;;
+              404) doc="{}" ;;
+              *)
+                echo "::error::$name: реестр npm ответил $code — повторите запуск"
+                exit 1
+                ;;
+            esac
+            existing=$(jq -r --arg v "$version" '.versions[$v].dist.integrity // ""' <<< "$doc")
+            if [ -n "$existing" ]; then
+              if [ "$existing" != "$integrity" ]; then
+                echo "::error::$name@$version уже в npm с другим архивом — план устарел: повторите запуск через 5 минут"
+                exit 1
+              fi
+              echo "$name@$version уже в npm этим архивом — пропускаю"
+              continue
+            fi
+            if jq -e --arg v "$version" '.time[$v] != null' <<< "$doc" > /dev/null; then
+              echo "::error::$name@$version был в npm и снят — номер не выпустить снова: pnpm release bump с новой версией"
+              exit 1
+            fi
+            current=$(jq -r --arg t "$tag" '."dist-tags"[$t] // ""' <<< "$doc")
+            if [ "$current" != "$base" ]; then
+              echo "::error::$name: в npm под тегом $tag уже ${current:-ничего}, а план считал от ${base:-нового пакета} — план устарел, повторите запуск"
+              exit 1
+            fi
+            if [ "$action" = new ] && [ -z "$FIRST_PUBLISH_TOKEN" ]; then
+              echo "::error::$name: новый пакет — первую версию выкладывает временный секрет NPM_TOKEN окружения npm (ADR-0051)"
+              exit 1
+            fi
+            npm publish "./dist-release/$file" --tag "$tag" --access public --provenance --ignore-scripts
+            echo "- $name@$version — опубликован под тегом $tag" >> "$GITHUB_STEP_SUMMARY"
+          done < <(jq -r '.packages[] | select(.publish) | [.id, .name, .version, (.base // "-"), .action, .file, .integrity] | @tsv' dist-release/plan.json)
+
+  verify:
+    name: Проверка
+    needs: [prepare, publish]
+    # И после неудачной публикации: проверка покажет, что вышло, а что нет.
+    if: ${{ !cancelled() && needs.prepare.result == 'success' && needs.prepare.outputs.live == 'true' && needs.prepare.outputs.publish == 'true' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      # План «Подготовки»: какие архивы выпустил этот запуск — проверка ждёт именно их.
+      - uses: actions/download-artifact@v8
+        with:
+          name: dist-release
+          path: dist-release
+      # npm показывает новую версию и её подпись после своей проверки — через минуты: после публикации
+      # ждём до 15 минут. Затем jsDelivr и чистый проект.
+      - name: Проверить выпуск
+        env:
+          PUBLISHED: ${{ needs.publish.result }}
+        run: |
+          case $PUBLISHED in
+            success) wait=900 ;;
+            failure) wait=120 ;;
+            *) wait=0 ;;
+          esac
+          pnpm release verify --plan=dist-release/plan.json --wait=$wait
+      # HTML-пример как у разработчика: строка из README с хэшем, настоящий jsDelivr и живые хосты.
+      - name: HTML-пример с jsDelivr (pnpm starters html --check --npm)
+        run: pnpm starters html --check --npm --browser=chrome
+      - name: Сводка
+        if: always()
+        run: |
+          for file in .cache/reports/release/verify.md .cache/reports/starters/check.md; do
+            if [ -f "$file" ]; then cat "$file" >> "$GITHUB_STEP_SUMMARY"; fi
+          done
+      - name: Отчёты — вне .cache
+        id: pages
+        if: always()
+        run: |
+          pages="$RUNNER_TEMP/pages"
+          mkdir -p "$pages"
+          cp .cache/reports/release/verify.html "$pages/verify.html" 2> /dev/null || true
+          cp .cache/reports/starters/check.html "$pages/starters-html.html" 2> /dev/null || true
+          echo "pages=$pages" >> "$GITHUB_OUTPUT"
+      - name: Отчёт — проверка
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: verify.html
+          path: ${{ steps.pages.outputs.pages }}/verify.html
+          archive: false
+          if-no-files-found: ignore
+      - name: Отчёт — HTML-пример
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: starters-html.html
+          path: ${{ steps.pages.outputs.pages }}/starters-html.html
+          archive: false
+          if-no-files-found: ignore

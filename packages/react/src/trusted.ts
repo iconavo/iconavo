@@ -3,8 +3,10 @@
 // - React передаёт __html в innerHTML как есть, поэтому TrustedHTML проходит строгую CSP. Сравнивает он
 //   __html на равенство, так что объект создаётся один раз на строку рисунка (useMemo в icon.ts).
 // - На сервере и в браузере без Trusted Types — строка.
-// - Политику не разрешили, а Trusted Types требуются (одна пробная запись это покажет): строка уронила
-//   бы React, поэтому иконки — пустое место и одно предупреждение, как у тега.
+// - Политику не разрешили, а Trusted Types требуются: строка уронила бы всё дерево React, поэтому
+//   иконки — пустое место и одно предупреждение, как у тега. Пробная запись — этим же рисунком в
+//   отдельный <template>: политика страницы по умолчанию может пропустить пустую строку и не
+//   пропустить рисунок.
 
 import { warn } from "@iconavo-ui/core/internal";
 
@@ -25,9 +27,6 @@ interface Shared {
   [KEY]?: Policy | null;
 }
 
-/** Требуются ли Trusted Types на странице без нашей политики; undefined — ещё не проверяли. */
-let blocked: boolean | undefined;
-
 /** Рисунок для __html: TrustedHTML или строка; null — рисовать нельзя, иконка пустая. */
 export function trusted(html: string): unknown {
   const shared = globalThis as Shared;
@@ -44,15 +43,12 @@ export function trusted(html: string): unknown {
   }
   const policy = shared[KEY];
   if (policy) return policy.createHTML(html);
-  if (blocked === undefined) {
-    try {
-      document.createElement("div").innerHTML = "";
-      blocked = false;
-    } catch {
-      blocked = true;
-    }
+  try {
+    // <template>: разметка не грузит картинок и не запускает ничего.
+    document.createElement("template").innerHTML = html;
+    return html;
+  } catch {
+    warn('Trusted Types blocked icons, allow "trusted-types iconavo"');
+    return null;
   }
-  if (!blocked) return html;
-  warn('Trusted Types blocked icons, allow "trusted-types iconavo"');
-  return null;
 }
