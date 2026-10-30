@@ -86,6 +86,110 @@ describe("Lucide", () => {
       /icons\/a\.json — не JSON/,
     );
   });
+
+  it("ссылки $extends и $group раскрываются на месте, по цепочке, без повторов", async () => {
+    // Пример из правил Lucide (metadata-conventions): file-minus — это file с группой minus.
+    await makeSource({
+      "icons/file.json": { tags: ["document"], categories: ["files"] },
+      "icons/file-minus.json": {
+        tags: ["$extends:file", "$group:minus", "erase", "remove"],
+        categories: ["$extends:file", "text"],
+        aliases: ["file-minus-old"],
+      },
+      "icons/file-minus-2.json": {
+        tags: ["$extends:file-minus", "two"],
+        categories: ["$extends:file-minus"],
+      },
+      "groups/minus.json": {
+        $schema: "../group.schema.json",
+        description: "Modifier: remove something",
+        tags: ["remove", "delete"],
+      },
+      "categories/files.json": { title: "Files" },
+      "categories/text.json": { title: "Text formatting" },
+    });
+    // Иконка-основа file в списке не нужна: её JSON читается по ссылке. Прежние имена не наследуются.
+    expect(
+      await read("lucide", ["icons/file-minus.svg", "icons/file-minus-2.svg"]),
+    ).toEqual({
+      "icons/file-minus.svg": {
+        tags: ["document", "remove", "delete", "erase"],
+        categories: ["Files", "Text formatting"],
+        aliases: ["icons/file-minus-old.svg"],
+      },
+      "icons/file-minus-2.svg": {
+        tags: ["document", "remove", "delete", "erase", "two"],
+        categories: ["Files", "Text formatting"],
+      },
+    });
+  });
+
+  it("знак доллара — обычный тег: ссылка — это «$» и буква", async () => {
+    await makeSource({ "icons/a.json": { tags: ["$", "usd"] } });
+    expect(await read("lucide", ["icons/a.svg"])).toEqual({
+      "icons/a.svg": { tags: ["$", "usd"], categories: [] },
+    });
+  });
+
+  it.each([
+    [
+      "иконки нет",
+      { "icons/a.json": { tags: ["$extends:nope"] } },
+      /icons\/a\.json: «\$extends:nope» — нет icons\/nope\.json/,
+    ],
+    [
+      "ссылки по кругу",
+      {
+        "icons/a.json": { tags: ["$extends:b"] },
+        "icons/b.json": { tags: ["$extends:a"] },
+      },
+      /icons\/a\.json: ссылки «\$extends:» идут по кругу/,
+    ],
+    [
+      "иконка ссылается на себя",
+      { "icons/a.json": { categories: ["$extends:a"] } },
+      /icons\/a\.json: ссылки «\$extends:» идут по кругу/,
+    ],
+    [
+      "имя иконки с выходом из папки",
+      { "icons/a.json": { tags: ["$extends:../x"] } },
+      /«\$extends:\.\.\/x» — не имя иконки/,
+    ],
+    [
+      "группы нет",
+      { "icons/a.json": { tags: ["$group:nope"] } },
+      /icons\/a\.json: «\$group:nope» — нет groups\/nope\.json/,
+    ],
+    [
+      "имя группы с выходом из папки",
+      { "icons/a.json": { tags: ["$group:../x"] } },
+      /«\$group:\.\.\/x» — не имя группы/,
+    ],
+    [
+      "группа в категориях",
+      {
+        "icons/a.json": { categories: ["$group:g"] },
+        "groups/g.json": { tags: ["x"] },
+      },
+      /категория «\$group:g» — не слаг/,
+    ],
+    [
+      "незнакомая ссылка",
+      { "icons/a.json": { tags: ["$foo:bar"] } },
+      /icons\/a\.json: незнакомая ссылка «\$foo:bar»/,
+    ],
+    [
+      "ссылка внутри группы",
+      {
+        "icons/a.json": { tags: ["$group:g"] },
+        "groups/g.json": { tags: ["$group:h"] },
+      },
+      /незнакомая ссылка «\$group:h»/,
+    ],
+  ])("ошибка ссылки: %s", async (_n, files, error) => {
+    await makeSource(files);
+    await expect(read("lucide", ["icons/a.svg"])).rejects.toThrow(error);
+  });
 });
 
 describe("Tabler", () => {

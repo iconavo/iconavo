@@ -70,8 +70,9 @@ export type MetadataFormat = (typeof METADATA_FORMATS)[number];
 
 /** Файлы метаданных автора каждого формата: шаблоны путей внутри источника (см. pathPattern). */
 export const METADATA_FILES: Record<MetadataFormat, readonly string[]> = {
-  // {имя}.json рядом с каждой иконкой; названия категорий — в categories/{слаг}.json.
-  lucide: ["icons/*.json", "categories/*.json"],
+  // {имя}.json рядом с каждой иконкой; названия категорий — в categories/{слаг}.json; теги для
+  // ссылок $group: — в groups/{группа}.json (с 1.65.0).
+  lucide: ["icons/*.json", "categories/*.json", "groups/*.json"],
   // Один файл на набор: теги и категория по базовому имени иконки.
   tabler: ["icons.json"],
   // Массив иконок в модуле JavaScript; читается как текст, без запуска.
