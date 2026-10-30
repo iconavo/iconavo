@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { DocPage } from "../../components/DocPage";
-import { docPage, docPages } from "../../lib/docs";
+import { DocPage } from "../../../components/DocPage";
+import { docPage, docPages } from "../../../lib/docs";
 
 const page = docPage("");
 

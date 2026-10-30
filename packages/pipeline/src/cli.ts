@@ -236,7 +236,13 @@ import {
   markdownSiteCheck,
   renderSiteCheckPage,
 } from "./site/check-report.js";
-import { DOC_SOURCES, LIVE_SITE, SITE_DIR, SITE_PORT } from "./site/config.js";
+import {
+  CRAWL_EXTRAS,
+  DOC_SOURCES,
+  LIVE_SITE,
+  SITE_DIR,
+  SITE_PORT,
+} from "./site/config.js";
 import { crawl, readmeSections } from "./site/crawl.js";
 import { checkLiveSite, liveFailed } from "./site/live.js";
 import {
@@ -1639,7 +1645,7 @@ try {
       let results: Awaited<ReturnType<typeof checkSite>>;
       try {
         console.log(`Обхожу страницы ${next.url}…`);
-        const pages = await crawl(next.url, ["/__missing__", "/robots.txt"]);
+        const pages = await crawl(next.url, CRAWL_EXTRAS);
         console.log(
           `Проверяю: ${browsers.map((b) => BROWSER_TITLES[b]).join(", ")} — ${pages.length} адресов, превью API ${api}…`,
         );

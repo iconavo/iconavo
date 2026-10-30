@@ -4,7 +4,7 @@
 
 import { fail, pass, type Verdict } from "../sandbox/verdict.js";
 import { STACKBLITZ_LINKS } from "../starters/links.js";
-import { ROBOTS } from "./config.js";
+import { ROBOTS, UNTRANSLATED } from "./config.js";
 
 export interface CrawledPage {
   path: string;
@@ -103,6 +103,142 @@ export function linksVerdict(pages: CrawledPage[]): Verdict {
         `${internal} внутренних ссылок и якорей, ${external} внешних — все на месте`,
       )
     : fail([...new Set(problems)].slice(0, 6).join("; "));
+}
+
+/** Страницы с HTML: ответ 200, не robots.txt. */
+export const htmlPages = (pages: CrawledPage[]) =>
+  pages.filter((p) => p.status === 200 && p.path !== "/robots.txt");
+
+/**
+ * Коды ответов: страницы — 200, перечисленные несуществующие — 404, перечисленные переходы — этот
+ * код на нужный адрес. Чего-то из перечисленного нет в обходе — тоже проблема.
+ */
+export function statusVerdict(
+  pages: CrawledPage[],
+  o: { missing: string[]; redirects: Record<string, string>; redirect: number },
+): Verdict {
+  const problems: string[] = [];
+  for (const p of pages) {
+    const to = o.redirects[p.path];
+    if (o.missing.includes(p.path)) {
+      if (p.status !== 404)
+        problems.push(`${p.path} — ${p.status}, а ждали 404`);
+    } else if (to !== undefined) {
+      const location = p.headers.location
+        ? new URL(p.headers.location, "http://site").pathname
+        : "";
+      if (p.status !== o.redirect || location !== to) {
+        problems.push(
+          `${p.path} — ${p.status} → ${location || "без адреса"}, а ждали ${o.redirect} → ${to}`,
+        );
+      }
+    } else if (p.status !== 200) {
+      problems.push(`${p.path} — ${p.status}`);
+    }
+  }
+  for (const path of [...o.missing, ...Object.keys(o.redirects)]) {
+    if (!pages.some((p) => p.path === path)) problems.push(`${path} не открыт`);
+  }
+  const ok = pages.filter((p) => p.status === 200).length;
+  return problems.length === 0
+    ? pass(
+        `${ok} страниц — 200, несуществующие (${o.missing.length}) — 404, переходы (${Object.keys(o.redirects).length}) — ${o.redirect}`,
+      )
+    : fail(problems.slice(0, 5).join("; "));
+}
+
+/** Язык страницы по адресу: /ru и всё под ним — русский (apps/site/lib/i18n.ts). */
+export const langOfPath = (path: string) =>
+  path === "/ru" || path.startsWith("/ru/") ? "ru" : "en";
+
+/** Атрибут lang у <html>. */
+export const htmlLang = (html: string) =>
+  /<html\b[^>]*\blang="([^"]*)"/i.exec(html)?.[1] ?? "";
+
+/** Каждая страница с HTML объявляет язык своего адреса в <html lang>. */
+export function langVerdict(pages: CrawledPage[]): Verdict {
+  const problems = htmlPages(pages)
+    .filter((p) => htmlLang(p.html) !== langOfPath(p.path))
+    .map(
+      (p) =>
+        `${p.path}: lang="${htmlLang(p.html)}", а ждали «${langOfPath(p.path)}»`,
+    );
+  return problems.length === 0
+    ? pass(`у всех ${htmlPages(pages).length} страниц`)
+    : fail(problems.slice(0, 5).join("; "));
+}
+
+/** Ссылки с hreflang: адрес и язык цели. */
+export const langLinksOf = (html: string) =>
+  [...html.matchAll(/<a\b[^>]*>/gi)].flatMap((m) => {
+    const tag = m[0];
+    const hreflang = /\bhreflang="([^"]*)"/i.exec(tag)?.[1];
+    const target = /\bhref="([^"]*)"/i.exec(tag)?.[1];
+    return hreflang && target ? [{ href: target, hreflang }] : [];
+  });
+
+/** Та же страница на другом языке; у страниц без перевода — главная другого языка. */
+export function counterpartOf(path: string): { lang: string; path: string } {
+  if (langOfPath(path) === "ru") {
+    return { lang: "en", path: path.slice("/ru".length) || "/" };
+  }
+  const untranslated = UNTRANSLATED.some(
+    (p) => path === p || path.startsWith(`${p}/`),
+  );
+  return {
+    lang: "ru",
+    path: untranslated ? "/ru" : path === "/" ? "/ru" : `/ru${path}`,
+  };
+}
+
+/** На каждой странице — ссылка на её пару на другом языке, и пара отвечает 200. */
+export function switchVerdict(pages: CrawledPage[]): Verdict {
+  const byPath = new Map(pages.map((p) => [p.path, p]));
+  const problems: string[] = [];
+  for (const page of htmlPages(pages)) {
+    const pair = counterpartOf(page.path);
+    const link = langLinksOf(page.html).find(
+      (l) => l.href === pair.path && l.hreflang === pair.lang,
+    );
+    if (!link) {
+      problems.push(
+        `${page.path}: нет ссылки на ${pair.path} (hreflang="${pair.lang}")`,
+      );
+    } else if (byPath.get(pair.path)?.status !== 200) {
+      problems.push(
+        `${page.path}: ${pair.path} — ${byPath.get(pair.path)?.status ?? "не открыта"}`,
+      );
+    }
+  }
+  return problems.length === 0
+    ? pass(`у всех ${htmlPages(pages).length} страниц — пара на другом языке`)
+    : fail(problems.slice(0, 5).join("; "));
+}
+
+/** Адрес формы поиска в шапке: <search><form action>. */
+export const searchActionOf = (html: string) =>
+  /<search\b[^>]*>\s*<form\b[^>]*\baction="([^"]*)"/i.exec(html)?.[1];
+
+/** Поле поиска в шапке каждой страницы ведёт на страницу поиска своего языка, и та отвечает 200. */
+export function searchFormVerdict(pages: CrawledPage[]): Verdict {
+  const byPath = new Map(pages.map((p) => [p.path, p]));
+  const problems: string[] = [];
+  for (const page of htmlPages(pages)) {
+    const expected = langOfPath(page.path) === "ru" ? "/ru/search" : "/search";
+    const action = searchActionOf(page.html);
+    if (action !== expected) {
+      problems.push(
+        `${page.path}: форма поиска — ${action ?? "нет"}, а ждали ${expected}`,
+      );
+    } else if (byPath.get(expected)?.status !== 200) {
+      problems.push(
+        `${page.path}: ${expected} — ${byPath.get(expected)?.status ?? "не открыта"}`,
+      );
+    }
+  }
+  return problems.length === 0
+    ? pass(`у всех ${htmlPages(pages).length} страниц — поиск своего языка`)
+    : fail(problems.slice(0, 5).join("; "));
 }
 
 /** Директивы политики CSP: имя → источники. */

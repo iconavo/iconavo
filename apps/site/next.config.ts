@@ -11,6 +11,22 @@ const config: NextConfig = {
   agentRules: false,
   generateBuildId: async () =>
     process.env.SITE_BUILD ? `site-${process.env.SITE_BUILD}` : null,
+  // Две корневые раскладки — по языку (ADR-0037), общей нет: несуществующие адреса отдаёт
+  // app/global-not-found.tsx. Настройка экспериментальная — Next.js закреплён точно, обновление — с
+  // проверкой 404 (pnpm site --check).
+  experimental: { globalNotFound: true },
+  // Документации на русском пока нет (решение владельца 30 октября 2026): /ru/docs… ведут на
+  // английскую временно (307) — когда появится перевод, адреса освободятся.
+  async redirects() {
+    return [
+      { source: "/ru/docs", destination: "/docs", permanent: false },
+      {
+        source: "/ru/docs/:path*",
+        destination: "/docs/:path*",
+        permanent: false,
+      },
+    ];
+  },
   async headers() {
     return [
       {

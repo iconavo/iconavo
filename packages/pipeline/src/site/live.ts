@@ -1,16 +1,29 @@
 // Проверка живого сайта iconavo.dev (ADR-0050): после выкладки — та ли сборка отвечает, все страницы,
-// заголовки и noindex, иконки в HTML, ссылки, переход с www и с http, robots.txt. Только HTTP, ключи не
-// нужны; запускает workflow «Сайт» после «Выкладки» и pnpm site --live.
+// коды и переходы, заголовки и noindex, языки (фаза 4, шаг 1), иконки в HTML, ссылки, переход с www и с
+// http, robots.txt. Только HTTP, ключи не нужны; запускает workflow «Сайт» после «Выкладки» и
+// pnpm site --live.
 
 import { fail, pass, type Verdict } from "../sandbox/verdict.js";
-import { DEFAULT_ICON_HOSTS, LIVE_WAIT_MS } from "./config.js";
+import {
+  CRAWL_EXTRAS,
+  DEFAULT_ICON_HOSTS,
+  LIVE_WAIT_MS,
+  MISSING_PATHS,
+  REDIRECT_STATUS,
+  REDIRECTS,
+} from "./config.js";
 import {
   type CrawledPage,
   crawl,
   headersVerdict,
+  htmlPages,
+  langVerdict,
   linksVerdict,
   robotsMetaVerdict,
+  searchFormVerdict,
   sectionsVerdict,
+  statusVerdict,
+  switchVerdict,
 } from "./crawl.js";
 
 export interface LiveRow {
@@ -71,35 +84,21 @@ export async function checkLiveSite(o: {
     });
   }
   o.log?.("Обхожу страницы…");
-  const pages: CrawledPage[] = await crawl(o.base, [
-    "/__missing__",
-    "/robots.txt",
-  ]);
-  const html = pages.filter(
-    (p) => p.status === 200 && p.path !== "/robots.txt",
-  );
-  const missing = pages.find((p) => p.path === "/__missing__");
-  const broken = pages.filter(
-    (p) => p.status !== 200 && p.path !== "/__missing__",
-  );
+  const pages: CrawledPage[] = await crawl(o.base, CRAWL_EXTRAS);
+  const html = htmlPages(pages);
   rows.push({
     what: "Страницы",
-    verdict:
-      broken.length === 0 && missing?.status === 404
-        ? pass(`${html.length} страниц — 200, /__missing__ — 404`)
-        : fail(
-            [
-              ...broken.map((p) => `${p.path} — ${p.status}`),
-              missing?.status === 404
-                ? ""
-                : `/__missing__ — ${missing?.status}`,
-            ]
-              .filter(Boolean)
-              .join("; "),
-          ),
+    verdict: statusVerdict(pages, {
+      missing: MISSING_PATHS,
+      redirects: REDIRECTS,
+      redirect: REDIRECT_STATUS,
+    }),
   });
+  // Переходы — без заголовков сайта: их код и адрес проверяет строка «Страницы».
   const headerProblems = pages
-    .filter((p) => p.path !== "/robots.txt")
+    .filter(
+      (p) => p.path !== "/robots.txt" && (p.status < 300 || p.status >= 400),
+    )
     .flatMap((p) =>
       headersVerdict(p, {
         production: true,
@@ -136,6 +135,9 @@ export async function checkLiveSite(o: {
             `без нарисованных иконок: ${noIcons.map((p) => p.path).join(", ")}`,
           ),
   });
+  rows.push({ what: "Язык страниц", verdict: langVerdict(pages) });
+  rows.push({ what: "Переключатель языка", verdict: switchVerdict(pages) });
+  rows.push({ what: "Поиск в шапке", verdict: searchFormVerdict(pages) });
   rows.push({
     what: "Разделы README",
     verdict: sectionsVerdict(pages, o.sections),

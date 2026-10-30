@@ -2,14 +2,20 @@ import { describe, expect, it } from "vitest";
 import {
   anchorsOf,
   type CrawledPage,
+  counterpartOf,
   headersVerdict,
   headingsOf,
+  htmlLang,
   idsOf,
+  langVerdict,
   linksVerdict,
   parseCsp,
   readmeSections,
   robotsMetaVerdict,
+  searchFormVerdict,
   sectionsVerdict,
+  statusVerdict,
+  switchVerdict,
 } from "./crawl.js";
 
 const page = (
@@ -122,7 +128,7 @@ describe("метка robots и разделы README", () => {
     ).toEqual(["One", "Icon data: /{set}.json"]);
   });
 
-  it("каждый раздел — ровно на одной странице документации", () => {
+  it("каждый раздел — ровно на одной странице документации (только /docs)", () => {
     const pages = [
       page("/docs", "<h1>Quick start</h1><h2>Install</h2>"),
       page("/docs/recipes", "<h1>Recipes</h1><h2>Code &amp; more</h2>"),
@@ -137,5 +143,109 @@ describe("метка robots и разделы README", () => {
     expect(sectionsVerdict(pages, ["Missing"]).note).toContain(
       "раздела «Missing» нет",
     );
+  });
+});
+
+describe("коды ответов", () => {
+  const expected = {
+    missing: ["/__missing__"],
+    redirects: { "/ru/docs": "/docs" },
+    redirect: 307,
+  };
+
+  it("страницы — 200, несуществующая — 404, переход — 307 на нужный адрес", () => {
+    const pages = [
+      page("/", ""),
+      page("/__missing__", "", 404),
+      page("/ru/docs", "", 307, { location: "/docs" }),
+    ];
+    expect(statusVerdict(pages, expected).ok).toBe(true);
+    // Vercel отдаёт адрес перехода целиком.
+    expect(
+      statusVerdict(
+        [
+          page("/", ""),
+          page("/__missing__", "", 404),
+          page("/ru/docs", "", 307, { location: "https://iconavo.dev/docs" }),
+        ],
+        expected,
+      ).ok,
+    ).toBe(true);
+  });
+
+  it("переход не тем кодом и не туда, 404 вместо 200, пропущенный адрес — замечания", () => {
+    const v = statusVerdict(
+      [page("/", "", 500), page("/ru/docs", "", 308, { location: "/ru" })],
+      expected,
+    );
+    expect(v.ok).toBe(false);
+    expect(v.note).toContain("/ — 500");
+    expect(v.note).toContain("/ru/docs — 308 → /ru, а ждали 307 → /docs");
+    expect(v.note).toContain("/__missing__ не открыт");
+  });
+});
+
+describe("языки страниц", () => {
+  const en = (path: string, body: string) =>
+    page(path, `<html lang="en"><body>${body}</body></html>`);
+  const ru = (path: string, body: string) =>
+    page(path, `<html lang="ru"><body>${body}</body></html>`);
+  const search = (action: string) =>
+    `<search class="header-search"><form action="${action}" class="f"></form></search>`;
+
+  it("lang у <html> — по адресу", () => {
+    expect(htmlLang('<html lang="ru" class="x">')).toBe("ru");
+    expect(langVerdict([en("/", ""), ru("/ru", "")]).ok).toBe(true);
+    const wrong = langVerdict([en("/ru/x", "")]);
+    expect(wrong.ok).toBe(false);
+    expect(wrong.note).toContain('/ru/x: lang="en"');
+  });
+
+  it("пара страницы: у документации — русская главная", () => {
+    expect(counterpartOf("/")).toEqual({ lang: "ru", path: "/ru" });
+    expect(counterpartOf("/search")).toEqual({
+      lang: "ru",
+      path: "/ru/search",
+    });
+    expect(counterpartOf("/docs/api")).toEqual({ lang: "ru", path: "/ru" });
+    expect(counterpartOf("/ru/search")).toEqual({
+      lang: "en",
+      path: "/search",
+    });
+  });
+
+  it("на каждой странице — ссылка на пару на другом языке", () => {
+    const pages = [
+      en("/", '<a href="/ru" hrefLang="ru" lang="ru">Русский</a>'),
+      en("/docs", '<a href="/ru" hreflang="ru">Русский</a>'),
+      ru("/ru", '<a href="/" hreflang="en">English</a>'),
+    ];
+    expect(switchVerdict(pages).ok).toBe(true);
+    const broken = switchVerdict([
+      ...pages,
+      en("/search", '<a href="/ru" hreflang="ru">Русский</a>'),
+    ]);
+    expect(broken.ok).toBe(false);
+    expect(broken.note).toContain("/search: нет ссылки на /ru/search");
+  });
+
+  it("поиск в шапке ведёт на поиск своего языка", () => {
+    const pages = [
+      en("/", search("/search")),
+      ru("/ru", search("/ru/search")),
+      en("/search", search("/search")),
+      ru("/ru/search", search("/ru/search")),
+    ];
+    expect(searchFormVerdict(pages).ok).toBe(true);
+    const broken = searchFormVerdict([
+      ...pages,
+      ru("/ru/x", search("/search")),
+      en("/docs", "<p>без поиска</p>"),
+    ]);
+    expect(broken.ok).toBe(false);
+    expect(broken.note).toContain(
+      "/ru/x: форма поиска — /search, а ждали /ru/search",
+    );
+    expect(broken.note).toContain("/docs: форма поиска — нет");
   });
 });

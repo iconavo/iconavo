@@ -9,3 +9,8 @@ packages:
 # Версия Node не из engines в package.json останавливает pnpm install понятной ошибкой:
 # без этой настройки pnpm 12 поле не проверяет.
 engineStrict: true
+
+# Скрипты установки зависимостей не запускаются (решение владельца 30 октября 2026): esbuild из
+# Storybook работает и без своего install.js — программа под систему приходит отдельным пакетом.
+allowBuilds:
+  esbuild: false

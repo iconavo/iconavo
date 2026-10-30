@@ -34,6 +34,7 @@
     "visual": "tsc -b && node packages/pipeline/dist/cli.js visual",
     "starters": "tsc -b && node packages/pipeline/dist/cli.js starters",
     "site": "tsc -b && node packages/pipeline/dist/cli.js site",
+    "storybook": "tsc -b && pnpm --filter @iconavo-ui/site storybook",
     "release": "tsc -b && node packages/pipeline/dist/cli.js release",
     "check": "pnpm lint && pnpm typecheck && pnpm api build && pnpm icon build && pnpm test --coverage && pnpm size"
   },
