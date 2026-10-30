@@ -13,7 +13,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - до запуска сайт скрыт от поисковиков (noindex);
 - живые примеры на StackBlitz — HTML и React; пример Next.js 16 — локально через `create-next-app`: 16-я на StackBlitz не запускается, а у 15.4 критические уязвимости.
 
-Команды — `pnpm site` и `pnpm starters`, выкладка — workflow «Сайт» (`site.yml`). Принят технически 30 октября 2026 (PR #88, #89, #91): примеры из npm, ссылки StackBlitz (HTML — через `servor`) и `create-next-app` работают. «Тест пяти минут» перенесён решением владельца 30 октября 2026 — проведём позже (бэклог).
+Команды — `pnpm site` и `pnpm starters`, выкладка — workflow «Сайт» (`site.yml`). Принят 30 октября 2026 (PR #88, #89, #91): примеры из npm, ссылки StackBlitz (HTML — через `servor`) и `create-next-app` работают; «тест пяти минут» владелец провёл в тот же день — «всё отлично».
 
 Шаг 11 — выпуск беты 0.1.0 (ниже, ADR-0051). Решения владельца 29 октября 2026:
 - каждый выпуск — PR с версией от `pnpm release bump`: слияние — одобрение, публикует CI (workflow «Выпуск пакетов», `release.yml`);
@@ -22,7 +22,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 0.1.0 опубликована 30 октября 2026 (PR #90): ручной запуск «Выпуска пакетов» с «Первой публикацией» и временным токеном, перед ним — `/code-review` и `/security-review`. Ядро, тег и React — под `next` (и `latest`: npm ставит его на первую версию сам), provenance из `release.yml`, чистый проект из npm рисует иконку. Токен отозван, у пакетов — «Require two-factor authentication and disallow tokens». Доверенная публикация включается прямо перед 0.1.1; README на странице пакетов в npm обновится тоже с ним.
 
-Фаза 3 закрыта 30 октября 2026, кроме «теста пяти минут» — он перенесён (решение владельца); чек-лист готовности в `docs/phase-3.md` отмечен.
+Фаза 3 закрыта 30 октября 2026, чек-лист готовности в `docs/phase-3.md` отмечен.
 
 План и решения — в `docs/`, ADR — в `docs/adr/`. Начинай с `docs/README.md`: там оглавление, а `docs/roadmap.md` даёт фазы и сроки (запуск 1 июня 2027). Фазы 0–3 подробно расписаны в `docs/phase-0.md` … `docs/phase-3.md` вместе с готовыми промптами. Если нужного решения в ADR нет — спроси, не придумывай.
 
