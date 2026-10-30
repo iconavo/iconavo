@@ -209,6 +209,7 @@ describe("выбор нужных файлов", () => {
     "icons/sub/b.json",
     "icons/readme.md",
     "categories/text.json",
+    "groups/plus.json",
     "dist/b.svg",
     "dist/index.mjs",
     "dist/index.umd.js",
@@ -235,7 +236,7 @@ describe("выбор нужных файлов", () => {
   });
 
   it.each([
-    ["lucide", ["icons/a.json", "categories/text.json"]],
+    ["lucide", ["icons/a.json", "categories/text.json", "groups/plus.json"]],
     ["tabler", ["icons.json"]],
     ["phosphor", ["dist/index.mjs"]],
     ["fluent-emoji", ["assets/Cat/metadata.json"]],

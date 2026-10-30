@@ -83,11 +83,23 @@ const lucideIcon = z.looseObject({
     .array(z.union([z.string(), z.looseObject({ name: z.string() })]))
     .default([]),
 });
+type LucideIcon = z.output<typeof lucideIcon>;
 const lucideCategory = z.looseObject({ title: z.string().min(1) });
+const lucideGroup = z.looseObject({ tags: z.array(z.string()) });
+
+/**
+ * Ссылки в метаданных Lucide (с 1.65.0): `$extends:{иконка}` в тегах и категориях — список той иконки,
+ * `$group:{группа}` только в тегах — теги из `groups/{группа}.json`.
+ */
+const EXTENDS = "$extends:";
+const GROUP = "$group:";
+/** Любая ссылка Lucide — «$» и буква; просто «$» — обычный тег (знак доллара). */
+const MARKER = /^\$[a-zA-Z]/;
 
 /**
  * Lucide: `icons/{имя}.json` рядом с иконкой; слаг категории → название из `categories/{слаг}.json`;
- * прежние имена — поле aliases.
+ * прежние имена — поле aliases. Ссылки раскрываются, как у сборки Lucide (resolveMetadataExtends):
+ * на месте ссылки — её список, по цепочке до конца, без повторов (первое вхождение остаётся).
  */
 const lucide: MetadataReader = async (dir, svgFiles) => {
   const titles = new Map<string, string>();
@@ -104,13 +116,85 @@ const lucide: MetadataReader = async (dir, svgFiles) => {
     titles.set(slug, category.title);
     return category.title;
   };
+
+  const groups = new Map<string, readonly string[]>();
+  const groupTags = async (entry: string, from: string) => {
+    const name = entry.slice(GROUP.length);
+    const known = groups.get(name);
+    if (known !== undefined) return known;
+    // Имя группы тоже становится путём к файлу.
+    if (!NAME_PATTERN.test(name)) {
+      throw new Error(`${from}: «${entry}» — не имя группы`);
+    }
+    const path = `groups/${name}.json`;
+    const group = await readJson(dir, path, lucideGroup);
+    if (!group) throw new Error(`${from}: «${entry}» — нет ${path}`);
+    groups.set(name, group.tags);
+    return group.tags;
+  };
+
+  // Метаданные по пути JSON со ссылками, уже раскрытыми; undefined — файла нет. chain — файлы, которые
+  // раскрываются сейчас: встретить в ней тот же файл снова — ссылки идут по кругу.
+  const resolved = new Map<string, LucideIcon | undefined>();
+  const chain = new Set<string>();
+  const resolve = async (path: string): Promise<LucideIcon | undefined> => {
+    if (resolved.has(path)) return resolved.get(path);
+    if (chain.has(path)) {
+      throw new Error(`${path}: ссылки «${EXTENDS}» идут по кругу`);
+    }
+    chain.add(path);
+    const expand = async (
+      list: readonly unknown[],
+      field: "tags" | "categories",
+    ) => {
+      const out: unknown[] = [];
+      for (const entry of list) {
+        if (typeof entry === "string" && entry.startsWith(EXTENDS)) {
+          const name = entry.slice(EXTENDS.length);
+          if (!NAME_PATTERN.test(name)) {
+            throw new Error(`${path}: «${entry}» — не имя иконки`);
+          }
+          const parentPath = `${path.slice(0, path.lastIndexOf("/") + 1)}${name}.json`;
+          const parent = await resolve(parentPath);
+          if (!parent) {
+            throw new Error(`${path}: «${entry}» — нет ${parentPath}`);
+          }
+          out.push(...parent[field]);
+        } else if (
+          field === "tags" &&
+          typeof entry === "string" &&
+          entry.startsWith(GROUP)
+        ) {
+          out.push(...(await groupTags(entry, path)));
+        } else {
+          out.push(entry);
+        }
+      }
+      return [...new Set(out)];
+    };
+    const meta = await readJson(dir, path, lucideIcon);
+    const result = meta && {
+      ...meta,
+      tags: await expand(meta.tags, "tags"),
+      // Категории у автора — строки, и ссылки приносят строки.
+      categories: (await expand(meta.categories, "categories")) as string[],
+    };
+    // Незнакомая ссылка — автор снова поменял формат: служебная строка не должна стать тегом.
+    // В категориях её останавливает проверка слага.
+    const stray = result?.tags.find(
+      (t) => typeof t === "string" && MARKER.test(t),
+    );
+    if (stray !== undefined) {
+      throw new Error(`${path}: незнакомая ссылка «${String(stray)}»`);
+    }
+    chain.delete(path);
+    resolved.set(path, result);
+    return result;
+  };
+
   const out = new Map<string, AuthorMetadata>();
   for (const file of svgFiles) {
-    const meta = await readJson(
-      dir,
-      file.replace(/\.svg$/i, ".json"),
-      lucideIcon,
-    );
+    const meta = await resolve(file.replace(/\.svg$/i, ".json"));
     if (!meta) continue;
     const categories: string[] = [];
     for (const slug of meta.categories) categories.push(await title(slug));
