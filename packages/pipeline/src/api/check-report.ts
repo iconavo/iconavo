@@ -20,7 +20,7 @@ export const API_HINTS: Record<CheckGroup, string> = {
     "nosniff, CORP и у SVG CSP ставит сама функция (apps/api/src/config.ts)",
   encoding:
     "сжатие br и gzip ответов функции делает Cloudflare — проверьте Compression Rules зоны iconavo.dev",
-  body: "ответ функции не сходится со статикой той же версии — ошибка в apps/api или в файлах раздачи (pnpm cdn build)",
+  body: "ответ функции не сходится со статикой или манифестом той же версии — ошибка в apps/api или в файлах раздачи и каталога (pnpm cdn build)",
 };
 
 const LEGEND =
@@ -50,6 +50,8 @@ export function formatApiCheckSummary(r: ApiCheckReport): string[] {
   }
   if (r.stop.length > 0) lines.push("");
   for (const s of r.stop) lines.push(`СТОП — ${s}`);
+  if (r.notes.length > 0) lines.push("");
+  for (const n of r.notes) lines.push(`Не проверялось: ${n}`);
   const timed = r.targets.filter((t) => t.ms !== undefined);
   if (timed.length > 0) {
     lines.push(
@@ -59,9 +61,10 @@ export function formatApiCheckSummary(r: ApiCheckReport): string[] {
   }
   const version = r.version === undefined ? "" : `, версия ${r.version}`;
   const build = r.build === undefined ? "" : `, сборка ${r.build}`;
+  const catalog = r.catalog === undefined ? "" : `, каталог ${r.catalog}`;
   lines.push(
     "",
-    `Хост https://${r.host}, образец ${r.set}${version}${build}; ожидание версии ${formatMs(r.waitedMs)}; запросов ${r.requests} за ${formatMs(r.ms)}.`,
+    `Хост https://${r.host}, образец ${r.set}${version}${build}${catalog}; ожидание версии ${formatMs(r.waitedMs)}; запросов ${r.requests} за ${formatMs(r.ms)}.`,
     apiCheckFailed(r)
       ? `Итог: не так — проблем ${issues.length + r.stop.length}.`
       : "Итог: ок — edge API отвечает как в ADR-0024 и сходится со статикой.",

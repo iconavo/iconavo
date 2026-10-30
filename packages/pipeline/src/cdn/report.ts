@@ -87,6 +87,11 @@ export function formatCdnSummary(r: CdnReport): string[] {
       `Манифест: не записан — остановлено наборов: ${stopped}; уборка устаревших версий не выполнялась`,
     );
   } else {
+    if (r.catalog !== undefined) {
+      lines.push(
+        `Каталог для edge API: ${OUT_DIR}/${r.catalog.index} и ещё ${r.catalog.files - 1} файлов (${formatBytes(r.catalog.bytes)}) — ${r.catalog.written.length > 0 ? `записано ${r.catalog.written.length}` : "без изменений"}`,
+      );
+    }
     lines.push(
       `Манифест: ${OUT_DIR}/${MANIFEST_FILE} — ${r.manifestWritten ? "записан" : "без изменений"}`,
     );
@@ -183,10 +188,16 @@ ${formatCdnSummary(report)
     report.manifest === undefined
       ? `<h2>Манифест</h2>\n<p class="stop">Не записан: сборка остановлена.</p>`
       : `<h2>Манифест</h2>\n<p><code>${OUT_DIR}/${MANIFEST_FILE}</code> → <code>https://${CDN_HOST}/${MANIFEST_FILE}</code> — ${report.manifestWritten ? "записан" : "без изменений"}.</p>\n<pre>${esc(report.manifest)}</pre>`;
+  const catalog =
+    report.catalog === undefined
+      ? ""
+      : `<h2>Каталог для edge API</h2>
+<p>Сведения о наборах, категории, скрытые имена, алиасы и выпуски — для адресов <code>/collections</code>, <code>/collection</code> и <code>/changelog</code> edge API (шаг 2 фазы 4). Оглавление <code>${OUT_DIR}/${esc(report.catalog.index)}</code> → <code>https://${CDN_HOST}/${esc(report.catalog.index)}</code>; его отпечаток — поле <code>catalog</code> манифеста. Имя каждого файла — отпечаток содержимого, файлы не перезаписываются. Только на ${CDN_HOST}: их читает только edge API.</p>
+<p>Файлов ${report.catalog.files} · ${esc(formatBytes(report.catalog.bytes))} · ${report.catalog.written.length > 0 ? `записано ${report.catalog.written.length}` : "без изменений"}.</p>`;
   const sets = report.sets.map(setSection).join("\n");
   return htmlPage(
     "Раздача",
     CDN_STYLE,
-    [intro, summary, manifest, sets].join("\n"),
+    [intro, summary, manifest, catalog, sets].join("\n"),
   );
 }

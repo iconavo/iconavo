@@ -1,6 +1,7 @@
 // Страница превью edge API для глаз (ADR-0024): сетка SVG с параметрами рядом с файлом статики,
-// CSS-иконки в маске и на фоне, пачка в двух порядках и примеры ошибок. Картинки и CSS браузер берёт
-// у функции — локальной или живой на api.iconavo.dev; тексты примеров сервер превью запрашивает сам.
+// CSS-иконки в маске и на фоне, пачка в двух порядках, каталог наборов (шаг 2 фазы 4) и примеры
+// ошибок. Картинки и CSS браузер берёт у функции — локальной или живой на api.iconavo.dev; тексты
+// примеров сервер превью запрашивает сам.
 
 import { BASE_STYLE, esc } from "../report/html.js";
 import { API_HOST } from "./config.js";
@@ -62,7 +63,58 @@ const ERRORS: readonly [string, string][] = [
     `/lucide.json?icons=${Array.from({ length: 101 }, (_, i) => `i${i}`).join(",")}`,
   ],
   ["Неизвестный адрес", "/lucide"],
+  ["/collection без prefix", "/collection"],
+  ["Неизвестный набор в /collection", "/collection?prefix=iconavo-missing"],
 ];
+
+/** Каталог наборов (шаг 2 фазы 4): те же адреса, что у Iconify, и наш /changelog. */
+const CATALOG: readonly [string, string][] = [
+  ["Сведения об одном наборе", "/collections?prefix=lucide"],
+  ["Имена набора: категории, скрытые, алиасы", "/collection?prefix=lucide"],
+  [
+    "Со сведениями и полным текстом лицензии",
+    "/collection?prefix=ph&info=true",
+  ],
+  ["Когда наборы обновлялись", "/last-modified"],
+  ["Выпуски одного набора", "/changelog?prefix=lucide"],
+];
+
+interface ListedSet {
+  name?: unknown;
+  total?: unknown;
+  version?: unknown;
+  author?: { name?: unknown };
+  license?: { title?: unknown };
+  samples?: unknown;
+}
+
+/** Таблица наборов из ответа /collections: название, автор, лицензия и витрина картинками функции. */
+function catalogTable(base: string, body: string): string {
+  let data: Record<string, ListedSet>;
+  try {
+    data = JSON.parse(body) as Record<string, ListedSet>;
+  } catch {
+    return "";
+  }
+  if (typeof data !== "object" || data === null) return "";
+  const text = (value: unknown) =>
+    typeof value === "string" || typeof value === "number"
+      ? esc(String(value))
+      : "—";
+  const rows = Object.entries(data).map(([id, s]) => {
+    const samples = Array.isArray(s.samples)
+      ? s.samples
+          .filter((n): n is string => typeof n === "string")
+          .map(
+            (n) =>
+              `<img src="${esc(`${base}/${id}/${n}.svg`)}" title="${esc(n)}" alt="">`,
+          )
+          .join("")
+      : "";
+    return `<tr><td><code>${esc(id)}</code></td><td>${text(s.name)}</td><td class="num">${text(s.total)}</td><td>${text(s.version)}</td><td>${text(s.author?.name)}</td><td>${text(s.license?.title)}</td><td class="found">${samples}</td></tr>`;
+  });
+  return `<table><tr><th>Набор</th><th>Название</th><th class="num">Иконок</th><th>Версия у автора</th><th>Автор</th><th>Лицензия</th><th>Витрина</th></tr>${rows.join("")}</table>`;
+}
 
 const SHOWN_HEADERS = [
   "content-type",
@@ -188,6 +240,11 @@ export async function renderPreviewPage(
   for (const [title, path] of ERRORS) {
     errors.push(block(title, path, await example(source, path)));
   }
+  const collections = await example(source, "/collections");
+  const catalog = [block("Все наборы", "/collections", collections)];
+  for (const [title, path] of CATALOG) {
+    catalog.push(block(title, path, await example(source, path)));
+  }
   const searches = [];
   for (const [title, path] of SEARCHES) {
     const r = await example(source, path);
@@ -234,6 +291,11 @@ ${block("CSS", "/lucide.css?icons=heart,home", css)}
 <p>Те же имена в другом порядке — побайтно тот же ответ: ${same}. Второй запрос — из кэша (x-cache: HIT).</p>
 ${block("Первый запрос", BATCH[0] as string, first)}
 ${block("Другой порядок", BATCH[1] as string, second)}
+
+<h2>Каталог наборов</h2>
+<p class="muted">Адреса Iconify — /collections, /collection?prefix=, /last-modified — и наш /changelog: сведения о наборах, имена с категориями, скрытые и алиасы, выпуски (шаг 2 фазы 4). Данные — каталог из dist-cdn/catalog/ (pnpm cdn build). Кэш браузера — 5 минут: в адресах нет версии.</p>
+${catalogTable(base, collections.body)}
+${catalog.join("\n")}
 
 <h2>Поиск</h2>
 <p class="muted">Ответ совместим с Iconify (icons, total, limit, start), плюс results — карточки с вариантами — и semantic: full — слова и смысл, pending — смысл ещё считается (повторите запрос), text — только слова. Нет ключей Meilisearch в .env — 503.</p>

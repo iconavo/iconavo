@@ -66,6 +66,8 @@ export const HIT_PAUSE_MS = 1000;
 /** Заголовки ответов функции (ADR-0023). */
 export const API_CACHE_OK = "public, max-age=604800";
 export const API_CACHE_ERROR = "public, max-age=300";
+/** Каталог наборов (шаг 2 фазы 4): в адресах нет версии — браузеру 5 минут, как манифест. */
+export const API_CACHE_CATALOG = "public, max-age=300";
 export const API_TYPES = {
   json: "application/json; charset=utf-8",
   svg: "image/svg+xml; charset=utf-8",

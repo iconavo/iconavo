@@ -24,9 +24,20 @@ describe("parseManifest", () => {
       '{"sets":{"lucide":{"version":"XYZ","lastModified":1}}}',
       '{"sets":{"lucide":{"version":"0123abcd","lastModified":-1}}}',
       '{"sets":{"Lucide":{"version":"0123abcd","lastModified":1}}}',
+      '{"catalog":"abc","sets":{}}',
+      '{"catalog":123,"sets":{}}',
     ]) {
       expect(() => parseManifest(text), text).toThrow(StorageError);
     }
+  });
+
+  it("catalog — отпечаток оглавления каталога; у манифеста до шага 2 фазы 4 его нет", () => {
+    expect(
+      parseManifest(manifestText({ lucide: VERSION }, "0123456789ab")).catalog,
+    ).toBe("0123456789ab");
+    expect(parseManifest(manifestText({ lucide: VERSION })).catalog).toBe(
+      undefined,
+    );
   });
 });
 

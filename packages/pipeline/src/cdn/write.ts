@@ -1,13 +1,16 @@
 // Запись раздачи на диск (ADR-0022): папка версии набора собирается во временной папке рядом и
 // подменяется целиком; файл контрольных сумм пишется последним — он подтверждает, что папка целая.
+// Файлы каталога (шаг 2 фазы 4) называются отпечатком содержимого и пишутся только недостающие.
 // Без изменений ничего не трогается: повторная сборка не пишет ни байта.
 
 import { randomBytes } from "node:crypto";
+import type { Dirent } from "node:fs";
 import { mkdir, readdir, readFile, rm, writeFile } from "node:fs/promises";
-import { basename, join } from "node:path";
+import { basename, dirname, join } from "node:path";
 import { renameRetrying, writeFileAtomic } from "../build/write.js";
 import { pool } from "../util/pool.js";
-import { CHECKSUMS_SUFFIX, VERSIONS_DIR } from "./config.js";
+import type { CatalogFile } from "./catalog.js";
+import { CATALOG_DIR, CHECKSUMS_SUFFIX, VERSIONS_DIR } from "./config.js";
 import type { CdnFile } from "./files.js";
 
 const order = (a: string, b: string) => (a < b ? -1 : a > b ? 1 : 0);
@@ -101,6 +104,74 @@ export async function writeIfChanged(
   if ((await readText(path)) === text) return false;
   await writeFileAtomic(path, text);
   return true;
+}
+
+/** Путь файла каталога на диске по его ключу catalog/…. */
+export const catalogPath = (outDir: string, key: string) =>
+  join(outDir, ...key.split("/"));
+
+/**
+ * Пишет файлы каталога, которых на диске нет или которые отличаются, по порядку — оглавление последним.
+ * Имя файла — отпечаток содержимого, поэтому повторная сборка не пишет ничего. Возвращает ключи
+ * записанных файлов.
+ */
+export async function writeCatalog(
+  outDir: string,
+  files: readonly CatalogFile[],
+): Promise<string[]> {
+  const written: string[] = [];
+  for (const f of files) {
+    const path = catalogPath(outDir, f.key);
+    await mkdir(dirname(path), { recursive: true });
+    if (await writeIfChanged(path, Buffer.from(f.data).toString("utf8"))) {
+      written.push(f.key);
+    }
+  }
+  return written;
+}
+
+/**
+ * Убирает из catalog/ файлы, на которые оглавление больше не ссылается, и опустевшие папки. keep —
+ * ключи файлов текущего каталога. Неудача удаления — предупреждение, не ошибка.
+ */
+export async function cleanupCatalog(
+  outDir: string,
+  keep: ReadonlySet<string>,
+): Promise<{ removed: string[]; warnings: string[] }> {
+  const removed: string[] = [];
+  const warnings: string[] = [];
+  const remove = async (path: string, label: string) => {
+    try {
+      await rm(path, { recursive: true, force: true });
+      removed.push(label);
+    } catch (e) {
+      warnings.push(`не удалено ${label}: ${(e as Error).message}`);
+    }
+  };
+  const base = join(outDir, CATALOG_DIR);
+  let entries: Dirent[];
+  try {
+    entries = await readdir(base, { withFileTypes: true });
+  } catch {
+    return { removed, warnings };
+  }
+  for (const entry of entries.sort((a, b) => order(a.name, b.name))) {
+    const key = `${CATALOG_DIR}/${entry.name}`;
+    if (!entry.isDirectory()) {
+      if (!keep.has(key)) await remove(join(base, entry.name), key);
+      continue;
+    }
+    const inner = (await readdir(join(base, entry.name))).sort(order);
+    const stale = inner.filter((name) => !keep.has(`${key}/${name}`));
+    if (stale.length === inner.length) {
+      await remove(join(base, entry.name), key);
+      continue;
+    }
+    for (const name of stale) {
+      await remove(join(base, entry.name, name), `${key}/${name}`);
+    }
+  }
+  return { removed, warnings };
 }
 
 /**

@@ -1,5 +1,6 @@
-// Тестовый набор в data/{id}/ для сборки раздачи: icons.json и info.json проходят схемы, версия —
-// настоящий отпечаток. Сломанные файлы тесты пишут сами.
+// Тестовый набор в data/{id}/ для сборки раздачи: icons.json, info.json, metadata.json и changelog.json
+// с выпуском текущей версии проходят схемы, версия — настоящий отпечаток. Сломанные файлы тесты пишут
+// сами.
 
 import { mkdir, writeFile } from "node:fs/promises";
 import { join } from "node:path";
@@ -22,6 +23,14 @@ export interface CdnDemoSet {
   samples?: string[];
   left?: number;
   top?: number;
+  /** metadata.json: категории и карта вариантов; по умолчанию пустой. */
+  metadata?: { [key: string]: Json };
+  /** Прошлые версии набора в журнале — от свежих к старым, после текущей. */
+  previous?: string[];
+  /** Поля свежего выпуска в changelog.json: added, changed, hidden… */
+  release?: { [key: string]: Json };
+  /** Ревизия источника в info.json и журнале; по умолчанию 1.0.0. */
+  revision?: string;
 }
 
 export const DEMO_LAST_MODIFIED = 1792490457;
@@ -58,7 +67,7 @@ export async function writeCdnDemoSet(
       spdx: "MIT",
       text: "MIT License",
       source: "https://example.com/demo",
-      revision: "1.0.0",
+      revision: set.revision ?? "1.0.0",
       confirmed: true,
     },
     height: grid,
@@ -66,7 +75,27 @@ export async function writeCdnDemoSet(
     version: set.version ?? version,
   };
   if (set.samples) info.samples = set.samples;
-  const issues = [...validate("icons", icons), ...validate("info", info)];
+  const metadata = set.metadata ?? {};
+  const versions = [version, ...(set.previous ?? [])];
+  const releases = versions.map((v, i) => {
+    const release: { [key: string]: Json } = {
+      version: v,
+      date: `2026-10-${String(20 - i).padStart(2, "0")}T00:00:00Z`,
+      revision: set.revision ?? "1.0.0",
+      total,
+      ...(i === 0 ? set.release : {}),
+    };
+    const older = versions[i + 1];
+    if (older !== undefined) release.previous = older;
+    return release;
+  });
+  const changelog = { prefix: set.id, releases };
+  const issues = [
+    ...validate("icons", icons),
+    ...validate("info", info),
+    ...validate("metadata", metadata),
+    ...validate("changelog", changelog),
+  ];
   if (issues.length > 0) {
     throw new Error(
       `тестовый набор не по схеме: ${issues.map((i) => `${i.path} — ${i.message}`).join("; ")}`,
@@ -74,5 +103,7 @@ export async function writeCdnDemoSet(
   }
   await writeFile(join(dir, "icons.json"), canonicalJson(icons));
   await writeFile(join(dir, "info.json"), canonicalJson(info));
+  await writeFile(join(dir, "metadata.json"), canonicalJson(metadata));
+  await writeFile(join(dir, "changelog.json"), canonicalJson(changelog));
   return { version };
 }

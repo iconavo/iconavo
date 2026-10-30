@@ -75,12 +75,14 @@ async function writeSets(sets: readonly DemoSet[]) {
   versions = new Map();
   for (const set of sets) {
     await writeDemoSet(dataDir, set);
-    // Файлы раздачи по схеме: icons.json с lastModified и info.json с версией (их читает loadSetData).
+    // Файлы раздачи по схеме: icons.json с lastModified и info.json с версией (их читает loadSetData);
+    // metadata.json — тот же, что у writeDemoSet: карта вариантов собирает карточки.
     const { version } = await writeCdnDemoSet(dataDir, {
       id: set.id,
       icons: Object.fromEntries(
         set.icons.map((i) => [i.name, { body: i.body as string }]),
       ),
+      metadata: set.suffixes ? { suffixes: set.suffixes } : {},
       ...(set.aliases
         ? {
             aliases: Object.fromEntries(

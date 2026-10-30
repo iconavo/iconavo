@@ -1,4 +1,4 @@
-import { mkdtemp, rm, writeFile } from "node:fs/promises";
+import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
@@ -9,6 +9,7 @@ import {
   CHECKSUMS_SUFFIX,
   MANIFEST_FILE,
 } from "./config.js";
+import { manifestSchema } from "./files.js";
 import { type CdnDemoSet, writeCdnDemoSet } from "./fixture.testing.js";
 import { buildCdn } from "./run.js";
 import { md5Hex } from "./s3.js";
@@ -16,6 +17,7 @@ import { sha256Hex } from "./sigv4.js";
 import { type StorageClient, storageError } from "./storage.js";
 import { BUNNY_LIKE, fakeStorage } from "./storage.testing.js";
 import {
+  CATALOG_LABEL,
   compareWithRemote,
   contentTypeOf,
   type HostUploadReport,
@@ -453,6 +455,120 @@ describe("uploadCdn на два хоста", () => {
     expect(host(report, 1).manifestStatus).toBe("skipped");
     expect(host(report, 1).manifestNote).toContain("«СТОП» на cdn.test");
     expect(bunny.store.has(MANIFEST_FILE)).toBe(false);
+  });
+});
+
+describe("uploadCdn: каталог наборов", () => {
+  /** Основной хост хранит каталог, как R2; второй — нет, как Bunny. */
+  const uploadCatalog = (
+    r2: StorageClient,
+    bunny: StorageClient,
+    dryRun = false,
+  ) =>
+    uploadCdn({
+      outDir,
+      hosts: [
+        { host: "cdn.test", storage: "бакет", client: r2, catalog: true },
+        { host: "cdn2.test", storage: "хранилище", client: bunny },
+      ],
+      dryRun,
+      concurrency: 2,
+      now: () => 0,
+    });
+  const manifest = async () =>
+    manifestSchema.parse(
+      JSON.parse(await readFile(join(outDir, MANIFEST_FILE), "utf8")),
+    );
+
+  it("каталог — только на основной хост, после файлов версий, оглавление последним, затем манифесты", async () => {
+    const journal: string[] = [];
+    const r2 = fakeStorage({ name: "R2", journal });
+    const bunny = fakeStorage({ name: "Bunny", journal, ...BUNNY_LIKE });
+    const report = await uploadCatalog(r2.client, bunny.client);
+    expect(uploadStop(report)).toBe(false);
+    const { catalog } = await manifest();
+    const c = host(report, 0).catalog;
+    expect(c).toMatchObject({
+      id: CATALOG_LABEL,
+      version: catalog,
+      files: 4,
+      uploaded: 4,
+      status: "uploaded",
+    });
+    expect(host(report, 1).catalog).toBeUndefined();
+    const writes = journal.filter((l) => l.includes(" put "));
+    const catalogWrites = writes.filter((l) => l.includes(" put catalog/"));
+    expect(catalogWrites.map((l) => l.replace(/[0-9a-f]{12}/, "#"))).toEqual([
+      "R2 put catalog/demo/#.json",
+      "R2 put catalog/other/#.json",
+      "R2 put catalog/changelog/#.json",
+      "R2 put catalog/#.json",
+    ]);
+    expect(catalogWrites.at(-1)).toBe(`R2 put catalog/${catalog}.json`);
+    // Каталог — после файлов версий основного хоста и до манифестов.
+    const lastVersion = Math.max(
+      ...writes.map((l, i) => (l.startsWith("R2 put v/") ? i : -1)),
+    );
+    expect(writes.indexOf(catalogWrites[0] ?? "")).toBeGreaterThan(lastVersion);
+    expect(writes.slice(-2)).toEqual([
+      `R2 put ${MANIFEST_FILE}`,
+      `Bunny put ${MANIFEST_FILE}`,
+    ]);
+    expect([...bunny.store.keys()].some((k) => k.startsWith("catalog/"))).toBe(
+      false,
+    );
+    const index = r2.store.get(`catalog/${catalog}.json`);
+    expect(index?.cacheControl).toBe(CACHE_IMMUTABLE);
+    expect(index?.contentType).toBe("application/json; charset=utf-8");
+    // Повтор — без изменений; сверка сходится.
+    const again = await uploadCatalog(r2.client, bunny.client, true);
+    expect(host(again, 0).catalog?.status).toBe("unchanged");
+    expect(verifyFailed(again)).toBe(false);
+  });
+
+  it("показ: каталог будет выгружен, сверка не сходится", async () => {
+    const r2 = fakeStorage();
+    const report = await uploadCatalog(
+      r2.client,
+      fakeStorage(BUNNY_LIKE).client,
+      true,
+    );
+    expect(host(report, 0).catalog).toMatchObject({
+      status: "planned",
+      missing: 4,
+    });
+    expect(r2.puts()).toEqual([]);
+    expect(verifyFailed(report)).toBe(true);
+  });
+
+  it("в хранилище другой файл каталога под тем же именем — СТОП, манифесты не пишутся", async () => {
+    const { catalog } = await manifest();
+    const r2 = fakeStorage();
+    r2.seed(`catalog/${catalog}.json`, "{}");
+    const bunny = fakeStorage(BUNNY_LIKE);
+    const report = await uploadCatalog(r2.client, bunny.client);
+    expect(uploadStop(report)).toBe(true);
+    expect(host(report, 0).catalog?.stop[0]).toContain(
+      "другие файлы каталога (1)",
+    );
+    expect(report.hosts.map((h) => h.manifestStatus)).toEqual([
+      "skipped",
+      "skipped",
+    ]);
+    expect(r2.store.has(MANIFEST_FILE)).toBe(false);
+  });
+
+  it("испорченный файл каталога на диске — СТОП с подсказкой", async () => {
+    const { catalog } = await manifest();
+    await writeFile(join(outDir, "catalog", `${catalog}.json`), "{}");
+    const report = await uploadCatalog(
+      fakeStorage().client,
+      fakeStorage(BUNNY_LIKE).client,
+    );
+    expect(host(report, 0).catalog?.stop).toEqual([
+      `файл каталога catalog/${catalog}.json не совпадает со своим отпечатком — запустите pnpm cdn build`,
+    ]);
+    expect(host(report, 0).manifestStatus).toBe("skipped");
   });
 });
 

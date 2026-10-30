@@ -90,6 +90,7 @@ import {
   formatUploadSummary,
   formatUploadTable,
   formatVerifyVerdict,
+  hostRows,
   renderUploadPage,
 } from "./cdn/upload-report.js";
 import { polzaEmbeddingClient } from "./embed/client.js";
@@ -1953,6 +1954,7 @@ try {
       host: h.host,
       storage: h.storage,
       client: clients[h.provider],
+      catalog: h.catalog,
     }));
     const names = hosts.map((h) => `${h.host} (${h.storage})`).join(", затем ");
     console.log(
@@ -1971,8 +1973,9 @@ try {
     console.log("");
     for (const h of upload.hosts) {
       console.log(formatHostTitle(h));
-      for (const r of h.sets) console.log(`${formatUploadReport(r)}\n`);
-      if (h.sets.length > 0) console.log(formatUploadTable(h.sets));
+      const rows = hostRows(h);
+      for (const r of rows) console.log(`${formatUploadReport(r)}\n`);
+      if (rows.length > 0) console.log(formatUploadTable(rows));
       console.log("");
     }
     for (const line of formatUploadSummary(upload)) console.log(line);

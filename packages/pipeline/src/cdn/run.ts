@@ -1,11 +1,13 @@
 // Команда pnpm cdn build (шаг 1 фазы 2, ADR-0022): из data/ — папка раздачи dist-cdn/ по схеме
 // ADR-0004: v/{версия}/{набор}/{имя}.json и .svg на каждую иконку и алиас, рядом
-// {набор}.checksums.json, в корне manifest.json. Версия — из info.json (ADR-0018). Сеть не
-// используется. Без изменений ничего не перезаписывается; остановленный набор не трогает ни свои
-// старые файлы, ни манифест.
+// {набор}.checksums.json, в корне manifest.json. Версия — из info.json (ADR-0018). С шага 2 фазы 4 —
+// ещё каталог наборов для edge API в catalog/ (catalog.ts): его оглавление — поле catalog манифеста.
+// Сеть не используется. Без изменений ничего не перезаписывается; остановленный набор не трогает ни
+// свои старые файлы, ни манифест, и каталог тогда не собирается.
 
 import { join } from "node:path";
 import type { SourceConfig } from "../sources/config.js";
+import { buildCatalog, catalogIndexKey } from "./catalog.js";
 import {
   CHECKSUMS_LIMIT,
   MANIFEST_FILE,
@@ -21,10 +23,17 @@ import {
   resolveChain,
   setFiles,
 } from "./files.js";
-import { type CdnSet, loadCdnSet } from "./load.js";
 import {
+  type CatalogSet,
+  type CdnSet,
+  loadCatalogSet,
+  loadCdnSet,
+} from "./load.js";
+import {
+  cleanupCatalog,
   cleanupStale,
   sameVersionOnDisk,
+  writeCatalog,
   writeIfChanged,
   writeSetVersion,
 } from "./write.js";
@@ -64,8 +73,22 @@ export interface SetCdnReport {
   stop: string[];
 }
 
+/** Каталог наборов для edge API (шаг 2 фазы 4). */
+export interface CatalogReport {
+  /** Отпечаток оглавления — поле catalog манифеста. */
+  hash: string;
+  /** Путь оглавления относительно папки раздачи: catalog/{хэш}.json. */
+  index: string;
+  files: number;
+  bytes: number;
+  /** Записанные за этот прогон пути; пусто — каталог тот же. */
+  written: string[];
+}
+
 export interface CdnReport {
   sets: SetCdnReport[];
+  /** Каталог; нет — сборка остановлена. */
+  catalog?: CatalogReport;
   /** Текст манифеста; нет — сборка остановлена. */
   manifest?: string;
   manifestWritten: boolean;
@@ -132,6 +155,7 @@ export async function buildCdn(
   const concurrency = options.concurrency ?? WRITE_CONCURRENCY;
   const sets: SetCdnReport[] = [];
   const entries: ManifestEntry[] = [];
+  const catalogSets: CatalogSet[] = [];
   const keep = new Map<string, Set<string>>();
   for (const config of configs) {
     const r: SetCdnReport = {
@@ -151,6 +175,8 @@ export async function buildCdn(
     sets.push(r);
     try {
       const set = await loadCdnSet(config, options.dataDir);
+      // Файлы каталога — до записи версии: набор без них не выйдет целиком.
+      catalogSets.push(await loadCatalogSet(set, options.dataDir));
       r.version = set.version;
       r.lastModified = set.lastModified;
       r.icons = Object.keys(set.file.icons).length;
@@ -216,14 +242,31 @@ export async function buildCdn(
     warnings: [],
   };
   if (cdnStop(report)) return report;
-  const manifest = manifestText(entries);
+  // Каталог — до манифеста: манифест не должен указывать на оглавление, которого ещё нет.
+  const catalog = buildCatalog(catalogSets);
+  const written = await writeCatalog(options.outDir, catalog.files);
+  if (written.length > 0) {
+    log(`каталог: записано файлов ${written.length} в catalog/…`);
+  }
+  report.catalog = {
+    hash: catalog.hash,
+    index: catalogIndexKey(catalog.hash),
+    files: catalog.files.length,
+    bytes: catalog.files.reduce((n, f) => n + f.data.byteLength, 0),
+    written,
+  };
+  const manifest = manifestText(entries, catalog.hash);
   report.manifest = manifest;
   report.manifestWritten = await writeIfChanged(
     join(options.outDir, MANIFEST_FILE),
     manifest,
   );
-  const { removed, warnings } = await cleanupStale(options.outDir, keep);
-  report.removed = removed;
-  report.warnings = warnings;
+  const stale = await cleanupStale(options.outDir, keep);
+  const staleCatalog = await cleanupCatalog(
+    options.outDir,
+    new Set(catalog.files.map((f) => f.key)),
+  );
+  report.removed = [...stale.removed, ...staleCatalog.removed];
+  report.warnings = [...stale.warnings, ...staleCatalog.warnings];
   return report;
 }

@@ -10,6 +10,7 @@ import {
   waiter,
 } from "../../../../apps/api/src/fake.testing.js";
 import { createHandler } from "../../../../apps/api/src/handler.js";
+import { compactJson } from "../../../../apps/api/src/json.js";
 import type { FetchFn } from "../sources/npm.js";
 import { apiCheckFailed, checkApi } from "./check.js";
 import { formatApiCheckSummary } from "./check-report.js";
@@ -21,11 +22,66 @@ const HEART = '<path fill="none" stroke="currentColor" d="M1 1"/>';
 const HOUSE = '<path fill="currentColor" d="M2 2"/>';
 const HEART_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24">${HEART}</svg>`;
 
+/** Каталог наборов (шаг 2 фазы 4): оглавление, тело /collection и выпуски lucide. */
+const CATALOG = "aaaaaaaaaaaa";
+const CATALOG_FILES: Record<string, string> = {
+  [`catalog/${CATALOG}.json`]: compactJson({
+    changelog: "dddddddddddd",
+    sets: {
+      lucide: {
+        collection: "bbbbbbbbbbbb",
+        info: {
+          name: "Lucide",
+          total: 2,
+          version: "81875c8",
+          author: { name: "Lucide Contributors" },
+          license: { title: "ISC", spdx: "ISC" },
+          height: 24,
+          palette: false,
+        },
+        license: {
+          text: "ISC License",
+          source: "https://github.com/lucide-icons/lucide",
+          revision: "81875c8c42d2320fa5123b37fee3554f4ca2bddc",
+        },
+      },
+    },
+  }),
+  "catalog/lucide/bbbbbbbbbbbb.json": compactJson({
+    aliases: { home: "house" },
+    prefix: "lucide",
+    title: "Lucide",
+    total: 2,
+    uncategorized: ["heart", "house"],
+  }),
+  "catalog/changelog/dddddddddddd.json": compactJson({
+    releases: [
+      {
+        date: "2026-10-30T00:00:00Z",
+        prefix: "lucide",
+        revision: "81875c8c42d2320fa5123b37fee3554f4ca2bddc",
+        total: 2,
+        version: V,
+      },
+    ],
+  }),
+};
+
 function world(
-  o: { apiVersion?: string; compress?: boolean; staticSvg?: string } = {},
+  o: {
+    apiVersion?: string;
+    compress?: boolean;
+    staticSvg?: string;
+    /** Каталог в манифесте R2; «static» — на статике есть, а функция ещё читает манифест без него. */
+    catalog?: "both" | "static";
+  } = {},
 ) {
   const files: Record<string, string> = {
-    "manifest.json": manifestText({ lucide: V }),
+    "manifest.json": manifestText(
+      { lucide: V },
+      o.catalog === undefined ? undefined : CATALOG,
+    ),
+    ...(o.catalog === undefined ? {} : CATALOG_FILES),
     [`v/${V}/lucide/heart.json`]: nameFileText("lucide", {
       heart: { body: HEART },
     }),
@@ -41,7 +97,10 @@ function world(
   }
   const bucket = fakeBucket({
     ...files,
-    "manifest.json": manifestText({ lucide: o.apiVersion ?? V }),
+    "manifest.json": manifestText(
+      { lucide: o.apiVersion ?? V },
+      o.catalog === "both" ? CATALOG : undefined,
+    ),
   });
   let time = 0;
   const handler = createHandler({
@@ -113,7 +172,57 @@ describe("checkApi", () => {
       "missing-icon",
       "redirect",
     ]);
+    // Манифест без catalog — каталог не проверялся, это не проблема.
+    expect(report.notes[0]).toMatch(/^каталог наборов не проверялся/);
     expect(formatApiCheckSummary(report).at(-1)).toMatch(/^Итог: ок/);
+  });
+
+  it("каталог в манифесте — его адреса сверяются с манифестом, всё ок", async () => {
+    const w = world({ catalog: "both" });
+    const report = await checkApi({ fetch: w.fetchFn, ...w.clock });
+    const issues = report.targets.flatMap((t) =>
+      t.issues.map((i) => `${t.path}: ${i.message}`),
+    );
+    expect(issues).toEqual([]);
+    expect(report.catalog).toBe(CATALOG);
+    expect(report.notes).toEqual([]);
+    expect(report.targets.map((t) => t.kind)).toEqual([
+      "batch",
+      "batch-order",
+      "svg",
+      "svg-params",
+      "svg-transform",
+      "css",
+      "collections",
+      "collection",
+      "last-modified",
+      "changelog",
+      "missing-collection",
+      "collection-prefix",
+      "missing-set",
+      "missing-icon",
+      "redirect",
+    ]);
+    expect(
+      report.targets.find((t) => t.kind === "collection-prefix")?.status,
+    ).toBe(400);
+  });
+
+  it("функция не отдаёт каталог из манифеста — СТОП после ожидания", async () => {
+    const w = world({ catalog: "static" });
+    const report = await checkApi({
+      fetch: w.fetchFn,
+      ...w.clock,
+      waitMs: 30_000,
+      waitStepMs: 10_000,
+    });
+    expect(report.stop[0]).toMatch(
+      new RegExp(
+        `^API не отдал каталог ${CATALOG} за 30 с; последний ответ — ответ 503`,
+      ),
+    );
+    expect(report.targets.some((t) => t.kind === "collections")).toBe(false);
+    expect(apiCheckFailed(report)).toBe(true);
   });
 
   it("ждёт, пока функция перечитает манифест и отдаст новую версию", async () => {

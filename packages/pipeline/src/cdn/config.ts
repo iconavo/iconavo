@@ -22,6 +22,19 @@ export const CHECKSUMS_LIMIT = 8;
 /** Шагов по цепочке алиасов, после которых цепочка считается зацикленной. */
 export const CHAIN_LIMIT = 10;
 
+// Каталог наборов для edge API (шаг 2 фазы 4, ADR-0022, ADR-0024): /collections, /collection,
+// /changelog. Файлы лежат вне v/ и называются отпечатком содержимого; оглавление включает поле
+// catalog манифеста.
+
+/** Папка каталога в раздаче: catalog/{хэш}.json — оглавление, catalog/{набор}/{хэш}.json — тела /collection. */
+export const CATALOG_DIR = "catalog";
+/** Папка файла выпусков в каталоге: changelog — служебное слово, набора с таким префиксом нет (ADR-0037). */
+export const CATALOG_RELEASES_DIR = "changelog";
+/** Знаков SHA-256 содержимого в имени файла каталога. */
+export const CATALOG_HASH_LENGTH = 12;
+/** Выпусков всех наборов в файле выпусков, свежие сверху. */
+export const CATALOG_RELEASES = 100;
+
 // Выгрузка в R2 (шаг 2 фазы 2, ADR-0022, ADR-0023).
 
 /** Бакет R2 с раздачей; к нему подключён домен cdn.iconavo.dev (бакет создал владелец 22 октября 2026). */
@@ -137,6 +150,11 @@ export interface CdnHost {
   edgeDirect: readonly string[];
   /** Начало заголовка Server: ответ пришёл от этого CDN, а не через чужой. */
   server: string;
+  /**
+   * Хранит ли хост каталог наборов (шаг 2 фазы 4): его читает только edge API, а оно привязано к R2.
+   * На втором хосте для него понадобились бы новые правила зоны Bunny.
+   */
+  catalog: boolean;
 }
 
 export const R2_CDN: CdnHost = {
@@ -147,6 +165,7 @@ export const R2_CDN: CdnHost = {
   edgeCached: EDGE_CACHED,
   edgeDirect: EDGE_DIRECT,
   server: "cloudflare",
+  catalog: true,
 };
 
 export const BUNNY_CDN: CdnHost = {
@@ -157,6 +176,7 @@ export const BUNNY_CDN: CdnHost = {
   edgeCached: ["HIT", "MISS"],
   edgeDirect: ["BYPASS", "MISS"],
   server: "BunnyCDN",
+  catalog: false,
 };
 
 /** Хосты раздачи в порядке выгрузки: основной, затем второй (ADR-0025). */

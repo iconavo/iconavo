@@ -1,12 +1,14 @@
 // Отчёт выгрузки и сверки хостов (ADR-0022, ADR-0025): строки и таблицы для терминала и страница
 // .cache/reports/cdn/upload.html (или verify.html) — по разделу на хост: сводка, манифест «в
-// хранилище → локальный», причины «СТОП», ссылки на выложенные файлы для проверки глазами. Это журнал
-// прогона со временем, а не детерминированная страница сборки.
+// хранилище → локальный», причины «СТОП», ссылки на выложенные файлы для проверки глазами; у хоста с
+// каталогом наборов — ещё его строка. Это журнал прогона со временем, а не детерминированная страница
+// сборки.
 
 import { formatMs } from "../embed/report.js";
 import { esc, htmlPage } from "../report/html.js";
 import { textTable } from "../report/table.js";
 import { formatBytes } from "../sources/report.js";
+import { catalogIndexKey } from "./catalog.js";
 import {
   CHECKSUMS_SUFFIX,
   MANIFEST_FILE,
@@ -15,6 +17,7 @@ import {
 } from "./config.js";
 import { CDN_STYLE } from "./report.js";
 import {
+  CATALOG_LABEL,
   type HostUploadReport,
   type ManifestStatus,
   type SetUploadReport,
@@ -51,12 +54,17 @@ export function formatHostTitle(h: HostUploadReport): string {
   return `Хост https://${h.host} — ${h.storage}`;
 }
 
-/** Строки одного набора для терминала. */
+/** Строки хоста: наборы и каталог, если хост его хранит. */
+export const hostRows = (h: HostUploadReport): SetUploadReport[] =>
+  h.catalog === undefined ? h.sets : [...h.sets, h.catalog];
+
+/** Строки одного набора или каталога для терминала. */
 export function formatUploadReport(r: SetUploadReport): string {
   const lines = [r.id];
   if (r.files > 0) {
+    const what = r.id === CATALOG_LABEL ? "Оглавление" : "Версия";
     lines.push(
-      `  Версия ${r.version} · файлов ${r.files} (${formatBytes(r.bytes)}) · в хранилище было ${r.present} · недоставало ${r.missing}`,
+      `  ${what} ${r.version} · файлов ${r.files} (${formatBytes(r.bytes)}) · в хранилище было ${r.present} · недоставало ${r.missing}`,
     );
   }
   if (r.status === "uploaded") {
@@ -137,7 +145,7 @@ export function formatVerifyVerdict(r: UploadReport): string[] {
   const details: string[] = [];
   for (const h of r.hosts) {
     const parts: string[] = [];
-    const planned = h.sets.filter((s) => s.status === "planned");
+    const planned = hostRows(h).filter((s) => s.status === "planned");
     if (planned.length > 0) {
       const missing = planned.reduce((n, s) => n + s.missing, 0);
       parts.push(
@@ -146,7 +154,7 @@ export function formatVerifyVerdict(r: UploadReport): string[] {
     }
     if (h.manifestStatus === "planned") parts.push("манифест отличается");
     const stopped =
-      h.stop.length + h.sets.filter((s) => s.stop.length > 0).length;
+      h.stop.length + hostRows(h).filter((s) => s.stop.length > 0).length;
     if (stopped > 0) parts.push("СТОП");
     if (parts.length > 0) details.push(`${h.host}: ${parts.join(", ")}`);
   }
@@ -161,15 +169,21 @@ const statusClass = (status: UploadStatus) =>
   status === "stopped" ? "stop" : "ok";
 
 function setSection(h: HostUploadReport, r: SetUploadReport): string {
+  const catalog = r.id === CATALOG_LABEL;
   const parts = [`<h3>${esc(r.id)}</h3>`];
   for (const s of r.stop) parts.push(`<p class="stop">СТОП — ${esc(s)}</p>`);
   if (r.files === 0) return parts.join("\n");
   parts.push(
-    `<p>Версия <code>${esc(r.version)}</code> · файлов ${r.files} (${esc(formatBytes(r.bytes))}) · в хранилище было ${r.present} · недоставало ${r.missing} · выгружено ${r.uploaded} (${esc(formatBytes(r.uploadedBytes))}) · ${esc(formatMs(r.ms))} · <span class="${statusClass(r.status)}">${esc(UPLOAD_STATUS[r.status])}</span></p>`,
+    `<p>${catalog ? "Оглавление" : "Версия"} <code>${esc(r.version)}</code> · файлов ${r.files} (${esc(formatBytes(r.bytes))}) · в хранилище было ${r.present} · недоставало ${r.missing} · выгружено ${r.uploaded} (${esc(formatBytes(r.uploadedBytes))}) · ${esc(formatMs(r.ms))} · <span class="${statusClass(r.status)}">${esc(UPLOAD_STATUS[r.status])}</span></p>`,
   );
   if (r.status === "stopped" || r.status === "planned") return parts.join("\n");
-  const links = [...r.samples, `${r.id}${CHECKSUMS_SUFFIX}`].map((path) => {
-    const url = `https://${h.host}/${VERSIONS_DIR}/${r.version}/${path}`;
+  const paths = catalog
+    ? [catalogIndexKey(r.version)]
+    : [...r.samples, `${r.id}${CHECKSUMS_SUFFIX}`].map(
+        (path) => `${VERSIONS_DIR}/${r.version}/${path}`,
+      );
+  const links = paths.map((path) => {
+    const url = `https://${h.host}/${path}`;
     return `<li><a href="${esc(url)}" target="_blank" rel="noopener">${esc(url)}</a></li>`;
   });
   parts.push(`<p>Проверить глазами:</p><ul>${links.join("")}</ul>`);
@@ -177,7 +191,7 @@ function setSection(h: HostUploadReport, r: SetUploadReport): string {
 }
 
 function hostSection(h: HostUploadReport): string {
-  const rows = h.sets
+  const rows = hostRows(h)
     .map(
       (s) =>
         `<tr><td>${esc(s.id)}</td><td><code>${esc(s.version === "" ? "—" : s.version)}</code></td><td class="num">${s.files}</td><td class="num">${s.present}</td><td class="num">${s.status === "planned" ? `(${s.missing})` : s.uploaded}</td><td class="num">${esc(formatBytes(s.status === "planned" ? s.bytes : s.uploadedBytes))}</td><td class="num">${esc(formatMs(s.ms))}</td><td class="${statusClass(s.status)}">${esc(UPLOAD_STATUS[s.status])}</td></tr>`,
@@ -185,7 +199,7 @@ function hostSection(h: HostUploadReport): string {
     .join("");
   const parts = [`<h2>${esc(formatHostTitle(h))}</h2>`];
   for (const s of h.stop) parts.push(`<p class="stop">СТОП — ${esc(s)}</p>`);
-  if (h.sets.length > 0) {
+  if (hostRows(h).length > 0) {
     parts.push(
       `<table><tr><th>Набор</th><th>Версия</th><th class="num">Файлов</th><th class="num">Было</th><th class="num">Выгружено</th><th class="num">Размер</th><th class="num">Время</th><th>Итог</th></tr>${rows}</table>`,
     );
@@ -201,7 +215,7 @@ function hostSection(h: HostUploadReport): string {
         : `<p>В хранилище:</p><pre>${esc(h.remoteManifest)}</pre>`,
     );
   }
-  parts.push(...h.sets.map((s) => setSection(h, s)));
+  parts.push(...hostRows(h).map((s) => setSection(h, s)));
   return parts.join("\n");
 }
 
@@ -212,7 +226,7 @@ export function renderUploadPage(r: UploadReport, title = "Выгрузка"): s
     : "";
   const intro = `<h1>${esc(title)}: ${OUT_DIR}/ → ${esc(r.hosts.map((h) => h.host).join(", ") || "хосты")}</h1>
 <p class="muted">Фаза 2, шаги 2 и 4 — ADR-0022, ADR-0023, ADR-0025.${shown}</p>
-<p>Выгружаются только недостающие файлы версий: версии неизменяемы, в <code>${VERSIONS_DIR}/</code> ничего не перезаписывается, а расхождение с хранилищем — «СТОП». Хосты идут по очереди; в каждом наборе файл сумм уходит последним, затем сверка по списку объектов: размер и SHA-256 (Bunny) или ETag = MD5 (R2). Манифесты — в самом конце, когда файлы версий есть на всех хостах, второй хост — последним, и только где манифест отличается. Ничего не удаляется.</p>
+<p>Выгружаются только недостающие файлы версий: версии неизменяемы, в <code>${VERSIONS_DIR}/</code> ничего не перезаписывается, а расхождение с хранилищем — «СТОП». Хосты идут по очереди; в каждом наборе файл сумм уходит последним, затем сверка по списку объектов: размер и SHA-256 (Bunny) или ETag = MD5 (R2). Манифесты — в самом конце, когда файлы версий есть на всех хостах, второй хост — последним, и только где манифест отличается. Ничего не удаляется. Каталог наборов для edge API (шаг 2 фазы 4) — только в R2: после файлов версий и перед манифестами, оглавление последним; имя файла — отпечаток содержимого.</p>
 <h2>Что проверить</h2>
 <ul>${checklist(r.hosts)
     .map((c) => `<li>${esc(c)}</li>`)

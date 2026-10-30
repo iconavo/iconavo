@@ -9,14 +9,17 @@
 // cdn2 через прокси Cloudflare лишила бы второй хост независимости. Последний адрес — манифест по
 // http://: ждём постоянный переход на тот же адрес по https (Always Use HTTPS у Cloudflare, Force
 // SSL у Bunny). Браузеры и так открывают .dev только по https, переход нужен программам. Ключи не
-// нужны: адреса открытые. Повторы — как у выгрузки (storage.ts).
+// нужны: адреса открытые. Повторы — как у выгрузки (storage.ts). У хоста с каталогом наборов (R2,
+// шаг 2 фазы 4) ещё оглавление каталога: файл версии, как остальные, и его отпечаток — в имени.
 
 import type { z } from "zod";
 import { retryable, retryDelay } from "../embed/client.js";
 import type { FetchFn } from "../sources/npm.js";
+import { catalogIndexKey, catalogIndexSchema } from "./catalog.js";
 import {
   CACHE_IMMUTABLE,
   CACHE_MANIFEST,
+  CATALOG_HASH_LENGTH,
   type CdnHost,
   type CdnProvider,
   CHECK_ICON,
@@ -52,10 +55,11 @@ export const CHECK_GROUPS = [
 ] as const;
 export type CheckGroup = (typeof CHECK_GROUPS)[number];
 
-/** Вид адреса — от него зависят ожидания; redirect — манифест по http://. */
+/** Вид адреса — от него зависят ожидания; redirect — манифест по http://, catalog — оглавление каталога. */
 export type CheckKind =
   | "manifest"
   | "checksums"
+  | "catalog"
   | "json"
   | "svg"
   | "missing"
@@ -484,9 +488,10 @@ export async function checkCdn(
     ms: now() - started,
   });
 
-  // Манифест даёт версию набора-образца.
+  // Манифест даёт версию набора-образца и, у хоста с каталогом, отпечаток оглавления.
   const manifest = await checkTarget("manifest", MANIFEST_FILE);
   let version: string | undefined;
+  let catalog: { hash: string; sets: string[] } | undefined;
   if (manifest.body !== undefined) {
     manifest.target.checked.push("body");
     const parsed = parseJson(manifest.body, manifestSchema);
@@ -499,9 +504,49 @@ export async function checkCdn(
       } else {
         version = parsed.data.sets[set]?.version;
       }
+      if (cdn.catalog && parsed.data.catalog === undefined) {
+        addIssue(
+          manifest.target,
+          "body",
+          "в манифесте нет поля catalog — каталог наборов для edge API не выложен (pnpm cdn upload)",
+        );
+      } else if (cdn.catalog && parsed.data.catalog !== undefined) {
+        catalog = {
+          hash: parsed.data.catalog,
+          sets: Object.keys(parsed.data.sets).sort(),
+        };
+      }
     }
   }
   done(manifest.target);
+  if (catalog !== undefined) {
+    const index = await checkTarget("catalog", catalogIndexKey(catalog.hash));
+    if (index.body !== undefined) {
+      index.target.checked.push("body");
+      const parsed = parseJson(index.body, catalogIndexSchema);
+      if ("error" in parsed) {
+        addIssue(index.target, "body", `оглавление ${parsed.error}`);
+      } else if (
+        sha256Hex(index.body).slice(0, CATALOG_HASH_LENGTH) !== catalog.hash
+      ) {
+        addIssue(
+          index.target,
+          "body",
+          "содержимое не совпадает с отпечатком в имени",
+        );
+      } else {
+        const listed = Object.keys(parsed.data.sets).sort();
+        if (listed.join(",") !== catalog.sets.join(",")) {
+          addIssue(
+            index.target,
+            "body",
+            `наборы в оглавлении (${listed.join(", ")}) — не наборы манифеста (${catalog.sets.join(", ")})`,
+          );
+        }
+      }
+    }
+    done(index.target);
+  }
   if (version === undefined) {
     stop.push(
       `версия набора «${set}» неизвестна — файлы версии не проверялись`,

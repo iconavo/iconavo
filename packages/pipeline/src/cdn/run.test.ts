@@ -11,6 +11,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { demoConfig } from "../search/fixture.testing.js";
+import { catalogIndexSchema } from "./catalog.js";
 import { checksumsSchema, manifestSchema } from "./files.js";
 import {
   type CdnDemoSet,
@@ -97,6 +98,25 @@ describe("buildCdn", () => {
       demo: { version: demo.version, lastModified: DEMO_LAST_MODIFIED },
       other: { version: other.version, lastModified: DEMO_LAST_MODIFIED },
     });
+    // Каталог для edge API: оглавление на месте, его отпечаток — в манифесте.
+    expect(report.catalog?.hash).toBe(manifest.catalog);
+    expect(report.catalog?.files).toBe(4);
+    const index = catalogIndexSchema.parse(
+      JSON.parse(await text(`catalog/${manifest.catalog}.json`)),
+    );
+    expect(Object.keys(index.sets)).toEqual(["demo", "other"]);
+    expect(
+      JSON.parse(
+        await text(`catalog/demo/${index.sets.demo?.collection}.json`),
+      ),
+    ).toEqual({
+      prefix: "demo",
+      title: "Demo demo",
+      total: 1,
+      uncategorized: ["house"],
+      hidden: ["old"],
+      aliases: { gone: "old", home: "house" },
+    });
     const r = report.sets[0];
     expect(r).toMatchObject({ icons: 2, hidden: 1, aliases: 2, files: 8 });
     expect(r?.examples.icon?.json.path).toBe(
@@ -131,11 +151,23 @@ describe("buildCdn", () => {
     const first = await writeCdnDemoSet(dataDir, DEMO);
     await writeCdnDemoSet(dataDir, OTHER);
     await build();
+    const catalogBefore = await walk(join(outDir, "catalog"));
     const second = await writeCdnDemoSet(dataDir, DEMO_PLUS);
     expect(second.version).not.toBe(first.version);
     const report = await build();
     expect(report.sets.map((s) => s.status)).toEqual(["written", "unchanged"]);
-    expect(report.removed).toEqual([`v/${first.version}`]);
+    // Старая версия и старые файлы каталога убраны; тело other осталось: у набора ничего не менялось.
+    const catalogAfter = await walk(join(outDir, "catalog"));
+    const gone = [...catalogBefore.keys()].filter((k) => !catalogAfter.has(k));
+    expect(report.removed).toEqual([
+      `v/${first.version}`,
+      ...gone.map((k) => `catalog/${k}`).sort(),
+    ]);
+    expect(gone.map((k) => k.replace(/[0-9a-f]{12}/, "#")).sort()).toEqual([
+      "#.json",
+      "changelog/#.json",
+      "demo/#.json",
+    ]);
     await expect(stat(join(outDir, "v", first.version))).rejects.toThrow();
     expect(await text(`v/${second.version}/demo/star.svg`)).toContain("<g/>");
     const manifest = manifestSchema.parse(
@@ -166,6 +198,60 @@ describe("buildCdn", () => {
     expect(report.sets.map((s) => s.status)).toEqual([
       "unchanged",
       "unchanged",
+    ]);
+  });
+
+  it("каталог: чужие файлы в catalog/ убираются, правка сведений набора — новое оглавление", async () => {
+    await writeCdnDemoSet(dataDir, DEMO);
+    await writeCdnDemoSet(dataDir, OTHER);
+    const first = await build();
+    await mkdir(join(outDir, "catalog", "zzz"), { recursive: true });
+    await writeFile(join(outDir, "catalog", "zzz", "x.json"), "{}");
+    await writeFile(join(outDir, "catalog", "000000000000.json"), "{}");
+    const again = await build();
+    expect(again.removed).toEqual(["catalog/000000000000.json", "catalog/zzz"]);
+    expect(again.catalog?.written).toEqual([]);
+    // Другая витрина — версия набора та же, а оглавление и манифест новые.
+    await writeCdnDemoSet(dataDir, { ...DEMO, samples: ["old"] });
+    const edited = await build();
+    expect(edited.sets.map((s) => s.status)).toEqual([
+      "unchanged",
+      "unchanged",
+    ]);
+    expect(edited.catalog?.hash).not.toBe(first.catalog?.hash);
+    expect(edited.manifestWritten).toBe(true);
+    expect(edited.catalog?.written).toEqual([
+      `catalog/${edited.catalog?.hash}.json`,
+    ]);
+  });
+
+  it("журнал не от этой сборки — СТОП набора, каталога и манифеста нет", async () => {
+    await writeCdnDemoSet(dataDir, DEMO);
+    await writeCdnDemoSet(dataDir, OTHER);
+    await writeFile(
+      join(dataDir, "other", "changelog.json"),
+      JSON.stringify({
+        prefix: "other",
+        releases: [
+          {
+            version: "0000aaaa",
+            date: "2026-10-20T00:00:00Z",
+            revision: "1.0.0",
+            total: 1,
+          },
+        ],
+      }),
+    );
+    const report = await build();
+    expect(cdnStop(report)).toBe(true);
+    expect(report.sets[1]?.stop[0]).toMatch(
+      /^свежий выпуск в changelog\.json \(0000aaaa\) — не версия icons\.json/,
+    );
+    expect(report.catalog).toBeUndefined();
+    await rm(join(dataDir, "other", "metadata.json"));
+    const again = await build();
+    expect(again.sets[1]?.stop).toEqual([
+      "metadata.json не читается — запустите pnpm data other",
     ]);
   });
 

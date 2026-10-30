@@ -13,14 +13,20 @@ import {
 } from "@iconavo-ui/schema";
 import { z } from "zod";
 import { canonicalJson, compactJson, type Json } from "../build/json.js";
+import { catalogHashSchema } from "./catalog.js";
 import { CHAIN_LIMIT, CHECKSUM_ALGORITHM } from "./config.js";
 import type { CdnSet } from "./load.js";
 import { type CdnIcon, svgOf } from "./svg.js";
 
 const order = (a: string, b: string) => (a < b ? -1 : a > b ? 1 : 0);
 
-/** manifest.json: набор → текущая версия и время последнего выпуска в секундах. */
+/**
+ * manifest.json: набор → текущая версия и время последнего выпуска в секундах; catalog — отпечаток
+ * оглавления каталога для edge API (шаг 2 фазы 4). Сборка пишет catalog всегда; у манифеста, выложенного
+ * до шага 2, его нет — поэтому при чтении поле необязательное. Ядро и функция edge API читают только sets.
+ */
 export const manifestSchema = z.strictObject({
+  catalog: catalogHashSchema.optional(),
   sets: z.record(
     nameSchema,
     z.strictObject({
@@ -161,11 +167,16 @@ export interface ManifestEntry {
   lastModified: number;
 }
 
-/** Текст manifest.json — читаемо: его открывают люди. */
-export function manifestText(sets: readonly ManifestEntry[]): string {
+/** Текст manifest.json — читаемо: его открывают люди. catalog — отпечаток оглавления каталога. */
+export function manifestText(
+  sets: readonly ManifestEntry[],
+  catalog?: string,
+): string {
   const list: { [key: string]: Json } = {};
   for (const s of sets) {
     list[s.id] = { version: s.version, lastModified: s.lastModified };
   }
-  return canonicalJson({ sets: list });
+  return canonicalJson(
+    catalog === undefined ? { sets: list } : { catalog, sets: list },
+  );
 }
