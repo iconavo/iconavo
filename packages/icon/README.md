@@ -16,7 +16,7 @@ Icon names are `set:icon`, for example `lucide:house`. Both parts use lowercase 
 **Without a build step**, add two lines to `<head>`:
 
 ```html
-<script type="module" src="https://cdn.jsdelivr.net/npm/@iconavo-ui/icon@0.1.0/dist/iconavo-icon.js" integrity="sha384-4jwgOS9euDQZj2iLfo9bjbv1WQK9EisJKx++vmGcOJPvz8bhFi0CB3Xs56eAxak3"></script>
+<script type="module" src="https://cdn.jsdelivr.net/npm/@iconavo-ui/icon@0.1.1/dist/iconavo-icon.js" integrity="sha384-4jwgOS9euDQZj2iLfo9bjbv1WQK9EisJKx++vmGcOJPvz8bhFi0CB3Xs56eAxak3"></script>
 <style>iconavo-icon:not(:defined) { display: inline-block; width: 1em; height: 1em; }</style>
 ```
 
@@ -49,7 +49,7 @@ With pnpm or yarn: `pnpm add @iconavo-ui/react@next`, `yarn add @iconavo-ui/reac
 <html lang="en">
   <head>
     <meta charset="utf-8">
-    <script type="module" src="https://cdn.jsdelivr.net/npm/@iconavo-ui/icon@0.1.0/dist/iconavo-icon.js" integrity="sha384-4jwgOS9euDQZj2iLfo9bjbv1WQK9EisJKx++vmGcOJPvz8bhFi0CB3Xs56eAxak3"></script>
+    <script type="module" src="https://cdn.jsdelivr.net/npm/@iconavo-ui/icon@0.1.1/dist/iconavo-icon.js" integrity="sha384-4jwgOS9euDQZj2iLfo9bjbv1WQK9EisJKx++vmGcOJPvz8bhFi0CB3Xs56eAxak3"></script>
     <style>iconavo-icon:not(:defined) { display: inline-block; width: 1em; height: 1em; }</style>
   </head>
   <body>
@@ -127,7 +127,7 @@ Without a build step, import `configure` from the same address as the script, in
 
 ```html
 <script type="module">
-  import { configure } from "https://cdn.jsdelivr.net/npm/@iconavo-ui/icon@0.1.0/dist/iconavo-icon.js";
+  import { configure } from "https://cdn.jsdelivr.net/npm/@iconavo-ui/icon@0.1.1/dist/iconavo-icon.js";
   configure({ api: ["https://icons.example.com/api"], cdn: ["https://icons.example.com/static"] });
 </script>
 ```

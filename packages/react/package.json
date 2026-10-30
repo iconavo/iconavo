@@ -1,6 +1,6 @@
 {
   "name": "@iconavo-ui/react",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "The Icon component for React and Next.js: any icon from the Iconavo catalog by its name.",
   "keywords": [
     "iconavo",

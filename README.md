@@ -3,7 +3,7 @@
 Icons from open icon sets by their names, with one HTML tag or one React component. Only the icons on the page are loaded. Iconavo is in beta: versions are 0.x, and the API may still change before 1.0.
 
 ```html
-<script type="module" src="https://cdn.jsdelivr.net/npm/@iconavo-ui/icon@0.1.0/dist/iconavo-icon.js" integrity="sha384-4jwgOS9euDQZj2iLfo9bjbv1WQK9EisJKx++vmGcOJPvz8bhFi0CB3Xs56eAxak3"></script>
+<script type="module" src="https://cdn.jsdelivr.net/npm/@iconavo-ui/icon@0.1.1/dist/iconavo-icon.js" integrity="sha384-4jwgOS9euDQZj2iLfo9bjbv1WQK9EisJKx++vmGcOJPvz8bhFi0CB3Xs56eAxak3"></script>
 <iconavo-icon icon="lucide:house"></iconavo-icon>
 ```
 

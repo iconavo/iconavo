@@ -1,6 +1,6 @@
 {
   "name": "@iconavo-ui/core",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "The shared core of the Iconavo icon packages: loading, the icon store and rendering. Install @iconavo-ui/icon or @iconavo-ui/react instead.",
   "keywords": [
     "iconavo",

@@ -1,6 +1,6 @@
 {
   "name": "@iconavo-ui/icon",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "The <iconavo-icon> web component: any icon from the Iconavo catalog by its name, for plain HTML and any framework.",
   "keywords": [
     "iconavo",
