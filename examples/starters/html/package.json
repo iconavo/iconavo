@@ -1,0 +1,11 @@
+{
+  "name": "iconavo-html-starter",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "servor . index.html 8080 --reload"
+  },
+  "devDependencies": {
+    "servor": "4.0.2"
+  }
+}

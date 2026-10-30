@@ -486,12 +486,12 @@ React (ADR-0033, ADR-0031, шаг 7 фазы 3): `packages/react` — `@iconavo-
 
 Живые примеры (ADR-0050, шаг 10 фазы 3): `examples/starters/{html,react,next}` — вне рабочего пространства pnpm (`!examples/starters/**`). Примеры ставят пакеты из npm, как у разработчика: StackBlitz открывает только подпапку и не понимает `workspace:*`.
 - **Что внутри.**
-  - html — один `index.html` со строками подключения из README;
+  - html — `index.html` со строками подключения из README и `package.json` с `servor` для StackBlitz;
   - react — Vite 7.3.7 (Vite 8 на StackBlitz сломан), React 19.3.1, TypeScript 7.0.2;
   - next — Next.js 16.4.3: живой ссылки нет, проект создаёт `npx create-next-app@latest --example …` (Next.js 16 на StackBlitz не запускается, а у 15.4 — 30 уязвимостей).
 
   Тексты — английские, меток для проверок нет. Версии точные; `@iconavo-ui/*` — версия из адреса скрипта в README; её ставит `pnpm release bump`. lock-файлы необязательны: выпуск удаляет устаревшие, новые пишет `pnpm starters --lock` после публикации (ADR-0051).
-- **Ссылки** — `packages/pipeline/src/starters/links.ts`. HTML — `?template=html` (статика StackBlitz без установки; параметр недокументированный, запасной вариант — `package.json` с `servor`), React — `startScript=dev`.
+- **Ссылки** — `packages/pipeline/src/starters/links.ts`. HTML и React — `startScript=dev`: у HTML-примера `package.json` со статическим сервером `servor` 4.0.2 только для StackBlitz. Шаблон `?template=html` выполнял внешний скрипт-модуль как обычный скрипт, и тег не регистрировался (30 октября 2026). `pnpm starters --check` открывает HTML-пример статикой, без установки.
 - **Тест согласованности** — `starters/consistency.test.ts`. Он сверяет:
   - одну версию скрипта во всём README и строки подключения HTML-примера, побайтно как в README;
   - у выпущенной версии — один хэш `integrity` верного вида во всех строках подключения и раздел журнала без заготовки;
