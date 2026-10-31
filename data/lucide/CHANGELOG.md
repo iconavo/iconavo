@@ -4,6 +4,15 @@
 Имена не пропадают: иконка, которую удалил автор, скрыта, но работает по имени, а старое имя переименованной ведёт на новое (ADR-0005).
 Скрытия и переименования вы одобряете лично в pull request (ADR-0019). Полные списки — в `changelog.json`.
 
+## 31 октября 2026 · версия af67c16f
+
+Прошлая версия: 8d1ee623 · источник: a630cec · иконок: 2 015.
+
+**Изменения**
+
+- Добавлены (17): `chart-bell-curve`, `file-database`, `margin`, `margin-bottom`, `margin-horizontal`, `margin-left`, `margin-right`, `margin-top`, `margin-vertical`, `monitor-activity`, `square-padding`, `square-padding-bottom`, `square-padding-horizontal`, `square-padding-left`, `square-padding-right`, `square-padding-top`, `square-padding-vertical`
+- Изменены (2): `circle-letter-p-off`, `square-letter-p-off`
+
 ## 30 октября 2026 · версия 8d1ee623
 
 Прошлая версия: c3b3f7a7 · источник: 81875c8 · иконок: 1 998.
