@@ -64,8 +64,14 @@ export const STOP_WORDS: ReadonlySet<string> = new Set([
 
 /** Поля документа: что ищется словами, что фильтруется и что отдаётся в выдаче. */
 export const SEARCHABLE = ["name", "tags", "synonymsEn", "synonymsRu"] as const;
-export const FILTERABLE = ["license", "names", "palette", "set"] as const;
-export const DISPLAYED = ["icon", "variants", "tones"] as const;
+export const FILTERABLE = [
+  "license",
+  "names",
+  "palette",
+  "set",
+  "style",
+] as const;
+export const DISPLAYED = ["icon", "variants", "tones", "styles"] as const;
 
 /** Настройки индекса — ровно то, что ставит робот. */
 export const INDEX_SETTINGS = {

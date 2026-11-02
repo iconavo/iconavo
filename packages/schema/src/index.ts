@@ -22,7 +22,13 @@ export {
   type License,
   licenseSchema,
 } from "./info.js";
-export { type MetadataFile, metadataFileSchema } from "./metadata.js";
+export {
+  type MetadataFile,
+  metadataFileSchema,
+  STYLE_IDS,
+  styleTableIssues,
+  styleTableSchema,
+} from "./metadata.js";
 export { NAME_PATTERN, nameSchema } from "./name.js";
 export {
   type Language,

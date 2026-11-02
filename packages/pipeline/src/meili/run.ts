@@ -20,11 +20,10 @@ import {
   vectorBytes,
 } from "@iconavo-ui/search";
 import { type Manifest, manifestSchema } from "../cdn/files.js";
-import { loadSetData } from "../cdn/load.js";
 import { requestWithRetries, type StorageClient } from "../cdn/storage.js";
 import { type EmbeddingClient, retryable } from "../embed/client.js";
 import { formatRub } from "../embed/cost.js";
-import { loadCatalog, type SearchDoc } from "../search/catalog.js";
+import type { SearchDoc } from "../search/catalog.js";
 import type { SourceConfig } from "../sources/config.js";
 import type { FetchFn } from "../sources/npm.js";
 import { pool } from "../util/pool.js";
@@ -38,7 +37,7 @@ import {
   REPORT_SAMPLES,
   VECTOR_TYPE,
 } from "./config.js";
-import { type SetFacts, searchDocuments } from "./docs.js";
+import { loadSearchDocuments } from "./docs.js";
 import {
   type Budget,
   embedBatches,
@@ -314,21 +313,12 @@ export async function searchIndex(
   }
   try {
     // 1. Наборы и карточки.
-    const facts = new Map<string, SetFacts>();
-    const versions = new Map<string, string>();
-    for (const [order, config] of o.configs.entries()) {
-      const data = await loadSetData(config, o.dataDir);
-      facts.set(config.id, {
-        palette: data.info.palette,
-        license: data.info.license.spdx,
-        order,
-      });
-      versions.set(config.id, data.version);
-    }
-    const { catalog, errors } = await loadCatalog(o.configs, o.dataDir);
+    const { docs, catalog, versions, errors } = await loadSearchDocuments(
+      o.configs,
+      o.dataDir,
+    );
     for (const e of errors) report.stop.push(`${e.id}: ${e.message}`);
     if (report.stop.length > 0) return finish();
-    const docs = searchDocuments(catalog, facts);
     const cardOf = new Map(catalog.docs.map((d) => [d.id, d]));
     report.cards = docs.length;
     report.withText = docs.filter((d) => d.textHash !== null).length;

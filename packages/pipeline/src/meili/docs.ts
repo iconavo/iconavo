@@ -8,8 +8,11 @@ import {
   documentId,
   normalizeText,
   type SearchDocument,
+  STYLES,
 } from "@iconavo-ui/search";
-import type { Catalog } from "../search/catalog.js";
+import { loadSetData } from "../cdn/load.js";
+import { type Catalog, loadCatalog } from "../search/catalog.js";
+import type { SourceConfig } from "../sources/config.js";
 
 /** Что о наборе нужно документам: цветность и лицензия из info.json, место в реестре. */
 export interface SetFacts {
@@ -58,10 +61,46 @@ export function searchDocuments(
       synonymsRu: phrases(doc.phrases.ru),
       variants: doc.variants,
       tones: doc.tones,
+      style: STYLES.filter((style) => doc.styles[style] !== undefined),
+      styles: doc.styles,
       parts: catalog.parts[i] ?? 1,
       setOrder: f.order,
       textHash: doc.textHash ?? null,
     };
     return { ...body, hash: documentHash(body) };
   });
+}
+
+/** Документы индекса из data/ со сведениями о наборах — для робота индекса и проверки сайта. */
+export interface LoadedDocuments {
+  docs: SearchDocument[];
+  catalog: Catalog;
+  /** Версия каждого набора из info.json — робот сверяет их с живым манифестом. */
+  versions: Map<string, string>;
+  /** Наборы, которые не читаются: файлы не от этой сборки или не по схеме. */
+  errors: { id: string; message: string }[];
+}
+
+/**
+ * Карточки всех наборов реестра в порядке реестра (setOrder — место набора в нём). Файл набора не
+ * читается — исключение от loadSetData; ошибки каталога — в errors, документов тогда нет.
+ */
+export async function loadSearchDocuments(
+  configs: readonly SourceConfig[],
+  dataDir: string,
+): Promise<LoadedDocuments> {
+  const facts = new Map<string, SetFacts>();
+  const versions = new Map<string, string>();
+  for (const [order, config] of configs.entries()) {
+    const data = await loadSetData(config, dataDir);
+    facts.set(config.id, {
+      palette: data.info.palette,
+      license: data.info.license.spdx,
+      order,
+    });
+    versions.set(config.id, data.version);
+  }
+  const { catalog, errors } = await loadCatalog(configs, dataDir);
+  const docs = errors.length > 0 ? [] : searchDocuments(catalog, facts);
+  return { docs, catalog, versions, errors };
 }

@@ -35,4 +35,11 @@ export default {
     "-fill": "Fill",
     "-duotone": "Duotone",
   },
+  // Стили по общей шкале (ADR-0052): Thin, Light, Regular и Bold — толщины контура, порядок — от
+  // тонкой к жирной; Fill — заливка, Duotone — двухцветные.
+  styles: {
+    outline: ["-thin", "-light", "", "-bold"],
+    filled: ["-fill"],
+    duotone: ["-duotone"],
+  },
 } satisfies SourceConfigInput;

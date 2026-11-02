@@ -47,6 +47,27 @@ describe("документы набора", () => {
     expect(names.get("house-fill")).toBe("house");
   });
 
+  it("без таблицы стилей у карточек нет стилей", () => {
+    expect(byName.get("pulse")?.styles).toEqual({});
+  });
+
+  it("стили карточки — по таблице набора, контур алиасом тоже считается (ADR-0052)", () => {
+    const styled = setDocs(
+      ph,
+      loadedSet({
+        id: "ph",
+        suffixes: { "": "Regular", "-bold": "Bold", "-fill": "Fill" },
+        styles: { outline: ["", "-bold"], filled: ["-fill"] },
+        icons: [{ name: "pulse" }, { name: "pulse-bold" }, { name: "house" }],
+        aliases: { "house-fill": "house" },
+      }),
+    ).docs;
+    expect(Object.fromEntries(styled.map((d) => [d.name, d.styles]))).toEqual({
+      house: { outline: "house", filled: "house-fill" },
+      pulse: { outline: "pulse" },
+    });
+  });
+
   it("у иконки с описаниями есть хэш текста для векторов, без описаний — нет", () => {
     expect(byName.get("pulse")?.textHash).toMatch(/^[0-9a-f]{16}$/);
     const bare = setDocs(

@@ -1,4 +1,8 @@
-import { nameSchema } from "@iconavo-ui/schema";
+import {
+  nameSchema,
+  styleTableIssues,
+  styleTableSchema,
+} from "@iconavo-ui/schema";
 import { z } from "zod";
 
 /** Относительный путь внутри источника: без `..`, без абсолютных и без обратных слэшей. */
@@ -187,8 +191,23 @@ export const sourceConfigSchema = z
         "суффиксы не должны повторяться",
       )
       .optional(),
+    /**
+     * Стили общей шкалы (ADR-0052): стиль → суффиксы его вариантов в порядке показа, "" — основной
+     * вариант. Каждый суффикс карты вариантов (у набора без неё — "") — ровно в одном стиле. У набора
+     * в реестре таблица обязательна — это проверяет тест реестра.
+     */
+    styles: styleTableSchema.optional(),
   })
   .superRefine((config, ctx) => {
+    if (config.styles !== undefined) {
+      const suffixes =
+        config.suffixes === undefined
+          ? undefined
+          : Object.keys(config.suffixes);
+      for (const message of styleTableIssues(config.styles, suffixes)) {
+        ctx.addIssue({ code: "custom", path: ["styles"], message });
+      }
+    }
     const missing = (config.variantAliases ?? []).filter(
       (suffix) => !Object.hasOwn(config.suffixes ?? {}, suffix),
     );

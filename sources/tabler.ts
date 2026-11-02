@@ -27,4 +27,6 @@ export default {
   metadata: "tabler",
   // Карта вариантов наша: у Iconify её для Tabler нет (ADR-0002).
   suffixes: { "": "Outline", "-filled": "Filled" },
+  // Стили по общей шкале (ADR-0052). Залитый вариант есть только у части иконок.
+  styles: { outline: [""], filled: ["-filled"] },
 } satisfies SourceConfigInput;

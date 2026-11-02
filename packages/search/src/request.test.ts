@@ -41,7 +41,7 @@ describe("exactQuery", () => {
       q: "",
       filter: ['set IN ["lucide"]', 'names = "house"'],
       limit: EXACT_LIMIT,
-      attributesToRetrieve: ["icon", "variants", "tones"],
+      attributesToRetrieve: ["icon", "variants", "tones", "styles"],
     });
     expect(exactQuery("lucide:house", {}).filter).toEqual([
       'names = "lucide:house"',
@@ -70,7 +70,7 @@ describe("mainQuery", () => {
       q: "дом",
       limit: 64,
       offset: 0,
-      attributesToRetrieve: ["icon", "variants", "tones"],
+      attributesToRetrieve: ["icon", "variants", "tones", "styles"],
     });
   });
 

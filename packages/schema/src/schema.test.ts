@@ -327,6 +327,43 @@ describe("metadata.json", () => {
   it("запрещает лишние поля", () => {
     expect(validate("metadata", { categoriez: {} }).length).toBeGreaterThan(0);
   });
+
+  describe("стили (ADR-0052)", () => {
+    const suffixes = { "": "Regular", "-bold": "Bold", "-fill": "Fill" };
+
+    it("принимает таблицу, где каждый суффикс — ровно в одном стиле", () => {
+      const data = {
+        suffixes,
+        styles: { outline: ["", "-bold"], filled: ["-fill"] },
+      };
+      expect(validate("metadata", data)).toEqual([]);
+      // Набор без вариантов: только основной вариант.
+      expect(validate("metadata", { styles: { outline: [""] } })).toEqual([]);
+    });
+
+    it("суффикс без стиля, в двух стилях или не из карты — ошибка", () => {
+      const messages = (styles: unknown) =>
+        validate("metadata", { suffixes, styles }).map((i) => i.message);
+      expect(messages({ outline: ["", "-bold"] })).toEqual([
+        "суффикс без стиля: «-fill»",
+      ]);
+      expect(
+        messages({ outline: ["", "-bold", "-fill"], filled: ["-fill"] }),
+      ).toEqual(["суффикс в нескольких стилях: «-fill»"]);
+      expect(
+        messages({ outline: ["", "-bold"], filled: ["-fill", "-thin"] }),
+      ).toEqual(["в стилях суффикс, которого нет в карте вариантов: «-thin»"]);
+    });
+
+    it("только стили шкалы и непустые списки", () => {
+      expect(
+        validate("metadata", { styles: { regular: [""] } }).length,
+      ).toBeGreaterThan(0);
+      expect(
+        validate("metadata", { styles: { outline: [""], filled: [] } }).length,
+      ).toBeGreaterThan(0);
+    });
+  });
 });
 
 describe("команда проверки", () => {

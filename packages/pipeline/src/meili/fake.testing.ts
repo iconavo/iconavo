@@ -1,6 +1,7 @@
 // Подменный Meilisearch для тестов: индекс, настройки, документы и задачи в памяти, журнал вызовов.
 // Задачи выполняются сразу; сбой — по правилу fail. multi-search понимает ровно то, что строят
-// запросы общего модуля: фильтры set IN, palette, names = и NOT names =, слова — по вхождению.
+// запросы общего модуля: фильтры set IN, palette, license IN, style =, names = и NOT names =, слова —
+// по вхождению.
 
 import type { MeiliClient, MeiliIndex, MeiliTask } from "./client.js";
 
@@ -48,6 +49,10 @@ export function fakeMeili(options: FakeMeiliOptions = {}) {
       if (m) return (m[1] as string).includes(`"${doc.set as string}"`);
       m = /^palette = (true|false)$/.exec(f);
       if (m) return String(doc.palette) === m[1];
+      m = /^license IN \[(.+)\]$/.exec(f);
+      if (m) return (m[1] as string).includes(`"${doc.license as string}"`);
+      m = /^style = "(.+)"$/.exec(f);
+      if (m) return ((doc.style as string[]) ?? []).includes(m[1] as string);
       throw new Error(`подменный Meilisearch: фильтр не понят: ${f}`);
     });
 

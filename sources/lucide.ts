@@ -28,4 +28,6 @@ export default {
       "8a1de583a86b897d2dce83c290a1ff5facd1248bba3355bcfe309839be1e0828",
   },
   metadata: "lucide",
+  // Стиль по общей шкале (ADR-0052): все иконки — контур.
+  styles: { outline: [""] },
 } satisfies SourceConfigInput;

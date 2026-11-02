@@ -1,4 +1,16 @@
 {
+  "styles": {
+    "filled": [
+      "",
+      "-rounded",
+      "-sharp"
+    ],
+    "outline": [
+      "-outline",
+      "-outline-rounded",
+      "-outline-sharp"
+    ]
+  },
   "suffixes": {
     "": "Regular",
     "-outline": "Outline",

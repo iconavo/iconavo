@@ -211,6 +211,36 @@ function suffixesBlock(m: SetMetadata): string {
 <ul>${items.join("")}</ul>`;
 }
 
+/** Названия стилей общей шкалы в отчёте (ADR-0052). */
+const STYLE_TITLES: Record<string, string> = {
+  outline: "Контур",
+  filled: "Заливка",
+  duotone: "Двухцветные",
+  color: "Цветные",
+};
+
+function stylesBlock(m: SetMetadata): string {
+  if (!m.styles) {
+    return `<h3>Стили</h3>
+<p class="stop">Нет таблицы стилей: добавьте styles в конфиг набора (ADR-0052).</p>`;
+  }
+  const items = Object.entries(m.styles).map(
+    ([style, list]) =>
+      `<li><b>${esc(STYLE_TITLES[style] ?? style)}</b> — ${(list ?? [])
+        .map((s) => `<code>${s === "" ? "без суффикса" : esc(s)}</code>`)
+        .join(", ")}</li>`,
+  );
+  const suspects =
+    m.styleSuspects.length > 0
+      ? `<p class="muted">Имя оканчивается суффиксом другого стиля, а карточка отнесена к стилю основного варианта (${m.styleSuspects.length}) — посмотрите, так ли это:</p>
+${namesList(m.styleSuspects)}`
+      : "";
+  return `<h3>Стили</h3>
+<p class="muted">Общая шкала (ADR-0052): к какому стилю относится каждый вариант. Порядок внутри стиля — порядок показа на сайте, главный вариант стиля — без суффикса, если он здесь, иначе первый.</p>
+<ul>${items.join("")}</ul>
+${suspects}`;
+}
+
 function categoriesBlock(m: SetMetadata): string {
   if (m.categories.length === 0) {
     return `<p class="muted">Нет: в источнике нет категорий автора.</p>`;
@@ -268,6 +298,7 @@ ${licenseBlock(n.id, m.license)}
 <h3>Витрина</h3>
 ${samplesBlock(r)}
 ${suffixesBlock(m)}
+${stylesBlock(m)}
 <h3>Категории (${m.categories.length})</h3>
 ${categoriesBlock(m)}
 <h3>${Math.min(TAG_SAMPLE, r.icons.length)} иконок с тегами</h3>

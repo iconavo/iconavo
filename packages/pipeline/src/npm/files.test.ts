@@ -190,6 +190,23 @@ describe("readmeText", () => {
     );
   });
 
+  it("варианты — в порядке стилей общей шкалы, стили — списком (ADR-0052)", async () => {
+    await writeNpmDemoSet(dataDir, {
+      id: "demo",
+      icons: ICONS,
+      aliases: { home: { parent: "house" } },
+      samples: ["house"],
+      metadata: {
+        suffixes: { "": "Regular", "-bold": "Bold", "-fill": "Fill" },
+        styles: { outline: ["", "-bold"], filled: ["-fill"] },
+      },
+    });
+    const readme = readmeText(await loadDemoNpmSet(dataDir, "demo"), "next");
+    expect(readme).toContain(
+      "variants: Regular, Bold, Fill; styles: outline, filled",
+    );
+  });
+
   it("в день запуска — без тега и без пометки о предварительных версиях", async () => {
     const readme = readmeText(await demo(), "latest");
     expect(readme).toContain("npm install @iconavo-ui/icons-demo\n");

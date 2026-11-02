@@ -6340,6 +6340,14 @@
       "zodiac-virgo"
     ]
   },
+  "styles": {
+    "filled": [
+      "-filled"
+    ],
+    "outline": [
+      ""
+    ]
+  },
   "suffixes": {
     "": "Outline",
     "-filled": "Filled"
