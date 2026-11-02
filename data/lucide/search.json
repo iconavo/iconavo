@@ -18092,7 +18092,38 @@
       ]
     },
     "chart-bell-curve": {
+      "en": {
+        "description": "A bell-shaped curve drawn over chart axes, representing a statistical distribution or data analytics graph.",
+        "synonyms": [
+          "graph",
+          "chart",
+          "statistics",
+          "distribution",
+          "bell curve",
+          "normal distribution",
+          "gaussian",
+          "analytics",
+          "probability",
+          "histogram"
+        ]
+      },
       "fingerprint": "d8247d5f7737",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Изображена линейная диаграмма в виде колоколообразной кривой на осях координат; обозначает статистику, распределение данных или график.",
+        "synonyms": [
+          "график",
+          "диаграмма",
+          "статистика",
+          "распределение",
+          "колокол",
+          "нормальное распределение",
+          "кривая гаусса",
+          "аналитика",
+          "данные",
+          "вероятность"
+        ]
+      },
       "tags": [
         "diagram",
         "graph",
@@ -22982,7 +23013,34 @@
       ]
     },
     "circle-letter-p-off": {
+      "en": {
+        "description": "A circle with a letter P crossed out by a diagonal line, usually meaning disabled, prohibited, or hidden.",
+        "synonyms": [
+          "crossed circle",
+          "prohibited",
+          "disabled",
+          "letter p off",
+          "no parking",
+          "hidden",
+          "unavailable",
+          "strikethrough"
+        ]
+      },
       "fingerprint": "899ea26cf1d6",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Круг с буквой «P», перечёркнутый диагональной линией; обычно означает отключено, запрещено или скрыто.",
+        "synonyms": [
+          "перечеркнутый круг",
+          "запрет",
+          "отключено",
+          "недоступно",
+          "скрыть",
+          "буква p",
+          "парковка запрещена",
+          "выключить"
+        ]
+      },
       "tags": [
         "alphabet",
         "character",
@@ -36398,7 +36456,38 @@
       ]
     },
     "file-database": {
+      "en": {
+        "description": "A document outline with a stacked database cylinder in the lower left; it represents a database file or data export.",
+        "synonyms": [
+          "database file",
+          "db file",
+          "data export",
+          "data import",
+          "dump",
+          "storage",
+          "tables",
+          "backup",
+          "archive",
+          "sql file"
+        ]
+      },
       "fingerprint": "e864875d6c8a",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Изображение документа с фигурой базы данных внизу; обозначает файл базы данных или экспорт данных.",
+        "synonyms": [
+          "база данных",
+          "файл бд",
+          "документ с данными",
+          "экспорт",
+          "импорт",
+          "дамп",
+          "хранилище",
+          "таблицы",
+          "бэкап",
+          "архив"
+        ]
+      },
       "tags": [
         "document",
         "storage",
@@ -56461,7 +56550,38 @@
       ]
     },
     "margin": {
+      "en": {
+        "description": "A central square surrounded by four outer bars, representing margin or outer spacing around an element in layouts and design tools.",
+        "synonyms": [
+          "spacing",
+          "outer spacing",
+          "padding",
+          "gap",
+          "whitespace",
+          "box model",
+          "offset",
+          "layout",
+          "css",
+          "space"
+        ]
+      },
       "fingerprint": "22da625dfdd1",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Квадрат в центре, окружённый четырьмя отрезками по сторонам, обозначает внешний отступ (margin) элемента в интерфейсе и редакторах макетов.",
+        "synonyms": [
+          "отступ",
+          "внешний отступ",
+          "поля",
+          "промежуток",
+          "расстояние",
+          "пространство",
+          "межстрочный отступ",
+          "верстка",
+          "вёрстка",
+          "макет"
+        ]
+      },
       "tags": [
         "margin",
         "design",
@@ -56482,7 +56602,36 @@
       ]
     },
     "margin-bottom": {
+      "en": {
+        "description": "A square above a horizontal line at the bottom, representing bottom margin or spacing below an element.",
+        "synonyms": [
+          "bottom margin",
+          "bottom spacing",
+          "space below",
+          "lower gap",
+          "bottom padding",
+          "spacing",
+          "offset",
+          "vertical space",
+          "layout"
+        ]
+      },
       "fingerprint": "3998fc471cfe",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Квадрат над горизонтальной линией внизу, означает отступ снизу или нижнее поле элемента.",
+        "synonyms": [
+          "отступ снизу",
+          "нижнее поле",
+          "margin",
+          "интервал",
+          "поле",
+          "нижний отступ",
+          "расстояние",
+          "вертикальный отступ",
+          "выравнивание"
+        ]
+      },
       "tags": [
         "margin",
         "design",
@@ -56514,7 +56663,34 @@
       ]
     },
     "margin-horizontal": {
+      "en": {
+        "description": "Two vertical bars frame a small square in the middle, indicating horizontal margin or spacing around an element.",
+        "synonyms": [
+          "spacing",
+          "gap",
+          "padding",
+          "offset",
+          "whitespace",
+          "box model",
+          "alignment",
+          "layout"
+        ]
+      },
       "fingerprint": "99768760d496",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Изображены два вертикальных линии по краям и квадрат между ними, это значит горизонтальный отступ или расстояние по бокам элемента.",
+        "synonyms": [
+          "отступ",
+          "поля",
+          "промежуток",
+          "расстояние",
+          "отступы по горизонтали",
+          "интервал",
+          "выравнивание",
+          "разметка"
+        ]
+      },
       "tags": [
         "margin",
         "design",
@@ -56548,7 +56724,36 @@
       ]
     },
     "margin-left": {
+      "en": {
+        "description": "Draws a vertical line with a square offset to its right, representing a left margin, the outer space left of an element.",
+        "synonyms": [
+          "left spacing",
+          "outer spacing",
+          "left offset",
+          "box model",
+          "gap",
+          "padding left",
+          "indent",
+          "left edge",
+          "layout"
+        ]
+      },
       "fingerprint": "dfed93f0f15e",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Изображена вертикальная линия слева и квадрат справа с отступом, обозначающий внешний отступ слева от элемента.",
+        "synonyms": [
+          "отступ слева",
+          "margin",
+          "внешний отступ",
+          "поле слева",
+          "расстояние",
+          "интервал",
+          "выравнивание",
+          "разметка",
+          "левый край"
+        ]
+      },
       "tags": [
         "margin",
         "design",
@@ -56579,7 +56784,38 @@
       ]
     },
     "margin-right": {
+      "en": {
+        "description": "A small square with a vertical bar to its right, representing a right margin, the outer spacing on an element's right side.",
+        "synonyms": [
+          "right spacing",
+          "spacing",
+          "padding",
+          "gap",
+          "box model",
+          "offset",
+          "right edge",
+          "layout",
+          "whitespace",
+          "css"
+        ]
+      },
       "fingerprint": "3ff52604e6b1",
+      "promptVersion": 1,
+      "ru": {
+        "description": "На картинке квадрат слева и вертикальная линия справа; иконка обозначает внешний отступ справа от элемента.",
+        "synonyms": [
+          "отступ справа",
+          "отступ",
+          "поле справа",
+          "margin",
+          "промежуток",
+          "расстояние",
+          "выравнивание",
+          "правый край",
+          "интервал",
+          "верстка"
+        ]
+      },
       "tags": [
         "margin",
         "design",
@@ -56609,7 +56845,33 @@
       ]
     },
     "margin-top": {
+      "en": {
+        "description": "Shows a square placed below a horizontal bar with space above it, representing a top margin in layout design.",
+        "synonyms": [
+          "top margin",
+          "top spacing",
+          "spacing",
+          "padding",
+          "offset",
+          "box model",
+          "layout"
+        ]
+      },
       "fingerprint": "1b9c2564e86e",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Изображение показывает квадрат под горизонтальной линией с отступом сверху; значок обозначает отступ сверху (margin-top) в макете.",
+        "synonyms": [
+          "отступ сверху",
+          "отступ",
+          "верхний отступ",
+          "поле сверху",
+          "промежуток",
+          "интервал",
+          "разметка",
+          "выравнивание"
+        ]
+      },
       "tags": [
         "margin",
         "design",
@@ -56641,7 +56903,36 @@
       ]
     },
     "margin-vertical": {
+      "en": {
+        "description": "Draws a rounded square between two horizontal lines above and below, representing vertical margin or spacing.",
+        "synonyms": [
+          "vertical margin",
+          "spacing",
+          "gap",
+          "padding",
+          "vertical spacing",
+          "distance",
+          "space",
+          "layout",
+          "top and bottom"
+        ]
+      },
       "fingerprint": "48987f3bafec",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Рисует квадрат между двумя горизонтальными линиями сверху и снизу, обозначая вертикальный отступ или поля элемента.",
+        "synonyms": [
+          "отступ",
+          "поля",
+          "вертикальный отступ",
+          "интервал",
+          "расстояние",
+          "промежуток",
+          "верх и низ",
+          "разметка",
+          "выравнивание"
+        ]
+      },
       "tags": [
         "margin",
         "design",
@@ -59800,7 +60091,38 @@
       ]
     },
     "monitor-activity": {
+      "en": {
+        "description": "A monitor displaying a pulse waveform on its screen, usually meaning live monitoring, vital signs or system activity.",
+        "synonyms": [
+          "monitor",
+          "screen",
+          "pulse",
+          "heartbeat",
+          "monitoring",
+          "diagnostics",
+          "health",
+          "activity",
+          "display",
+          "dashboard"
+        ]
+      },
       "fingerprint": "48be6ae3258d",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Изображен монитор с линией пульса внутри экрана; обычно означает мониторинг показателей, активность или состояние системы.",
+        "synonyms": [
+          "монитор",
+          "экран",
+          "пульс",
+          "кардиограмма",
+          "мониторинг",
+          "диагностика",
+          "здоровье",
+          "активность",
+          "дисплей",
+          "компьютер"
+        ]
+      },
       "tags": [
         "tv",
         "computer",
@@ -84154,7 +84476,36 @@
       ]
     },
     "square-letter-p-off": {
+      "en": {
+        "description": "A rounded square containing the letter P, crossed by a diagonal line; it usually means disabled, hidden, or parking prohibited.",
+        "synonyms": [
+          "disabled",
+          "no parking",
+          "crossed out",
+          "hide",
+          "turn off",
+          "blocked",
+          "prohibited",
+          "unavailable",
+          "strikethrough"
+        ]
+      },
       "fingerprint": "e31e7ff1d12a",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Изображена рамка-квадрат с буквой «P», перечёркнутая диагональной линией; означает, что параметр отключён или скрыт, либо парковка запрещена.",
+        "synonyms": [
+          "отключено",
+          "запрещено",
+          "перечеркнутое",
+          "парковка запрещена",
+          "скрыть",
+          "выключить",
+          "недоступно",
+          "блокировка",
+          "буква p"
+        ]
+      },
       "tags": [
         "parking lot",
         "car park",
@@ -84973,7 +85324,38 @@
       ]
     },
     "square-padding": {
+      "en": {
+        "description": "A rounded square with four short dashes inside near its edges, representing inner spacing or padding in layouts.",
+        "synonyms": [
+          "inner spacing",
+          "spacing",
+          "box model",
+          "whitespace",
+          "gap",
+          "offset",
+          "margin",
+          "layout",
+          "css",
+          "internal space"
+        ]
+      },
       "fingerprint": "471baf618977",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Квадрат с четырьмя короткими черточками внутри у края, обозначающий внутренний отступ (padding) в интерфейсе или макете.",
+        "synonyms": [
+          "отступ",
+          "внутренний отступ",
+          "падding",
+          "поля",
+          "пространство",
+          "интервал",
+          "блочная модель",
+          "промежуток",
+          "разметка",
+          "верстка"
+        ]
+      },
       "tags": [
         "padding",
         "design",
@@ -84994,7 +85376,38 @@
       ]
     },
     "square-padding-bottom": {
+      "en": {
+        "description": "A rounded square outline with a thick horizontal bar near its bottom edge, representing bottom padding or inner spacing.",
+        "synonyms": [
+          "bottom padding",
+          "bottom spacing",
+          "inner spacing",
+          "lower margin",
+          "box model",
+          "bottom inset",
+          "spacing bottom",
+          "padding",
+          "whitespace",
+          "bottom gap"
+        ]
+      },
       "fingerprint": "6cb36bd9cd77",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Квадрат с толстой горизонтальной линией внизу внутри рамки, обозначает отступ снизу (нижний padding).",
+        "synonyms": [
+          "падding снизу",
+          "отступ снизу",
+          "нижний отступ",
+          "внутренний отступ",
+          "padding",
+          "отступ",
+          "пространство",
+          "нижняя граница",
+          "интервал",
+          "вёрстка"
+        ]
+      },
       "tags": [
         "padding",
         "design",
@@ -85026,7 +85439,38 @@
       ]
     },
     "square-padding-horizontal": {
+      "en": {
+        "description": "A square outline with two vertical bars inside near the sides, representing horizontal padding or inner spacing in an interface.",
+        "synonyms": [
+          "padding",
+          "horizontal padding",
+          "inner spacing",
+          "margin",
+          "gap",
+          "spacing",
+          "box model",
+          "whitespace",
+          "inset",
+          "layout"
+        ]
+      },
       "fingerprint": "ea9121488fce",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Квадрат с двумя вертикальными линиями внутри по бокам, обозначает внутренние горизонтальные отступы (padding) в интерфейсе.",
+        "synonyms": [
+          "отступы",
+          "внутренний отступ",
+          "падding по горизонтали",
+          "поля",
+          "интервал",
+          "промежуток",
+          "выравнивание",
+          "расстояние по бокам",
+          "разметка",
+          "вёрстка"
+        ]
+      },
       "tags": [
         "padding",
         "design",
@@ -85060,7 +85504,38 @@
       ]
     },
     "square-padding-left": {
+      "en": {
+        "description": "A rounded square with a vertical bar near its left edge, representing left padding inside a box.",
+        "synonyms": [
+          "padding",
+          "left padding",
+          "inner spacing",
+          "indent",
+          "left edge",
+          "box model",
+          "spacing",
+          "margin left",
+          "whitespace",
+          "alignment"
+        ]
+      },
       "fingerprint": "e9f8aafbe034",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Квадрат со скруглёнными углами и вертикальной линией у левого края внутри, обозначает внутренний отступ слева.",
+        "synonyms": [
+          "отступ",
+          "отступ слева",
+          "падding слева",
+          "поле",
+          "внутренний отступ",
+          "левый край",
+          "выравнивание",
+          "интервал",
+          "расстояние",
+          "разметка"
+        ]
+      },
       "tags": [
         "padding",
         "design",
@@ -85091,7 +85566,34 @@
       ]
     },
     "square-padding-right": {
+      "en": {
+        "description": "A rounded square outline with a vertical bar near its right inner edge, indicating right padding.",
+        "synonyms": [
+          "right padding",
+          "inner spacing",
+          "right inset",
+          "padding right",
+          "box model",
+          "right gap",
+          "right margin",
+          "rightmost space"
+        ]
+      },
       "fingerprint": "d8cf5b1114bd",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Квадратная рамка с вертикальной линией у правого края внутри, обозначает внутренний отступ справа.",
+        "synonyms": [
+          "отступ справа",
+          "внутренний отступ",
+          "падding справа",
+          "поля справа",
+          "правый отступ",
+          "интервал справа",
+          "выравнивание вправо",
+          "правый край"
+        ]
+      },
       "tags": [
         "padding",
         "design",
@@ -85121,7 +85623,38 @@
       ]
     },
     "square-padding-top": {
+      "en": {
+        "description": "A rounded square with a horizontal bar near its top edge, representing top padding in a layout or box model.",
+        "synonyms": [
+          "padding top",
+          "top padding",
+          "inner spacing",
+          "top inset",
+          "top spacing",
+          "box model",
+          "top margin",
+          "upper spacing",
+          "css padding",
+          "layout spacing"
+        ]
+      },
       "fingerprint": "94b5dd86f183",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Квадрат с жирной горизонтальной полосой внутри у верхнего края, обозначающий внутренний отступ сверху (padding-top) в интерфейсе.",
+        "synonyms": [
+          "отступ сверху",
+          "внутренний отступ",
+          "падding сверху",
+          "верхний отступ",
+          "отступ",
+          "поля сверху",
+          "интервал сверху",
+          "верх блока",
+          "выравнивание",
+          "вёрстка"
+        ]
+      },
       "tags": [
         "padding",
         "design",
@@ -85153,7 +85686,36 @@
       ]
     },
     "square-padding-vertical": {
+      "en": {
+        "description": "A rounded square with two horizontal bars near its top and bottom edges, representing vertical padding inside a box.",
+        "synonyms": [
+          "padding",
+          "vertical padding",
+          "inner spacing",
+          "spacing",
+          "box model",
+          "margin",
+          "whitespace",
+          "gap",
+          "top bottom"
+        ]
+      },
       "fingerprint": "a581eaa5982c",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Квадрат со скруглёнными углами и двумя горизонтальными линиями внутри, сверху и снизу; обозначает вертикальный внутренний отступ (padding).",
+        "synonyms": [
+          "отступ",
+          "внутренний отступ",
+          "падding по вертикали",
+          "паддинг",
+          "вертикальный отступ",
+          "пространство",
+          "интервал",
+          "расстояние",
+          "верх и низ"
+        ]
+      },
       "tags": [
         "padding",
         "design",
