@@ -275,17 +275,20 @@ async function pendingProblems(
   options: { pendingForever?: boolean } = {},
 ): Promise<string[]> {
   const context = await browser.newContext({ viewport: DESKTOP });
+  // Сдвиги — со временем кадра: браузер сообщает о них не сразу, и сдвиг ещё от открытия страницы мог
+  // прийти уже после появления неполной выдачи (так было в Chrome на машине CI).
   await context.addInitScript(() => {
-    const w = window as { __iconavoShift?: number };
-    w.__iconavoShift = 0;
+    const w = window as { __iconavoShifts?: { at: number; value: number }[] };
+    w.__iconavoShifts = [];
     try {
       new PerformanceObserver((list) => {
         for (const e of list.getEntries() as (PerformanceEntry & {
           value: number;
           hadRecentInput: boolean;
         })[]) {
-          if (!e.hadRecentInput)
-            w.__iconavoShift = (w.__iconavoShift ?? 0) + e.value;
+          if (!e.hadRecentInput) {
+            w.__iconavoShifts?.push({ at: e.startTime, value: e.value });
+          }
         }
       }).observe({ type: "layout-shift", buffered: true });
     } catch {
@@ -331,9 +334,8 @@ async function pendingProblems(
     await context.close();
     return problems;
   }
-  await page.evaluate(() => {
-    (window as { __iconavoShift?: number }).__iconavoShift = 0;
-  });
+  // С этого кадра сдвигов быть не должно: дальше выдача только встаёт в те же клетки.
+  const since = await page.evaluate(() => performance.now());
   if (partial.facts.icons.length !== 3 || partial.facts.skeletons === 0) {
     problems.push(
       `неполная выдача: клеток ${partial.facts.icons.length}, скелетонов ${partial.facts.skeletons}`,
@@ -358,8 +360,22 @@ async function pendingProblems(
         `сетка сдвинулась: было ${JSON.stringify(before)}, стало ${JSON.stringify(after)}`,
       );
     }
+    // Наблюдатель сообщает о кадре не сразу — подождать два кадра.
+    await page.evaluate(
+      () =>
+        new Promise((resolve) =>
+          requestAnimationFrame(() => requestAnimationFrame(resolve)),
+        ),
+    );
     const shift = await page.evaluate(
-      () => (window as { __iconavoShift?: number }).__iconavoShift ?? 0,
+      (from) =>
+        (
+          (window as { __iconavoShifts?: { at: number; value: number }[] })
+            .__iconavoShifts ?? []
+        )
+          .filter((s) => s.at > from)
+          .reduce((sum, s) => sum + s.value, 0),
+      since,
     );
     if (shift > 0.001) problems.push(`сдвиг вёрстки ${shift.toFixed(3)}`);
   }
