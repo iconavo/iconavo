@@ -179,6 +179,10 @@ export interface FakeDoc {
   styles?: Record<string, string>;
   variants?: string[];
   tones?: string[];
+  /** Сведения для показа (шаг 4 фазы 4) — отдаются, если запрос их просит. */
+  about?: { [key: string]: Json };
+  /** false — у документа нет вектора: похожие отвечают 400. */
+  vector?: boolean;
 }
 
 export interface FakeSearchOptions {
@@ -187,6 +191,8 @@ export interface FakeSearchOptions {
   polza?: (text: string) => Promise<number[]>;
   /** Meilisearch отвечает этим кодом. */
   meiliStatus?: number;
+  /** Похожие отвечают этим кодом. */
+  similarStatus?: number;
 }
 
 export const MEILI_URL = "https://ms-test.fra.meilisearch.io";
@@ -199,9 +205,33 @@ export const MEILI_URL = "https://ms-test.fra.meilisearch.io";
 export function fakeSearchFetch(options: FakeSearchOptions) {
   const meili: { queries: Record<string, unknown>[] }[] = [];
   const polza: { input: string[]; dimensions?: number }[] = [];
+  const similar: Record<string, unknown>[] = [];
   const fn = (async (input: RequestInfo | URL, init?: RequestInit) => {
     const url = String(input);
     const body = JSON.parse(String(init?.body ?? "{}"));
+    if (url === `${MEILI_URL}/indexes/icons/similar`) {
+      // Похожие: соседи по общим словам, затем по имени; сам документ не отдаётся.
+      similar.push(body);
+      if (options.similarStatus !== undefined) {
+        return new Response("{}", { status: options.similarStatus });
+      }
+      const source = options.docs.find(
+        (d) => d.icon.replace(":", "_") === body.id,
+      );
+      if (source === undefined) return new Response("{}", { status: 404 });
+      if (source.vector === false) return new Response("{}", { status: 400 });
+      const shared = (d: FakeDoc) =>
+        d.words.filter((w) => source.words.includes(w)).length;
+      const hits = options.docs
+        .filter((d) => d !== source)
+        .sort((a, b) => shared(b) - shared(a) || (a.icon < b.icon ? -1 : 1))
+        .slice(0, Number(body.limit ?? 20))
+        .map((d) => ({
+          icon: d.icon,
+          ...(d.styles === undefined ? {} : { styles: d.styles }),
+        }));
+      return Response.json({ hits, id: body.id });
+    }
     if (url === `${MEILI_URL}/multi-search`) {
       meili.push(body);
       if (options.meiliStatus !== undefined) {
@@ -239,12 +269,16 @@ export function fakeSearchFetch(options: FakeSearchOptions) {
           q.q === "" ? options.docs.filter(ok) : [...byWords, ...rest];
         const offset = Number(q.offset ?? 0);
         const limit = Number(q.limit ?? 20);
+        const fields = (q.attributesToRetrieve as string[] | undefined) ?? [];
         return {
           hits: found.slice(offset, offset + limit).map((d) => ({
             icon: d.icon,
             variants: d.variants ?? [],
             tones: d.tones ?? [],
             ...(d.styles === undefined ? {} : { styles: d.styles }),
+            ...(d.about !== undefined && fields.includes("about")
+              ? { about: d.about }
+              : {}),
           })),
         };
       });
@@ -262,7 +296,7 @@ export function fakeSearchFetch(options: FakeSearchOptions) {
     }
     throw new TypeError(`подменный fetch: нет адреса ${url}`);
   }) as typeof fetch;
-  return { fn, meili, polza };
+  return { fn, meili, polza, similar };
 }
 
 /** Лимит частоты: разрешено allowed запросов на ключ. */

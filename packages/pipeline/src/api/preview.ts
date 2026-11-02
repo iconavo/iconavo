@@ -153,6 +153,7 @@ export async function startApiPreview(
           SEARCH: diskBucket(o.search.dir),
           // Лимита частоты в превью нет: сервер слушает только 127.0.0.1.
           SEARCH_LIMIT: { limit: async () => ({ success: true }) },
+          ICON_LIMIT: { limit: async () => ({ success: true }) },
           MEILISEARCH_URL: o.search.url,
           MEILISEARCH_SEARCH_KEY: o.search.key,
           ...(o.search.polzaKey ? { POLZA_API_KEY: o.search.polzaKey } : {}),

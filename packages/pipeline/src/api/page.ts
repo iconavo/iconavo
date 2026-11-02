@@ -121,6 +121,7 @@ const SHOWN_HEADERS = [
   "cache-control",
   "x-cache",
   "x-iconavo-version",
+  "x-iconavo-content",
   "x-iconavo-index",
   "x-iconavo-build",
   "server-timing",
@@ -148,25 +149,67 @@ const SEARCHES: readonly [string, string][] = [
 
 const ICON = /^[a-z0-9-]+:[a-z0-9-]+$/;
 
-/** Картинки найденных иконок из ответа поиска — у той же функции. */
-function searchImages(base: string, body: string): string {
-  let icons: string[] = [];
-  try {
-    const data = JSON.parse(body) as { icons?: unknown };
-    if (Array.isArray(data.icons)) {
-      icons = data.icons.filter(
-        (i): i is string => typeof i === "string" && ICON.test(i),
-      );
-    }
-  } catch {
-    return "";
-  }
+/** Картинки иконок по полным именам — у той же функции. */
+function iconImages(base: string, icons: readonly unknown[]): string {
   return icons
+    .filter((i): i is string => typeof i === "string" && ICON.test(i))
     .map((icon) => {
       const [set, name] = icon.split(":");
       return `<img src="${esc(`${base}/${set}/${name}.svg`)}" title="${esc(icon)}" alt="">`;
     })
     .join("");
+}
+
+/** Картинки найденных иконок из ответа поиска. */
+function searchImages(base: string, body: string): string {
+  try {
+    const data = JSON.parse(body) as { icons?: unknown };
+    return Array.isArray(data.icons) ? iconImages(base, data.icons) : "";
+  } catch {
+    return "";
+  }
+}
+
+/** Сведения об иконке (шаг 4 фазы 4): адрес /icon — панель и страница иконки на сайте, потом MCP. */
+const DETAILS: readonly [string, string][] = [
+  ["Линии Lucide", "/icon?icon=lucide:house"],
+  ["Старое имя и авторство Feather", "/icon?icon=lucide:alert-circle"],
+  ["Варианты Phosphor по таблице стилей", "/icon?icon=ph:house-bold"],
+  ["Оттенки кожи", "/icon?icon=fluent-emoji-flat:waving-hand"],
+  ["Скрытая иконка", "/icon?icon=lucide:circle-parking"],
+  ["Имя без набора", "/icon?icon=house"],
+];
+
+/** Картинки вариантов, оттенков и похожих из ответа /icon. */
+function detailsImages(base: string, body: string): string {
+  try {
+    const data = JSON.parse(body) as {
+      variants?: { style?: unknown; icons?: unknown }[];
+      tones?: unknown;
+      similar?: unknown;
+    };
+    const rows: string[] = [];
+    for (const v of data.variants ?? []) {
+      if (Array.isArray(v.icons)) {
+        rows.push(
+          `<p class="found">${esc(String(v.style))}: ${iconImages(base, v.icons)}</p>`,
+        );
+      }
+    }
+    if (Array.isArray(data.tones) && data.tones.length > 0) {
+      rows.push(
+        `<p class="found">оттенки: ${iconImages(base, data.tones)}</p>`,
+      );
+    }
+    if (Array.isArray(data.similar) && data.similar.length > 0) {
+      rows.push(
+        `<p class="found">похожие: ${iconImages(base, data.similar)}</p>`,
+      );
+    }
+    return rows.join("");
+  } catch {
+    return "";
+  }
 }
 
 const STYLE = `
@@ -258,6 +301,11 @@ export async function renderPreviewPage(
       `${images === "" ? "" : `<p class="found">${images}</p>`}${block(title, path, r)}`,
     );
   }
+  const details = [];
+  for (const [title, path] of DETAILS) {
+    const r = await example(source, path);
+    details.push(`${detailsImages(base, r.body)}${block(title, path, r)}`);
+  }
   const same =
     first.status === "200" && first.body === second.body
       ? '<span class="ok">да</span>'
@@ -305,6 +353,10 @@ ${catalog.join("\n")}
 <h2>Поиск</h2>
 <p class="muted">Ответ совместим с Iconify (icons, total, limit, start), плюс results — карточки с вариантами — и semantic: full — слова и смысл, pending — смысл ещё считается (повторите запрос), text — только слова. Нет ключей Meilisearch в .env — 503.</p>
 ${searches.join("\n")}
+
+<h2>Сведения об иконке</h2>
+<p class="muted">Адрес /icon (шаг 4 фазы 4): набор, автор и лицензия, варианты по стилям в порядке таблицы набора, оттенки, толщина линии (strokes), описания и синонимы ru/en, теги, авторство Feather и похожие по смыслу. Сведения — из индекса поиска: без ключей Meilisearch в .env — 503.</p>
+${details.join("\n")}
 
 <h2>Ошибки</h2>
 ${errors.join("\n")}

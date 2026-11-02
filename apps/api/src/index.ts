@@ -18,6 +18,7 @@ export default {
       search: {
         ...(env.SEARCH ? { bucket: env.SEARCH } : {}),
         ...(env.SEARCH_LIMIT ? { limiter: env.SEARCH_LIMIT } : {}),
+        ...(env.ICON_LIMIT ? { iconLimiter: env.ICON_LIMIT } : {}),
         ...(env.MEILISEARCH_URL && env.MEILISEARCH_SEARCH_KEY
           ? {
               meili: {

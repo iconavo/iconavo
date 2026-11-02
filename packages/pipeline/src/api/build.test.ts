@@ -83,6 +83,12 @@ describe("buildApi", () => {
           namespace_id: "1001",
           simple: { limit: 60, period: 60 },
         },
+        {
+          type: "ratelimit",
+          name: "ICON_LIMIT",
+          namespace_id: "1002",
+          simple: { limit: 300, period: 60 },
+        },
       ],
       observability: {
         enabled: true,

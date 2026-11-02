@@ -1,6 +1,7 @@
 // Обработчик edge API (ADR-0024): маршрут → параметры → манифест → кэш дата-центра → файлы имён (из
 // кэша файлов, затем из R2) → ответ. Поиск /search (ADR-0049) — свой путь: search/handler.ts; каталог
-// наборов /collections, /collection, /last-modified и /changelog (шаг 2 фазы 4) — catalog.ts. Новый
+// наборов /collections, /collection, /last-modified и /changelog (шаг 2 фазы 4) — catalog.ts;
+// сведения об иконке /icon (шаг 4 фазы 4) — icon.ts, с общими версией индекса и оглавлением. Новый
 // выпуск набора или новая сборка дают новые ключи кэша, сбрасывать ничего не нужно (ADR-0023). В кэш
 // попадают только ответы, которым понадобились файлы имён; новые файлы — следом за ответом, в пределах
 // бюджета обращений (data.ts). Сбой кэша — как промах: ответ соберётся из R2. Ответ из кэша менять
@@ -11,7 +12,11 @@ import type { IconavoIconSet } from "@iconavo-ui/core";
 import { isValidNamePart } from "@iconavo-ui/core/internal";
 import { batchBody } from "./batch.js";
 import { cacheKey } from "./cache.js";
-import { CATALOG_ROUTES, createCatalog } from "./catalog.js";
+import {
+  CATALOG_ROUTES,
+  catalogIndexLoader,
+  createCatalog,
+} from "./catalog.js";
 import { CACHE_OK, SVG_CSP, TYPES } from "./config.js";
 import { cssBody, cssOptionsKey, parseCssOptions } from "./css.js";
 import { readNames, storeNames } from "./data.js";
@@ -23,6 +28,7 @@ import {
   respond,
   StorageError,
 } from "./http.js";
+import { createIcon } from "./icon.js";
 import { manifestLoader, type SetEntry } from "./manifest.js";
 import { parseNames, searchable } from "./params.js";
 import {
@@ -30,6 +36,7 @@ import {
   SearchError,
   type SearchOptions,
 } from "./search/handler.js";
+import { indexVersionLoader } from "./search/index-version.js";
 import { parseSvgOptions, svgBody, svgOptionsKey } from "./svg.js";
 
 export interface HandlerOptions {
@@ -85,7 +92,7 @@ function route(pathname: string): Route {
     throw new ApiError(
       404,
       "not_found",
-      "Unknown address: use /{set}.json?icons=a,b, /{set}/{icon}.svg, /{set}.css?icons=a,b, /search?query=…, /collections, /collection?prefix=…, /last-modified or /changelog",
+      "Unknown address: use /{set}.json?icons=a,b, /{set}/{icon}.svg, /{set}.css?icons=a,b, /search?query=…, /icon?icon=set:icon, /collections, /collection?prefix=…, /last-modified or /changelog",
     );
   }
   if (!isValidNamePart(set)) throw setNotFound(set);
@@ -150,9 +157,25 @@ export function createHandler(options: HandlerOptions): Handler {
   const now = options.now ?? (() => Date.now());
   const log = options.log ?? (() => {});
   const manifest = manifestLoader(options.bucket, now, log, options.cache);
+  const searchOptions = options.search ?? {};
+  // Версия индекса и оглавления каталога — общие у поиска, каталога и /icon: одна загрузка на копию.
+  const indexVersion = indexVersionLoader(
+    searchOptions.bucket,
+    now,
+    log,
+    options.cache,
+  );
+  const catalogIndex = catalogIndexLoader(options.bucket, options.cache);
   const search = createSearch(
-    { cache: options.cache, build: options.build, manifest, now, log },
-    options.search ?? {},
+    {
+      cache: options.cache,
+      build: options.build,
+      manifest,
+      now,
+      log,
+      indexVersion,
+    },
+    searchOptions,
   );
   const catalog = createCatalog({
     bucket: options.bucket,
@@ -160,7 +183,27 @@ export function createHandler(options: HandlerOptions): Handler {
     build: options.build,
     manifest,
     log,
+    index: catalogIndex,
   });
+  const icon = createIcon(
+    {
+      bucket: options.bucket,
+      cache: options.cache,
+      build: options.build,
+      manifest,
+      catalog: catalogIndex,
+      indexVersion,
+      now,
+      log,
+    },
+    {
+      ...(searchOptions.meili ? { meili: searchOptions.meili } : {}),
+      ...(searchOptions.iconLimiter
+        ? { limiter: searchOptions.iconLimiter }
+        : {}),
+      ...(searchOptions.fetch ? { fetch: searchOptions.fetch } : {}),
+    },
+  );
   return async (request, waitUntil) => {
     const started = now();
     const head = request.method === "HEAD";
@@ -176,6 +219,9 @@ export function createHandler(options: HandlerOptions): Handler {
       const url = new URL(request.url);
       if (url.pathname === "/search") {
         return await search(request, url, waitUntil, head);
+      }
+      if (url.pathname === "/icon") {
+        return await icon(request, url, waitUntil, head);
       }
       const catalogKind = CATALOG_ROUTES.get(url.pathname);
       if (catalogKind !== undefined) {

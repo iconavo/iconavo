@@ -117,7 +117,7 @@ export const POLZA_EMBEDDINGS_URL = "https://polza.ai/api/v1/embeddings";
 export const COMMON_HEADERS: Readonly<Record<string, string>> = {
   "access-control-allow-origin": "*",
   "access-control-expose-headers":
-    "Retry-After, Server-Timing, X-Cache, X-Iconavo-Build, X-Iconavo-Index, X-Iconavo-Version",
+    "Retry-After, Server-Timing, X-Cache, X-Iconavo-Build, X-Iconavo-Content, X-Iconavo-Index, X-Iconavo-Version",
   "cross-origin-resource-policy": "cross-origin",
   "x-content-type-options": "nosniff",
 };

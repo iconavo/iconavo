@@ -31,6 +31,9 @@ export const WORKER_BUCKET = R2_BUCKET;
 export const SEARCH_BINDING = "SEARCH";
 export const LIMIT_BINDING = "SEARCH_LIMIT";
 export const LIMIT_NAMESPACE = "1001";
+/** Лимит частоты /icon (шаг 4 фазы 4) — своя привязка и своё пространство счёта. */
+export const ICON_LIMIT_BINDING = "ICON_LIMIT";
+export const ICON_LIMIT_NAMESPACE = "1002";
 export const SEARCH_SECRETS = [
   "MEILISEARCH_URL",
   "MEILISEARCH_SEARCH_KEY",

@@ -2,7 +2,8 @@
 // превью API без Meilisearch отвечает на /search 503. Здесь — настоящие документы индекса из data/
 // (loadSearchDocuments) и поиск по словам по вхождению (matchDocs), без смысла: превью ходит сюда без
 // ключа Polza, и его ответы предсказуемы — semantic: "text". Сервер слушает только 127.0.0.1 и сверяет
-// Host; понимает ровно POST /multi-search с ключом.
+// Host; понимает ровно POST /multi-search и похожие документы /indexes/icons/similar (адрес /icon,
+// шаг 4 фазы 4) с ключом.
 
 import { randomBytes } from "node:crypto";
 import { createServer, type IncomingMessage } from "node:http";
@@ -51,6 +52,52 @@ export function localSearch(
   };
 }
 
+/**
+ * Похожие документы без векторов (шаг 4 фазы 4): соседи по общим словам имени, тегов и синонимов, при
+ * равенстве — по месту набора и имени. Как у настоящего: самого документа в ответе нет; документа нет
+ * — 404; без вектора (нет описаний, textHash: null) — 400.
+ */
+export function localSimilar(
+  docs: readonly SearchDocument[],
+  body: Record<string, unknown>,
+): { status: number; body: unknown } {
+  const source = docs.find((d) => d.id === body.id);
+  if (source === undefined) return { status: 404, body: { message: "id" } };
+  if (source.textHash === null) {
+    return { status: 400, body: { message: "no vector" } };
+  }
+  const words = (d: SearchDocument) =>
+    new Set(
+      [...d.name, ...d.tags, ...d.synonymsEn, ...d.synonymsRu].flatMap((p) =>
+        p.split(" "),
+      ),
+    );
+  const mine = words(source);
+  const score = (d: SearchDocument) =>
+    [...words(d)].filter((w) => mine.has(w)).length;
+  const limit = Number(body.limit ?? 20);
+  const fields = Array.isArray(body.attributesToRetrieve)
+    ? (body.attributesToRetrieve as string[])
+    : ["icon"];
+  const hits = docs
+    .filter((d) => d !== source)
+    .map((d) => ({ d, s: score(d) }))
+    .sort(
+      (a, b) =>
+        b.s - a.s ||
+        a.d.setOrder - b.d.setOrder ||
+        (a.d.icon < b.d.icon ? -1 : 1),
+    )
+    .slice(0, limit)
+    .map(({ d }) => {
+      const doc = d as unknown as Record<string, unknown>;
+      return Object.fromEntries(
+        fields.filter((f) => f in doc).map((f) => [f, doc[f]] as const),
+      );
+    });
+  return { status: 200, body: { hits, id: source.id } };
+}
+
 export async function startLocalMeili(
   docs: readonly SearchDocument[],
 ): Promise<LocalMeili> {
@@ -74,13 +121,19 @@ export async function startLocalMeili(
     if (!allowedHost(req.headers.host, port)) {
       return reply(403, { message: "host" });
     }
-    if (req.method !== "POST" || req.url !== "/multi-search") {
+    const similar = req.url === "/indexes/icons/similar";
+    if (req.method !== "POST" || (req.url !== "/multi-search" && !similar)) {
       return reply(404, { message: "not found" });
     }
     if (req.headers.authorization !== `Bearer ${key}`) {
       return reply(401, { message: "key" });
     }
     try {
+      if (similar) {
+        local.calls++;
+        const answer = localSimilar(docs, JSON.parse(await bodyOf(req)));
+        return reply(answer.status, answer.body);
+      }
       const body = JSON.parse(await bodyOf(req)) as { queries?: unknown };
       if (!Array.isArray(body.queries)) {
         return reply(400, { message: "queries" });

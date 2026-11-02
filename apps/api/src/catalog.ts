@@ -8,6 +8,7 @@
 // через запятую, «mdi-» — начало имени; неизвестные параметры (pretty) не читаются.
 
 import { isValidNamePart } from "@iconavo-ui/core/internal";
+import { isStyle, type StyleTable } from "@iconavo-ui/search";
 import { cacheKey, sharedText } from "./cache.js";
 import {
   CATALOG_CACHE_BROWSER,
@@ -38,13 +39,27 @@ export type CatalogKind =
   | "last-modified"
   | "changelog";
 
-interface IndexEntry {
+/** Часть набора от другого автора — запись credits оглавления (ADR-0017). */
+export interface CatalogCredit {
+  name: string;
+  author: string;
+  url: string;
+  license: string;
+  icons: string[];
+}
+
+export interface IndexEntry {
   /** Отпечаток тела /collection: catalog/{набор}/{хэш}.json. */
   collection: string;
   /** IconifyInfo набора. */
   info: JsonObject;
   /** Полный текст лицензии, NOTICE, источник, ревизия — дополнение к info.license. */
   license: JsonObject;
+  /** Отпечаток содержимого набора (шаг 4 фазы 4); нет — каталог до шага 4. */
+  content?: string;
+  /** Таблица стилей: стиль → суффиксы с дефисом в порядке показа (ADR-0052). */
+  styles?: StyleTable;
+  credits?: CatalogCredit[];
 }
 
 export interface CatalogIndex {
@@ -55,6 +70,53 @@ export interface CatalogIndex {
 
 const isObject = (value: unknown): value is JsonObject =>
   typeof value === "object" && value !== null && !Array.isArray(value);
+
+const isStrings = (value: unknown): value is string[] =>
+  Array.isArray(value) && value.every((v) => typeof v === "string");
+
+const SUFFIX = /^(-[a-z0-9]+)*$/;
+
+/** Таблица стилей записи; не по форме — undefined, и запись неверна. */
+function stylesOf(value: unknown): StyleTable | undefined {
+  if (!isObject(value)) return undefined;
+  const out: StyleTable = {};
+  for (const [style, list] of Object.entries(value)) {
+    if (
+      !isStyle(style) ||
+      !isStrings(list) ||
+      !list.every((s) => SUFFIX.test(s))
+    )
+      return undefined;
+    out[style] = list;
+  }
+  return out;
+}
+
+/** Части от других авторов; не по форме — undefined. */
+function creditsOf(value: unknown): CatalogCredit[] | undefined {
+  if (!Array.isArray(value)) return undefined;
+  const out: CatalogCredit[] = [];
+  for (const c of value) {
+    if (
+      !isObject(c) ||
+      typeof c.name !== "string" ||
+      typeof c.author !== "string" ||
+      typeof c.url !== "string" ||
+      typeof c.license !== "string" ||
+      !isStrings(c.icons)
+    ) {
+      return undefined;
+    }
+    out.push({
+      name: c.name,
+      author: c.author,
+      url: c.url,
+      license: c.license,
+      icons: c.icons,
+    });
+  }
+  return out;
+}
 
 /** Оглавление по тексту; не тот формат — ошибка хранилища. */
 export function parseCatalogIndex(text: string): CatalogIndex {
@@ -85,10 +147,26 @@ export function parseCatalogIndex(text: string): CatalogIndex {
     ) {
       throw new StorageError(`в оглавлении каталога неверная запись «${id}»`);
     }
+    const styles =
+      entry.styles === undefined ? undefined : stylesOf(entry.styles);
+    const credits =
+      entry.credits === undefined ? undefined : creditsOf(entry.credits);
+    if (
+      (entry.content !== undefined &&
+        (typeof entry.content !== "string" ||
+          !CATALOG_PATTERN.test(entry.content))) ||
+      (entry.styles !== undefined && styles === undefined) ||
+      (entry.credits !== undefined && credits === undefined)
+    ) {
+      throw new StorageError(`в оглавлении каталога неверная запись «${id}»`);
+    }
     sets.set(id, {
       collection: entry.collection,
       info: entry.info,
       license: entry.license,
+      ...(typeof entry.content === "string" ? { content: entry.content } : {}),
+      ...(styles === undefined ? {} : { styles }),
+      ...(credits === undefined ? {} : { credits }),
     });
   }
   return { changelog: data.changelog, sets };
@@ -123,6 +201,53 @@ export interface CatalogContext {
   build: string;
   manifest: () => Promise<Manifest>;
   log: (message: string) => void;
+  /** Общий с /icon загрузчик оглавлений; нет — свой. */
+  index?: CatalogIndexLoader;
+}
+
+/** Оглавление по отпечатку. */
+export type CatalogIndexLoader = (hash: string) => Promise<CatalogIndex>;
+
+/** Файл каталога из R2; нет или не прочитан — ошибка хранилища. */
+export async function readCatalogText(
+  bucket: Bucket,
+  key: string,
+): Promise<string> {
+  let text: string | undefined;
+  try {
+    text = await (await bucket.get(key))?.text();
+  } catch (e) {
+    throw new StorageError(`${key} не прочитан: ${(e as Error).message}`);
+  }
+  if (text === undefined) throw new StorageError(`${key} нет в R2`);
+  return text;
+}
+
+/**
+ * Загрузчик оглавлений: из памяти копии функции, затем из кэша дата-центра (30 дней — файл
+ * неизменяем), затем из R2. Хватит двух в памяти — текущего и прежнего.
+ */
+export function catalogIndexLoader(
+  bucket: Bucket,
+  cache: EdgeCache,
+): CatalogIndexLoader {
+  const indexes = new Map<string, CatalogIndex>();
+  return async (hash) => {
+    const known = indexes.get(hash);
+    if (known !== undefined) return known;
+    const key = `${CATALOG_DIR}/${hash}.json`;
+    const text = await sharedText(
+      cache,
+      key,
+      () => readCatalogText(bucket, key),
+      CATALOG_CACHE_EDGE,
+    );
+    const index = parseCatalogIndex(text ?? "");
+    const oldest = indexes.keys().next().value;
+    if (indexes.size >= 2 && oldest !== undefined) indexes.delete(oldest);
+    indexes.set(hash, index);
+    return index;
+  };
 }
 
 export type CatalogRoute = (
@@ -133,7 +258,7 @@ export type CatalogRoute = (
 ) => Promise<Response>;
 
 /** Отпечаток оглавления из манифеста; манифест до шага 2 фазы 4 — каталога ещё нет. */
-function catalogOf(manifest: Manifest): string {
+export function catalogOf(manifest: Manifest): string {
   if (manifest.catalog === undefined) {
     throw new StorageError("в манифесте нет catalog — каталог ещё не выложен");
   }
@@ -147,49 +272,25 @@ const fullInfo = (entry: IndexEntry): JsonObject => ({
 });
 
 export function createCatalog(ctx: CatalogContext): CatalogRoute {
-  /** Оглавления по отпечатку: неизменяемы, хватит двух — текущего и прежнего. */
-  const indexes = new Map<string, CatalogIndex>();
+  const loadIndex = ctx.index ?? catalogIndexLoader(ctx.bucket, ctx.cache);
+  const readText = (key: string) => readCatalogText(ctx.bucket, key);
 
-  async function readText(key: string): Promise<string> {
-    let text: string | undefined;
-    try {
-      text = await (await ctx.bucket.get(key))?.text();
-    } catch (e) {
-      throw new StorageError(`${key} не прочитан: ${(e as Error).message}`);
-    }
-    if (text === undefined) throw new StorageError(`${key} нет в R2`);
-    return text;
-  }
-
-  async function loadIndex(hash: string): Promise<CatalogIndex> {
-    const known = indexes.get(hash);
-    if (known !== undefined) return known;
-    const key = `${CATALOG_DIR}/${hash}.json`;
-    const text = await sharedText(
-      ctx.cache,
-      key,
-      () => readText(key),
-      CATALOG_CACHE_EDGE,
-    );
-    const index = parseCatalogIndex(text ?? "");
-    const oldest = indexes.keys().next().value;
-    if (indexes.size >= 2 && oldest !== undefined) indexes.delete(oldest);
-    indexes.set(hash, index);
-    return index;
-  }
-
-  const headersOf = (version: string): Record<string, string> => ({
+  const headersOf = (
+    version: string,
+    content?: string,
+  ): Record<string, string> => ({
     "content-type": TYPES.json,
     "cache-control": CATALOG_CACHE_BROWSER,
     "timing-allow-origin": "*",
     "x-iconavo-build": ctx.build,
     ...(version === "" ? {} : { "x-iconavo-version": version }),
+    ...(content === undefined ? {} : { "x-iconavo-content": content }),
   });
 
   /** Готовый ответ из кэша дата-центра или собранный make и положенный туда после ответа. */
   async function cached(
     key: Request,
-    make: () => Promise<{ body: string; version: string }>,
+    make: () => Promise<{ body: string; version: string; content?: string }>,
     head: boolean,
     waitUntil: (promise: Promise<unknown>) => void,
   ): Promise<Response> {
@@ -207,8 +308,8 @@ export function createCatalog(ctx: CatalogContext): CatalogRoute {
       response.headers.set("x-cache", "HIT");
       return response;
     }
-    const { body, version } = await make();
-    const headers = headersOf(version);
+    const { body, version, content } = await make();
+    const headers = headersOf(version, content);
     if (cacheOk) {
       const stored = { ...headers, "cache-control": CATALOG_CACHE_EDGE };
       waitUntil(
@@ -291,7 +392,11 @@ export function createCatalog(ctx: CatalogContext): CatalogRoute {
           const body = info
             ? `{"info":${compactJson(fullInfo(entry))},${text.slice(1)}`
             : text;
-          return { body, version: set.version };
+          return {
+            body,
+            version: set.version,
+            ...(entry.content === undefined ? {} : { content: entry.content }),
+          };
         },
         head,
         waitUntil,

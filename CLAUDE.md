@@ -105,7 +105,7 @@ pnpm packages prepare [id…] [--new] [--force]   # пакеты npm в dist-npm
 pnpm packages verify [id…] [--wait=N] [--plan=…]   # в npm ровно эта сборка: отпечаток или версия из плана, файлы, provenance из main, доверенная публикация (ADR-0026)
 pnpm api build               # функция edge API в dist-api/: один модуль для Workers, metadata.json и метка сборки (ADR-0024); сеть не нужна
 pnpm api preview [--port=N]  # превью функции на 127.0.0.1:4281 с данными dist-cdn/ и страница для глаз
-pnpm api check [--expect-build=…]   # живой api.iconavo.dev против статики той же версии: кэш, заголовки, сжатие; и поиск; ключи не нужны
+pnpm api check [--expect-build=…]   # живой api.iconavo.dev против статики той же версии: кэш, заголовки, сжатие; поиск и сведения об иконке /icon; ключи не нужны
 pnpm api bench [--base=…]    # замер скорости /search: 100 запросов контрольной части, холодный проход и повтор, P50/P95 (ADR-0049); с машины GitHub — ручной запуск «Edge API» с «замер скорости»
 pnpm api bench --batches [--base=…] [--seed=N]   # замер скорости пачек по 30 имён без кэша ответов: новые иконки, знакомые в новой пачке, повтор, по 4 сразу; одно соединение HTTP/2; .cache/reports/api/bench-batches.html и .json (шаг 6 фазы 3, ADR-0030); с машины GitHub — ручной запуск «Edge API» с «замер пачек», можно с ветки
 pnpm search-index [--dry-run] [--max-rub=N] [--reembed]   # поисковый индекс Meilisearch из data/, векторы в бакете iconavo-search (ADR-0049); пишет только CI, локально — --dry-run
@@ -354,6 +354,8 @@ Edge API (ADR-0024, шаг 7 фазы 2): функция Cloudflare Workers `ico
   - SVG `/{набор}/{иконка}.svg` с параметрами `color`, `width`, `height`, `rotate`, `flip`, `box`, `download`; без параметров — побайтно файл статики;
   - CSS `/{набор}.css?icons=…` с параметрами `color`, `mode`, `square`, `format`, `download`;
   - поиск `/search?query=…` (ADR-0049): ответ как у Iconify плюс `results` (карточка с `variants`, `tones` и `styles`), `semantic` (`full`, `pending`, `text`) и `matched` (нашлось ли по словам — проба в том же multi-search); фильтры `prefix`, `palette`, `license`, `style` (шкала ADR-0052; в `icons` — имена этого стиля); кэш дата-центра по версии индекса, сбой кэша — промах; 60 поисков в минуту с адреса, `Retry-After` открыт браузеру. Фраза из бакета и гибрид успели за 0,25 с — полная выдача, иначе сразу слова, а полная досчитывается в фоне. Ключи `MEILISEARCH_URL`, `MEILISEARCH_SEARCH_KEY`, `POLZA_API_KEY` — секреты окружения `api`, выкладка вписывает их в `metadata.json`.
+  - сведения об иконке `/icon?icon=набор:иконка` (шаг 4 фазы 4, ADR-0041): каноническое имя (`alias` — спросили старое), `hidden`, набор с автором и лицензией, карточка и `style`, `variants` — стили по шкале с вариантами в порядке таблицы набора, `tones`, `strokes` (`hasStrokeWidth` ядра), `description`/`synonyms` ru/en или `null`, `tags`, `credits` (Feather у Lucide), `similar` — до 12 по векторам индекса (`POST /indexes/icons/similar`), в стиле этой иконки. Данные — файл имени из R2, оглавление каталога (`styles`, `credits`, `content`) и индекс (`about`, фильтр `names`). Кэш дата-центра 30 дней по версиям набора, индекса и оглавления, браузеру — 5 минут; лимит — своя привязка `ICON_LIMIT`, 300 промахов в минуту с адреса; Meilisearch не ответил — 503. Код — `apps/api/src/icon.ts`, общее с сайтом — `packages/search/src/details.ts` (тип ответа `IconDetails`);
+  - `X-Iconavo-Content` у `/collection` и `/icon` — отпечаток содержимого набора из оглавления: по нему сайт узнаёт, что сбросить (шаг 4 фазы 4);
 - **Параметры строже, чем у Iconify**: неверное значение — 400, JSON с кодом. Например, `rotate=90` — ошибка, нужно `90deg` или `1`.
 - **Код:**
   - функция — `apps/api/src/`: `handler.ts` — маршруты и кэш, `config.ts` — лимиты и заголовки;
@@ -377,6 +379,7 @@ Edge API (ADR-0024, шаг 7 фазы 2): функция Cloudflare Workers `ico
   - Ждёт до 3 минут, пока API отдаст версию из манифеста R2.
   - Пачка в двух порядках: второй ответ — HIT и побайтно тот же.
   - SVG, CSS, ответы 404, CORS, защита, сжатие, переход с http, время первого ответа.
+  - Сведения об иконке (`src/api/icon-check.ts`): `lucide:house` и повтор из кэша, старое имя `lucide:alert-circle` и Feather, варианты `ph:house-bold` по таблице, оттенки Fluent, скрытая `lucide:circle-parking`, 400 и 404.
   - Каталог наборов: ждёт до 3 минут, пока API отдаст оглавление из поля `catalog` манифеста, и сверяет `/collections`, `/collection?prefix=lucide&info=true`, `/last-modified` и `/changelog` с манифестом; 400 и 404. В манифесте нет `catalog` — строки каталога пропускаются с пометкой «не проверялось».
 - **CI** — workflow «Edge API» (`.github/workflows/api.yml`).
   - Запуск: push в `main` при изменении `apps/api/**`, `packages/core/**`, `packages/search/**`, `packages/pipeline/src/api/**`, lock-файла или самого workflow; вручную — флажки «только показ», «выложить заново» (после смены ключей), «замер скорости» и «замер пачек». Замер пачек только читает открытые адреса и идёт и с ветки — против живого API, без выкладки.

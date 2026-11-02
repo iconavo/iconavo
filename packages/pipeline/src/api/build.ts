@@ -9,7 +9,7 @@ import { createHash } from "node:crypto";
 import { mkdir } from "node:fs/promises";
 import { join } from "node:path";
 import { gzipSync } from "node:zlib";
-import { SEARCH_RATE } from "@iconavo-ui/search";
+import { ICON_RATE, SEARCH_RATE } from "@iconavo-ui/search";
 import { canonicalJson, type Json } from "../build/json.js";
 import { writeIfChanged } from "../cdn/write.js";
 import { SEARCH_BUCKET } from "../meili/config.js";
@@ -18,6 +18,8 @@ import {
   BUILD_ID_LENGTH,
   BUILD_PLACEHOLDER,
   COMPATIBILITY_DATE,
+  ICON_LIMIT_BINDING,
+  ICON_LIMIT_NAMESPACE,
   LIMIT_BINDING,
   LIMIT_NAMESPACE,
   METADATA_FILE,
@@ -44,8 +46,9 @@ export interface ApiBuildOptions {
 
 /**
  * metadata загрузки функции: модуль, дата совместимости, привязки бакета раздачи, закрытого бакета
- * поиска и лимита частоты (ADR-0049). Секреты поиска сюда не пишутся: их вписывает выкладка. Журналы —
- * только наши сообщения об ошибках, без журнала запросов с IP (ADR-0028).
+ * поиска и лимитов частоты поиска (ADR-0049) и /icon (шаг 4 фазы 4). Секреты поиска сюда не пишутся:
+ * их вписывает выкладка. Журналы — только наши сообщения об ошибках, без журнала запросов с IP
+ * (ADR-0028).
  */
 export function workerMetadata(): Json {
   return {
@@ -59,6 +62,12 @@ export function workerMetadata(): Json {
         name: LIMIT_BINDING,
         namespace_id: LIMIT_NAMESPACE,
         simple: { limit: SEARCH_RATE.limit, period: SEARCH_RATE.period },
+      },
+      {
+        type: "ratelimit",
+        name: ICON_LIMIT_BINDING,
+        namespace_id: ICON_LIMIT_NAMESPACE,
+        simple: { limit: ICON_RATE.limit, period: ICON_RATE.period },
       },
     ],
     observability: {
