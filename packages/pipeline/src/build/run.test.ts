@@ -22,7 +22,12 @@ import {
 import type { LockEntry } from "../sources/lock.js";
 import { SVG_NS } from "../svg/xml.js";
 import { formatBuildReport, renderBuildGallery } from "./report.js";
-import { buildSet, type SetBuildReport, writeSetData } from "./run.js";
+import {
+  aliasResolver,
+  buildSet,
+  type SetBuildReport,
+  writeSetData,
+} from "./run.js";
 
 const LICENSE_TEXT = "MIT License\n\nCopyright (c) Demo\n";
 const base: SourceConfigInput = {
@@ -849,5 +854,28 @@ describe("описания из search.json на диске (ADR-0046)", () => {
       expect.stringMatching(/^search\.json на диске не проходит схему/),
     ]);
     expect(await writeSetData(dataDir, r)).toBeUndefined();
+  });
+});
+
+describe("aliasResolver", () => {
+  const resolve = aliasResolver({
+    icons: { house: { body: "" }, x: { body: "" } },
+    aliases: {
+      home: { parent: "house" },
+      "old-home": { parent: "home" },
+      loop: { parent: "loop" },
+    },
+  });
+
+  it("иконка — она сама, алиас — его иконка по цепочке", () => {
+    expect(resolve("house")).toBe("house");
+    expect(resolve("home")).toBe("house");
+    expect(resolve("old-home")).toBe("house");
+  });
+
+  it("незнакомое имя, петля и имена из прототипа объекта — undefined", () => {
+    expect(resolve("nope")).toBeUndefined();
+    expect(resolve("loop")).toBeUndefined();
+    expect(resolve("constructor")).toBeUndefined();
   });
 });

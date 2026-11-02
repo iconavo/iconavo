@@ -71,7 +71,10 @@ export const FILTERABLE = [
   "set",
   "style",
 ] as const;
-export const DISPLAYED = ["icon", "variants", "tones", "styles"] as const;
+/** Поля карточки в выдаче /search: остальные отдаваемые поля поиск не просит, ответ не тяжелеет. */
+export const RESULT_FIELDS = ["icon", "variants", "tones", "styles"] as const;
+/** Сведения об одной иконке — ещё и about (адрес /icon, шаг 4 фазы 4). */
+export const DISPLAYED = [...RESULT_FIELDS, "about"] as const;
 
 /** Настройки индекса — ровно то, что ставит робот. */
 export const INDEX_SETTINGS = {

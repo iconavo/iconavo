@@ -78,6 +78,10 @@ export function formatMetadata(m: SetMetadata): string[] {
       : "  Лицензия: текст не прочитан",
     `  Метаданные ${m.format ? `автора (${m.format})` : "автора: нет"} · теги автора у ${c.author} из ${c.total} · из имени ${c.name} · категорий ${c.categories}`,
     `  Витрина: ${m.samples.join(", ")}`,
+    ...m.credits.map(
+      (c) =>
+        `  Часть от другого автора: ${c.name} (${c.author}, ${c.license}) — ${c.icons.length} иконок`,
+    ),
     ...(m.enrichment
       ? [
           `  Описания (ADR-0046): перешли к ${m.enrichment.kept.length} базовым иконкам · отброшено ${m.enrichment.dropped.length}${m.enrichment.dropped.length > 0 ? ` (${m.enrichment.dropped.slice(0, 5).join(", ")}${m.enrichment.dropped.length > 5 ? ", …" : ""})` : ""}`,
@@ -241,6 +245,18 @@ ${namesList(m.styleSuspects)}`
 ${suspects}`;
 }
 
+function creditsBlock(m: SetMetadata): string {
+  if (m.credits.length === 0) return "";
+  const items = m.credits.map(
+    (c) =>
+      `<h4><a href="${esc(c.url)}">${esc(c.name)}</a> — ${esc(c.author)}, ${esc(c.license)} (${c.icons.length})</h4>
+${namesList(c.icons)}`,
+  );
+  return `<h3>Части от других авторов</h3>
+<p class="muted">Список — из LICENSE набора, старые имена переведены в нынешние по алиасам (ADR-0017). Сайт и API показывают у этих иконок второго автора и его лицензию.</p>
+${items.join("\n")}`;
+}
+
 function categoriesBlock(m: SetMetadata): string {
   if (m.categories.length === 0) {
     return `<p class="muted">Нет: в источнике нет категорий автора.</p>`;
@@ -295,6 +311,7 @@ ${namesList(m.withoutAuthor)}`
 ${stops}
 <h3>Лицензия</h3>
 ${licenseBlock(n.id, m.license)}
+${creditsBlock(m)}
 <h3>Витрина</h3>
 ${samplesBlock(r)}
 ${suffixesBlock(m)}

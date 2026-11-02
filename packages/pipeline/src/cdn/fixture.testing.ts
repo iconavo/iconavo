@@ -1,6 +1,6 @@
-// Тестовый набор в data/{id}/ для сборки раздачи: icons.json, info.json, metadata.json и changelog.json
-// с выпуском текущей версии проходят схемы, версия — настоящий отпечаток. Сломанные файлы тесты пишут
-// сами.
+// Тестовый набор в data/{id}/ для сборки раздачи: icons.json, info.json, metadata.json, search.json и
+// changelog.json с выпуском текущей версии проходят схемы, версия — настоящий отпечаток. Сломанные
+// файлы тесты пишут сами.
 
 import { mkdir, writeFile } from "node:fs/promises";
 import { join } from "node:path";
@@ -31,6 +31,8 @@ export interface CdnDemoSet {
   release?: { [key: string]: Json };
   /** Ревизия источника в info.json и журнале; по умолчанию 1.0.0. */
   revision?: string;
+  /** search.json — в отпечатке содержимого (шаг 4 фазы 4); по умолчанию теги из имён. */
+  search?: { [key: string]: Json };
 }
 
 export const DEMO_LAST_MODIFIED = 1792490457;
@@ -90,11 +92,23 @@ export async function writeCdnDemoSet(
     return release;
   });
   const changelog = { prefix: set.id, releases };
+  const search = set.search ?? {
+    prefix: set.id,
+    icons: Object.fromEntries(
+      Object.keys(set.icons)
+        .filter((name) => set.icons[name]?.hidden !== true)
+        .map((name) => [
+          name,
+          { fingerprint: "0123456789ab", tags: name.split("-") },
+        ]),
+    ),
+  };
   const issues = [
     ...validate("icons", icons),
     ...validate("info", info),
     ...validate("metadata", metadata),
     ...validate("changelog", changelog),
+    ...validate("search", search),
   ];
   if (issues.length > 0) {
     throw new Error(
@@ -105,5 +119,11 @@ export async function writeCdnDemoSet(
   await writeFile(join(dir, "info.json"), canonicalJson(info));
   await writeFile(join(dir, "metadata.json"), canonicalJson(metadata));
   await writeFile(join(dir, "changelog.json"), canonicalJson(changelog));
+  // Свой search.json теста (writeDemoSet поиска) не перезаписывается, если search не задан явно.
+  await writeFile(join(dir, "search.json"), canonicalJson(search), {
+    flag: set.search === undefined ? "wx" : "w",
+  }).catch((e: NodeJS.ErrnoException) => {
+    if (e.code !== "EEXIST") throw e;
+  });
   return { version };
 }

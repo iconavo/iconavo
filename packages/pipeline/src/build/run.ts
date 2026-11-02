@@ -102,6 +102,30 @@ const bytes = (text: string) => Buffer.byteLength(text, "utf8");
 const order = (a: string, b: string) => (a < b ? -1 : a > b ? 1 : 0);
 
 /**
+ * Имя иконки или алиаса → нынешнее имя иконки по icons.json этой сборки (ADR-0018): алиас ведёт к
+ * родителю, цепочка — не длиннее 10. Незнакомое имя — undefined.
+ */
+export function aliasResolver(data: {
+  readonly [key: string]: unknown;
+}): (name: string) => string | undefined {
+  const icons = (data.icons ?? {}) as Record<string, unknown>;
+  const aliases = (data.aliases ?? {}) as Record<
+    string,
+    { parent?: unknown } | undefined
+  >;
+  return (name) => {
+    let n = name;
+    for (let i = 0; i <= 10; i++) {
+      if (Object.hasOwn(icons, n)) return n;
+      const parent = Object.hasOwn(aliases, n) ? aliases[n]?.parent : undefined;
+      if (typeof parent !== "string") return undefined;
+      n = parent;
+    }
+    return undefined;
+  };
+}
+
+/**
  * Собирает набор из скачанного источника (entry — его запись в sources.lock.json): результат — отчёт
  * и, если набор не остановлен, тексты файлов набора.
  */
@@ -238,6 +262,7 @@ export async function buildSet(
       version: changelog.version,
       previousSearch: options.previousSearch,
       renamed: changelog.changes.renamed,
+      resolve: aliasResolver(changelog.data),
     },
   );
   stop.push(...metadata.stop);

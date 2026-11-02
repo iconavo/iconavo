@@ -765,6 +765,7 @@ describe("checkCdn: каталог наборов на основном хост
           source: "https://example.com/demo",
           revision: "1.0.0",
         },
+        content: "cccccccccccc",
       },
     },
   });

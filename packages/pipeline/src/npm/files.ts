@@ -120,13 +120,25 @@ export interface IconavoSetInfo {
 /** Common style of a variant: outline, filled, duotone or color. */
 export type IconavoStyle = "outline" | "filled" | "duotone" | "color";
 
-/** The author's categories, variant suffixes and their styles. */
+/** Icons of the set that come from another author, under their own license. */
+export interface IconavoCredit {
+  name: string;
+  author: string;
+  url: string;
+  /** SPDX identifier of their license. */
+  license: string;
+  icons: string[];
+}
+
+/** The author's categories, variant suffixes, their styles and credits. */
 export interface IconavoSetMetadata {
   categories?: Record<string, string[]>;
   /** Suffix → variant name; "" is the base variant. */
   suffixes?: Record<string, string>;
   /** Style → suffixes of its variants in display order; "" is the base variant. */
   styles?: Partial<Record<IconavoStyle, string[]>>;
+  /** Icons from other authors, such as the Feather icons in Lucide. */
+  credits?: IconavoCredit[];
 }
 
 export declare const icons: IconavoIconSet;
@@ -170,6 +182,11 @@ function metadataLine(set: NpmSet): string {
   if (categories > 0) parts.push(`the author's categories (${categories})`);
   if (variants.length > 0) parts.push(`variants: ${variants.join(", ")}`);
   if (styleList.length > 0) parts.push(`styles: ${styleList.join(", ")}`);
+  for (const c of set.metadata.credits ?? []) {
+    parts.push(
+      `${count(c.icons.length, "icon", "icons")} from ${c.name} by ${c.author} (${c.license})`,
+    );
+  }
   return parts.length > 0
     ? parts.join("; ")
     : "empty: the author has no categories or variants";

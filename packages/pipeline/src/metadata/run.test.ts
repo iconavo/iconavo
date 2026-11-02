@@ -128,6 +128,49 @@ describe("метаданные набора", () => {
     expect(r.styleSuspects).toEqual([]);
   });
 
+  it("части от других авторов — из LICENSE, старые имена по журналу (ADR-0017)", async () => {
+    const anchor = "The following icons are derived from the Feather project:";
+    const text = `${TEXT}\n${anchor}\n\nold-heart, arrow\n`;
+    await makeSource({ LICENSE: text });
+    const cfg = config({
+      license: {
+        spdx: "MIT",
+        file: "LICENSE",
+        confirmed: licenseHash("MIT", text),
+      },
+      credits: [
+        {
+          name: "Feather",
+          author: "Cole Bemis",
+          url: "https://github.com/feathericons/feather",
+          license: "MIT",
+          list: anchor,
+        },
+      ],
+    });
+    const r = await setMetadata(cfg, dir, ENTRY, ICONS, names(), {
+      resolve: (n) => (n === "old-heart" ? "heart" : n),
+    });
+    expect(r.stop).toEqual([]);
+    expect(r.credits.map((c) => c.icons)).toEqual([["arrow", "heart"]]);
+    expect(jsonOf(r, "metadata.json").credits).toEqual([
+      {
+        name: "Feather",
+        author: "Cole Bemis",
+        url: "https://github.com/feathericons/feather",
+        license: "MIT",
+        icons: ["arrow", "heart"],
+      },
+    ]);
+    expect(validate("metadata", jsonOf(r, "metadata.json"))).toEqual([]);
+
+    const unknown = await setMetadata(cfg, dir, ENTRY, ICONS, names());
+    expect(unknown.stop).toEqual([
+      "Feather: в наборе нет иконок из списка LICENSE: old-heart",
+    ]);
+    expect(unknown.files).toBeUndefined();
+  });
+
   it("имя с суффиксом другого стиля без основы — в отчёт", async () => {
     await makeSource();
     const icons = [

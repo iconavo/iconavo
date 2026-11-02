@@ -5,6 +5,7 @@
 // отражений — только у раздачи. Каталогу edge API нужны ещё metadata.json и changelog.json
 // (loadCatalogSet, шаг 2 фазы 4).
 
+import { createHash } from "node:crypto";
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 import {
@@ -17,6 +18,7 @@ import {
 import type { Json } from "../build/json.js";
 import { versionOf } from "../changelog/state.js";
 import type { SourceConfig } from "../sources/config.js";
+import { CATALOG_HASH_LENGTH } from "./config.js";
 
 export interface SetData {
   id: string;
@@ -38,6 +40,33 @@ export type CdnSet = SetData;
 export interface CatalogSet extends CdnSet {
   metadata: MetadataFile;
   changelog: ChangelogFile;
+  /** Отпечаток содержимого набора — contentHash файлов CONTENT_FILES (шаг 4 фазы 4). */
+  content: string;
+}
+
+/**
+ * Файлы набора в отпечатке содержимого (шаг 4 фазы 4, ADR-0039): всё, что показывают сайт и edge API,
+ * — и описания из search.json, у которых своей версии нет. По отпечатку сайт узнаёт, страницы каких
+ * наборов сбросить.
+ */
+export const CONTENT_FILES = [
+  "icons.json",
+  "info.json",
+  "metadata.json",
+  "search.json",
+  "changelog.json",
+] as const;
+
+/** Отпечаток содержимого: SHA-256 файлов по порядку, у каждого — имя и длина, первые 12 знаков. */
+export function contentHash(
+  files: readonly { name: string; bytes: Uint8Array }[],
+): string {
+  const hash = createHash("sha256");
+  for (const file of files) {
+    hash.update(`${file.name}\0${file.bytes.length}\0`);
+    hash.update(file.bytes);
+  }
+  return hash.digest("hex").slice(0, CATALOG_HASH_LENGTH);
 }
 
 const order = (a: string, b: string) => (a < b ? -1 : a > b ? 1 : 0);
@@ -145,12 +174,14 @@ export async function loadCatalogSet(
 ): Promise<CatalogSet> {
   const dir = join(dataDir, set.id);
   const hint = rebuildHint(set.id);
-  const metadata = (await readSetFile(dir, "metadata.json", hint)).data;
+  const metadataFile = await readSetFile(dir, "metadata.json", hint);
+  const metadata = metadataFile.data;
   const metadataIssues = validate("metadata", metadata);
   if (metadataIssues.length > 0) {
     throw new Error(issuesText("metadata.json", metadataIssues));
   }
-  const changelog = (await readSetFile(dir, "changelog.json", hint)).data;
+  const changelogFile = await readSetFile(dir, "changelog.json", hint);
+  const changelog = changelogFile.data;
   const changelogIssues = validate("changelog", changelog);
   if (changelogIssues.length > 0) {
     throw new Error(issuesText("changelog.json", changelogIssues));
@@ -167,7 +198,27 @@ export async function loadCatalogSet(
       `свежий выпуск в changelog.json (${latest}) — не версия icons.json (${set.version}) — ${hint}`,
     );
   }
-  return { ...set, metadata: metadata as MetadataFile, changelog: journal };
+  let search: Uint8Array;
+  try {
+    search = await readFile(join(dir, "search.json"));
+  } catch {
+    throw new Error(`search.json не читается — ${hint}`);
+  }
+  const bytes: Record<(typeof CONTENT_FILES)[number], Uint8Array> = {
+    "icons.json": set.bytes.icons,
+    "info.json": set.bytes.info,
+    "metadata.json": metadataFile.bytes,
+    "search.json": search,
+    "changelog.json": changelogFile.bytes,
+  };
+  return {
+    ...set,
+    metadata: metadata as MetadataFile,
+    changelog: journal,
+    content: contentHash(
+      CONTENT_FILES.map((name) => ({ name, bytes: bytes[name] })),
+    ),
+  };
 }
 
 /** Набор для раздачи: общие проверки и запрет поворотов и отражений — статический SVG их не умеет. */

@@ -34,6 +34,13 @@ export function setStrokeWidth(body: string, width: number): string {
     : body;
 }
 
+/**
+ * Меняет ли толщина линии этот рисунок: он монохромный и линии в нём — линии, с атрибутом
+ * stroke-width. Так сайт, edge API и MCP решают, предлагать ли толщину (ADR-0041).
+ */
+export const hasStrokeWidth = (body: string): boolean =>
+  body.includes("currentColor") && /\sstroke-width="/.test(body);
+
 /** Номер отрисовки для ID: общий для всех копий ядра на странице. */
 function next(): number {
   const n = store.ids ?? 0;

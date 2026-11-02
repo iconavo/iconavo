@@ -4,7 +4,12 @@
 // документа: имя и прежние имена, теги автора, синонимы ru/en; описания идут только в векторы. Слова
 // вариантов (bold, outline…) не индексируются.
 
-import { baseName, groupCards, type Style } from "@iconavo-ui/search";
+import {
+  baseName,
+  groupCards,
+  type SearchAbout,
+  type Style,
+} from "@iconavo-ui/search";
 import { iconText, textHash } from "../embed/text.js";
 import { type LoadedSet, loadSet } from "../enrich/run.js";
 import type { NormalizedIcon } from "../normalize/normalize.js";
@@ -39,6 +44,8 @@ export interface SearchDoc {
   tones: string[];
   /** Стиль общей шкалы → главное имя карточки в нём (ADR-0052). */
   styles: Partial<Record<Style, string>>;
+  /** Описания, синонимы и теги для показа — как в search.json (шаг 4 фазы 4). */
+  about: SearchAbout;
   /** Слова по полям, без повторов. */
   words: DocWords;
 }
@@ -120,6 +127,16 @@ export function setDocs(config: SourceConfig, set: LoadedSet): SetDocs {
       ...(entry.en?.synonyms ?? []),
       ...(entry.ru?.synonyms ?? []),
     ];
+    const about: SearchAbout = { tags: [...entry.tags] };
+    for (const lang of ["en", "ru"] as const) {
+      const text = entry[lang];
+      if (text !== undefined) {
+        about[lang] = {
+          description: text.description,
+          synonyms: [...text.synonyms],
+        };
+      }
+    }
     const doc: SearchDoc = {
       id: `${id}:${name}`,
       set: id,
@@ -129,6 +146,7 @@ export function setDocs(config: SourceConfig, set: LoadedSet): SetDocs {
       variants: card.variants,
       tones: card.tones,
       styles: card.styles,
+      about,
       phrases: {
         name: unique([name, ...(renamed.get(name) ?? [])]),
         tags: entry.tags,

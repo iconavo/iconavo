@@ -22,7 +22,12 @@ export {
   SEMANTIC_RATIO,
   STORE_KEYS,
 } from "./config.js";
-export { documentId, type SearchDocument } from "./document.js";
+export {
+  documentId,
+  type SearchAbout,
+  type SearchAboutText,
+  type SearchDocument,
+} from "./document.js";
 export {
   exactName,
   nameForm,
@@ -56,6 +61,7 @@ export {
   FILTERABLE,
   INDEX_SETTINGS,
   type IndexSettings,
+  RESULT_FIELDS,
   SEARCHABLE,
   STOP_WORDS,
 } from "./settings.js";

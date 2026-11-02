@@ -197,6 +197,27 @@ export const sourceConfigSchema = z
      * в реестре таблица обязательна — это проверяет тест реестра.
      */
     styles: styleTableSchema.optional(),
+    /**
+     * Части набора от других авторов (ADR-0017): у Lucide — иконки из Feather под MIT. Список иконок
+     * берётся из LICENSE набора: строка сразу после фразы `list` — имена через запятую. Старые имена
+     * переводятся в нынешние по алиасам; незнакомое имя — «СТОП».
+     */
+    credits: z
+      .array(
+        z.strictObject({
+          name: z.string().min(1),
+          author: z.string().min(1),
+          url: z.url().refine((u) => u.startsWith("https://"), "адрес — https"),
+          license: z.enum(
+            LICENSE_IDS,
+            `лицензия — одна из разрешённых: ${LICENSE_IDS.join(", ")} (ADR-0017)`,
+          ),
+          /** Строка LICENSE набора, после которой идёт список иконок. */
+          list: z.string().trim().min(1),
+        }),
+      )
+      .min(1)
+      .optional(),
   })
   .superRefine((config, ctx) => {
     if (config.styles !== undefined) {
