@@ -459,11 +459,17 @@ async function checkManyPage(
     await route.continue().catch(() => {});
   });
   await open(page, `${o.base}/many?api=${encodeURIComponent(o.api)}`);
+  // Имена — от их сетки, а не от окна: полоса счётчиков над сеткой растёт вместе с числами (в Chrome на
+  // Windows кнопка «32» уходит на вторую строку, и сетка съезжает на 39 px), а резерв тут ни при чём.
   const spots = () =>
     page.evaluate(() =>
       [...document.querySelectorAll(".c span")].slice(0, 300).map((span) => {
         const box = span.getBoundingClientRect();
-        return { left: box.left, top: box.top };
+        const grid = span.closest(".grid")?.getBoundingClientRect();
+        return {
+          left: box.left - (grid?.left ?? 0),
+          top: box.top - (grid?.top ?? 0),
+        };
       }),
     );
   const drawn = () =>
