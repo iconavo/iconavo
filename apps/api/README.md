@@ -76,9 +76,15 @@ GET https://api.iconavo.dev/search?query=trash%20can&limit=4
 {
   "icons": ["lucide:trash", "tabler:trash", "ph:trash", "material-symbols:delete"],
   "limit": 4,
+  "matched": true,
   "results": [
-    { "icon": "lucide:trash", "tones": [], "variants": [] },
-    { "icon": "ph:trash", "tones": [], "variants": ["trash-bold", "trash-duotone"] }
+    { "icon": "lucide:trash", "styles": { "outline": "trash" }, "tones": [], "variants": [] },
+    {
+      "icon": "ph:trash",
+      "styles": { "duotone": "trash-duotone", "filled": "trash-fill", "outline": "trash" },
+      "tones": [],
+      "variants": ["trash-bold", "trash-duotone", "trash-fill"]
+    }
   ],
   "semantic": "full",
   "start": 0,
@@ -88,6 +94,9 @@ GET https://api.iconavo.dev/search?query=trash%20can&limit=4
 
 - **Iconify-compatible fields.** `icons`, `total`, `limit` and `start` work as on Iconify: `total` is the number of icons in this response, and if it equals `limit`, request the next page with `start`.
 - **`results`** groups each base icon with its style `variants` and Fluent Emoji skin `tones`. Variant and tone names are given without the set prefix.
+- **`styles`** in each result maps a common style — `outline`, `filled`, `duotone` or `color` — to the name to show in that style (see `styles` of [`/collection`](#icons-of-a-set-collectionprefix)). It can be an alias: Material Symbols draws many icons the same way in both styles.
+- **`icons`** lists what to show: the name in the requested `style`; for an exact match with a variant or a skin tone, that name itself (`house-fill`, not `house`); otherwise the base icon.
+- **`matched`** is `false` when no icon matched the words or the exact name, so the results only look close in meaning. Show a hint to rephrase the query.
 - **Exact names first.** A query that looks like an icon name (`house`, `lucide:house`) puts the matching icons first and marks them with `"exact": true`. With a `set:` prefix, only the exact match is limited to that set; the other results come from all sets (use `prefix` to filter them).
 - **`semantic`** says how complete the results are:
   - `full` — words and meaning;
@@ -102,8 +111,9 @@ GET https://api.iconavo.dev/search?query=trash%20can&limit=4
 | `prefix`, `prefixes` | One icon set, or several separated by commas. |
 | `palette` | `1` — multicolor sets only, `0` — monochrome sets only. |
 | `license` | SPDX license ids separated by commas, for example `MIT,ISC`. |
+| `style` | One common style: `outline`, `filled`, `duotone` or `color`. Only icons that have it, shown in it. |
 
-- **Rate limit.** At most 60 uncached searches per minute from one address (IPv6 — per /64 network); more gives 429 with `Retry-After: 60`. Cached responses are not counted.
+- **Rate limit.** At most 60 uncached searches per minute from one address (IPv6 — per /64 network); more gives 429 with `Retry-After: 60`. Pages can read `Retry-After`. Cached responses are not counted.
 - **Caching.** Full results are cached for 5 minutes in browsers (`Cache-Control: public, max-age=300`); `pending` and `text` results are not cached. `X-Iconavo-Index` is the version of the search index.
 - **Privacy.** Queries are not logged and IP addresses are not stored.
 
@@ -222,7 +232,7 @@ Errors are short JSON with an HTTP status:
 
 | Status | Codes |
 | --- | --- |
-| 400 | `icons_required`, `too_many_icons`, `duplicate_parameter`, `invalid_parameter`, `invalid_color`, `invalid_size`, `invalid_rotate`, `invalid_flip`, `invalid_mode`, `invalid_format`; search: `query_required`, `invalid_limit`, `invalid_start`, `invalid_prefix`, `invalid_license`; `/collection`: `prefix_required` |
+| 400 | `icons_required`, `too_many_icons`, `duplicate_parameter`, `invalid_parameter`, `invalid_color`, `invalid_size`, `invalid_rotate`, `invalid_flip`, `invalid_mode`, `invalid_format`; search: `query_required`, `invalid_limit`, `invalid_start`, `invalid_prefix`, `invalid_license`, `invalid_style`; `/collection`: `prefix_required` |
 | 404 | `not_found` (unknown address), `set_not_found`, `icon_not_found` |
 | 405 | `method_not_allowed`: only `GET`, `HEAD` and `OPTIONS` are allowed |
 | 429 | `rate_limited`: too many searches, retry after a minute |
@@ -246,4 +256,4 @@ In `/collection?info=true`, `info.license` also carries the full license text; `
 - A new release of a set is served within a minute; the edge cache needs no purge.
 - `X-Iconavo-Version` is the data version of the set (on `/collections`, `/last-modified` and `/changelog` — of the whole catalog), `X-Iconavo-Build` is the API build, and `X-Cache` says `HIT` or `MISS`.
 - `Server-Timing` on icon, SVG and CSS responses shows where the time went: `cache` (`hit` or `miss`), `files` (icon files found in the edge cache / looked up), `r2` (files read from storage) and `total`, all in milliseconds. `Timing-Allow-Origin: *` lets pages read it.
-- Every response allows any origin (`Access-Control-Allow-Origin: *`). SVG responses carry a strict `Content-Security-Policy`.
+- Every response allows any origin (`Access-Control-Allow-Origin: *`) and lets pages read `Retry-After`, `Server-Timing`, `X-Cache`, `X-Iconavo-Build`, `X-Iconavo-Index` and `X-Iconavo-Version`. SVG responses carry a strict `Content-Security-Policy`.

@@ -14,6 +14,7 @@ import {
   exactQuery,
   mainQuery,
   pageResults,
+  probeQuery,
   SEARCH_MODEL,
   SEARCH_RATE,
   SEMANTIC_RATIO,
@@ -80,6 +81,8 @@ export type SearchRoute = (
 interface Lists {
   exact: SearchHit[];
   main: SearchHit[];
+  /** Нашлось ли по словам или точному имени (ADR-0040). */
+  matched: boolean;
 }
 
 type VectorResult =
@@ -161,7 +164,11 @@ export function createSearch(
     mark("index", indexStarted);
     const meta = { "x-iconavo-build": ctx.build, "x-iconavo-index": version };
     const key = cacheKey(ctx.build, version, "/search", searchCacheParams(p));
-    const hit = await ctx.cache.match(key);
+    // Сбой кэша — как промах, а не ошибка: поиск досчитает ответ сам, как пачки, SVG и CSS (ADR-0024).
+    const hit = await ctx.cache.match(key).catch((e: Error) => {
+      ctx.log(`кэш поиска не прочитан: ${e.message}`);
+      return undefined;
+    });
     if (hit !== undefined) {
       const response = new Response(head ? null : hit.body, hit);
       response.headers.set("cache-control", SEARCH_CACHE_BROWSER);
@@ -193,6 +200,10 @@ export function createSearch(
     if (!meili) throw new SearchError("нет ключей Meilisearch");
 
     const run = async (vector?: Float32Array): Promise<Lists> => {
+      // Проба по словам — когда основная выдача не сама «слова»: гибрид всегда находит соседей по
+      // смыслу, а на дальней странице слова могли кончиться раньше. Пустой текст (запрос «набор:»)
+      // словами не ищется: он нашёл бы всё.
+      const probe = p.text !== "" && (vector !== undefined || p.start > 0);
       const body = [
         ...(p.exact === undefined ? [] : [exactQuery(p.exact, p.filters)]),
         mainQuery({
@@ -205,11 +216,16 @@ export function createSearch(
             ? {}
             : { vector, semanticRatio: SEMANTIC_RATIO }),
         }),
+        ...(probe ? [probeQuery(p.text, p.filters)] : []),
       ];
       const lists = await multiSearch(fetchFn, meili, body, MEILI_TIMEOUT_MS);
+      const exact = p.exact === undefined ? [] : (lists[0] ?? []);
+      const main = lists[p.exact === undefined ? 0 : 1] ?? [];
+      const words = probe ? (lists[lists.length - 1] ?? []) : main;
       return {
-        exact: p.exact === undefined ? [] : (lists[0] ?? []),
-        main: lists[lists.length - 1] ?? [],
+        exact,
+        main,
+        matched: exact.length > 0 || (p.text !== "" && words.length > 0),
       };
     };
     const render = (lists: Lists, semantic: SemanticState) =>
@@ -218,6 +234,13 @@ export function createSearch(
           pageResults(lists.exact, lists.main, p.start, p.limit),
           { start: p.start, limit: p.limit },
           semantic,
+          {
+            ...(p.filters.style === undefined
+              ? {}
+              : { style: p.filters.style }),
+            ...(p.exact === undefined ? {} : { exact: p.exact }),
+            matched: lists.matched,
+          },
         ) as unknown as Json,
       );
     const headersOf = (cacheControl: string) => ({

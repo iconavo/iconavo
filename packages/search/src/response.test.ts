@@ -8,7 +8,12 @@ import {
   searchResponse,
 } from "./response.js";
 
-const hit = (icon: string): SearchHit => ({ icon, variants: [], tones: [] });
+const hit = (icon: string): SearchHit => ({
+  icon,
+  variants: [],
+  tones: [],
+  styles: {},
+});
 
 describe("parseMultiSearch", () => {
   it("по списку карточек на запрос", () => {
@@ -19,9 +24,36 @@ describe("parseMultiSearch", () => {
       ],
     };
     expect(parseMultiSearch(json, 2)).toEqual([
-      [{ icon: "lucide:house", variants: ["house-plus"], tones: [] }],
+      [
+        {
+          icon: "lucide:house",
+          variants: ["house-plus"],
+          tones: [],
+          styles: {},
+        },
+      ],
       [],
     ]);
+  });
+
+  it("стили карточки — стиль шкалы → имя (ADR-0052)", () => {
+    const json = {
+      results: [
+        {
+          hits: [
+            {
+              icon: "ph:house",
+              variants: ["house-fill"],
+              styles: { outline: "house", filled: "house-fill" },
+            },
+          ],
+        },
+      ],
+    };
+    expect(parseMultiSearch(json, 1)[0]?.[0]?.styles).toEqual({
+      outline: "house",
+      filled: "house-fill",
+    });
   });
 
   it.each([
@@ -32,6 +64,14 @@ describe("parseMultiSearch", () => {
     [
       { results: [{ hits: [{ icon: "a:b", variants: ["X"] }] }] },
       /неверное имя X/,
+    ],
+    [
+      { results: [{ hits: [{ icon: "a:b", styles: { bold: "b-bold" } }] }] },
+      /неизвестный стиль bold/,
+    ],
+    [
+      { results: [{ hits: [{ icon: "a:b", styles: { filled: "B" } }] }] },
+      /неверное имя стиля filled/,
     ],
   ])("ответ не по форме — ошибка: %j", (json, message) => {
     expect(() => parseMultiSearch(json, 1)).toThrow(message);
@@ -95,14 +135,100 @@ describe("searchResponse", () => {
         [{ ...hit("lucide:house"), exact: true }],
         { start: 0, limit: 64 },
         "pending",
+        { matched: true },
       ),
     ).toEqual({
       icons: ["lucide:house"],
       total: 1,
       limit: 64,
       start: 0,
-      results: [{ icon: "lucide:house", variants: [], tones: [], exact: true }],
+      results: [
+        {
+          icon: "lucide:house",
+          variants: [],
+          tones: [],
+          styles: {},
+          exact: true,
+        },
+      ],
       semantic: "pending",
+      matched: true,
     });
+  });
+
+  const ph: SearchHit = {
+    icon: "ph:house",
+    variants: ["house-bold", "house-fill"],
+    tones: [],
+    styles: { outline: "house", filled: "house-fill" },
+  };
+
+  it("icons — имя в запрошенном стиле, results — карточка как есть", () => {
+    const r = searchResponse([ph], { start: 0, limit: 64 }, "full", {
+      style: "filled",
+      matched: true,
+    });
+    expect(r.icons).toEqual(["ph:house-fill"]);
+    expect(r.results[0]?.icon).toBe("ph:house");
+  });
+
+  it("точное имя варианта или оттенка показывается само, алиас — карточкой", () => {
+    const shown = (exact: string) =>
+      searchResponse(
+        [{ ...ph, exact: true }],
+        { start: 0, limit: 64 },
+        "full",
+        {
+          exact,
+          matched: true,
+        },
+      ).icons;
+    expect(shown("house-bold")).toEqual(["ph:house-bold"]);
+    expect(shown("ph:house-bold")).toEqual(["ph:house-bold"]);
+    expect(shown("home")).toEqual(["ph:house"]);
+    const hand: SearchHit = {
+      icon: "f:hand",
+      variants: [],
+      tones: ["hand-dark"],
+      styles: { color: "hand" },
+    };
+    expect(
+      searchResponse(
+        [{ ...hand, exact: true }],
+        { start: 0, limit: 64 },
+        "full",
+        {
+          exact: "hand-dark",
+          matched: true,
+        },
+      ).icons,
+    ).toEqual(["f:hand-dark"]);
+  });
+
+  it("стиль важнее точного имени; не точное совпадение имя не подменяет", () => {
+    expect(
+      searchResponse(
+        [{ ...ph, exact: true }],
+        { start: 0, limit: 64 },
+        "full",
+        {
+          style: "outline",
+          exact: "house-fill",
+          matched: true,
+        },
+      ).icons,
+    ).toEqual(["ph:house"]);
+    expect(
+      searchResponse([ph], { start: 0, limit: 64 }, "full", {
+        exact: "house-fill",
+        matched: true,
+      }).icons,
+    ).toEqual(["ph:house"]);
+  });
+
+  it("без признака matched — по числу карточек", () => {
+    expect(searchResponse([], { start: 0, limit: 64 }, "text").matched).toBe(
+      false,
+    );
   });
 });

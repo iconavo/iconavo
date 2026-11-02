@@ -5,6 +5,7 @@ import {
   filterConditions,
   mainQuery,
   mainWindow,
+  probeQuery,
 } from "./request.js";
 
 describe("filterConditions", () => {
@@ -22,6 +23,16 @@ describe("filterConditions", () => {
     ]);
     expect(filterConditions({})).toEqual([]);
     expect(filterConditions({ sets: [], licenses: [] })).toEqual([]);
+  });
+
+  it("стиль общей шкалы — последним условием (ADR-0052)", () => {
+    expect(filterConditions({ sets: ["ph"], style: "filled" })).toEqual([
+      'set IN ["ph"]',
+      'style = "filled"',
+    ]);
+    expect(() => filterConditions({ style: 'filled" OR 1' as never })).toThrow(
+      /неверный стиль/,
+    );
   });
 
   it.each([
@@ -108,5 +119,18 @@ describe("mainQuery", () => {
         semanticRatio: 0.3,
       }).hybrid?.semanticRatio,
     ).toBe(0.3);
+  });
+});
+
+describe("probeQuery", () => {
+  it("одна карточка только по словам, с теми же фильтрами", () => {
+    expect(probeQuery("дом", { style: "outline" })).toEqual({
+      indexUid: "icons",
+      q: "дом",
+      filter: ['style = "outline"'],
+      limit: 1,
+      attributesToRetrieve: ["icon"],
+    });
+    expect(probeQuery("дом", {}).filter).toBeUndefined();
   });
 });

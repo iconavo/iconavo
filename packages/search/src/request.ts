@@ -6,12 +6,14 @@
 import { isValidIconName, isValidNamePart } from "@iconavo-ui/core/internal";
 import { EMBEDDER, EXACT_LIMIT, INDEX_UID, SEMANTIC_RATIO } from "./config.js";
 import { DISPLAYED } from "./settings.js";
+import { isStyle, type Style } from "./styles.js";
 
-/** Фильтры выдачи: наборы, цветность, лицензии (ADR-0027). Стиль — в фазе 4. */
+/** Фильтры выдачи: наборы, цветность, лицензии (ADR-0027) и стиль общей шкалы (ADR-0052). */
 export interface SearchFilters {
   sets?: readonly string[];
   palette?: boolean;
   licenses?: readonly string[];
+  style?: Style;
 }
 
 /** Один запрос в теле POST /multi-search. */
@@ -48,6 +50,12 @@ export function filterConditions(filters: SearchFilters): string[] {
       }
     }
     out.push(`license IN [${quoted(filters.licenses)}]`);
+  }
+  if (filters.style !== undefined) {
+    if (!isStyle(filters.style)) {
+      throw new Error(`неверный стиль: ${String(filters.style)}`);
+    }
+    out.push(`style = "${filters.style}"`);
   }
   return out;
 }
@@ -123,5 +131,25 @@ export function mainQuery(options: MainQueryOptions): MultiSearchQuery {
       semanticRatio: options.semanticRatio ?? SEMANTIC_RATIO,
     };
   }
+  return query;
+}
+
+/**
+ * Проба «нашлось ли по словам» (ADR-0040): одна карточка только по словам, с теми же фильтрами. Гибрид
+ * всегда находит соседей по смыслу, а сайту нужно знать, совпали ли слова, — чтобы подсказать, что
+ * выдача только похожа по смыслу.
+ */
+export function probeQuery(
+  q: string,
+  filters: SearchFilters,
+): MultiSearchQuery {
+  const query: MultiSearchQuery = {
+    indexUid: INDEX_UID,
+    q,
+    limit: 1,
+    attributesToRetrieve: ["icon"],
+  };
+  const filter = filterConditions(filters);
+  if (filter.length > 0) query.filter = filter;
   return query;
 }

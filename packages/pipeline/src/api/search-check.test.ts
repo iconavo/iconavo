@@ -31,12 +31,25 @@ const DOCS: FakeDoc[] = [
     set: "lucide",
     names: ["house", "lucide:house"],
     words: ["house", "дом"],
+    style: ["outline"],
+    styles: { outline: "house" },
   },
   {
     icon: "lucide:trash",
     set: "lucide",
     names: ["trash", "lucide:trash"],
     words: ["trash", "мусорное", "ведро"],
+    style: ["outline"],
+    styles: { outline: "trash" },
+  },
+  {
+    icon: "ph:house",
+    set: "ph",
+    names: ["house", "house-fill", "ph:house", "ph:house-fill"],
+    words: ["house", "дом"],
+    variants: ["house-fill"],
+    style: ["outline", "filled"],
+    styles: { outline: "house", filled: "house-fill" },
   },
 ];
 
@@ -68,7 +81,7 @@ async function world(
   });
   const handler = createHandler({
     bucket: fakeBucket({
-      "manifest.json": manifestText({ lucide: "0123abcd" }),
+      "manifest.json": manifestText({ lucide: "0123abcd", ph: "4567cdef" }),
     }),
     cache: fakeCache(),
     build: "b1",
@@ -99,9 +112,11 @@ describe("pnpm api check — поиск", () => {
     expect(r.index).toBe("abcd1234");
     expect(r.targets.map((t) => [t.name, t.status])).toEqual([
       ["Точное имя", 200],
+      ["Стиль", 200],
       ["По-русски", 200],
       ["Без query", 400],
       ["Неизвестный набор", 400],
+      ["Неизвестный стиль", 400],
     ]);
     expect(r.targets[0]?.notes).toContain("вектор: store");
     expect(formatSearchCheck(r).at(-1)).toBe("Итог поиска: всё в порядке.");

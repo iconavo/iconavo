@@ -110,11 +110,14 @@ export const QUERY_VECTOR_CACHE = "public, max-age=2592000";
 /** Векторы запросов — Polza (решение владельца 26 октября 2026). */
 export const POLZA_EMBEDDINGS_URL = "https://polza.ai/api/v1/embeddings";
 
-/** На каждом ответе, включая ошибки (ADR-0023). */
+/**
+ * На каждом ответе, включая ошибки (ADR-0023). Retry-After открыт браузеру: сайт по нему ведёт
+ * обратный отсчёт после 429 (ADR-0040).
+ */
 export const COMMON_HEADERS: Readonly<Record<string, string>> = {
   "access-control-allow-origin": "*",
   "access-control-expose-headers":
-    "Server-Timing, X-Cache, X-Iconavo-Build, X-Iconavo-Index, X-Iconavo-Version",
+    "Retry-After, Server-Timing, X-Cache, X-Iconavo-Build, X-Iconavo-Index, X-Iconavo-Version",
   "cross-origin-resource-policy": "cross-origin",
   "x-content-type-options": "nosniff",
 };

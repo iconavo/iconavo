@@ -1,17 +1,19 @@
 // Параметры /search (ADR-0004, ADR-0049): как у Iconify — query, limit, start, prefix, prefixes — и
-// наши palette и license. Строже Iconify: неверное значение — 400 с понятным текстом, а не тихо другой
-// результат. Ключ кэша строится из нормализованных значений в постоянном порядке: «Дом» и «дом»
-// дают один ответ.
+// наши palette, license и style (общая шкала стилей, ADR-0052). Строже Iconify: неверное значение —
+// 400 с понятным текстом, а не тихо другой результат. Ключ кэша строится из нормализованных значений
+// в постоянном порядке: «Дом» и «дом» дают один ответ.
 
 import { isValidNamePart } from "@iconavo-ui/core/internal";
 import {
   exactName,
+  isStyle,
   LIMIT_DEFAULT,
   LIMIT_MAX,
   MAX_TOTAL_HITS,
   normalizeText,
   QUERY_MAX_LENGTH,
   type SearchFilters,
+  STYLES,
   stripSetPrefix,
 } from "@iconavo-ui/search";
 import { ApiError } from "../http.js";
@@ -132,10 +134,20 @@ export function parseSearchParams(
     }
   }
 
+  const style = single(query, "style");
+  if (style !== undefined && !isStyle(style)) {
+    throw new ApiError(
+      400,
+      "invalid_style",
+      `Parameter "style" must be one of: ${STYLES.join(", ")}`,
+    );
+  }
+
   const filters: SearchFilters = {};
   if (sets.length > 0) filters.sets = sets;
   if (palette !== undefined) filters.palette = palette;
   if (licenses.length > 0) filters.licenses = licenses;
+  if (style !== undefined) filters.style = style;
   return {
     text,
     ...(exact === undefined ? {} : { exact }),
@@ -158,5 +170,6 @@ export function searchCacheParams(p: SearchParams): URLSearchParams {
     out.set("palette", String(p.filters.palette));
   }
   if (p.filters.licenses) out.set("license", p.filters.licenses.join(","));
+  if (p.filters.style) out.set("style", p.filters.style);
   return out;
 }
