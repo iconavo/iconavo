@@ -267,7 +267,7 @@ async function pageProblems(
 /**
  * Неполная выдача (подмена ответа): сначала по словам — три карточки и скелетоны до полной страницы,
  * повтор — полная в тех же клетках. Вёрстка не двигается: место сетки то же; в Chrome ещё и сумма
- * сдвигов Layout Instability API после появления неполной выдачи — ноль.
+ * сдвигов Layout Instability API со скелетонов загрузки до полной выдачи — ноль.
  */
 async function pendingProblems(
   browser: Browser,
@@ -323,6 +323,10 @@ async function pendingProblems(
   });
   await page.waitForTimeout(400);
   const loading = await page.evaluate(searchFacts);
+  // С этого кадра сдвигов быть не должно: скелетоны загрузки, неполная и полная выдача встают в те же
+  // клетки. Точка отсчёта — до неполной выдачи: сдвиг её кадра браузер отмечает временем отрисовки, и
+  // отсчёт после неё ловил бы его, только если успел раньше кадра (на машине CI — не всегда).
+  const since = await page.evaluate(() => performance.now());
   if (loading.state !== "loading" || loading.skeletons === 0) {
     problems.push(
       `загрузка: выдача «${loading.state}», видимых скелетонов ${loading.skeletons}`,
@@ -334,8 +338,6 @@ async function pendingProblems(
     await context.close();
     return problems;
   }
-  // С этого кадра сдвигов быть не должно: дальше выдача только встаёт в те же клетки.
-  const since = await page.evaluate(() => performance.now());
   if (partial.facts.icons.length !== 3 || partial.facts.skeletons === 0) {
     problems.push(
       `неполная выдача: клеток ${partial.facts.icons.length}, скелетонов ${partial.facts.skeletons}`,
