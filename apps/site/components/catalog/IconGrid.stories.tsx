@@ -1,8 +1,8 @@
 import type { Meta, StoryObj } from "@storybook/nextjs-vite";
 import { IconGrid } from "./IconGrid";
 
-// Сетка набора: первая страница — из пропсов, как с сервера; другие страницы и категории история берёт
-// у живого api.iconavo.dev (/collection), иконки — с живых хостов.
+// Сетка набора: первая страница — из пропсов, как с сервера; другие страницы, категории и стили история
+// берёт у живого api.iconavo.dev (/collection), иконки — с живых хостов.
 const meta = {
   title: "Catalog/IconGrid",
   component: IconGrid,
@@ -47,9 +47,33 @@ const LUCIDE = {
     { slug: "arrows", title: "arrows", size: 212, count: "212" },
     { slug: "design", title: "design", size: 174, count: "174" },
   ],
+  styles: [{ style: "outline" as const, size: 1998, count: "1,998" }],
 };
 
 export const Lucide: Story = { args: LUCIDE };
+
+/** Набор с несколькими стилями — чипсы «Стиль»: карточки показывают главное имя выбранного стиля. */
+export const Phosphor: Story = {
+  args: {
+    ...LUCIDE,
+    prefix: "ph",
+    first: [
+      "acorn",
+      "address-book",
+      "address-book-tabs",
+      "air-traffic-control",
+    ],
+    total: 1512,
+    allCount: "1,512",
+    categories: [],
+    styles: [
+      { style: "outline", size: 1512, count: "1,512" },
+      { style: "filled", size: 1512, count: "1,512" },
+      { style: "duotone", size: 1512, count: "1,512" },
+    ],
+  },
+  parameters: { nextjs: { navigation: { pathname: "/ph" } } },
+};
 
 /** Без категорий автора — как у Material Symbols: только сетка. */
 export const NoCategories: Story = {

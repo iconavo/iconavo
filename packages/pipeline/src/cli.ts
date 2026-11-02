@@ -17,8 +17,9 @@
 // | pnpm site [--port=N] [--prod] | pnpm site --check [--browser=…] | pnpm site --live [--expect-build=…] [--base=…]
 // | pnpm release bump [версия] | pnpm release prepare [--first] | pnpm release verify --plan=… [--wait=N]
 import { randomInt } from "node:crypto";
-import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
+import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import type { AddressInfo } from "node:net";
+import { tmpdir } from "node:os";
 import { basename, join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
 import {
@@ -152,6 +153,8 @@ import {
   SEARCH_ENV,
   SEARCH_R2_RUN_STOPS,
 } from "./meili/config.js";
+import { loadSearchDocuments } from "./meili/docs.js";
+import { startLocalMeili } from "./meili/local.js";
 import {
   formatSearchIndexReport,
   formatSetsTable,
@@ -1621,11 +1624,30 @@ try {
         );
         process.exit(1);
       }
+      // Поиск (шаг 3 фазы 4): локальный Meilisearch с настоящими документами индекса из data/, бакет
+      // поиска — пустая папка. Без ключа Polza превью отвечает предсказуемо — только по словам.
+      const documents = await loadSearchDocuments(configs, dataDir);
+      if (documents.errors.length > 0) {
+        console.error(
+          `Документы поиска не собрались: ${documents.errors.map((e) => `${e.id} — ${e.message}`).join("; ")}`,
+        );
+        process.exit(1);
+      }
+      const meili = await startLocalMeili(documents.docs);
+      const searchDir = await mkdtemp(join(tmpdir(), "iconavo-site-search-"));
+      // Функция без ключа Polza пишет об этом на каждый поиск — здесь так и задумано.
+      const printError = console.error;
+      console.error = (...args: unknown[]) => {
+        if (!String(args[0]).startsWith("вектор запроса: нет ключа Polza")) {
+          printError(...args);
+        }
+      };
       const preview = await startApiPreview({
         root,
         outDir: distApiDir,
         cdnDir: distCdnDir,
         port: 0,
+        search: { url: meili.url, key: meili.key, dir: searchDir },
       });
       const api = `http://127.0.0.1:${preview.port}`;
       const env = {
@@ -1663,6 +1685,9 @@ try {
       } finally {
         await next.stop();
         await preview.close();
+        await meili.close();
+        await rm(searchDir, { recursive: true, force: true });
+        console.error = printError;
       }
       console.log("");
       for (const line of formatSiteCheck(results)) console.log(line);

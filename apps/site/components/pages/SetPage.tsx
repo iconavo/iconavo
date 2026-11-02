@@ -2,9 +2,12 @@ import { Icon, IconavoProvider } from "@iconavo-ui/react";
 import { notFound } from "next/navigation";
 import {
   categoriesOf,
+  categoryCards,
   getReleases,
   getSet,
   pageOf,
+  setCards,
+  setStyles,
   visibleNames,
 } from "../../lib/catalog";
 import {
@@ -20,7 +23,8 @@ import { PageLink } from "../PageLink";
 
 /**
  * Страница набора /{префикс} (ADR-0037): автор, лицензия, версия и последний выпуск, витрина из шести
- * иконок (ADR-0017), сетка по 96 иконок с категориями автора. Скрытых иконок нет: в /collection они
+ * иконок (ADR-0017), сетка по 96 карточек со стилями (ADR-0052) и категориями автора. Число иконок в
+ * заголовке — все варианты, как у Iconify; в сетке — карточки. Скрытых иконок нет: в /collection они
  * отдельно (ADR-0018).
  */
 export async function SetPage({
@@ -36,7 +40,8 @@ export async function SetPage({
   const { info } = set;
   const latest = (await getReleases()).find((r) => r.prefix === prefix);
   const names = visibleNames(set);
-  const first = pageOf(names, 1);
+  const grouped = setCards(set);
+  const first = pageOf(grouped.cards, 1).map((card) => card.base);
   const samples = info.samples ?? [];
   const icons = await loadPageIcons(
     [...samples, ...first].map((name) => `${prefix}:${name}`),
@@ -122,14 +127,21 @@ export async function SetPage({
           lang={lang}
           prefix={prefix}
           first={first}
-          total={names.length}
-          allCount={formatNumber(lang, names.length)}
-          categories={categoriesOf(set).map((c) => ({
-            slug: c.slug,
-            title: c.title,
-            size: c.names.length,
-            count: formatNumber(lang, c.names.length),
-          }))}
+          total={grouped.cards.length}
+          allCount={formatNumber(lang, grouped.cards.length)}
+          categories={categoriesOf(set).map((c) => {
+            const size = categoryCards(c.names, grouped).length;
+            return {
+              slug: c.slug,
+              title: c.title,
+              size,
+              count: formatNumber(lang, size),
+            };
+          })}
+          styles={setStyles(set).map((style) => {
+            const size = grouped.cards.filter((c) => c.styles[style]).length;
+            return { style, size, count: formatNumber(lang, size) };
+          })}
         />
       </IconavoProvider>
     </main>

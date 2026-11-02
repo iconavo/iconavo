@@ -199,6 +199,9 @@ importers:
       '@iconavo-ui/react':
         specifier: workspace:*
         version: link:../../packages/react
+      '@iconavo-ui/search':
+        specifier: workspace:*
+        version: link:../../packages/search
       next:
         specifier: 16.4.3
         version: 16.4.3(@babel/core@7.29.7)(@opentelemetry/api@1.9.1)(@types/node@26.6.5)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)

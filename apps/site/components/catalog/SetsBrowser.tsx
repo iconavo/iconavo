@@ -1,13 +1,15 @@
 "use client";
 
-import { DICTIONARIES, type Lang } from "../../lib/i18n";
+import { DICTIONARIES, type Lang, STYLE_KEYS } from "../../lib/i18n";
+import { isStyle, STYLES } from "../../lib/search";
 import { useUrlQuery, withParams } from "../../lib/url-query";
 import { Chips } from "./Chips";
 import { SetCard, type SetSummary } from "./SetCard";
 
 /**
- * Все наборы карточками и фильтры «лицензия» и «цвета» (ADR-0037) — в адресе (?license=MIT&palette=color),
- * применяются в браузере. Фильтр по стилю — шаг 3, вместе с общей шкалой стилей (ADR-0049).
+ * Все наборы карточками и фильтры «лицензия» и «стиль» (ADR-0037, ADR-0052) — в адресе
+ * (?license=MIT&style=duotone), применяются в браузере. «Цветные» — стиль общей шкалы, отдельного
+ * фильтра цветности нет (решение владельца 2 ноября 2026).
  */
 export function SetsBrowser({
   lang,
@@ -19,27 +21,32 @@ export function SetsBrowser({
   const t = DICTIONARIES[lang];
   const { query, hrefOf, navigate } = useUrlQuery();
   const license = query.get("license");
-  const palette = query.get("palette");
+  const styleParam = query.get("style");
+  const style = isStyle(styleParam) ? styleParam : undefined;
   const licenses = [...new Map(sets.map((s) => [s.licenseId, s.license]))]
     .sort(([, a], [, b]) => a.localeCompare(b, "en"))
     .map(([id, title]) => ({ id, title }));
+  const styles = STYLES.filter((s) =>
+    sets.some((set) => set.styles.includes(s)),
+  );
   const shown = sets.filter(
     (s) =>
       (license === null || s.licenseId === license) &&
-      (palette === null || (palette === "color") === s.palette),
+      (style === undefined || s.styles.includes(style)),
   );
   const chip = (
     key: string,
     label: string,
-    param: "license" | "palette",
+    param: "license" | "style",
     value: string | undefined,
+    current: boolean,
   ) => {
     const next = withParams(query, { [param]: value });
     return {
       key,
       label,
       href: hrefOf(next),
-      current: (query.get(param) ?? undefined) === value,
+      current,
       onSelect: () => navigate(next),
     };
   };
@@ -49,16 +56,19 @@ export function SetsBrowser({
         <Chips
           label={t.filterLicense}
           chips={[
-            chip("", t.filterAll, "license", undefined),
-            ...licenses.map((l) => chip(l.id, l.title, "license", l.id)),
+            chip("", t.filterAll, "license", undefined, license === null),
+            ...licenses.map((l) =>
+              chip(l.id, l.title, "license", l.id, license === l.id),
+            ),
           ]}
         />
         <Chips
-          label={t.filterColors}
+          label={t.searchStyle}
           chips={[
-            chip("", t.filterAll, "palette", undefined),
-            chip("mono", t.filterMono, "palette", "mono"),
-            chip("color", t.filterColor, "palette", "color"),
+            chip("", t.styleAny, "style", undefined, style === undefined),
+            ...styles.map((s) =>
+              chip(s, t[STYLE_KEYS[s]], "style", s, style === s),
+            ),
           ]}
         />
       </div>

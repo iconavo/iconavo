@@ -4,6 +4,13 @@
 // как у иконок сайта: иначе вышли бы пустые страницы. Тот же разбор берёт браузер — сетка набора
 // догружает список имён сама. Чистые части проверяют тесты без сети.
 
+import {
+  type Card,
+  groupCards,
+  isStyle,
+  STYLES,
+  type Style,
+} from "@iconavo-ui/search";
 import { API } from "./api";
 
 /** Лицензия в сведениях о наборе — как у Iconify. */
@@ -44,6 +51,8 @@ export interface Collection {
   hidden?: string[];
   aliases?: Record<string, string>;
   suffixes?: Record<string, string>;
+  /** Стиль общей шкалы → суффиксы вариантов без дефиса (ADR-0052) — дополнение Iconavo. */
+  styles?: Record<string, string[]>;
 }
 
 /** Набор для страницы: имена, сведения с полной лицензией и версия данных (X-Iconavo-Version). */
@@ -124,6 +133,9 @@ export function parseCollection(value: unknown): Collection {
     (value.hidden !== undefined && !isStrings(value.hidden)) ||
     (value.aliases !== undefined && !isStringMap(value.aliases)) ||
     (value.suffixes !== undefined && !isStringMap(value.suffixes)) ||
+    (value.styles !== undefined &&
+      (!isObject(value.styles) ||
+        !Object.values(value.styles).every(isStrings))) ||
     (value.categories !== undefined &&
       (!isObject(value.categories) ||
         !Object.values(value.categories).every(isStrings)))
@@ -295,13 +307,65 @@ export function categoriesOf(c: Collection): Category[] {
     });
 }
 
+/** Суффикс из /collection — без дефиса, как у Iconify; правилу карточек он нужен с дефисом. */
+const dashed = (suffix: string) => (suffix === "" ? "" : `-${suffix}`);
+
+/** Стили набора в порядке общей шкалы (ADR-0052). */
+export function setStyles(c: Collection): Style[] {
+  return STYLES.filter((style) => (c.styles?.[style]?.length ?? 0) > 0);
+}
+
+export interface SetCards {
+  /** Карточки по кодам символов имени базовой иконки. */
+  cards: Card[];
+  /** Видимое имя или алиас → карточка. */
+  cardOf: Map<string, string>;
+}
+
+/**
+ * Карточки набора (шаг 3 фазы 4, ADR-0052): база, варианты, оттенки кожи и главное имя каждого стиля —
+ * тем же правилом, что у индекса поиска (groupCards общего модуля).
+ */
+export function setCards(c: Collection): SetCards {
+  const styles: Partial<Record<Style, string[]>> = {};
+  for (const [style, list] of Object.entries(c.styles ?? {})) {
+    if (isStyle(style)) styles[style] = list.map(dashed);
+  }
+  return groupCards({
+    names: visibleNames(c),
+    aliases: Object.entries(c.aliases ?? {}),
+    suffixes: Object.keys(c.suffixes ?? {}).map(dashed),
+    styles,
+  });
+}
+
+/** Карточки категории: её имена → их карточки, без повторов, в порядке карточек набора. */
+export function categoryCards(names: readonly string[], set: SetCards): Card[] {
+  const bases = new Set(names.map((n) => set.cardOf.get(n) ?? n));
+  return set.cards.filter((card) => bases.has(card.base));
+}
+
+/** Карточки в стиле: только те, у которых он есть; без стиля — все. */
+export const cardsInStyle = (cards: readonly Card[], style?: Style) =>
+  style === undefined ? [...cards] : cards.filter((c) => c.styles[style]);
+
+/** Имя карточки для показа: главное имя стиля, без стиля — база. */
+export const shownName = (card: Card, style?: Style) =>
+  (style === undefined ? undefined : card.styles[style]) ?? card.base;
+
+/** Стили набора по его странице /collection — для фильтра «Стиль» на /sets и карточек наборов. */
+export async function getSetStyles(prefix: string): Promise<Style[]> {
+  const set = await getSet(prefix);
+  return set === undefined ? [] : setStyles(set);
+}
+
 /** Страниц в списке имён. */
 export const pageCount = (total: number) =>
   Math.max(1, Math.ceil(total / PAGE_SIZE));
 
-/** Имена страницы page (с 1). */
-export const pageOf = (names: readonly string[], page: number) =>
-  names.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+/** Элементы страницы page (с 1): имена или карточки. */
+export const pageOf = <T>(items: readonly T[], page: number): T[] =>
+  items.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
 /** Номера для навигации: первая, соседние с текущей и последняя; между ними — пропуск «gap». */
 export function pageItems(page: number, pages: number): (number | "gap")[] {

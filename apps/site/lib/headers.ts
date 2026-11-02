@@ -7,6 +7,24 @@ export const INDEXING = false;
 
 export const ROBOTS = "noindex, nofollow";
 
+/** Страницы поиска: не индексируются никогда — у выдачи нет постоянного содержания (ADR-0039). */
+export const SEARCH_PATHS = ["/search", "/ru/search"];
+
+/**
+ * Заголовок noindex у страниц поиска для next.config. Пока весь сайт скрыт, он уже на всех страницах;
+ * когда сайт откроют поисковикам (INDEXING), у поиска он останется.
+ */
+export function searchRobotsHeaders(
+  indexing = INDEXING,
+): { source: string; headers: { key: string; value: string }[] }[] {
+  return indexing
+    ? SEARCH_PATHS.map((source) => ({
+        source,
+        headers: [{ key: "X-Robots-Tag", value: ROBOTS }],
+      }))
+    : [];
+}
+
 /** Хосты иконок по умолчанию (ADR-0030). */
 const DEFAULT_HOSTS = [
   "https://api.iconavo.dev",

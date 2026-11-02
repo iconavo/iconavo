@@ -27,6 +27,8 @@ const LUCIDE = {
   licenseId: "ISC",
   palette: false,
   samples: ["house", "search", "settings", "user", "heart", "star"],
+  styles: ["outline"],
+  stylesLine: "Outline",
 };
 
 export const Monochrome: Story = { args: { lang: "en", set: LUCIDE } };
@@ -50,11 +52,16 @@ export const Multicolor: Story = {
         "red-heart",
         "star",
       ],
+      styles: ["color"],
+      stylesLine: "Color",
     },
   },
 };
 
 export const Russian: Story = {
-  args: { lang: "ru", set: { ...LUCIDE, total: "1 998 иконок" } },
+  args: {
+    lang: "ru",
+    set: { ...LUCIDE, total: "1 998 иконок", stylesLine: "Контур" },
+  },
   parameters: { nextjs: { navigation: { pathname: "/ru/sets" } } },
 };

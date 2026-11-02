@@ -16,7 +16,8 @@ import {
   visibleNames,
 } from "./catalog";
 import { countOf, formatDate, formatNumber, ICON_FORMS } from "./format";
-import { DICTIONARIES, type Lang } from "./i18n";
+import { DICTIONARIES, type Lang, STYLE_KEYS } from "./i18n";
+import type { Style } from "./search";
 
 /** Добавленных иконок в превью выпуска. */
 export const RELEASE_PREVIEW = 24;
@@ -38,8 +39,14 @@ export async function setMetadata(
   };
 }
 
-/** Карточка набора. */
-export function setSummary(lang: Lang, id: string, info: SetInfo): SetSummary {
+/** Карточка набора; styles — стили набора по общей шкале (ADR-0052). */
+export function setSummary(
+  lang: Lang,
+  id: string,
+  info: SetInfo,
+  styles: readonly Style[] = [],
+): SetSummary {
+  const t = DICTIONARIES[lang];
   return {
     id,
     name: info.name,
@@ -49,6 +56,8 @@ export function setSummary(lang: Lang, id: string, info: SetInfo): SetSummary {
     licenseId: info.license.spdx,
     palette: info.palette,
     samples: info.samples ?? [],
+    styles: [...styles],
+    stylesLine: styles.map((s) => t[STYLE_KEYS[s]]).join(" · "),
   };
 }
 

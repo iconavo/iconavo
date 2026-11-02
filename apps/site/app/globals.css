@@ -469,14 +469,116 @@
     font-size: 0.875rem;
     margin-bottom: 0.25rem;
   }
-  .home-search {
+  /* Поле поиска главной и страницы поиска — одно, в общей раскладке (шаг 3 фазы 4). */
+  .hero-search {
     margin-block: 1.5rem;
     max-width: var(--width-text);
   }
-  .home-search-form {
+  .hero-search-form {
     display: flex;
     align-items: center;
     gap: 0.5rem;
+  }
+
+  /* Выдача поиска: клетки одного размера и места под строки статуса — замена выдачи не двигает
+     вёрстку (ADR-0040). Скелетон первые 150 мс не виден, как у заглушек пакета (ADR-0031). */
+  .search-commercial {
+    color: var(--color-muted);
+    font-size: 0.875rem;
+  }
+  .page .search-status {
+    min-height: 1.5rem;
+    margin-block: 0.5rem;
+    color: var(--color-muted);
+    font-size: 0.875rem;
+  }
+  .search-timing {
+    margin-inline-start: 0.75rem;
+    font-variant-numeric: tabular-nums;
+  }
+  .search-subtitle {
+    font-size: 1.125rem;
+    font-weight: 600;
+    margin-top: 1.5rem;
+  }
+  .result-grid {
+    display: grid;
+    gap: 0.5rem;
+    grid-template-columns: repeat(auto-fill, minmax(7.5rem, 1fr));
+    list-style: none;
+    padding: 0;
+    margin-block: 1rem;
+  }
+  .result-grid[aria-busy="true"] {
+    opacity: 0.5;
+  }
+  .result-cell {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.375rem;
+    block-size: 8.5rem;
+    padding: 0.75rem 0.25rem;
+    border-radius: var(--radius-md);
+    text-align: center;
+    overflow: hidden;
+  }
+  .result-cell-svg {
+    flex: none;
+    font-size: 2rem;
+  }
+  .result-cell-name {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    overflow: hidden;
+    font-size: 0.75rem;
+    line-height: 1.3;
+    overflow-wrap: anywhere;
+  }
+  .result-cell-set,
+  .result-exact {
+    color: var(--color-muted);
+    font-size: 0.75rem;
+    line-height: 1.2;
+  }
+  .result-exact {
+    padding: 0 0.375rem;
+    border: 1px solid var(--color-control);
+    border-radius: 999px;
+  }
+  .result-skeleton-icon,
+  .result-skeleton-line {
+    border-radius: 15%;
+    background: currentColor;
+    opacity: 0.12;
+    animation:
+      search-h 0.15s step-end,
+      search-p 1s 0.15s infinite alternate;
+  }
+  .result-skeleton-icon {
+    width: 2rem;
+    height: 2rem;
+  }
+  .result-skeleton-line {
+    width: 4rem;
+    height: 0.75rem;
+  }
+  @keyframes search-h {
+    from {
+      visibility: hidden;
+    }
+  }
+  @keyframes search-p {
+    to {
+      opacity: 0.24;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .result-skeleton-icon,
+    .result-skeleton-line {
+      animation: search-h 0.15s step-end;
+    }
   }
 
   /* Карточки наборов. */

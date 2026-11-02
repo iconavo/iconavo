@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import {
+  cardsInStyle,
   categoriesOf,
+  categoryCards,
   categorySlug,
   orderSets,
   PAGE_SIZE,
@@ -13,6 +15,9 @@ import {
   parseSets,
   releaseCounts,
   revisionLabel,
+  setCards,
+  setStyles,
+  shownName,
   visibleNames,
 } from "./catalog";
 import { releaseSummary, releaseView, setSummary } from "./catalog-view";
@@ -156,7 +161,7 @@ describe("строки на языке страницы", () => {
   });
 
   it("карточка набора и выпуск", () => {
-    const card = setSummary("ru", "lucide", INFO);
+    const card = setSummary("ru", "lucide", INFO, ["outline", "filled"]);
     expect({ ...card, total: spaces(card.total) }).toEqual({
       id: "lucide",
       name: "Lucide",
@@ -166,6 +171,8 @@ describe("строки на языке страницы", () => {
       licenseId: "ISC",
       palette: false,
       samples: ["house", "heart"],
+      styles: ["outline", "filled"],
+      stylesLine: "Контур · Заливка",
     });
     const release = {
       prefix: "lucide",
@@ -203,5 +210,63 @@ describe("строки на языке страницы", () => {
     expect(releaseSummary("ru", first)).toBe("Набор добавлен в каталог");
     expect(releaseCounts(release)).toMatchObject({ added: 2, renamed: 1 });
     expect(revisionLabel("3.50.0")).toBe("3.50.0");
+  });
+});
+
+describe("карточки набора (шаг 3 фазы 4, ADR-0052)", () => {
+  // Как /collection у Phosphor: суффиксы и стили — без дефиса, алиас-переименование.
+  const ph = parseCollection({
+    prefix: "ph",
+    title: "Phosphor",
+    total: 7,
+    categories: {
+      Buildings: ["house", "house-fill", "house-bold"],
+      Health: ["heart", "heart-fill"],
+    },
+    uncategorized: ["acorn"],
+    aliases: { home: "house" },
+    suffixes: { "": "Regular", bold: "Bold", fill: "Fill" },
+    styles: { outline: ["", "bold"], filled: ["fill"] },
+  });
+
+  it("варианты сворачиваются в карточку, у карточки — главное имя стиля", () => {
+    const set = setCards(ph);
+    expect(set.cards.map((c) => c.base)).toEqual(["acorn", "heart", "house"]);
+    expect(set.cards.find((c) => c.base === "house")?.styles).toEqual({
+      outline: "house",
+      filled: "house-fill",
+    });
+    expect(set.cardOf.get("home")).toBe("house");
+    expect(setStyles(ph)).toEqual(["outline", "filled"]);
+  });
+
+  it("категории и стиль — по карточкам; имя для показа — по стилю", () => {
+    const set = setCards(ph);
+    const buildings = categoryCards(["house", "house-fill", "house-bold"], set);
+    expect(buildings.map((c) => c.base)).toEqual(["house"]);
+    const filled = cardsInStyle(set.cards, "filled");
+    expect(filled.map((c) => shownName(c, "filled"))).toEqual([
+      "heart-fill",
+      "house-fill",
+    ]);
+    expect(cardsInStyle(set.cards).map((c) => shownName(c))).toEqual([
+      "acorn",
+      "heart",
+      "house",
+    ]);
+  });
+
+  it("стили — дополнение Iconavo: не по формату — ошибка, нет — карточки без стилей", () => {
+    expect(() =>
+      parseCollection({ ...ph, styles: { outline: "house" } }),
+    ).toThrow(/СТОП/);
+    const bare = parseCollection({
+      prefix: "x",
+      title: "X",
+      total: 1,
+      uncategorized: ["a"],
+    });
+    expect(setStyles(bare)).toEqual([]);
+    expect(setCards(bare).cards[0]?.styles).toEqual({});
   });
 });

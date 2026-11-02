@@ -32,25 +32,55 @@ const en = {
   navSets: "Sets",
   homeLead:
     "Any icon from open icon sets by its name, with one HTML tag or one React component.",
-  homeBeta:
-    "The packages are in beta. Search by meaning in English and Russian is coming next.",
+  homeBeta: "The packages are in beta.",
   homeDocs: "Read the docs",
   homeSets: "Popular sets",
   homeAllSets: "All sets",
   homeNews: "What’s new",
   homeAllNews: "All releases",
   searchTitle: "Search",
-  searchSoon:
-    "Search is coming soon. Until then, the docs show how to add any icon by its name.",
-  searchDocs: "Go to the docs",
+  searchResults: "Results",
+  searchHint: "Search by name or by meaning, in English or Russian.",
+  searchExamples: "For example:",
+  searchStyle: "Style",
+  styleAny: "Any",
+  styleOutline: "Outline",
+  styleFilled: "Filled",
+  styleDuotone: "Duotone",
+  styleColor: "Color",
+  filterSet: "Set",
+  searchCommercial: "All icons here can be used in commercial projects.",
+  searchCommercialLink: "Licenses",
+  searchCommercialLabel: "Use",
+  searchCommercialOnly: "OK for commercial projects",
+  searchExact: "exact name",
+  searchRefining: "Refining by meaning…",
+  searchSlow: "Search by meaning is taking too long — these are word matches.",
+  searchRetry: "Try again",
+  searchWordsOnly:
+    "Search by meaning is unavailable right now — these are word matches only.",
+  searchNoWords:
+    "No icons match these words — here are the closest in meaning. Try other words.",
+  searchNothing: "Nothing found.",
+  searchRephrase:
+    "Try other words or a shorter query. English and Russian both work.",
+  searchNoneFiltered: "No icons match these filters.",
+  searchResetFilters: "Reset filters",
+  searchUnfiltered: "Without filters",
+  searchNoMore: "No more results.",
+  searchFirstPage: "Back to the first page",
+  searchLimited:
+    "Too many searches in a minute — the search will repeat by itself",
+  searchLimitedIn: "in {s} s",
+  searchFailed:
+    "The search did not answer. Check the connection and try again.",
+  searchNoScript: "Search needs JavaScript.",
+  searchTiming: "Answer in {ms} ms",
   setsTitle: "Icon sets",
   setsLead:
     "Open icon sets with permissive licenses. Every icon works by its name with one HTML tag or one React component.",
   filterLicense: "License",
-  filterColors: "Colors",
   filterAll: "All",
-  filterMono: "Monochrome",
-  filterColor: "Multicolor",
   filterNone: "No sets match these filters.",
   setMulticolor: "Multicolor",
   setMonochrome: "Monochrome",
@@ -63,6 +93,7 @@ const en = {
   setNpm: "npm package",
   setCategories: "Categories",
   setAllIcons: "All icons",
+  setStyles: "Styles",
   setPages: "Pages",
   pagePrev: "Previous page",
   pageNext: "Next page",
@@ -111,25 +142,53 @@ const ru: Dictionary = {
   navSets: "Наборы",
   homeLead:
     "Любая иконка из открытых наборов по имени — одним HTML-тегом или одним компонентом React.",
-  homeBeta:
-    "Пакеты — в бета-версии. Поиск по смыслу на русском и английском — следующий шаг.",
+  homeBeta: "Пакеты — в бета-версии.",
   homeDocs: "Документация (англ.)",
   homeSets: "Популярные наборы",
   homeAllSets: "Все наборы",
   homeNews: "Что нового",
   homeAllNews: "Все выпуски",
   searchTitle: "Поиск",
-  searchSoon:
-    "Поиск появится скоро. А пока документация (на английском) показывает, как вставить любую иконку по имени.",
-  searchDocs: "К документации",
+  searchResults: "Результаты",
+  searchHint: "Ищите по имени или по смыслу — по-русски или по-английски.",
+  searchExamples: "Например:",
+  searchStyle: "Стиль",
+  styleAny: "Любой",
+  styleOutline: "Контур",
+  styleFilled: "Заливка",
+  styleDuotone: "Двухцветные",
+  styleColor: "Цветные",
+  filterSet: "Набор",
+  searchCommercial: "Все иконки можно использовать в коммерческих проектах.",
+  searchCommercialLink: "Лицензии",
+  searchCommercialLabel: "Использование",
+  searchCommercialOnly: "Можно в коммерческих проектах",
+  searchExact: "точное имя",
+  searchRefining: "Уточняем по смыслу…",
+  searchSlow: "Поиск по смыслу не успел — это совпадения по словам.",
+  searchRetry: "Повторить",
+  searchWordsOnly:
+    "Поиск по смыслу сейчас недоступен — нашлось только по словам.",
+  searchNoWords:
+    "По словам совпадений нет — показываем близкие по смыслу. Попробуйте другие слова.",
+  searchNothing: "Ничего не нашлось.",
+  searchRephrase:
+    "Попробуйте другие слова или запрос короче — можно по-русски и по-английски.",
+  searchNoneFiltered: "С такими фильтрами ничего нет.",
+  searchResetFilters: "Сбросить фильтры",
+  searchUnfiltered: "Без фильтров",
+  searchNoMore: "Больше результатов нет.",
+  searchFirstPage: "К первой странице",
+  searchLimited: "Слишком много поисков за минуту — поиск повторится сам",
+  searchLimitedIn: "через {s} с",
+  searchFailed: "Поиск не ответил. Проверьте связь и повторите.",
+  searchNoScript: "Для поиска нужен JavaScript.",
+  searchTiming: "Ответ за {ms} мс",
   setsTitle: "Наборы иконок",
   setsLead:
     "Открытые наборы иконок с разрешительными лицензиями. Любая иконка работает по имени — одним HTML-тегом или одним компонентом React.",
   filterLicense: "Лицензия",
-  filterColors: "Цвета",
   filterAll: "Все",
-  filterMono: "Монохромные",
-  filterColor: "Цветные",
   filterNone: "Нет наборов с такими фильтрами.",
   setMulticolor: "Цветной",
   setMonochrome: "Монохромный",
@@ -142,6 +201,7 @@ const ru: Dictionary = {
   setNpm: "Пакет npm",
   setCategories: "Категории",
   setAllIcons: "Все иконки",
+  setStyles: "Стили",
   setPages: "Страницы",
   pagePrev: "Предыдущая страница",
   pageNext: "Следующая страница",
@@ -170,6 +230,14 @@ const ru: Dictionary = {
 
 export const DICTIONARIES: Record<Lang, Dictionary> = { en, ru };
 
+/** Названия стилей общей шкалы (ADR-0052) — ключи словаря. */
+export const STYLE_KEYS = {
+  outline: "styleOutline",
+  filled: "styleFilled",
+  duotone: "styleDuotone",
+  color: "styleColor",
+} as const satisfies Record<string, keyof Dictionary>;
+
 /** Адреса без перевода: на русском их пара — английская страница. */
 const UNTRANSLATED = ["/docs"];
 
@@ -188,6 +256,10 @@ export function href(lang: Lang, path: string): string {
   if (lang === "en" || untranslated(path)) return path;
   return path === "/" ? "/ru" : `/ru${path}`;
 }
+
+/** Есть ли у страницы пара на другом языке: у документации на русском её пока нет. */
+export const isTranslated = (path: string) =>
+  langOf(path) === "ru" || !untranslated(path);
 
 /** Та же страница на другом языке; у страниц без перевода — главная другого языка. */
 export function counterpart(path: string): { lang: Lang; path: string } {

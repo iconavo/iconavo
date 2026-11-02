@@ -4,6 +4,7 @@ import {
   INDEXING,
   iconHosts,
   ROBOTS,
+  searchRobotsHeaders,
   siteHeaders,
 } from "./headers";
 
@@ -35,5 +36,21 @@ describe("заголовки сайта", () => {
         NEXT_PUBLIC_ICONAVO_CDN: "http://127.0.0.1:5000/_static",
       }),
     ).toEqual(["http://127.0.0.1:5000"]);
+  });
+});
+
+describe("страницы поиска не индексируются никогда (ADR-0039)", () => {
+  it("пока сайт скрыт — метка и так на всех страницах; после запуска — отдельно у поиска", () => {
+    expect(searchRobotsHeaders(false)).toEqual([]);
+    expect(searchRobotsHeaders(true)).toEqual([
+      {
+        source: "/search",
+        headers: [{ key: "X-Robots-Tag", value: "noindex, nofollow" }],
+      },
+      {
+        source: "/ru/search",
+        headers: [{ key: "X-Robots-Tag", value: "noindex, nofollow" }],
+      },
+    ]);
   });
 });
