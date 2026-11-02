@@ -44,6 +44,11 @@ import {
   PREVIEW_PORT,
   WORKER_FILE,
 } from "./api/config.js";
+import {
+  checkIcon,
+  formatIconCheck,
+  iconCheckFailed,
+} from "./api/icon-check.js";
 import { startApiPreview } from "./api/preview.js";
 import {
   checkSearch,
@@ -2216,7 +2221,20 @@ try {
       });
       console.log("");
       for (const line of formatSearchCheck(search)) console.log(line);
-      process.exit(apiCheckFailed(report) || searchCheckFailed(search) ? 1 : 0);
+      // Сведения об иконке (шаг 4 фазы 4) — тоже через индекс поиска, тоже отдельно от раздачи.
+      console.log(`\nПроверяю сведения об иконке https://${API_HOST}/icon…`);
+      const icon = await checkIcon({
+        log: (line) => console.log(`  ${line}`),
+      });
+      console.log("");
+      for (const line of formatIconCheck(icon)) console.log(line);
+      process.exit(
+        apiCheckFailed(report) ||
+          searchCheckFailed(search) ||
+          iconCheckFailed(icon)
+          ? 1
+          : 0,
+      );
     }
     if (sub === "bench" && benchBatchesMode) {
       // Без первой тысячи имён каждого набора: их показывает страница «5000 иконок» песочницы.

@@ -35,6 +35,13 @@ export const EXACT_LIMIT = 50;
  */
 export const SEARCH_RATE = { limit: 60, period: 60 } as const;
 
+/**
+ * Лимит частоты /icon мимо кэша (шаг 4 фазы 4): 300 в минуту с одного адреса — своя привязка, выше
+ * поискового. Сведения об иконке без модели и дешевле поиска, а лимит бережёт Meilisearch от перебора
+ * имён скриптом: тогда отказал бы и /search.
+ */
+export const ICON_RATE = { limit: 300, period: 60 } as const;
+
 /** Длина запроса в символах; длиннее — ошибка 400. */
 export const QUERY_MAX_LENGTH = 100;
 

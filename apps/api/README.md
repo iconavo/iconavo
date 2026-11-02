@@ -117,6 +117,56 @@ GET https://api.iconavo.dev/search?query=trash%20can&limit=4
 - **Caching.** Full results are cached for 5 minutes in browsers (`Cache-Control: public, max-age=300`); `pending` and `text` results are not cached. `X-Iconavo-Index` is the version of the search index.
 - **Privacy.** Queries are not logged and IP addresses are not stored.
 
+## Icon details: `/icon?icon=…`
+
+Everything about one icon: its set, author and license, the style variants of its card, skin tones, whether stroke width can change it, descriptions and synonyms in English and Russian, tags and icons similar in meaning. The Iconavo site shows it in the icon panel and on the icon page.
+
+```
+GET https://api.iconavo.dev/icon?icon=ph:house-bold
+```
+
+```json
+{
+  "icon": "ph:house-bold",
+  "set": {
+    "prefix": "ph",
+    "name": "Phosphor",
+    "author": { "name": "Phosphor Icons", "url": "https://github.com/phosphor-icons/core" },
+    "license": { "title": "MIT", "spdx": "MIT", "url": "https://spdx.org/licenses/MIT.html" },
+    "palette": false
+  },
+  "card": "ph:house",
+  "style": "outline",
+  "variants": [
+    { "style": "outline", "icons": ["ph:house-thin", "ph:house-light", "ph:house", "ph:house-bold"] },
+    { "style": "filled", "icons": ["ph:house-fill"] },
+    { "style": "duotone", "icons": ["ph:house-duotone"] }
+  ],
+  "tones": [],
+  "strokes": false,
+  "description": { "en": "…", "ru": "…" },
+  "synonyms": { "en": ["home", "…"], "ru": ["дом", "…"] },
+  "tags": ["home", "…"],
+  "similar": ["tabler:home", "lucide:house", "…"]
+}
+```
+
+- **Names are full**, `set:icon`, everywhere in the response.
+- **`alias`** appears when you asked for an old name: `icon` is the icon it leads to, `alias` is what you asked for.
+- **`hidden: true`** — the author removed the icon. It still works by name, but it is not listed in the catalog or search.
+- **`variants`** are the styles of the card in the order of the common scale (`outline`, `filled`, `duotone`, `color`), with the variants of each style in the order the set shows them: Phosphor weights, Material Symbols shapes. A Material Symbols name that draws the same as another variant is listed only if it is the main name of a style.
+- **`style`** is the style of this icon; **`strokes`** is `true` when `stroke-width` changes it — Lucide and the outline icons of Tabler.
+- **`description`, `synonyms`** — both languages, or `null` until a new icon is described. **`card`** and **`style`** are `null` for hidden icons and for icons not yet in the search index.
+- **`credits`** lists another author whose icon this is, under their license: Lucide icons that come from Feather (MIT).
+- **`similar`** — up to 12 icons from all sets that are closest in meaning, each in the style of this icon when it has one.
+
+| Parameter | Values |
+| --- | --- |
+| `icon` | Required: `set:icon`, such as `lucide:house`. |
+
+- **Rate limit.** At most 300 uncached requests per minute from one address; more gives 429 with `Retry-After: 60`.
+- **Caching.** 5 minutes in browsers (`Cache-Control: public, max-age=300`). `X-Iconavo-Version` is the version of the icon set, `X-Iconavo-Index` — of the search index, `X-Iconavo-Content` — a fingerprint of all data of the set: it changes with any change of the set, descriptions included.
+
 ## Icon sets: `/collections`
 
 Lists the icon sets with their author, license and showcase icons, as on Iconify: an object of [IconifyInfo](https://iconify.design/docs/types/iconify-info.html) by set prefix.
@@ -232,11 +282,11 @@ Errors are short JSON with an HTTP status:
 
 | Status | Codes |
 | --- | --- |
-| 400 | `icons_required`, `too_many_icons`, `duplicate_parameter`, `invalid_parameter`, `invalid_color`, `invalid_size`, `invalid_rotate`, `invalid_flip`, `invalid_mode`, `invalid_format`; search: `query_required`, `invalid_limit`, `invalid_start`, `invalid_prefix`, `invalid_license`, `invalid_style`; `/collection`: `prefix_required` |
+| 400 | `icons_required`, `too_many_icons`, `duplicate_parameter`, `invalid_parameter`, `invalid_color`, `invalid_size`, `invalid_rotate`, `invalid_flip`, `invalid_mode`, `invalid_format`; search: `query_required`, `invalid_limit`, `invalid_start`, `invalid_prefix`, `invalid_license`, `invalid_style`; `/icon`: `icon_required`, `invalid_icon`; `/collection`: `prefix_required` |
 | 404 | `not_found` (unknown address), `set_not_found`, `icon_not_found` |
 | 405 | `method_not_allowed`: only `GET`, `HEAD` and `OPTIONS` are allowed |
-| 429 | `rate_limited`: too many searches, retry after a minute |
-| 503 | `storage_unavailable`: retry later. The static files on `cdn.iconavo.dev` and `cdn2.iconavo.dev` keep working. `search_unavailable`: the search service is down, retry later; icons keep working. |
+| 429 | `rate_limited`: too many searches or icon details, retry after a minute |
+| 503 | `storage_unavailable`: retry later. The static files on `cdn.iconavo.dev` and `cdn2.iconavo.dev` keep working. `search_unavailable`: the search service is down, retry later; icons keep working. `/icon` needs it too. |
 
 ## Differences from the Iconify API
 
@@ -252,8 +302,8 @@ In `/collection?info=true`, `info.license` also carries the full license text; `
 
 ## Caching and headers
 
-- Successful responses are cached for a week (`Cache-Control: public, max-age=604800`); search results and `/collections`, `/collection`, `/last-modified` and `/changelog` for 5 minutes, because their addresses carry no version. Errors are cached for 5 minutes, outages and rate limits not at all.
+- Successful responses are cached for a week (`Cache-Control: public, max-age=604800`); search results, `/icon` and `/collections`, `/collection`, `/last-modified` and `/changelog` for 5 minutes, because their addresses carry no version. Errors are cached for 5 minutes, outages and rate limits not at all.
 - A new release of a set is served within a minute; the edge cache needs no purge.
-- `X-Iconavo-Version` is the data version of the set (on `/collections`, `/last-modified` and `/changelog` — of the whole catalog), `X-Iconavo-Build` is the API build, and `X-Cache` says `HIT` or `MISS`.
+- `X-Iconavo-Version` is the data version of the set (on `/collections`, `/last-modified` and `/changelog` — of the whole catalog), `X-Iconavo-Build` is the API build, and `X-Cache` says `HIT` or `MISS`. `/collection` and `/icon` also send `X-Iconavo-Content`: a fingerprint of all data of the set, descriptions included.
 - `Server-Timing` on icon, SVG and CSS responses shows where the time went: `cache` (`hit` or `miss`), `files` (icon files found in the edge cache / looked up), `r2` (files read from storage) and `total`, all in milliseconds. `Timing-Allow-Origin: *` lets pages read it.
-- Every response allows any origin (`Access-Control-Allow-Origin: *`) and lets pages read `Retry-After`, `Server-Timing`, `X-Cache`, `X-Iconavo-Build`, `X-Iconavo-Index` and `X-Iconavo-Version`. SVG responses carry a strict `Content-Security-Policy`.
+- Every response allows any origin (`Access-Control-Allow-Origin: *`) and lets pages read `Retry-After`, `Server-Timing`, `X-Cache`, `X-Iconavo-Build`, `X-Iconavo-Content`, `X-Iconavo-Index` and `X-Iconavo-Version`. SVG responses carry a strict `Content-Security-Policy`.

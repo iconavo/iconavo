@@ -12,6 +12,7 @@ export {
 export {
   EMBEDDER,
   EXACT_LIMIT,
+  ICON_RATE,
   INDEX_UID,
   LIMIT_DEFAULT,
   LIMIT_MAX,
@@ -22,6 +23,25 @@ export {
   SEMANTIC_RATIO,
   STORE_KEYS,
 } from "./config.js";
+export {
+  cardVariants,
+  ICON_FIELDS,
+  type IconCredit,
+  type IconDetails,
+  type IconHit,
+  type IconSetSummary,
+  iconQuery,
+  parseAbout,
+  parseIconResult,
+  parseSimilar,
+  SIMILAR_LIMIT,
+  SIMILAR_PATH,
+  type StyleVariants,
+  shownInStyle,
+  similarBody,
+  splitIconName,
+  styleOf,
+} from "./details.js";
 export {
   documentId,
   type SearchAbout,

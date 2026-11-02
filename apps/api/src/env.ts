@@ -33,6 +33,8 @@ export interface Env {
   CDN: Bucket;
   SEARCH?: Bucket;
   SEARCH_LIMIT?: RateLimiter;
+  /** Лимит частоты /icon (шаг 4 фазы 4): 300 в минуту с адреса мимо кэша. */
+  ICON_LIMIT?: RateLimiter;
   MEILISEARCH_URL?: string;
   MEILISEARCH_SEARCH_KEY?: string;
   POLZA_API_KEY?: string;

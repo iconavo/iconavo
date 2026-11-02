@@ -1,6 +1,11 @@
 import type { SearchDocument } from "@iconavo-ui/search";
 import { afterEach, describe, expect, it } from "vitest";
-import { type LocalMeili, localSearch, startLocalMeili } from "./local.js";
+import {
+  type LocalMeili,
+  localSearch,
+  localSimilar,
+  startLocalMeili,
+} from "./local.js";
 
 const doc = (
   icon: string,
@@ -22,6 +27,7 @@ const doc = (
     tones: [],
     style: ["outline"],
     styles: { outline: name },
+    about: { tags: [] },
     parts: 1,
     setOrder: 0,
     hash: "0".repeat(16),
@@ -63,6 +69,30 @@ describe("локальный Meilisearch проверки сайта", () => {
     expect(() =>
       localSearch(DOCS, { q: "a", filter: ["unknown = 1"] }),
     ).toThrow(/фильтр не понят/);
+  });
+
+  it("похожие: соседи по общим словам, без самого документа; без вектора — 400, нет документа — 404", () => {
+    const docs = [
+      doc("lucide:house", { tags: ["home", "building"], textHash: "a" }),
+      doc("ph:house", { tags: ["home"], textHash: "b", setOrder: 1 }),
+      doc("lucide:heart", { tags: ["love"], textHash: "c" }),
+      doc("tabler:new"),
+    ];
+    const answer = localSimilar(docs, {
+      id: "lucide_house",
+      limit: 2,
+      attributesToRetrieve: ["icon", "styles"],
+    });
+    expect(answer.status).toBe(200);
+    expect(answer.body).toEqual({
+      hits: [
+        { icon: "ph:house", styles: { outline: "house" } },
+        { icon: "lucide:heart", styles: { outline: "heart" } },
+      ],
+      id: "lucide_house",
+    });
+    expect(localSimilar(docs, { id: "tabler_new" }).status).toBe(400);
+    expect(localSimilar(docs, { id: "nope_x" }).status).toBe(404);
   });
 
   let meili: LocalMeili | undefined;

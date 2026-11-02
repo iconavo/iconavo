@@ -51,10 +51,12 @@ import {
 
 export { SearchError } from "./meili.js";
 
-/** Привязки и ключи поиска; нет Meilisearch — /search отвечает 503. */
+/** Привязки и ключи поиска; нет Meilisearch — /search и /icon отвечают 503. */
 export interface SearchOptions {
   bucket?: Bucket;
   limiter?: RateLimiter;
+  /** Лимит частоты /icon (шаг 4 фазы 4) — своя привязка, выше поисковой. */
+  iconLimiter?: RateLimiter;
   meili?: MeiliConfig;
   polzaKey?: string;
   fetch?: typeof fetch;
@@ -69,6 +71,8 @@ export interface SearchContext {
   manifest: () => Promise<Manifest>;
   now: () => number;
   log: (message: string) => void;
+  /** Общий с /icon загрузчик версии индекса; нет — свой. */
+  indexVersion?: () => Promise<string>;
 }
 
 export type SearchRoute = (
@@ -131,12 +135,9 @@ export function createSearch(
 ): SearchRoute {
   const fetchFn = options.fetch ?? fetch;
   const deadlineMs = options.deadlineMs ?? SEARCH_DEADLINE_MS;
-  const indexVersion = indexVersionLoader(
-    options.bucket,
-    ctx.now,
-    ctx.log,
-    ctx.cache,
-  );
+  const indexVersion =
+    ctx.indexVersion ??
+    indexVersionLoader(options.bucket, ctx.now, ctx.log, ctx.cache);
   /**
    * Сбои модели подряд и время последнего. После MODEL_FAILURES_TO_PAUSE сбоев подряд новые запросы
    * без фразы в бакете MODEL_RETRY_MS получают text и Polza не зовут — иначе при сбое модели они
