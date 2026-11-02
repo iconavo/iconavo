@@ -2,9 +2,10 @@
 // API. Сначала обход по HTTP — коды, заголовки, языки, ссылки, разделы README, — затем каждая страница в
 // Chrome, Firefox и WebKit по очереди: иконки в серверном HTML, консоль и нарушения CSP, заголовки
 // страницы, ссылка «к содержимому», axe-core в светлой и тёмной теме, ширина телефона, меню темы
-// (фаза 4, шаг 1), сетка набора и фильтр наборов (фаза 4, шаг 2). Контрольный запуск подкладывает
-// поломки — каждую проверка обязана заметить.
+// (фаза 4, шаг 1), сетка набора и фильтр наборов (фаза 4, шаг 2), поиск (фаза 4, шаг 3, site/search.ts).
+// Контрольный запуск подкладывает поломки — каждую проверка обязана заметить.
 
+import { groupCards, isStyle, type Style } from "@iconavo-ui/search";
 import type { Browser, Page } from "playwright";
 import { canaryVerdict } from "../example/check.js";
 import { type AxeViolation, axe, axeVerdict, runAxe } from "../sandbox/axe.js";
@@ -32,6 +33,7 @@ import {
   REDIRECT_STATUS,
   REDIRECTS,
   SKIP_TEXT,
+  STYLES_SET,
   THEME_LABEL,
 } from "./config.js";
 import {
@@ -47,6 +49,7 @@ import {
   switchVerdict,
   versionMetaOf,
 } from "./crawl.js";
+import { checkSearchPage, searchCanaryCaught } from "./search.js";
 
 export const CHECKS = [
   ["static", "Все страницы собраны заранее (статические)"],
@@ -93,7 +96,11 @@ export const CHECKS = [
   ["copy", "Кнопка Copy копирует код"],
   [
     "catalog",
-    "Каталог: сетка набора — страницы, категория, «назад», ссылка на страницу; фильтр наборов",
+    "Каталог: сетка набора — страницы, категория, «назад», ссылка на страницу; карточки и стиль; фильтр наборов",
+  ],
+  [
+    "results",
+    "Поиск: набор с главной и из шапки, фильтры и «назад», страницы, ссылка с фильтрами; по словам → полная без сдвигов; пустые ответы и 429",
   ],
   ["canary", "Контрольный запуск: каждая подложенная поломка замечена"],
 ] as const;
@@ -587,7 +594,72 @@ async function gridProblems(
   return problem ? [problem] : [];
 }
 
-/** Фильтр /sets: все наборы карточками, «цветные» — только наборы с цветными иконками. */
+/** Карточки набора STYLES_SET по стилю: стиль → имена клеток по порядку (ADR-0052). */
+export async function styledExpect(
+  api: string,
+): Promise<{ any: string[]; filled: string[] }> {
+  const response = await fetch(`${api}/collection?prefix=${STYLES_SET}`);
+  if (!response.ok) {
+    throw new Error(
+      `${api}/collection?prefix=${STYLES_SET} ответил ${response.status}`,
+    );
+  }
+  const c = (await response.json()) as {
+    categories?: Record<string, string[]>;
+    uncategorized?: string[];
+    aliases?: Record<string, string>;
+    suffixes?: Record<string, string>;
+    styles?: Record<string, string[]>;
+  };
+  const dashed = (s: string) => (s === "" ? "" : `-${s}`);
+  const styles: Partial<Record<Style, string[]>> = {};
+  for (const [style, list] of Object.entries(c.styles ?? {})) {
+    if (isStyle(style)) styles[style] = list.map(dashed);
+  }
+  const { cards } = groupCards({
+    names: [
+      ...(c.uncategorized ?? []),
+      ...Object.values(c.categories ?? {}).flat(),
+    ],
+    aliases: Object.entries(c.aliases ?? {}),
+    suffixes: Object.keys(c.suffixes ?? {}).map(dashed),
+    styles,
+  });
+  return {
+    any: cards.map((card) => card.base),
+    filled: cards.flatMap((card) =>
+      card.styles.filled === undefined ? [] : [card.styles.filled],
+    ),
+  };
+}
+
+/** Карточки и чипсы стиля на странице набора со стилями: «Любой» — базы, «Заливка» — её главные имена. */
+async function stylesProblems(
+  page: Page,
+  base: string,
+  e: { any: string[]; filled: string[] },
+): Promise<string[]> {
+  const first = (names: string[]) => names.slice(0, CATALOG_PAGE_SIZE);
+  await page.goto(`${base}/${STYLES_SET}`, { waitUntil: "load" });
+  await waitForHydration(page);
+  let problem = await gridShows(
+    page,
+    `/${STYLES_SET}: карточки`,
+    first(e.any),
+    "",
+  );
+  if (problem) return [problem];
+  await page.locator('.chips-nav a.chip[href$="?style=filled"]').click();
+  problem = await gridShows(
+    page,
+    `/${STYLES_SET}: «Заливка»`,
+    first(e.filled),
+    "?style=filled",
+  );
+  return problem ? [problem] : [];
+}
+
+/** Фильтр /sets: все наборы карточками, «Цветные» — только наборы с цветными иконками (ADR-0052). */
 async function setsProblems(
   page: Page,
   base: string,
@@ -601,11 +673,11 @@ async function setsProblems(
   if (all !== e.sets) {
     problems.push(`/sets: карточек ${all}, а наборов ${e.sets}`);
   }
-  await page.locator('.chips-nav a.chip[href$="?palette=color"]').click();
+  await page.locator('.chips-nav a.chip[href$="?style=color"]').click();
   const shown = await page
     .waitForFunction(
       ([n]) =>
-        location.search === "?palette=color" &&
+        location.search === "?style=color" &&
         document.querySelectorAll(".set-card").length === n,
       [e.colorSets] as const,
       { timeout: CATALOG_WAIT_MS },
@@ -616,7 +688,7 @@ async function setsProblems(
     );
   if (!shown) {
     problems.push(
-      `/sets, «цветные»: адрес «${await page.evaluate(() => location.search)}», карточек ${await cards()}, а ждали ${e.colorSets}`,
+      `/sets, «Цветные»: адрес «${await page.evaluate(() => location.search)}», карточек ${await cards()}, а ждали ${e.colorSets}`,
     );
   }
   return problems;
@@ -648,6 +720,7 @@ async function checkCatalog(
   });
   problems.push(
     ...(await violations(page)).map((x) => `CSP: ${x}`),
+    ...(await stylesProblems(page, o.base, await styledExpect(o.api))),
     ...(await setsProblems(page, o.base, e)),
     ...(await violations(page)).map((x) => `/sets, CSP: ${x}`),
     ...[...new Set(seen.errors)].map((x) => `ошибка: ${x}`),
@@ -655,7 +728,7 @@ async function checkCatalog(
   result.verdicts.catalog =
     problems.length === 0
       ? pass(
-          `/${CATALOG_SET}: страница 1 с сервера, 2, категория, «назад», ссылка на 3 — имена и иконки как в /collection; /sets: «цветные» — ${e.colorSets} из ${e.sets}`,
+          `/${CATALOG_SET}: страница 1 с сервера, 2, категория, «назад», ссылка на 3 — имена и иконки как в /collection; /${STYLES_SET}: карточки и «Заливка»; /sets: «Цветные» — ${e.colorSets} из ${e.sets}`,
         )
       : fail(problems.slice(0, 3).join("; "));
   await context.close();
@@ -780,7 +853,24 @@ async function checkTheme(
         png: await shot(page, seen),
       });
     }
-    for (let i = 0; i < steps; i++) await page.keyboard.press("ArrowDown");
+    // После каждого ↓ — ждать, пока фокус дойдёт до следующего пункта: WebKit двигает его не сразу, и
+    // следующее нажатие раньше времени приходилось на прежний пункт (опыт 2 ноября 2026, Windows).
+    for (let i = 1; i <= steps; i++) {
+      await page.keyboard.press("ArrowDown");
+      await page
+        .waitForFunction(
+          (n) => {
+            const el = document.activeElement;
+            return (
+              el?.getAttribute("role") === "menuitemradio" &&
+              [...(el.parentElement?.children ?? [])].indexOf(el) === n
+            );
+          },
+          i,
+          { timeout: 2000 },
+        )
+        .catch(() => {});
+    }
     await page.keyboard.press("Enter");
     await menu.waitFor({ state: "hidden" });
     const picked = await themeAttr(page);
@@ -992,10 +1082,14 @@ async function checkCanary(
     missed.push("сетка набора без списка имён");
   }
   await blind.close();
+  // Выдача поиска навсегда неполная (каждый ответ — pending): сценарий «Поиск» обязан это заметить.
+  if (!(await searchCanaryCaught(browser, o))) {
+    missed.push("поиск без полной выдачи");
+  }
   result.verdicts.canary =
     missed.length === 0
       ? pass(
-          "замечены все двенадцать: кнопка без подписи, style, ширина, иконка-блок, robots, битая ссылка, гидратация, чужой lang, нет ссылки на другой язык, переход не туда, нет скрипта темы, сетка без списка имён",
+          "замечены все тринадцать: кнопка без подписи, style, ширина, иконка-блок, robots, битая ссылка, гидратация, чужой lang, нет ссылки на другой язык, переход не туда, нет скрипта темы, сетка без списка имён, поиск без полной выдачи",
         )
       : fail(`проверка слепая: не замечено — ${missed.join(", ")}`);
 }
@@ -1021,6 +1115,8 @@ export async function checkSite(o: SiteCheckOptions): Promise<SiteResult[]> {
       await checkTheme(browser, o, result);
       o.log?.(`${BROWSER_TITLES[name]}: каталог…`);
       await checkCatalog(browser, o, expected, result);
+      o.log?.(`${BROWSER_TITLES[name]}: поиск…`);
+      result.verdicts.results = await checkSearchPage(browser, o, result.shots);
       o.log?.(`${BROWSER_TITLES[name]}: контрольный запуск…`);
       await checkCanary(browser, o, expected, result);
     } catch (e) {

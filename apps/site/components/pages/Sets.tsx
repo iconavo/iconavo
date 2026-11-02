@@ -1,18 +1,24 @@
 import { IconavoProvider } from "@iconavo-ui/react";
-import { getSets, orderSets } from "../../lib/catalog";
+import { getSetStyles, getSets, orderSets } from "../../lib/catalog";
 import { setSummary } from "../../lib/catalog-view";
 import { DICTIONARIES, type Lang } from "../../lib/i18n";
 import { loadPageIcons } from "../../lib/icons";
 import { SetsBrowser } from "../catalog/SetsBrowser";
 
-/** Каталог наборов /sets (ADR-0037): все наборы карточками, фильтры по лицензии и цветам. */
+/** Каталог наборов /sets (ADR-0037): все наборы карточками, фильтры по лицензии и стилю (ADR-0052). */
 export async function Sets({ lang }: { lang: Lang }) {
   const t = DICTIONARIES[lang];
   const sets = await getSets();
-  const cards = orderSets(Object.keys(sets)).flatMap((id) => {
-    const info = sets[id];
-    return info === undefined ? [] : [setSummary(lang, id, info)];
-  });
+  const cards = (
+    await Promise.all(
+      orderSets(Object.keys(sets)).map(async (id) => {
+        const info = sets[id];
+        return info === undefined
+          ? []
+          : [setSummary(lang, id, info, await getSetStyles(id))];
+      }),
+    )
+  ).flat();
   const icons = await loadPageIcons(
     cards.flatMap((c) => c.samples.map((name) => `${c.id}:${name}`)),
   );

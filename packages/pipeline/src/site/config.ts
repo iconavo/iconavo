@@ -90,3 +90,16 @@ export const PHONE = { width: 375, height: 800 };
 
 /** Живой сайт показывает новую сборку не сразу — ждать до стольких секунд. */
 export const LIVE_WAIT_MS = 180_000;
+
+/**
+ * Поиск (шаг 3 фазы 4): запросы сценария «Поиск». В проверке превью API ищет по словам в локальном
+ * Meilisearch (pnpm site --check): «house» находит точные имена в нескольких наборах, «arrow» — больше
+ * страницы, «zzqxv» — ничего.
+ */
+export const SEARCH_QUERY = "house";
+export const SEARCH_PAGES_QUERY = "arrow";
+export const SEARCH_EMPTY_QUERY = "zzqxv";
+/** Выдача появляется не дольше: запрос и иконки браузер берёт у превью API. */
+export const SEARCH_WAIT_MS = 20_000;
+/** Набор со стилями для сценария «Каталог»: чипсы «Стиль» и карточки (ADR-0052). */
+export const STYLES_SET = "ph";

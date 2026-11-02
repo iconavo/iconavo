@@ -12,3 +12,14 @@ export function siteMetadata(lang: Lang): Metadata {
     robots: INDEXING ? undefined : { index: false, follow: false },
   };
 }
+
+/**
+ * Страница поиска: заголовок и метка «не индексировать» всегда, и после запуска тоже — у выдачи нет
+ * постоянного содержания (ADR-0039).
+ */
+export function searchMetadata(lang: Lang): Metadata {
+  return {
+    title: DICTIONARIES[lang].searchTitle,
+    robots: { index: false, follow: false },
+  };
+}

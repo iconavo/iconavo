@@ -1,5 +1,5 @@
 import type { NextConfig } from "next";
-import { iconHosts, siteHeaders } from "./lib/headers";
+import { iconHosts, searchRobotsHeaders, siteHeaders } from "./lib/headers";
 
 // Метка сборки — 8 знаков коммита от CI (site.yml); её видно в заголовке X-Iconavo-Build, по ней
 // pnpm site --live узнаёт, что выложена именно эта сборка.
@@ -37,6 +37,7 @@ const config: NextConfig = {
           hosts: iconHosts(process.env),
         }),
       },
+      ...searchRobotsHeaders(),
     ];
   },
 };

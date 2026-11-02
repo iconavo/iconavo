@@ -15,10 +15,14 @@ export interface SetSummary {
   licenseId: string;
   palette: boolean;
   samples: string[];
+  /** Стили набора по общей шкале (ADR-0052) — для фильтра. */
+  styles: string[];
+  /** Они же названиями: «Контур · Заливка». */
+  stylesLine: string;
 }
 
 /**
- * Карточка набора: название, витрина, число иконок, лицензия и автор. Уровень заголовка — по странице:
+ * Карточка набора: название, витрина, число иконок, лицензия, стили (ADR-0052) и автор. Уровень заголовка — по странице:
  * на /sets — h2, на главной под разделом «Популярные наборы» — h3.
  */
 export function SetCard({
@@ -50,7 +54,13 @@ export function SetCard({
       </p>
       <p className="set-card-meta">
         {set.total} · {set.license}
-        {set.palette ? ` · ${t.setMulticolor}` : ""}
+      </p>
+      <p className="set-card-meta">
+        {set.stylesLine === ""
+          ? set.palette
+            ? t.setMulticolor
+            : t.setMonochrome
+          : set.stylesLine}
       </p>
       <p className="set-card-meta">{set.author}</p>
     </article>

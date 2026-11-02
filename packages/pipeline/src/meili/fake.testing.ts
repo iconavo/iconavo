@@ -4,6 +4,7 @@
 // по вхождению.
 
 import type { MeiliClient, MeiliIndex, MeiliTask } from "./client.js";
+import { matchDocs } from "./match.js";
 
 export interface FakeMeiliOptions {
   /** Ошибка для операции и номера её вызова (с 1). */
@@ -37,29 +38,6 @@ export function fakeMeili(options: FakeMeiliOptions = {}) {
     tasks.set(uid, { uid, status: "succeeded", type });
     return uid;
   };
-
-  /** Условие фильтра: только те формы, что строит общий модуль. */
-  const matches = (doc: StoredDocument, filter: readonly string[]) =>
-    filter.every((f) => {
-      let m = /^NOT names = "(.+)"$/.exec(f);
-      if (m) return !(doc.names as string[]).includes(m[1] as string);
-      m = /^names = "(.+)"$/.exec(f);
-      if (m) return (doc.names as string[]).includes(m[1] as string);
-      m = /^set IN \[(.+)\]$/.exec(f);
-      if (m) return (m[1] as string).includes(`"${doc.set as string}"`);
-      m = /^palette = (true|false)$/.exec(f);
-      if (m) return String(doc.palette) === m[1];
-      m = /^license IN \[(.+)\]$/.exec(f);
-      if (m) return (m[1] as string).includes(`"${doc.license as string}"`);
-      m = /^style = "(.+)"$/.exec(f);
-      if (m) return ((doc.style as string[]) ?? []).includes(m[1] as string);
-      throw new Error(`подменный Meilisearch: фильтр не понят: ${f}`);
-    });
-
-  const words = (doc: StoredDocument) =>
-    ["name", "tags", "synonymsEn", "synonymsRu"]
-      .flatMap((k) => (doc[k] as string[]) ?? [])
-      .join(" ");
 
   const client: MeiliClient = {
     async index() {
@@ -119,13 +97,7 @@ export function fakeMeili(options: FakeMeiliOptions = {}) {
       return {
         results: (queries as Record<string, unknown>[]).map((q) => {
           const filter = (q.filter as string[] | undefined) ?? [];
-          const text = String(q.q ?? "");
-          const found = [...docs.values()].filter(
-            (d) =>
-              matches(d, filter) &&
-              (text === "" ||
-                text.split(" ").some((w) => words(d).includes(w))),
-          );
+          const found = matchDocs(docs.values(), String(q.q ?? ""), filter);
           const offset = Number(q.offset ?? 0);
           const limit = Number(q.limit ?? 20);
           return {
