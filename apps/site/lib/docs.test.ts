@@ -2,7 +2,7 @@ import { mkdirSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
-import { type DocBlock, docPages, PAGES, SOURCES } from "./docs";
+import { type DocBlock, docPage, docPages, PAGES, SOURCES } from "./docs";
 import type { Inline } from "./markdown";
 
 const root = join(import.meta.dirname, "..", "..", "..");
@@ -146,5 +146,12 @@ describe("страницы документации из README", () => {
     expect(() =>
       docPages(fakeRoot(body("See [x](LICENSE)."), "# API\n\n## A\n")),
     ).toThrow("только https://");
+  });
+
+  it("на сервере без исходников неизвестный адрес — «страницы нет», а не ошибка", () => {
+    const empty = mkdtempSync(join(tmpdir(), "iconavo-docs-empty-"));
+    expect(docPage("x", empty)).toBeUndefined();
+    // Сломанный или пропавший README сборку по-прежнему останавливает: docPages читает напрямую.
+    expect(() => docPages(empty)).toThrow();
   });
 });
