@@ -939,6 +939,27 @@
   .icon-preview.preview-dark {
     color-scheme: dark;
   }
+  /*
+   * Панели со своей темой. Lightning CSS, которым Tailwind собирает стили, заменяет light-dark()
+   * переменными --lightningcss-light и --lightningcss-dark, и токен вычисляется один раз — у :root:
+   * color-scheme вложенного элемента его уже не меняет. Здесь токены объявлены заново — значениями из
+   * @theme (--theme(… inline)), без новых цветов: элемент со своим color-scheme вычисляет их сам. Список
+   * токенов сверяет lib/tokens.test.ts.
+   */
+  .preview-light,
+  .preview-dark {
+    /* biome-ignore-start lint/correctness/noMissingVarFunction: --theme(… inline) Tailwind подставляет значение токена из @theme, а не ссылку на переменную */
+    --color-bg: --theme(--color-bg inline);
+    --color-fg: --theme(--color-fg inline);
+    --color-muted: --theme(--color-muted inline);
+    --color-line: --theme(--color-line inline);
+    --color-control: --theme(--color-control inline);
+    --color-surface: --theme(--color-surface inline);
+    --color-accent: --theme(--color-accent inline);
+    --color-focus: --theme(--color-focus inline);
+    --shadow-md: --theme(--shadow-md inline);
+    /* biome-ignore-end lint/correctness/noMissingVarFunction: конец значений из @theme */
+  }
   .icon-name-row {
     display: flex;
     flex-wrap: wrap;

@@ -54,6 +54,10 @@ function panelFacts() {
     color: panel?.querySelector('input[type="color"]') !== null,
     preview:
       (panel?.querySelector(".icon-preview svg")?.childNodes.length ?? 0) > 0,
+    /** Фон превью на светлом и тёмном фоне — у каждой панели свой color-scheme. */
+    backgrounds: [...(panel?.querySelectorAll(".icon-preview") ?? [])].map(
+      (e) => getComputedStyle(e).backgroundColor,
+    ),
     position: panel ? getComputedStyle(panel).position : "",
     top: box?.top ?? 0,
     height: box?.height ?? 0,
@@ -141,6 +145,10 @@ export async function panelProblems(
   );
   no(f.focusInPanel, "фокус после открытия — не в панели");
   no(f.preview, "превью в панели не нарисовано");
+  no(
+    f.backgrounds.length === 2 && f.backgrounds[0] !== f.backgrounds[1],
+    `у превью на светлом и тёмном фоне один фон: ${f.backgrounds.join(", ")}`,
+  );
   no(f.history === start.history + 1, "открытие не добавило запись истории");
   no(f.stroke, `у ${first} (Lucide) нет толщины линии`);
   no(f.color, `у ${first} нет выбора цвета`);

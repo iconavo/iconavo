@@ -88,6 +88,19 @@ describe("токены вместо значений", () => {
       }
     }
   });
+
+  it("панели со своей темой объявляют заново все токены с light-dark — значениями из @theme", () => {
+    // Lightning CSS вычисляет light-dark() у :root, и без этого превью «на тёмном фоне» осталось бы светлым.
+    const css = readFileSync(join(site, "app", "globals.css"), "utf8");
+    const rule = /\.preview-light,[^{]*\{([^}]*)\}/.exec(css)?.[1] ?? "";
+    const tokens = [
+      ...[...tokenColors().keys()].map((name) => `--color-${name}`),
+      "--shadow-md",
+    ];
+    for (const token of tokens) {
+      expect(rule).toContain(`${token}: --theme(${token} inline);`);
+    }
+  });
 });
 
 /** Пары цветов токена: светлая и тёмная тема. */
