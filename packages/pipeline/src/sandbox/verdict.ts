@@ -47,6 +47,13 @@ export function layoutVerdict(before: Spot[], after: Spot[]): Verdict {
 export const isRequestFailure = (text: string) =>
   text.startsWith("Failed to load resource") ||
   text.includes("(Reason: CORS request did not succeed)") ||
+  isAbortedPrefetch(text);
+
+/**
+ * WebKit: запрос Next.js к самому сайту (`?_rsc=`), оборванный уходом со страницы. Приходит и записью
+ * консоли, и необработанной ошибкой страницы с тем же текстом — не ошибка страницы ни там, ни там.
+ */
+export const isAbortedPrefetch = (text: string) =>
   /[?&]_rsc=\S* due to access control checks\.$/.test(text);
 
 /** Что пишет страница: предупреждения и ошибки, кроме записей о неудавшихся запросах. */
@@ -60,7 +67,9 @@ export function watch(page: Page) {
       errors.push(text);
     }
   });
-  page.on("pageerror", (error) => errors.push(error.message));
+  page.on("pageerror", (error) => {
+    if (!isAbortedPrefetch(error.message)) errors.push(error.message);
+  });
   return { warnings, errors };
 }
 

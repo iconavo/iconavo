@@ -13,7 +13,11 @@ import {
   markdownSandboxCheck,
   renderSandboxCheckPage,
 } from "./check-report.js";
-import { isRequestFailure, layoutVerdict } from "./verdict.js";
+import {
+  isAbortedPrefetch,
+  isRequestFailure,
+  layoutVerdict,
+} from "./verdict.js";
 
 describe("разбор проверки в браузерах", () => {
   it("предупреждения: каждое ожидаемое — ровно один раз, чужие предупреждения пакета — проблема", () => {
@@ -137,6 +141,13 @@ describe("разбор проверки в браузерах", () => {
         "Fetch API cannot load http://127.0.0.1:4281/lucide.json?icons=house due to access control checks.",
       ),
     ).toBe(false);
+    // Та же запись приходит и необработанной ошибкой страницы — её отсеивает isAbortedPrefetch.
+    expect(
+      isAbortedPrefetch(
+        "/127.0.0.1:40037/licenses?_rsc=Pl0muESTIEMhrDNY due to access control checks.",
+      ),
+    ).toBe(true);
+    expect(isAbortedPrefetch("TypeError: Load failed")).toBe(false);
   });
 });
 
