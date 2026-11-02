@@ -3,8 +3,10 @@ import { notFound } from "next/navigation";
 import { DocPage } from "../../../../components/DocPage";
 import { docPage, docPages } from "../../../../lib/docs";
 
-// Страницы документации собираются при сборке; другого адреса под /docs нет.
-export const dynamicParams = false;
+// Страницы документации собираются при сборке. Неизвестный раздел — 404 через notFound() ниже, а не
+// dynamicParams = false: с маршрутом страницы иконки /[prefix]/[icon] (шаг 4 фазы 4) Vercel отвечал на
+// /docs/x ошибкой 500 — его маршрутизация не подхватывает отказ Next.js «нет такой заранее собранной
+// страницы», а next start подхватывает, поэтому pnpm site --check этого не видит (ловит --live).
 
 export function generateStaticParams() {
   return docPages()
