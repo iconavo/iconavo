@@ -353,5 +353,17 @@ export function docPages(root = join(process.cwd(), "..", "..")): DocPage[] {
   return done;
 }
 
-export const docPage = (slug: string) =>
-  docPages().find((p) => p.slug === slug);
+/**
+ * Страница документации по адресу. На сервере Vercel исходников нет — страницы собраны при сборке, а
+ * трассировка их путь не отслеживает. Но неизвестный адрес под /docs функция всё же получает (с маршрутом
+ * страницы иконки /[prefix]/[icon], шаг 4 фазы 4): для него страницы просто нет — 404, а не ошибка 500.
+ * Сломанный README по-прежнему останавливает сборку: generateStaticParams читает docPages() напрямую.
+ */
+export function docPage(slug: string, root?: string): DocPage | undefined {
+  try {
+    return docPages(root).find((p) => p.slug === slug);
+  } catch (e) {
+    if ((e as NodeJS.ErrnoException).code === "ENOENT") return undefined;
+    throw e;
+  }
+}
