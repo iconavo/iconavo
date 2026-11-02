@@ -1,18 +1,25 @@
 import { describe, expect, it } from "vitest";
 import {
+  CONTENT_META,
+  CRAWL_ICON_NAMES,
   CRAWL_ICONS,
   followLink,
+  HIDDEN_ICON,
+  iconPath,
   isIconPath,
+  MOCKUPS,
   REDIRECT_CODES,
 } from "./config.js";
 import {
   anchorsOf,
   type CrawledPage,
+  contentVerdict,
   counterpartOf,
   freshnessVerdict,
   headersVerdict,
   headingsOf,
   htmlLang,
+  iconPagesProblems,
   idsOf,
   langVerdict,
   linksVerdict,
@@ -333,5 +340,76 @@ describe("страницы иконок в обходе (шаг 4 фазы 4)", 
     };
     expect(statusVerdict(pages, { ...o, codes: REDIRECT_CODES }).ok).toBe(true);
     expect(statusVerdict(pages, o).ok).toBe(false);
+  });
+});
+
+describe("страницы иконок и отпечатки содержимого (шаг 4 фазы 4)", () => {
+  const mockups = '<div class="mockup" data-mockup="m"></div>'.repeat(MOCKUPS);
+  /** Серверный HTML страницы иконки: метки, заголовок, превью и мокапы. */
+  const iconHtml = (name: string, content: string, extra = "") =>
+    [
+      `<meta name="iconavo-version" content="v1"/>`,
+      `<meta name="${CONTENT_META}" content="${content}"/>`,
+      `<h1>${name.slice(name.indexOf(":") + 1)}</h1>`,
+      `<figure class="icon-preview preview-light"><svg viewBox="0 0 24 24"><path/></svg></figure>`,
+      mockups,
+      extra,
+    ].join("");
+  const setOf = (name: string) => name.slice(0, name.indexOf(":"));
+  /** Страницы выборки обхода на двух языках; change может подменить HTML одной из них. */
+  const sample = (change?: (path: string) => string | undefined) =>
+    CRAWL_ICON_NAMES.flatMap((name) =>
+      ["", "/ru"].map((lang) => {
+        const path = `${lang}${iconPath(name)}`;
+        const mark =
+          name === HIDDEN_ICON ? (lang ? "Устарела" : "Deprecated") : "";
+        return page(
+          path,
+          change?.(path) ?? iconHtml(name, `c-${setOf(name)}`, mark),
+        );
+      }),
+    );
+
+  it("заголовок, превью, метки, мокапы; у скрытой — «Устарела»", () => {
+    expect(iconPagesProblems(sample())).toEqual([]);
+  });
+
+  it("нет мокапов, нет «Устарела» или страница не открыта — проблема", () => {
+    const noMockups = sample((path) =>
+      path === "/lucide/house"
+        ? iconHtml("lucide:house", "c-lucide").replaceAll("data-mockup", "x")
+        : undefined,
+    );
+    expect(iconPagesProblems(noMockups)).toEqual([
+      `/lucide/house: нет ${MOCKUPS} мокапов`,
+    ]);
+    const hidden = `/ru${iconPath(HIDDEN_ICON)}`;
+    const notHidden = sample((path) =>
+      path === hidden ? iconHtml(HIDDEN_ICON, "c-lucide") : undefined,
+    );
+    expect(iconPagesProblems(notHidden)).toEqual([`${hidden}: нет «Устарела»`]);
+    expect(iconPagesProblems(sample().slice(1))[0]).toBe(
+      "/lucide/house: не открыта",
+    );
+  });
+
+  it("отпечатки: страницы набора на двух языках и его иконки — как в каталоге", () => {
+    const sets = Object.fromEntries(
+      CRAWL_ICON_NAMES.map((name) => [
+        setOf(name),
+        { content: `c-${setOf(name)}` },
+      ]),
+    );
+    const setPages = Object.keys(sets).flatMap((id) => [
+      page(`/${id}`, iconHtml(`${id}:x`, `c-${id}`)),
+      page(`/ru/${id}`, iconHtml(`${id}:x`, `c-${id}`)),
+    ]);
+    expect(contentVerdict([...sample(), ...setPages], sets).ok).toBe(true);
+    const stale = [...sample(), ...setPages].map((p) =>
+      p.path === "/ru/ph" ? page("/ru/ph", iconHtml("ph:x", "old")) : p,
+    );
+    const verdict = contentVerdict(stale, sets);
+    expect(verdict.ok).toBe(false);
+    expect(verdict.note).toContain("/ru/ph: old, а в каталоге c-ph");
   });
 });

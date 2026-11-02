@@ -15,6 +15,7 @@
 // | pnpm starters <пример> [--browser=…] | pnpm starters [пример…] --check [--browser=…] [--npm]
 // | pnpm starters [пример…] --lock
 // | pnpm site [--port=N] [--prod] | pnpm site --check [--browser=…] | pnpm site --live [--expect-build=…] [--base=…]
+// | pnpm site --refresh [--all] [--base=…] | pnpm site --refresh --wait=N --since=… --sets=… [--base=…]
 // | pnpm release bump [версия] | pnpm release prepare [--first] | pnpm release verify --plan=… [--wait=N]
 import { randomInt } from "node:crypto";
 import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
@@ -239,23 +240,32 @@ import { MODEL_SEARCH, PAGE_PORT } from "./search/config.js";
 import { startSearchServer } from "./search/server.js";
 import { buildTextIndex } from "./search/text.js";
 import { loadModelVectors, type ModelVectors } from "./search/vectors.js";
-import { checkSite, siteCheckFailed } from "./site/check.js";
+import { checkSite, readCacheTags, siteCheckFailed } from "./site/check.js";
 import {
   formatSiteCheck,
   markdownSiteCheck,
   renderSiteCheckPage,
 } from "./site/check-report.js";
 import {
+  CACHE_TAG_PAGES,
   CRAWL_EXTRAS,
   CRAWL_ICONS,
   DOC_SOURCES,
   followLink,
   LIVE_SITE,
+  REFRESH_WAIT_S,
   SITE_DIR,
   SITE_PORT,
 } from "./site/config.js";
 import { crawl, readmeSections } from "./site/crawl.js";
 import { checkLiveSite, liveFailed } from "./site/live.js";
+import {
+  catalogSets,
+  compareSite,
+  describePage,
+  invalidateGroups,
+  waitRefreshed,
+} from "./site/refresh.js";
 import {
   cachedSourceDir,
   fetchSource,
@@ -461,7 +471,16 @@ const USAGE = `Использование:
       --browser=…                     с --check: только chrome, firefox или webkit
       --live                          живой ${LIVE_SITE}: страницы, заголовки, noindex, переходы
       --expect-build=…                с --live: ждать до 3 минут сборку с этой меткой
-      --base=…                        с --live: другой адрес, https://…
+      --base=…                        с --live и --refresh: другой адрес, https://…
+      --refresh                       сброс по наборам (шаг 4 фазы 4, ADR-0039): отпечатки наборов на
+                                      живых страницах против оглавления каталога раздачи; устаревшие,
+                                      новые и метки для vercel cache invalidate — .cache/reports/site/
+                                      refresh.json; только чтение, ключи не нужны
+      --all                           с --refresh: все наборы со страницей — устаревшие; с --wait —
+                                      свежесть ещё и по времени сборки страниц
+      --wait=N --since=… --sets=…     с --refresh: после сброса ждать до N секунд (по умолчанию
+                                      ${REFRESH_WAIT_S}), пока страницы этих наборов покажут свежий
+                                      отпечаток (since — время сброса, UTC, ISO); код 1 — нет
   pnpm packages prepare [id…]       пакеты npm @iconavo-ui/icons-{набор} в ${NPM_OUT_DIR}/ (ADR-0026):
                                       данные, LICENSE, README, типы; версия — по реестру npm (только
                                       чтение, ключи не нужны); план для CI ${NPM_OUT_DIR}/plan.json;
@@ -595,6 +614,11 @@ let startersNpm = false;
 let startersLock = false;
 let siteLive = false;
 let siteBase: string | undefined;
+let siteRefresh = false;
+let refreshAll = false;
+let refreshWait: number | undefined;
+let refreshSince: number | undefined;
+let refreshSets: string[] | undefined;
 const modelKeys = new Set<string>();
 for (const flag of flags) {
   const eq = flag.indexOf("=");
@@ -678,6 +702,33 @@ for (const flag of flags) {
     }
     if (flag === "--live") {
       siteLive = true;
+      continue;
+    }
+    if (flag === "--refresh") {
+      siteRefresh = true;
+      continue;
+    }
+    if (flag === "--all") {
+      refreshAll = true;
+      continue;
+    }
+    if (name === "--wait" && /^[1-9][0-9]{0,3}$/.test(value ?? "")) {
+      refreshWait = Number(value);
+      continue;
+    }
+    if (
+      name === "--since" &&
+      /^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d(\.\d+)?Z$/.test(value ?? "") &&
+      Number.isFinite(Date.parse(value ?? ""))
+    ) {
+      refreshSince = Date.parse(value ?? "");
+      continue;
+    }
+    if (
+      name === "--sets" &&
+      /^[a-z0-9]+(-[a-z0-9]+)*(,[a-z0-9]+(-[a-z0-9]+)*)*$/.test(value ?? "")
+    ) {
+      refreshSets = (value ?? "").split(",");
       continue;
     }
     if (name === "--browser" && value !== undefined && isBrowserName(value)) {
@@ -1562,14 +1613,126 @@ try {
     process.exit(visualFailed(results) ? 1 : 0);
   } else if (command === "site") {
     if (args.length > 0) usageError("pnpm site принимает только флаги.");
-    if ([checkBrowsers, siteLive, exampleProd].filter(Boolean).length > 1) {
-      usageError("--check, --live и --prod — по одному.");
+    if (
+      [checkBrowsers, siteLive, exampleProd, siteRefresh].filter(Boolean)
+        .length > 1
+    ) {
+      usageError("--check, --live, --refresh и --prod — по одному.");
     }
     if (browserName && !checkBrowsers) {
       usageError("--browser — только вместе с --check.");
     }
-    if ((expectBuild || siteBase) && !siteLive) {
-      usageError("--expect-build и --base — только вместе с --live.");
+    if (expectBuild && !siteLive) {
+      usageError("--expect-build — только вместе с --live.");
+    }
+    if (siteBase && !siteLive && !siteRefresh) {
+      usageError("--base — только вместе с --live или --refresh.");
+    }
+    const waiting =
+      refreshWait !== undefined ||
+      refreshSince !== undefined ||
+      refreshSets !== undefined;
+    if ((refreshAll || waiting) && !siteRefresh) {
+      usageError(
+        "--all, --wait, --since и --sets — только вместе с --refresh.",
+      );
+    }
+    if (waiting && (refreshSince === undefined || refreshSets === undefined)) {
+      usageError(
+        "с --wait нужны --since=… (UTC, ISO) и --sets=… — что и когда сброшено.",
+      );
+    }
+    if (siteRefresh) {
+      // Сброс по наборам (шаг 4 фазы 4, ADR-0039): только открытые адреса — сайт и раздача.
+      const base = siteBase ?? LIVE_SITE;
+      const reportDir = join(reportsDir, "site");
+      await mkdir(reportDir, { recursive: true });
+      const sets = await catalogSets();
+      if (refreshSince !== undefined && refreshSets !== undefined) {
+        const ids = refreshSets;
+        const unknown = ids.filter((id) => sets[id] === undefined);
+        if (unknown.length > 0) {
+          usageError(
+            `Наборов ${unknown.join(", ")} нет в оглавлении каталога раздачи.`,
+          );
+        }
+        const seconds = refreshWait ?? REFRESH_WAIT_S;
+        console.log(
+          `Жду до ${seconds} с, пока ${base} покажет свежие страницы наборов: ${ids.join(", ")}…`,
+        );
+        const result = await waitRefreshed({
+          base,
+          sets,
+          ids,
+          since: refreshSince,
+          rendered: refreshAll,
+          timeoutMs: seconds * 1000,
+          log: (line) => console.log(line),
+        });
+        const lines = result.done
+          ? [`Итог: страницы обновились за ${result.seconds} с.`]
+          : [
+              `Итог: за ${result.seconds} с обновились не все страницы — сброс не сработал или сборка страниц падает:`,
+              ...result.pending.map((page) => `- ${describePage(page)}`),
+            ];
+        console.log(`\n${lines.join("\n")}`);
+        await writeFile(
+          join(reportDir, "refresh.md"),
+          [`### Сброс по наборам: ${ids.join(", ")}`, "", ...lines, ""].join(
+            "\n",
+          ),
+          "utf8",
+        );
+        process.exit(result.done ? 0 : 1);
+      }
+      const rows = await compareSite(base, sets, refreshAll);
+      const states = {
+        fresh: "свежий",
+        stale: refreshAll ? "сбросить" : "устарел",
+        missing: "нет страницы",
+      };
+      const head = ["Набор", "Состояние", "Отпечаток в каталоге", "Страницы"];
+      const table = rows.map((r) => [
+        r.id,
+        states[r.state],
+        r.expected,
+        r.pages.map(describePage).join("; "),
+      ]);
+      console.log(textTable(head, table));
+      const stale = rows.filter((r) => r.state === "stale").map((r) => r.id);
+      const missing = rows
+        .filter((r) => r.state === "missing")
+        .map((r) => r.id);
+      // Для workflow «Сайт»: что сбросить (метки группами для vercel cache invalidate) и что пересобрать.
+      await writeFile(
+        join(reportDir, "refresh.json"),
+        `${JSON.stringify(
+          {
+            checked: new Date().toISOString(),
+            base,
+            stale,
+            missing,
+            groups: invalidateGroups(stale),
+          },
+          null,
+          2,
+        )}\n`,
+        "utf8",
+      );
+      await writeFile(
+        join(reportDir, "refresh.md"),
+        [
+          `### Сброс по наборам: ${base}`,
+          "",
+          markdownTable(head, table),
+          "",
+        ].join("\n"),
+        "utf8",
+      );
+      console.log(
+        `\nУстарели: ${stale.join(", ") || "нет"}; без страницы (нужна пересборка): ${missing.join(", ") || "нет"}.`,
+      );
+      process.exit(0);
     }
     const dir = join(root, SITE_DIR);
     const sections: string[] = [];
@@ -1684,6 +1847,15 @@ try {
           (await fetch(`${next.url}${CRAWL_ICONS[0]}`)).headers.get(
             "x-nextjs-cache",
           ) ?? undefined;
+        // Метки кэша страниц — из файлов кэша Next.js: страницы иконок туда уже записал обход.
+        const cacheTags = Object.fromEntries(
+          await Promise.all(
+            CACHE_TAG_PAGES.map(
+              async ({ path }) =>
+                [path, await readCacheTags(dir, path)] as const,
+            ),
+          ),
+        );
         console.log(
           `Проверяю: ${browsers.map((b) => BROWSER_TITLES[b]).join(", ")} — ${pages.length} адресов, превью API ${api}…`,
         );
@@ -1697,6 +1869,7 @@ try {
             .filter(([, r]) => r.fallback === null)
             .map(([route]) => route),
           ...(iconCache === undefined ? {} : { iconCache }),
+          cacheTags,
           sections,
           browsers,
           log: (line) => console.log(`  ${line}`),

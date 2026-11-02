@@ -5,7 +5,6 @@ import { setMetadata } from "../../../../lib/catalog-view";
 
 // Русские страницы наборов — в русской раскладке: адрес /ru/xyz не попадёт в английский [набор]/[иконка]
 // шага 4 (ADR-0037).
-export const dynamic = "error";
 export const dynamicParams = false;
 
 type Props = { params: Promise<{ prefix: string }> };

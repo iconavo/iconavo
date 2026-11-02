@@ -1,7 +1,8 @@
 // Проверка живого сайта iconavo.dev (ADR-0050): после выкладки — та ли сборка отвечает, все страницы,
-// коды и переходы, свежесть данных наборов (фаза 4, шаг 2), заголовки и noindex, языки (фаза 4, шаг 1),
-// иконки в HTML, ссылки, переход с www и с http, robots.txt. Только HTTP, ключи не нужны; запускает
-// задача «Проверка» workflow «Сайт» и pnpm site --live.
+// коды и переходы, свежесть данных наборов (фаза 4, шаг 2), страницы иконок выборки и отпечатки
+// содержимого наборов (фаза 4, шаг 4), заголовки и noindex, языки (фаза 4, шаг 1), иконки в HTML, ссылки,
+// переход с www и с http, robots.txt. Только HTTP, ключи не нужны; запускают задачи «Проверка» и
+// «Свежесть» workflow «Сайт» и pnpm site --live.
 
 import { manifestSchema } from "../cdn/files.js";
 import { fail, pass, type Verdict } from "../sandbox/verdict.js";
@@ -19,10 +20,12 @@ import {
 } from "./config.js";
 import {
   type CrawledPage,
+  contentVerdict,
   crawl,
   freshnessVerdict,
   headersVerdict,
   htmlPages,
+  iconPagesProblems,
   langVerdict,
   linksVerdict,
   robotsMetaVerdict,
@@ -31,6 +34,7 @@ import {
   statusVerdict,
   switchVerdict,
 } from "./crawl.js";
+import { catalogSets, getWithRetry } from "./refresh.js";
 
 export interface LiveRow {
   what: string;
@@ -54,7 +58,7 @@ async function redirectVerdict(from: string, to: string): Promise<Verdict> {
 /** Свежесть данных: версии наборов на страницах сайта против живого манифеста раздачи. */
 async function liveFreshness(pages: CrawledPage[]): Promise<Verdict> {
   try {
-    const response = await fetch(LIVE_MANIFEST, { cache: "no-store" });
+    const response = await getWithRetry(LIVE_MANIFEST);
     if (!response.ok)
       return fail(`${LIVE_MANIFEST} ответил ${response.status}`);
     return freshnessVerdict(
@@ -117,6 +121,24 @@ export async function checkLiveSite(o: {
     }),
   });
   rows.push({ what: "Свежесть данных", verdict: await liveFreshness(pages) });
+  rows.push({
+    what: "Отпечатки содержимого",
+    verdict: await catalogSets().then(
+      (sets) => contentVerdict(pages, sets),
+      (e: Error) =>
+        fail(`оглавление каталога раздачи: ${e.message.split("\n")[0]}`),
+    ),
+  });
+  const iconProblems = iconPagesProblems(pages);
+  rows.push({
+    what: "Страницы иконок",
+    verdict:
+      iconProblems.length === 0
+        ? pass(
+            "выборка обхода: заголовок, превью, метки, мокапы; скрытая — «Устарела»",
+          )
+        : fail(iconProblems.slice(0, 5).join("; ")),
+  });
   // Переходы — без заголовков сайта: их код и адрес проверяет строка «Страницы».
   const headerProblems = pages
     .filter(

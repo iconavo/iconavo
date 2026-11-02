@@ -3,7 +3,8 @@ import type { Metadata } from "next";
 import { notFound, permanentRedirect } from "next/navigation";
 import { cache } from "react";
 import { API } from "../../lib/api";
-import { VERSION_META } from "../../lib/catalog-view";
+import { getSetInfo, setTag } from "../../lib/catalog";
+import { setMetas } from "../../lib/catalog-view";
 import { DICTIONARIES, href, type Lang } from "../../lib/i18n";
 import {
   bareName,
@@ -13,23 +14,32 @@ import {
   isIconName,
   parseIconDetails,
 } from "../../lib/icon";
-import { loadPageIcons } from "../../lib/icons";
+import { existingIcons, loadPageIcons } from "../../lib/icons";
+import {
+  mockupLabel,
+  neighbourCandidates,
+  pickNeighbours,
+} from "../../lib/mockups";
 import { IconDetails } from "../icon/IconDetails";
+import { IconMockups } from "../icon/IconMockups";
 import { PageLink } from "../PageLink";
 
 /**
  * Сведения об иконке для страницы — из /icon edge API, один запрос на сборку страницы (cache убирает
  * повтор из generateMetadata). 400 и 404 — иконки нет; остальные сбои — ошибка: тогда Vercel оставит
  * прежнюю страницу, а не 404 на весь срок кэша. Метка set-{набор} — для сброса кэша по набору (ADR-0039);
- * без cache: ответ не ложится в кэш запросов — он пережил бы выкладки.
+ * без cache: ответ не ложится в кэш запросов — он пережил бы выкладки. Других меток у страницы нет:
+ * выпуск другого набора её не сбрасывает.
  */
 const getDetails = cache(
   async (
     name: string,
-  ): Promise<{ details: Details; version: string } | undefined> => {
+  ): Promise<
+    { details: Details; version: string; content: string } | undefined
+  > => {
     const prefix = name.slice(0, name.indexOf(":"));
     const res = await fetch(iconDetailsUrl(API, name), {
-      next: { tags: [`set-${prefix}`] },
+      next: { tags: [setTag(prefix)] },
     });
     if (res.status === 400 || res.status === 404) return undefined;
     if (!res.ok) {
@@ -39,11 +49,15 @@ const getDetails = cache(
     if (details === undefined) {
       throw new Error(`СТОП: /icon ${name} — ответ не по форме (ADR-0024)`);
     }
-    return { details, version: res.headers.get("x-iconavo-version") ?? "" };
+    return {
+      details,
+      version: res.headers.get("x-iconavo-version") ?? "",
+      content: res.headers.get("x-iconavo-content") ?? "",
+    };
   },
 );
 
-/** Заголовок, описание и метка версии набора; скрытая иконка — не для поисковиков. */
+/** Заголовок, описание и метки набора (версия, содержимое, время сборки); скрытая — не для поисковиков. */
 export async function iconMetadata(
   lang: Lang,
   prefix: string,
@@ -63,15 +77,15 @@ export async function iconMetadata(
     title: fill(t.iconPageTitle),
     description: details.description?.[lang] ?? fill(t.iconPageDescription),
     ...(details.hidden ? { robots: { index: false, follow: false } } : {}),
-    other: { [VERSION_META]: got.version },
+    other: setMetas(got.version, got.content),
   };
 }
 
 /**
- * Страница иконки /{набор}/{иконка} (ADR-0037, ADR-0041): всё то же, что в боковой панели. Создаётся при
- * первом открытии и хранится в кэше (ADR-0039). Старое имя — постоянный переход на основное, скрытая
- * иконка — с пометкой «Устарела». Иконка, её варианты и оттенки — в серверном HTML (без мигания);
- * похожие из других наборов догружает браузер.
+ * Страница иконки /{набор}/{иконка} (ADR-0037, ADR-0041): всё то же, что в боковой панели, и мокапы.
+ * Создаётся при первом открытии и хранится в кэше (ADR-0039). Старое имя — постоянный переход на
+ * основное, скрытая иконка — с пометкой «Устарела». Иконка, её варианты и оттенки — в серверном HTML (без
+ * мигания); похожие из других наборов и рисунки мокапов догружает браузер.
  */
 export async function IconPage({
   lang,
@@ -90,12 +104,23 @@ export async function IconPage({
   if (details.icon !== name) {
     permanentRedirect(href(lang, iconPagePath(details.icon)));
   }
-  const icons = await loadPageIcons([
-    details.icon,
-    ...details.variants.flatMap((v) => v.icons),
-    ...(details.card === null ? [] : [details.card]),
-    ...details.tones,
+  const [icons, info] = await Promise.all([
+    loadPageIcons([
+      details.icon,
+      ...details.variants.flatMap((v) => v.icons),
+      ...(details.card === null ? [] : [details.card]),
+      ...details.tones,
+    ]),
+    getSetInfo(prefix),
   ]);
+  // Соседи в мокапах — витрина набора в стиле иконки (нет такого имени — имя витрины как есть), подписи —
+  // по месту в витрине.
+  const candidates = neighbourCandidates(info?.samples ?? [], details);
+  const neighbours = pickNeighbours(
+    candidates,
+    await existingIcons(candidates.map((c) => c.styled)),
+    lang,
+  );
   return (
     <main id="content" className="container page icon-page">
       <p className="crumbs">
@@ -113,6 +138,14 @@ export async function IconPage({
           mode="page"
         />
       </IconavoProvider>
+      <IconMockups
+        lang={lang}
+        icon={details.icon}
+        label={mockupLabel(details, lang)}
+        neighbours={neighbours}
+        palette={details.set.palette}
+        strokes={details.strokes}
+      />
     </main>
   );
 }

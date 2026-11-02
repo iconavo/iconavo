@@ -12,12 +12,26 @@ name: Сайт
 # и переменная репозитория SITE_DEPLOY — on (её включает владелец после разовой настройки, ADR-0050).
 # Проект iconavo-site создаёт первая выкладка. Откат — откат PR: запуск от main выложит прежнюю сборку.
 # Что сайт собирается и работает, на каждом PR проверяет CI (задача site); PR с правкой этого файла —
-# только показ. Страницы каталога берут данные наборов из edge API при сборке (шаг 2 фазы 4, ADR-0039),
-# поэтому после каждой успешной «Выкладки» на main сайт собирается заново — от свежего main.
+# только показ.
+#
+# Сброс по наборам (шаг 4 фазы 4, ADR-0039). Страницы с данными берут их из edge API и хранятся в кэше
+# Vercel с метками: set-{набор} — страница набора и страницы его иконок, catalog — общие. После каждого
+# «Поискового индекса» на main (он идёт после «Выкладки» — новые страницы сразу получают свежие описания и
+# похожие) и вручную («только сброс», «сбросить все наборы»):
+# - «Сверка с раздачей» — без ключей: пауза 2 минуты (edge API помнит версию индекса до 90 секунд), затем
+#   pnpm site --refresh — отпечатки наборов на живых страницах против оглавления каталога раздачи. Индекс
+#   запустила не «Выкладка», а правка кода поиска или ручной запуск — сбрасываются все наборы: описания и
+#   похожие могли измениться без выпуска.
+# - «Сброс кэша» — окружение site, без checkout: vercel cache invalidate --tag catalog,set-{набор}…;
+#   посетители получают прежнюю страницу, пока новая собирается (stale-while-revalidate).
+# - «Свежесть» — без ключей: ждёт до 5 минут свежих страниц сброшенных наборов, затем pnpm site --live.
+#   Не дождалась — запуск красный; повторить — ручной запуск с «только сброс».
+# - Набор без страницы — новый: задача «Пересборка» без кода зависимостей запускает обычную выкладку этого
+#   workflow (workflow_dispatch), и та встаёт в общую очередь выкладок.
 
 on:
   workflow_run:
-    workflows: ["Выкладка"]
+    workflows: ["Поисковый индекс"]
     types: [completed]
     branches: [main]
   push:
@@ -39,23 +53,36 @@ on:
   workflow_dispatch:
     inputs:
       dry_run:
-        description: Только собрать и показать, ничего не выкладывать
+        description: Только показать — ничего не выкладывать и не сбрасывать
+        type: boolean
+        default: false
+      refresh:
+        description: Без сборки — сверить страницы наборов с раздачей и сбросить кэш устаревших
+        type: boolean
+        default: false
+      refresh_all:
+        description: Без сборки — сбросить кэш страниц всех наборов (проба сброса, ADR-0039)
         type: boolean
         default: false
 
 permissions: {}
 
-# Выкладки из main не пересекаются и не прерываются: следующая ждёт текущую. Показы с веток и PR — в
-# своих группах. Запуск после «Выкладки», которую задача «Сборка» пропустит (условие у неё), — в своей
-# группе: иначе он встал бы в очередь site и отменил бы ждущую там выкладку.
+# Выкладки из main не пересекаются и не прерываются: следующая ждёт текущую. Сбросы по наборам — в своей
+# очереди site-refresh: в общей новый сброс отменил бы ждущую выкладку кода (у очереди одно место для
+# ждущего), а сброс во время выкладки безвреден — новая выкладка и так начинает с пустого кэша. Показы с
+# веток и PR — в своих группах. Запуск после «Поискового индекса», который задача «Сверка с раздачей»
+# пропустит (условие у неё), — тоже в своей группе.
 concurrency:
   group: >-
     ${{ github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
-    && (github.event_name != 'workflow_run' || (github.event.workflow_run.conclusion == 'success'
+    && (github.event_name != 'workflow_run' || ((github.event.workflow_run.conclusion == 'success'
+    || github.event.workflow_run.conclusion == 'failure')
     && github.event.workflow_run.head_repository.full_name == github.repository
-    && (github.event.workflow_run.event == 'push' || github.event.workflow_run.event == 'workflow_dispatch')
+    && (github.event.workflow_run.event == 'push' || github.event.workflow_run.event == 'workflow_dispatch'
+    || github.event.workflow_run.event == 'workflow_run')
     && github.event.workflow_run.head_branch == 'main'))
-    && 'site' || format('site-{0}', github.event_name == 'workflow_run' && github.run_id || github.ref) }}
+    && ((github.event_name == 'workflow_run' || inputs.refresh || inputs.refresh_all) && 'site-refresh' || 'site')
+    || format('site-{0}', github.event_name == 'workflow_run' && github.run_id || github.ref) }}
   cancel-in-progress: false
 
 defaults:
@@ -69,16 +96,182 @@ env:
   NEXT_TELEMETRY_DISABLED: "1"
 
 jobs:
+  refresh:
+    name: Сверка с раздачей
+    # После «Поискового индекса» — только если он шёл в этом репозитории на main — от push, ручного запуска
+    # или после «Выкладки» (workflow_run) — и закончился, а не был пропущен или отменён: workflow с тем же
+    # именем из PR форка тоже вызывает workflow_run, а его запуск — событие pull_request и чужой репозиторий.
+    # Неудачный индекс сайт не держит: страницы наборов всё равно сверяются с раздачей. Задача только
+    # читает открытые адреса, а сбрасывает и пересобирает — по её итогу — «Сброс кэша» и «Пересборка».
+    # Вручную — «только сброс» или «сбросить все наборы», только из main.
+    if: >-
+      (github.event_name == 'workflow_run' && (github.event.workflow_run.conclusion == 'success'
+      || github.event.workflow_run.conclusion == 'failure')
+      && github.event.workflow_run.head_repository.full_name == github.repository
+      && (github.event.workflow_run.event == 'push' || github.event.workflow_run.event == 'workflow_dispatch'
+      || github.event.workflow_run.event == 'workflow_run')
+      && github.event.workflow_run.head_branch == 'main')
+      || (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main'
+      && (inputs.refresh || inputs.refresh_all))
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    outputs:
+      stale: ${{ steps.compare.outputs.stale }}
+      missing: ${{ steps.compare.outputs.missing }}
+      groups: ${{ steps.compare.outputs.groups }}
+      all: ${{ steps.compare.outputs.all }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      # Edge API помнит версию индекса до 60 секунд в памяти и ещё 30 — в кэше дата-центра (ADR-0024):
+      # страницы, собранные раньше, взяли бы прежние описания и похожие.
+      - name: Пауза после индекса
+        if: github.event_name == 'workflow_run'
+        run: sleep 120
+      - name: Сверить страницы наборов с раздачей
+        id: compare
+        env:
+          ALL: ${{ inputs.refresh_all == true || (github.event_name == 'workflow_run' && github.event.workflow_run.event != 'workflow_run') }}
+        run: |
+          if [ "$ALL" = true ]; then pnpm site --refresh --all; else pnpm site --refresh; fi
+          file=.cache/reports/site/refresh.json
+          {
+            echo "stale=$(jq -r '.stale | join(",")' "$file")"
+            echo "missing=$(jq -r '.missing | join(",")' "$file")"
+            echo "groups=$(jq -c '.groups' "$file")"
+            echo "all=$ALL"
+          } >> "$GITHUB_OUTPUT"
+          cat .cache/reports/site/refresh.md >> "$GITHUB_STEP_SUMMARY"
+
+  invalidate:
+    name: Сброс кэша
+    needs: refresh
+    # Набор без страницы — новый: его выложит «Пересборка», а новая выкладка и так начинает с пустого кэша.
+    # «Только показ» и выключенная выкладка сайта (SITE_DEPLOY) — без сброса.
+    if: >-
+      needs.refresh.outputs.stale != '' && needs.refresh.outputs.missing == ''
+      && vars.SITE_DEPLOY == 'on' && inputs.dry_run != true
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    # Окружение site: ключ Vercel — его секрет, задача идёт только из main. Без checkout: код репозитория и
+    # зависимостей с ключом не встречается.
+    environment: site
+    permissions: {}
+    outputs:
+      since: ${{ steps.invalidate.outputs.since }}
+    steps:
+      - name: Сбросить метки наборов
+        id: invalidate
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_SCOPE: ${{ vars.VERCEL_SCOPE }}
+          GROUPS: ${{ needs.refresh.outputs.groups }}
+        run: |
+          if [ -z "$VERCEL_TOKEN" ] || [ -z "$VERCEL_SCOPE" ]; then
+            echo "::error::Нет секрета VERCEL_TOKEN или переменной VERCEL_SCOPE окружения site (ADR-0050)"
+            exit 1
+          fi
+          # Метки — только catalog и set-{набор} по правилу имён (ADR-0001): из выхода другой задачи в
+          # команду с ключом не попадёт ничего лишнего.
+          tag='(catalog|set-[a-z0-9]+(-[a-z0-9]+)*)'
+          rule="^${tag}(,${tag})*\$"
+          groups=$(jq -r '.[]' <<< "$GROUPS")
+          if [ -z "$groups" ]; then
+            echo "::error::нет меток для сброса"
+            exit 1
+          fi
+          while IFS= read -r group; do
+            if ! [[ "$group" =~ $rule ]]; then
+              echo "::error::метки не по правилу: $group"
+              exit 1
+            fi
+          done <<< "$groups"
+          npm install --global --ignore-scripts --no-audit --no-fund "$VERCEL_CLI"
+          # Сброс работает в папке, привязанной к проекту: своя пустая папка, из репозитория — ничего.
+          cd "$(mktemp -d)"
+          vercel link --yes --project iconavo-site --scope "$VERCEL_SCOPE" --token "$VERCEL_TOKEN"
+          # Время сброса — до первой команды: «Свежесть» ждёт страницы, собранные не раньше.
+          echo "since=$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> "$GITHUB_OUTPUT"
+          while IFS= read -r group; do
+            vercel cache invalidate --tag "$group" --yes --scope "$VERCEL_SCOPE" --token "$VERCEL_TOKEN"
+            echo "- сброшены метки: $group" >> "$GITHUB_STEP_SUMMARY"
+          done <<< "$groups"
+
+  fresh:
+    name: Свежесть
+    needs: [refresh, invalidate]
+    if: ${{ !cancelled() && needs.invalidate.result == 'success' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      # Только чтение открытых адресов. После «сбросить все наборы» отпечатки не меняются — тогда
+      # свежесть видна по времени сборки страниц (--all).
+      - name: Дождаться свежих страниц
+        env:
+          SINCE: ${{ needs.invalidate.outputs.since }}
+          STALE: ${{ needs.refresh.outputs.stale }}
+          ALL: ${{ needs.refresh.outputs.all }}
+        run: |
+          if [ "$ALL" = true ]; then
+            pnpm site --refresh --wait=300 --since="$SINCE" --sets="$STALE" --all
+          else
+            pnpm site --refresh --wait=300 --since="$SINCE" --sets="$STALE"
+          fi
+      - name: Проверить iconavo.dev
+        run: pnpm site --live
+      - name: Сводка
+        if: success() || failure()
+        run: |
+          for file in .cache/reports/site/refresh.md .cache/reports/site/live.md; do
+            if [ -f "$file" ]; then cat "$file" >> "$GITHUB_STEP_SUMMARY"; fi
+          done
+
+  rebuild:
+    name: Пересборка
+    needs: refresh
+    # Новый набор: страницы наборов собираются при сборке. Обычная выкладка этого workflow встаёт в общую
+    # очередь выкладок и собирает свежий main. Право — только запустить workflow, без checkout и кода.
+    if: needs.refresh.outputs.missing != '' && vars.SITE_DEPLOY == 'on' && inputs.dry_run != true
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      actions: write
+    steps:
+      - name: Запустить выкладку сайта
+        env:
+          GH_TOKEN: ${{ github.token }}
+          MISSING: ${{ needs.refresh.outputs.missing }}
+        run: |
+          gh workflow run site.yml --repo "$GITHUB_REPOSITORY" --ref main
+          echo "- новые наборы без страниц: $MISSING — запущена выкладка сайта" >> "$GITHUB_STEP_SUMMARY"
+
   build:
     name: Сборка
-    # После «Выкладки» — только если она удалась (иначе сайт показал бы данные, которых нет на раздаче) и
-    # шла в этом репозитории от push или ручного запуска на main: workflow с тем же именем из PR форка
-    # тоже вызывает workflow_run (как у поискового индекса, search.yml). Собирается свежий main.
+    # Выкладка кода: push, ручной запуск без «только сброс» и PR (только показ). После «Поискового индекса»
+    # сайт не собирается — его страницы сбрасывает путь выше.
     if: >-
-      github.event_name != 'workflow_run' || (github.event.workflow_run.conclusion == 'success'
-      && github.event.workflow_run.head_repository.full_name == github.repository
-      && (github.event.workflow_run.event == 'push' || github.event.workflow_run.event == 'workflow_dispatch')
-      && github.event.workflow_run.head_branch == 'main')
+      github.event_name != 'workflow_run'
+      && !(github.event_name == 'workflow_dispatch' && (inputs.refresh || inputs.refresh_all))
     runs-on: ubuntu-latest
     timeout-minutes: 20
     permissions:
