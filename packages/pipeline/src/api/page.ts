@@ -126,7 +126,7 @@ const SHOWN_HEADERS = [
   "server-timing",
 ];
 
-/** Поиск (ADR-0049): точное имя, русский запрос, префикс набора, фильтр и ошибка. */
+/** Поиск (ADR-0049): точное имя, русский запрос, префикс набора, фильтры, стиль (ADR-0052) и ошибки. */
 const SEARCHES: readonly [string, string][] = [
   ["Точное имя", "/search?query=house&limit=8"],
   [
@@ -138,6 +138,11 @@ const SEARCHES: readonly [string, string][] = [
     "Фильтр: цветные наборы",
     `/search?query=${encodeURIComponent("сердце")}&palette=1&limit=6`,
   ],
+  [
+    "Стиль: заливка",
+    `/search?query=${encodeURIComponent("дом")}&style=filled&limit=8`,
+  ],
+  ["Неизвестный стиль", "/search?query=house&style=bold"],
   ["Без query", "/search"],
 ];
 

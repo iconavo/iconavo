@@ -36,17 +36,20 @@ export {
   type MultiSearchQuery,
   mainQuery,
   mainWindow,
+  probeQuery,
   type SearchFilters,
 } from "./request.js";
 export {
   pageResults,
   parseHits,
   parseMultiSearch,
+  type ResponseExtra,
   type SearchHit,
   type SearchResponse,
   type SearchResult,
   type SemanticState,
   searchResponse,
+  shownIcon,
 } from "./response.js";
 export {
   DISPLAYED,

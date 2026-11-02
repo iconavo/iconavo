@@ -166,12 +166,19 @@ export function waiter() {
   };
 }
 
-/** Карточка подменного индекса: имена для точного совпадения и слова для поиска. */
+/** Карточка подменного индекса: имена для точного совпадения, слова, фильтры и выдача. */
 export interface FakeDoc {
   icon: string;
   names: string[];
   words: string[];
   set: string;
+  palette?: boolean;
+  license?: string;
+  /** Стили карточки (фильтр) и стиль → главное имя (выдача), ADR-0052. */
+  style?: string[];
+  styles?: Record<string, string>;
+  variants?: string[];
+  tones?: string[];
 }
 
 export interface FakeSearchOptions {
@@ -186,7 +193,8 @@ export const MEILI_URL = "https://ms-test.fra.meilisearch.io";
 
 /**
  * fetch для Meilisearch и Polza. Meilisearch понимает фильтры общего модуля поиска (names, NOT names,
- * set IN); слова — по вхождению; с вектором — ещё и все остальные карточки, как смысловая часть.
+ * set IN, palette, license IN, style); слова — по вхождению; с вектором — ещё и все остальные
+ * карточки, как смысловая часть. Непонятый фильтр — ошибка теста, а не тихое «подходит».
  */
 export function fakeSearchFetch(options: FakeSearchOptions) {
   const meili: { queries: Record<string, unknown>[] }[] = [];
@@ -210,9 +218,15 @@ export function fakeSearchFetch(options: FakeSearchOptions) {
             if (m) return !d.names.includes(m[1] as string);
             m = /^names = "(.+)"$/.exec(f);
             if (m) return d.names.includes(m[1] as string);
-            m = /^set IN [(.+)]$/.exec(f);
+            m = /^set IN \[(.+)\]$/.exec(f);
             if (m) return (m[1] as string).includes(`"${d.set}"`);
-            return true;
+            m = /^palette = (true|false)$/.exec(f);
+            if (m) return String(d.palette ?? false) === m[1];
+            m = /^license IN \[(.+)\]$/.exec(f);
+            if (m) return (m[1] as string).includes(`"${d.license ?? ""}"`);
+            m = /^style = "(.+)"$/.exec(f);
+            if (m) return (d.style ?? []).includes(m[1] as string);
+            throw new Error(`подменный Meilisearch: фильтр не понят: ${f}`);
           });
         const byWords = options.docs.filter(
           (d) => ok(d) && words.some((w) => d.words.includes(w)),
@@ -226,9 +240,12 @@ export function fakeSearchFetch(options: FakeSearchOptions) {
         const offset = Number(q.offset ?? 0);
         const limit = Number(q.limit ?? 20);
         return {
-          hits: found
-            .slice(offset, offset + limit)
-            .map((d) => ({ icon: d.icon, variants: [], tones: [] })),
+          hits: found.slice(offset, offset + limit).map((d) => ({
+            icon: d.icon,
+            variants: d.variants ?? [],
+            tones: d.tones ?? [],
+            ...(d.styles === undefined ? {} : { styles: d.styles }),
+          })),
         };
       });
       return Response.json({ results });

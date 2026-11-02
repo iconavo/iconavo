@@ -1,10 +1,12 @@
 // Проверка поиска на живом api.iconavo.dev (ADR-0049). Отдельно от проверки раздачи: pnpm cdn check
 // («Выкладка», «Сверка хостов») её не запускает, и сбой поиска не красит раздачу иконок. Её запускает
 // pnpm api check — в «Edge API» после выкладки. Что проверяется:
-// - точное имя: 200, JSON, CORS и защита, версия индекса, точное совпадение первым; неполная выдача
-//   (pending) должна стать полной, а повтор — прийти из кэша с кэшем браузеру 5 минут;
+// - точное имя: 200, JSON, CORS и защита, версия индекса, точное совпадение первым и matched;
+//   неполная выдача (pending) должна стать полной, а повтор — прийти из кэша с кэшем браузеру 5 минут;
 // - русский запрос находит иконки;
-// - ответы 400: без query и с неизвестным набором.
+// - стиль (ADR-0052): у каждой карточки есть этот стиль, в icons — его имена;
+// - ответы 400: без query, с неизвестным набором и неизвестным стилем;
+// - у любого ответа Retry-After открыт браузеру: сайт ведёт по нему отсчёт после 429.
 // Ключи не нужны.
 
 import {
@@ -64,10 +66,14 @@ export const searchCheckFailed = (r: SearchCheckReport) =>
 
 interface SearchBody {
   icons?: unknown;
-  results?: { icon?: unknown; exact?: unknown }[];
+  results?: { icon?: unknown; exact?: unknown; styles?: unknown }[];
   semantic?: unknown;
+  matched?: unknown;
   error?: unknown;
 }
+
+/** Заголовки, которые браузер сайта должен видеть у ответа поиска. */
+export const SEARCH_EXPOSED = ["Retry-After", "X-Iconavo-Index"];
 
 function parse(res: Fetched): SearchBody | undefined {
   try {
@@ -127,6 +133,17 @@ export async function checkSearch(
     );
     for (const [name, value] of Object.entries(SECURITY_HEADERS)) {
       issue(target, mismatch(res.headers, name, value));
+    }
+    const exposed = (res.headers.get("access-control-expose-headers") ?? "")
+      .split(",")
+      .map((h) => h.trim().toLowerCase());
+    for (const name of SEARCH_EXPOSED) {
+      if (!exposed.includes(name.toLowerCase())) {
+        issue(
+          target,
+          `${name} не открыт браузеру: нет в Access-Control-Expose-Headers`,
+        );
+      }
     }
   };
 
@@ -244,7 +261,35 @@ export async function checkSearch(
     if (!Array.isArray(body.icons) || !body.icons.includes("lucide:house")) {
       issue(t, "в выдаче нет lucide:house");
     }
+    if (body.matched !== true) {
+      issue(
+        t,
+        `matched: ${String(body.matched)} — точное имя не отмечено как найденное по словам`,
+      );
+    }
   });
+  await check200(
+    "Стиль",
+    "search?query=house&style=filled&limit=8",
+    (body, t) => {
+      const results = body.results ?? [];
+      if (results.length === 0) issue(t, "пустая выдача");
+      results.forEach((r, i) => {
+        const styles = r.styles as Record<string, unknown> | undefined;
+        const name = styles?.filled;
+        const icon = String(r.icon);
+        if (typeof name !== "string") {
+          issue(t, `у карточки ${icon} нет стиля filled`);
+          return;
+        }
+        const shown = `${icon.slice(0, icon.indexOf(":"))}:${name}`;
+        const listed = Array.isArray(body.icons) ? body.icons[i] : undefined;
+        if (listed !== shown) {
+          issue(t, `icons[${i}] — ${String(listed)}, а не ${shown}`);
+        }
+      });
+    },
+  );
   await check200(
     "По-русски",
     `search?query=${encodeURIComponent("мусорное ведро")}&limit=8`,
@@ -259,6 +304,11 @@ export async function checkSearch(
     "Неизвестный набор",
     "search?query=house&prefix=iconavo-missing",
     "invalid_prefix",
+  );
+  await check400(
+    "Неизвестный стиль",
+    "search?query=house&style=bold",
+    "invalid_style",
   );
   report.requests = requests;
   report.ms = now() - started;

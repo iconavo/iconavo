@@ -25,20 +25,38 @@ const DOCS: FakeDoc[] = [
   {
     icon: "demo:house",
     set: "demo",
-    names: ["demo:home", "demo:house", "home", "house"],
+    names: [
+      "demo:home",
+      "demo:house",
+      "demo:house-fill",
+      "home",
+      "house",
+      "house-fill",
+    ],
     words: ["house", "home", "дом"],
+    license: "MIT",
+    variants: ["house-fill"],
+    style: ["outline", "filled"],
+    styles: { outline: "house", filled: "house-fill" },
   },
   {
     icon: "demo:heart",
     set: "demo",
     names: ["demo:heart", "heart"],
     words: ["heart", "love", "сердце"],
+    license: "MIT",
+    style: ["outline"],
+    styles: { outline: "heart" },
   },
   {
     icon: "color:house",
     set: "color",
     names: ["color:house", "house"],
     words: ["house", "дом"],
+    palette: true,
+    license: "MIT",
+    style: ["color"],
+    styles: { color: "house" },
   },
 ];
 const INDEX = "1234abcd";
@@ -140,10 +158,12 @@ describe("/search: полная выдача", () => {
     });
     expect(body.results[0]).toEqual({
       icon: "demo:house",
-      variants: [],
+      variants: ["house-fill"],
       tones: [],
+      styles: { outline: "house", filled: "house-fill" },
       exact: true,
     });
+    expect(body.matched).toBe(true);
     expect(s.net.polza).toHaveLength(0);
     await s.flush();
 
@@ -174,6 +194,77 @@ describe("/search: полная выдача", () => {
       semanticRatio: SEMANTIC_RATIO,
     });
     expect(main?.vector).toHaveLength(SEARCH_MODEL.dims);
+  });
+
+  it("стиль (ADR-0052): фильтр в обоих запросах, в icons — имена этого стиля, в ключе кэша", async () => {
+    const s = await setup({ phrases: ["house"] });
+    const res = await s.get("/search?query=house&style=filled");
+    const body = await json(res);
+    expect(body.icons).toEqual(["demo:house-fill"]);
+    expect(body.results.map((r: { icon: string }) => r.icon)).toEqual([
+      "demo:house",
+    ]);
+    const hybrid = s.net.meili.find((b) =>
+      b.queries.some((q) => q.vector !== undefined),
+    );
+    for (const q of hybrid?.queries ?? []) {
+      expect(q.filter).toContain('style = "filled"');
+    }
+    await s.flush();
+    const outline = await json(
+      await s.get("/search?query=house&style=outline"),
+    );
+    // Контур есть у обеих карточек demo; с вектором выдача добирает и непохожие по словам.
+    expect(outline.icons).toEqual(["demo:house", "demo:heart"]);
+    const color = await json(await s.get("/search?query=house&style=color"));
+    expect(color.icons).toEqual(["color:house"]);
+  });
+
+  it("точное имя варианта показывается само", async () => {
+    const s = await setup({ phrases: ["house fill"] });
+    const body = await json(await s.get("/search?query=house-fill"));
+    expect(body.icons[0]).toBe("demo:house-fill");
+    expect(body.results[0]).toMatchObject({ icon: "demo:house", exact: true });
+  });
+
+  it("неизвестный стиль — 400 со списком шкалы", async () => {
+    const s = await setup();
+    const res = await s.get("/search?query=house&style=bold");
+    expect(res.status).toBe(400);
+    expect(await json(res)).toMatchObject({
+      error: "invalid_style",
+      message:
+        'Parameter "style" must be one of: outline, filled, duotone, color',
+    });
+  });
+
+  it("по словам ничего — выдача только по смыслу и matched: false", async () => {
+    const s = await setup({ phrases: ["облако"] });
+    const body = await json(await s.get("/search?query=облако"));
+    expect(body.semantic).toBe("full");
+    expect(body.icons).toHaveLength(3);
+    expect(body.matched).toBe(false);
+    // Проба по словам — в том же multi-search, одна карточка, с теми же фильтрами.
+    const probe = s.net.meili.at(-1)?.queries.at(-1);
+    expect(probe).toMatchObject({ q: "облако", limit: 1 });
+  });
+
+  it("сбой кэша ответов — как промах: поиск отвечает, а не падает", async () => {
+    const s = await setup({ phrases: ["house"] });
+    s.cache.failing = /\/search/;
+    const res = await s.get("/search?query=house");
+    expect(res.status).toBe(200);
+    expect((await json(res)).semantic).toBe("full");
+    await s.flush();
+    expect(s.logs.some((l) => l.includes("кэш поиска не прочитан"))).toBe(true);
+  });
+
+  it("Retry-After открыт браузеру", async () => {
+    const s = await setup({ phrases: ["house"] });
+    const res = await s.get("/search?query=house");
+    expect(res.headers.get("access-control-expose-headers")).toMatch(
+      /Retry-After/,
+    );
   });
 
   it("вектор от Polza — 1024 числа, в фоне; запомнен в дата-центре для следующих страниц", async () => {
