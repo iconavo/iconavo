@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   type BrowserResult,
   CHECKS,
+  delayVerdict,
   EXPECTED_WARNINGS,
   errorsVerdict,
   sandboxCheckFailed,
@@ -49,6 +50,47 @@ describe("разбор проверки в браузерах", () => {
       ]),
     ).toEqual({ ok: false, note: "сдвинулось 1 из 2 имён" });
     expect(layoutVerdict([], []).ok).toBe(false);
+  });
+
+  it("заглушка: скрыта при вставке и в раннем кадре, потом видна и анимирована; поздний кадр не судится", () => {
+    const measured = {
+      startVisibility: "hidden",
+      earlyAt: 16.7,
+      earlyVisibility: "hidden",
+      lateVisibility: "visible",
+      skeleton: "h, p",
+      spinner: "h, s",
+    };
+    expect(delayVerdict(measured)).toEqual({
+      ok: true,
+      note: "при вставке и на 17 мс анимации скрыта, после 150 мс видна; анимации h, p / h, s",
+    });
+    // Медленная машина: первый кадр пришёл после конца задержки — он не судится, вставка судится.
+    const late = { ...measured, earlyAt: 150, earlyVisibility: "visible" };
+    expect(delayVerdict(late)).toEqual({
+      ok: null,
+      note: "при вставке скрыта, первый кадр анимации пришёл поздно (150 мс), после задержки — видна; анимации h, p / h, s",
+    });
+    expect(delayVerdict({ ...late, startVisibility: "visible" }).ok).toBe(
+      false,
+    );
+    expect(delayVerdict({ ...measured, earlyVisibility: "visible" })).toEqual({
+      ok: false,
+      note: "при вставке — hidden, на 17 мс анимации — visible, после задержки — visible; анимации h, p / h, s",
+    });
+    expect(delayVerdict({ ...measured, lateVisibility: "hidden" }).ok).toBe(
+      false,
+    );
+    expect(delayVerdict({ ...measured, skeleton: "h" }).ok).toBe(false);
+    expect(delayVerdict({ ...measured, spinner: "h" }).ok).toBe(false);
+    expect(delayVerdict({ ...measured, earlyAt: null })).toEqual({
+      ok: false,
+      note: "у заглушки нет анимации задержки h; анимации h, p",
+    });
+    expect(delayVerdict(null)).toEqual({
+      ok: false,
+      note: "класс skeleton не появился за 10 с",
+    });
   });
 
   it("ошибки и нарушения CSP — проблема, без них — «нет»", () => {

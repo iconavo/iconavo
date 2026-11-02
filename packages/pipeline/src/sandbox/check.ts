@@ -107,6 +107,53 @@ export function errorsVerdict(errors: string[], violations: string[]): Verdict {
     : { ok: false, note: [...new Set(all)].slice(0, 5).join("; ") };
 }
 
+/** Замер заглушки в браузере (measurePlaceholder). */
+export interface PlaceholderMeasure {
+  /** Видимость при вставке — на 0 мс анимации задержки h. */
+  startVisibility: string;
+  /** Время анимации h в первом кадре после её старта; null — анимации задержки нет. */
+  earlyAt: number | null;
+  earlyVisibility: string;
+  /** Видимость после конца задержки. */
+  lateVisibility: string;
+  /** Анимации скелетона и спиннера после задержки (animation-name). */
+  skeleton: string;
+  spinner: string;
+}
+
+/**
+ * Задержка заглушки: при вставке и в первом кадре после старта анимации h скрыта, после её конца —
+ * видна и анимирована (скелетон мерцает — p, спиннер крутится — s). Первый кадр позже 140 мс не
+ * судится: на медленной машине задержка к нему уже прошла. null — класс skeleton не появился.
+ */
+export function delayVerdict(p: PlaceholderMeasure | null): Verdict {
+  if (!p) return fail("класс skeleton не появился за 10 с");
+  if (p.earlyAt === null) {
+    return fail(`у заглушки нет анимации задержки h; анимации ${p.skeleton}`);
+  }
+  const at = Math.round(p.earlyAt);
+  const early = p.earlyAt < 140 ? p.earlyVisibility === "hidden" : null;
+  const animated = p.skeleton.includes("p") && p.spinner.includes("s");
+  if (
+    p.startVisibility !== "hidden" ||
+    early === false ||
+    p.lateVisibility !== "visible" ||
+    !animated
+  ) {
+    return fail(
+      `при вставке — ${p.startVisibility}, на ${at} мс анимации — ${p.earlyVisibility}, после задержки — ${p.lateVisibility}; анимации ${p.skeleton} / ${p.spinner}`,
+    );
+  }
+  return early === null
+    ? {
+        ok: null,
+        note: `при вставке скрыта, первый кадр анимации пришёл поздно (${at} мс), после задержки — видна; анимации ${p.skeleton} / ${p.spinner}`,
+      }
+    : pass(
+        `при вставке и на ${at} мс анимации скрыта, после 150 мс видна; анимации ${p.skeleton} / ${p.spinner}`,
+      );
+}
+
 async function open(page: Page, url: string): Promise<void> {
   await page.goto(url, { waitUntil: "load", timeout: 60_000 });
   await page.waitForFunction(() => document.body.dataset.ready === "1", null, {
@@ -125,12 +172,15 @@ const scrollThrough = (page: Page, pause: number) =>
 
 /**
  * Заглушка в первом теге раздела после «Показать заново» — по её собственной анимации задержки h (Web
- * Animations API): видимость в первом кадре после старта анимации, после её конца и анимации. Таймером
- * от смены класса мерить нельзя: WebKit запускает CSS-анимацию на ближайшей отрисовке кадра, а на
- * медленной машине она приходит позже 50 мс. earlyAt — время анимации в этом кадре; null — анимации
- * задержки нет.
+ * Animations API). Заглушку ловит наблюдатель shadow root тега в той же задаче, где тег её вставил, до
+ * отрисовки кадра: там берутся анимация h и видимость на её 0 мс. Опрос по кадрам замечал заглушку на
+ * кадр позже, а WebKit ведёт время анимации от прошлого кадра, то есть от вставки: в CI кадр дольше
+ * 150 мс съедал всю задержку, и анимации h к замеру уже не было (ADR-0035). Дальше — видимость в первом
+ * кадре после старта анимации, после её конца и анимации. Таймером от смены класса мерить нельзя:
+ * WebKit запускает CSS-анимацию на ближайшей отрисовке кадра. earlyAt — время анимации в этом кадре;
+ * null — анимации задержки нет.
  */
-function measurePlaceholder(page: Page) {
+function measurePlaceholder(page: Page): Promise<PlaceholderMeasure | null> {
   return page.evaluate(async () => {
     const frame = () =>
       new Promise((resolve) => requestAnimationFrame(resolve));
@@ -152,15 +202,39 @@ function measurePlaceholder(page: Page) {
     const spinner = tags.find(
       (t) => t.getAttribute("placeholder") === "spinner",
     );
-    const start = performance.now();
-    while (svg(skeleton)?.getAttribute("class") !== "skeleton") {
-      if (performance.now() - start > 10_000) return null;
-      await frame();
-    }
-    const node = svg(skeleton) as SVGElement;
-    const hide = node
-      .getAnimations()
-      .find((a) => (a as CSSAnimation).animationName === "h");
+    const caught = await new Promise<{
+      node: SVGElement;
+      hide: Animation | undefined;
+      visibility: string;
+    } | null>((resolve) => {
+      const take = () => {
+        const node = svg(skeleton);
+        if (node?.getAttribute("class") !== "skeleton") return;
+        observer.disconnect();
+        clearTimeout(timer);
+        // getAnimations сначала пересчитывает стили: анимация h создаётся здесь, ещё не начатой.
+        const hide = node
+          .getAnimations()
+          .find((a) => (a as CSSAnimation).animationName === "h");
+        resolve({ node, hide, visibility: getComputedStyle(node).visibility });
+      };
+      const observer = new MutationObserver(take);
+      const timer = setTimeout(() => {
+        observer.disconnect();
+        resolve(null);
+      }, 10_000);
+      // Тег вставляет новый <svg>, но и смена класса у прежнего не пройдёт мимо.
+      if (skeleton?.shadowRoot) {
+        observer.observe(skeleton.shadowRoot, {
+          childList: true,
+          subtree: true,
+          attributeFilter: ["class"],
+        });
+      }
+      take();
+    });
+    if (!caught) return null;
+    const { node, hide } = caught;
     let earlyAt: number | null = null;
     let earlyVisibility = "";
     if (hide) {
@@ -173,6 +247,7 @@ function measurePlaceholder(page: Page) {
     }
     const late = svg(skeleton);
     return {
+      startVisibility: caught.visibility,
       earlyAt,
       earlyVisibility,
       lateVisibility: late ? getComputedStyle(late).visibility : "",
@@ -209,34 +284,7 @@ async function checkTagPage(
       : fail(`${first} / ${second}`);
 
   // Заглушка: класс при активации, скрыта первые 150 мс своей анимации, потом видна и анимирована.
-  const placeholder = await measurePlaceholder(page);
-  if (!placeholder) {
-    v.delay = fail("класс skeleton не появился за 10 с");
-  } else if (placeholder.earlyAt === null) {
-    v.delay = fail(
-      `у заглушки нет анимации задержки h; анимации ${placeholder.skeleton}`,
-    );
-  } else {
-    const at = Math.round(placeholder.earlyAt);
-    const early =
-      placeholder.earlyAt < 140
-        ? placeholder.earlyVisibility === "hidden"
-        : null;
-    const animated =
-      placeholder.skeleton.includes("p") && placeholder.spinner.includes("s");
-    v.delay =
-      early === false || placeholder.lateVisibility !== "visible" || !animated
-        ? fail(
-            `на ${at} мс анимации — ${placeholder.earlyVisibility}, после задержки — ${placeholder.lateVisibility}; анимации ${placeholder.skeleton} / ${placeholder.spinner}`,
-          )
-        : {
-            ok: early === null ? null : true,
-            note:
-              early === null
-                ? `первый кадр анимации пришёл поздно (${at} мс), после задержки — видна; анимации ${placeholder.skeleton} / ${placeholder.spinner}`
-                : `на ${at} мс анимации скрыта, после 150 мс видна; анимации ${placeholder.skeleton} / ${placeholder.spinner}`,
-          };
-  }
+  v.delay = delayVerdict(await measurePlaceholder(page));
   result.shots.push({
     title: "Тег: заглушки во время загрузки",
     png: await shot(page, seen, "#placeholders"),
