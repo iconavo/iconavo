@@ -199,6 +199,8 @@ jobs:
           # Сброс работает в папке, привязанной к проекту: своя пустая папка, из репозитория — ничего.
           cd "$(mktemp -d)"
           vercel link --yes --project iconavo-site --scope "$VERCEL_SCOPE" --token "$VERCEL_TOKEN"
+          # link заодно скачивает .env.local с одноразовым VERCEL_OIDC_TOKEN проекта — сбросу он не нужен.
+          rm -f .env.local
           # Время сброса — до первой команды: «Свежесть» ждёт страницы, собранные не раньше.
           echo "since=$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> "$GITHUB_OUTPUT"
           while IFS= read -r group; do
