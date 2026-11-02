@@ -167,6 +167,27 @@ const en = {
   iconPageTitle: "{name} icon from {set}",
   iconPageDescription:
     "{name} — an icon from {set}: preview, settings, author and license.",
+  mockupsTitle: "In an interface",
+  mockupsLead:
+    "The icon with your settings next to icons from the same set, in the light and dark theme.",
+  mockupLight: "Light theme",
+  mockupDark: "Dark theme",
+  mockupButtons: "Button with a label",
+  mockupTabs: "Tab bar",
+  mockupMenu: "Menu item",
+  mockupInput: "Input field",
+  mockupToast: "Notification",
+  mockupTiles: "App tile",
+  mockupToolbar: "Toolbar",
+  mockupSidebar: "Sidebar",
+  mockupHome: "Home",
+  mockupSearch: "Search",
+  mockupSettings: "Settings",
+  mockupProfile: "Profile",
+  mockupFavorites: "Favorites",
+  mockupRating: "Rating",
+  mockupInputText: "Typed text",
+  mockupToastText: "A short message goes here.",
 } as const;
 
 export type Dictionary = Record<keyof typeof en, string>;
@@ -323,6 +344,27 @@ const ru: Dictionary = {
   iconPageTitle: "Иконка {name} из набора {set}",
   iconPageDescription:
     "{name} — иконка из набора {set}: превью, настройки, автор и лицензия.",
+  mockupsTitle: "В интерфейсе",
+  mockupsLead:
+    "Иконка с вашими настройками рядом с иконками того же набора — в светлой и тёмной теме.",
+  mockupLight: "Светлая тема",
+  mockupDark: "Тёмная тема",
+  mockupButtons: "Кнопка с подписью",
+  mockupTabs: "Панель вкладок",
+  mockupMenu: "Пункт меню",
+  mockupInput: "Поле ввода",
+  mockupToast: "Уведомление",
+  mockupTiles: "Плитка приложения",
+  mockupToolbar: "Панель инструментов",
+  mockupSidebar: "Боковое меню",
+  mockupHome: "Главная",
+  mockupSearch: "Поиск",
+  mockupSettings: "Настройки",
+  mockupProfile: "Профиль",
+  mockupFavorites: "Избранное",
+  mockupRating: "Рейтинг",
+  mockupInputText: "Введённый текст",
+  mockupToastText: "Здесь короткий текст сообщения.",
 };
 
 export const DICTIONARIES: Record<Lang, Dictionary> = { en, ru };

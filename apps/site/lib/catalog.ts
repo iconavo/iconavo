@@ -1,8 +1,14 @@
 // Каталог наборов для сайта (шаг 2 фазы 4, ADR-0037): данные — адреса edge API /collections, /collection
-// и /changelog (ADR-0024), при сборке. Сайт показывает ровно то, что уже выложено на раздачу: после
-// каждой «Выкладки» он пересобирается (ADR-0039). Ответ не по формату или API не ответил — ошибка сборки,
-// как у иконок сайта: иначе вышли бы пустые страницы. Тот же разбор берёт браузер — сетка набора
-// догружает список имён сама. Чистые части проверяют тесты без сети.
+// и /changelog (ADR-0024). Сайт показывает ровно то, что уже выложено на раздачу. Ответ не по формату или
+// API не ответил — ошибка сборки страницы, как у иконок сайта: иначе вышли бы пустые страницы, а при
+// пересборке из кэша остаётся прежняя. Тот же разбор берёт браузер — сетка набора догружает список имён
+// сама. Чистые части проверяют тесты без сети.
+//
+// Кэш страниц и сброс по наборам (шаг 4 фазы 4, ADR-0039): на сервере у каждого запроса — метка кэша
+// страниц Vercel. Метку выбирает страница, а не адрес: страница набора и страницы его иконок —
+// set-{набор}, общие страницы (главная, /sets, /licenses, /changelog, поиск) — catalog, даже когда
+// спрашивают про отдельный набор: иначе у главной было бы по метке на набор, а Vercel и Next.js хранят
+// не больше 128 меток на ответ. Выпуск набора сбрасывает set-{набор} и catalog.
 
 import {
   type Card,
@@ -11,7 +17,14 @@ import {
   STYLES,
   type Style,
 } from "@iconavo-ui/search";
+import { cache } from "react";
 import { API } from "./api";
+
+/** Метка общих страниц: их данные — весь каталог (ADR-0039). */
+export const CATALOG_TAG = "catalog";
+
+/** Метка страницы набора и страниц его иконок (ADR-0039). */
+export const setTag = (prefix: string) => `set-${prefix}`;
 
 /** Лицензия в сведениях о наборе — как у Iconify. */
 export interface SetLicense {
@@ -55,10 +68,14 @@ export interface Collection {
   styles?: Record<string, string[]>;
 }
 
-/** Набор для страницы: имена, сведения с полной лицензией и версия данных (X-Iconavo-Version). */
+/**
+ * Набор для страницы: имена, сведения с полной лицензией, версия данных (X-Iconavo-Version) и отпечаток
+ * содержимого (X-Iconavo-Content): по нему pnpm site --refresh видит, что страницу пора сбросить.
+ */
 export interface SetData extends Collection {
   info: SetInfo & { license: FullLicense };
   version: string;
+  content: string;
 }
 
 /** Выпуск набора из /changelog (ADR-0018). */
@@ -165,48 +182,86 @@ export function parseReleases(value: unknown): Release[] {
   return value.releases as Release[];
 }
 
-/** Ответы API за прогон сборки: один набор не скачивается трижды. */
-const memo = new Map<string, Promise<{ data: unknown; version: string }>>();
+/** Ответ адреса API: тело, версия набора и отпечаток содержимого из заголовков. */
+interface Got {
+  data: unknown;
+  version: string;
+  content: string;
+}
 
-/** JSON адреса API; 404 — undefined, другой сбой — ошибка сборки. */
-function getJson(
-  path: string,
-): Promise<{ data: unknown; version: string } | undefined> {
+const onServer = typeof window === "undefined";
+
+/** JSON адреса API; 404 — undefined, другой сбой — ошибка. */
+async function load(path: string, tag: string): Promise<Got | undefined> {
+  let response: Response;
+  try {
+    // Без cache: ответ не ложится в кэш запросов Next.js — тот пережил бы выкладки; метка достаётся
+    // странице, и сброс по ней пересоберёт её из свежих данных (ADR-0039).
+    response = await fetch(
+      `${API}${path}`,
+      onServer ? { next: { tags: [tag] } } : undefined,
+    );
+  } catch (e) {
+    stop(`${API}${path} не ответил: ${(e as Error).message}`);
+  }
+  if (response.status === 404) return undefined;
+  if (!response.ok) stop(`${API}${path} ответил ${response.status}`);
+  return {
+    data: await response.json(),
+    version: response.headers.get("x-iconavo-version") ?? "",
+    content: response.headers.get("x-iconavo-content") ?? "",
+  };
+}
+
+/**
+ * На сервере — один запрос на сборку страницы (React cache): память процесса держала бы старые данные
+ * после выпуска, пока функция Vercel тёплая, и пересобранная страница вышла бы прежней.
+ */
+const perRender = cache(load);
+
+/** В браузере — память вкладки: сетка не скачивает список имён дважды. */
+const memo = new Map<string, Promise<Got | undefined>>();
+
+function getJson(path: string, tag: string): Promise<Got | undefined> {
+  if (onServer) return perRender(path, tag);
   const known = memo.get(path);
   if (known !== undefined) return known;
-  const promise = (async () => {
-    let response: Response;
-    try {
-      response = await fetch(`${API}${path}`);
-    } catch (e) {
-      stop(`${API}${path} не ответил: ${(e as Error).message}`);
-    }
-    if (response.status === 404) return undefined;
-    if (!response.ok) stop(`${API}${path} ответил ${response.status}`);
-    return {
-      data: await response.json(),
-      version: response.headers.get("x-iconavo-version") ?? "",
-    };
-  })().catch((e: Error) => {
+  const promise = load(path, tag).catch((e: Error) => {
     // Сбой не запоминается: браузер повторит запрос при следующем переходе.
     memo.delete(path);
     throw e;
   });
-  memo.set(path, promise as Promise<{ data: unknown; version: string }>);
+  memo.set(path, promise);
   return promise;
 }
 
 /** Все наборы каталога. */
 export async function getSets(): Promise<Record<string, SetInfo>> {
-  const got = await getJson("/collections");
+  const got = await getJson("/collections", CATALOG_TAG);
   if (got === undefined) stop("/collections — 404");
   return parseSets(got.data);
 }
 
-/** Набор с именами и полной лицензией; нет такого набора — undefined. */
-export async function getSet(prefix: string): Promise<SetData | undefined> {
+/** Сведения об одном наборе — для страниц его иконок (витрина в мокапах); нет набора — undefined. */
+export async function getSetInfo(prefix: string): Promise<SetInfo | undefined> {
+  const got = await getJson(
+    `/collections?prefix=${encodeURIComponent(prefix)}`,
+    setTag(prefix),
+  );
+  return got === undefined ? undefined : parseSets(got.data)[prefix];
+}
+
+/**
+ * Набор с именами и полной лицензией; нет такого набора — undefined. Метка — по странице: общие
+ * страницы передают CATALOG_TAG.
+ */
+export async function getSet(
+  prefix: string,
+  tag: string = setTag(prefix),
+): Promise<SetData | undefined> {
   const got = await getJson(
     `/collection?prefix=${encodeURIComponent(prefix)}&info=true`,
+    tag,
   );
   if (got === undefined) return undefined;
   const collection = parseCollection(got.data);
@@ -223,19 +278,28 @@ export async function getSet(prefix: string): Promise<SetData | undefined> {
     ...collection,
     info: info as SetInfo & { license: FullLicense },
     version: got.version,
+    content: got.content,
   };
 }
 
 /** Имена набора без сведений — их догружает браузер для сетки (≈ 75 КБ у Material Symbols в br). */
 export async function getNames(prefix: string): Promise<Collection> {
-  const got = await getJson(`/collection?prefix=${encodeURIComponent(prefix)}`);
+  const got = await getJson(
+    `/collection?prefix=${encodeURIComponent(prefix)}`,
+    setTag(prefix),
+  );
   if (got === undefined) stop(`набора «${prefix}» нет`);
   return parseCollection(got.data);
 }
 
-/** Выпуски всех наборов, свежие сверху. */
-export async function getReleases(): Promise<Release[]> {
-  const got = await getJson("/changelog");
+/**
+ * Выпуски всех наборов, свежие сверху. Метка — по странице: страница набора берёт отсюда только свой
+ * последний выпуск и передаёт setTag.
+ */
+export async function getReleases(
+  tag: string = CATALOG_TAG,
+): Promise<Release[]> {
+  const got = await getJson("/changelog", tag);
   if (got === undefined) stop("/changelog — 404");
   return parseReleases(got.data);
 }
@@ -353,9 +417,12 @@ export const cardsInStyle = (cards: readonly Card[], style?: Style) =>
 export const shownName = (card: Card, style?: Style) =>
   (style === undefined ? undefined : card.styles[style]) ?? card.base;
 
-/** Стили набора по его странице /collection — для фильтра «Стиль» на /sets и карточек наборов. */
+/**
+ * Стили набора по его странице /collection — для фильтра «Стиль» на /sets и карточек наборов на главной:
+ * общие страницы, метка catalog.
+ */
 export async function getSetStyles(prefix: string): Promise<Style[]> {
-  const set = await getSet(prefix);
+  const set = await getSet(prefix, CATALOG_TAG);
   return set === undefined ? [] : setStyles(set);
 }
 

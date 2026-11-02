@@ -2,9 +2,12 @@
 // API. Сначала обход по HTTP — коды, заголовки, языки, ссылки, разделы README, — затем каждая страница в
 // Chrome, Firefox и WebKit по очереди: иконки в серверном HTML, консоль и нарушения CSP, заголовки
 // страницы, ссылка «к содержимому», axe-core в светлой и тёмной теме, ширина телефона, меню темы
-// (фаза 4, шаг 1), сетка набора и фильтр наборов (фаза 4, шаг 2), поиск (фаза 4, шаг 3, site/search.ts).
-// Контрольный запуск подкладывает поломки — каждую проверка обязана заметить.
+// (фаза 4, шаг 1), сетка набора и фильтр наборов (фаза 4, шаг 2), поиск (фаза 4, шаг 3, site/search.ts),
+// панель и страница иконки, метки кэша для сброса по наборам (фаза 4, шаг 4, site/panel.ts). Контрольный
+// запуск подкладывает поломки — каждую проверка обязана заметить.
 
+import { readdir, readFile } from "node:fs/promises";
+import { join } from "node:path";
 import { groupCards, isStyle, type Style } from "@iconavo-ui/search";
 import type { Browser, Page } from "playwright";
 import { canaryVerdict } from "../example/check.js";
@@ -24,8 +27,10 @@ import {
   watch,
 } from "../sandbox/verdict.js";
 import {
+  CACHE_TAG_PAGES,
   CATALOG_PAGE_SIZE,
   CATALOG_SET,
+  CATALOG_TAG,
   CATALOG_WAIT_MS,
   DESKTOP,
   isIconPath,
@@ -63,6 +68,10 @@ export const CHECKS = [
   [
     "static",
     "Страницы собраны заранее (статические); страницы иконок — по первому запросу и из кэша",
+  ],
+  [
+    "tags",
+    "Метки кэша: общие страницы — catalog, страница набора и страницы его иконок — только set-{набор}",
   ],
   [
     "status",
@@ -153,10 +162,72 @@ export interface SiteCheckOptions {
   onDemand?: string[];
   /** x-nextjs-cache повторного запроса страницы иконки: ждём HIT — она в кэше, а не собрана заново. */
   iconCache?: string;
+  /** Метки кэша страниц CACHE_TAG_PAGES из файлов кэша Next.js (readCacheTags); нет файла — undefined. */
+  cacheTags?: Record<string, string[] | undefined>;
   /** Разделы README, которые должны быть на сайте. */
   sections: string[];
   browsers: readonly BrowserName[];
   log?: (line: string) => void;
+}
+
+/**
+ * Метки кэша страницы из файла кэша Next.js (заголовок x-next-cache-tags): собранные заранее страницы
+ * next build пишет в .next/server/app/{путь}.meta, страницы по первому запросу next start 16.4 — в
+ * .next/server/route-cache/APP_PAGE/{хэш}/$/{путь}.meta (их туда уже записал обход). Нет файла — undefined.
+ */
+export async function readCacheTags(
+  siteDir: string,
+  path: string,
+): Promise<string[] | undefined> {
+  const server = join(siteDir, ".next", "server");
+  const name = `${path === "/" ? "index" : path.slice(1)}.meta`;
+  const routeCache = join(server, "route-cache", "APP_PAGE");
+  const hashes = await readdir(routeCache).catch(() => [] as string[]);
+  for (const file of [
+    join(server, "app", name),
+    ...hashes.map((hash) => join(routeCache, hash, "$", name)),
+  ]) {
+    try {
+      const meta = JSON.parse(await readFile(file, "utf8")) as {
+        headers?: Record<string, string>;
+      };
+      return (meta.headers?.["x-next-cache-tags"] ?? "").split(",");
+    } catch {
+      // Нет здесь — следующее место.
+    }
+  }
+  return undefined;
+}
+
+/**
+ * Метки кэша (шаг 4 фазы 4, ADR-0039): у общих страниц из CACHE_TAG_PAGES — ровно catalog, у страницы
+ * набора и страниц его иконок — ровно set-{набор}. Служебные метки Next.js (_N_T_…) не в счёт.
+ */
+export function tagsVerdict(
+  tags: Record<string, string[] | undefined>,
+): Verdict {
+  const problems: string[] = [];
+  for (const { path, set } of CACHE_TAG_PAGES) {
+    const list = tags[path];
+    if (list === undefined) {
+      problems.push(`${path}: нет файла кэша`);
+      continue;
+    }
+    const ours = [
+      ...new Set(list.filter((t) => t === CATALOG_TAG || t.startsWith("set-"))),
+    ].sort();
+    const want = set === undefined ? CATALOG_TAG : `set-${set}`;
+    if (ours.join(",") !== want) {
+      problems.push(
+        `${path}: ${ours.join(", ") || "без меток"}, а ждали ${want}`,
+      );
+    }
+  }
+  return problems.length === 0
+    ? pass(
+        `${CACHE_TAG_PAGES.length} страниц: общие — ${CATALOG_TAG}, набора и его иконок — set-{набор}`,
+      )
+    : fail(problems.join("; "));
 }
 
 /** Проверки по HTTP — одни на все браузеры. */
@@ -208,6 +279,7 @@ export function httpVerdicts(
         : fail(
             `собраны по запросу: ${notStatic.map((p) => p.path).join(", ")}`,
           ),
+    tags: tagsVerdict(o.cacheTags ?? {}),
     status: statusVerdict(o.pages, {
       missing: MISSING_PATHS,
       redirects: REDIRECTS,
@@ -235,10 +307,11 @@ export function httpVerdicts(
  * не flex и не grid: их элементы браузер и так делает блоками, так устроен CSS. Выполняется в браузере.
  */
 function iconFacts() {
-  // Похожие иконки других наборов на странице иконки догружает браузер (шаг 4 фазы 4): выпуск чужого
-  // набора не должен сбрасывать её кэш — их в серверном HTML нет.
+  // Похожие иконки других наборов и рисунки мокапов на странице иконки догружает браузер (шаг 4 фазы 4):
+  // выпуск чужого набора не должен сбрасывать её кэш, а страница в кэше — легче. В серверном HTML вместо
+  // них заглушки.
   const svgs = [...document.querySelectorAll("body svg")].filter(
-    (svg) => !svg.closest(".icon-similar"),
+    (svg) => !svg.closest(".icon-similar, .mockups"),
   );
   const inText = (svg: Element) =>
     !/flex|grid/.test(
@@ -1206,10 +1279,21 @@ async function checkCanary(
   ) {
     missed.push("старое имя иконки без перехода");
   }
+  // Страница иконки с меткой catalog — выпуск любого набора сбросил бы её: «Метки кэша» обязана заметить.
+  const icon = CACHE_TAG_PAGES.find((p) => isIconPath(p.path));
+  if (
+    icon === undefined ||
+    tagsVerdict({
+      ...o.cacheTags,
+      [icon.path]: [...(o.cacheTags?.[icon.path] ?? []), CATALOG_TAG],
+    }).ok !== false
+  ) {
+    missed.push("метка catalog у страницы иконки");
+  }
   result.verdicts.canary =
     missed.length === 0
       ? pass(
-          "замечены все семнадцать: кнопка без подписи, style, ширина, иконка-блок, robots, битая ссылка, гидратация, чужой lang, нет ссылки на другой язык, переход не туда, нет скрипта темы, сетка без списка имён, поиск без полной выдачи, Esc не закрывает панель, фокус не возвращается, фильтр закрывает панель, старое имя без перехода",
+          "замечены все восемнадцать: кнопка без подписи, style, ширина, иконка-блок, robots, битая ссылка, гидратация, чужой lang, нет ссылки на другой язык, переход не туда, нет скрипта темы, сетка без списка имён, поиск без полной выдачи, Esc не закрывает панель, фокус не возвращается, фильтр закрывает панель, старое имя без перехода, метка catalog у страницы иконки",
         )
       : fail(`проверка слепая: не замечено — ${missed.join(", ")}`);
 }

@@ -19,11 +19,12 @@ import {
   CATALOG_SET,
   CRAWL_ICON_NAMES,
   DESKTOP,
+  MOCKUPS,
   PANEL_WAIT_MS,
   PHONE,
   STYLES_SET,
 } from "./config.js";
-import { type CrawledPage, versionMetaOf } from "./crawl.js";
+import { type CrawledPage, iconPagesProblems } from "./crawl.js";
 
 export interface PanelCheckOptions {
   base: string;
@@ -291,9 +292,33 @@ export async function checkPanel(
     : fail(problems.slice(0, 4).join("; "));
 }
 
+/** Мокапы на странице иконки: сколько мест и панелей тем, что нарисовано, фон тем, цвет и высота иконки. */
+function mockupFacts() {
+  const panes = [...document.querySelectorAll(".mockup-pane")];
+  const svgs = panes.flatMap((pane) => [...pane.querySelectorAll("svg")]);
+  const bg = (selector: string) => {
+    const pane = document.querySelector(selector);
+    return pane ? getComputedStyle(pane).backgroundColor : "";
+  };
+  const main = panes.map((pane) => pane.querySelector("svg[color]"));
+  return {
+    mockups: document.querySelectorAll(".mockup[data-mockup]").length,
+    panes: panes.length,
+    svgs: svgs.length,
+    drawn: svgs.filter(
+      (svg) => svg.hasAttribute("viewBox") && svg.childNodes.length > 0,
+    ).length,
+    light: bg(".mockup-light"),
+    dark: bg(".mockup-dark"),
+    colors: [...new Set(main.map((svg) => svg?.getAttribute("color") ?? ""))],
+    firstHeight: main[0]?.getAttribute("height") ?? "",
+    hidden: panes.every((pane) => pane.getAttribute("aria-hidden") === "true"),
+  };
+}
+
 /**
- * Страница иконки: серверный HTML со сведениями, иконкой и меткой версии; скрытая — «Устарела» и noindex;
- * в браузере — настройки из адреса и переход из панели с настройками.
+ * Страница иконки: серверный HTML со сведениями, иконкой, мокапами и меткой версии; скрытая — «Устарела» и
+ * noindex; в браузере — настройки из адреса в превью и мокапах, переход из панели с настройками.
  */
 export async function iconPageProblems(
   page: Page,
@@ -303,32 +328,12 @@ export async function iconPageProblems(
   const no = (ok: boolean, message: string) => {
     if (!ok) problems.push(message);
   };
-  const html = (path: string) => o.pages.find((p) => p.path === path)?.html;
-  for (const name of CRAWL_ICON_NAMES) {
-    for (const prefix of ["", "/ru"]) {
-      const path = `${prefix}/${name.replace(":", "/")}`;
-      const text = html(path);
-      if (text === undefined) {
-        problems.push(`${path} не открыта обходом`);
-        continue;
-      }
-      const bare = name.slice(name.indexOf(":") + 1);
-      no(text.includes(`<h1>${bare}</h1>`), `${path}: нет заголовка ${bare}`);
-      no(
-        /class="icon-preview[^"]*"[^>]*>\s*<svg[^>]*viewBox/.test(text),
-        `${path}: превью не нарисовано в серверном HTML`,
-      );
-      no(versionMetaOf(text) !== undefined, `${path}: нет метки версии набора`);
-    }
-  }
-  const hidden = html("/lucide/circle-parking") ?? "";
-  no(hidden.includes("Deprecated"), "/lucide/circle-parking: нет «Deprecated»");
+  // Серверный HTML страниц выборки — тот же разбор, что у pnpm site --live.
+  problems.push(...iconPagesProblems(o.pages));
   no(
-    (html("/ru/lucide/circle-parking") ?? "").includes("Устарела"),
-    "/ru/lucide/circle-parking: нет «Устарела»",
-  );
-  no(
-    (html("/lucide/house") ?? "").includes("Feather") === false,
+    o.pages
+      .find((p) => p.path === "/lucide/house")
+      ?.html.includes("Feather") === false,
     "/lucide/house: авторство Feather у иконки не из Feather",
   );
 
@@ -363,6 +368,42 @@ export async function iconPageProblems(
     `размер из адреса не применён: «${preview.height}»`,
   );
   no(preview.stroke, "толщина линии из адреса не применена");
+
+  // Мокапы: восемь мест в двух темах, всё нарисовано; у иконки — цвет из адреса и размер места, не превью.
+  await page
+    .waitForFunction(
+      () => {
+        const svgs = [...document.querySelectorAll(".mockup-pane svg")];
+        return (
+          svgs.length > 0 &&
+          svgs.every(
+            (s) => s.hasAttribute("viewBox") && s.childNodes.length > 0,
+          )
+        );
+      },
+      null,
+      { timeout: PANEL_WAIT_MS },
+    )
+    .catch(() => {});
+  const m = await page.evaluate(mockupFacts);
+  no(
+    m.mockups === MOCKUPS && m.panes === MOCKUPS * 2,
+    `мокапов ${m.mockups}, панелей тем ${m.panes}, а ждали ${MOCKUPS} и ${MOCKUPS * 2}`,
+  );
+  no(m.drawn === m.svgs, `в мокапах нарисовано ${m.drawn} иконок из ${m.svgs}`);
+  no(
+    m.light !== "" && m.light !== m.dark,
+    `у светлой и тёмной темы мокапа один фон: ${m.light}`,
+  );
+  no(
+    m.colors.length === 1 && m.colors[0] === "#e11d48",
+    `цвет иконки в мокапах — ${m.colors.join(", ")}, а ждали #e11d48`,
+  );
+  no(
+    m.firstHeight === "20",
+    `иконка в кнопке — ${m.firstHeight} px, а ждали 20: размер из настроек меняет только превью`,
+  );
+  no(m.hidden, "мокапы не скрыты от экранных дикторов");
 
   // Из панели — на страницу с настройками.
   await page.goto(`${o.base}/${CATALOG_SET}`);

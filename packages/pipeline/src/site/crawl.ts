@@ -4,7 +4,16 @@
 
 import { fail, pass, type Verdict } from "../sandbox/verdict.js";
 import { STACKBLITZ_LINKS } from "../starters/links.js";
-import { ROBOTS, UNTRANSLATED, VERSION_META } from "./config.js";
+import {
+  CONTENT_META,
+  CRAWL_ICON_NAMES,
+  HIDDEN_ICON,
+  iconPath,
+  MOCKUPS,
+  ROBOTS,
+  UNTRANSLATED,
+  VERSION_META,
+} from "./config.js";
 
 export interface CrawledPage {
   path: string;
@@ -337,14 +346,103 @@ export function robotsMetaVerdict(html: string): Verdict {
       );
 }
 
-/** Версия данных набора на его странице — метка <meta name="iconavo-version">; нет метки — undefined. */
-export function versionMetaOf(html: string): string | undefined {
+/** Содержимое метки <meta name="…"> страницы; нет метки — undefined. */
+export function metaOf(html: string, name: string): string | undefined {
   for (const m of html.matchAll(/<meta\b[^>]*>/g)) {
-    if (m[0].includes(`name="${VERSION_META}"`)) {
+    if (m[0].includes(`name="${name}"`)) {
       return /\bcontent="([^"]*)"/.exec(m[0])?.[1];
     }
   }
   return undefined;
+}
+
+/** Версия данных набора на его странице — метка <meta name="iconavo-version">; нет метки — undefined. */
+export const versionMetaOf = (html: string): string | undefined =>
+  metaOf(html, VERSION_META);
+
+/**
+ * Страницы иконок выборки обхода (шаг 4 фазы 4): серверный HTML — заголовок, нарисованное превью, метки
+ * версии и содержимого набора, мокапы (их рисунки догружает браузер); у скрытой — «Устарела».
+ */
+export function iconPagesProblems(pages: CrawledPage[]): string[] {
+  const byPath = new Map(pages.map((p) => [p.path, p]));
+  const problems: string[] = [];
+  for (const name of CRAWL_ICON_NAMES) {
+    for (const lang of ["", "/ru"]) {
+      const path = `${lang}${iconPath(name)}`;
+      const page = byPath.get(path);
+      if (page === undefined || page.status !== 200) {
+        problems.push(
+          `${path}: ${page ? `ответ ${page.status}` : "не открыта"}`,
+        );
+        continue;
+      }
+      const bare = name.slice(name.indexOf(":") + 1);
+      const miss = (what: string) => problems.push(`${path}: нет ${what}`);
+      if (!page.html.includes(`<h1>${bare}</h1>`)) miss(`заголовка ${bare}`);
+      if (
+        !/class="icon-preview[^"]*"[^>]*>\s*<svg[^>]*viewBox/.test(page.html)
+      ) {
+        miss("нарисованного превью");
+      }
+      if (versionMetaOf(page.html) === undefined) miss("метки версии");
+      if (metaOf(page.html, CONTENT_META) === undefined)
+        miss("метки содержимого");
+      if ((page.html.match(/data-mockup="/g) ?? []).length !== MOCKUPS) {
+        miss(`${MOCKUPS} мокапов`);
+      }
+    }
+  }
+  const hidden = iconPath(HIDDEN_ICON);
+  if (!byPath.get(hidden)?.html.includes("Deprecated")) {
+    problems.push(`${hidden}: нет «Deprecated»`);
+  }
+  if (!byPath.get(`/ru${hidden}`)?.html.includes("Устарела")) {
+    problems.push(`/ru${hidden}: нет «Устарела»`);
+  }
+  return problems;
+}
+
+/**
+ * Отпечатки содержимого (шаг 4 фазы 4, ADR-0039): страница каждого набора на обоих языках и страницы его
+ * иконок из выборки обхода показывают отпечаток из оглавления каталога раздачи. Иначе сброс по наборам
+ * не дошёл — повторить его можно ручным запуском «Сайт» с «только сброс».
+ */
+export function contentVerdict(
+  pages: CrawledPage[],
+  sets: Record<string, { content: string }>,
+): Verdict {
+  const byPath = new Map(pages.map((p) => [p.path, p]));
+  const problems: string[] = [];
+  const paths = [
+    ...Object.keys(sets).flatMap((id) => [`/${id}`, `/ru/${id}`]),
+    ...CRAWL_ICON_NAMES.flatMap((name) => [
+      iconPath(name),
+      `/ru${iconPath(name)}`,
+    ]),
+  ];
+  for (const path of paths) {
+    const id = path.replace(/^\/ru\//, "/").split("/")[1] ?? "";
+    const expected = sets[id]?.content;
+    if (expected === undefined) continue;
+    const page = byPath.get(path);
+    const seen =
+      page === undefined
+        ? "страницы нет"
+        : page.status !== 200
+          ? `ответ ${page.status}`
+          : (metaOf(page.html, CONTENT_META) ?? "без метки содержимого");
+    if (seen !== expected) {
+      problems.push(`${path}: ${seen}, а в каталоге ${expected}`);
+    }
+  }
+  return problems.length === 0
+    ? pass(
+        `страницы ${Object.keys(sets).length} наборов и их иконок — отпечатки из каталога раздачи`,
+      )
+    : fail(
+        `${problems.slice(0, 4).join("; ")} — сброс по наборам не дошёл: «Сайт» вручную с «только сброс»`,
+      );
 }
 
 /**

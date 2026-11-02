@@ -8,6 +8,7 @@ import {
   pageOf,
   setCards,
   setStyles,
+  setTag,
   visibleNames,
 } from "../../lib/catalog";
 import {
@@ -38,7 +39,10 @@ export async function SetPage({
   const set = await getSet(prefix);
   if (set === undefined) notFound();
   const { info } = set;
-  const latest = (await getReleases()).find((r) => r.prefix === prefix);
+  // Свой последний выпуск меняется только с выпуском набора — метка набора, а не catalog (ADR-0039).
+  const latest = (await getReleases(setTag(prefix))).find(
+    (r) => r.prefix === prefix,
+  );
   const names = visibleNames(set);
   const grouped = setCards(set);
   const first = pageOf(grouped.cards, 1).map((card) => card.base);

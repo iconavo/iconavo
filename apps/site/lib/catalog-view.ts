@@ -25,7 +25,23 @@ export const RELEASE_PREVIEW = 24;
 /** Имя метки версии набора на его странице: по ней pnpm site --live видит, что сайт пересобран. */
 export const VERSION_META = "iconavo-version";
 
-/** Заголовок и описание страницы набора; метка — версия данных набора (X-Iconavo-Version). */
+/**
+ * Имя метки отпечатка содержимого набора (X-Iconavo-Content) — у страницы набора и страниц его иконок:
+ * по ней pnpm site --refresh видит, что страницу пора сбросить (ADR-0039).
+ */
+export const CONTENT_META = "iconavo-content";
+
+/** Имя метки времени сборки страницы (UTC, ISO): по ней pnpm site --refresh видит, что сброс сработал. */
+export const RENDERED_META = "iconavo-rendered";
+
+/** Метки страницы с данными набора: версия, отпечаток содержимого и время сборки. */
+export const setMetas = (version: string, content: string) => ({
+  [VERSION_META]: version,
+  [CONTENT_META]: content,
+  [RENDERED_META]: new Date().toISOString(),
+});
+
+/** Заголовок и описание страницы набора; метки — версия и содержимое набора, время сборки. */
 export async function setMetadata(
   lang: Lang,
   prefix: string,
@@ -35,7 +51,7 @@ export async function setMetadata(
   return {
     title: set.info.name,
     description: `${countOf(lang, visibleNames(set).length, ICON_FORMS[lang])} · ${set.info.author.name} · ${set.info.license.title}`,
-    other: { [VERSION_META]: set.version },
+    other: setMetas(set.version, set.content),
   };
 }
 

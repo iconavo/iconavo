@@ -32,7 +32,7 @@ export const DOC_SOURCES = [
 ];
 
 /** Путь страницы иконки без языка: lucide:house → /lucide/house (apps/site/lib/icon.ts). */
-const iconPath = (name: string) => `/${name.replace(":", "/")}`;
+export const iconPath = (name: string) => `/${name.replace(":", "/")}`;
 
 /**
  * Страницы иконок в обходе (шаг 4 фазы 4): их десятки тысяч, и обход открывает только эти — по одной
@@ -49,6 +49,10 @@ export const CRAWL_ICON_NAMES = [
   "fluent-emoji-flat:waving-hand",
   "lucide:circle-parking",
 ];
+/** Скрытая иконка выборки: её страница — с пометкой «Устарела» (ADR-0037). */
+export const HIDDEN_ICON = "lucide:circle-parking";
+/** Мест в мокапах страницы иконки — восемь, утверждены владельцем 2 ноября 2026 (ADR-0041). */
+export const MOCKUPS = 8;
 export const CRAWL_ICONS = CRAWL_ICON_NAMES.flatMap((name) => [
   iconPath(name),
   `/ru${iconPath(name)}`,
@@ -144,6 +148,41 @@ export const CATALOG_WAIT_MS = 20_000;
 export const PANEL_WAIT_MS = 15_000;
 /** Метка версии данных набора на его странице (apps/site/lib/catalog-view.ts) — по ней --live видит свежесть. */
 export const VERSION_META = "iconavo-version";
+/**
+ * Метки страницы набора и страниц его иконок (шаг 4 фазы 4, ADR-0039): отпечаток содержимого набора и
+ * время сборки страницы — по ним pnpm site --refresh видит, что сбросить и что сброс сработал.
+ */
+export const CONTENT_META = "iconavo-content";
+export const RENDERED_META = "iconavo-rendered";
+/** Оглавление каталога раздачи — рядом с манифестом: catalog/{хэш}.json (ADR-0022). */
+export const LIVE_CDN = "https://cdn.iconavo.dev";
+/** После сброса меток страницы показывают свежие данные не сразу — ждать по умолчанию до стольких секунд. */
+export const REFRESH_WAIT_S = 300;
+/** Опрос живых страниц после сброса — так часто. */
+export const REFRESH_POLL_MS = 10_000;
+/**
+ * Время сборки страницы — с часов Vercel, время сброса — с часов машины GitHub: свежей считается страница,
+ * собранная не раньше чем за столько до сброса.
+ */
+export const REFRESH_SKEW_MS = 10_000;
+/** Меток в одном вызове сброса Vercel — не больше (REST API Vercel, «Tags per bulk REST API call»). */
+export const INVALIDATE_TAGS = 16;
+/** Метка общих страниц сайта (apps/site/lib/catalog.ts): сбрасывается с выпуском любого набора. */
+export const CATALOG_TAG = "catalog";
+/**
+ * Метки кэша, которые проверка сайта ждёт у страниц (строка «Метки кэша», ADR-0039): у общих — только
+ * catalog, у страницы набора и страниц его иконок — только set-{набор}. Иначе выпуск любого набора
+ * сбрасывал бы все страницы иконок, а у главной копились бы метки всех наборов (не больше 128 на ответ).
+ */
+export const CACHE_TAG_PAGES: { path: string; set?: string }[] = [
+  { path: "/" },
+  { path: "/sets" },
+  { path: "/ru/licenses" },
+  { path: "/lucide", set: "lucide" },
+  { path: "/ru/lucide", set: "lucide" },
+  { path: "/lucide/house", set: "lucide" },
+  { path: "/ru/ph/house-bold", set: "ph" },
+];
 /** Манифест раздачи: версии наборов, с которыми сравнивается сайт. */
 export const LIVE_MANIFEST = "https://cdn.iconavo.dev/manifest.json";
 

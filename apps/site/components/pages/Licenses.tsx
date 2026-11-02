@@ -1,4 +1,10 @@
-import { getSet, getSets, orderSets, revisionLabel } from "../../lib/catalog";
+import {
+  CATALOG_TAG,
+  getSet,
+  getSets,
+  orderSets,
+  revisionLabel,
+} from "../../lib/catalog";
 import { DICTIONARIES, type Lang } from "../../lib/i18n";
 import { PageLink } from "../PageLink";
 
@@ -9,9 +15,10 @@ import { PageLink } from "../PageLink";
 export async function Licenses({ lang }: { lang: Lang }) {
   const t = DICTIONARIES[lang];
   const ids = orderSets(Object.keys(await getSets()));
-  const sets = (await Promise.all(ids.map((id) => getSet(id)))).flatMap(
-    (set) => (set === undefined ? [] : [set]),
-  );
+  // Общая страница — метка catalog, а не по набору (ADR-0039).
+  const sets = (
+    await Promise.all(ids.map((id) => getSet(id, CATALOG_TAG)))
+  ).flatMap((set) => (set === undefined ? [] : [set]));
   return (
     <main id="content" className="container page">
       <h1>{t.licensesTitle}</h1>
