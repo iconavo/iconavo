@@ -40,11 +40,21 @@ export function layoutVerdict(before: Spot[], after: Spot[]): Verdict {
  * Записи браузера о запросе, который не удался, — не ошибки страницы: 404 иконок, которых нет, и
  * упавшие хосты в сценариях сбоев сети. Chrome и WebKit пишут «Failed to load resource», Firefox о
  * запросе к чужому адресу без ответа — «CORS request did not succeed». Настоящую ошибку CORS — ответ
- * без нужного заголовка — Firefox называет иначе, и она остаётся ошибкой.
+ * без нужного заголовка — Firefox называет иначе, и она остаётся ошибкой. WebKit запрос Next.js к самому
+ * сайту (`?_rsc=`: предзагрузка ссылки), оборванный уходом со страницы, называет «… due to access control
+ * checks.»; у запросов к хостам иконок `_rsc` не бывает, и там эта запись остаётся ошибкой.
  */
 export const isRequestFailure = (text: string) =>
   text.startsWith("Failed to load resource") ||
-  text.includes("(Reason: CORS request did not succeed)");
+  text.includes("(Reason: CORS request did not succeed)") ||
+  isAbortedPrefetch(text);
+
+/**
+ * WebKit: запрос Next.js к самому сайту (`?_rsc=`), оборванный уходом со страницы. Приходит и записью
+ * консоли, и необработанной ошибкой страницы с тем же текстом — не ошибка страницы ни там, ни там.
+ */
+export const isAbortedPrefetch = (text: string) =>
+  /[?&]_rsc=\S* due to access control checks\.$/.test(text);
 
 /** Что пишет страница: предупреждения и ошибки, кроме записей о неудавшихся запросах. */
 export function watch(page: Page) {
@@ -57,7 +67,9 @@ export function watch(page: Page) {
       errors.push(text);
     }
   });
-  page.on("pageerror", (error) => errors.push(error.message));
+  page.on("pageerror", (error) => {
+    if (!isAbortedPrefetch(error.message)) errors.push(error.message);
+  });
   return { warnings, errors };
 }
 

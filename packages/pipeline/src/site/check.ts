@@ -28,8 +28,10 @@ import {
   CATALOG_SET,
   CATALOG_WAIT_MS,
   DESKTOP,
+  isIconPath,
   MISSING_PATHS,
   PHONE,
+  REDIRECT_CODES,
   REDIRECT_STATUS,
   REDIRECTS,
   SKIP_TEXT,
@@ -49,13 +51,22 @@ import {
   switchVerdict,
   versionMetaOf,
 } from "./crawl.js";
+import {
+  checkIconPage,
+  checkPanel,
+  checkSheet,
+  panelProblems,
+} from "./panel.js";
 import { checkSearchPage, searchCanaryCaught } from "./search.js";
 
 export const CHECKS = [
-  ["static", "Все страницы собраны заранее (статические)"],
+  [
+    "static",
+    "Страницы собраны заранее (статические); страницы иконок — по первому запросу и из кэша",
+  ],
   [
     "status",
-    "Страницы отвечают 200, несуществующие — 404, /ru/docs… — временный переход на /docs…",
+    "Страницы отвечают 200, несуществующие — 404, /ru/docs… — временный переход на /docs…, старые имена иконок — постоянный на основные",
   ],
   [
     "headers",
@@ -95,6 +106,18 @@ export const CHECKS = [
   ],
   ["copy", "Кнопка Copy копирует код"],
   [
+    "panel",
+    "Панель иконки мышью и с клавиатуры: адрес, фокус, Esc, ✕, «назад»; фильтр при открытой панели; варианты, похожие, толщина и цвет; axe",
+  ],
+  [
+    "iconpage",
+    "Страница иконки: серверный HTML со сведениями, «Устарела», настройки из адреса, переход из панели",
+  ],
+  [
+    "sheet",
+    "Панель на телефоне: шторка снизу, выдача над ней щёлкается, «развернуть», «назад»",
+  ],
+  [
     "catalog",
     "Каталог: сетка набора — страницы, категория, «назад», ссылка на страницу; карточки и стиль; фильтр наборов",
   ],
@@ -123,6 +146,13 @@ export interface SiteCheckOptions {
   pages: CrawledPage[];
   /** Пути, которые Next.js собрал заранее (prerender-manifest.json). */
   prerendered: string[];
+  /**
+   * Маршруты, которые Next.js собирает по первому запросу и хранит в кэше (dynamicRoutes с fallback:
+   * null) — страницы иконок (шаг 4 фазы 4, ADR-0039).
+   */
+  onDemand?: string[];
+  /** x-nextjs-cache повторного запроса страницы иконки: ждём HIT — она в кэше, а не собрана заново. */
+  iconCache?: string;
   /** Разделы README, которые должны быть на сайте. */
   sections: string[];
   browsers: readonly BrowserName[];
@@ -134,7 +164,29 @@ export function httpVerdicts(
   o: SiteCheckOptions,
 ): Partial<Record<CheckId, Verdict>> {
   const html = htmlPages(o.pages);
-  const notStatic = html.filter((p) => !o.prerendered.includes(p.path));
+  const notStatic = html.filter(
+    (p) => !o.prerendered.includes(p.path) && !isIconPath(p.path),
+  );
+  // Страницы иконок — по первому запросу и из кэша: маршруты без «собрать заранее» и повтор — HIT.
+  const icons = html.filter((p) => isIconPath(p.path));
+  const onDemand = o.onDemand ?? [];
+  const iconRoutes = ["/[prefix]/[icon]", "/ru/[prefix]/[icon]"].filter(
+    (r) => !onDemand.includes(r),
+  );
+  if (icons.length > 0 && iconRoutes.length > 0) {
+    notStatic.push(
+      ...iconRoutes.map((r) => ({
+        ...(icons[0] as CrawledPage),
+        path: `${r} — не по первому запросу`,
+      })),
+    );
+  }
+  if (icons.length > 0 && o.iconCache !== "HIT") {
+    notStatic.push({
+      ...(icons[0] as CrawledPage),
+      path: `${icons[0]?.path} — повтор не из кэша (x-nextjs-cache: ${o.iconCache ?? "нет"})`,
+    });
+  }
   // У переходов из redirects() в next start нет заголовков сайта — их проверяет statusVerdict.
   const answers = o.pages.filter(
     (p) => p.path !== "/robots.txt" && (p.status < 300 || p.status >= 400),
@@ -150,7 +202,9 @@ export function httpVerdicts(
   return {
     static:
       notStatic.length === 0
-        ? pass(`${html.length} страниц — статические`)
+        ? pass(
+            `${html.length - icons.length} страниц — статические${icons.length > 0 ? `, ${icons.length} страниц иконок — по первому запросу и из кэша` : ""}`,
+          )
         : fail(
             `собраны по запросу: ${notStatic.map((p) => p.path).join(", ")}`,
           ),
@@ -158,6 +212,7 @@ export function httpVerdicts(
       missing: MISSING_PATHS,
       redirects: REDIRECTS,
       redirect: REDIRECT_STATUS,
+      codes: REDIRECT_CODES,
     }),
     headers:
       headerProblems.length === 0
@@ -171,7 +226,7 @@ export function httpVerdicts(
     switch: switchVerdict(o.pages),
     search: searchFormVerdict(o.pages),
     sections: sectionsVerdict(o.pages, o.sections),
-    links: linksVerdict(o.pages),
+    links: linksVerdict(o.pages, isIconPath),
   };
 }
 
@@ -180,7 +235,11 @@ export function httpVerdicts(
  * не flex и не grid: их элементы браузер и так делает блоками, так устроен CSS. Выполняется в браузере.
  */
 function iconFacts() {
-  const svgs = [...document.querySelectorAll("body svg")];
+  // Похожие иконки других наборов на странице иконки догружает браузер (шаг 4 фазы 4): выпуск чужого
+  // набора не должен сбрасывать её кэш — их в серверном HTML нет.
+  const svgs = [...document.querySelectorAll("body svg")].filter(
+    (svg) => !svg.closest(".icon-similar"),
+  );
   const inText = (svg: Element) =>
     !/flex|grid/.test(
       svg.parentElement ? getComputedStyle(svg.parentElement).display : "",
@@ -1021,6 +1080,7 @@ async function checkCanary(
         missing: MISSING_PATHS,
         redirects: REDIRECTS,
         redirect: REDIRECT_STATUS,
+        codes: REDIRECT_CODES,
       },
     ).ok !== false
   ) {
@@ -1086,10 +1146,70 @@ async function checkCanary(
   if (!(await searchCanaryCaught(browser, o))) {
     missed.push("поиск без полной выдачи");
   }
+  // Панель иконки (шаг 4 фазы 4): поломки — скриптом до страницы; сценарий «Панель» обязан заметить.
+  const panelBreaks: [string, () => void][] = [
+    [
+      "Esc не закрывает панель",
+      () => {
+        document.addEventListener(
+          "keydown",
+          (e) => {
+            if (e.key === "Escape") e.stopImmediatePropagation();
+          },
+          true,
+        );
+      },
+    ],
+    [
+      "фокус не возвращается к карточке",
+      () => {
+        const focus = HTMLElement.prototype.focus;
+        HTMLElement.prototype.focus = function (options) {
+          if (this.classList.contains("icon-card-link")) return;
+          focus.call(this, options);
+        };
+      },
+    ],
+    [
+      "смена фильтра закрывает панель",
+      () => {
+        const push = history.pushState.bind(history);
+        history.pushState = (state, unused, url) => {
+          const next = new URL(String(url ?? location.href), location.href);
+          if (next.searchParams.has("style")) next.searchParams.delete("icon");
+          push(state, unused, next);
+        };
+      },
+    ],
+  ];
+  for (const [title, script] of panelBreaks) {
+    const ctx = await browser.newContext({ viewport: DESKTOP });
+    await ctx.addInitScript(script);
+    const p = await ctx.newPage();
+    const caught = await panelProblems(p, o.base).catch(() => ["остановился"]);
+    if (caught.length === 0) missed.push(title);
+    await ctx.close();
+  }
+  if (
+    statusVerdict(
+      [
+        ...o.pages.filter((p) => p.path !== "/lucide/home"),
+        { path: "/lucide/home", status: 200, headers: {}, html: "" },
+      ],
+      {
+        missing: MISSING_PATHS,
+        redirects: REDIRECTS,
+        redirect: REDIRECT_STATUS,
+        codes: REDIRECT_CODES,
+      },
+    ).ok !== false
+  ) {
+    missed.push("старое имя иконки без перехода");
+  }
   result.verdicts.canary =
     missed.length === 0
       ? pass(
-          "замечены все тринадцать: кнопка без подписи, style, ширина, иконка-блок, robots, битая ссылка, гидратация, чужой lang, нет ссылки на другой язык, переход не туда, нет скрипта темы, сетка без списка имён, поиск без полной выдачи",
+          "замечены все семнадцать: кнопка без подписи, style, ширина, иконка-блок, robots, битая ссылка, гидратация, чужой lang, нет ссылки на другой язык, переход не туда, нет скрипта темы, сетка без списка имён, поиск без полной выдачи, Esc не закрывает панель, фокус не возвращается, фильтр закрывает панель, старое имя без перехода",
         )
       : fail(`проверка слепая: не замечено — ${missed.join(", ")}`);
 }
@@ -1115,6 +1235,10 @@ export async function checkSite(o: SiteCheckOptions): Promise<SiteResult[]> {
       await checkTheme(browser, o, result);
       o.log?.(`${BROWSER_TITLES[name]}: каталог…`);
       await checkCatalog(browser, o, expected, result);
+      o.log?.(`${BROWSER_TITLES[name]}: панель и страница иконки…`);
+      result.verdicts.panel = await checkPanel(browser, o, result.shots);
+      result.verdicts.iconpage = await checkIconPage(browser, o, result.shots);
+      result.verdicts.sheet = await checkSheet(browser, o, result.shots);
       o.log?.(`${BROWSER_TITLES[name]}: поиск…`);
       result.verdicts.results = await checkSearchPage(browser, o, result.shots);
       o.log?.(`${BROWSER_TITLES[name]}: контрольный запуск…`);

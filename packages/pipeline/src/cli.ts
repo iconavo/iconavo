@@ -247,7 +247,9 @@ import {
 } from "./site/check-report.js";
 import {
   CRAWL_EXTRAS,
+  CRAWL_ICONS,
   DOC_SOURCES,
+  followLink,
   LIVE_SITE,
   SITE_DIR,
   SITE_PORT,
@@ -1667,13 +1669,21 @@ try {
       await buildNext({ dir, env });
       const manifest = JSON.parse(
         await readFile(join(dir, ".next", "prerender-manifest.json"), "utf8"),
-      ) as { routes?: Record<string, unknown> };
+      ) as {
+        routes?: Record<string, unknown>;
+        dynamicRoutes?: Record<string, { fallback?: unknown }>;
+      };
       const next = await startNext("prod", await freePort(), { dir, env });
       const browsers = browserName ? [browserName] : BROWSERS;
       let results: Awaited<ReturnType<typeof checkSite>>;
       try {
         console.log(`Обхожу страницы ${next.url}…`);
-        const pages = await crawl(next.url, CRAWL_EXTRAS);
+        const pages = await crawl(next.url, CRAWL_EXTRAS, followLink);
+        // Страница иконки уже собрана обходом: повтор должен прийти из кэша (шаг 4 фазы 4).
+        const iconCache =
+          (await fetch(`${next.url}${CRAWL_ICONS[0]}`)).headers.get(
+            "x-nextjs-cache",
+          ) ?? undefined;
         console.log(
           `Проверяю: ${browsers.map((b) => BROWSER_TITLES[b]).join(", ")} — ${pages.length} адресов, превью API ${api}…`,
         );
@@ -1683,6 +1693,10 @@ try {
           api,
           pages,
           prerendered: Object.keys(manifest.routes ?? {}),
+          onDemand: Object.entries(manifest.dynamicRoutes ?? {})
+            .filter(([, r]) => r.fallback === null)
+            .map(([route]) => route),
+          ...(iconCache === undefined ? {} : { iconCache }),
           sections,
           browsers,
           log: (line) => console.log(`  ${line}`),

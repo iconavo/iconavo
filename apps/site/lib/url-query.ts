@@ -14,6 +14,36 @@ export const URL_EVENT = "iconavo:url";
 
 const EMPTY = new URLSearchParams();
 
+/**
+ * Пометка записи истории, которую добавило открытие панели иконки (шаг 4 фазы 4): закрытие панели
+ * уходит назад только с такой записи — иначе «назад» отменил бы смену фильтра.
+ */
+interface PanelState {
+  iconavoPanel?: string;
+}
+
+/** Иконка, открытием которой добавлена текущая запись истории; нет — запись не от панели. */
+export function panelMarker(): string | undefined {
+  const state = window.history.state as PanelState | null;
+  return typeof state?.iconavoPanel === "string"
+    ? state.iconavoPanel
+    : undefined;
+}
+
+/** Строка параметров; двоеточие имени иконки остаётся как есть: ?icon=lucide:house. */
+export const queryText = (next: URLSearchParams): string =>
+  next.toString().replaceAll("%3A", ":");
+
+export interface NavigateOptions {
+  /** Заменить запись истории, а не добавить (набор текста, смена иконки в панели). */
+  replace?: boolean;
+  /**
+   * Пометка панели: строка — запись от открытия панели с этой иконкой; null — без пометки. Нет — при
+   * замене пометка текущей записи сохраняется, новая запись идёт без неё.
+   */
+  panel?: string | null;
+}
+
 /** Параметры адреса и переход к другим параметрам той же страницы. */
 export function useUrlQuery(): {
   query: URLSearchParams;
@@ -25,7 +55,7 @@ export function useUrlQuery(): {
   /** Адрес ссылки с этими параметрами — для href. */
   hrefOf: (next: URLSearchParams) => string;
   /** Переход; replace — заменить запись истории, а не добавить (набор текста в поле поиска). */
-  navigate: (next: URLSearchParams, options?: { replace?: boolean }) => void;
+  navigate: (next: URLSearchParams, options?: NavigateOptions) => void;
 } {
   const pathname = usePathname();
   const [read, setRead] = useState<{ path?: string; query: URLSearchParams }>(
@@ -52,17 +82,29 @@ export function useUrlQuery(): {
   const query = ready ? read.query : EMPTY;
   const hrefOf = useCallback(
     (next: URLSearchParams) => {
-      const search = next.toString();
+      const search = queryText(next);
       return search === "" ? pathname : `${pathname}?${search}`;
     },
     [pathname],
   );
   const navigate = useCallback(
-    (next: URLSearchParams, options?: { replace?: boolean }) => {
+    (next: URLSearchParams, options?: NavigateOptions) => {
+      // Своё состояние — новым объектом: в history.state лежит и внутреннее состояние Next.js, его не
+      // копируем — Next.js допишет своё сам.
+      const marker =
+        options?.panel !== undefined
+          ? options.panel
+          : options?.replace
+            ? panelMarker()
+            : undefined;
+      const state: PanelState | null =
+        marker === undefined || marker === null
+          ? null
+          : { iconavoPanel: marker };
       if (options?.replace) {
-        window.history.replaceState(null, "", hrefOf(next));
+        window.history.replaceState(state, "", hrefOf(next));
       } else {
-        window.history.pushState(null, "", hrefOf(next));
+        window.history.pushState(state, "", hrefOf(next));
       }
       setRead({ path: pathname, query: new URLSearchParams(next) });
       window.dispatchEvent(new Event(URL_EVENT));

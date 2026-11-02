@@ -8,9 +8,12 @@ import { fail, pass, type Verdict } from "../sandbox/verdict.js";
 import {
   CRAWL_EXTRAS,
   DEFAULT_ICON_HOSTS,
+  followLink,
+  isIconPath,
   LIVE_MANIFEST,
   LIVE_WAIT_MS,
   MISSING_PATHS,
+  REDIRECT_CODES,
   REDIRECT_STATUS,
   REDIRECTS,
 } from "./config.js";
@@ -102,7 +105,7 @@ export async function checkLiveSite(o: {
     });
   }
   o.log?.("Обхожу страницы…");
-  const pages: CrawledPage[] = await crawl(o.base, CRAWL_EXTRAS);
+  const pages: CrawledPage[] = await crawl(o.base, CRAWL_EXTRAS, followLink);
   const html = htmlPages(pages);
   rows.push({
     what: "Страницы",
@@ -110,6 +113,7 @@ export async function checkLiveSite(o: {
       missing: MISSING_PATHS,
       redirects: REDIRECTS,
       redirect: REDIRECT_STATUS,
+      codes: REDIRECT_CODES,
     }),
   });
   rows.push({ what: "Свежесть данных", verdict: await liveFreshness(pages) });
@@ -161,7 +165,10 @@ export async function checkLiveSite(o: {
     what: "Разделы README",
     verdict: sectionsVerdict(pages, o.sections),
   });
-  rows.push({ what: "Ссылки и якоря", verdict: linksVerdict(pages) });
+  rows.push({
+    what: "Ссылки и якоря",
+    verdict: linksVerdict(pages, isIconPath),
+  });
   const server = pages.find((p) => p.path === "/")?.headers.server ?? "";
   rows.push({
     what: "Хостинг",
