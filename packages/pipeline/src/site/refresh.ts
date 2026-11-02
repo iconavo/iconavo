@@ -91,22 +91,35 @@ export function invalidateGroups(stale: readonly string[]): string[] {
   return groups;
 }
 
-/** Ответ адреса с тремя попытками: сеть подводит, а запуск из-за этого краснеть не должен. */
-async function get(url: string): Promise<Response> {
+/**
+ * Ответ адреса: сбой сети и ответ 5xx — ещё две попытки через pauseMs. Запуск из-за моргнувшей раздачи
+ * краснеть не должен: 2 ноября 2026 манифест cdn.iconavo.dev один раз ответил 500, а через минуту — 200.
+ * После третьей попытки 5xx возвращается как есть.
+ */
+export async function getWithRetry(
+  url: string,
+  pauseMs = 2_000,
+): Promise<Response> {
   let last: unknown;
   for (let attempt = 0; attempt < 3; attempt++) {
+    if (attempt > 0) await new Promise((r) => setTimeout(r, pauseMs));
     try {
-      return await fetch(url, {
+      const response = await fetch(url, {
         cache: "no-store",
         redirect: "manual",
         signal: AbortSignal.timeout(30_000),
       });
+      if (response.status < 500 || attempt === 2) return response;
+      await response.arrayBuffer();
+      last = new Error(`ответ ${response.status}`);
     } catch (e) {
       last = e;
     }
   }
   throw new Error(`${url} не ответил: ${(last as Error).message}`);
 }
+
+const get = (url: string) => getWithRetry(url);
 
 /** Наборы из оглавления каталога раздачи: отпечаток содержимого и первая иконка витрины. */
 export async function catalogSets(

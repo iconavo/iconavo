@@ -34,7 +34,7 @@ import {
   statusVerdict,
   switchVerdict,
 } from "./crawl.js";
-import { catalogSets } from "./refresh.js";
+import { catalogSets, getWithRetry } from "./refresh.js";
 
 export interface LiveRow {
   what: string;
@@ -58,7 +58,7 @@ async function redirectVerdict(from: string, to: string): Promise<Verdict> {
 /** Свежесть данных: версии наборов на страницах сайта против живого манифеста раздачи. */
 async function liveFreshness(pages: CrawledPage[]): Promise<Verdict> {
   try {
-    const response = await fetch(LIVE_MANIFEST, { cache: "no-store" });
+    const response = await getWithRetry(LIVE_MANIFEST);
     if (!response.ok)
       return fail(`${LIVE_MANIFEST} ответил ${response.status}`);
     return freshnessVerdict(

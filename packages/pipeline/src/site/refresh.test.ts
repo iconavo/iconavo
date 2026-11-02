@@ -9,6 +9,7 @@ import {
 } from "./config.js";
 import {
   compareSite,
+  getWithRetry,
   invalidateGroups,
   type LivePage,
   pageRefreshed,
@@ -78,6 +79,23 @@ describe("сброс кэша страниц по наборам (шаг 4 фа�
     // Без since — только отпечаток: выкладка кода между сравнением и сбросом даёт страницы чуть старше.
     expect(pageRefreshed(page("/a", "x", old), "x")).toBe(true);
     expect(pageRefreshed(page("/a", "y", old), "x")).toBe(false);
+  });
+
+  it("ответ 5xx и сбой сети — ещё две попытки, потом 5xx как есть", async () => {
+    const answers = [500, 200];
+    let calls = 0;
+    vi.stubGlobal("fetch", async () => {
+      calls++;
+      const status = answers.shift() ?? 503;
+      if (status === 0) throw new Error("сеть");
+      return new Response("", { status });
+    });
+    expect((await getWithRetry("https://cdn", 1)).status).toBe(200);
+    expect(calls).toBe(2);
+    calls = 0;
+    answers.push(0, 502, 503);
+    expect((await getWithRetry("https://cdn", 1)).status).toBe(503);
+    expect(calls).toBe(3);
   });
 
   it("метки для сброса: catalog один раз, группы не больше 16", () => {
