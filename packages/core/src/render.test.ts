@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { freshCore } from "./fake.testing.js";
 import type { IconData } from "./icon.js";
-import { setStrokeWidth } from "./render.js";
+import { hasStrokeWidth, setStrokeWidth } from "./render.js";
 
 afterEach(() => {
   vi.unstubAllGlobals();
@@ -143,5 +143,24 @@ describe("setStrokeWidth", () => {
     expect(setStrokeWidth(LINE.body, 0.1 + 0.2)).toContain(
       'stroke-width="0.3"',
     );
+  });
+});
+
+describe("hasStrokeWidth", () => {
+  it("линейный монохромный рисунок — да, и тогда setStrokeWidth его меняет", () => {
+    expect(hasStrokeWidth(LINE.body)).toBe(true);
+    expect(setStrokeWidth(LINE.body, 1)).not.toBe(LINE.body);
+  });
+
+  it("залитый, цветной и без stroke-width — нет", () => {
+    expect(hasStrokeWidth('<path fill="currentColor" d="M0 0"/>')).toBe(false);
+    expect(
+      hasStrokeWidth('<path fill="#f00" stroke="#000" stroke-width="3"/>'),
+    ).toBe(false);
+    expect(hasStrokeWidth(GRADIENT.body)).toBe(false);
+    // «stroke-width» без атрибута, например в тексте id, — не линия.
+    expect(
+      hasStrokeWidth('<path id="stroke-width" fill="currentColor"/>'),
+    ).toBe(false);
   });
 });

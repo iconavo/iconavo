@@ -63,6 +63,7 @@ export function searchDocuments(
       tones: doc.tones,
       style: STYLES.filter((style) => doc.styles[style] !== undefined),
       styles: doc.styles,
+      about: doc.about,
       parts: catalog.parts[i] ?? 1,
       setOrder: f.order,
       textHash: doc.textHash ?? null,

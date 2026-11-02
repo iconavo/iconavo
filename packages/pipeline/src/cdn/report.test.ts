@@ -3,6 +3,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { demoConfig } from "../search/fixture.testing.js";
+import { formatBytes } from "../sources/report.js";
 import { writeCdnDemoSet } from "./fixture.testing.js";
 import {
   formatCdnReport,
@@ -58,7 +59,7 @@ describe("отчёт раздачи", () => {
     expect(table).toContain("записано");
     const catalog = report.catalog;
     expect(formatCdnSummary(report)).toEqual([
-      `Каталог для edge API: dist-cdn/catalog/${catalog?.hash}.json и ещё 3 файлов (${catalog?.bytes} Б) — записано 4`,
+      `Каталог для edge API: dist-cdn/catalog/${catalog?.hash}.json и ещё 3 файлов (${formatBytes(catalog?.bytes ?? 0)}) — записано 4`,
       "Манифест: dist-cdn/manifest.json — записан",
       "Удалено устаревших: нет",
     ]);
@@ -67,7 +68,7 @@ describe("отчёт раздачи", () => {
       "без изменений",
     );
     expect(formatCdnSummary(again).slice(0, 2)).toEqual([
-      `Каталог для edge API: dist-cdn/catalog/${catalog?.hash}.json и ещё 3 файлов (${catalog?.bytes} Б) — без изменений`,
+      `Каталог для edge API: dist-cdn/catalog/${catalog?.hash}.json и ещё 3 файлов (${formatBytes(catalog?.bytes ?? 0)}) — без изменений`,
       "Манифест: dist-cdn/manifest.json — без изменений",
     ]);
   });

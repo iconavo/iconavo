@@ -107,6 +107,17 @@ describe("searchDocuments", () => {
     expect(byId.get("lucide_bare")?.textHash).toBeNull();
   });
 
+  it("about — сведения для показа как в search.json: «ё» и регистр на месте (шаг 4 фазы 4)", () => {
+    const about = byId.get("lucide_shopping-cart")?.about;
+    // Теги — как в search.json, без нормализации запроса (в tags документа — «shop»).
+    expect(about?.tags).toEqual(["Shop"]);
+    expect(about?.ru?.synonyms.slice(0, 2)).toEqual(["Ёлка", "корзина"]);
+    expect(about?.en?.synonyms[0]).toBe("Cart");
+    expect(typeof about?.en?.description).toBe("string");
+    // Без описаний — только теги (у заготовки их нет).
+    expect(byId.get("lucide_bare")?.about).toEqual({ tags: [] });
+  });
+
   it("оттенки кожи — одна карточка с именами всех оттенков", () => {
     expect(docs.filter((d) => d.set === "fluent")).toHaveLength(1);
     const hand = byId.get("fluent_waving-hand");

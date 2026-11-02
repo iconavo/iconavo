@@ -30,4 +30,14 @@ export default {
   metadata: "lucide",
   // Стиль по общей шкале (ADR-0052): все иконки — контур.
   styles: { outline: [""] },
+  // Иконки из Feather — под MIT, их список — в LICENSE Lucide (ADR-0017).
+  credits: [
+    {
+      name: "Feather",
+      author: "Cole Bemis",
+      url: "https://github.com/feathericons/feather",
+      license: "MIT",
+      list: "The following Lucide icons are derived from the Feather project:",
+    },
+  ],
 } satisfies SourceConfigInput;

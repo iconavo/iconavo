@@ -8,7 +8,7 @@
 // одинаковые данные дают побайтно те же файлы.
 
 import { createHash } from "node:crypto";
-import { nameSchema } from "@iconavo-ui/schema";
+import { creditSchema, nameSchema, styleTableSchema } from "@iconavo-ui/schema";
 import { z } from "zod";
 import { compactJson, type Json } from "../build/json.js";
 import {
@@ -68,6 +68,15 @@ export const catalogIndexSchema = z.strictObject({
       collection: catalogHashSchema,
       info: iconifyInfoSchema,
       license: licenseExtraSchema,
+      /**
+       * Отпечаток содержимого набора (шаг 4 фазы 4): меняется с любым файлом набора, включая
+       * search.json. Edge API отдаёт его заголовком, сайт сверяет — так узнаёт, что сбросить.
+       */
+      content: catalogHashSchema,
+      /** Таблица стилей, как в metadata.json — суффиксы с дефисом (ADR-0052); для /icon. */
+      styles: styleTableSchema.optional(),
+      /** Части набора от других авторов, как в metadata.json (ADR-0017); для /icon. */
+      credits: z.array(creditSchema).min(1).optional(),
     }),
   ),
 });
@@ -228,11 +237,29 @@ export function buildCatalog(sets: readonly CatalogSet[]): Catalog {
       collectionKey(set.id, hash),
     );
     files.push(body.file);
-    entries[set.id] = {
+    const entry: { [key: string]: Json } = {
       collection: body.hash,
       info: iconifyInfo(set),
       license: licenseExtra(set),
+      content: set.content,
     };
+    // Таблица стилей и части от других авторов — запись набора, а не info: /collections отдаёт
+    // info как есть, в формате Iconify.
+    if (set.metadata.styles !== undefined) {
+      entry.styles = Object.fromEntries(
+        Object.entries(set.metadata.styles).map(([style, list]) => [
+          style,
+          [...(list ?? [])],
+        ]),
+      );
+    }
+    if (set.metadata.credits !== undefined) {
+      entry.credits = set.metadata.credits.map((c) => ({
+        ...c,
+        icons: [...c.icons],
+      }));
+    }
+    entries[set.id] = entry;
   }
   const releases = catalogFile(releasesBody(sets), releasesKey);
   files.push(releases.file);

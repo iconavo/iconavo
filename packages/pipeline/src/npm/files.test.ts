@@ -207,6 +207,28 @@ describe("readmeText", () => {
     );
   });
 
+  it("части от других авторов — в строке метаданных, типы их знают (ADR-0017)", async () => {
+    await writeNpmDemoSet(dataDir, {
+      id: "demo",
+      icons: ICONS,
+      samples: ["house"],
+      metadata: {
+        credits: [
+          {
+            name: "Feather",
+            author: "Cole Bemis",
+            url: "https://github.com/feathericons/feather",
+            license: "MIT",
+            icons: ["house", "star"],
+          },
+        ],
+      },
+    });
+    const readme = readmeText(await loadDemoNpmSet(dataDir, "demo"), "next");
+    expect(readme).toContain("2 icons from Feather by Cole Bemis (MIT)");
+    expect(indexDts("demo")).toContain("credits?: IconavoCredit[];");
+  });
+
   it("в день запуска — без тега и без пометки о предварительных версиях", async () => {
     const readme = readmeText(await demo(), "latest");
     expect(readme).toContain("npm install @iconavo-ui/icons-demo\n");

@@ -364,6 +364,30 @@ describe("metadata.json", () => {
       ).toBeGreaterThan(0);
     });
   });
+
+  describe("части от других авторов (ADR-0017)", () => {
+    const feather = {
+      name: "Feather",
+      author: "Cole Bemis",
+      url: "https://github.com/feathericons/feather",
+      license: "MIT",
+      icons: ["airplay", "circle-alert"],
+    };
+
+    it("принимает список частей", () => {
+      expect(validate("metadata", { credits: [feather] })).toEqual([]);
+    });
+
+    it("повтор иконки, неверное имя, лишнее поле и пустой список — ошибки", () => {
+      const issues = (credit: unknown) =>
+        validate("metadata", { credits: [credit] }).length;
+      expect(issues({ ...feather, icons: ["x", "x"] })).toBeGreaterThan(0);
+      expect(issues({ ...feather, icons: ["Airplay"] })).toBeGreaterThan(0);
+      expect(issues({ ...feather, note: "?" })).toBeGreaterThan(0);
+      expect(issues({ ...feather, icons: [] })).toBeGreaterThan(0);
+      expect(validate("metadata", { credits: [] }).length).toBeGreaterThan(0);
+    });
+  });
 });
 
 describe("команда проверки", () => {

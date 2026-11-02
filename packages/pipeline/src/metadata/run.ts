@@ -4,6 +4,7 @@
 
 import { createHash } from "node:crypto";
 import {
+  type Credit,
   type SearchEntry,
   type SearchFile,
   validate,
@@ -15,6 +16,7 @@ import type { NormalizedIcon } from "../normalize/normalize.js";
 import { percent } from "../report/html.js";
 import type { MetadataFormat, SourceConfig } from "../sources/config.js";
 import type { LockEntry } from "../sources/lock.js";
+import { readCredits } from "./credits.js";
 import { fingerprint } from "./fingerprint.js";
 import { type AuthorMetadata, READERS } from "./formats.js";
 import { readLicense, type SetLicense } from "./license.js";
@@ -75,6 +77,8 @@ export interface SetMetadata {
   suffixes?: Record<string, string>;
   /** Стиль общей шкалы → суффиксы его вариантов в порядке показа (ADR-0052). */
   styles?: SourceConfig["styles"];
+  /** Части набора от других авторов из LICENSE (ADR-0017). */
+  credits: Credit[];
   /** Видимые имена, которые оканчиваются суффиксом другого стиля, чем их карточка (ADR-0052). */
   styleSuspects: string[];
   /** Иконки без тегов автора в наборе, у которого метаданные автора есть. */
@@ -170,6 +174,11 @@ export interface MetadataOptions {
   previousSearch?: unknown;
   /** Переименования этой сборки: старое имя → новое (ADR-0018). */
   renamed?: ReadonlyMap<string, string>;
+  /**
+   * Имя иконки или алиаса → нынешнее имя иконки по журналу этой сборки; нет — подходят только
+   * имена из names. Нужно для списков credits: в LICENSE имена бывают старые (ADR-0017).
+   */
+  resolve?: (name: string) => string | undefined;
 }
 
 /**
@@ -247,6 +256,15 @@ export async function setMetadata(
     samples = [...config.samples];
   }
 
+  const credits = license
+    ? readCredits(
+        config,
+        license.text,
+        options.resolve ?? ((n) => (names.has(n) ? n : undefined)),
+      )
+    : { credits: [], stop: [] };
+  stop.push(...credits.stop);
+
   const report: SetMetadata = {
     author: config.author,
     license,
@@ -258,6 +276,7 @@ export async function setMetadata(
     samples,
     suffixes: config.suffixes,
     styles: config.styles,
+    credits: credits.credits,
     styleSuspects: styleSuspects(config, iconNames),
     withoutAuthor,
     stop,
@@ -321,6 +340,9 @@ function setFiles(
         [...(list ?? [])],
       ]),
     );
+  }
+  if (r.credits.length > 0) {
+    metadata.credits = r.credits.map((c) => ({ ...c, icons: [...c.icons] }));
   }
 
   const icons: Record<string, SearchEntry> = {};

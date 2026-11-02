@@ -5,7 +5,7 @@
 
 import { isValidIconName, isValidNamePart } from "@iconavo-ui/core/internal";
 import { EMBEDDER, EXACT_LIMIT, INDEX_UID, SEMANTIC_RATIO } from "./config.js";
-import { DISPLAYED } from "./settings.js";
+import { RESULT_FIELDS } from "./settings.js";
 import { isStyle, type Style } from "./styles.js";
 
 /** Фильтры выдачи: наборы, цветность, лицензии (ADR-0027) и стиль общей шкалы (ADR-0052). */
@@ -77,7 +77,7 @@ export function exactQuery(
     q: "",
     filter: [...filterConditions(filters), `names = "${checkedName(name)}"`],
     limit: EXACT_LIMIT,
-    attributesToRetrieve: [...DISPLAYED],
+    attributesToRetrieve: [...RESULT_FIELDS],
   };
 }
 
@@ -119,7 +119,7 @@ export function mainQuery(options: MainQueryOptions): MultiSearchQuery {
     q: options.q,
     limit: window.limit,
     offset: window.offset,
-    attributesToRetrieve: [...DISPLAYED],
+    attributesToRetrieve: [...RESULT_FIELDS],
   };
   if (filter.length > 0) query.filter = filter;
   if (options.vector !== undefined) {

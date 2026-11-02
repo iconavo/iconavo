@@ -23,7 +23,12 @@ export {
 } from "./load.js";
 export { isValidIconName, isValidNamePart } from "./name.js";
 export { cleanNumber, formatNumber } from "./number.js";
-export { type RenderOptions, renderIcon, setStrokeWidth } from "./render.js";
+export {
+  hasStrokeWidth,
+  type RenderOptions,
+  renderIcon,
+  setStrokeWidth,
+} from "./render.js";
 export {
   DEFAULT_API,
   DEFAULT_CDN,

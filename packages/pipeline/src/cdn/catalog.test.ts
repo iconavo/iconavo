@@ -26,6 +26,7 @@ function demoSet(
     info?: Partial<InfoFile>;
     metadata?: MetadataFile;
     changelog?: ChangelogFile["releases"];
+    content?: string;
   } = {},
 ): CatalogSet {
   const file = {
@@ -81,6 +82,7 @@ function demoSet(
         },
       ],
     },
+    content: o.content ?? "c0ffee000001",
   };
 }
 
@@ -288,6 +290,52 @@ describe("buildCatalog", () => {
       collectionBody(demoSet("alpha")),
     );
     expect(parsed.sets.alpha?.license.text).toBe("MIT License");
+    expect(parsed.sets.alpha?.content).toBe("c0ffee000001");
+    // Без таблицы стилей и частей от других авторов полей нет.
+    expect(parsed.sets.alpha?.styles).toBeUndefined();
+    expect(parsed.sets.alpha?.credits).toBeUndefined();
+  });
+
+  it("таблица стилей и части от других авторов — в записи набора, а не в info (шаг 4 фазы 4)", () => {
+    const credit = {
+      name: "Feather",
+      author: "Cole Bemis",
+      url: "https://github.com/feathericons/feather",
+      license: "MIT",
+      icons: ["house", "star"],
+    };
+    const catalog = buildCatalog([
+      demoSet("alpha", {
+        metadata: {
+          suffixes: { "": "Regular", "-bold": "Bold" },
+          styles: { outline: ["", "-bold"] },
+          credits: [credit],
+        },
+        content: "c0ffee000002",
+      }),
+    ]);
+    const index = catalog.files.at(-1);
+    const parsed = catalogIndexSchema.parse(
+      JSON.parse(text(index?.data ?? new Uint8Array())),
+    );
+    expect(parsed.sets.alpha).toMatchObject({
+      content: "c0ffee000002",
+      styles: { outline: ["", "-bold"] },
+      credits: [credit],
+    });
+    expect(parsed.sets.alpha?.info).not.toHaveProperty("credits");
+  });
+
+  it("новый отпечаток содержимого — новое оглавление, тела те же", () => {
+    const first = buildCatalog(sets);
+    const edited = buildCatalog([
+      demoSet("zeta"),
+      demoSet("alpha", { content: "c0ffee0000ff" }),
+    ]);
+    expect(edited.hash).not.toBe(first.hash);
+    expect(edited.files.slice(0, 2).map((f) => f.key)).toEqual(
+      first.files.slice(0, 2).map((f) => f.key),
+    );
   });
 
   it("одинаковые данные — побайтно те же файлы в любом порядке наборов", () => {

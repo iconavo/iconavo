@@ -23,6 +23,8 @@ export {
   licenseSchema,
 } from "./info.js";
 export {
+  type Credit,
+  creditSchema,
   type MetadataFile,
   metadataFileSchema,
   STYLE_IDS,

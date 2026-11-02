@@ -53,7 +53,29 @@ export const styleTableSchema = z.partialRecord(
   z.array(suffixKey).min(1),
 );
 
-/** `metadata.json` — категории, карта суффиксов вариантов (ADR-0002) и стили (ADR-0052), в рантайм не идёт. */
+/**
+ * Часть набора другого автора под своей лицензией (ADR-0017): у Lucide — иконки из Feather, MIT.
+ * Имена — нынешние, без повторов, по кодам символов.
+ */
+export const creditSchema = z.strictObject({
+  name: z.string().min(1),
+  author: z.string().min(1),
+  url: z.url(),
+  /** SPDX лицензии этой части. */
+  license: z.string().min(1),
+  icons: z
+    .array(nameSchema)
+    .min(1)
+    .refine(
+      (list) => new Set(list).size === list.length,
+      "иконки не должны повторяться",
+    ),
+});
+
+/**
+ * `metadata.json` — категории, карта суффиксов вариантов (ADR-0002), стили (ADR-0052) и части от
+ * других авторов (ADR-0017), в рантайм не идёт.
+ */
 export const metadataFileSchema = z
   .strictObject({
     /** Категория (название для людей) → иконки в ней. */
@@ -62,6 +84,8 @@ export const metadataFileSchema = z
     suffixes: z.record(suffixKey, z.string().min(1)).optional(),
     /** Стиль общей шкалы → суффиксы его вариантов в порядке показа (ADR-0052). */
     styles: styleTableSchema.optional(),
+    /** Части набора от других авторов: чьи иконки и под какой лицензией (ADR-0017). */
+    credits: z.array(creditSchema).min(1).optional(),
   })
   .superRefine((file, ctx) => {
     if (file.styles === undefined) return;
@@ -72,4 +96,5 @@ export const metadataFileSchema = z
     }
   });
 
+export type Credit = z.infer<typeof creditSchema>;
 export type MetadataFile = z.infer<typeof metadataFileSchema>;
