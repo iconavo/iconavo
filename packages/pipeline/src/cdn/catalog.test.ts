@@ -112,6 +112,20 @@ describe("collectionBody", () => {
     });
   });
 
+  it("стили — наше дополнение: суффиксы без дефиса, порядок показа сохранён (ADR-0052)", () => {
+    const body = collectionBody(
+      demoSet("demo", {
+        metadata: {
+          suffixes: { "": "Regular", "-bold": "Bold", "-fill": "Fill" },
+          styles: { outline: ["", "-bold"], filled: ["-fill"] },
+        },
+      }),
+    );
+    expect(body).toMatchObject({
+      styles: { outline: ["", "bold"], filled: ["fill"] },
+    });
+  });
+
   it("пустые поля не пишутся", () => {
     const body = collectionBody(
       demoSet("demo", {

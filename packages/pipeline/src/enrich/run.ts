@@ -120,6 +120,8 @@ export interface LoadedSet {
   /** Видимые иконки из icons.json. */
   icons: Map<string, NormalizedIcon>;
   suffixes: string[];
+  /** Стиль общей шкалы → суффиксы его вариантов (metadata.json, ADR-0052); нет — у карточек нет стилей. */
+  styles?: MetadataFile["styles"];
   /** Алиасы из icons.json: имя → иконка-родитель (поиску нужны прежние имена). */
   aliases: Map<string, string>;
 }
@@ -169,7 +171,8 @@ export async function loadSet(
   if (metadataIssues.length > 0) {
     throw new Error(issuesText("metadata.json", metadataIssues));
   }
-  const suffixes = Object.keys((metadataData as MetadataFile).suffixes ?? {});
+  const metadata = metadataData as MetadataFile;
+  const suffixes = Object.keys(metadata.suffixes ?? {});
   let state: ReturnType<typeof stateOf>;
   try {
     state = stateOf(await read("icons.json"));
@@ -199,7 +202,9 @@ export async function loadSet(
       );
     }
   }
-  return { search, icons, suffixes, aliases: state.aliases };
+  const set: LoadedSet = { search, icons, suffixes, aliases: state.aliases };
+  if (metadata.styles !== undefined) set.styles = metadata.styles;
+  return set;
 }
 
 /** Базовые иконки и описания по всему каталогу — для прогноза в отчёте; набор без файлов не считается. */

@@ -6,5 +6,9 @@
     "": "Regular",
     "-bold": "Bold",
     "-outline-rounded": "Outline Rounded"
+  },
+  "styles": {
+    "filled": ["", "-bold"],
+    "outline": ["-outline-rounded"]
   }
 }

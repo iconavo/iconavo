@@ -1,29 +1,17 @@
 // Алиасы одинаковых вариантов (ADR-0002), как у Iconify: варианты одной иконки сравниваются между
 // собой, и вариант, нарисованный так же, как более старший, становится его алиасом: 360-sharp → 360.
 
+import { baseName } from "@iconavo-ui/search";
 import type { NormalizedIcon } from "../normalize/normalize.js";
+
+/**
+ * Основа имени варианта (ADR-0002). Правило одно на конвейер, робот индекса и сайт — в общем модуле
+ * поиска, рядом с карточками вариантов (ADR-0052).
+ */
+export { baseName };
 
 const same = (a: NormalizedIcon, b: NormalizedIcon) =>
   a.body === b.body && a.width === b.width && a.height === b.height;
-
-/**
- * Основа имени варианта (ADR-0002): самое короткое имя, которое получается, если снять суффикс
- * варианта, и которое само есть в наборе. У `done-outline-rounded` это `done-outline`, если иконки
- * `done` нет. Ни один суффикс не подошёл — имя и есть основа.
- */
-export function baseName(
-  name: string,
-  suffixes: readonly string[],
-  has: (name: string) => boolean,
-): string {
-  let base = name;
-  for (const suffix of suffixes) {
-    if (suffix === "" || !name.endsWith(suffix)) continue;
-    const candidate = name.slice(0, -suffix.length);
-    if (candidate.length < base.length && has(candidate)) base = candidate;
-  }
-  return base;
-}
 
 /**
  * Имя варианта → имя родителя. order — суффиксы вариантов от старшего к младшему, первый — "".

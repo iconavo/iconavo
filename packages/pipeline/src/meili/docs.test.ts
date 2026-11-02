@@ -1,3 +1,5 @@
+import { STYLE_IDS } from "@iconavo-ui/schema";
+import { STYLES } from "@iconavo-ui/search";
 import { describe, expect, it } from "vitest";
 import { buildCatalog, setDocs } from "../search/catalog.js";
 import { demoConfig, loadedSet } from "../search/fixture.testing.js";
@@ -32,6 +34,7 @@ const catalog = buildCatalog([
           { name: "bare" },
         ],
         aliases: { home: "house", basket: "shopping-cart" },
+        styles: { outline: [""] },
       }),
     ),
   },
@@ -46,6 +49,7 @@ const catalog = buildCatalog([
           en: ["wave"],
           ru: ["привет"],
         })),
+        styles: { color: [""] },
       }),
     ),
   },
@@ -82,6 +86,21 @@ describe("searchDocuments", () => {
     expect(cart?.synonymsRu.slice(0, 2)).toEqual(["елка", "корзина"]);
     expect(cart?.textHash).toMatch(/^[0-9a-f]{16}$/);
     expect(cart?.hash).toMatch(/^[0-9a-f]{16}$/);
+  });
+
+  it("стили карточки: список для фильтра и главное имя каждого стиля (ADR-0052)", () => {
+    expect(byId.get("lucide_house")).toMatchObject({
+      style: ["outline"],
+      styles: { outline: "house" },
+    });
+    expect(byId.get("fluent_waving-hand")).toMatchObject({
+      style: ["color"],
+      styles: { color: "waving-hand" },
+    });
+  });
+
+  it("шкала стилей одна: в схеме metadata.json и в модуле поиска", () => {
+    expect([...STYLE_IDS]).toEqual([...STYLES]);
   });
 
   it("без описаний — карточка есть, вектора нет", () => {

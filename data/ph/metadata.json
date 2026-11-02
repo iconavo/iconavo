@@ -16597,6 +16597,20 @@
       "wind-thin"
     ]
   },
+  "styles": {
+    "duotone": [
+      "-duotone"
+    ],
+    "filled": [
+      "-fill"
+    ],
+    "outline": [
+      "-thin",
+      "-light",
+      "",
+      "-bold"
+    ]
+  },
   "suffixes": {
     "": "Regular",
     "-bold": "Bold",

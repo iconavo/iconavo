@@ -8,6 +8,7 @@ import {
   type SearchFile,
   validate,
 } from "@iconavo-ui/schema";
+import { baseName } from "../build/aliases.js";
 import { canonicalJson, type Json } from "../build/json.js";
 import { carryEnrichment } from "../enrich/apply.js";
 import type { NormalizedIcon } from "../normalize/normalize.js";
@@ -72,6 +73,10 @@ export interface SetMetadata {
   categories: [string, string[]][];
   samples: string[];
   suffixes?: Record<string, string>;
+  /** Стиль общей шкалы → суффиксы его вариантов в порядке показа (ADR-0052). */
+  styles?: SourceConfig["styles"];
+  /** Видимые имена, которые оканчиваются суффиксом другого стиля, чем их карточка (ADR-0052). */
+  styleSuspects: string[];
   /** Иконки без тегов автора в наборе, у которого метаданные автора есть. */
   withoutAuthor: string[];
   /** Описания из search.json на диске (ADR-0046): к каким базовым иконкам перешли, а чьи отброшены. */
@@ -83,6 +88,33 @@ export interface SetMetadata {
 
 const order = (a: string, b: string) => (a < b ? -1 : a > b ? 1 : 0);
 const sha1 = (text: string) => createHash("sha1").update(text).digest("hex");
+
+/**
+ * Базовые иконки, имя которых оканчивается суффиксом другого стиля, чем у основного варианта
+ * (ADR-0052): правило отнесёт такую карточку к стилю основного варианта. У Material Symbols это
+ * `done-outline` — самостоятельная иконка Google, а не контур `done`. Список — только в отчёт.
+ */
+export function styleSuspects(
+  config: SourceConfig,
+  names: readonly string[],
+): string[] {
+  const styles = Object.entries(config.styles ?? {});
+  const main = styles.find(([, list]) => list?.includes(""))?.[0];
+  const suffixes = Object.keys(config.suffixes ?? {});
+  const visible = new Set(names);
+  const has = (n: string) => visible.has(n);
+  return names
+    .filter(
+      (n) =>
+        baseName(n, suffixes, has) === n &&
+        styles.some(
+          ([style, list]) =>
+            style !== main &&
+            (list ?? []).some((s) => s !== "" && n.endsWith(s)),
+        ),
+    )
+    .sort(order);
+}
 
 /**
  * Витрина: первое найденное имя каждого понятия из SAMPLE_CONCEPTS. Если понятий не хватило,
@@ -225,6 +257,8 @@ export async function setMetadata(
       .map(([title, list]) => [title, [...list].sort(order)]),
     samples,
     suffixes: config.suffixes,
+    styles: config.styles,
+    styleSuspects: styleSuspects(config, iconNames),
     withoutAuthor,
     stop,
   };
@@ -280,6 +314,14 @@ function setFiles(
     metadata.categories = Object.fromEntries(r.categories);
   }
   if (r.suffixes) metadata.suffixes = { ...r.suffixes };
+  if (r.styles) {
+    metadata.styles = Object.fromEntries(
+      Object.entries(r.styles).map(([style, list]) => [
+        style,
+        [...(list ?? [])],
+      ]),
+    );
+  }
 
   const icons: Record<string, SearchEntry> = {};
   for (const [name, m] of r.icons) {

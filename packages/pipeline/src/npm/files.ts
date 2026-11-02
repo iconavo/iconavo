@@ -5,6 +5,7 @@
 // одинаковые байты на любой системе.
 
 import { createHash } from "node:crypto";
+import { STYLE_IDS } from "@iconavo-ui/schema";
 import {
   NPM_BUGS_URL,
   NPM_REPOSITORY,
@@ -116,11 +117,16 @@ export interface IconavoSetInfo {
   version?: string;
 }
 
-/** The author's categories and variant suffixes. */
+/** Common style of a variant: outline, filled, duotone or color. */
+export type IconavoStyle = "outline" | "filled" | "duotone" | "color";
+
+/** The author's categories, variant suffixes and their styles. */
 export interface IconavoSetMetadata {
   categories?: Record<string, string[]>;
   /** Suffix → variant name; "" is the base variant. */
   suffixes?: Record<string, string>;
+  /** Style → suffixes of its variants in display order; "" is the base variant. */
+  styles?: Partial<Record<IconavoStyle, string[]>>;
 }
 
 export declare const icons: IconavoIconSet;
@@ -147,10 +153,23 @@ const link = (text: string, url: string | undefined) =>
 
 function metadataLine(set: NpmSet): string {
   const categories = Object.keys(set.metadata.categories ?? {}).length;
-  const variants = Object.values(set.metadata.suffixes ?? {});
+  const titles = set.metadata.suffixes ?? {};
+  const styles = set.metadata.styles ?? {};
+  // Варианты — в порядке общей шкалы стилей (ADR-0052), а не по кодам символов ключей карты.
+  const variants = [
+    ...new Set([
+      ...STYLE_IDS.flatMap((style) => styles[style] ?? []),
+      ...Object.keys(titles),
+    ]),
+  ].flatMap((suffix) => {
+    const title = titles[suffix];
+    return title === undefined ? [] : [title];
+  });
+  const styleList = STYLE_IDS.filter((style) => styles[style] !== undefined);
   const parts: string[] = [];
   if (categories > 0) parts.push(`the author's categories (${categories})`);
   if (variants.length > 0) parts.push(`variants: ${variants.join(", ")}`);
+  if (styleList.length > 0) parts.push(`styles: ${styleList.join(", ")}`);
   return parts.length > 0
     ? parts.join("; ")
     : "empty: the author has no categories or variants";

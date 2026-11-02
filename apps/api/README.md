@@ -153,6 +153,7 @@ GET https://api.iconavo.dev/collection?prefix=ph&info=true
   "aliases": { "activity-bold": "pulse-bold" },
   "categories": { "arrows": ["arrow-arc-left", "arrow-arc-left-bold"] },
   "prefix": "ph",
+  "styles": { "duotone": ["duotone"], "filled": ["fill"], "outline": ["thin", "light", "", "bold"] },
   "suffixes": { "": "Regular", "bold": "Bold", "thin": "Thin" },
   "title": "Phosphor",
   "total": 9072
@@ -163,6 +164,7 @@ GET https://api.iconavo.dev/collection?prefix=ph&info=true
 - **`hidden`** lists icons the author removed: they still work by name but are not listed.
 - **`aliases`** maps an old name or an identical variant to its icon.
 - **`suffixes`** names the style variants: `house-bold` is the `Bold` variant of `house`.
+- **`styles`** (Iconavo's addition) puts every suffix into one of the common styles — `outline`, `filled`, `duotone` or `color` — in display order. Weights and shapes, such as Phosphor `thin` or Material Symbols `rounded`, are variants within a style. The main variant of a style is the unsuffixed one if it belongs to the style, otherwise the first listed.
 - **`info`**, with `info=true`, is the set's IconifyInfo plus the full license: `license.text`, `license.notice` when the author has one, `license.source` and `license.revision`. It comes as the first field.
 
 | Parameter | Values |
@@ -236,7 +238,7 @@ These are not supported:
 - the legacy `/{set}/icons.json` address;
 - the `pretty` parameter: responses are always compact.
 
-In `/collection?info=true`, `info.license` also carries the full license text; `/changelog` is Iconavo's own address.
+In `/collection?info=true`, `info.license` also carries the full license text; `/collection` also has `styles`; `/changelog` is Iconavo's own address.
 
 ## Caching and headers
 

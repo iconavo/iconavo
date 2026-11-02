@@ -29,6 +29,8 @@ export interface DemoSet {
   suffixes?: Record<string, string>;
   /** Алиас → родитель. */
   aliases?: Record<string, string>;
+  /** Таблица стилей (ADR-0052): стиль → суффиксы. */
+  styles?: Record<string, string[]>;
 }
 
 export function demoConfig(id: string): SourceConfig {
@@ -97,6 +99,7 @@ export function loadedSet(set: DemoSet): LoadedSet {
     icons: new Map(set.icons.map((icon, i) => [icon.name, iconOf(icon, i)])),
     suffixes: Object.keys(set.suffixes ?? {}),
     aliases: new Map(Object.entries(set.aliases ?? {})),
+    ...(set.styles ? { styles: set.styles } : {}),
   };
 }
 
@@ -131,7 +134,10 @@ export async function writeDemoSet(
   );
   await writeFile(
     join(dir, "metadata.json"),
-    canonicalJson(set.suffixes ? { suffixes: set.suffixes } : {}),
+    canonicalJson({
+      ...(set.suffixes ? { suffixes: set.suffixes } : {}),
+      ...(set.styles ? { styles: set.styles } : {}),
+    }),
   );
   await writeFile(
     join(dir, "info.json"),

@@ -9,6 +9,7 @@ import {
 } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { fileURLToPath } from "node:url";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import {
   downloadRules,
@@ -127,6 +128,15 @@ describe("конфиг набора", () => {
     ["старое поле iconMetadata", { ...baseConfig, iconMetadata: "json" }],
     ["старое поле tagsFile", { ...baseConfig, tagsFile: "tags.json" }],
     ["неверный суффикс", { ...baseConfig, suffixes: { bold: "Bold" } }],
+    ["стиль не из шкалы", { ...baseConfig, styles: { regular: [""] } }],
+    [
+      "суффикс без стиля",
+      {
+        ...baseConfig,
+        suffixes: { "": "Regular", "-bold": "Bold" },
+        styles: { outline: [""] },
+      },
+    ],
     [
       "суффикс из variantAliases без названия",
       {
@@ -187,6 +197,24 @@ describe("конфиг набора", () => {
     });
     expect(c.license.confirmed).toBe("a".repeat(64));
     expect(c.suffixes).toEqual({ "": "Regular", "-outline": "Outline" });
+  });
+
+  it("стили (ADR-0052): каждый суффикс — ровно в одном стиле, ошибка — с путём к полю", () => {
+    expect(
+      parse({
+        ...baseConfig,
+        suffixes: { "": "Regular", "-fill": "Fill" },
+        styles: { outline: [""], filled: ["-fill"] },
+      }).styles,
+    ).toEqual({ outline: [""], filled: ["-fill"] });
+    const r = sourceConfigSchema.safeParse({
+      ...baseConfig,
+      suffixes: { "": "Regular", "-fill": "Fill" },
+      styles: { outline: ["", "-fill"], filled: ["-fill"] },
+    });
+    expect(r.error?.issues.map((i) => [i.path.join("."), i.message])).toEqual([
+      ["styles", "суффикс в нескольких стилях: «-fill»"],
+    ]);
   });
 
   it("называет суффиксы без названия", () => {
@@ -1023,6 +1051,16 @@ describe("реестр конфигов", () => {
     await expect(loadRegistry(dir)).rejects.toThrow(
       /должен совпадать с именем файла/,
     );
+  });
+
+  it("у каждого набора реестра есть таблица стилей (ADR-0052)", async () => {
+    const configs = await loadRegistry(
+      fileURLToPath(new URL("../../../../sources/", import.meta.url)),
+    );
+    expect(configs.length).toBeGreaterThan(0);
+    expect(
+      configs.filter((c) => c.styles === undefined).map((c) => c.id),
+    ).toEqual([]);
   });
 
   it("ошибки конфига показывают путь к полю", async () => {

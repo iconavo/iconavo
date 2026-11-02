@@ -2,6 +2,14 @@
 // (робот индекса, замер). Здесь только то, что обе стороны обязаны считать одинаково.
 
 export {
+  baseName,
+  type Card,
+  type CardSet,
+  type CardsInput,
+  groupCards,
+  TONE_SUFFIXES,
+} from "./cards.js";
+export {
   EMBEDDER,
   EXACT_LIMIT,
   INDEX_UID,
@@ -48,6 +56,13 @@ export {
   SEARCHABLE,
   STOP_WORDS,
 } from "./settings.js";
+export {
+  isStyle,
+  STYLES,
+  type Style,
+  type StyleTable,
+  styleCandidates,
+} from "./styles.js";
 export {
   bytesVector,
   truncateUnit,

@@ -67,4 +67,10 @@ export default {
     "-outline-sharp",
     "-outline-rounded",
   ],
+  // Стили по общей шкале (ADR-0052): «Regular» у Google — залитый. Форма (rounded, sharp) — не стиль,
+  // а вариант внутри стиля; порядок — обычная, скруглённая, острая.
+  styles: {
+    filled: ["", "-rounded", "-sharp"],
+    outline: ["-outline", "-outline-rounded", "-outline-sharp"],
+  },
 } satisfies SourceConfigInput;

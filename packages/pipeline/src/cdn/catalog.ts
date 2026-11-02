@@ -109,7 +109,7 @@ export const iconifySuffix = (suffix: string) => suffix.replace(/^-/, "");
 /**
  * Тело /collection без info, как у Iconify: видимые имена — в категориях автора, остальные — в
  * uncategorized; скрытые — отдельно (по имени они работают, в каталог не попадают); алиасы — «алиас →
- * родитель». Пустые поля не пишутся.
+ * родитель»; наше дополнение — стили (ADR-0052). Пустые поля не пишутся.
  */
 export function collectionBody(set: CatalogSet): Json {
   const { file, info, metadata } = set;
@@ -127,6 +127,12 @@ export function collectionBody(set: CatalogSet): Json {
   for (const [suffix, title] of Object.entries(metadata.suffixes ?? {})) {
     suffixes[iconifySuffix(suffix)] = title;
   }
+  // Наше дополнение (ADR-0052): стиль общей шкалы → суффиксы вариантов в порядке показа, без
+  // дефиса, как ключи suffixes. По нему сайт и MCP собирают карточки тем же правилом, что индекс.
+  const styles: { [key: string]: Json } = {};
+  for (const [style, list] of Object.entries(metadata.styles ?? {})) {
+    styles[style] = (list ?? []).map(iconifySuffix);
+  }
   const out: { [key: string]: Json } = {
     prefix: set.id,
     title: info.name,
@@ -137,6 +143,7 @@ export function collectionBody(set: CatalogSet): Json {
   if (hidden.length > 0) out.hidden = hidden;
   if (Object.keys(aliases).length > 0) out.aliases = aliases;
   if (Object.keys(suffixes).length > 0) out.suffixes = suffixes;
+  if (Object.keys(styles).length > 0) out.styles = styles;
   return out;
 }
 

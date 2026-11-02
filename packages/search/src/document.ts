@@ -1,6 +1,8 @@
 // Документ индекса (ADR-0027, ADR-0049): карточка — базовая иконка со своими вариантами, оттенки кожи
 // Fluent — одна карточка (ADR-0048). Документы собирает робот индекса из data/, функция edge API
-// читает из выдачи только icon, variants и tones.
+// читает из выдачи icon, variants, tones и styles.
+
+import type { Style } from "./styles.js";
 
 /** Документ Meilisearch. */
 export interface SearchDocument {
@@ -26,6 +28,10 @@ export interface SearchDocument {
   /** Другие видимые имена карточки (варианты стиля) и оттенки — без набора, по алфавиту. */
   variants: string[];
   tones: string[];
+  /** Стили карточки по общей шкале (ADR-0052), в её порядке: по ним работает фильтр «Стиль». */
+  style: Style[];
+  /** Стиль → главное имя карточки в нём, без набора: так выдача показывает карточку в нужном стиле. */
+  styles: Partial<Record<Style, string>>;
   /** Частей в имени: при равенстве короткое имя выше. */
   parts: number;
   /**

@@ -115,6 +115,36 @@ describe("метаданные набора", () => {
     expect(fileOf(r, "LICENSE")).toBe(TEXT);
   });
 
+  it("стили из конфига — в metadata.json в порядке показа (ADR-0052)", async () => {
+    await makeSource();
+    const r = await run(
+      config({ styles: { outline: [""], filled: ["-filled"] } }),
+    );
+    expect(r.stop).toEqual([]);
+    expect(jsonOf(r, "metadata.json")).toMatchObject({
+      styles: { outline: [""], filled: ["-filled"] },
+    });
+    expect(validate("metadata", jsonOf(r, "metadata.json"))).toEqual([]);
+    expect(r.styleSuspects).toEqual([]);
+  });
+
+  it("имя с суффиксом другого стиля без основы — в отчёт", async () => {
+    await makeSource();
+    const icons = [
+      ...ICONS,
+      {
+        name: "done-filled",
+        file: "icons/filled/done.svg",
+        icon: icon("<i/>"),
+      },
+    ];
+    const r = await run(
+      config({ styles: { outline: [""], filled: ["-filled"] } }),
+      icons,
+    );
+    expect(r.styleSuspects).toEqual(["done-filled"]);
+  });
+
   it("две сборки подряд дают одинаковые тексты", async () => {
     await makeSource();
     expect((await run()).files).toEqual((await run()).files);

@@ -3163,5 +3163,10 @@
       "wood",
       "world-map"
     ]
+  },
+  "styles": {
+    "color": [
+      ""
+    ]
   }
 }

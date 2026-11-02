@@ -1,15 +1,14 @@
 // Каталог прототипа поиска (шаг 12, ADR-0048): документ — базовая иконка со своими вариантами
 // (ADR-0002, ADR-0027). Оттенки кожи Fluent сворачиваются в карточку базового эмодзи (решение
-// владельца 21 октября 2026). Слова документа: имя и прежние имена, теги автора, синонимы ru/en;
-// описания идут только в векторы. Слова вариантов (bold, outline…) не индексируются.
+// владельца 21 октября 2026). Карточки — общим правилом groupCards с сайтом (ADR-0052). Слова
+// документа: имя и прежние имена, теги автора, синонимы ru/en; описания идут только в векторы. Слова
+// вариантов (bold, outline…) не индексируются.
 
-import { baseName } from "../build/aliases.js";
+import { baseName, groupCards, type Style } from "@iconavo-ui/search";
 import { iconText, textHash } from "../embed/text.js";
-import { enrichmentBases } from "../enrich/apply.js";
 import { type LoadedSet, loadSet } from "../enrich/run.js";
 import type { NormalizedIcon } from "../normalize/normalize.js";
 import type { SourceConfig } from "../sources/config.js";
-import { TONE_SUFFIXES } from "./config.js";
 import { type DocWords, words } from "./text.js";
 
 export interface SearchDoc {
@@ -38,6 +37,8 @@ export interface SearchDoc {
   variants: string[];
   /** Оттенки кожи, свёрнутые в карточку. */
   tones: string[];
+  /** Стиль общей шкалы → главное имя карточки в нём (ADR-0052). */
+  styles: Partial<Record<Style, string>>;
   /** Слова по полям, без повторов. */
   words: DocWords;
 }
@@ -64,8 +65,6 @@ export interface SetDocs {
   names: Map<string, string>;
 }
 
-const order = (a: string, b: string) => (a < b ? -1 : a > b ? 1 : 0);
-
 /** Слова без повторов, в порядке появления. */
 const unique = (list: readonly string[]) => [...new Set(list)];
 
@@ -87,42 +86,21 @@ function stem(name: string, suffixes: readonly string[]): string {
 export function setDocs(config: SourceConfig, set: LoadedSet): SetDocs {
   const id = config.id;
   const has = (n: string) => set.icons.has(n);
-  const bases = enrichmentBases(set.search, set.suffixes);
-  const baseSet = new Set(bases);
-
-  // Оттенки: основа и все пять оттенков — базовые иконки набора.
-  const toneOf = new Map<string, string>();
-  for (const b of bases) {
-    const tones = TONE_SUFFIXES.map((s) => `${b}${s}`);
-    if (tones.every((t) => baseSet.has(t))) {
-      for (const t of tones) toneOf.set(t, b);
-    }
-  }
-  /** Карточка, в которой показывается видимая иконка. */
-  const cardOf = (name: string) => {
-    const base = baseName(name, set.suffixes, has);
-    return toneOf.get(base) ?? base;
-  };
-
-  const names = new Map<string, string>();
-  const variants = new Map<string, string[]>();
-  for (const name of set.icons.keys()) {
-    const card = cardOf(name);
-    names.set(name, card);
-    if (name !== card && !toneOf.has(name)) {
-      const list = variants.get(card) ?? [];
-      list.push(name);
-      variants.set(card, list);
-    }
-  }
+  // Карточки — общим правилом с сайтом и раздачей (ADR-0052): варианты, оттенки и стили.
+  const { cards, cardOf } = groupCards({
+    names: set.icons.keys(),
+    aliases: set.aliases,
+    suffixes: set.suffixes,
+    ...(set.styles !== undefined ? { styles: set.styles } : {}),
+  });
+  const names = new Map(cardOf);
 
   // Прежние имена: алиас ведёт к родителю. Алиас-вариант (`add-outline` → `add`) новых слов не
   // добавляет; переименование (`home` → `house`, `activity-bold` → `pulse-bold`) даёт слова имени.
   const renamed = new Map<string, string[]>();
   for (const [alias, parent] of set.aliases) {
-    if (!has(parent)) continue;
-    const card = cardOf(parent);
-    names.set(alias, card);
+    const card = cardOf.get(parent);
+    if (card === undefined) continue;
     const aliasStem = stem(alias, set.suffixes);
     const parentStem = baseName(parent, set.suffixes, has);
     if (aliasStem === parentStem || aliasStem === card) continue;
@@ -132,8 +110,8 @@ export function setDocs(config: SourceConfig, set: LoadedSet): SetDocs {
   }
 
   const docs: SearchDoc[] = [];
-  for (const name of bases) {
-    if (toneOf.has(name)) continue;
+  for (const card of cards) {
+    const name = card.base;
     const icon = set.icons.get(name);
     const entry = set.search.icons[name];
     if (!icon || !entry) continue;
@@ -148,10 +126,9 @@ export function setDocs(config: SourceConfig, set: LoadedSet): SetDocs {
       name,
       icon,
       fingerprint: entry.fingerprint,
-      variants: (variants.get(name) ?? []).sort(order),
-      tones: TONE_SUFFIXES.map((s) => `${name}${s}`).filter((t) =>
-        toneOf.has(t),
-      ),
+      variants: card.variants,
+      tones: card.tones,
+      styles: card.styles,
       phrases: {
         name: unique([name, ...(renamed.get(name) ?? [])]),
         tags: entry.tags,
