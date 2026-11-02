@@ -1,5 +1,11 @@
 import { describe, expect, it } from "vitest";
 import {
+  CRAWL_ICONS,
+  followLink,
+  isIconPath,
+  REDIRECT_CODES,
+} from "./config.js";
+import {
   anchorsOf,
   type CrawledPage,
   counterpartOf,
@@ -287,5 +293,45 @@ describe("языки страниц", () => {
       "/ru/x: форма поиска — /search, а ждали /ru/search",
     );
     expect(broken.note).toContain("/docs: форма поиска — нет");
+  });
+});
+
+describe("страницы иконок в обходе (шаг 4 фазы 4)", () => {
+  it("форма адреса: /набор/иконка и /ru/набор/иконка, но не документация и не русская страница набора", () => {
+    expect(isIconPath("/lucide/house")).toBe(true);
+    expect(isIconPath("/ru/lucide/house")).toBe(true);
+    expect(isIconPath("/ru/lucide")).toBe(false);
+    expect(isIconPath("/docs/reference")).toBe(false);
+    expect(isIconPath("/ru/docs/reference")).toBe(false);
+    expect(isIconPath("/lucide")).toBe(false);
+    expect(isIconPath("/Lucide/House")).toBe(false);
+  });
+
+  it("обход идёт только по выборке, переходам и 404", () => {
+    expect(CRAWL_ICONS).toContain("/ru/ph/house-bold");
+    expect(followLink("/ph/house-bold")).toBe(true);
+    expect(followLink("/lucide/home")).toBe(true);
+    expect(followLink("/lucide/iconavo-missing")).toBe(true);
+    expect(followLink("/lucide/heart")).toBe(false);
+    expect(followLink("/sets")).toBe(true);
+  });
+
+  it("ссылка на страницу иконки вне выборки — по форме; на неоткрытую обычную — проблема", () => {
+    const pages = [page("/", `<a href="/lucide/heart">h</a>`)];
+    expect(linksVerdict(pages, isIconPath).ok).toBe(true);
+    expect(linksVerdict(pages).ok).toBe(false);
+  });
+
+  it("у старых имён иконок свой код перехода — 308", () => {
+    const pages = [
+      page("/lucide/home", "", 308, { location: "/lucide/house" }),
+    ];
+    const o = {
+      missing: [],
+      redirects: { "/lucide/home": "/lucide/house" },
+      redirect: 307,
+    };
+    expect(statusVerdict(pages, { ...o, codes: REDIRECT_CODES }).ok).toBe(true);
+    expect(statusVerdict(pages, o).ok).toBe(false);
   });
 });

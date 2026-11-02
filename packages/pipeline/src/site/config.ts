@@ -31,10 +31,40 @@ export const DOC_SOURCES = [
   "packages/icon/CHANGELOG.md",
 ];
 
+/** Путь страницы иконки без языка: lucide:house → /lucide/house (apps/site/lib/icon.ts). */
+const iconPath = (name: string) => `/${name.replace(":", "/")}`;
+
 /**
- * Несуществующие адреса — 404. Неизвестный набор или страница документации — страница 404 в раскладке
- * своего языка (not-found.tsx), незнакомый адрес из нескольких частей — общая (app/global-not-found.tsx,
- * ADR-0037).
+ * Страницы иконок в обходе (шаг 4 фазы 4): их десятки тысяч, и обход открывает только эти — по одной
+ * на набор с особым случаем, на обоих языках. Остальные ссылки на иконки проверяются по форме.
+ * - lucide:house — линии; ph:house-bold — варианты по таблице стилей; tabler:home-filled — заливка без
+ *   толщины; material-symbols:home-outline-rounded — форма; fluent-emoji-flat:waving-hand — оттенки;
+ *   lucide:circle-parking — скрытая, с пометкой «Устарела».
+ */
+export const CRAWL_ICON_NAMES = [
+  "lucide:house",
+  "ph:house-bold",
+  "tabler:home-filled",
+  "material-symbols:home-outline-rounded",
+  "fluent-emoji-flat:waving-hand",
+  "lucide:circle-parking",
+];
+export const CRAWL_ICONS = CRAWL_ICON_NAMES.flatMap((name) => [
+  iconPath(name),
+  `/ru${iconPath(name)}`,
+]);
+
+/** Старое имя — постоянный переход на основной адрес (ADR-0037). */
+export const ICON_REDIRECTS: Record<string, string> = {
+  "/lucide/home": "/lucide/house",
+  "/ru/lucide/home": "/ru/lucide/house",
+};
+export const ICON_REDIRECT_STATUS = 308;
+
+/**
+ * Несуществующие адреса — 404. Неизвестный набор, иконка или страница документации — страница 404 в
+ * раскладке своего языка (not-found.tsx): адрес из двух частей теперь — маршрут страницы иконки; из
+ * трёх и больше — общая (app/global-not-found.tsx, ADR-0037).
  */
 export const MISSING_PATHS = [
   "/__missing__",
@@ -42,15 +72,45 @@ export const MISSING_PATHS = [
   "/docs/__missing__",
   "/no-such-set",
   "/ru/no-such-set",
+  "/lucide/iconavo-missing",
+  "/ru/lucide/iconavo-missing",
   "/__missing__/__missing__/__missing__",
 ];
 
-/** Документации на русском пока нет: /ru/docs… временно ведут на английскую (next.config.ts). */
+/**
+ * Переходы: документации на русском пока нет — /ru/docs… временно ведут на английскую (next.config.ts,
+ * 307); старые имена иконок — на основные (308).
+ */
 export const REDIRECTS: Record<string, string> = {
   "/ru/docs": "/docs",
   "/ru/docs/reference": "/docs/reference",
+  ...ICON_REDIRECTS,
 };
 export const REDIRECT_STATUS = 307;
+/** Свой код перехода у адреса; остальные — REDIRECT_STATUS. */
+export const REDIRECT_CODES: Record<string, number> = Object.fromEntries(
+  Object.keys(ICON_REDIRECTS).map((path) => [path, ICON_REDIRECT_STATUS]),
+);
+
+const PART = "[a-z0-9]+(?:-[a-z0-9]+)*";
+const ICON_PAGE = new RegExp(`^(?:/ru)?/(${PART})/(${PART})$`);
+
+/**
+ * Адрес страницы иконки: /набор/иконка или /ru/набор/иконка; /docs/… и русская страница набора /ru/…
+ * — не иконки.
+ */
+export function isIconPath(path: string): boolean {
+  const m = ICON_PAGE.exec(path);
+  // /ru/lucide совпадает как «набор ru, иконка lucide» — это русская страница набора.
+  return m !== null && m[1] !== "docs" && m[1] !== "ru";
+}
+
+/** Обход идёт по ссылке: страницы иконок — только перечисленные (CRAWL_ICONS, переходы, 404). */
+export const followLink = (path: string): boolean =>
+  !isIconPath(path) ||
+  CRAWL_ICONS.includes(path) ||
+  path in ICON_REDIRECTS ||
+  MISSING_PATHS.includes(path);
 
 /** Страницы, на которые ведёт только форма поиска: обход по ссылкам их не найдёт. */
 export const FORM_PAGES = ["/search", "/ru/search"];
@@ -60,6 +120,7 @@ export const CRAWL_EXTRAS = [
   ...MISSING_PATHS,
   ...Object.keys(REDIRECTS),
   ...FORM_PAGES,
+  ...CRAWL_ICONS,
   "/robots.txt",
 ];
 
@@ -79,6 +140,8 @@ export const CATALOG_SET = "lucide";
 export const CATALOG_PAGE_SIZE = 96;
 /** Сетка показывает нужную страницу не дольше: список имён и иконки браузер берёт у превью API. */
 export const CATALOG_WAIT_MS = 20_000;
+/** Панель показывает выбранную иконку со сведениями не дольше: /icon превью API и локальный Meilisearch. */
+export const PANEL_WAIT_MS = 15_000;
 /** Метка версии данных набора на его странице (apps/site/lib/catalog-view.ts) — по ней --live видит свежесть. */
 export const VERSION_META = "iconavo-version";
 /** Манифест раздачи: версии наборов, с которыми сравнивается сайт. */

@@ -23,10 +23,14 @@ export const anchorsOf = (html: string) =>
 export const idsOf = (html: string) =>
   new Set([...html.matchAll(/\bid="([^"]+)"/g)].map((m) => m[1] as string));
 
-/** Обойти сайт со страницы / : только адреса того же сайта, без якорей и параметров. */
+/**
+ * Обойти сайт со страницы / : только адреса того же сайта, без якорей и параметров. follow решает, идти
+ * ли по ссылке: страниц иконок десятки тысяч, обход открывает только перечисленные (шаг 4 фазы 4).
+ */
 export async function crawl(
   base: string,
   extra: string[] = [],
+  follow: (path: string) => boolean = () => true,
 ): Promise<CrawledPage[]> {
   const seen = new Set<string>(["/", ...extra]);
   const queue = ["/", ...extra];
@@ -44,7 +48,7 @@ export async function crawl(
     for (const href of anchorsOf(html)) {
       if (!href.startsWith("/") || href.startsWith("//")) continue;
       const next = href.split("#")[0]?.split("?")[0] || "/";
-      if (!seen.has(next)) {
+      if (!seen.has(next) && follow(next)) {
         seen.add(next);
         queue.push(next);
       }
@@ -55,9 +59,13 @@ export async function crawl(
 
 /**
  * Ссылки: каждая внутренняя ведёт на страницу, которая ответила 200, а якорь — на id этой страницы;
- * внешние — только https; ссылки на StackBlitz — ровно из starters/links.ts.
+ * внешние — только https; ссылки на StackBlitz — ровно из starters/links.ts. Адреса, по которым обход
+ * не ходил (shape — страницы иконок вне выборки), проверяются только по форме адреса.
  */
-export function linksVerdict(pages: CrawledPage[]): Verdict {
+export function linksVerdict(
+  pages: CrawledPage[],
+  shape: (path: string) => boolean = () => false,
+): Verdict {
   const byPath = new Map(pages.map((p) => [p.path, p]));
   const problems: string[] = [];
   let internal = 0;
@@ -76,6 +84,9 @@ export function linksVerdict(pages: CrawledPage[]): Verdict {
         internal++;
         const [path, anchor] = href.split("#") as [string, string | undefined];
         const target = byPath.get(path.split("?")[0] || "/");
+        if (target === undefined && shape(path.split("?")[0] || "/")) {
+          continue;
+        }
         if (target?.status !== 200) {
           problems.push(
             `${page.path}: ${href} — ${target?.status ?? "не открыта"}`,
@@ -115,7 +126,13 @@ export const htmlPages = (pages: CrawledPage[]) =>
  */
 export function statusVerdict(
   pages: CrawledPage[],
-  o: { missing: string[]; redirects: Record<string, string>; redirect: number },
+  o: {
+    missing: string[];
+    redirects: Record<string, string>;
+    redirect: number;
+    /** Свой код перехода у адреса: 308 у старых имён иконок. */
+    codes?: Record<string, number>;
+  },
 ): Verdict {
   const problems: string[] = [];
   for (const p of pages) {
@@ -124,12 +141,19 @@ export function statusVerdict(
       if (p.status !== 404)
         problems.push(`${p.path} — ${p.status}, а ждали 404`);
     } else if (to !== undefined) {
-      const location = p.headers.location
-        ? new URL(p.headers.location, "http://site").pathname
-        : "";
-      if (p.status !== o.redirect || location !== to) {
+      // next start отдаёт Location перехода со страницы по первому запросу дважды, одинаковым (fetch
+      // склеивает повтор через «, »): разные адреса — проблема, одинаковые — один.
+      const values = [
+        ...new Set((p.headers.location ?? "").split(", ").filter((v) => v)),
+      ];
+      const location =
+        values.length === 1
+          ? new URL(values[0] as string, "http://site").pathname
+          : values.join(", ");
+      const code = o.codes?.[p.path] ?? o.redirect;
+      if (p.status !== code || location !== to) {
         problems.push(
-          `${p.path} — ${p.status} → ${location || "без адреса"}, а ждали ${o.redirect} → ${to}`,
+          `${p.path} — ${p.status} → ${location || "без адреса"}, а ждали ${code} → ${to}`,
         );
       }
     } else if (p.status !== 200) {

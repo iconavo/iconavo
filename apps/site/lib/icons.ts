@@ -22,6 +22,11 @@ export const SITE_ICONS = [
   // Номера страниц сетки набора.
   "lucide:chevron-left",
   "lucide:chevron-right",
+  // Панель иконки (шаг 4 фазы 4): закрыть, развернуть и свернуть шторку, открыть страницу.
+  "lucide:x",
+  "lucide:maximize-2",
+  "lucide:minimize-2",
+  "lucide:arrow-up-right",
 ] as const;
 
 export type SiteIcon = (typeof SITE_ICONS)[number];
