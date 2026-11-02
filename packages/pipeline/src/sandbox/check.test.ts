@@ -120,6 +120,23 @@ describe("разбор проверки в браузерах", () => {
       ),
     ).toBe(false);
     expect(isRequestFailure("TypeError: boom")).toBe(false);
+    // WebKit: предзагрузка Next.js, оборванная уходом со страницы, — не ошибка; та же запись о хосте
+    // иконок — ошибка.
+    expect(
+      isRequestFailure(
+        "Fetch API cannot load http://127.0.0.1:45569/changelog?_rsc=JNBreH5MGdaz7Hmy due to access control checks.",
+      ),
+    ).toBe(true);
+    expect(
+      isRequestFailure(
+        "/127.0.0.1:45569/?_rsc=AyO1lXZyYIZqO9o0 due to access control checks.",
+      ),
+    ).toBe(true);
+    expect(
+      isRequestFailure(
+        "Fetch API cannot load http://127.0.0.1:4281/lucide.json?icons=house due to access control checks.",
+      ),
+    ).toBe(false);
   });
 });
 
