@@ -3,6 +3,24 @@
   "releases": [
     {
       "added": [
+        "diagram-flow-horizontal",
+        "diagram-flow-vertical",
+        "globe-ban",
+        "globe-plus"
+      ],
+      "changed": [
+        "chef-hat",
+        "circle-letter-j",
+        "square-letter-j"
+      ],
+      "date": "2026-11-03T10:53:10Z",
+      "previous": "af67c16f",
+      "revision": "4b203ec9b6002fd74fd5dadc8612220e64289305",
+      "total": 2019,
+      "version": "3aab506c"
+    },
+    {
+      "added": [
         "chart-bell-curve",
         "file-database",
         "margin",
