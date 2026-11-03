@@ -97,6 +97,16 @@ function setSummary(prefix: string, entry: IndexEntry): IconDetails["set"] {
       ...(typeof license.url === "string" ? { url: license.url } : {}),
     },
     palette: info.palette === true,
+    ...(entry.credits !== undefined && entry.credits.length > 0
+      ? {
+          credits: entry.credits.map((c) => ({
+            name: c.name,
+            author: c.author,
+            license: c.license,
+            url: c.url,
+          })),
+        }
+      : {}),
   };
 }
 

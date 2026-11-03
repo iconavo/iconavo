@@ -115,15 +115,54 @@ describe("parseIconDetails", () => {
 });
 
 describe("attributionText", () => {
-  it("иконка, набор, автор, лицензия и вторая часть авторства — на языке страницы", () => {
-    const d = parseIconDetails(DETAILS);
-    if (d === undefined) throw new Error("разбор");
-    expect(attributionText("en", d)).toBe(
-      "“circle-alert” icon from Lucide by Lucide Contributors, ISC License (https://spdx.org/licenses/ISC.html). Based on Feather by Cole Bemis, MIT License.",
+  it("один текст на весь набор, по-английски: набор, автор, лицензия и части от других авторов", () => {
+    const feather = {
+      name: "Feather",
+      author: "Cole Bemis",
+      license: "MIT",
+      url: "https://github.com/feathericons/feather",
+    };
+    const lucide = parseIconDetails({
+      ...DETAILS,
+      set: {
+        ...DETAILS.set,
+        author: {
+          name: "Lucide Contributors",
+          url: "https://github.com/lucide-icons/lucide",
+        },
+        license: {
+          title: "ISC",
+          spdx: "ISC",
+          url: "https://spdx.org/licenses/ISC.html",
+        },
+        credits: [feather],
+      },
+    });
+    if (lucide === undefined) throw new Error("разбор");
+    expect(lucide.set.credits).toEqual([feather]);
+    expect(attributionText(lucide)).toBe(
+      "Icons: Lucide by Lucide Contributors (https://github.com/lucide-icons/lucide), ISC license (https://spdx.org/licenses/ISC.html). Includes icons from Feather by Cole Bemis (https://github.com/feathericons/feather), MIT license.",
     );
-    expect(attributionText("ru", d)).toBe(
-      "Иконка «circle-alert» из набора Lucide (Lucide Contributors), лицензия ISC (https://spdx.org/licenses/ISC.html). По мотивам Feather (Cole Bemis), лицензия MIT.",
-    );
+    expect(
+      attributionText({
+        set: {
+          prefix: "material-symbols",
+          name: "Material Symbols",
+          author: { name: "Google" },
+          license: { title: "Apache 2.0", spdx: "Apache-2.0" },
+          palette: false,
+        },
+      }),
+    ).toBe("Icons: Material Symbols by Google, Apache 2.0 license.");
+  });
+
+  it("части набора не по форме — ответ не разбирается", () => {
+    expect(
+      parseIconDetails({
+        ...DETAILS,
+        set: { ...DETAILS.set, credits: [{ name: "Feather" }] },
+      }),
+    ).toBeUndefined();
   });
 });
 

@@ -1097,27 +1097,22 @@
     display: block;
     color: var(--color-muted);
   }
+  /* Указание авторства — свёрнуто под стрелкой (решение владельца 3 ноября 2026). */
   .icon-attribution {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: start;
-    gap: 0.5rem;
+    margin-block-start: 0.75rem;
+  }
+  .icon-attribution summary {
+    cursor: pointer;
+    font-size: 0.875rem;
+    font-weight: 600;
+  }
+  .icon-attribution-text {
+    margin-block: 0.5rem;
     padding: 0.5rem 0.75rem;
     border-radius: var(--radius-md);
     background: var(--color-surface);
     font-size: 0.8rem;
-  }
-  .icon-attribution span {
-    flex: 1;
-    min-inline-size: 12rem;
-  }
-  .icon-words {
-    font-size: 0.875rem;
-  }
-  .icon-other-words summary {
-    cursor: pointer;
-    color: var(--color-muted);
-    font-size: 0.8rem;
+    overflow-wrap: anywhere;
   }
   .icon-hidden,
   .icon-alias {

@@ -206,6 +206,15 @@ describe("/icon: сведения об иконке", () => {
           url: "https://spdx.org/licenses/ISC.html",
         },
         palette: false,
+        // Части набора от других авторов — без списков иконок: для указания авторства на весь набор.
+        credits: [
+          {
+            name: "Feather",
+            author: "Cole Bemis",
+            license: "MIT",
+            url: "https://github.com/feathericons/feather",
+          },
+        ],
       },
       card: "demo:house",
       style: "outline",
@@ -271,8 +280,16 @@ describe("/icon: сведения об иконке", () => {
       strokes: false,
       similar: ["color:house", "demo:heart"],
     });
-    // Feather — только у самой house.
+    // Feather — только у самой house, а у набора — у любой иконки: указание авторства на весь набор.
     expect(data.credits).toBeUndefined();
+    expect(data.set.credits).toEqual([
+      {
+        name: "Feather",
+        author: "Cole Bemis",
+        license: "MIT",
+        url: "https://github.com/feathericons/feather",
+      },
+    ]);
   });
 
   it("старое имя — сведения основной иконки с пометкой alias", async () => {
