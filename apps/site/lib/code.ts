@@ -1,8 +1,8 @@
 // Генератор кода и файлы иконки (шаг 5 фазы 4, ADR-0042, ADR-0041): тег, React, SVG, CSS и ссылка на SVG
-// edge API с настройками превью — «настройки сразу применяются к коду и экспорту». В код попадают
-// только изменённые настройки: размер превью по умолчанию не пишется, и тогда у тега, React и SVG
-// 1em, как у Iconify. Свой цвет — только у монохромных, толщина — где она меняет рисунок (как
-// iconProps). SVG собирают те же функции ядра в том же порядке, что svgBody edge API, поэтому код SVG
+// edge API с настройками превью — «настройки сразу применяются к коду и экспорту». Размер — всегда в
+// пикселях, по умолчанию 24 (решение владельца 3 ноября 2026: что выбрано, то и в коде, копии и файле,
+// как у Iconify), остальное — только изменённое. Свой цвет — только у монохромных, толщина — где она
+// меняет рисунок (как iconProps). SVG собирают те же функции ядра в том же порядке, что svgBody edge API, поэтому код SVG
 // побайтно равен ответу адреса из «Ссылки» — это сверяет code.test.ts. Чистые функции, без браузера.
 
 import {
@@ -13,7 +13,7 @@ import {
   svgToString,
 } from "@iconavo-ui/core/internal";
 import { attributionText, type IconDetails } from "./icon";
-import { DEFAULT_SETTINGS, type IconSettings } from "./icon-settings";
+import type { IconSettings } from "./icon-settings";
 import type { Install } from "./install";
 
 export const CODE_KINDS = ["tag", "react", "svg", "css", "link"] as const;
@@ -28,9 +28,9 @@ export interface Applies {
   strokes: boolean;
 }
 
-/** Настройки для кода строками — только изменённые. */
+/** Настройки для кода строками: размер — всегда, остальное — только изменённое. */
 interface Values {
-  width?: string;
+  width: string;
   color?: string;
   stroke?: number;
   rotate?: string;
@@ -42,7 +42,7 @@ function values(s: IconSettings, o: Applies): Values {
     .filter((f) => f !== "")
     .join(",");
   return {
-    ...(s.size === DEFAULT_SETTINGS.size ? {} : { width: String(s.size) }),
+    width: String(s.size),
     ...(s.color === undefined || o.palette ? {} : { color: s.color }),
     ...(s.stroke === undefined || !o.strokes ? {} : { stroke: s.stroke }),
     ...(s.rotate === 0 ? {} : { rotate: `${s.rotate * 90}deg` }),
@@ -65,7 +65,7 @@ export function tagCode(name: string, s: IconSettings, o: Applies): string {
   const v = values(s, o);
   return `<iconavo-icon ${list([
     `icon="${name}"`,
-    v.width !== undefined && `width="${v.width}"`,
+    `width="${v.width}"`,
     v.color !== undefined && `color="${v.color}"`,
     v.stroke !== undefined && `stroke-width="${formatNumber(v.stroke)}"`,
     v.rotate !== undefined && `rotate="${v.rotate}"`,
@@ -83,7 +83,7 @@ export function reactCode(
   const v = values(s, o);
   return `${install.react.import}\n\n<Icon ${list([
     `icon="${name}"`,
-    v.width !== undefined && `width={${v.width}}`,
+    `width={${v.width}}`,
     v.color !== undefined && `color="${v.color}"`,
     v.stroke !== undefined && `strokeWidth={${formatNumber(v.stroke)}}`,
     v.rotate !== undefined && `rotate="${v.rotate}"`,
@@ -147,7 +147,7 @@ export function cssCode(
     flip,
   ]);
   const style = [
-    v.width === undefined ? "" : `font-size: ${v.width}px`,
+    `font-size: ${v.width}px`,
     transform === "" ? "" : `transform: ${transform}`,
   ]
     .filter((d) => d !== "")
@@ -163,16 +163,16 @@ export function cssCode(
   return `<link rel="stylesheet" href="${href}">\n<span class="icon--${set} icon--${set}--${icon}"${style === "" ? "" : ` style="${style}"`}></span>`;
 }
 
-/** SVG с настройками: ширина — заданная, высота по пропорции; без ширины — 1em. */
+/** SVG с настройками: ширина в пикселях, высота по пропорции. */
 function svg(
   icon: IconData,
   s: IconSettings,
   o: Applies,
-  width: string | undefined,
+  width: string,
 ): string {
   const v = values(s, o);
   const parts = iconToSvg(icon, {
-    ...(width === undefined ? {} : { width }),
+    width,
     rotate: s.rotate,
     hFlip: s.hflip,
     vFlip: s.vflip,
@@ -220,11 +220,11 @@ export function fileComment(
 }
 
 /**
- * SVG для файла и буфера обмена: размер — заданный, иначе родной у сетки набора (24 или 32 px) — так его
- * вставляют в Figma (решение владельца 3 ноября 2026).
+ * SVG для файла и буфера обмена — тот же, что код SVG: в пикселях выбранного размера, по умолчанию 24 —
+ * так его вставляют в Figma (решения владельца 3 ноября 2026).
  */
 export const fileSvg = (icon: IconData, s: IconSettings, o: Applies): string =>
-  svg(icon, s, o, values(s, o).width ?? "auto");
+  svg(icon, s, o, values(s, o).width);
 
 /** Файл SVG: первой строкой — комментарий об авторе и лицензии. */
 export function svgFile(

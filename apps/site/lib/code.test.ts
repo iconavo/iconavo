@@ -38,19 +38,19 @@ const ALL: IconSettings = {
 };
 
 describe("код тега, React, CSS и ссылки", () => {
-  it("без настроек — только имя: размер 1em, как у Iconify", () => {
+  it("без настроек — имя и размер по умолчанию, 24 px", () => {
     const s = DEFAULT_SETTINGS;
     expect(tagCode("lucide:house", s, LINE)).toBe(
-      '<iconavo-icon icon="lucide:house"></iconavo-icon>',
+      '<iconavo-icon icon="lucide:house" width="24"></iconavo-icon>',
     );
     expect(reactCode("lucide:house", s, LINE, install)).toBe(
-      'import { Icon } from "@iconavo-ui/react";\n\n<Icon icon="lucide:house" />',
+      'import { Icon } from "@iconavo-ui/react";\n\n<Icon icon="lucide:house" width={24} />',
     );
     expect(svgLink(API, "lucide:house", s, LINE)).toBe(
-      "https://api.iconavo.dev/lucide/house.svg",
+      "https://api.iconavo.dev/lucide/house.svg?width=24",
     );
     expect(cssCode(API, "lucide:house", s, LINE)).toBe(
-      '<link rel="stylesheet" href="https://api.iconavo.dev/lucide.css?icons=house">\n<span class="icon--lucide icon--lucide--house"></span>',
+      '<link rel="stylesheet" href="https://api.iconavo.dev/lucide.css?icons=house">\n<span class="icon--lucide icon--lucide--house" style="font-size: 24px"></span>',
     );
   });
 

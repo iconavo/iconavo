@@ -232,7 +232,7 @@ export const CODE_PALETTE = {
 };
 export const CODE_FILLED = {
   path: "/ph/house-bold?color=e11d48&stroke=1.5",
-  tag: '<iconavo-icon icon="ph:house-bold" color="#e11d48"></iconavo-icon>',
+  tag: '<iconavo-icon icon="ph:house-bold" width="24" color="#e11d48"></iconavo-icon>',
 };
 /** Размеры PNG, которые скачивает проверка: самый маленький и самый большой (ADR-0042). */
 export const PNG_CHECK_SIZES = [16, 512] as const;

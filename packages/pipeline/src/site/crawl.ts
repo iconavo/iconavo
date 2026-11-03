@@ -451,7 +451,9 @@ export function codeHtmlProblems(
       const html = byPath.get(path)?.html;
       if (html === undefined) continue;
       if (
-        !html.includes(htmlText(`<iconavo-icon icon="${name}"></iconavo-icon>`))
+        !html.includes(
+          htmlText(`<iconavo-icon icon="${name}" width="24"></iconavo-icon>`),
+        )
       ) {
         problems.push(`${path}: нет кода тега по умолчанию`);
       }

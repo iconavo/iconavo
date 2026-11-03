@@ -939,6 +939,14 @@
     background: var(--color-bg);
     color: var(--color-fg);
   }
+  /* Размер копии, файла и кода под крупным превью (решение владельца 3 ноября 2026). */
+  .icon-preview-size {
+    margin-block: 0.375rem 0;
+    color: var(--color-muted);
+    font-size: 0.8rem;
+    font-variant-numeric: tabular-nums;
+    text-align: center;
+  }
   .icon-preview.preview-light {
     color-scheme: light;
   }
