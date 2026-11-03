@@ -219,14 +219,21 @@ export function fileComment(
   )} -->`;
 }
 
-/** Файл SVG: размер — заданный, иначе родной у сетки набора; первой строкой — комментарий. */
+/**
+ * SVG для файла и буфера обмена: размер — заданный, иначе родной у сетки набора (24 или 32 px) — так его
+ * вставляют в Figma (решение владельца 3 ноября 2026).
+ */
+export const fileSvg = (icon: IconData, s: IconSettings, o: Applies): string =>
+  svg(icon, s, o, values(s, o).width ?? "auto");
+
+/** Файл SVG: первой строкой — комментарий об авторе и лицензии. */
 export function svgFile(
   icon: IconData,
   s: IconSettings,
   o: Applies,
   comment: string,
 ): string {
-  return `${comment}\n${svg(icon, s, o, values(s, o).width ?? "auto")}\n`;
+  return `${comment}\n${fileSvg(icon, s, o)}\n`;
 }
 
 /** Размеры PNG (ADR-0042): от 16 до 512 px. */

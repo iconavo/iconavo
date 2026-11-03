@@ -15,10 +15,19 @@ export type CopyWhat =
   | "import"
   | "script"
   | "name"
-  | "attribution";
+  | "attribution"
+  | "icon"
+  | "png";
 
 export type SiteEvent =
-  | { name: "copy"; what: CopyWhat; icon?: string }
+  | {
+      name: "copy";
+      what: CopyWhat;
+      icon?: string;
+      /** Формат имени (lib/names.ts). */
+      format?: string;
+      size?: number;
+    }
   | {
       name: "download";
       format: "svg" | "png" | "zip" | "sprite";
