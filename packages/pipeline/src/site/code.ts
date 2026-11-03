@@ -153,7 +153,14 @@ async function tagRenders(
   // пускает его запросы к адресам этого компьютера (Local Network Access).
   await page.route(
     (url) => url.href.startsWith(o.api),
-    async (route) => route.fulfill({ response: await route.fetch() }),
+    async (route) => {
+      // Окно могут закрыть, пока ответ ещё идёт: тогда он не нужен.
+      try {
+        await route.fulfill({ response: await route.fetch() });
+      } catch {
+        // Окно закрыто.
+      }
+    },
   );
   await page.goto(`${origin}/`);
   const drawn = await page

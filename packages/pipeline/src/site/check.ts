@@ -1307,12 +1307,17 @@ async function checkCanary(
         ctx.route(
           (url) => url.href.startsWith(`${o.api}/lucide.json`),
           async (route) => {
-            const response = await route.fetch();
-            const body = (await response.text()).replaceAll(
-              '"body":"',
-              '"body":"<g/>',
-            );
-            await route.fulfill({ response, body });
+            // Окно контрольного запуска могут закрыть, пока ответ ещё идёт: тогда он не нужен.
+            try {
+              const response = await route.fetch();
+              const body = (await response.text()).replaceAll(
+                '"body":"',
+                '"body":"<g/>',
+              );
+              await route.fulfill({ response, body });
+            } catch {
+              // Окно закрыто.
+            }
           },
         ),
     ],
