@@ -1,7 +1,9 @@
+import { cn } from "../lib/cn";
 import { CopyButton } from "./CopyButton";
 
 // Блок кода: подпись языка, кнопка «Copy» и сам код. Подсветки пока нет: цвета — часть визуального
-// дизайна, фаза 6 (ADR-0050).
+// дизайна, фаза 6 (ADR-0050). Генератор кода в панели иконки (шаг 5 фазы 4) даёт свою подпись,
+// подписи кнопки на языке страницы, метку аналитики и узкий вид — с переносом длинных строк.
 
 const LANGUAGE_TITLES: Record<string, string> = {
   html: "HTML",
@@ -15,13 +17,39 @@ const LANGUAGE_TITLES: Record<string, string> = {
   "": "Text",
 };
 
-export function CodeBlock({ lang, value }: { lang: string; value: string }) {
-  const title = LANGUAGE_TITLES[lang] ?? lang;
+export function CodeBlock({
+  lang,
+  value,
+  title,
+  labels,
+  onCopied,
+  wrap = false,
+  snippet,
+}: {
+  lang: string;
+  value: string;
+  title?: string;
+  labels?: { copy: string; copied: string };
+  onCopied?: () => void;
+  /** Длинные строки переносятся, а не прокручиваются: узкая панель иконки. */
+  wrap?: boolean;
+  /** Что в блоке — для проверки сайта: data-snippet. */
+  snippet?: string;
+}) {
   return (
-    <figure className="code">
+    <figure
+      className={cn("code", wrap && "code-wrap")}
+      {...(snippet === undefined ? {} : { "data-snippet": snippet })}
+    >
       <figcaption className="code-bar">
-        <span className="code-lang">{title}</span>
-        <CopyButton text={value} />
+        <span className="code-lang">
+          {title ?? LANGUAGE_TITLES[lang] ?? lang}
+        </span>
+        <CopyButton
+          text={value}
+          {...(labels === undefined ? {} : { labels })}
+          {...(onCopied === undefined ? {} : { onCopied })}
+        />
       </figcaption>
       {/* Длинная строка прокручивается внутри блока — его можно прокрутить и с клавиатуры. */}
       <pre

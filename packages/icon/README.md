@@ -2,7 +2,7 @@
 
 Any icon from the [Iconavo](https://iconavo.dev) catalog by its name, with one HTML tag or one React component. Only the icons on the page are loaded, in batches, and if a host fails, they come from the next one.
 
-> **Beta.** Versions 0.x are published under the `next` tag. The API may still change before 1.0. See the [changelog](https://iconavo.dev/docs/changelog).
+> **Beta.** Versions 0.x are betas: the API may still change before 1.0. See the [changelog](https://iconavo.dev/docs/changelog).
 
 | Package | What it is |
 | --- | --- |
@@ -25,7 +25,7 @@ The script is a single ES module with everything inside. With the `integrity` ha
 **With npm**:
 
 ```sh
-npm install @iconavo-ui/icon@next
+npm install @iconavo-ui/icon
 ```
 
 ```js
@@ -35,10 +35,10 @@ import "@iconavo-ui/icon"; // registers <iconavo-icon>
 **For React**:
 
 ```sh
-npm install @iconavo-ui/react@next
+npm install @iconavo-ui/react
 ```
 
-With pnpm or yarn: `pnpm add @iconavo-ui/react@next`, `yarn add @iconavo-ui/react@next`. Until 1.0, new versions are published under the `next` tag, so install with `@next`.
+With pnpm or yarn: `pnpm add` or `yarn add` and the same package name, for example `pnpm add @iconavo-ui/icon`.
 
 ## Examples
 

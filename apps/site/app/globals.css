@@ -415,6 +415,12 @@
   .copy:hover {
     color: var(--color-fg);
   }
+  /* Узкий блок кода — панель иконки (шаг 5 фазы 4): строки переносятся, длинный SVG прокручивается внутри. */
+  .code-wrap pre {
+    max-block-size: 16rem;
+    overflow-wrap: anywhere;
+    white-space: pre-wrap;
+  }
 
   .pager {
     display: flex;
@@ -1083,6 +1089,22 @@
     color: var(--color-muted);
     font-size: 0.8rem;
     margin-block: 0.25rem;
+  }
+  /* Генератор кода и скачивание (шаг 5 фазы 4, ADR-0042). */
+  .icon-code .code {
+    margin-block: 0.5rem;
+  }
+  .icon-code-choice {
+    min-inline-size: 0;
+    margin: 0 0 0.5rem;
+    padding: 0;
+    border: 0;
+  }
+  .icon-download {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-block-end: 0.5rem;
   }
   .icon-facts {
     display: grid;

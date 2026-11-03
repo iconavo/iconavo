@@ -10,6 +10,7 @@
     "storybook": "storybook dev --port 6006 --host 127.0.0.1 --no-open --no-version-updates"
   },
   "dependencies": {
+    "@iconavo-ui/core": "workspace:*",
     "@iconavo-ui/react": "workspace:*",
     "@iconavo-ui/search": "workspace:*",
     "next": "16.4.3",

@@ -84,7 +84,7 @@ type Facts = ReturnType<typeof panelFacts>;
 const facts = (page: Page): Promise<Facts> => page.evaluate(panelFacts);
 
 /** Гидратация закончилась — у main есть данные React. */
-async function hydrated(page: Page) {
+export async function hydrated(page: Page) {
   await page.waitForFunction(
     () => {
       const main = document.querySelector("main");

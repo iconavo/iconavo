@@ -3,6 +3,8 @@
 import { Icon } from "@iconavo-ui/react";
 import Link from "next/link";
 import { type ReactNode, useEffect, useRef } from "react";
+import { track } from "../../lib/analytics";
+import type { Applies } from "../../lib/code";
 import { DICTIONARIES, href, type Lang, STYLE_KEYS } from "../../lib/i18n";
 import {
   attributionText,
@@ -24,6 +26,8 @@ import "../../lib/iconavo";
 import { CopyButton } from "../CopyButton";
 import { PageLink } from "../PageLink";
 import { Button, buttonClass } from "../ui/button";
+import { IconCode } from "./IconCode";
+import { IconExport } from "./IconExport";
 import { IconSettings } from "./IconSettings";
 import type { DetailsState } from "./useIconDetails";
 
@@ -48,9 +52,10 @@ export function iconPageHref(
 
 /**
  * Всё об иконке (шаг 4 фазы 4, ADR-0041): превью на светлом и тёмном фоне, стили и варианты, оттенки,
- * настройки, автор и лицензия с текстом указания авторства, описание, теги, синонимы и похожие. Одно на
- * боковую панель и страницу иконки: в панели варианты и похожие открываются там же (onPick), на
- * странице — ссылки на их страницы, без предзагрузки: каждая видимая ссылка иначе собирала бы страницу.
+ * настройки, код и скачивание (шаг 5, ADR-0042), автор и лицензия с текстом указания авторства,
+ * описание и похожие. Одно на боковую панель и страницу иконки: в панели варианты и похожие
+ * открываются там же (onPick), на странице — ссылки на их страницы, без предзагрузки: каждая видимая
+ * ссылка иначе собирала бы страницу.
  */
 export function IconDetails({
   lang,
@@ -99,6 +104,11 @@ export function IconDetails({
     palette: details?.set.palette ?? false,
     strokes: details?.strokes ?? true,
   });
+  // Код и файлы — только с тем, что применимо к иконке; до ответа API — без цвета и толщины.
+  const applies: Applies = {
+    palette: details?.set.palette ?? false,
+    strokes: details?.strokes ?? false,
+  };
 
   /** Ссылка или кнопка другой иконки — по месту. */
   const pick = (
@@ -161,6 +171,7 @@ export function IconDetails({
           text={shown}
           labels={{ copy: t.iconCopy, copied: t.iconCopied }}
           label={t.iconCopyName}
+          onCopied={() => track({ name: "copy", what: "name", icon: shown })}
         />
       </p>
 
@@ -235,6 +246,14 @@ export function IconDetails({
         palette={details?.set.palette ?? false}
         strokes={details?.strokes ?? false}
       />
+      <IconCode lang={lang} name={shown} applies={applies} H={H} />
+      <IconExport
+        lang={lang}
+        name={shown}
+        details={details}
+        applies={applies}
+        H={H}
+      />
 
       {details !== undefined ? (
         <section className="icon-section">
@@ -280,6 +299,9 @@ export function IconDetails({
             <CopyButton
               text={attributionText(details)}
               labels={{ copy: t.iconCopy, copied: t.iconCopied }}
+              onCopied={() =>
+                track({ name: "copy", what: "attribution", icon: shown })
+              }
             />
             <p className="icon-setting-note">{t.iconAttributionNote}</p>
           </details>

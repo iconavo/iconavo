@@ -205,3 +205,34 @@ export const SEARCH_EMPTY_QUERY = "zzqxv";
 export const SEARCH_WAIT_MS = 20_000;
 /** Набор со стилями для сценария «Каталог»: чипсы «Стиль» и карточки (ADR-0052). */
 export const STYLES_SET = "ph";
+
+/**
+ * Генератор кода и скачивание (шаг 5 фазы 4, ADR-0042): иконка с линиями и все настройки в адресе
+ * страницы — размер, цвет, толщина, поворот и отражение. Ожидания записаны дословно: проверка не
+ * повторяет код сайта, а сверяет его с README тега и ответом превью edge API.
+ */
+export const CODE_ICON = "lucide:house";
+export const CODE_SETTINGS =
+  "size=64&color=e11d48&stroke=1.5&rotate=90&flip=horizontal";
+export const CODE_EXPECT = {
+  tag: '<iconavo-icon icon="lucide:house" width="64" color="#e11d48" stroke-width="1.5" rotate="90deg" flip="horizontal"></iconavo-icon>',
+  react:
+    'import { Icon } from "@iconavo-ui/react";\n\n<Icon icon="lucide:house" width={64} color="#e11d48" strokeWidth={1.5} rotate="90deg" flip="horizontal" />',
+  /** Параметры адреса SVG edge API для тех же настроек. */
+  query: "width=64&color=e11d48&stroke-width=1.5&rotate=90deg&flip=horizontal",
+  css: (api: string) =>
+    `<link rel="stylesheet" href="${api}/lucide.css?icons=house&color=e11d48&stroke-width=1.5">\n<span class="icon--lucide icon--lucide--house" style="font-size: 64px; transform: rotate(90deg) scaleX(-1)"></span>`,
+  /** Цвет из адреса — у PNG. */
+  rgb: [225, 29, 72] as const,
+};
+/** Цветной набор и заливка: в коде нет цвета и толщины или только толщины. */
+export const CODE_PALETTE = {
+  path: "/fluent-emoji-flat/waving-hand?size=64&color=e11d48&stroke=1.5",
+  tag: '<iconavo-icon icon="fluent-emoji-flat:waving-hand" width="64"></iconavo-icon>',
+};
+export const CODE_FILLED = {
+  path: "/ph/house-bold?color=e11d48&stroke=1.5",
+  tag: '<iconavo-icon icon="ph:house-bold" color="#e11d48"></iconavo-icon>',
+};
+/** Размеры PNG, которые скачивает проверка: самый маленький и самый большой (ADR-0042). */
+export const PNG_CHECK_SIZES = [16, 512] as const;

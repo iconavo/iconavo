@@ -20,6 +20,7 @@ import {
 } from "./config.js";
 import {
   type CrawledPage,
+  codeHtmlProblems,
   contentVerdict,
   crawl,
   freshnessVerdict,
@@ -92,6 +93,8 @@ export async function checkLiveSite(o: {
   base: string;
   expectBuild?: string;
   sections: string[];
+  /** README тега: строка скрипта, которую сборка вшила в страницы иконок (шаг 5 фазы 4). */
+  readme: string;
   log?: (line: string) => void;
 }): Promise<LiveRow[]> {
   const rows: LiveRow[] = [];
@@ -129,13 +132,16 @@ export async function checkLiveSite(o: {
         fail(`оглавление каталога раздачи: ${e.message.split("\n")[0]}`),
     ),
   });
-  const iconProblems = iconPagesProblems(pages);
+  const iconProblems = [
+    ...iconPagesProblems(pages),
+    ...codeHtmlProblems(pages, o.readme),
+  ];
   rows.push({
     what: "Страницы иконок",
     verdict:
       iconProblems.length === 0
         ? pass(
-            "выборка обхода: заголовок, превью, метки, мокапы; скрытая — «Устарела»",
+            "выборка обхода: заголовок, превью, метки, мокапы, код тега и строка скрипта из README; скрытая — «Устарела»",
           )
         : fail(iconProblems.slice(0, 5).join("; ")),
   });

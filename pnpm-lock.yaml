@@ -196,6 +196,9 @@ importers:
 
   apps/site:
     dependencies:
+      '@iconavo-ui/core':
+        specifier: workspace:*
+        version: link:../../packages/core
       '@iconavo-ui/react':
         specifier: workspace:*
         version: link:../../packages/react

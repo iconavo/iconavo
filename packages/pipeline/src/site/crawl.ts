@@ -403,6 +403,66 @@ export function iconPagesProblems(pages: CrawledPage[]): string[] {
   return problems;
 }
 
+/** Строки README тега для страниц без сборщика: <script> с хэшем и <style> (шаг 5 фазы 4). */
+export function readmeScript(readme: string): string {
+  const lines = readme.split("\n").map((line) => line.trim());
+  const script = lines.find((line) =>
+    line.startsWith(
+      '<script type="module" src="https://cdn.jsdelivr.net/npm/@iconavo-ui/icon@',
+    ),
+  );
+  const style = lines.find((line) =>
+    line.startsWith("<style>iconavo-icon:not(:defined)"),
+  );
+  return `${script}\n${style}`;
+}
+
+/** Строка подключения тега из README. */
+export const readmeImport = (readme: string): string =>
+  readme
+    .split("\n")
+    .map((line) => line.trim())
+    .find((line) => line.startsWith('import "@iconavo-ui/icon";')) ?? "";
+
+/** Текст в HTML, как его пишет React: & < > " '. */
+const htmlText = (text: string) =>
+  text
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#x27;");
+
+/**
+ * Генератор кода в серверном HTML страниц иконок выборки (шаг 5 фазы 4, ADR-0042): код тега по умолчанию
+ * и строка скрипта из README тега. Строки README вшивает сборка (next.config.ts) — по ним видно, что они
+ * есть и в страницах, которые Vercel собирает по первому запросу.
+ */
+export function codeHtmlProblems(
+  pages: CrawledPage[],
+  readme: string,
+): string[] {
+  const byPath = new Map(pages.map((p) => [p.path, p]));
+  const script = htmlText(readmeScript(readme).split("\n")[0] ?? "");
+  const problems: string[] = [];
+  for (const name of CRAWL_ICON_NAMES) {
+    for (const lang of ["", "/ru"]) {
+      const path = `${lang}${iconPath(name)}`;
+      const html = byPath.get(path)?.html;
+      if (html === undefined) continue;
+      if (
+        !html.includes(htmlText(`<iconavo-icon icon="${name}"></iconavo-icon>`))
+      ) {
+        problems.push(`${path}: нет кода тега по умолчанию`);
+      }
+      if (!html.includes(script)) {
+        problems.push(`${path}: нет строки скрипта из README тега`);
+      }
+    }
+  }
+  return problems;
+}
+
 /**
  * Отпечатки содержимого (шаг 4 фазы 4, ADR-0039): страница каждого набора на обоих языках и страницы его
  * иконок из выборки обхода показывают отпечаток из оглавления каталога раздачи. Иначе сброс по наборам

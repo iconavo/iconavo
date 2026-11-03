@@ -2,7 +2,7 @@
 
 The shared core of the [Iconavo](https://iconavo.dev) icon packages: loading icons in batches, the icon store and rendering.
 
-> **Beta.** Versions 0.x are published under the `next` tag. The API may still change before 1.0. See the [changelog](https://iconavo.dev/docs/changelog).
+> **Beta.** Versions 0.x are betas: the API may still change before 1.0. See the [changelog](https://iconavo.dev/docs/changelog).
 
 You don't need to install it yourself: it comes with the package you use.
 

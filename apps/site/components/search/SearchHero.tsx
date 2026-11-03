@@ -1,7 +1,13 @@
 "use client";
 
 import { usePathname, useRouter } from "next/navigation";
-import { type FormEvent, useEffect, useRef, useState } from "react";
+import {
+  type FormEvent,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from "react";
 import { DICTIONARIES, href, type Lang } from "../../lib/i18n";
 import { QUERY_MAX_LENGTH, TYPING_PAUSE_MS } from "../../lib/search";
 import { takeHandoff } from "../../lib/search-handoff";
@@ -44,10 +50,14 @@ export function SearchHero({ lang }: { lang: Lang }) {
   const pending = useRef<string | undefined>(undefined);
   /**
    * Свежие страница, параметры и переход: таймер паузы набора запускает функцию из того отрисовывания,
-   * в котором нажата клавиша, — оно могло быть ещё до перехода на /search.
+   * в котором нажата клавиша, — оно могло быть ещё до перехода на /search. Обновляются после показа, а
+   * не во время отрисовки: страницу поиска React отрисовывает заранее, пока переход ещё идёт, и таймер
+   * поменял бы адрес раньше, чем Next.js закончит переход, — выдача осталась бы от прежнего текста.
    */
   const latest = useRef({ onSearch, query, navigate });
-  latest.current = { onSearch, query, navigate };
+  useLayoutEffect(() => {
+    latest.current = { onSearch, query, navigate };
+  });
 
   // Текст и фокус из поля шапки — после перехода на /search. Пока страница открывалась, в поле шапки
   // могли допечатать: адрес догоняет текст.
