@@ -41,6 +41,8 @@ const VARIANTS: readonly { query: string; natural?: boolean }[] = [
   { query: "flip=vertical" },
   { query: "flip=horizontal,vertical" },
   { query: "rotate=90deg&flip=horizontal" },
+  { query: "stroke-width=1" },
+  { query: "stroke-width=3&color=%23e11d48" },
   { query: "box=1" },
 ];
 
@@ -53,6 +55,7 @@ const ERRORS: readonly [string, string][] = [
   ["Неизвестный набор", "/iconavo-missing.json?icons=heart"],
   ["Нет иконки", "/lucide/iconavo-missing.svg"],
   ["Неверный цвет", "/lucide/heart.svg?color=url(x)"],
+  ["Неверная толщина линии", "/lucide/heart.svg?stroke-width=0"],
   [
     "rotate=90: у Iconify это 180°, здесь ошибка",
     "/lucide/heart.svg?rotate=90",

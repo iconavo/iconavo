@@ -1,8 +1,8 @@
 // CSS-иконки (ADR-0024), как getIconsCSS у Iconify с селекторами по умолчанию: .icon--{набор} —
 // общие правила, .icon--{набор}--{имя} — рисунок. Монохромные иконки — маской: цвет берётся из
-// текста; цветные — фоном. Свои селекторы, pseudo и var Iconify позволяет, здесь их нет: это главная
-// поверхность для подмены CSS (бэклог). Ненайденное имя — комментарием, и только если оно прошло
-// правило имён: «*/» в имени закрыл бы комментарий.
+// текста; цветные — фоном. Толщина линии — как у SVG, setStrokeWidth ядра. Свои селекторы, pseudo и
+// var Iconify позволяет, здесь их нет: это главная поверхность для подмены CSS (бэклог). Ненайденное
+// имя — комментарием, и только если оно прошло правило имён: «*/» в имени закрыл бы комментарий.
 
 import type { IconavoIconSet } from "@iconavo-ui/core";
 import {
@@ -10,15 +10,23 @@ import {
   formatNumber,
   iconData,
   SVG_NS,
+  setStrokeWidth,
 } from "@iconavo-ui/core/internal";
 import { ApiError } from "./http.js";
-import { parseBool, parseColor, searchable, single } from "./params.js";
+import {
+  parseBool,
+  parseColor,
+  parseStrokeWidth,
+  searchable,
+  single,
+} from "./params.js";
 
 export type CssMode = "mask" | "background";
 export type CssFormat = "expanded" | "compact" | "compressed";
 
 export interface CssOptions {
   color?: string;
+  strokeWidth?: number;
   mode?: CssMode;
   square: boolean;
   format: CssFormat;
@@ -55,6 +63,9 @@ const BACKGROUND: readonly Declaration[] = [
 
 export function parseCssOptions(query: URLSearchParams): CssOptions {
   const color = single(query, "color");
+  const strokeValue = single(query, "stroke-width");
+  const strokeWidth =
+    strokeValue === undefined ? undefined : parseStrokeWidth(strokeValue);
   const mode = single(query, "mode");
   if (
     mode !== undefined &&
@@ -78,6 +89,7 @@ export function parseCssOptions(query: URLSearchParams): CssOptions {
   }
   return {
     ...(color === undefined ? {} : { color: parseColor(color) }),
+    ...(strokeWidth === undefined ? {} : { strokeWidth }),
     ...(mode === undefined
       ? {}
       : { mode: mode === "mask" ? "mask" : "background" }),
@@ -91,6 +103,9 @@ export function parseCssOptions(query: URLSearchParams): CssOptions {
 export function cssOptionsKey(o: CssOptions): URLSearchParams {
   const key = new URLSearchParams();
   if (o.color !== undefined) key.set("color", o.color);
+  if (o.strokeWidth !== undefined) {
+    key.set("stroke-width", formatNumber(o.strokeWidth));
+  }
   if (o.mode !== undefined) key.set("mode", o.mode);
   if (o.square) key.set("square", "1");
   if (o.format !== "expanded") key.set("format", o.format);
@@ -179,7 +194,12 @@ export function cssBody(
       declarations.push(["width", calculateSize("1em", width / height)]);
     }
     const viewBox = [left, top, width, height].map(formatNumber).join(" ");
-    const body = icon.body.replace(/currentColor/g, o.color ?? "black");
+    // Толщина — до замены цвета: setStrokeWidth меняет только рисунок с currentColor (ADR-0041).
+    const drawn =
+      o.strokeWidth === undefined
+        ? icon.body
+        : setStrokeWidth(icon.body, o.strokeWidth);
+    const body = drawn.replace(/currentColor/g, o.color ?? "black");
     const url = svgToUrl(
       `<svg xmlns="${SVG_NS}" viewBox="${viewBox}" width="${formatNumber(width)}" height="${formatNumber(height)}">${body}</svg>`,
     );

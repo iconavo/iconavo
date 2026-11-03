@@ -1,6 +1,12 @@
 import { describe, expect, it } from "vitest";
 import { ApiError } from "./http.js";
-import { parseBool, parseColor, parseNames, single } from "./params.js";
+import {
+  parseBool,
+  parseColor,
+  parseNames,
+  parseStrokeWidth,
+  single,
+} from "./params.js";
 
 const code = (fn: () => unknown) => {
   try {
@@ -81,6 +87,36 @@ describe("parseNames", () => {
     expect(parseNames(new URLSearchParams(`icons=${hundred}`))).toHaveLength(
       100,
     );
+  });
+});
+
+describe("parseStrokeWidth", () => {
+  it("положительное число без единиц", () => {
+    expect(parseStrokeWidth("1.5")).toBe(1.5);
+    expect(parseStrokeWidth(".5")).toBe(0.5);
+    expect(parseStrokeWidth("2")).toBe(2);
+    expect(parseStrokeWidth("1.50")).toBe(1.5);
+  });
+
+  it("ноль, знак, экспонента, единицы и пробелы — 400", () => {
+    for (const value of [
+      "0",
+      "0.0",
+      "-1",
+      "+1",
+      "1.",
+      "1e1",
+      "0x10",
+      "2px",
+      " 2",
+      "abc",
+      "Infinity",
+    ]) {
+      expect(
+        code(() => parseStrokeWidth(value)),
+        value,
+      ).toBe("invalid_stroke_width");
+    }
   });
 });
 

@@ -2,9 +2,10 @@
 // же версии на cdn.iconavo.dev. Сначала — ожидание: функция перечитывает манифест раз в минуту, а
 // при первой выкладке её на адресе может ещё не быть. Затем пачка в двух порядках (второй ответ — из
 // кэша и побайтно тот же), SVG без параметров (равен файлу статики), с цветом и размером, с поворотом
-// и отражением, CSS, каталог наборов (шаг 2 фазы 4: /collections, /collection, /last-modified,
-// /changelog — сверка с манифестом), ответы 400 и 404 и переход с http. К каждому ответу 200 — два
-// запроса, как у статики: с Origin и «br, gzip» и без Origin только с gzip. Ключи не нужны.
+// и отражением, с толщиной линии, CSS и CSS с толщиной (шаг 5 фазы 4), каталог наборов (шаг 2 фазы 4:
+// /collections, /collection, /last-modified, /changelog — сверка с манифестом), ответы 400 и 404 и
+// переход с http. К каждому ответу 200 — два запроса, как у статики: с Origin и «br, gzip» и без
+// Origin только с gzip. Ключи не нужны.
 
 import { isDeepStrictEqual } from "node:util";
 import {
@@ -39,6 +40,7 @@ import {
   API_CHECK_ICON,
   API_CHECK_MISSING,
   API_CHECK_SET,
+  API_CHECK_STROKE,
   API_CHECK_TRANSFORM,
   API_HOST,
   API_TYPES,
@@ -56,13 +58,16 @@ export type ApiCheckKind =
   | "svg"
   | "svg-params"
   | "svg-transform"
+  | "svg-stroke"
   | "css"
+  | "css-stroke"
   | "collections"
   | "collection"
   | "last-modified"
   | "changelog"
   | "missing-set"
   | "missing-icon"
+  | "invalid-stroke"
   | "missing-collection"
   | "collection-prefix"
   | "redirect";
@@ -802,6 +807,30 @@ export async function checkApi(
   }
   done(transform.target);
 
+  // Толщина линии вместе с цветом (шаг 5 фазы 4): как setStrokeWidth ядра и до замены цвета, иначе
+  // толщина пропала бы вместе с currentColor.
+  const stroke = await check200(
+    "svg-stroke",
+    `${set}/${API_CHECK_ICON}.svg?stroke-width=${API_CHECK_STROKE}&color=red`,
+    API_TYPES.svg,
+    { csp: true },
+  );
+  if (stroke.body !== undefined && svg.body !== undefined) {
+    stroke.target.checked.push("body");
+    const expected = utf8(svg.body)
+      .replace(/(\sstroke-width=")[^"]*"/g, `$1${API_CHECK_STROKE}"`)
+      .split("currentColor")
+      .join("red");
+    if (utf8(stroke.body) !== expected) {
+      addIssue(
+        stroke.target,
+        "body",
+        `толщина ${API_CHECK_STROKE} и цвет red — не как у ядра`,
+      );
+    }
+  }
+  done(stroke.target);
+
   const css = await check200(
     "css",
     `${set}.css?icons=${API_CHECK_ICON},${API_CHECK_ALIAS}`,
@@ -820,6 +849,20 @@ export async function checkApi(
     }
   }
   done(css.target);
+
+  const cssStroke = await check200(
+    "css-stroke",
+    `${set}.css?icons=${API_CHECK_ICON}&stroke-width=${API_CHECK_STROKE}`,
+    API_TYPES.css,
+  );
+  if (cssStroke.body !== undefined) {
+    cssStroke.target.checked.push("body");
+    const want = `stroke-width='${API_CHECK_STROKE}'`;
+    if (!utf8(cssStroke.body).includes(want)) {
+      addIssue(cssStroke.target, "body", `нет «${want}» в рисунке`);
+    }
+  }
+  done(cssStroke.target);
 
   if (catalog === undefined) {
     notes.push(
@@ -841,6 +884,14 @@ export async function checkApi(
       "missing-icon",
       `${set}/${API_CHECK_ABSENT}.svg`,
       "icon_not_found",
+    ),
+  );
+  done(
+    await check404(
+      "invalid-stroke",
+      `${set}/${API_CHECK_ICON}.svg?stroke-width=0`,
+      "invalid_stroke_width",
+      400,
     ),
   );
   done(await checkRedirect());

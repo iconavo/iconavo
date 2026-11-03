@@ -90,6 +90,22 @@ describe("cssBody", () => {
     expect(mask).toContain("--svg: url(");
   });
 
+  it("толщина линии — до замены цвета и только у рисунка с currentColor", () => {
+    const line =
+      '<path fill="none" stroke="currentColor" stroke-width="2" d="M1 1"/>';
+    const icons = files("demo", {
+      line: { body: line },
+      dot: { body: '<path fill="#000" stroke-width="2"/>' },
+    });
+    const thin = cssBody("demo", ["dot", "line"], icons, {
+      ...DEFAULTS,
+      color: "#ff0000",
+      strokeWidth: 1.5,
+    });
+    expect(thin).toContain("stroke='%23ff0000' stroke-width='1.5'");
+    expect(thin).toContain("fill='%23000' stroke-width='2'");
+  });
+
   it("форматы compact и compressed", () => {
     const icons = files("mdi", { home: { body: MDI_HOME } });
     const compact = cssBody("mdi", ["home"], icons, {

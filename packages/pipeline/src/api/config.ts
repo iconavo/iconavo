@@ -60,6 +60,8 @@ export const API_CHECK_ABSENT = "iconavo-missing";
 /** Поворот и отражение образца на сетке 24 — точная строка transform, как у Iconify. */
 export const API_CHECK_TRANSFORM =
   '<g transform="rotate(90 12 12) translate(24 0) scale(-1 1)">';
+/** Толщина линии для проверки stroke-width: у Lucide своя — 2 (шаг 5 фазы 4). */
+export const API_CHECK_STROKE = "1.5";
 /** Ждать версию из манифеста R2: минута памяти функции и первая выкладка. */
 export const API_WAIT_MS = 180_000;
 export const API_WAIT_STEP_MS = 15_000;
