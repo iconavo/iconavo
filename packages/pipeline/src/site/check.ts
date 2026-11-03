@@ -3,13 +3,14 @@
 // Chrome, Firefox и WebKit по очереди: иконки в серверном HTML, консоль и нарушения CSP, заголовки
 // страницы, ссылка «к содержимому», axe-core в светлой и тёмной теме, ширина телефона, меню темы
 // (фаза 4, шаг 1), сетка набора и фильтр наборов (фаза 4, шаг 2), поиск (фаза 4, шаг 3, site/search.ts),
-// панель и страница иконки, метки кэша для сброса по наборам (фаза 4, шаг 4, site/panel.ts). Контрольный
-// запуск подкладывает поломки — каждую проверка обязана заметить.
+// панель и страница иконки, метки кэша для сброса по наборам (фаза 4, шаг 4, site/panel.ts), генератор
+// кода и скачивание (фаза 4, шаг 5, site/code.ts). Контрольный запуск подкладывает поломки — каждую
+// проверка обязана заметить.
 
 import { readdir, readFile } from "node:fs/promises";
 import { join } from "node:path";
 import { groupCards, isStyle, type Style } from "@iconavo-ui/search";
-import type { Browser, Page } from "playwright";
+import type { Browser, BrowserContext, Page } from "playwright";
 import { canaryVerdict } from "../example/check.js";
 import { type AxeViolation, axe, axeVerdict, runAxe } from "../sandbox/axe.js";
 import {
@@ -26,6 +27,13 @@ import {
   violations,
   watch,
 } from "../sandbox/verdict.js";
+import {
+  checkCode,
+  checkFiles,
+  codeProblems,
+  filesProblems,
+  recordTrack,
+} from "./code.js";
 import {
   CACHE_TAG_PAGES,
   CATALOG_PAGE_SIZE,
@@ -127,6 +135,14 @@ export const CHECKS = [
     "Панель на телефоне: шторка снизу, выдача над ней щёлкается, «развернуть», «назад»",
   ],
   [
+    "code",
+    "Код: тег, React, SVG (как у edge API), CSS и ссылка с настройками; npm, pnpm и yarn; выбор после перезагрузки; строки README; код тега рисует иконку",
+  ],
+  [
+    "files",
+    "Скачивание: SVG с комментарием об авторе и лицензии, PNG 16 и 512 px; метки аналитики",
+  ],
+  [
     "catalog",
     "Каталог: сетка набора — страницы, категория, «назад», ссылка на страницу; карточки и стиль; фильтр наборов",
   ],
@@ -166,6 +182,8 @@ export interface SiteCheckOptions {
   cacheTags?: Record<string, string[] | undefined>;
   /** Разделы README, которые должны быть на сайте. */
   sections: string[];
+  /** Корень репозитория: README тега и скрипт тега этой ветки — для строки «Код». */
+  root: string;
   browsers: readonly BrowserName[];
   log?: (line: string) => void;
 }
@@ -1063,7 +1081,8 @@ async function checkTheme(
  * Контрольный запуск: поломки, которые проверки обязаны заметить, — кнопка без подписи (axe), атрибут
  * style (CSP), слишком широкий блок (телефон), убранная метка robots, битая ссылка, испорченный
  * заголовок до гидратации; с фазы 4 — чужой lang, страница без ссылки на другой язык, переход не туда,
- * страница без скрипта темы и (шаг 2) сетка набора без списка имён.
+ * страница без скрипта темы и (шаг 2) сетка набора без списка имён; дальше — поиск и панель (шаги 3 и 4),
+ * код и скачивание (шаг 5).
  */
 async function checkCanary(
   browser: Browser,
@@ -1263,6 +1282,65 @@ async function checkCanary(
     if (caught.length === 0) missed.push(title);
     await ctx.close();
   }
+  // Код и скачивание (шаг 5 фазы 4): поломки — скриптом до страницы или подменой ответа API; строки «Код»
+  // и «Скачивание» обязаны заметить.
+  const codeBreaks: [
+    string,
+    "code" | "files",
+    (ctx: BrowserContext) => Promise<unknown>,
+  ][] = [
+    [
+      "менеджер пакетов не запоминается",
+      "code",
+      (ctx) =>
+        ctx.addInitScript(() => {
+          const set = Storage.prototype.setItem;
+          Storage.prototype.setItem = function (key, value) {
+            if (key !== "iconavo-pm") set.call(this, key, value);
+          };
+        }),
+    ],
+    [
+      "SVG-код не совпадает с адресом",
+      "code",
+      (ctx) =>
+        ctx.route(
+          (url) => url.href.startsWith(`${o.api}/lucide.json`),
+          async (route) => {
+            const response = await route.fetch();
+            const body = (await response.text()).replace(
+              '"body":"',
+              '"body":"<g/>',
+            );
+            await route.fulfill({ response, body });
+          },
+        ),
+    ],
+    [
+      "PNG пустой",
+      "files",
+      (ctx) =>
+        ctx.addInitScript(() => {
+          CanvasRenderingContext2D.prototype.drawImage = () => {};
+        }),
+    ],
+  ];
+  const code = { base: o.base, api: o.api, root: o.root, pages: o.pages };
+  for (const [title, row, spoil] of codeBreaks) {
+    const ctx = await browser.newContext({
+      viewport: DESKTOP,
+      acceptDownloads: true,
+    });
+    await recordTrack(ctx);
+    await spoil(ctx);
+    const p = await ctx.newPage();
+    const caught = await (row === "code"
+      ? codeProblems(p, code, false)
+      : filesProblems(p, code)
+    ).catch(() => ["остановился"]);
+    if (caught.length === 0) missed.push(title);
+    await ctx.close();
+  }
   if (
     statusVerdict(
       [
@@ -1293,7 +1371,7 @@ async function checkCanary(
   result.verdicts.canary =
     missed.length === 0
       ? pass(
-          "замечены все восемнадцать: кнопка без подписи, style, ширина, иконка-блок, robots, битая ссылка, гидратация, чужой lang, нет ссылки на другой язык, переход не туда, нет скрипта темы, сетка без списка имён, поиск без полной выдачи, Esc не закрывает панель, фокус не возвращается, фильтр закрывает панель, старое имя без перехода, метка catalog у страницы иконки",
+          "замечены все двадцать одна: кнопка без подписи, style, ширина, иконка-блок, robots, битая ссылка, гидратация, чужой lang, нет ссылки на другой язык, переход не туда, нет скрипта темы, сетка без списка имён, поиск без полной выдачи, Esc не закрывает панель, фокус не возвращается, фильтр закрывает панель, старое имя без перехода, метка catalog у страницы иконки, менеджер пакетов не запоминается, SVG-код не как у адреса, пустой PNG",
         )
       : fail(`проверка слепая: не замечено — ${missed.join(", ")}`);
 }
@@ -1323,6 +1401,9 @@ export async function checkSite(o: SiteCheckOptions): Promise<SiteResult[]> {
       result.verdicts.panel = await checkPanel(browser, o, result.shots);
       result.verdicts.iconpage = await checkIconPage(browser, o, result.shots);
       result.verdicts.sheet = await checkSheet(browser, o, result.shots);
+      o.log?.(`${BROWSER_TITLES[name]}: код и скачивание…`);
+      result.verdicts.code = await checkCode(browser, name, o, result.shots);
+      result.verdicts.files = await checkFiles(browser, o, result.shots);
       o.log?.(`${BROWSER_TITLES[name]}: поиск…`);
       result.verdicts.results = await checkSearchPage(browser, o, result.shots);
       o.log?.(`${BROWSER_TITLES[name]}: контрольный запуск…`);

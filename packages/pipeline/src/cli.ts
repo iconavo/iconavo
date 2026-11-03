@@ -1747,6 +1747,10 @@ try {
         base,
         expectBuild,
         sections,
+        readme: await readFile(
+          join(root, "packages", "icon", "README.md"),
+          "utf8",
+        ),
         log: (line) => console.log(line),
       });
       console.log("");
@@ -1871,6 +1875,7 @@ try {
           ...(iconCache === undefined ? {} : { iconCache }),
           cacheTags,
           sections,
+          root,
           browsers,
           log: (line) => console.log(`  ${line}`),
         });

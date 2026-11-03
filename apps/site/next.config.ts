@@ -1,12 +1,26 @@
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import type { NextConfig } from "next";
 import { iconHosts, searchRobotsHeaders, siteHeaders } from "./lib/headers";
+import { installFromReadme } from "./lib/install-readme";
 
 // Метка сборки — 8 знаков коммита от CI (site.yml); её видно в заголовке X-Iconavo-Build, по ней
 // pnpm site --live узнаёт, что выложена именно эта сборка.
 const build = process.env.SITE_BUILD ?? "dev";
 
+// Строки установки для генератора кода — из README тега при сборке (шаг 5 фазы 4, ADR-0042, ADR-0050):
+// страницы иконок собираются по первому запросу на Vercel, а README в функции нет. Хэш integrity в
+// README обновляет pnpm release bump (ADR-0051) — сайт берёт его со следующей выкладкой.
+const install = installFromReadme(
+  readFileSync(
+    join(process.cwd(), "..", "..", "packages", "icon", "README.md"),
+    "utf8",
+  ),
+);
+
 const config: NextConfig = {
   poweredByHeader: false,
+  env: { ICONAVO_INSTALL: JSON.stringify(install) },
   // `next dev` would otherwise write an AGENTS.md for AI coding agents into the app.
   agentRules: false,
   generateBuildId: async () =>
