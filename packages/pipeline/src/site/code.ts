@@ -139,16 +139,22 @@ async function tagRenders(
   const context = await browser.newContext({ viewport: DESKTOP });
   const page = await context.newPage();
   const seen = watch(page);
-  const origin = "http://iconavo-check.test";
+  const origin = `${o.base}/__iconavo-check`;
   await page.route(`${origin}/**`, (route) => {
     const path = new URL(route.request().url()).pathname;
-    return path === "/iconavo-icon.js"
+    return path.endsWith("/iconavo-icon.js")
       ? route.fulfill({ contentType: "text/javascript", body })
       : route.fulfill({
           contentType: "text/html",
-          body: `<!doctype html><html lang="en"><head><script type="module">import { configure } from "/iconavo-icon.js"; configure({ api: ["${o.api}"], cdn: ["${o.api}/_static"] });</script></head><body>${code}</body></html>`,
+          body: `<!doctype html><html lang="en"><head><script type="module">import { configure } from "./iconavo-icon.js"; configure({ api: ["${o.api}"], cdn: ["${o.api}/_static"] });</script></head><body>${code}</body></html>`,
         });
   });
+  // Запросы к превью API — через Playwright: документ, который отдал route, Chrome считает чужим и не
+  // пускает его запросы к адресам этого компьютера (Local Network Access).
+  await page.route(
+    (url) => url.href.startsWith(o.api),
+    async (route) => route.fulfill({ response: await route.fetch() }),
+  );
   await page.goto(`${origin}/`);
   const drawn = await page
     .waitForFunction(

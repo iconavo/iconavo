@@ -1308,7 +1308,7 @@ async function checkCanary(
           (url) => url.href.startsWith(`${o.api}/lucide.json`),
           async (route) => {
             const response = await route.fetch();
-            const body = (await response.text()).replace(
+            const body = (await response.text()).replaceAll(
               '"body":"',
               '"body":"<g/>',
             );
