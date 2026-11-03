@@ -34,8 +34,9 @@ export const SITE_ICONS = [
   "lucide:maximize-2",
   "lucide:minimize-2",
   "lucide:arrow-up-right",
-  // Сумка в шапке (шаг 5 фазы 4).
+  // Сумка в шапке и список форматов имени (шаг 5 фазы 4).
   "lucide:shopping-bag",
+  "lucide:chevron-down",
 ] as const;
 
 export type SiteIcon = (typeof SITE_ICONS)[number];

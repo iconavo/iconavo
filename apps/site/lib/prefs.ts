@@ -1,11 +1,12 @@
-// Выбор в генераторе кода (шаг 5 фазы 4, ADR-0042): вид кода и менеджер пакетов запоминаются в
-// localStorage браузера, как тема (ADR-0038), и на сервер не уходят. На сервере и при гидратации —
+// Выбор в генераторе кода (шаг 5 фазы 4, ADR-0042): вид кода, менеджер пакетов и формат копируемого имени
+// запоминаются в localStorage браузера, как тема (ADR-0038), и на сервер не уходят. На сервере и при гидратации —
 // значение по умолчанию, выбор из хранилища — после гидратации; выбор в другой вкладке приходит
 // событием storage.
 
 import { useSyncExternalStore } from "react";
 import { CODE_KINDS, type CodeKind } from "./code";
 import { PACKAGE_MANAGERS, type PackageManager } from "./install";
+import { DEFAULT_NAME_FORMAT, NAME_FORMATS, type NameFormat } from "./names";
 
 export interface ChoiceStore<T extends string> {
   readonly fallback: T;
@@ -70,12 +71,19 @@ export function choiceStore<T extends string>(
 
 export const CODE_KEY = "iconavo-code";
 export const PM_KEY = "iconavo-pm";
+export const NAME_KEY = "iconavo-name";
 
 export const codeStore = choiceStore<CodeKind>(CODE_KEY, CODE_KINDS, "tag");
 export const pmStore = choiceStore<PackageManager>(
   PM_KEY,
   PACKAGE_MANAGERS,
   "npm",
+);
+/** Формат копируемого имени: по умолчанию набор/иконка (решение владельца 3 ноября 2026). */
+export const nameStore = choiceStore<NameFormat>(
+  NAME_KEY,
+  NAME_FORMATS,
+  DEFAULT_NAME_FORMAT,
 );
 
 /** Выбор после гидратации; на сервере — по умолчанию. */

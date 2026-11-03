@@ -137,11 +137,11 @@ export const CHECKS = [
   ],
   [
     "code",
-    "Код: тег, React, SVG (как у edge API), CSS и ссылка с настройками; npm, pnpm и yarn; выбор после перезагрузки; строки README; код тега рисует иконку",
+    "Код: тег, React, SVG (как у edge API), CSS и ссылка с настройками; npm, pnpm и yarn; имя — набор/иконка и список форматов; выбор после перезагрузки; строки README; код тега рисует иконку; «Скопировать иконку» — SVG как у edge API",
   ],
   [
     "files",
-    "Скачивание: SVG с комментарием об авторе и лицензии, PNG 16 и 512 px; метки аналитики",
+    "Скачивание: SVG с комментарием об авторе и лицензии, PNG 16 и 512 px, «Копировать PNG»; метки аналитики",
   ],
   [
     "bag",
@@ -1346,7 +1346,7 @@ async function checkCanary(
     const p = await ctx.newPage();
     const caught = await (row === "code"
       ? codeProblems(p, code, false)
-      : filesProblems(p, code)
+      : filesProblems(p, code, false)
     ).catch(() => ["остановился"]);
     if (caught.length === 0) missed.push(title);
     await ctx.close();
@@ -1445,7 +1445,7 @@ export async function checkSite(o: SiteCheckOptions): Promise<SiteResult[]> {
       result.verdicts.sheet = await checkSheet(browser, o, result.shots);
       o.log?.(`${BROWSER_TITLES[name]}: код и скачивание…`);
       result.verdicts.code = await checkCode(browser, name, o, result.shots);
-      result.verdicts.files = await checkFiles(browser, o, result.shots);
+      result.verdicts.files = await checkFiles(browser, name, o, result.shots);
       o.log?.(`${BROWSER_TITLES[name]}: сумка…`);
       result.verdicts.bag = await checkBag(browser, o, result.shots);
       o.log?.(`${BROWSER_TITLES[name]}: поиск…`);

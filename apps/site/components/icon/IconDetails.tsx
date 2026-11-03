@@ -26,8 +26,10 @@ import "../../lib/iconavo";
 import { CopyButton } from "../CopyButton";
 import { PageLink } from "../PageLink";
 import { Button, buttonClass } from "../ui/button";
+import { IconActions } from "./IconActions";
 import { IconCode } from "./IconCode";
 import { IconExport } from "./IconExport";
+import { IconName } from "./IconName";
 import { IconSettings } from "./IconSettings";
 import type { DetailsState } from "./useIconDetails";
 
@@ -165,15 +167,13 @@ export function IconDetails({
           <figcaption className="sr-only">{t.iconPreviewDark}</figcaption>
         </figure>
       </div>
-      <p className="icon-name-row">
-        <code>{shown}</code>
-        <CopyButton
-          text={shown}
-          labels={{ copy: t.iconCopy, copied: t.iconCopied }}
-          label={t.iconCopyName}
-          onCopied={() => track({ name: "copy", what: "name", icon: shown })}
-        />
-      </p>
+      <IconName lang={lang} name={shown} />
+      <IconActions
+        lang={lang}
+        name={shown}
+        details={details}
+        applies={applies}
+      />
 
       {state === "failed" ? (
         <p className="icon-failed" role="alert">

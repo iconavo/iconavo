@@ -105,6 +105,24 @@ async function snippet(
   }, name);
 }
 
+/** Имя под превью в выбранном формате; ждёт ожидаемое. */
+async function nameShown(page: Page, expect: string): Promise<string> {
+  await page
+    .waitForFunction(
+      (e) =>
+        (document.querySelector(".icon-name-row .name-format-text")
+          ?.textContent ?? "") === e,
+      expect,
+      { timeout: PANEL_WAIT_MS },
+    )
+    .catch(() => {});
+  return page.evaluate(
+    () =>
+      document.querySelector(".icon-name-row .name-format-text")?.textContent ??
+      "",
+  );
+}
+
 /** Кнопка генератора: вид кода, менеджер пакетов, размер PNG. */
 const press = (page: Page, scope: string, name: string) =>
   page
@@ -296,8 +314,39 @@ export async function codeProblems(
     );
   }
 
-  // Выбор после перезагрузки: вид кода — «Ссылка», менеджер пакетов — yarn. Из хранилища выбор
-  // приходит после гидратации.
+  // Имя (решения владельца 3 ноября 2026): по умолчанию — набор/иконка, формат — из списка, как у
+  // Iconify; «Скопировать иконку» кладёт в буфер SVG с настройками — как ответ edge API.
+  same(
+    "имя по умолчанию",
+    await nameShown(page, "lucide/house"),
+    "lucide/house",
+  );
+  await page.locator(".name-format").click();
+  await page.getByRole("menuitemradio", { name: /^lucide:house/ }).click();
+  same("имя в формате Iconavo", await nameShown(page, CODE_ICON), CODE_ICON);
+  if (clipboard) {
+    await page.getByRole("button", { name: "Copy name", exact: true }).click();
+    await page.waitForTimeout(300);
+    same(
+      "скопированное имя",
+      await page.evaluate(() => navigator.clipboard.readText()),
+      CODE_ICON,
+    );
+    await page.getByRole("button", { name: "Copy icon", exact: true }).click();
+    await page.waitForTimeout(500);
+    same(
+      "скопированная иконка — SVG как у edge API",
+      await page.evaluate(() => navigator.clipboard.readText()),
+      apiSvg,
+    );
+    no(
+      (await tracked(page)).some((e) => e.name === "copy" && e.what === "icon"),
+      "нет метки аналитики copy у «Скопировать иконку»",
+    );
+  }
+
+  // Выбор после перезагрузки: вид кода — «Ссылка», менеджер пакетов — yarn, формат имени — lucide:house.
+  // Из хранилища выбор приходит после гидратации.
   await page.reload();
   await hydrated(page);
   await page
@@ -322,6 +371,11 @@ export async function codeProblems(
     "менеджер пакетов после перезагрузки",
     await snippet(page, "install", "yarn add @iconavo-ui/icon"),
     "yarn add @iconavo-ui/icon",
+  );
+  same(
+    "формат имени после перезагрузки",
+    await nameShown(page, CODE_ICON),
+    CODE_ICON,
   );
 
   // Цветной набор — без цвета и толщины; заливка — без толщины.
@@ -407,10 +461,11 @@ export function pngFacts(body: Uint8Array) {
   };
 }
 
-/** Скачивание одной иконки: SVG с комментарием и PNG 16 и 512 px; метки аналитики. */
+/** Скачивание одной иконки: SVG с комментарием, PNG 16 и 512 px, «Копировать PNG» (Chrome); метки. */
 export async function filesProblems(
   page: Page,
   o: CodeCheckOptions,
+  clipboard: boolean,
 ): Promise<string[]> {
   const problems: string[] = [];
   const no = (ok: boolean, message: string) => {
@@ -469,6 +524,45 @@ export async function filesProblems(
     );
   }
 
+  // «Копировать PNG» — картинка последнего размера в буфере (только Chrome: доступ к буферу).
+  if (clipboard) {
+    await page.getByRole("button", { name: "Copy PNG", exact: true }).click();
+    // Картинку рисует canvas: в буфере она — когда кнопка сказала «Copied».
+    await page
+      .locator(".icon-export")
+      .getByRole("button", { name: "Copied", exact: true })
+      .waitFor({ timeout: PANEL_WAIT_MS })
+      .catch(() => {});
+    const copied = await page
+      .evaluate(async () => {
+        const [item] = await navigator.clipboard.read();
+        if (!item?.types.includes("image/png")) return undefined;
+        const bytes = new Uint8Array(
+          await (await item.getType("image/png")).arrayBuffer(),
+        );
+        let text = "";
+        for (const byte of bytes) text += String.fromCharCode(byte);
+        return btoa(text);
+      })
+      .catch(() => undefined);
+    const last = PNG_CHECK_SIZES.at(-1);
+    let size = "";
+    try {
+      const f =
+        typeof copied === "string"
+          ? pngFacts(Buffer.from(copied, "base64"))
+          : undefined;
+      size = f === undefined ? "" : `${f.width}×${f.height}`;
+      no(f !== undefined && f.painted > 0, "«Копировать PNG»: в буфере пусто");
+    } catch (e) {
+      problems.push(`«Копировать PNG»: ${(e as Error).message}`);
+    }
+    no(
+      size === `${last}×${last}`,
+      `«Копировать PNG»: в буфере ${size || "нет картинки"}`,
+    );
+  }
+
   const events = await tracked(page);
   no(
     events.some((e) => e.name === "download" && e.format === "svg"),
@@ -484,6 +578,7 @@ export async function filesProblems(
 /** Строка «Скачивание»: сценарий, CSP и консоль. */
 export async function checkFiles(
   browser: Browser,
+  name: BrowserName,
   o: CodeCheckOptions,
   shots: { title: string; png: string }[],
 ): Promise<Verdict> {
@@ -491,11 +586,16 @@ export async function checkFiles(
     viewport: DESKTOP,
     acceptDownloads: true,
   });
+  if (name === "chrome") {
+    await context.grantPermissions(["clipboard-read", "clipboard-write"], {
+      origin: o.base,
+    });
+  }
   await recordTrack(context);
   const page = await context.newPage();
   const seen = watch(page);
   await recordViolations(page);
-  const problems = await filesProblems(page, o);
+  const problems = await filesProblems(page, o, name === "chrome");
   shots.push({ title: "Скачивание", png: await shot(page, seen) });
   problems.push(
     ...(await violations(page)).map((x) => `CSP: ${x}`),
@@ -504,7 +604,7 @@ export async function checkFiles(
   await context.close();
   return problems.length === 0
     ? pass(
-        "SVG с комментарием об авторе и лицензии — рисунок как у edge API; PNG 16 и 512 px нужного цвета; метки аналитики",
+        `SVG с комментарием об авторе и лицензии — рисунок как у edge API; PNG 16 и 512 px нужного цвета${name === "chrome" ? "; «Копировать PNG»" : ""}; метки аналитики`,
       )
     : fail(problems.slice(0, 4).join("; "));
 }

@@ -84,7 +84,10 @@ export function BagMenu({
       : {}),
   };
 
+  // Пока файл готовится, кнопки не отключаются — иначе браузер снял бы с нажатой фокус и меню потеряло
+  // бы его; повторный щелчок просто не срабатывает (aria-disabled).
   async function download(kind: "zip" | "sprite") {
+    if (busy) return;
     setBusy(true);
     setFailed(false);
     try {
@@ -204,14 +207,14 @@ export function BagMenu({
             <p className="icon-download">
               <Button
                 variant="outline"
-                disabled={busy}
+                aria-disabled={busy}
                 onClick={() => download("zip")}
               >
                 {t.bagZip}
               </Button>
               <Button
                 variant="outline"
-                disabled={busy}
+                aria-disabled={busy}
                 onClick={() => download("sprite")}
               >
                 {t.bagSprite}
