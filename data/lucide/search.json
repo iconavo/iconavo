@@ -19284,7 +19284,36 @@
       ]
     },
     "chef-hat": {
+      "en": {
+        "description": "A chef's toque with a puffy top and three pleats; it usually represents cooking, chefs, or restaurants.",
+        "synonyms": [
+          "toque",
+          "cook",
+          "kitchen",
+          "cooking",
+          "restaurant",
+          "culinary",
+          "chef",
+          "baker",
+          "food"
+        ]
+      },
       "fingerprint": "e3b8c5d2c1db",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Изображена поварская шапка с пышным верхом и тремя складками; обозначает повара, кухню или ресторан.",
+        "synonyms": [
+          "повар",
+          "поварской колпак",
+          "кухня",
+          "готовка",
+          "ресторан",
+          "кулинария",
+          "шеф-повар",
+          "выпечка",
+          "еда"
+        ]
+      },
       "tags": [
         "toque blanche",
         "culinary cap",
@@ -22666,7 +22695,34 @@
       ]
     },
     "circle-letter-j": {
+      "en": {
+        "description": "A letter J drawn inside a circle, usually representing the letter J or a character or text label in an interface.",
+        "synonyms": [
+          "letter j",
+          "alphabet",
+          "character",
+          "text",
+          "font",
+          "uppercase",
+          "typography",
+          "symbol"
+        ]
+      },
       "fingerprint": "67fd1d392b74",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Изображена буква J внутри круга; обозначает букву «J» или текстовый символ в интерфейсе.",
+        "synonyms": [
+          "буква j",
+          "буква дж",
+          "символ",
+          "алфавит",
+          "текст",
+          "шрифт",
+          "заглавная буква",
+          "знак"
+        ]
+      },
       "tags": [
         "alphabet",
         "character",
@@ -31314,7 +31370,38 @@
       ]
     },
     "diagram-flow-horizontal": {
+      "en": {
+        "description": "A square node on the left connects by curved lines to two square nodes on the right, representing a branching flow diagram or relationships.",
+        "synonyms": [
+          "flowchart",
+          "branching",
+          "diagram",
+          "nodes",
+          "connections",
+          "tree",
+          "workflow",
+          "hierarchy",
+          "process",
+          "mind map"
+        ]
+      },
       "fingerprint": "d7df6a9a4bc0",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Один квадратный узел слева соединён изгибающимися линиями с двумя узлами справа, обозначая схему потока, ветвление или связи.",
+        "synonyms": [
+          "схема",
+          "блок-схема",
+          "ветвление",
+          "связи",
+          "дерево",
+          "процесс",
+          "структура",
+          "узлы",
+          "иерархия",
+          "последовательность"
+        ]
+      },
       "tags": [
         "network",
         "nodes",
@@ -31343,7 +31430,38 @@
       ]
     },
     "diagram-flow-vertical": {
+      "en": {
+        "description": "Shows one top square connected by curved lines to two bottom squares, representing a hierarchy, tree structure, or linked nodes.",
+        "synonyms": [
+          "flowchart",
+          "hierarchy",
+          "tree",
+          "structure",
+          "nodes",
+          "connections",
+          "branches",
+          "diagram",
+          "network",
+          "topology"
+        ]
+      },
       "fingerprint": "695fa6385486",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Изображена схема из одного верхнего блока, соединённого изогнутыми линиями с двумя нижними блоками; обозначает иерархию, дерево или связи между узлами.",
+        "synonyms": [
+          "схема",
+          "иерархия",
+          "дерево",
+          "структура",
+          "связи",
+          "узлы",
+          "блок-схема",
+          "диаграмма",
+          "сеть",
+          "разветвление"
+        ]
+      },
       "tags": [
         "network",
         "nodes",
@@ -43309,7 +43427,38 @@
       ]
     },
     "globe-ban": {
+      "en": {
+        "description": "A globe with a crossed-out circle in the corner, indicating blocked, restricted, or unavailable global or web access.",
+        "synonyms": [
+          "globe",
+          "world",
+          "earth",
+          "internet",
+          "block",
+          "banned",
+          "restricted",
+          "forbidden",
+          "geo blocking",
+          "region lock"
+        ]
+      },
       "fingerprint": "bd3ce523d318",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Глобус с перечёркнутым кружком в углу; обозначает запрет, недоступность или блокировку контента по региону.",
+        "synonyms": [
+          "глобус",
+          "земной шар",
+          "интернет",
+          "блокировка",
+          "запрет",
+          "заблокировано",
+          "недоступно",
+          "ограничение доступа",
+          "регион",
+          "сеть"
+        ]
+      },
       "tags": [
         "world",
         "browser",
@@ -43641,7 +43790,36 @@
       ]
     },
     "globe-plus": {
+      "en": {
+        "description": "A globe with latitude and longitude lines and a plus sign at the top right, usually meaning add a location, region, or language.",
+        "synonyms": [
+          "globe",
+          "world",
+          "earth",
+          "add country",
+          "add language",
+          "internet",
+          "planet",
+          "network",
+          "new location"
+        ]
+      },
       "fingerprint": "ac822ea530a9",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Изображён глобус с меridians и параллелями и знаком плюс справа сверху; обычно означает добавление мира, региона или языка.",
+        "synonyms": [
+          "глобус",
+          "мир",
+          "земля",
+          "интернет",
+          "добавить",
+          "новый язык",
+          "сеть",
+          "планета",
+          "страна"
+        ]
+      },
       "tags": [
         "world",
         "browser",
@@ -84281,7 +84459,36 @@
       ]
     },
     "square-letter-j": {
+      "en": {
+        "description": "A rounded square containing the uppercase letter J, typically representing a letter or text character.",
+        "synonyms": [
+          "letter j",
+          "alphabet",
+          "character",
+          "font",
+          "typography",
+          "uppercase",
+          "text",
+          "symbol",
+          "javascript"
+        ]
+      },
       "fingerprint": "61a01346255a",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Прямоугольник с буквой J внутри, обозначает букву или текстовый символ «J» в интерфейсе.",
+        "synonyms": [
+          "буква j",
+          "буква дж",
+          "символ",
+          "шрифт",
+          "алфавит",
+          "текст",
+          "заглавная буква",
+          "типографика",
+          "знак"
+        ]
+      },
       "tags": [
         "alphabet",
         "character",
