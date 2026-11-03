@@ -27,6 +27,7 @@ import {
   violations,
   watch,
 } from "../sandbox/verdict.js";
+import { BAG_KEY, bagProblems, checkBag, zipProblems } from "./bag.js";
 import {
   checkCode,
   checkFiles,
@@ -141,6 +142,10 @@ export const CHECKS = [
   [
     "files",
     "Скачивание: SVG с комментарием об авторе и лицензии, PNG 16 и 512 px; метки аналитики",
+  ],
+  [
+    "bag",
+    "Сумка: «Выбрать несколько» в сетке и поиске, «В сумку» в панели, число в шапке после перезагрузки; меню с клавиатуры, «Убрать», Esc; ZIP с текстами лицензий и README; спрайт; axe, телефон",
   ],
   [
     "catalog",
@@ -1082,7 +1087,7 @@ async function checkTheme(
  * style (CSP), слишком широкий блок (телефон), убранная метка robots, битая ссылка, испорченный
  * заголовок до гидратации; с фазы 4 — чужой lang, страница без ссылки на другой язык, переход не туда,
  * страница без скрипта темы и (шаг 2) сетка набора без списка имён; дальше — поиск и панель (шаги 3 и 4),
- * код и скачивание (шаг 5).
+ * код, скачивание и сумка (шаг 5).
  */
 async function checkCanary(
   browser: Browser,
@@ -1346,6 +1351,38 @@ async function checkCanary(
     if (caught.length === 0) missed.push(title);
     await ctx.close();
   }
+  // Сумка (шаг 5 фазы 4): не сохраняется в хранилище — строка «Сумка» обязана заметить после
+  // перезагрузки; ZIP без текстов лицензий — разбор ZIP обязан заметить.
+  {
+    const ctx = await browser.newContext({
+      viewport: DESKTOP,
+      acceptDownloads: true,
+    });
+    await recordTrack(ctx);
+    await ctx.addInitScript((key) => {
+      const set = Storage.prototype.setItem;
+      Storage.prototype.setItem = function (k, value) {
+        if (k !== key) set.call(this, k, value);
+      };
+    }, BAG_KEY);
+    const p = await ctx.newPage();
+    const caught = await bagProblems(p, browser, o).catch(() => [
+      "остановился",
+    ]);
+    if (caught.length === 0) missed.push("сумка не переживает перезагрузку");
+    await ctx.close();
+  }
+  if (
+    zipProblems(
+      [
+        { path: "README.txt", data: Buffer.from("Icons: Lucide by …") },
+        { path: "lucide/house.svg", data: Buffer.from("<svg ></svg>") },
+      ],
+      { icons: ["lucide:house"], licenses: { lucide: "ISC License" } },
+    ).length === 0
+  ) {
+    missed.push("ZIP без текстов лицензий");
+  }
   if (
     statusVerdict(
       [
@@ -1376,7 +1413,7 @@ async function checkCanary(
   result.verdicts.canary =
     missed.length === 0
       ? pass(
-          "замечены все двадцать одна: кнопка без подписи, style, ширина, иконка-блок, robots, битая ссылка, гидратация, чужой lang, нет ссылки на другой язык, переход не туда, нет скрипта темы, сетка без списка имён, поиск без полной выдачи, Esc не закрывает панель, фокус не возвращается, фильтр закрывает панель, старое имя без перехода, метка catalog у страницы иконки, менеджер пакетов не запоминается, SVG-код не как у адреса, пустой PNG",
+          "замечены все двадцать три: кнопка без подписи, style, ширина, иконка-блок, robots, битая ссылка, гидратация, чужой lang, нет ссылки на другой язык, переход не туда, нет скрипта темы, сетка без списка имён, поиск без полной выдачи, Esc не закрывает панель, фокус не возвращается, фильтр закрывает панель, старое имя без перехода, метка catalog у страницы иконки, менеджер пакетов не запоминается, SVG-код не как у адреса, пустой PNG, сумка не переживает перезагрузку, ZIP без лицензий",
         )
       : fail(`проверка слепая: не замечено — ${missed.join(", ")}`);
 }
@@ -1409,6 +1446,8 @@ export async function checkSite(o: SiteCheckOptions): Promise<SiteResult[]> {
       o.log?.(`${BROWSER_TITLES[name]}: код и скачивание…`);
       result.verdicts.code = await checkCode(browser, name, o, result.shots);
       result.verdicts.files = await checkFiles(browser, o, result.shots);
+      o.log?.(`${BROWSER_TITLES[name]}: сумка…`);
+      result.verdicts.bag = await checkBag(browser, o, result.shots);
       o.log?.(`${BROWSER_TITLES[name]}: поиск…`);
       result.verdicts.results = await checkSearchPage(browser, o, result.shots);
       o.log?.(`${BROWSER_TITLES[name]}: контрольный запуск…`);

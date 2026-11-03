@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { track } from "../../lib/analytics";
+import { bagStore, useBag } from "../../lib/bag";
 import {
   type Applies,
   fileComment,
@@ -22,7 +23,8 @@ import { iconDataOf } from "./useIconData";
 /**
  * Скачивание иконки (шаг 5 фазы 4, ADR-0042): SVG с настройками и комментарием об авторе и лицензии,
  * PNG от 16 до 512 px — его рисует браузер (lib/png.ts). Размеры PNG — кнопки, не ползунок: проверка
- * панели считает второй ползунок толщиной линии. Скачивание — метка аналитики (ADR-0043).
+ * панели считает второй ползунок толщиной линии. Скачивание — метка аналитики (ADR-0043). «В сумку» —
+ * переключатель: иконка ложится в сумку шапки или уходит из неё (шаг 5 фазы 4, решение владельца).
  */
 export function IconExport({
   lang,
@@ -43,6 +45,8 @@ export function IconExport({
   const [px, setPx] = useState<number>(PNG_DEFAULT);
   const [busy, setBusy] = useState(false);
   const [failed, setFailed] = useState(false);
+  const [full, setFull] = useState(false);
+  const inBag = useBag().includes(name);
   const pressed = (on: boolean) =>
     buttonClass(on ? "primary" : "outline", "md", "icon-setting-toggle");
 
@@ -94,7 +98,19 @@ export function IconExport({
         >
           {t.iconDownloadPng}
         </Button>
+        <Button
+          variant={inBag ? "primary" : "outline"}
+          aria-pressed={inBag}
+          onClick={() => setFull(bagStore.toggle(name) === "full")}
+        >
+          {t.bagAdd}
+        </Button>
       </p>
+      {full ? (
+        <p className="icon-setting-note" role="alert">
+          {t.bagFull}
+        </p>
+      ) : null}
       <fieldset className="icon-setting">
         <legend className="icon-setting-label">{t.iconPngSize}</legend>
         <span className="icon-setting-buttons">
