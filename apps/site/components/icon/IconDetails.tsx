@@ -181,7 +181,9 @@ export function IconDetails({
         </p>
       ) : null}
 
-      {details !== undefined && details.variants.length > 0 ? (
+      {/* Один вариант — блок не нужен: выбирать не из чего (решение владельца 3 ноября 2026). */}
+      {details !== undefined &&
+      details.variants.reduce((n, group) => n + group.icons.length, 0) > 1 ? (
         <section className="icon-section">
           <H className="icon-section-title">{t.iconVariants}</H>
           {details.variants.map((group) => (
@@ -266,40 +268,29 @@ export function IconDetails({
               ))}
             </dd>
           </dl>
-          <H className="icon-section-title">{t.iconAttribution}</H>
-          <p className="icon-attribution">
-            <span>{attributionText(lang, details)}</span>
+          {/*
+           * Указание авторства — одно на весь набор и по-английски, свёрнуто под стрелкой (решение владельца
+           * 3 ноября 2026): родной <details>, с клавиатурой и экранным диктором работает сам.
+           */}
+          <details className="icon-attribution">
+            <summary>{t.iconAttribution}</summary>
+            <p className="icon-attribution-text" lang="en">
+              {attributionText(details)}
+            </p>
             <CopyButton
-              text={attributionText(lang, details)}
+              text={attributionText(details)}
               labels={{ copy: t.iconCopy, copied: t.iconCopied }}
             />
-          </p>
-          <p className="icon-setting-note">{t.iconAttributionNote}</p>
+            <p className="icon-setting-note">{t.iconAttributionNote}</p>
+          </details>
         </section>
       ) : null}
 
-      {details !== undefined && !details.hidden ? (
+      {/* Описание — только на странице иконки; тегов и синонимов нет (решение владельца 3 ноября 2026). */}
+      {mode === "page" && details?.description ? (
         <section className="icon-section">
           <H className="icon-section-title">{t.iconDescription}</H>
-          <p>{details.description?.[lang] ?? t.iconNoDescription}</p>
-          {details.tags.length > 0 ? (
-            <>
-              <H className="icon-section-title">{t.iconTags}</H>
-              <p className="icon-words">{details.tags.join(", ")}</p>
-            </>
-          ) : null}
-          {details.synonyms !== null ? (
-            <>
-              <H className="icon-section-title">{t.iconSynonyms}</H>
-              <p className="icon-words">{details.synonyms[lang].join(", ")}</p>
-              <details className="icon-other-words">
-                <summary>{t.iconSynonymsOther}</summary>
-                <p className="icon-words">
-                  {details.synonyms[lang === "ru" ? "en" : "ru"].join(", ")}
-                </p>
-              </details>
-            </>
-          ) : null}
+          <p>{details.description[lang]}</p>
         </section>
       ) : null}
 

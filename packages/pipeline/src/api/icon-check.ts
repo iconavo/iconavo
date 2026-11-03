@@ -3,7 +3,8 @@
 // выкладки. Что проверяется:
 // - lucide:house: 200, JSON, CORS и защита, версия набора, индекса и отпечаток содержимого, карточка
 //   и стиль, толщина линии, описания ru/en, теги, похожие; повтор — из кэша, браузеру 5 минут;
-// - старое имя lucide:alert-circle → circle-alert, у неё — авторство Feather (ADR-0017);
+// - старое имя lucide:alert-circle → circle-alert, у неё — авторство Feather (ADR-0017), у набора — тоже
+//   (указание авторства на весь набор);
 // - варианты ph:house-bold — по стилям шкалы в порядке таблицы набора, без толщины линии;
 // - оттенки кожи Fluent и цветной набор; скрытая иконка — пометка hidden;
 // - ответы 400 и 404 с кодами.
@@ -72,7 +73,7 @@ interface IconBody {
   icon?: unknown;
   alias?: unknown;
   hidden?: unknown;
-  set?: { prefix?: unknown; palette?: unknown };
+  set?: { prefix?: unknown; palette?: unknown; credits?: { name?: unknown }[] };
   card?: unknown;
   style?: unknown;
   variants?: { style?: unknown; icons?: unknown }[];
@@ -288,6 +289,12 @@ export async function checkIcon(
       }
       if (!(body.credits ?? []).some((c) => c.name === "Feather")) {
         issue(t, "нет авторства Feather (credits)");
+      }
+      if (!(body.set?.credits ?? []).some((c) => c.name === "Feather")) {
+        issue(
+          t,
+          "у набора нет Feather (set.credits) — указание авторства на весь набор",
+        );
       }
     },
   );

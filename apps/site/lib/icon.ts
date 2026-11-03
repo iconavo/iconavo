@@ -8,7 +8,6 @@ import {
   isStyle,
   type StyleVariants,
 } from "@iconavo-ui/search";
-import type { Lang } from "./i18n";
 
 export type { IconDetails };
 
@@ -61,6 +60,31 @@ function pair<T>(
 
 const isString = (v: unknown): v is string => typeof v === "string";
 
+/** Части набора от других авторов: нет поля — пусто, не по форме — undefined. */
+function creditsOf(value: unknown): IconCredit[] | undefined {
+  if (value === undefined) return [];
+  if (!Array.isArray(value)) return undefined;
+  const credits: IconCredit[] = [];
+  for (const c of value) {
+    if (
+      !isObject(c) ||
+      !isString(c.name) ||
+      !isString(c.author) ||
+      !isString(c.license) ||
+      !isString(c.url)
+    ) {
+      return undefined;
+    }
+    credits.push({
+      name: c.name,
+      author: c.author,
+      license: c.license,
+      url: c.url,
+    });
+  }
+  return credits;
+}
+
 /** Ответ /icon по форме или undefined — тогда панель покажет «не удалось». */
 export function parseIconDetails(json: unknown): IconDetails | undefined {
   if (!isObject(json) || !isIconName(json.icon)) return undefined;
@@ -85,27 +109,9 @@ export function parseIconDetails(json: unknown): IconDetails | undefined {
     }
     variants.push({ style: v.style, icons: v.icons });
   }
-  const credits: IconCredit[] = [];
-  if (json.credits !== undefined) {
-    if (!Array.isArray(json.credits)) return undefined;
-    for (const c of json.credits) {
-      if (
-        !isObject(c) ||
-        !isString(c.name) ||
-        !isString(c.author) ||
-        !isString(c.license) ||
-        !isString(c.url)
-      ) {
-        return undefined;
-      }
-      credits.push({
-        name: c.name,
-        author: c.author,
-        license: c.license,
-        url: c.url,
-      });
-    }
-  }
+  const credits = creditsOf(json.credits);
+  const setCredits = creditsOf(set.credits);
+  if (credits === undefined || setCredits === undefined) return undefined;
   const description = pair(json.description, isString);
   const synonyms = pair(json.synonyms, isStrings);
   if (
@@ -138,6 +144,7 @@ export function parseIconDetails(json: unknown): IconDetails | undefined {
         ...(isString(set.license.url) ? { url: set.license.url } : {}),
       },
       palette: set.palette === true,
+      ...(setCredits.length > 0 ? { credits: setCredits } : {}),
     },
     card: json.card,
     style: json.style,
@@ -153,25 +160,20 @@ export function parseIconDetails(json: unknown): IconDetails | undefined {
 }
 
 /**
- * Готовый текст указания авторства на языке страницы (ADR-0041): иконка, набор, автор и лицензия, у
- * иконок другого автора — ещё и он (Feather у Lucide, ADR-0017). Его вставляют в «О программе» или
- * файл лицензий проекта.
+ * Готовый текст указания авторства — один на весь набор и по-английски (решение владельца 3 ноября 2026):
+ * иконку обычно берут вместе с другими из того же набора. Набор, автор, лицензия и части от других
+ * авторов (Feather у Lucide, ADR-0017) — у любой иконки набора. Его вставляют в «О программе» или файл
+ * лицензий проекта.
  */
-export function attributionText(lang: Lang, d: IconDetails): string {
-  const name = bareName(d.icon);
+export function attributionText(d: Pick<IconDetails, "set">): string {
   const { set } = d;
-  const license = set.license.url
-    ? `${set.license.title} (${set.license.url})`
-    : set.license.title;
-  const credits = d.credits ?? [];
-  if (lang === "ru") {
-    const based = credits.map(
-      (c) => ` По мотивам ${c.name} (${c.author}), лицензия ${c.license}.`,
-    );
-    return `Иконка «${name}» из набора ${set.name} (${set.author.name}), лицензия ${set.license.spdx}${set.license.url ? ` (${set.license.url})` : ""}.${based.join("")}`;
-  }
-  const based = credits.map(
-    (c) => ` Based on ${c.name} by ${c.author}, ${c.license} License.`,
-  );
-  return `“${name}” icon from ${set.name} by ${set.author.name}, ${license}.${based.join("")}`;
+  const linked = (text: string, url?: string) =>
+    url === undefined ? text : `${text} (${url})`;
+  return [
+    `Icons: ${set.name} by ${linked(set.author.name, set.author.url)}, ${linked(`${set.license.title} license`, set.license.url)}.`,
+    ...(set.credits ?? []).map(
+      (c) =>
+        `Includes icons from ${c.name} by ${linked(c.author, c.url)}, ${c.license} license.`,
+    ),
+  ].join(" ");
 }

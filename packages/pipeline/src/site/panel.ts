@@ -59,6 +59,19 @@ function panelFacts() {
     backgrounds: [...(panel?.querySelectorAll(".icon-preview") ?? [])].map(
       (e) => getComputedStyle(e).backgroundColor,
     ),
+    /** Заголовки разделов панели: описания, тегов и синонимов в ней нет (решение владельца 3 ноября 2026). */
+    sections: [...(panel?.querySelectorAll(".icon-section-title") ?? [])].map(
+      (e) => e.textContent?.trim() ?? "",
+    ),
+    /** Указание авторства: свёрнуто под стрелкой, текст — на весь набор и по-английски. */
+    attribution: (() => {
+      const block = panel?.querySelector("details.icon-attribution");
+      return {
+        present: block !== null && block !== undefined,
+        open: block?.hasAttribute("open") === true,
+        text: block?.querySelector(".icon-attribution-text")?.textContent ?? "",
+      };
+    })(),
     position: panel ? getComputedStyle(panel).position : "",
     top: box?.top ?? 0,
     height: box?.height ?? 0,
@@ -153,6 +166,28 @@ export async function panelProblems(
   no(f.history === start.history + 1, "открытие не добавило запись истории");
   no(f.stroke, `у ${first} (Lucide) нет толщины линии`);
   no(f.color, `у ${first} нет выбора цвета`);
+  no(
+    f.variants.length === 0,
+    `у ${first} один вариант, а блок вариантов показан: ${f.variants.join(", ")}`,
+  );
+  no(
+    !f.sections.some((s) => /^(Description|Tags|Synonyms)$/.test(s)),
+    `в панели — описание, теги или синонимы: ${f.sections.join(", ")}`,
+  );
+  no(
+    f.attribution.present && !f.attribution.open,
+    "указание авторства не свёрнуто под стрелкой",
+  );
+  await page
+    .locator("aside.icon-panel details.icon-attribution summary")
+    .click();
+  const attribution = (await facts(page)).attribution;
+  no(
+    attribution.open &&
+      attribution.text.startsWith("Icons: Lucide by ") &&
+      attribution.text.includes("Includes icons from Feather"),
+    `указание авторства — «${attribution.text.slice(0, 80)}», а ждали текст на весь набор Lucide с Feather`,
+  );
   const opened = f.history;
   await page.locator("a.icon-card-link").nth(1).click();
   f = await shown(page, second);
@@ -330,11 +365,16 @@ export async function iconPageProblems(
   };
   // Серверный HTML страниц выборки — тот же разбор, что у pnpm site --live.
   problems.push(...iconPagesProblems(o.pages));
+  // Строка «по мотивам Feather» — только у иконок из Feather, а текст указания авторства — на весь набор:
+  // у любой иконки Lucide в нём есть Feather (решение владельца 3 ноября 2026).
+  const house = o.pages.find((p) => p.path === "/lucide/house")?.html ?? "";
   no(
-    o.pages
-      .find((p) => p.path === "/lucide/house")
-      ?.html.includes("Feather") === false,
-    "/lucide/house: авторство Feather у иконки не из Feather",
+    !house.includes('class="icon-credit"'),
+    "/lucide/house: строка «по мотивам Feather» у иконки не из Feather",
+  );
+  no(
+    house.includes("Includes icons from Feather"),
+    "/lucide/house: в указании авторства набора нет Feather",
   );
 
   // Настройки из адреса.

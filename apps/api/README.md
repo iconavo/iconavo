@@ -157,7 +157,7 @@ GET https://api.iconavo.dev/icon?icon=ph:house-bold
 - **`variants`** are the styles of the card in the order of the common scale (`outline`, `filled`, `duotone`, `color`), with the variants of each style in the order the set shows them: Phosphor weights, Material Symbols shapes. A Material Symbols name that draws the same as another variant is listed only if it is the main name of a style.
 - **`style`** is the style of this icon; **`strokes`** is `true` when `stroke-width` changes it — Lucide and the outline icons of Tabler.
 - **`description`, `synonyms`** — both languages, or `null` until a new icon is described. **`card`** and **`style`** are `null` for hidden icons and for icons not yet in the search index.
-- **`credits`** lists another author whose icon this is, under their license: Lucide icons that come from Feather (MIT).
+- **`credits`** lists another author whose icon this is, under their license: Lucide icons that come from Feather (MIT). **`set.credits`** lists such parts for the whole set, on every icon of it — for one attribution line per set.
 - **`similar`** — up to 12 icons from all sets that are closest in meaning, each in the style of this icon when it has one.
 
 | Parameter | Values |
