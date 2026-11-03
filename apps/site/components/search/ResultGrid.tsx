@@ -1,12 +1,14 @@
 "use client";
 
 import { Icon } from "@iconavo-ui/react";
-import type { MouseEvent } from "react";
+import type { MouseEvent, ReactNode } from "react";
+import { cn } from "../../lib/cn";
 import { DICTIONARIES, href, type Lang } from "../../lib/i18n";
 import { iconPagePath } from "../../lib/icon";
 // Хосты иконок — для ядра браузера: иконки выдачи грузит оно само, пачками (lib/iconavo.ts).
 import "../../lib/iconavo";
 import type { SearchCard } from "../../lib/search";
+import type { Select } from "../catalog/SelectToggle";
 import { CARD_LINK } from "../icon/usePanel";
 
 /**
@@ -14,7 +16,8 @@ import { CARD_LINK } from "../icon/usePanel";
  * выдачи по словам полной не двигает вёрстку. Ключ клетки — карточка, поэтому та же иконка остаётся в
  * своей клетке. Скелетоны добивают страницу до полной, пока смысл досчитывается; первые 150 мс их не
  * видно (CSS), как у заглушек пакета (ADR-0031). Карточка — ссылка на страницу иконки: обычный щелчок
- * открывает боковую панель (onOpen), с Ctrl — страницу в новой вкладке (шаг 4 фазы 4).
+ * открывает боковую панель (onOpen), с Ctrl — страницу в новой вкладке (шаг 4 фазы 4). В режиме «Выбрать
+ * несколько» карточка — кнопка: щелчок кладёт иконку в сумку или убирает (шаг 5 фазы 4).
  */
 export function ResultGrid({
   lang,
@@ -24,6 +27,7 @@ export function ResultGrid({
   busy = false,
   current,
   onOpen,
+  select,
 }: {
   lang: Lang;
   cards: SearchCard[];
@@ -36,28 +40,45 @@ export function ResultGrid({
   /** Иконка открытой панели — её карточка отмечена. */
   current?: string;
   onOpen?: (e: MouseEvent<HTMLAnchorElement>, name: string) => void;
+  /** Режим «Выбрать несколько»: карточки кладут иконки в сумку. */
+  select?: Select;
 }) {
   const t = DICTIONARIES[lang];
+  const content = (card: SearchCard): ReactNode => (
+    <>
+      <Icon icon={card.icon} className="result-cell-svg" />
+      <span className="result-cell-name">{card.name}</span>
+      <span className="result-cell-set">{setTitles[card.set] ?? card.set}</span>
+      {card.exact ? (
+        <span className="result-exact">{t.searchExact}</span>
+      ) : null}
+    </>
+  );
   return (
     <ul className="result-grid" aria-busy={busy ? "true" : undefined}>
       {cards.map((card) => (
         <li key={card.card} className="result-cell" data-icon={card.icon}>
-          <a
-            href={href(lang, iconPagePath(card.icon))}
-            className={CARD_LINK}
-            data-icon={card.icon}
-            aria-current={current === card.icon ? "true" : undefined}
-            onClick={(e) => onOpen?.(e, card.icon)}
-          >
-            <Icon icon={card.icon} className="result-cell-svg" />
-            <span className="result-cell-name">{card.name}</span>
-            <span className="result-cell-set">
-              {setTitles[card.set] ?? card.set}
-            </span>
-            {card.exact ? (
-              <span className="result-exact">{t.searchExact}</span>
-            ) : null}
-          </a>
+          {select?.on ? (
+            <button
+              type="button"
+              className={cn(CARD_LINK, "icon-card-pick")}
+              data-icon={card.icon}
+              aria-pressed={select.bag.includes(card.icon)}
+              onClick={() => select.pick(card.icon)}
+            >
+              {content(card)}
+            </button>
+          ) : (
+            <a
+              href={href(lang, iconPagePath(card.icon))}
+              className={CARD_LINK}
+              data-icon={card.icon}
+              aria-current={current === card.icon ? "true" : undefined}
+              onClick={(e) => onOpen?.(e, card.icon)}
+            >
+              {content(card)}
+            </a>
+          )}
         </li>
       ))}
       {Array.from(

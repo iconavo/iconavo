@@ -15,6 +15,7 @@ import {
   setCards,
   shownName,
 } from "../../lib/catalog";
+import { cn } from "../../lib/cn";
 import { DICTIONARIES, href, type Lang, STYLE_KEYS } from "../../lib/i18n";
 import { iconPagePath } from "../../lib/icon";
 // Хосты иконок — для ядра браузера: страницы и категории сетка грузит сама (lib/iconavo.ts).
@@ -25,6 +26,7 @@ import { IconPanel } from "../icon/IconPanel";
 import { CARD_LINK, usePanel } from "../icon/usePanel";
 import { Chips } from "./Chips";
 import { Pagination } from "./Pagination";
+import { SelectToggle, useSelect } from "./SelectToggle";
 
 /** Категория для сетки: адрес, название, число карточек и оно же строкой на языке страницы. */
 export interface GridCategory {
@@ -53,7 +55,8 @@ interface Loaded {
  * один раз берёт у edge API (/collection) и собирает карточки тем же правилом, что индекс поиска;
  * иконки грузит ядро пакета, пачками; пока грузятся — скелетоны. Карточка показывает главное имя
  * выбранного стиля, без стиля — как у автора. Карточка — ссылка на страницу иконки: обычный щелчок
- * открывает боковую панель, с Ctrl — страницу в новой вкладке (шаг 4 фазы 4).
+ * открывает боковую панель, с Ctrl — страницу в новой вкладке (шаг 4 фазы 4). В режиме «Выбрать
+ * несколько» карточка — кнопка: щелчок кладёт иконку в сумку или убирает (шаг 5 фазы 4).
  */
 export function IconGrid({
   lang,
@@ -79,6 +82,7 @@ export function IconGrid({
   const t = DICTIONARIES[lang];
   const { query, hrefOf, navigate } = useUrlQuery();
   const panel = usePanel(query, navigate);
+  const select = useSelect();
   const slug = query.get("category");
   const category = categories.find((c) => c.slug === slug);
   const styleParam = query.get("style");
@@ -200,6 +204,7 @@ export function IconGrid({
             ]}
           />
         ) : null}
+        <SelectToggle lang={lang} select={select} />
         {failed ? (
           <p className="grid-status" role="alert">
             {t.gridError}
@@ -214,16 +219,29 @@ export function IconGrid({
               const icon = `${prefix}:${name}`;
               return (
                 <li key={name} className="icon-cell">
-                  <a
-                    href={href(lang, iconPagePath(icon))}
-                    className={CARD_LINK}
-                    data-icon={icon}
-                    aria-current={panel.icon === icon ? "true" : undefined}
-                    onClick={(e) => panel.onCardClick(e, icon)}
-                  >
-                    <Icon icon={icon} className="icon-cell-svg" />
-                    <span className="icon-cell-name">{name}</span>
-                  </a>
+                  {select.on ? (
+                    <button
+                      type="button"
+                      className={cn(CARD_LINK, "icon-card-pick")}
+                      data-icon={icon}
+                      aria-pressed={select.bag.includes(icon)}
+                      onClick={() => select.pick(icon)}
+                    >
+                      <Icon icon={icon} className="icon-cell-svg" />
+                      <span className="icon-cell-name">{name}</span>
+                    </button>
+                  ) : (
+                    <a
+                      href={href(lang, iconPagePath(icon))}
+                      className={CARD_LINK}
+                      data-icon={icon}
+                      aria-current={panel.icon === icon ? "true" : undefined}
+                      onClick={(e) => panel.onCardClick(e, icon)}
+                    >
+                      <Icon icon={icon} className="icon-cell-svg" />
+                      <span className="icon-cell-name">{name}</span>
+                    </a>
+                  )}
                 </li>
               );
             })}

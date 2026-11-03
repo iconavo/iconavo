@@ -173,6 +173,20 @@ const en = {
   iconDownloadFailed: "Could not prepare the file. Try again.",
   iconDownloadNote:
     "The SVG starts with a comment with the set, author and license. PNG is drawn by your browser.",
+  bag: "Bag",
+  bagLabel: "Bag: {count}",
+  bagEmpty:
+    "The bag is empty. Add icons with “Add to bag” in the icon panel or turn on “Select several” above a grid.",
+  bagClear: "Clear",
+  bagRemove: "Remove {name}",
+  bagZip: "Download ZIP",
+  bagSprite: "Download sprite",
+  bagLicenses:
+    "The ZIP has the license texts: {sets}. The sprite starts with a comment with authors and licenses.",
+  bagAdd: "Add to bag",
+  bagFull: "The bag is full: at most 500 icons.",
+  bagSelect: "Select several",
+  bagSelected: "In the bag: {count}",
   iconToneDefault: "Default",
   iconToneLight: "Light",
   iconToneMediumLight: "Medium-light",
@@ -366,6 +380,20 @@ const ru: Dictionary = {
   iconDownloadFailed: "Не удалось подготовить файл. Попробуйте ещё раз.",
   iconDownloadNote:
     "SVG начинается с комментария: набор, автор и лицензия. PNG рисует ваш браузер.",
+  bag: "Сумка",
+  bagLabel: "Сумка: {count}",
+  bagEmpty:
+    "Сумка пуста. Кладите иконки кнопкой «В сумку» в панели иконки или включите «Выбрать несколько» над сеткой.",
+  bagClear: "Очистить",
+  bagRemove: "Убрать {name}",
+  bagZip: "Скачать ZIP",
+  bagSprite: "Скачать спрайт",
+  bagLicenses:
+    "В ZIP — тексты лицензий: {sets}. Спрайт начинается с комментария об авторах и лицензиях.",
+  bagAdd: "В сумку",
+  bagFull: "Сумка полна: не больше 500 иконок.",
+  bagSelect: "Выбрать несколько",
+  bagSelected: "В сумке: {count}",
   iconToneDefault: "Обычный",
   iconToneLight: "Светлый",
   iconToneMediumLight: "Светлее среднего",

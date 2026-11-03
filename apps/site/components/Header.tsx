@@ -1,13 +1,15 @@
 import { Icon } from "@iconavo-ui/react";
 import { DICTIONARIES, type Lang } from "../lib/i18n";
+import { BagMenu } from "./BagMenu";
 import { LanguageSwitch } from "./LanguageSwitch";
 import { PageLink } from "./PageLink";
 import { SearchField } from "./SearchField";
 import { ThemeMenu } from "./ThemeMenu";
 
 /**
- * Шапка сайта: имя, поле поиска, ссылки, переключатели языка и темы. Синхронная, без чтения файлов —
- * так её показывает и Storybook. У страницы 404 переключателя языка нет: она одна на все адреса.
+ * Шапка сайта: имя, поле поиска, ссылки, переключатели языка и темы, сумка (шаг 5 фазы 4). Синхронная,
+ * без чтения файлов — так её показывает и Storybook. У страницы 404 переключателя языка нет: она одна на
+ * все адреса.
  */
 export function Header({
   lang,
@@ -38,6 +40,7 @@ export function Header({
         <div className="header-tools">
           {languageSwitch ? <LanguageSwitch /> : null}
           <ThemeMenu lang={lang} />
+          <BagMenu lang={lang} />
         </div>
       </div>
     </header>
