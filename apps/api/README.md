@@ -41,6 +41,7 @@ Without parameters, the SVG is byte for byte the static file from `cdn.iconavo.d
 | --- | --- |
 | `color` | Replaces `currentColor`. Accepts hex with or without `#` (`ff0000`, `#f00`), a color name (`red`), or `rgb()`, `rgba()`, `hsl()`, `hsla()`. Has no effect on multicolor icons. |
 | `width`, `height` | A number with an optional CSS unit (`24`, `2em`, `50%`), `auto` for the icon's own size, or `unset` / `none` to omit the attribute. If only one is set, the other follows the aspect ratio. |
+| `stroke-width` | Line width of line icons, such as Lucide and the outline icons of Tabler: a positive number in units of the icon's grid (`1.5`), as the `stroke-width` attribute of the web component. Other icons are unchanged. |
 | `rotate` | `90deg`, `180deg`, `270deg`, or quarter turns `1`, `2`, `3`. |
 | `flip` | `horizontal`, `vertical`, or both, comma-separated. Flip is applied before rotation. |
 | `box` | `1` adds a transparent rectangle the size of the view box, for editors that ignore `viewBox`. |
@@ -59,6 +60,7 @@ Without parameters, the SVG is byte for byte the static file from `cdn.iconavo.d
 | Parameter | Values |
 | --- | --- |
 | `color` | Same values as for SVG. Switches to background mode unless `mode` is set. |
+| `stroke-width` | Same values as for SVG. |
 | `mode` | `mask` or `background` (`bg`). By default it is detected from the icon. |
 | `square` | `1` makes non-square icons square. |
 | `format` | `expanded` (default), `compact` or `compressed`. |
@@ -282,7 +284,7 @@ Errors are short JSON with an HTTP status:
 
 | Status | Codes |
 | --- | --- |
-| 400 | `icons_required`, `too_many_icons`, `duplicate_parameter`, `invalid_parameter`, `invalid_color`, `invalid_size`, `invalid_rotate`, `invalid_flip`, `invalid_mode`, `invalid_format`; search: `query_required`, `invalid_limit`, `invalid_start`, `invalid_prefix`, `invalid_license`, `invalid_style`; `/icon`: `icon_required`, `invalid_icon`; `/collection`: `prefix_required` |
+| 400 | `icons_required`, `too_many_icons`, `duplicate_parameter`, `invalid_parameter`, `invalid_color`, `invalid_size`, `invalid_stroke_width`, `invalid_rotate`, `invalid_flip`, `invalid_mode`, `invalid_format`; search: `query_required`, `invalid_limit`, `invalid_start`, `invalid_prefix`, `invalid_license`, `invalid_style`; `/icon`: `icon_required`, `invalid_icon`; `/collection`: `prefix_required` |
 | 404 | `not_found` (unknown address), `set_not_found`, `icon_not_found` |
 | 405 | `method_not_allowed`: only `GET`, `HEAD` and `OPTIONS` are allowed |
 | 429 | `rate_limited`: too many searches or icon details, retry after a minute |
@@ -298,7 +300,7 @@ These are not supported:
 - the legacy `/{set}/icons.json` address;
 - the `pretty` parameter: responses are always compact.
 
-In `/collection?info=true`, `info.license` also carries the full license text; `/collection` also has `styles`; `/changelog` is Iconavo's own address.
+In `/collection?info=true`, `info.license` also carries the full license text; `/collection` also has `styles`; `/changelog` is Iconavo's own address. SVG and CSS also take `stroke-width`.
 
 ## Caching and headers
 

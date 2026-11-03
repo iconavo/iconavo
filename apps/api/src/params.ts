@@ -82,6 +82,22 @@ export function parseColor(value: string): string {
   );
 }
 
+const POSITIVE = /^(?:\d+(?:\.\d+)?|\.\d+)$/;
+
+/**
+ * Толщина линии (stroke-width): положительное число без единиц, в единицах сетки иконки — как атрибут
+ * тега (ADR-0031), но строже: без 1e1, 0x10 и пробелов.
+ */
+export function parseStrokeWidth(value: string): number {
+  const n = POSITIVE.test(value) ? Number(value) : 0;
+  if (n > 0 && n < Number.POSITIVE_INFINITY) return n;
+  throw new ApiError(
+    400,
+    "invalid_stroke_width",
+    "stroke-width must be a positive number, such as 1.5",
+  );
+}
+
 /** Флажок: 1, true, yes — да; 0, false, no — нет; нет параметра — нет. */
 export function parseBool(name: string, value: string | undefined): boolean {
   if (value === undefined) return false;

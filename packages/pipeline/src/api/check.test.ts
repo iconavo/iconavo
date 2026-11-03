@@ -18,7 +18,8 @@ import { API_HOST, STATIC_HOST } from "./config.js";
 
 const V = "0123abcd";
 const OLD = "00000000";
-const HEART = '<path fill="none" stroke="currentColor" d="M1 1"/>';
+const HEART =
+  '<path fill="none" stroke="currentColor" stroke-width="2" d="M1 1"/>';
 const HOUSE = '<path fill="currentColor" d="M2 2"/>';
 const HEART_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24">${HEART}</svg>`;
 
@@ -167,9 +168,12 @@ describe("checkApi", () => {
       "svg",
       "svg-params",
       "svg-transform",
+      "svg-stroke",
       "css",
+      "css-stroke",
       "missing-set",
       "missing-icon",
+      "invalid-stroke",
       "redirect",
     ]);
     // Манифест без catalog — каталог не проверялся, это не проблема.
@@ -192,7 +196,9 @@ describe("checkApi", () => {
       "svg",
       "svg-params",
       "svg-transform",
+      "svg-stroke",
       "css",
+      "css-stroke",
       "collections",
       "collection",
       "last-modified",
@@ -201,6 +207,7 @@ describe("checkApi", () => {
       "collection-prefix",
       "missing-set",
       "missing-icon",
+      "invalid-stroke",
       "redirect",
     ]);
     expect(

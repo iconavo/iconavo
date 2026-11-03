@@ -1,7 +1,7 @@
 // SVG с параметрами (ADR-0004, ADR-0024): размеры, поворот и отражение — сборка ядра, та же, что
-// нарисует пакет в фазе 3 (ADR-0031); цвет — вместо currentColor; box — прозрачный прямоугольник по
-// итоговому холсту для редакторов, которые не читают viewBox; download — отдать файлом. Без
-// параметров ответ побайтно равен файлу статики.
+// нарисует пакет в фазе 3 (ADR-0031); толщина линии — setStrokeWidth ядра, как у тега; цвет — вместо
+// currentColor; box — прозрачный прямоугольник по итоговому холсту для редакторов, которые не читают
+// viewBox; download — отдать файлом. Без параметров ответ побайтно равен файлу статики.
 
 import type { IconavoIconSet } from "@iconavo-ui/core";
 import {
@@ -12,15 +12,17 @@ import {
   parseRotate,
   parseSize,
   type Rotation,
+  setStrokeWidth,
   svgToString,
 } from "@iconavo-ui/core/internal";
 import { ApiError } from "./http.js";
-import { parseBool, parseColor, single } from "./params.js";
+import { parseBool, parseColor, parseStrokeWidth, single } from "./params.js";
 
 export interface SvgOptions {
   color?: string;
   width?: string;
   height?: string;
+  strokeWidth?: number;
   rotate: Rotation;
   hFlip: boolean;
   vFlip: boolean;
@@ -46,6 +48,9 @@ export function parseSvgOptions(query: URLSearchParams): SvgOptions {
   const color = single(query, "color");
   const width = size(query, "width");
   const height = size(query, "height");
+  const strokeValue = single(query, "stroke-width");
+  const strokeWidth =
+    strokeValue === undefined ? undefined : parseStrokeWidth(strokeValue);
   const rotateValue = single(query, "rotate");
   const rotate = rotateValue === undefined ? 0 : parseRotate(rotateValue);
   if (rotate === null) {
@@ -71,6 +76,7 @@ export function parseSvgOptions(query: URLSearchParams): SvgOptions {
     ...(color === undefined ? {} : { color: parseColor(color) }),
     ...(width === undefined ? {} : { width }),
     ...(height === undefined ? {} : { height }),
+    ...(strokeWidth === undefined ? {} : { strokeWidth }),
     rotate,
     ...flip,
     box: parseBool("box", single(query, "box")),
@@ -84,6 +90,9 @@ export function svgOptionsKey(o: SvgOptions): URLSearchParams {
   if (o.color !== undefined) key.set("color", o.color);
   if (o.width !== undefined) key.set("width", o.width);
   if (o.height !== undefined) key.set("height", o.height);
+  if (o.strokeWidth !== undefined) {
+    key.set("stroke-width", formatNumber(o.strokeWidth));
+  }
   if (o.rotate !== 0) key.set("rotate", String(o.rotate));
   if (o.hFlip || o.vFlip) {
     key.set(
@@ -113,6 +122,10 @@ export function svgBody(
     hFlip: o.hFlip,
     vFlip: o.vFlip,
   });
+  // До замены цвета: setStrokeWidth меняет только рисунок с currentColor (ADR-0041).
+  if (o.strokeWidth !== undefined) {
+    parts.body = setStrokeWidth(parts.body, o.strokeWidth);
+  }
   if (o.box) {
     const [x, y, w, h] = [
       parts.box.left,

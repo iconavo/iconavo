@@ -13,6 +13,8 @@ import {
 import { createHandler } from "./handler.js";
 
 const HEART = '<path fill="none" stroke="currentColor" d="M1 1"/>';
+const LINE =
+  '<path fill="none" stroke="currentColor" stroke-width="2" d="M1 1"/>';
 const HOUSE = '<path fill="currentColor" d="M2 2"/>';
 const SWAN = '<path fill="#fff" d="M3 3"/>';
 const COLOR_VERSION = "89abcdef";
@@ -24,6 +26,9 @@ const FILES: Record<string, string> = {
   }),
   [`v/${VERSION}/demo/house.json`]: nameFileText("demo", {
     house: { body: HOUSE },
+  }),
+  [`v/${VERSION}/demo/line.json`]: nameFileText("demo", {
+    line: { body: LINE },
   }),
   [`v/${VERSION}/demo/home.json`]: nameFileText(
     "demo",
@@ -237,6 +242,26 @@ describe("SVG /{набор}/{имя}.svg", () => {
     );
   });
 
+  it("толщина линии — только у рисунка с currentColor, до замены цвета; в ключе — число", async () => {
+    const { get } = setup();
+    expect(
+      await (await get("/demo/line.svg?stroke-width=1.5")).text(),
+    ).toContain('stroke-width="1.5"');
+    expect(
+      await (await get("/demo/line.svg?stroke-width=1.5&color=red")).text(),
+    ).toContain('stroke="red" stroke-width="1.5"');
+    const house = await (await get("/demo/house.svg")).text();
+    expect(await (await get("/demo/house.svg?stroke-width=3")).text()).toBe(
+      house,
+    );
+    const swan = await (await get("/color/swan.svg")).text();
+    expect(await (await get("/color/swan.svg?stroke-width=3")).text()).toBe(
+      swan,
+    );
+    const same = await get("/demo/line.svg?stroke-width=1.50");
+    expect(same.headers.get("x-cache")).toBe("HIT");
+  });
+
   it("неквадратная иконка с поворотом", async () => {
     const svg = await (await setup().get("/color/swan.svg?rotate=1")).text();
     expect(svg).toContain('width="1.04em" height="1em" viewBox="0 0 33 32"');
@@ -256,6 +281,10 @@ describe("SVG /{набор}/{имя}.svg", () => {
       ["/demo/heart.svg?rotate=90", "invalid_rotate"],
       ["/demo/heart.svg?flip=diagonal", "invalid_flip"],
       ["/demo/heart.svg?width=abc", "invalid_size"],
+      ["/demo/heart.svg?stroke-width=0", "invalid_stroke_width"],
+      ["/demo/heart.svg?stroke-width=-1", "invalid_stroke_width"],
+      ["/demo/heart.svg?stroke-width=1e1", "invalid_stroke_width"],
+      ["/demo/heart.svg?stroke-width=2px", "invalid_stroke_width"],
       ["/demo/heart.svg?box=maybe", "invalid_parameter"],
       ["/demo/heart.svg?color=red&color=blue", "duplicate_parameter"],
     ];
@@ -307,6 +336,19 @@ describe("CSS /{набор}.css", () => {
     expect(await compressed.text()).not.toContain("\n  ");
     expect((await get("/demo.css?icons=heart&mode=x")).status).toBe(400);
     expect((await get("/demo.css?icons=heart&format=x")).status).toBe(400);
+  });
+
+  it("толщина линии — в рисунке и в ключе, неверная — 400", async () => {
+    const { get } = setup();
+    await get("/demo.css?icons=line");
+    const thin = await get("/demo.css?icons=line&stroke-width=1.5");
+    expect(thin.headers.get("x-cache")).toBe("MISS");
+    expect(await thin.text()).toContain("stroke-width='1.5'");
+    const again = await get("/demo.css?icons=line&stroke-width=1.50");
+    expect(again.headers.get("x-cache")).toBe("HIT");
+    const bad = await get("/demo.css?icons=line&stroke-width=0");
+    expect(bad.status).toBe(400);
+    expect((await json(bad)).error).toBe("invalid_stroke_width");
   });
 });
 
