@@ -388,7 +388,8 @@ export async function codeProblems(
   // Панель: тот же генератор, настройки вкладки — по умолчанию.
   await page.goto(`${o.base}/${CATALOG_SET}?icon=${CODE_ICON}`);
   await hydrated(page);
-  const plain = `<iconavo-icon icon="${CODE_ICON}"></iconavo-icon>`;
+  // Размер — всегда в пикселях, по умолчанию 24 (решение владельца 3 ноября 2026).
+  const plain = `<iconavo-icon icon="${CODE_ICON}" width="24"></iconavo-icon>`;
   same("код тега в панели", await snippet(page, "code", plain), plain);
   return problems;
 }

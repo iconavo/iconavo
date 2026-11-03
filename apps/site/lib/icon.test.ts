@@ -205,7 +205,7 @@ describe("настройки превью", () => {
       hflip: true,
     };
     expect(iconProps(s, { palette: false, strokes: true })).toEqual({
-      height: 48,
+      height: 24,
       color: "#e11d48",
       strokeWidth: 1.5,
       flip: "horizontal",

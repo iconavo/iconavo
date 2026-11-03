@@ -396,6 +396,7 @@ export async function iconPageProblems(
     return {
       color: svg?.getAttribute("color") ?? "",
       height: svg?.getAttribute("height") ?? "",
+      size: document.querySelector(".icon-preview-size")?.textContent ?? "",
       stroke: svg?.innerHTML.includes('stroke-width="1.5"') === true,
     };
   });
@@ -403,9 +404,14 @@ export async function iconPageProblems(
     preview.color === "#e11d48",
     `цвет из адреса не применён: «${preview.color}»`,
   );
+  // Превью всегда крупное, размер копии и кода — подписью под ним (решение владельца 3 ноября 2026).
   no(
-    preview.height === "64",
-    `размер из адреса не применён: «${preview.height}»`,
+    preview.height === "96",
+    `превью не крупное: высота «${preview.height}», а ждали 96`,
+  );
+  no(
+    preview.size === "64 × 64 px",
+    `размер из адреса не применён: под превью «${preview.size}»`,
   );
   no(preview.stroke, "толщина линии из адреса не применена");
 

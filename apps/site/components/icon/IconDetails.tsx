@@ -15,6 +15,7 @@ import {
 import {
   hasSettings,
   iconProps,
+  PREVIEW_SIZE,
   readSettings,
   settingsParams,
   settingsStore,
@@ -102,7 +103,9 @@ export function IconDetails({
     }
   }, [mode, ready, query, paramsText, navigate]);
   const shown = details?.icon ?? icon;
+  // Превью всегда крупное, как у Iconify; под ним — размер копии, файла и кода (решение владельца).
   const props = iconProps(s, {
+    size: PREVIEW_SIZE,
     palette: details?.set.palette ?? false,
     strokes: details?.strokes ?? true,
   });
@@ -167,6 +170,9 @@ export function IconDetails({
           <figcaption className="sr-only">{t.iconPreviewDark}</figcaption>
         </figure>
       </div>
+      <p className="icon-preview-size">
+        {s.size} × {s.size} px
+      </p>
       <IconName lang={lang} name={shown} />
       <IconActions
         lang={lang}

@@ -3,14 +3,15 @@
 // и переходят на страницу иконки через адрес (?size=48&color=e11d48&stroke=1.5&rotate=90&flip=horizontal).
 // Хранилище одно на вкладку — у панели и страницы; адрес читается только после гидратации, поэтому
 // серверный HTML — с настройками по умолчанию. Значения — те, что понимает пакет (ADR-0031): поворот
-// четвертями, отражение по горизонтали и вертикали.
+// четвертями, отражение по горизонтали и вертикали. Размер — тот, что уходит в копию, файл и код
+// (решение владельца 3 ноября 2026): по умолчанию 24 px, а превью всегда крупное — PREVIEW_SIZE.
 
 import { useSyncExternalStore } from "react";
 
 export type Quarter = 0 | 1 | 2 | 3;
 
 export interface IconSettings {
-  /** Размер превью в пикселях. */
+  /** Размер копии, файла и кода в пикселях. */
   size: number;
   /** Свой цвет #rrggbb; нет — цвет текста вокруг. */
   color?: string;
@@ -31,9 +32,11 @@ export const STROKE_STEP = 0.25;
 export const STROKE_DEFAULT = 2;
 /** Цвет, с которого начинается выбор своего, пока человек его не поменял. */
 export const COLOR_START = "#2563eb";
+/** Превью в панели и на странице — всегда крупное, как у Iconify; под ним подпись выбранного размера. */
+export const PREVIEW_SIZE = 96;
 
 export const DEFAULT_SETTINGS: IconSettings = {
-  size: 48,
+  size: 24,
   rotate: 0,
   hflip: false,
   vflip: false,
