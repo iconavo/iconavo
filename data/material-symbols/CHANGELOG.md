@@ -4,6 +4,15 @@
 Имена не пропадают: иконка, которую удалил автор, скрыта, но работает по имени, а старое имя переименованной ведёт на новое (ADR-0005).
 Скрытия и переименования вы одобряете лично в pull request (ADR-0019). Полные списки — в `changelog.json`.
 
+## 4 ноября 2026 · версия 76e7ac83
+
+Прошлая версия: 3e14c00b · источник: 0.48.3 · иконок: 15 802.
+
+**Изменения**
+
+- Добавлены (14): `devices-2`, `devices-2-outline`, `devices-2-outline-rounded`, `devices-2-outline-sharp`, `devices-2-rounded`, `devices-2-sharp`, `mirror-stack`, `mirror-stack-outline`, `mirror-stack-outline-sharp`, `mirror-stack-sharp`, `pull-request`, `pull-request-outline`, `pull-request-outline-rounded`, `pull-request-rounded`
+- Изменены (12): `looks-0`, `looks-0-sharp`, `looks-7`, `looks-7-rounded`, `looks-7-sharp`, `looks-8`, `looks-8-sharp`, `looks-9`, `looks-9-rounded`, `looks-9-sharp`, `payment-card-rounded`, `payment-card-sharp`
+
 ## 27 октября 2026 · версия 3e14c00b
 
 Прошлая версия: 0673b602 · источник: 0.48.2 · иконок: 15 786.

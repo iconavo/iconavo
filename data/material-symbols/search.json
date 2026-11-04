@@ -59185,6 +59185,48 @@
         "devices"
       ]
     },
+    "devices-2": {
+      "fingerprint": "2547c2165e75",
+      "tags": [
+        "devices",
+        "2"
+      ]
+    },
+    "devices-2-outline": {
+      "fingerprint": "287e5e70aa68",
+      "tags": [
+        "devices",
+        "2"
+      ]
+    },
+    "devices-2-outline-rounded": {
+      "fingerprint": "756aa9dafb1e",
+      "tags": [
+        "devices",
+        "2"
+      ]
+    },
+    "devices-2-outline-sharp": {
+      "fingerprint": "715a3ca95f26",
+      "tags": [
+        "devices",
+        "2"
+      ]
+    },
+    "devices-2-rounded": {
+      "fingerprint": "10945eb5d39d",
+      "tags": [
+        "devices",
+        "2"
+      ]
+    },
+    "devices-2-sharp": {
+      "fingerprint": "f86e15ec2661",
+      "tags": [
+        "devices",
+        "2"
+      ]
+    },
     "devices-fold": {
       "en": {
         "description": "Shows a foldable device with a dotted fold line on the left, indicating a folding screen or fold mode.",
@@ -119425,36 +119467,7 @@
       ]
     },
     "looks-0": {
-      "en": {
-        "description": "A black rounded square with a white digit zero inside, representing the number zero or a numeric option.",
-        "synonyms": [
-          "zero",
-          "digit 0",
-          "number zero",
-          "numeral",
-          "figure",
-          "number",
-          "symbol 0",
-          "square digit",
-          "numeric"
-        ]
-      },
-      "fingerprint": "6c6f1d945b2a",
-      "promptVersion": 1,
-      "ru": {
-        "description": "Чёрный квадрат с белой цифрой 0 внутри, обозначающий цифру ноль или числовой вариант.",
-        "synonyms": [
-          "ноль",
-          "цифра 0",
-          "число ноль",
-          "нолик",
-          "цифра",
-          "номер",
-          "число",
-          "символ 0",
-          "квадрат с цифрой"
-        ]
-      },
+      "fingerprint": "fac1bdfe625b",
       "tags": [
         "looks",
         "0"
@@ -119475,7 +119488,7 @@
       ]
     },
     "looks-0-sharp": {
-      "fingerprint": "8a8d5f9dd74b",
+      "fingerprint": "66e71f6c8dff",
       "tags": [
         "looks",
         "0"
@@ -119760,34 +119773,7 @@
       ]
     },
     "looks-7": {
-      "en": {
-        "description": "A white number 7 inside a black rounded square, usually indicating the seventh item, level, or number.",
-        "synonyms": [
-          "seven",
-          "number 7",
-          "digit 7",
-          "square number",
-          "seventh",
-          "numeral",
-          "numbered square",
-          "counter"
-        ]
-      },
-      "fingerprint": "4bb676957f1c",
-      "promptVersion": 1,
-      "ru": {
-        "description": "Белая цифра 7 на чёрном скруглённом квадрате; обозначает номер седьмой позиции или пункт списка с семёркой.",
-        "synonyms": [
-          "семёрка",
-          "цифра 7",
-          "число 7",
-          "номер 7",
-          "седьмой",
-          "квадрат с цифрой",
-          "иконка цифры",
-          "нумерация"
-        ]
-      },
+      "fingerprint": "dbce75193daf",
       "tags": [
         "looks",
         "7"
@@ -119815,52 +119801,21 @@
       ]
     },
     "looks-7-rounded": {
-      "fingerprint": "a9424f47d26b",
+      "fingerprint": "ef5a6bf74ff4",
       "tags": [
         "looks",
         "7"
       ]
     },
     "looks-7-sharp": {
-      "fingerprint": "e8e817b23052",
+      "fingerprint": "f2ecc1198c47",
       "tags": [
         "looks",
         "7"
       ]
     },
     "looks-8": {
-      "en": {
-        "description": "A black rounded square with a white number 8 inside, usually representing the number eight or an eighth option.",
-        "synonyms": [
-          "number 8",
-          "digit 8",
-          "eight",
-          "numeral",
-          "square",
-          "rounded square",
-          "figure",
-          "numbered",
-          "option 8",
-          "counter"
-        ]
-      },
-      "fingerprint": "b5b769e80983",
-      "promptVersion": 1,
-      "ru": {
-        "description": "Чёрный закруглённый квадрат с белой цифрой 8; обозначает число восемь или пункт номер восемь.",
-        "synonyms": [
-          "цифра 8",
-          "восемь",
-          "число 8",
-          "номер 8",
-          "восьмёрка",
-          "квадрат",
-          "цифра",
-          "знак",
-          "пункт 8",
-          "нумерация"
-        ]
-      },
+      "fingerprint": "105ac6eef097",
       "tags": [
         "looks",
         "8"
@@ -119881,43 +119836,14 @@
       ]
     },
     "looks-8-sharp": {
-      "fingerprint": "f61e8e945273",
+      "fingerprint": "e0f5bd9d0dc5",
       "tags": [
         "looks",
         "8"
       ]
     },
     "looks-9": {
-      "en": {
-        "description": "A black rounded square with a white digit 9 inside, usually meaning the ninth item, number or step.",
-        "synonyms": [
-          "nine",
-          "digit 9",
-          "number 9",
-          "numeral nine",
-          "square number",
-          "ninth item",
-          "numbered step",
-          "numeric",
-          "figure"
-        ]
-      },
-      "fingerprint": "bd88b035407a",
-      "promptVersion": 1,
-      "ru": {
-        "description": "Чёрный скруглённый квадрат с белой цифрой 9; обозначает девятый пункт, числовой элемент или номер.",
-        "synonyms": [
-          "девять",
-          "цифра 9",
-          "число 9",
-          "номер 9",
-          "девятка",
-          "квадрат с цифрой",
-          "пункт 9",
-          "нумерация",
-          "цифра"
-        ]
-      },
+      "fingerprint": "3da20ccfa4d2",
       "tags": [
         "looks",
         "9"
@@ -119945,14 +119871,14 @@
       ]
     },
     "looks-9-rounded": {
-      "fingerprint": "5c43722ec38f",
+      "fingerprint": "3902f87fcdaa",
       "tags": [
         "looks",
         "9"
       ]
     },
     "looks-9-sharp": {
-      "fingerprint": "bfbedf796ad6",
+      "fingerprint": "ddbed1adea9b",
       "tags": [
         "looks",
         "9"
@@ -126468,6 +126394,34 @@
       "fingerprint": "b3eed70735ad",
       "tags": [
         "mintmark"
+      ]
+    },
+    "mirror-stack": {
+      "fingerprint": "0ae80376d508",
+      "tags": [
+        "mirror",
+        "stack"
+      ]
+    },
+    "mirror-stack-outline": {
+      "fingerprint": "da4e166ae84e",
+      "tags": [
+        "mirror",
+        "stack"
+      ]
+    },
+    "mirror-stack-outline-sharp": {
+      "fingerprint": "07b9694e74a3",
+      "tags": [
+        "mirror",
+        "stack"
+      ]
+    },
+    "mirror-stack-sharp": {
+      "fingerprint": "25866ff9e24f",
+      "tags": [
+        "mirror",
+        "stack"
       ]
     },
     "missed-video-call": {
@@ -149319,6 +149273,20 @@
         "card"
       ]
     },
+    "payment-card-rounded": {
+      "fingerprint": "78568830e21e",
+      "tags": [
+        "payment",
+        "card"
+      ]
+    },
+    "payment-card-sharp": {
+      "fingerprint": "230aa3eb1047",
+      "tags": [
+        "payment",
+        "card"
+      ]
+    },
     "payments": {
       "en": {
         "description": "A banknote with a circle in the center and corner marks, usually meaning payment, money or cash transactions.",
@@ -160677,6 +160645,34 @@
         "published",
         "with",
         "changes"
+      ]
+    },
+    "pull-request": {
+      "fingerprint": "7752f31740ee",
+      "tags": [
+        "pull",
+        "request"
+      ]
+    },
+    "pull-request-outline": {
+      "fingerprint": "aeabccf2657c",
+      "tags": [
+        "pull",
+        "request"
+      ]
+    },
+    "pull-request-outline-rounded": {
+      "fingerprint": "63d09d38f19c",
+      "tags": [
+        "pull",
+        "request"
+      ]
+    },
+    "pull-request-rounded": {
+      "fingerprint": "0eea9a361b33",
+      "tags": [
+        "pull",
+        "request"
       ]
     },
     "pulmonology": {
