@@ -3,6 +3,35 @@
   "releases": [
     {
       "added": [
+        "circle-fading-check",
+        "mango",
+        "opacity",
+        "package-pen",
+        "package-question-mark"
+      ],
+      "date": "2026-11-05T10:56:49Z",
+      "previous": "3aab506c",
+      "renamed": {
+        "badge-alert": "badge-exclamation-point",
+        "battery-warning": "battery-exclamation-point",
+        "book-alert": "book-exclamation-point",
+        "circle-alert": "circle-exclamation-point",
+        "clock-alert": "clock-exclamation-point",
+        "cloud-alert": "cloud-exclamation-point",
+        "mail-warning": "mail-exclamation-point",
+        "message-circle-warning": "message-circle-exclamation-point",
+        "message-square-warning": "message-square-exclamation-point",
+        "octagon-alert": "octagon-exclamation-point",
+        "search-alert": "search-exclamation-point",
+        "shield-alert": "shield-exclamation-point",
+        "triangle-alert": "triangle-exclamation-point"
+      },
+      "revision": "91a1359b5ea235f620ba3a9682015ab8d6ada3af",
+      "total": 2024,
+      "version": "9c26bcf3"
+    },
+    {
+      "added": [
         "diagram-flow-horizontal",
         "diagram-flow-vertical",
         "globe-ban",

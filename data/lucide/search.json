@@ -5867,70 +5867,6 @@
         "shape"
       ]
     },
-    "badge-alert": {
-      "en": {
-        "description": "Draws a scalloped badge shape containing an exclamation mark, signaling a warning, alert, or unverified status.",
-        "synonyms": [
-          "warning",
-          "attention",
-          "error",
-          "problem",
-          "exclamation mark",
-          "security",
-          "unverified",
-          "caution",
-          "status"
-        ]
-      },
-      "fingerprint": "5ed008d2879e",
-      "promptVersion": 1,
-      "ru": {
-        "description": "Рисует печать с закруглёнными краями и восклицательным знаком внутри; обозначает предупреждение или проблему.",
-        "synonyms": [
-          "предупреждение",
-          "внимание",
-          "ошибка",
-          "проблема",
-          "восклицательный знак",
-          "безопасность",
-          "непроверенный",
-          "значок",
-          "статус"
-        ]
-      },
-      "tags": [
-        "seal",
-        "emblem",
-        "rosette",
-        "insignia",
-        "sticker",
-        "stamp",
-        "label",
-        "award",
-        "achievement",
-        "certification",
-        "official",
-        "status",
-        "starburst",
-        "scalloped",
-        "shape",
-        "alert",
-        "warning",
-        "danger",
-        "caution",
-        "notice",
-        "error",
-        "risk",
-        "concern",
-        "hazard",
-        "exclamation mark",
-        "exclamation point",
-        "!",
-        "security",
-        "safety",
-        "issue"
-      ]
-    },
     "badge-cent": {
       "en": {
         "description": "A cent sign inside a scalloped seal or badge, usually meaning a discount, voucher, or small-value payment.",
@@ -6166,6 +6102,70 @@
         "tag",
         "marketing",
         "€"
+      ]
+    },
+    "badge-exclamation-point": {
+      "en": {
+        "description": "Draws a scalloped badge shape containing an exclamation mark, signaling a warning, alert, or unverified status.",
+        "synonyms": [
+          "warning",
+          "attention",
+          "error",
+          "problem",
+          "exclamation mark",
+          "security",
+          "unverified",
+          "caution",
+          "status"
+        ]
+      },
+      "fingerprint": "5ed008d2879e",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Рисует печать с закруглёнными краями и восклицательным знаком внутри; обозначает предупреждение или проблему.",
+        "synonyms": [
+          "предупреждение",
+          "внимание",
+          "ошибка",
+          "проблема",
+          "восклицательный знак",
+          "безопасность",
+          "непроверенный",
+          "значок",
+          "статус"
+        ]
+      },
+      "tags": [
+        "seal",
+        "emblem",
+        "rosette",
+        "insignia",
+        "sticker",
+        "stamp",
+        "label",
+        "award",
+        "achievement",
+        "certification",
+        "official",
+        "status",
+        "starburst",
+        "scalloped",
+        "shape",
+        "alert",
+        "warning",
+        "danger",
+        "caution",
+        "notice",
+        "error",
+        "risk",
+        "concern",
+        "hazard",
+        "exclamation mark",
+        "exclamation point",
+        "!",
+        "security",
+        "safety",
+        "issue"
       ]
     },
     "badge-indian-rupee": {
@@ -7761,6 +7761,55 @@
         "charge"
       ]
     },
+    "battery-exclamation-point": {
+      "en": {
+        "description": "Battery outline with an exclamation mark inside and a terminal on the right; signals low charge or a power problem.",
+        "synonyms": [
+          "battery",
+          "accumulator",
+          "low battery",
+          "battery low",
+          "charge",
+          "energy",
+          "power alert",
+          "exclamation mark"
+        ]
+      },
+      "fingerprint": "1f3f215d92a7",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Контур батареи с восклицательным знаком внутри и полюсом справа; обозначает низкий заряд или проблему с питанием.",
+        "synonyms": [
+          "батарея",
+          "аккумулятор",
+          "низкий заряд",
+          "разряд батареи",
+          "зарядка",
+          "энергия",
+          "предупреждение",
+          "восклицательный знак"
+        ]
+      },
+      "tags": [
+        "power",
+        "electricity",
+        "energy",
+        "accumulator",
+        "charge",
+        "alert",
+        "warning",
+        "danger",
+        "caution",
+        "notice",
+        "error",
+        "risk",
+        "concern",
+        "hazard",
+        "exclamation mark",
+        "exclamation point",
+        "!"
+      ]
+    },
     "battery-full": {
       "en": {
         "description": "A battery outline with three charge bars and a terminal nub on the right. It usually indicates full or high battery charge level.",
@@ -7931,55 +7980,6 @@
         "health",
         "maximum",
         "upgrade"
-      ]
-    },
-    "battery-warning": {
-      "en": {
-        "description": "Battery outline with an exclamation mark inside and a terminal on the right; signals low charge or a power problem.",
-        "synonyms": [
-          "battery",
-          "accumulator",
-          "low battery",
-          "battery low",
-          "charge",
-          "energy",
-          "power alert",
-          "exclamation mark"
-        ]
-      },
-      "fingerprint": "1f3f215d92a7",
-      "promptVersion": 1,
-      "ru": {
-        "description": "Контур батареи с восклицательным знаком внутри и полюсом справа; обозначает низкий заряд или проблему с питанием.",
-        "synonyms": [
-          "батарея",
-          "аккумулятор",
-          "низкий заряд",
-          "разряд батареи",
-          "зарядка",
-          "энергия",
-          "предупреждение",
-          "восклицательный знак"
-        ]
-      },
-      "tags": [
-        "power",
-        "electricity",
-        "energy",
-        "accumulator",
-        "charge",
-        "alert",
-        "warning",
-        "danger",
-        "caution",
-        "notice",
-        "error",
-        "risk",
-        "concern",
-        "hazard",
-        "exclamation mark",
-        "exclamation point",
-        "!"
       ]
     },
     "beaker": {
@@ -10272,82 +10272,6 @@
         "ordered"
       ]
     },
-    "book-alert": {
-      "en": {
-        "description": "A closed book with an exclamation mark on its cover, usually meaning a warning, important notice, or documentation alert.",
-        "synonyms": [
-          "book warning",
-          "documentation notice",
-          "important information",
-          "textbook",
-          "manual",
-          "guide",
-          "exclamation mark",
-          "caution",
-          "error book"
-        ]
-      },
-      "fingerprint": "d5a9c3f8b18e",
-      "promptVersion": 1,
-      "ru": {
-        "description": "Книга с восклицательным знаком на обложке, означает предупреждение, важную информацию или ошибку в документации.",
-        "synonyms": [
-          "книга предупреждение",
-          "книга внимание",
-          "книга ошибка",
-          "важная информация",
-          "учебник",
-          "журнал",
-          "справочник",
-          "восклицательный знак",
-          "предупреждение",
-          "книга с ошибкой"
-        ]
-      },
-      "tags": [
-        "reading",
-        "paperback",
-        "booklet",
-        "magazine",
-        "leaflet",
-        "pamphlet",
-        "tome",
-        "library",
-        "writing",
-        "written",
-        "writer",
-        "author",
-        "story",
-        "script",
-        "fiction",
-        "novel",
-        "information",
-        "knowledge",
-        "education",
-        "high school",
-        "university",
-        "college",
-        "academy",
-        "student",
-        "study",
-        "learning",
-        "homework",
-        "research",
-        "documentation",
-        "alert",
-        "warning",
-        "danger",
-        "caution",
-        "notice",
-        "error",
-        "risk",
-        "concern",
-        "hazard",
-        "exclamation mark",
-        "exclamation point",
-        "!"
-      ]
-    },
     "book-audio": {
       "en": {
         "description": "A closed book with three vertical sound-wave bars on its cover, usually representing an audiobook.",
@@ -10848,6 +10772,82 @@
         "git",
         "repository",
         "pull"
+      ]
+    },
+    "book-exclamation-point": {
+      "en": {
+        "description": "A closed book with an exclamation mark on its cover, usually meaning a warning, important notice, or documentation alert.",
+        "synonyms": [
+          "book warning",
+          "documentation notice",
+          "important information",
+          "textbook",
+          "manual",
+          "guide",
+          "exclamation mark",
+          "caution",
+          "error book"
+        ]
+      },
+      "fingerprint": "d5a9c3f8b18e",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Книга с восклицательным знаком на обложке, означает предупреждение, важную информацию или ошибку в документации.",
+        "synonyms": [
+          "книга предупреждение",
+          "книга внимание",
+          "книга ошибка",
+          "важная информация",
+          "учебник",
+          "журнал",
+          "справочник",
+          "восклицательный знак",
+          "предупреждение",
+          "книга с ошибкой"
+        ]
+      },
+      "tags": [
+        "reading",
+        "paperback",
+        "booklet",
+        "magazine",
+        "leaflet",
+        "pamphlet",
+        "tome",
+        "library",
+        "writing",
+        "written",
+        "writer",
+        "author",
+        "story",
+        "script",
+        "fiction",
+        "novel",
+        "information",
+        "knowledge",
+        "education",
+        "high school",
+        "university",
+        "college",
+        "academy",
+        "student",
+        "study",
+        "learning",
+        "homework",
+        "research",
+        "documentation",
+        "alert",
+        "warning",
+        "danger",
+        "caution",
+        "notice",
+        "error",
+        "risk",
+        "concern",
+        "hazard",
+        "exclamation mark",
+        "exclamation point",
+        "!"
       ]
     },
     "book-headphones": {
@@ -20579,52 +20579,6 @@
         "shape"
       ]
     },
-    "circle-alert": {
-      "en": {
-        "description": "A circle containing an exclamation mark, commonly used to signal a warning, error, or important notice in interfaces.",
-        "synonyms": [
-          "warning",
-          "attention",
-          "error",
-          "danger",
-          "exclamation mark",
-          "caution",
-          "notice",
-          "important",
-          "alert sign"
-        ]
-      },
-      "fingerprint": "43b9ad65e226",
-      "promptVersion": 1,
-      "ru": {
-        "description": "Круг с восклицательным знаком внутри обозначает предупреждение, ошибку или важное уведомление в интерфейсе.",
-        "synonyms": [
-          "предупреждение",
-          "внимание",
-          "ошибка",
-          "опасность",
-          "восклицательный знак",
-          "важно",
-          "уведомление",
-          "тревога",
-          "осторожно"
-        ]
-      },
-      "tags": [
-        "alert",
-        "warning",
-        "danger",
-        "caution",
-        "notice",
-        "error",
-        "risk",
-        "concern",
-        "hazard",
-        "exclamation mark",
-        "exclamation point",
-        "!"
-      ]
-    },
     "circle-arrow-down": {
       "en": {
         "description": "A downward arrow inside a circle, usually meaning scroll down, download, or move down.",
@@ -22049,6 +22003,52 @@
         "coin"
       ]
     },
+    "circle-exclamation-point": {
+      "en": {
+        "description": "A circle containing an exclamation mark, commonly used to signal a warning, error, or important notice in interfaces.",
+        "synonyms": [
+          "warning",
+          "attention",
+          "error",
+          "danger",
+          "exclamation mark",
+          "caution",
+          "notice",
+          "important",
+          "alert sign"
+        ]
+      },
+      "fingerprint": "43b9ad65e226",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Круг с восклицательным знаком внутри обозначает предупреждение, ошибку или важное уведомление в интерфейсе.",
+        "synonyms": [
+          "предупреждение",
+          "внимание",
+          "ошибка",
+          "опасность",
+          "восклицательный знак",
+          "важно",
+          "уведомление",
+          "тревога",
+          "осторожно"
+        ]
+      },
+      "tags": [
+        "alert",
+        "warning",
+        "danger",
+        "caution",
+        "notice",
+        "error",
+        "risk",
+        "concern",
+        "hazard",
+        "exclamation mark",
+        "exclamation point",
+        "!"
+      ]
+    },
     "circle-fading-arrow-up": {
       "en": {
         "description": "A broken circular outline with an upward arrow inside, usually meaning upload, upgrade, or move up.",
@@ -22096,6 +22096,31 @@
         "improve",
         "circle",
         "button"
+      ]
+    },
+    "circle-fading-check": {
+      "fingerprint": "16cf53c8f5dd",
+      "tags": [
+        "checkmark",
+        "done",
+        "completed",
+        "finished",
+        "successful",
+        "confirmed",
+        "verified",
+        "validated",
+        "approved",
+        "accepted",
+        "correct",
+        "valid",
+        "ticked",
+        "task",
+        "todo",
+        "pending",
+        "progress",
+        "processing",
+        "verifying",
+        "loading"
       ]
     },
     "circle-fading-play": {
@@ -26090,68 +26115,6 @@
         "alarm"
       ]
     },
-    "clock-alert": {
-      "en": {
-        "description": "A clock face with an exclamation mark beside it, meaning a time-related warning or an alert about a timing issue.",
-        "synonyms": [
-          "clock",
-          "time",
-          "watch",
-          "alarm",
-          "warning",
-          "alert",
-          "error",
-          "deadline"
-        ]
-      },
-      "fingerprint": "28c10e2c8f10",
-      "promptVersion": 1,
-      "ru": {
-        "description": "Изображена стрелочные часы с восклицательным знаком сбоку, что означает предупреждение о времени или ошибку времени.",
-        "synonyms": [
-          "часы",
-          "время",
-          "будильник",
-          "предупреждение",
-          "ошибка",
-          "таймер",
-          "внимание",
-          "срок"
-        ]
-      },
-      "tags": [
-        "clock",
-        "time",
-        "hour",
-        "minute",
-        "second",
-        "timestamp",
-        "timer",
-        "duration",
-        "interval",
-        "frequency",
-        "schedule",
-        "deadline",
-        "pending",
-        "delayed",
-        "watch",
-        "history",
-        "alarm",
-        "alert",
-        "warning",
-        "danger",
-        "caution",
-        "notice",
-        "error",
-        "risk",
-        "concern",
-        "hazard",
-        "exclamation mark",
-        "exclamation point",
-        "!",
-        "wrong"
-      ]
-    },
     "clock-arrow-down": {
       "en": {
         "description": "A downward arrow beside a clock face, usually meaning descending order, time sorting, or decreasing time.",
@@ -26492,6 +26455,68 @@
         "todo"
       ]
     },
+    "clock-exclamation-point": {
+      "en": {
+        "description": "A clock face with an exclamation mark beside it, meaning a time-related warning or an alert about a timing issue.",
+        "synonyms": [
+          "clock",
+          "time",
+          "watch",
+          "alarm",
+          "warning",
+          "alert",
+          "error",
+          "deadline"
+        ]
+      },
+      "fingerprint": "28c10e2c8f10",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Изображена стрелочные часы с восклицательным знаком сбоку, что означает предупреждение о времени или ошибку времени.",
+        "synonyms": [
+          "часы",
+          "время",
+          "будильник",
+          "предупреждение",
+          "ошибка",
+          "таймер",
+          "внимание",
+          "срок"
+        ]
+      },
+      "tags": [
+        "clock",
+        "time",
+        "hour",
+        "minute",
+        "second",
+        "timestamp",
+        "timer",
+        "duration",
+        "interval",
+        "frequency",
+        "schedule",
+        "deadline",
+        "pending",
+        "delayed",
+        "watch",
+        "history",
+        "alarm",
+        "alert",
+        "warning",
+        "danger",
+        "caution",
+        "notice",
+        "error",
+        "risk",
+        "concern",
+        "hazard",
+        "exclamation mark",
+        "exclamation point",
+        "!",
+        "wrong"
+      ]
+    },
     "clock-fading": {
       "en": {
         "description": "A clock face with hour and minute hands and a dashed, fading outline; it usually means time, timing, or history.",
@@ -26689,55 +26714,6 @@
       },
       "tags": [
         "weather"
-      ]
-    },
-    "cloud-alert": {
-      "en": {
-        "description": "Outline of a cloud with an exclamation mark inside, indicating a cloud or network warning or error.",
-        "synonyms": [
-          "cloud",
-          "cloud error",
-          "warning",
-          "error",
-          "exclamation mark",
-          "alert",
-          "network issue",
-          "sync error",
-          "offline"
-        ]
-      },
-      "fingerprint": "476af1c2ea67",
-      "promptVersion": 1,
-      "ru": {
-        "description": "Контур облака с восклицательным знаком внутри, обозначает предупреждение об ошибке или проблеме с облачным сервисом или сетью.",
-        "synonyms": [
-          "облако",
-          "облако с ошибкой",
-          "предупреждение",
-          "ошибка",
-          "восклицательный знак",
-          "тревога",
-          "сеть",
-          "проблема с синхронизацией",
-          "сбой"
-        ]
-      },
-      "tags": [
-        "weather",
-        "alert",
-        "warning",
-        "danger",
-        "caution",
-        "notice",
-        "error",
-        "risk",
-        "concern",
-        "hazard",
-        "exclamation mark",
-        "exclamation point",
-        "!",
-        "sync",
-        "network"
       ]
     },
     "cloud-backup": {
@@ -26963,6 +26939,55 @@
       "tags": [
         "weather",
         "shower"
+      ]
+    },
+    "cloud-exclamation-point": {
+      "en": {
+        "description": "Outline of a cloud with an exclamation mark inside, indicating a cloud or network warning or error.",
+        "synonyms": [
+          "cloud",
+          "cloud error",
+          "warning",
+          "error",
+          "exclamation mark",
+          "alert",
+          "network issue",
+          "sync error",
+          "offline"
+        ]
+      },
+      "fingerprint": "476af1c2ea67",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Контур облака с восклицательным знаком внутри, обозначает предупреждение об ошибке или проблеме с облачным сервисом или сетью.",
+        "synonyms": [
+          "облако",
+          "облако с ошибкой",
+          "предупреждение",
+          "ошибка",
+          "восклицательный знак",
+          "тревога",
+          "сеть",
+          "проблема с синхронизацией",
+          "сбой"
+        ]
+      },
+      "tags": [
+        "weather",
+        "alert",
+        "warning",
+        "danger",
+        "caution",
+        "notice",
+        "error",
+        "risk",
+        "concern",
+        "hazard",
+        "exclamation mark",
+        "exclamation point",
+        "!",
+        "sync",
+        "network"
       ]
     },
     "cloud-fog": {
@@ -55495,6 +55520,57 @@
         "address"
       ]
     },
+    "mail-exclamation-point": {
+      "en": {
+        "description": "Outlined envelope with an exclamation mark at its lower corner, indicating a mail warning or email problem.",
+        "synonyms": [
+          "letter",
+          "envelope",
+          "mail",
+          "message",
+          "email error",
+          "warning",
+          "delivery failed",
+          "alert",
+          "exclamation"
+        ]
+      },
+      "fingerprint": "29d27b03ca33",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Контур конверта с восклицательным знаком у нижнего края, обозначающий предупреждение о проблеме с письмом или почтой.",
+        "synonyms": [
+          "письмо",
+          "конверт",
+          "почта",
+          "email",
+          "ошибка письма",
+          "предупреждение",
+          "сообщение с ошибкой",
+          "восклицательный знак",
+          "ошибка доставки"
+        ]
+      },
+      "tags": [
+        "email",
+        "message",
+        "letter",
+        "unread",
+        "alert",
+        "warning",
+        "danger",
+        "caution",
+        "notice",
+        "error",
+        "risk",
+        "concern",
+        "hazard",
+        "exclamation mark",
+        "exclamation point",
+        "!",
+        "delivery error"
+      ]
+    },
     "mail-minus": {
       "en": {
         "description": "Shows an envelope with a minus sign at the bottom right, usually meaning remove or delete a mail message.",
@@ -55809,57 +55885,6 @@
         "zoom"
       ]
     },
-    "mail-warning": {
-      "en": {
-        "description": "Outlined envelope with an exclamation mark at its lower corner, indicating a mail warning or email problem.",
-        "synonyms": [
-          "letter",
-          "envelope",
-          "mail",
-          "message",
-          "email error",
-          "warning",
-          "delivery failed",
-          "alert",
-          "exclamation"
-        ]
-      },
-      "fingerprint": "29d27b03ca33",
-      "promptVersion": 1,
-      "ru": {
-        "description": "Контур конверта с восклицательным знаком у нижнего края, обозначающий предупреждение о проблеме с письмом или почтой.",
-        "synonyms": [
-          "письмо",
-          "конверт",
-          "почта",
-          "email",
-          "ошибка письма",
-          "предупреждение",
-          "сообщение с ошибкой",
-          "восклицательный знак",
-          "ошибка доставки"
-        ]
-      },
-      "tags": [
-        "email",
-        "message",
-        "letter",
-        "unread",
-        "alert",
-        "warning",
-        "danger",
-        "caution",
-        "notice",
-        "error",
-        "risk",
-        "concern",
-        "hazard",
-        "exclamation mark",
-        "exclamation point",
-        "!",
-        "delivery error"
-      ]
-    },
     "mail-x": {
       "en": {
         "description": "An outlined envelope with a cross in the lower right corner, meaning a rejected, deleted, or unavailable email.",
@@ -55997,6 +56022,23 @@
         "mailing list",
         "newsletter",
         "copy"
+      ]
+    },
+    "mango": {
+      "fingerprint": "ad6b830aa9d1",
+      "tags": [
+        "fruit",
+        "food",
+        "tropical",
+        "summer",
+        "exotic",
+        "healthy",
+        "ripe",
+        "yellow",
+        "juice",
+        "smoothie",
+        "snack",
+        "produce"
       ]
     },
     "map": {
@@ -58016,6 +58058,62 @@
         "resolved"
       ]
     },
+    "message-circle-exclamation-point": {
+      "en": {
+        "description": "An outlined speech bubble containing an exclamation mark, usually signaling a warning or an important message in chat.",
+        "synonyms": [
+          "warning",
+          "exclamation mark",
+          "alert",
+          "message",
+          "chat",
+          "caution",
+          "report",
+          "attention",
+          "error"
+        ]
+      },
+      "fingerprint": "b19fc38b3cc7",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Контур круглого облачка речи с восклицательным знаком внутри; обозначает предупреждение или важное сообщение в чате.",
+        "synonyms": [
+          "предупреждение",
+          "восклицательный знак",
+          "сообщение",
+          "чат",
+          "ошибка",
+          "внимание",
+          "жалоба",
+          "уведомление",
+          "оповещение"
+        ]
+      },
+      "tags": [
+        "comment",
+        "chat",
+        "conversation",
+        "dialog",
+        "feedback",
+        "speech bubble",
+        "alert",
+        "warning",
+        "danger",
+        "caution",
+        "notice",
+        "error",
+        "risk",
+        "concern",
+        "hazard",
+        "exclamation mark",
+        "exclamation point",
+        "!",
+        "report",
+        "abuse",
+        "offense",
+        "protected"
+      ]
+    },
     "message-circle-heart": {
       "en": {
         "description": "Outlined speech bubble containing a heart; it usually signals love, liking, or positive feedback in a chat.",
@@ -58404,62 +58502,6 @@
         "chatbot"
       ]
     },
-    "message-circle-warning": {
-      "en": {
-        "description": "An outlined speech bubble containing an exclamation mark, usually signaling a warning or an important message in chat.",
-        "synonyms": [
-          "warning",
-          "exclamation mark",
-          "alert",
-          "message",
-          "chat",
-          "caution",
-          "report",
-          "attention",
-          "error"
-        ]
-      },
-      "fingerprint": "b19fc38b3cc7",
-      "promptVersion": 1,
-      "ru": {
-        "description": "Контур круглого облачка речи с восклицательным знаком внутри; обозначает предупреждение или важное сообщение в чате.",
-        "synonyms": [
-          "предупреждение",
-          "восклицательный знак",
-          "сообщение",
-          "чат",
-          "ошибка",
-          "внимание",
-          "жалоба",
-          "уведомление",
-          "оповещение"
-        ]
-      },
-      "tags": [
-        "comment",
-        "chat",
-        "conversation",
-        "dialog",
-        "feedback",
-        "speech bubble",
-        "alert",
-        "warning",
-        "danger",
-        "caution",
-        "notice",
-        "error",
-        "risk",
-        "concern",
-        "hazard",
-        "exclamation mark",
-        "exclamation point",
-        "!",
-        "report",
-        "abuse",
-        "offense",
-        "protected"
-      ]
-    },
     "message-circle-x": {
       "en": {
         "description": "Outlined speech bubble with an X inside, usually meaning a message is deleted, cancelled, or closed.",
@@ -58810,6 +58852,63 @@
         "unread",
         "current",
         "unresolved"
+      ]
+    },
+    "message-square-exclamation-point": {
+      "en": {
+        "description": "A speech bubble containing an exclamation mark, usually signaling a warning or a problem with a message or conversation.",
+        "synonyms": [
+          "warning",
+          "report",
+          "alert",
+          "chat",
+          "message",
+          "caution",
+          "feedback",
+          "complaint",
+          "notification",
+          "danger"
+        ]
+      },
+      "fingerprint": "d0ca068b0ccc",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Изображена речевая подсказка с восклицательным знаком внутри, что обычно означает предупреждение или сообщение о проблеме в переписке.",
+        "synonyms": [
+          "предупреждение",
+          "жалоба",
+          "оповещение",
+          "чат",
+          "сообщение",
+          "ошибка",
+          "внимание",
+          "опасность",
+          "уведомление"
+        ]
+      },
+      "tags": [
+        "comment",
+        "chat",
+        "conversation",
+        "dialog",
+        "feedback",
+        "speech bubble",
+        "alert",
+        "warning",
+        "danger",
+        "caution",
+        "notice",
+        "error",
+        "risk",
+        "concern",
+        "hazard",
+        "exclamation mark",
+        "exclamation point",
+        "!",
+        "report",
+        "abuse",
+        "offense",
+        "protected"
       ]
     },
     "message-square-heart": {
@@ -59276,63 +59375,6 @@
         "dialog",
         "feedback",
         "speech bubble"
-      ]
-    },
-    "message-square-warning": {
-      "en": {
-        "description": "A speech bubble containing an exclamation mark, usually signaling a warning or a problem with a message or conversation.",
-        "synonyms": [
-          "warning",
-          "report",
-          "alert",
-          "chat",
-          "message",
-          "caution",
-          "feedback",
-          "complaint",
-          "notification",
-          "danger"
-        ]
-      },
-      "fingerprint": "d0ca068b0ccc",
-      "promptVersion": 1,
-      "ru": {
-        "description": "Изображена речевая подсказка с восклицательным знаком внутри, что обычно означает предупреждение или сообщение о проблеме в переписке.",
-        "synonyms": [
-          "предупреждение",
-          "жалоба",
-          "оповещение",
-          "чат",
-          "сообщение",
-          "ошибка",
-          "внимание",
-          "опасность",
-          "уведомление"
-        ]
-      },
-      "tags": [
-        "comment",
-        "chat",
-        "conversation",
-        "dialog",
-        "feedback",
-        "speech bubble",
-        "alert",
-        "warning",
-        "danger",
-        "caution",
-        "notice",
-        "error",
-        "risk",
-        "concern",
-        "hazard",
-        "exclamation mark",
-        "exclamation point",
-        "!",
-        "report",
-        "abuse",
-        "offense",
-        "protected"
       ]
     },
     "message-square-x": {
@@ -63916,7 +63958,7 @@
         "shape"
       ]
     },
-    "octagon-alert": {
+    "octagon-exclamation-point": {
       "en": {
         "description": "An outlined octagon containing an exclamation mark, commonly used to signal a warning, danger, or important alert.",
         "synonyms": [
@@ -64168,6 +64210,24 @@
         "philosophy"
       ]
     },
+    "opacity": {
+      "fingerprint": "9749d476f161",
+      "tags": [
+        "opacity",
+        "opaque",
+        "transparency",
+        "visibility",
+        "fade",
+        "lens",
+        "glass",
+        "blur",
+        "filter",
+        "clear",
+        "mask",
+        "cover",
+        "gradient"
+      ]
+    },
     "option": {
       "en": {
         "description": "Draws the Option key symbol from a Mac keyboard, usually representing the Option or Alt modifier key.",
@@ -64326,7 +64386,14 @@
         "packed",
         "archive",
         "zip",
-        "module"
+        "module",
+        "shipping",
+        "recipient",
+        "inventory",
+        "logistics",
+        "tracking",
+        "order",
+        "product"
       ]
     },
     "package-2": {
@@ -64371,7 +64438,14 @@
         "packed",
         "archive",
         "zip",
-        "module"
+        "module",
+        "shipping",
+        "recipient",
+        "inventory",
+        "logistics",
+        "tracking",
+        "order",
+        "product"
       ]
     },
     "package-check": {
@@ -64417,6 +64491,13 @@
         "archive",
         "zip",
         "module",
+        "shipping",
+        "recipient",
+        "inventory",
+        "logistics",
+        "tracking",
+        "order",
+        "product",
         "checkmark",
         "done",
         "completed",
@@ -64478,6 +64559,13 @@
         "archive",
         "zip",
         "module",
+        "shipping",
+        "recipient",
+        "inventory",
+        "logistics",
+        "tracking",
+        "order",
+        "product",
         "minus",
         "remove",
         "delete",
@@ -64532,6 +64620,51 @@
         "delivered"
       ]
     },
+    "package-pen": {
+      "fingerprint": "704e742beaad",
+      "tags": [
+        "box",
+        "container",
+        "storage",
+        "sealed",
+        "delivery",
+        "undelivered",
+        "unopened",
+        "packed",
+        "archive",
+        "zip",
+        "module",
+        "shipping",
+        "recipient",
+        "inventory",
+        "logistics",
+        "tracking",
+        "order",
+        "product",
+        "edit",
+        "modify",
+        "update",
+        "revise",
+        "amend",
+        "create",
+        "change",
+        "write",
+        "writer",
+        "writing",
+        "pencil",
+        "compose",
+        "draft",
+        "author",
+        "annotate",
+        "comment",
+        "note",
+        "draw",
+        "sketch",
+        "doodle",
+        "rename",
+        "customize"
+      ]
+    },
     "package-plus": {
       "en": {
         "description": "Outline of a box with a plus sign at the bottom right; it usually means adding a new package or item.",
@@ -64575,6 +64708,13 @@
         "archive",
         "zip",
         "module",
+        "shipping",
+        "recipient",
+        "inventory",
+        "logistics",
+        "tracking",
+        "order",
+        "product",
         "plus",
         "add",
         "new",
@@ -64586,6 +64726,49 @@
         "insert",
         "addition",
         "added"
+      ]
+    },
+    "package-question-mark": {
+      "fingerprint": "b9bc40e2b0fe",
+      "tags": [
+        "box",
+        "container",
+        "storage",
+        "sealed",
+        "delivery",
+        "undelivered",
+        "unopened",
+        "packed",
+        "archive",
+        "zip",
+        "module",
+        "shipping",
+        "recipient",
+        "inventory",
+        "logistics",
+        "tracking",
+        "order",
+        "product",
+        "help",
+        "guide",
+        "tutorial",
+        "manual",
+        "unknown",
+        "unidentified",
+        "unspecified",
+        "uncertain",
+        "undetermined",
+        "missing",
+        "to be determined",
+        "mystery",
+        "question",
+        "question mark",
+        "?",
+        "unresolved",
+        "placeholder",
+        "pending",
+        "lost",
+        "dependency"
       ]
     },
     "package-search": {
@@ -64633,6 +64816,13 @@
         "archive",
         "zip",
         "module",
+        "shipping",
+        "recipient",
+        "inventory",
+        "logistics",
+        "tracking",
+        "order",
+        "product",
         "search",
         "magnifier",
         "scan",
@@ -64700,6 +64890,13 @@
         "archive",
         "zip",
         "module",
+        "shipping",
+        "recipient",
+        "inventory",
+        "logistics",
+        "tracking",
+        "order",
+        "product",
         "x",
         "remove",
         "delete",
@@ -75536,74 +75733,6 @@
         "enlarge"
       ]
     },
-    "search-alert": {
-      "en": {
-        "description": "A magnifying glass containing an exclamation mark, usually meaning a search warning or an error found during searching.",
-        "synonyms": [
-          "magnifier",
-          "magnifying glass",
-          "search warning",
-          "search error",
-          "alert",
-          "caution",
-          "zoom",
-          "inspect",
-          "problem"
-        ]
-      },
-      "fingerprint": "95de95394ad6",
-      "promptVersion": 1,
-      "ru": {
-        "description": "Изображена лупа с восклицательным знаком внутри, что обозначает поиск с предупреждением или ошибку при поиске.",
-        "synonyms": [
-          "лупа",
-          "поиск",
-          "предупреждение",
-          "ошибка",
-          "внимание",
-          "восклицательный знак",
-          "поиск ошибки",
-          "проверка",
-          "увеличение"
-        ]
-      },
-      "tags": [
-        "search",
-        "magnifier",
-        "scan",
-        "scanning",
-        "browsing",
-        "finding",
-        "find",
-        "lookup",
-        "query",
-        "locate",
-        "explore",
-        "discover",
-        "browse",
-        "inspect",
-        "examine",
-        "investigate",
-        "magnifying glass",
-        "lens",
-        "zoom",
-        "enlarge",
-        "alert",
-        "warning",
-        "danger",
-        "caution",
-        "notice",
-        "error",
-        "risk",
-        "concern",
-        "hazard",
-        "exclamation mark",
-        "exclamation point",
-        "!",
-        "stop",
-        "anomaly"
-      ]
-    },
     "search-check": {
       "en": {
         "description": "A magnifying glass containing a checkmark, usually meaning a search found a result or a verification succeeded.",
@@ -75733,6 +75862,74 @@
         "grep",
         "chevrons",
         "<>"
+      ]
+    },
+    "search-exclamation-point": {
+      "en": {
+        "description": "A magnifying glass containing an exclamation mark, usually meaning a search warning or an error found during searching.",
+        "synonyms": [
+          "magnifier",
+          "magnifying glass",
+          "search warning",
+          "search error",
+          "alert",
+          "caution",
+          "zoom",
+          "inspect",
+          "problem"
+        ]
+      },
+      "fingerprint": "95de95394ad6",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Изображена лупа с восклицательным знаком внутри, что обозначает поиск с предупреждением или ошибку при поиске.",
+        "synonyms": [
+          "лупа",
+          "поиск",
+          "предупреждение",
+          "ошибка",
+          "внимание",
+          "восклицательный знак",
+          "поиск ошибки",
+          "проверка",
+          "увеличение"
+        ]
+      },
+      "tags": [
+        "search",
+        "magnifier",
+        "scan",
+        "scanning",
+        "browsing",
+        "finding",
+        "find",
+        "lookup",
+        "query",
+        "locate",
+        "explore",
+        "discover",
+        "browse",
+        "inspect",
+        "examine",
+        "investigate",
+        "magnifying glass",
+        "lens",
+        "zoom",
+        "enlarge",
+        "alert",
+        "warning",
+        "danger",
+        "caution",
+        "notice",
+        "error",
+        "risk",
+        "concern",
+        "hazard",
+        "exclamation mark",
+        "exclamation point",
+        "!",
+        "stop",
+        "anomaly"
       ]
     },
     "search-slash": {
@@ -76855,145 +77052,6 @@
         "scout"
       ]
     },
-    "shield-alert": {
-      "en": {
-        "description": "A shield outline with an exclamation mark inside, usually meaning a security warning or threat.",
-        "synonyms": [
-          "warning",
-          "security alert",
-          "danger",
-          "protection",
-          "threat",
-          "vulnerability",
-          "unsafe",
-          "alarm",
-          "attention",
-          "error"
-        ]
-      },
-      "fingerprint": "5ddb8f2630cf",
-      "promptVersion": 1,
-      "ru": {
-        "description": "Нарисован щит с восклицательным знаком внутри, он обозначает предупреждение о угрозе или небезопасности.",
-        "synonyms": [
-          "предупреждение",
-          "опасность",
-          "защита",
-          "безопасность",
-          "угроза",
-          "уязвимость",
-          "тревога",
-          "внимание",
-          "ошибка",
-          "щит с восклицательным знаком"
-        ]
-      },
-      "tags": [
-        "shield",
-        "privacy",
-        "safeguard",
-        "security",
-        "cybersecurity",
-        "secure",
-        "safety",
-        "protection",
-        "protected",
-        "guard",
-        "guardian",
-        "defense",
-        "defence",
-        "defender",
-        "prevention",
-        "armored",
-        "armoured",
-        "block",
-        "threat",
-        "antivirus",
-        "vigilance",
-        "vigilant",
-        "detection",
-        "scan",
-        "find",
-        "strength",
-        "strong",
-        "tough",
-        "invincible",
-        "invincibility",
-        "invulnerable",
-        "undamaged",
-        "audit",
-        "admin",
-        "verification",
-        "crest",
-        "bravery",
-        "knight",
-        "foot soldier",
-        "infantry",
-        "trooper",
-        "pawn",
-        "battle",
-        "war",
-        "military",
-        "army",
-        "cadet",
-        "scout",
-        "alert",
-        "warning",
-        "danger",
-        "caution",
-        "notice",
-        "error",
-        "risk",
-        "concern",
-        "hazard",
-        "exclamation mark",
-        "exclamation point",
-        "!",
-        "unshielded",
-        "insecure",
-        "unsecured",
-        "unsafe",
-        "unprotected",
-        "unguarded",
-        "unarmored",
-        "unarmoured",
-        "defenseless",
-        "defenceless",
-        "undefended",
-        "blocked",
-        "stopped",
-        "intercepted",
-        "interception",
-        "saved",
-        "thwarted",
-        "unprevented",
-        "detected",
-        "scanned",
-        "found",
-        "exploit",
-        "vulnerability",
-        "vulnerable",
-        "weakness",
-        "infection",
-        "infected",
-        "compromised",
-        "data leak",
-        "audited",
-        "unverified",
-        "uncertified",
-        "emergency",
-        "attention",
-        "urgent",
-        "alarm",
-        "attacked",
-        "damaged",
-        "injured",
-        "hit",
-        "expired",
-        "disabled",
-        "inactive"
-      ]
-    },
     "shield-ban": {
       "en": {
         "description": "A shield with a diagonal line through it, usually meaning blocked, unprotected, or security disabled.",
@@ -77551,6 +77609,145 @@
         "etc",
         "...",
         "…"
+      ]
+    },
+    "shield-exclamation-point": {
+      "en": {
+        "description": "A shield outline with an exclamation mark inside, usually meaning a security warning or threat.",
+        "synonyms": [
+          "warning",
+          "security alert",
+          "danger",
+          "protection",
+          "threat",
+          "vulnerability",
+          "unsafe",
+          "alarm",
+          "attention",
+          "error"
+        ]
+      },
+      "fingerprint": "5ddb8f2630cf",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Нарисован щит с восклицательным знаком внутри, он обозначает предупреждение о угрозе или небезопасности.",
+        "synonyms": [
+          "предупреждение",
+          "опасность",
+          "защита",
+          "безопасность",
+          "угроза",
+          "уязвимость",
+          "тревога",
+          "внимание",
+          "ошибка",
+          "щит с восклицательным знаком"
+        ]
+      },
+      "tags": [
+        "shield",
+        "privacy",
+        "safeguard",
+        "security",
+        "cybersecurity",
+        "secure",
+        "safety",
+        "protection",
+        "protected",
+        "guard",
+        "guardian",
+        "defense",
+        "defence",
+        "defender",
+        "prevention",
+        "armored",
+        "armoured",
+        "block",
+        "threat",
+        "antivirus",
+        "vigilance",
+        "vigilant",
+        "detection",
+        "scan",
+        "find",
+        "strength",
+        "strong",
+        "tough",
+        "invincible",
+        "invincibility",
+        "invulnerable",
+        "undamaged",
+        "audit",
+        "admin",
+        "verification",
+        "crest",
+        "bravery",
+        "knight",
+        "foot soldier",
+        "infantry",
+        "trooper",
+        "pawn",
+        "battle",
+        "war",
+        "military",
+        "army",
+        "cadet",
+        "scout",
+        "alert",
+        "warning",
+        "danger",
+        "caution",
+        "notice",
+        "error",
+        "risk",
+        "concern",
+        "hazard",
+        "exclamation mark",
+        "exclamation point",
+        "!",
+        "unshielded",
+        "insecure",
+        "unsecured",
+        "unsafe",
+        "unprotected",
+        "unguarded",
+        "unarmored",
+        "unarmoured",
+        "defenseless",
+        "defenceless",
+        "undefended",
+        "blocked",
+        "stopped",
+        "intercepted",
+        "interception",
+        "saved",
+        "thwarted",
+        "unprevented",
+        "detected",
+        "scanned",
+        "found",
+        "exploit",
+        "vulnerability",
+        "vulnerable",
+        "weakness",
+        "infection",
+        "infected",
+        "compromised",
+        "data leak",
+        "audited",
+        "unverified",
+        "uncertified",
+        "emergency",
+        "attention",
+        "urgent",
+        "alarm",
+        "attacked",
+        "damaged",
+        "injured",
+        "hit",
+        "expired",
+        "disabled",
+        "inactive"
       ]
     },
     "shield-half": {
@@ -93994,7 +94191,47 @@
         "hierarchy"
       ]
     },
-    "triangle-alert": {
+    "triangle-dashed": {
+      "en": {
+        "description": "A dashed outline of an equilateral triangle, usually representing a shape tool or a delta symbol in an interface.",
+        "synonyms": [
+          "triangle",
+          "dashed",
+          "outline",
+          "shape",
+          "delta",
+          "equilateral",
+          "stroke",
+          "pyramid",
+          "hierarchy"
+        ]
+      },
+      "fingerprint": "b70dbb693f1d",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Пунктирный контур равностороннего треугольника; обозначает фигуру, форму или дельту, часто используется как инструмент выделения фигур.",
+        "synonyms": [
+          "треугольник",
+          "пунктир",
+          "фигура",
+          "форма",
+          "равносторонний треугольник",
+          "дельта",
+          "контур",
+          "иерархия",
+          "пирамида"
+        ]
+      },
+      "tags": [
+        "equilateral",
+        "delta",
+        "shape",
+        "pyramid",
+        "hierarchy",
+        "dashed"
+      ]
+    },
+    "triangle-exclamation-point": {
       "en": {
         "description": "An outlined triangle with an exclamation mark inside, commonly used to signal a warning or potential danger.",
         "synonyms": [
@@ -94037,46 +94274,6 @@
         "exclamation point",
         "!",
         "linter"
-      ]
-    },
-    "triangle-dashed": {
-      "en": {
-        "description": "A dashed outline of an equilateral triangle, usually representing a shape tool or a delta symbol in an interface.",
-        "synonyms": [
-          "triangle",
-          "dashed",
-          "outline",
-          "shape",
-          "delta",
-          "equilateral",
-          "stroke",
-          "pyramid",
-          "hierarchy"
-        ]
-      },
-      "fingerprint": "b70dbb693f1d",
-      "promptVersion": 1,
-      "ru": {
-        "description": "Пунктирный контур равностороннего треугольника; обозначает фигуру, форму или дельту, часто используется как инструмент выделения фигур.",
-        "synonyms": [
-          "треугольник",
-          "пунктир",
-          "фигура",
-          "форма",
-          "равносторонний треугольник",
-          "дельта",
-          "контур",
-          "иерархия",
-          "пирамида"
-        ]
-      },
-      "tags": [
-        "equilateral",
-        "delta",
-        "shape",
-        "pyramid",
-        "hierarchy",
-        "dashed"
       ]
     },
     "triangle-right": {
