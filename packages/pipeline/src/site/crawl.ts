@@ -346,6 +346,70 @@ export function robotsMetaVerdict(html: string): Verdict {
       );
 }
 
+interface RobotsGroup {
+  /** Имена ботов строчными. */
+  agents: string[];
+  disallow: string[];
+}
+
+/** Группы robots.txt (RFC 9309): подряд идущие User-agent и их правила; комментарии отброшены. */
+export function robotsGroups(text: string): RobotsGroup[] {
+  const groups: RobotsGroup[] = [];
+  let group: RobotsGroup | undefined;
+  let agentsOpen = false;
+  for (const raw of text.split(/\r?\n/)) {
+    const m = /^\s*([A-Za-z-]+)\s*:\s*(.*?)\s*$/.exec(raw.replace(/#.*/, ""));
+    if (!m) continue;
+    const key = (m[1] ?? "").toLowerCase();
+    const value = m[2] ?? "";
+    if (key === "user-agent") {
+      if (!group || !agentsOpen) {
+        group = { agents: [], disallow: [] };
+        groups.push(group);
+      }
+      group.agents.push(value.toLowerCase());
+      agentsOpen = true;
+    } else if (group) {
+      agentsOpen = false;
+      if (key === "disallow") group.disallow.push(value);
+    }
+  }
+  return groups;
+}
+
+/** Закрыт ли сайт боту целиком: в его группе, а без неё — в группе «*» есть Disallow: /. */
+export function robotsBlocksAll(text: string, agent: string): boolean {
+  const groups = robotsGroups(text);
+  const name = agent.toLowerCase();
+  const group =
+    groups.find((g) => g.agents.includes(name)) ??
+    groups.find((g) => g.agents.includes("*"));
+  return group?.disallow.includes("/") ?? false;
+}
+
+/**
+ * robots.txt: поисковикам обход открыт — иначе они не увидят noindex; ИИ-обходчикам — как велит aiOpen
+ * (до запуска закрыт, ADR-0039). Образцы — Googlebot и GPTBot.
+ */
+export function robotsTxtVerdict(text: string, aiOpen: boolean): Verdict {
+  if (robotsBlocksAll(text, "Googlebot")) {
+    return fail("обход закрыт поисковикам — они не увидят noindex");
+  }
+  const aiBlocked = robotsBlocksAll(text, "GPTBot");
+  if (aiBlocked === aiOpen) {
+    return fail(
+      aiOpen
+        ? "ИИ-обходчикам обход закрыт, а по AI_CRAWLERS он открыт"
+        : "ИИ-обходчикам обход открыт до запуска: у GPTBot нет Disallow: / (ADR-0039)",
+    );
+  }
+  return pass(
+    aiOpen
+      ? "обход открыт всем — поисковик увидит noindex"
+      : "поисковикам обход открыт — увидят noindex; ИИ-обходчикам закрыт до запуска",
+  );
+}
+
 /** Содержимое метки <meta name="…"> страницы; нет метки — undefined. */
 export function metaOf(html: string, name: string): string | undefined {
   for (const m of html.matchAll(/<meta\b[^>]*>/g)) {

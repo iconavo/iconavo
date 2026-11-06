@@ -1,12 +1,14 @@
 // Проверка живого сайта iconavo.dev (ADR-0050): после выкладки — та ли сборка отвечает, все страницы,
 // коды и переходы, свежесть данных наборов (фаза 4, шаг 2), страницы иконок выборки и отпечатки
 // содержимого наборов (фаза 4, шаг 4), заголовки и noindex, языки (фаза 4, шаг 1), иконки в HTML, ссылки,
-// переход с www и с http, robots.txt. Только HTTP, ключи не нужны; запускают задачи «Проверка» и
+// переход с www и с http, robots.txt (поисковикам обход открыт, ИИ-обходчикам до запуска — нет,
+// ADR-0039). Только HTTP, ключи не нужны; запускают задачи «Проверка» и
 // «Свежесть» workflow «Сайт» и pnpm site --live.
 
 import { manifestSchema } from "../cdn/files.js";
 import { fail, pass, type Verdict } from "../sandbox/verdict.js";
 import {
+  AI_CRAWLERS_OPEN,
   CRAWL_EXTRAS,
   DEFAULT_ICON_HOSTS,
   followLink,
@@ -30,6 +32,7 @@ import {
   langVerdict,
   linksVerdict,
   robotsMetaVerdict,
+  robotsTxtVerdict,
   searchFormVerdict,
   sectionsVerdict,
   statusVerdict,
@@ -208,10 +211,8 @@ export async function checkLiveSite(o: {
   rows.push({
     what: "robots.txt",
     verdict:
-      robotsTxt &&
-      robotsTxt.status === 200 &&
-      !/^disallow:\s*\/\s*$/im.test(robotsTxt.html)
-        ? pass("обход разрешён — поисковик увидит noindex")
+      robotsTxt && robotsTxt.status === 200
+        ? robotsTxtVerdict(robotsTxt.html, AI_CRAWLERS_OPEN)
         : fail(
             robotsTxt
               ? `${robotsTxt.status}: ${robotsTxt.html.slice(0, 80)}`
