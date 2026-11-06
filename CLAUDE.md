@@ -612,7 +612,7 @@ React (ADR-0033, ADR-0031, шаг 7 фазы 3): `packages/react` — `@iconavo-
   - CSP в продакшене: стили только файлами, `connect-src` — хосты иконок;
   - `X-Robots-Tag: noindex, nofollow` и `<meta name="robots">` от константы `INDEXING` — до запуска `false`;
   - `X-Iconavo-Build` — метка сборки `SITE_BUILD`;
-  - `robots.txt` обход разрешает.
+  - `robots.txt` обход поисковикам разрешает, а ИИ-обходчикам (GPTBot, ClaudeBot и др. — `AI_CRAWLER_AGENTS`) до запуска закрывает: константа `AI_CRAWLERS = false`, сверху — правило AI Bots в Firewall Vercel. Причина — 6 ноября 2026 GPTBot за ночь открыл 33,6 тысячи страниц иконок, и бесплатный суточный лимит Workers кончился. Решение владельца: ИИ-обходчики нужны, чтобы сайт попадал в ответы ИИ, — открыть в фазе 7 по чек-листу запуска (`docs/roadmap.md`, ADR-0039); `pnpm site --live` сверяет файл с `AI_CRAWLERS_OPEN`.
 - **Тесты** `apps/site/lib/*.test.ts` — общий Vitest: разбор, якоря, раскладка, иконки, токены, заголовки. Типы сайта проверяет `next build`: в `tsc -b` сайт не входит, как и `examples/next`.
 - **`pnpm site`** — `next dev` на 127.0.0.1:4284 с живыми хостами; `--prod` — сборка и `next start`.
 - **`pnpm site --check`** (`src/site/`):

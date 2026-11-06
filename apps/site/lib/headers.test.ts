@@ -1,9 +1,12 @@
 import { describe, expect, it } from "vitest";
 import {
+  AI_CRAWLER_AGENTS,
+  AI_CRAWLERS,
   contentSecurityPolicy,
   INDEXING,
   iconHosts,
   ROBOTS,
+  robotsRules,
   searchRobotsHeaders,
   siteHeaders,
 } from "./headers";
@@ -14,6 +17,22 @@ describe("заголовки сайта", () => {
     const headers = siteHeaders({ production: false, build: "x", hosts: [] });
     expect(headers).toContainEqual({ key: "X-Robots-Tag", value: ROBOTS });
     expect(ROBOTS).toBe("noindex, nofollow");
+  });
+
+  it("robots.txt до запуска: поисковикам обход открыт, ИИ-обходчикам — закрыт (ADR-0039)", () => {
+    expect(AI_CRAWLERS).toBe(false);
+    expect(robotsRules()).toEqual([
+      { userAgent: AI_CRAWLER_AGENTS, disallow: "/" },
+      { userAgent: "*", allow: "/" },
+    ]);
+    expect(AI_CRAWLER_AGENTS).toContain("GPTBot");
+    expect(new Set(AI_CRAWLER_AGENTS).size).toBe(AI_CRAWLER_AGENTS.length);
+    // Поисковики в список не попадают: они должны видеть метку noindex.
+    for (const engine of ["Googlebot", "Bingbot", "YandexBot", "*"]) {
+      expect(AI_CRAWLER_AGENTS).not.toContain(engine);
+    }
+    // Фаза 7: AI_CRAWLERS = true — остаётся одно правило для всех.
+    expect(robotsRules(true)).toEqual([{ userAgent: "*", allow: "/" }]);
   });
 
   it("CSP — только в продакшене: стили файлами, соединения — с хостами иконок", () => {
