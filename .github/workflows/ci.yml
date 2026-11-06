@@ -138,14 +138,21 @@ jobs:
           node-version: 24
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      # Сборки браузеров Playwright — по его версии в package.json конвейера. Системные библиотеки
-      # (--with-deps, apt) ставятся при каждом запуске: их кэш не хранит.
+      # Сборки браузеров Playwright — по его версии в package.json конвейера и по версии Ubuntu: WebKit у
+      # Playwright свой под каждую версию системы (webkit-ubuntu-24.04, webkit-ubuntu-26.04), а сборку,
+      # которая уже лежит в папке, playwright install не заменяет. Без версии системы в ключе машина с 26.04
+      # получала из кэша сборку от 24.04, и WebKit не запускался (ноябрь 2026, ubuntu-latest перешёл на 26.04).
+      # Системные библиотеки (--with-deps, apt) ставятся при каждом запуске: их кэш не хранит.
+      - name: Версия системы
+        id: os
+        if: matrix.browser != 'chrome'
+        run: . /etc/os-release && echo "version=$ID-$VERSION_ID" >> "$GITHUB_OUTPUT"
       - name: Кэш браузеров Playwright
         if: matrix.browser != 'chrome'
         uses: actions/cache@v6
         with:
           path: ~/.cache/ms-playwright
-          key: playwright-${{ matrix.browser }}-${{ hashFiles('packages/pipeline/package.json') }}
+          key: playwright-${{ steps.os.outputs.version }}-${{ matrix.browser }}-${{ hashFiles('packages/pipeline/package.json') }}
       - name: Браузер
         run: |
           if [ "$BROWSER" = chrome ]; then
@@ -238,12 +245,17 @@ jobs:
           path: ~/.npm
           key: npm-starters-${{ hashFiles('examples/starters/*/package.json', 'examples/starters/*/package-lock.json') }}
           restore-keys: npm-starters-
+      # Ключ кэша браузеров — как у задачи browser: версии Playwright и Ubuntu.
+      - name: Версия системы
+        id: os
+        if: matrix.browser != 'chrome'
+        run: . /etc/os-release && echo "version=$ID-$VERSION_ID" >> "$GITHUB_OUTPUT"
       - name: Кэш браузеров Playwright
         if: matrix.browser != 'chrome'
         uses: actions/cache@v6
         with:
           path: ~/.cache/ms-playwright
-          key: playwright-${{ matrix.browser }}-${{ hashFiles('packages/pipeline/package.json') }}
+          key: playwright-${{ steps.os.outputs.version }}-${{ matrix.browser }}-${{ hashFiles('packages/pipeline/package.json') }}
       - name: Браузер
         run: |
           if [ "$BROWSER" = chrome ]; then
@@ -298,13 +310,18 @@ jobs:
           node-version: 24
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+      # Ключ кэша браузеров — как у задачи browser: версии Playwright и Ubuntu.
+      - name: Версия системы
+        id: os
+        if: matrix.browser != 'chrome'
+        run: . /etc/os-release && echo "version=$ID-$VERSION_ID" >> "$GITHUB_OUTPUT"
       # Кэша .next нет: сайт собирается с чистого листа — кэш Turbopack от другой сборки ронял next build.
       - name: Кэш браузеров Playwright
         if: matrix.browser != 'chrome'
         uses: actions/cache@v6
         with:
           path: ~/.cache/ms-playwright
-          key: playwright-${{ matrix.browser }}-${{ hashFiles('packages/pipeline/package.json') }}
+          key: playwright-${{ steps.os.outputs.version }}-${{ matrix.browser }}-${{ hashFiles('packages/pipeline/package.json') }}
       - name: Браузер
         run: |
           if [ "$BROWSER" = chrome ]; then
