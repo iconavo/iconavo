@@ -3,6 +3,43 @@
   "releases": [
     {
       "added": [
+        "devices-2",
+        "devices-2-outline",
+        "devices-2-outline-rounded",
+        "devices-2-outline-sharp",
+        "devices-2-rounded",
+        "devices-2-sharp",
+        "mirror-stack",
+        "mirror-stack-outline",
+        "mirror-stack-outline-sharp",
+        "mirror-stack-sharp",
+        "pull-request",
+        "pull-request-outline",
+        "pull-request-outline-rounded",
+        "pull-request-rounded"
+      ],
+      "changed": [
+        "looks-0",
+        "looks-0-sharp",
+        "looks-7",
+        "looks-7-rounded",
+        "looks-7-sharp",
+        "looks-8",
+        "looks-8-sharp",
+        "looks-9",
+        "looks-9-rounded",
+        "looks-9-sharp",
+        "payment-card-rounded",
+        "payment-card-sharp"
+      ],
+      "date": "2026-11-04T10:56:24Z",
+      "previous": "3e14c00b",
+      "revision": "0.48.3",
+      "total": 15802,
+      "version": "76e7ac83"
+    },
+    {
+      "added": [
         "contrast-auto",
         "contrast-auto-rounded",
         "contrast-inverse",
