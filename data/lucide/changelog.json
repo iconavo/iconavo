@@ -3,6 +3,20 @@
   "releases": [
     {
       "added": [
+        "grid-3x3-off",
+        "moped",
+        "square-dashed-search",
+        "user-exclamation-point",
+        "user-round-exclamation-point"
+      ],
+      "date": "2026-11-06T10:53:20Z",
+      "previous": "9c26bcf3",
+      "revision": "b826f0c527e1498f5e46f41ca0277ccab144bf31",
+      "total": 2029,
+      "version": "ac88e2c8"
+    },
+    {
+      "added": [
         "circle-fading-check",
         "mango",
         "opacity",
