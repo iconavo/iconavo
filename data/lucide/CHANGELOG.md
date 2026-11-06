@@ -4,6 +4,18 @@
 Имена не пропадают: иконка, которую удалил автор, скрыта, но работает по имени, а старое имя переименованной ведёт на новое (ADR-0005).
 Скрытия и переименования вы одобряете лично в pull request (ADR-0019). Полные списки — в `changelog.json`.
 
+## 5 ноября 2026 · версия 9c26bcf3
+
+Прошлая версия: 3aab506c · источник: 91a1359 · иконок: 2 024.
+
+**Требуют вашего одобрения**
+
+- Переименованы — старое имя ведёт на новое (13): `badge-alert` → `badge-exclamation-point`, `battery-warning` → `battery-exclamation-point`, `book-alert` → `book-exclamation-point`, `circle-alert` → `circle-exclamation-point`, `clock-alert` → `clock-exclamation-point`, `cloud-alert` → `cloud-exclamation-point`, `mail-warning` → `mail-exclamation-point`, `message-circle-warning` → `message-circle-exclamation-point`, `message-square-warning` → `message-square-exclamation-point`, `octagon-alert` → `octagon-exclamation-point`, `search-alert` → `search-exclamation-point`, `shield-alert` → `shield-exclamation-point`, `triangle-alert` → `triangle-exclamation-point`
+
+**Изменения**
+
+- Добавлены (5): `circle-fading-check`, `mango`, `opacity`, `package-pen`, `package-question-mark`
+
 ## 3 ноября 2026 · версия 3aab506c
 
 Прошлая версия: af67c16f · источник: 4b203ec · иконок: 2 019.
