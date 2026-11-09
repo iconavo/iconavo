@@ -1518,6 +1518,28 @@
         "adjustments"
       ]
     },
+    "adjustments-flame": {
+      "fingerprint": "e175bb7453b1",
+      "tags": [
+        "settings",
+        "sliders",
+        "equalizer",
+        "controls",
+        "filter",
+        "options",
+        "tune",
+        "preferences",
+        "mixer",
+        "configure",
+        "adjustments",
+        "flame",
+        "fire",
+        "hot",
+        "burn",
+        "heat",
+        "trending"
+      ]
+    },
     "adjustments-heart": {
       "en": {
         "description": "Three slider controls with a heart at the bottom right, indicating favorite preferences or personalized settings.",
@@ -1628,6 +1650,29 @@
         "configure",
         "adjustments",
         "horizontal"
+      ]
+    },
+    "adjustments-key": {
+      "fingerprint": "7c3f6a1d80f8",
+      "tags": [
+        "settings",
+        "sliders",
+        "equalizer",
+        "controls",
+        "filter",
+        "options",
+        "tune",
+        "preferences",
+        "mixer",
+        "configure",
+        "adjustments",
+        "key",
+        "password",
+        "access",
+        "login",
+        "security",
+        "unlock",
+        "auth"
       ]
     },
     "adjustments-minus": {
@@ -12533,6 +12578,23 @@
         "down"
       ]
     },
+    "arrow-move-down-x": {
+      "fingerprint": "68ce0c1e72f0",
+      "tags": [
+        "direction",
+        "south",
+        "downward",
+        "shortened",
+        "cut short",
+        "stop",
+        "end",
+        "terminate",
+        "shift",
+        "arrow",
+        "move",
+        "x"
+      ]
+    },
     "arrow-move-left": {
       "en": {
         "description": "Shows a left-pointing arrow with a dot on the right, meaning moving or shifting an object to the left.",
@@ -12594,6 +12656,23 @@
         "arrow",
         "move",
         "left"
+      ]
+    },
+    "arrow-move-left-x": {
+      "fingerprint": "fe87559e6f57",
+      "tags": [
+        "direction",
+        "west",
+        "shortened",
+        "cut short",
+        "stop",
+        "end",
+        "terminate",
+        "shift",
+        "arrow",
+        "move",
+        "left",
+        "x"
       ]
     },
     "arrow-move-right": {
@@ -12659,6 +12738,23 @@
         "right"
       ]
     },
+    "arrow-move-right-x": {
+      "fingerprint": "001ba01195c7",
+      "tags": [
+        "direction",
+        "east",
+        "shortened",
+        "cut short",
+        "stop",
+        "end",
+        "terminate",
+        "shift",
+        "arrow",
+        "move",
+        "right",
+        "x"
+      ]
+    },
     "arrow-move-up": {
       "en": {
         "description": "An upward arrow above a small circle, usually indicating moving or shifting an item upward.",
@@ -12718,6 +12814,23 @@
         "navigation",
         "arrow",
         "move"
+      ]
+    },
+    "arrow-move-up-x": {
+      "fingerprint": "794399462d6b",
+      "tags": [
+        "direction",
+        "north",
+        "upward",
+        "shortened",
+        "cut short",
+        "stop",
+        "end",
+        "terminate",
+        "shift",
+        "arrow",
+        "move",
+        "x"
       ]
     },
     "arrow-narrow-down": {
@@ -52384,38 +52497,7 @@
       ]
     },
     "calendar": {
-      "en": {
-        "description": "Icon shows a calendar page with a single digit one, usually representing dates, schedules, or events in an interface.",
-        "synonyms": [
-          "date",
-          "schedule",
-          "event",
-          "day",
-          "month",
-          "planner",
-          "agenda",
-          "appointment",
-          "booking",
-          "timetable"
-        ]
-      },
-      "fingerprint": "a74da1fad6cc",
-      "promptVersion": 1,
-      "ru": {
-        "description": "Иконка показывает перекидной настенный календарь с цифрой 1 и обычно означает дату, расписание или событие.",
-        "synonyms": [
-          "календарь",
-          "дата",
-          "расписание",
-          "событие",
-          "день",
-          "месяц",
-          "планер",
-          "ежедневник",
-          "встреча",
-          "запись"
-        ]
-      },
+      "fingerprint": "d511be445d4d",
       "tags": [
         "calendar",
         "date",
@@ -53031,7 +53113,7 @@
       ]
     },
     "calendar-filled": {
-      "fingerprint": "d8750e2d11e2",
+      "fingerprint": "29b102b2858a",
       "tags": [
         "calendar",
         "date",
@@ -54569,6 +54651,25 @@
         "snapshot"
       ]
     },
+    "camera-flame": {
+      "fingerprint": "4b236a2e3565",
+      "tags": [
+        "camera",
+        "photo",
+        "photography",
+        "picture",
+        "video",
+        "lens",
+        "image",
+        "snapshot",
+        "flame",
+        "fire",
+        "hot",
+        "burn",
+        "heat",
+        "trending"
+      ]
+    },
     "camera-heart": {
       "en": {
         "description": "A camera outline with a heart in the corner, usually meaning a favorite photo or liked picture.",
@@ -54614,6 +54715,26 @@
         "favorite",
         "like",
         "love"
+      ]
+    },
+    "camera-key": {
+      "fingerprint": "77671ded0d31",
+      "tags": [
+        "camera",
+        "photo",
+        "photography",
+        "picture",
+        "video",
+        "lens",
+        "image",
+        "snapshot",
+        "key",
+        "password",
+        "access",
+        "login",
+        "security",
+        "unlock",
+        "auth"
       ]
     },
     "camera-minus": {
@@ -107646,6 +107767,27 @@
         "password-show"
       ]
     },
+    "eye-flame": {
+      "fingerprint": "8b335507c8da",
+      "tags": [
+        "eye",
+        "view",
+        "visibility",
+        "show",
+        "see",
+        "preview",
+        "visible",
+        "watch",
+        "vision",
+        "password-show",
+        "flame",
+        "fire",
+        "hot",
+        "burn",
+        "heat",
+        "trending"
+      ]
+    },
     "eye-heart": {
       "en": {
         "description": "An eye with a heart in its lower right corner, usually meaning liked content, favorites, or preview.",
@@ -107691,6 +107833,28 @@
         "vision",
         "preview",
         "watch"
+      ]
+    },
+    "eye-key": {
+      "fingerprint": "96396549b33f",
+      "tags": [
+        "eye",
+        "view",
+        "visibility",
+        "show",
+        "see",
+        "preview",
+        "visible",
+        "watch",
+        "vision",
+        "password-show",
+        "key",
+        "password",
+        "access",
+        "login",
+        "security",
+        "unlock",
+        "auth"
       ]
     },
     "eye-minus": {
@@ -114732,6 +114896,47 @@
         "exclamation"
       ]
     },
+    "filter-2-flame": {
+      "fingerprint": "9e8c4016cc9e",
+      "tags": [
+        "filter",
+        "filter-list",
+        "filtering",
+        "sort",
+        "refine",
+        "narrow",
+        "lines",
+        "options",
+        "sorting",
+        "flame",
+        "fire",
+        "hot",
+        "burn",
+        "heat",
+        "trending"
+      ]
+    },
+    "filter-2-key": {
+      "fingerprint": "613ea7c3d22f",
+      "tags": [
+        "filter",
+        "filter-list",
+        "filtering",
+        "sort",
+        "refine",
+        "narrow",
+        "lines",
+        "options",
+        "sorting",
+        "key",
+        "password",
+        "access",
+        "login",
+        "security",
+        "unlock",
+        "auth"
+      ]
+    },
     "filter-2-minus": {
       "en": {
         "description": "Four horizontal bars of decreasing length are stacked in a staircase; the icon represents filtering or sorting a list, reducing filters.",
@@ -115698,6 +115903,26 @@
         "conditions"
       ]
     },
+    "filter-flame": {
+      "fingerprint": "076e21e43a75",
+      "tags": [
+        "filter",
+        "funnel",
+        "filtering",
+        "sort",
+        "refine",
+        "narrow",
+        "search-options",
+        "query",
+        "conditions",
+        "flame",
+        "fire",
+        "hot",
+        "burn",
+        "heat",
+        "trending"
+      ]
+    },
     "filter-heart": {
       "en": {
         "description": "A funnel with a small heart at its lower right, meaning filtering favorite or liked items.",
@@ -115739,6 +115964,27 @@
         "favourite",
         "refine",
         "narrow"
+      ]
+    },
+    "filter-key": {
+      "fingerprint": "1bc38d9f4eb6",
+      "tags": [
+        "filter",
+        "funnel",
+        "filtering",
+        "sort",
+        "refine",
+        "narrow",
+        "search-options",
+        "query",
+        "conditions",
+        "key",
+        "password",
+        "access",
+        "login",
+        "security",
+        "unlock",
+        "auth"
       ]
     },
     "filter-minus": {
@@ -117855,6 +118101,26 @@
         "finish"
       ]
     },
+    "flag-flame": {
+      "fingerprint": "1c05bbe2aaba",
+      "tags": [
+        "flag",
+        "report",
+        "banner",
+        "milestone",
+        "mark",
+        "country",
+        "goal",
+        "nation",
+        "finish",
+        "flame",
+        "fire",
+        "hot",
+        "burn",
+        "heat",
+        "trending"
+      ]
+    },
     "flag-heart": {
       "en": {
         "description": "An outlined flag on a pole with a small heart at its lower right, meaning a favorite, liked, or marked milestone.",
@@ -117899,6 +118165,27 @@
         "mark",
         "country",
         "goal"
+      ]
+    },
+    "flag-key": {
+      "fingerprint": "85138fd28177",
+      "tags": [
+        "flag",
+        "report",
+        "banner",
+        "milestone",
+        "mark",
+        "country",
+        "goal",
+        "nation",
+        "finish",
+        "key",
+        "password",
+        "access",
+        "login",
+        "security",
+        "unlock",
+        "auth"
       ]
     },
     "flag-minus": {
@@ -128906,6 +129193,26 @@
         "health"
       ]
     },
+    "heart-flame": {
+      "fingerprint": "6aba445046f7",
+      "tags": [
+        "heart",
+        "love",
+        "like",
+        "favorite",
+        "favourite",
+        "wishlist",
+        "valentine",
+        "emotion",
+        "health",
+        "flame",
+        "fire",
+        "hot",
+        "burn",
+        "heat",
+        "trending"
+      ]
+    },
     "heart-handshake": {
       "en": {
         "description": "An outlined heart containing a handshake, symbolizing care, support, charity, or partnership.",
@@ -128948,6 +129255,27 @@
         "partnership",
         "kindness",
         "trust"
+      ]
+    },
+    "heart-key": {
+      "fingerprint": "555d879f63ba",
+      "tags": [
+        "heart",
+        "love",
+        "like",
+        "favorite",
+        "favourite",
+        "wishlist",
+        "valentine",
+        "emotion",
+        "health",
+        "key",
+        "password",
+        "access",
+        "login",
+        "security",
+        "unlock",
+        "auth"
       ]
     },
     "heart-minus": {
@@ -134491,6 +134819,26 @@
         "real-estate"
       ]
     },
+    "home-flame": {
+      "fingerprint": "e6bc5f754186",
+      "tags": [
+        "home",
+        "house",
+        "homepage",
+        "main",
+        "start",
+        "dashboard",
+        "building",
+        "residence",
+        "real-estate",
+        "flame",
+        "fire",
+        "hot",
+        "burn",
+        "heat",
+        "trending"
+      ]
+    },
     "home-hand": {
       "en": {
         "description": "Outline of a house with a pointing hand at its lower right, commonly representing home services, property care, or a home link.",
@@ -134622,6 +134970,27 @@
         "loop",
         "lifetime",
         "residence"
+      ]
+    },
+    "home-key": {
+      "fingerprint": "df3b8b9550af",
+      "tags": [
+        "home",
+        "house",
+        "homepage",
+        "main",
+        "start",
+        "dashboard",
+        "building",
+        "residence",
+        "real-estate",
+        "key",
+        "password",
+        "access",
+        "login",
+        "security",
+        "unlock",
+        "auth"
       ]
     },
     "home-link": {
@@ -153468,6 +153837,25 @@
         "contact"
       ]
     },
+    "mail-flame": {
+      "fingerprint": "231cb9bf7d0d",
+      "tags": [
+        "mail",
+        "email",
+        "envelope",
+        "message",
+        "inbox",
+        "letter",
+        "e-mail",
+        "contact",
+        "flame",
+        "fire",
+        "hot",
+        "burn",
+        "heat",
+        "trending"
+      ]
+    },
     "mail-forward": {
       "en": {
         "description": "A envelope with a right-pointing arrow at its lower right; it usually means forwarding or sending an email.",
@@ -153557,6 +153945,26 @@
         "love",
         "like",
         "favourite"
+      ]
+    },
+    "mail-key": {
+      "fingerprint": "eec95a62e89e",
+      "tags": [
+        "mail",
+        "email",
+        "envelope",
+        "message",
+        "inbox",
+        "letter",
+        "e-mail",
+        "contact",
+        "key",
+        "password",
+        "access",
+        "login",
+        "security",
+        "unlock",
+        "auth"
       ]
     },
     "mail-minus": {
@@ -185551,6 +185959,29 @@
         "photo"
       ]
     },
+    "photo-flame": {
+      "fingerprint": "cca311539934",
+      "tags": [
+        "image",
+        "picture",
+        "gallery",
+        "img",
+        "photography",
+        "media",
+        "thumbnail",
+        "landscape",
+        "jpg",
+        "png",
+        "wallpaper",
+        "photo",
+        "flame",
+        "fire",
+        "hot",
+        "burn",
+        "heat",
+        "trending"
+      ]
+    },
     "photo-heart": {
       "en": {
         "description": "A square picture frame with mountains, a sun and a heart in the corner; it marks a favorite or liked photo.",
@@ -185641,6 +186072,30 @@
         "thumbnail",
         "shape",
         "nft"
+      ]
+    },
+    "photo-key": {
+      "fingerprint": "9cb4d0e13b49",
+      "tags": [
+        "image",
+        "picture",
+        "gallery",
+        "img",
+        "photography",
+        "media",
+        "thumbnail",
+        "landscape",
+        "jpg",
+        "png",
+        "wallpaper",
+        "photo",
+        "key",
+        "password",
+        "access",
+        "login",
+        "security",
+        "unlock",
+        "auth"
       ]
     },
     "photo-minus": {
@@ -206178,6 +206633,26 @@
         "settings"
       ]
     },
+    "settings-flame": {
+      "fingerprint": "5c12fadeb47c",
+      "tags": [
+        "cog",
+        "gear",
+        "preferences",
+        "configuration",
+        "options",
+        "config",
+        "setup",
+        "control",
+        "settings",
+        "flame",
+        "fire",
+        "hot",
+        "burn",
+        "heat",
+        "trending"
+      ]
+    },
     "settings-heart": {
       "en": {
         "description": "An outlined gear with a heart in the corner, usually meaning favorite settings or personalized preferences.",
@@ -206222,6 +206697,27 @@
         "configuration",
         "options",
         "config"
+      ]
+    },
+    "settings-key": {
+      "fingerprint": "96d3af2e0d88",
+      "tags": [
+        "cog",
+        "gear",
+        "preferences",
+        "configuration",
+        "options",
+        "config",
+        "setup",
+        "control",
+        "settings",
+        "key",
+        "password",
+        "access",
+        "login",
+        "security",
+        "unlock",
+        "auth"
       ]
     },
     "settings-minus": {
@@ -209562,36 +210058,7 @@
       ]
     },
     "shopping-cart-copy": {
-      "en": {
-        "description": "Outlined shopping cart with a wheel and a checkmark, indicating a confirmed purchase or completed checkout.",
-        "synonyms": [
-          "cart",
-          "basket",
-          "trolley",
-          "shopping",
-          "checkout",
-          "buy",
-          "store",
-          "confirm order",
-          "checkmark"
-        ]
-      },
-      "fingerprint": "b0292fead312",
-      "promptVersion": 1,
-      "ru": {
-        "description": "Контур тележки для покупок с колёсиком и галочкой справа, означает подтверждённую покупку или заказ в корзине.",
-        "synonyms": [
-          "корзина",
-          "корзина покупок",
-          "тележка",
-          "магазин",
-          "покупка",
-          "оформить заказ",
-          "подтверждение заказа",
-          "купить",
-          "галочка"
-        ]
-      },
+      "fingerprint": "a9ca55e08bc3",
       "tags": [
         "shopping-cart",
         "cart",
@@ -211262,6 +211729,25 @@
         "website"
       ]
     },
+    "sitemap-minus": {
+      "fingerprint": "304e2e84e7ef",
+      "tags": [
+        "site-map",
+        "hierarchy",
+        "tree",
+        "structure",
+        "org-chart",
+        "diagram",
+        "navigation",
+        "website",
+        "remove",
+        "subtract",
+        "delete",
+        "minus",
+        "less",
+        "reduce"
+      ]
+    },
     "sitemap-off": {
       "en": {
         "description": "An icon showing a site hierarchy diagram crossed out with a diagonal line, meaning the sitemap is disabled or unavailable.",
@@ -211308,6 +211794,25 @@
         "hidden",
         "sitemap",
         "off"
+      ]
+    },
+    "sitemap-plus": {
+      "fingerprint": "c6542a8ac0cb",
+      "tags": [
+        "site-map",
+        "hierarchy",
+        "tree",
+        "structure",
+        "org-chart",
+        "diagram",
+        "navigation",
+        "website",
+        "add",
+        "new",
+        "create",
+        "plus",
+        "insert",
+        "more"
       ]
     },
     "skateboard": {
@@ -238064,6 +238569,27 @@
         "user"
       ]
     },
+    "user-flame": {
+      "fingerprint": "1a00d3e9f11e",
+      "tags": [
+        "person",
+        "account",
+        "profile",
+        "avatar",
+        "member",
+        "people",
+        "human",
+        "login",
+        "identity",
+        "user",
+        "flame",
+        "fire",
+        "hot",
+        "burn",
+        "heat",
+        "trending"
+      ]
+    },
     "user-heart": {
       "en": {
         "description": "Shows a person silhouette with a heart at the lower right, usually meaning favorite user, liked profile, or follower.",
@@ -238736,6 +239262,25 @@
         "secure",
         "guard",
         "shield"
+      ]
+    },
+    "user-spark": {
+      "fingerprint": "ec10e0e64641",
+      "tags": [
+        "person",
+        "account",
+        "profile",
+        "avatar",
+        "member",
+        "people",
+        "human",
+        "login",
+        "identity",
+        "user",
+        "spark",
+        "sparkle",
+        "magic",
+        "shine"
       ]
     },
     "user-square": {
