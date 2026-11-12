@@ -87,7 +87,7 @@
   --width-text: 46rem;
   --width-nav: 14rem;
   --width-toc: 13rem;
-  /* Боковая панель каркаса по макету: 224 px, свёрнутая — 56 px. */
+  /* Боковая панель каркаса по макету: 224 px, свёрнутая — 64 px. */
   --width-sidebar: 14rem;
   --width-sidebar-collapsed: 4rem;
   /* Панель иконки по макету «Icon Panel»: 355 px. На телефоне — шторка: над ней, как в кадре 390 × 844,
@@ -109,6 +109,10 @@
   --motion-fade: 200ms;
   --motion-ease-out: cubic-bezier(0.25, 1, 0.5, 1);
   --motion-ease-in: cubic-bezier(0.5, 0, 0.75, 0);
+  /* Сворачивание боковой панели (lib/sidebar-motion.ts): ширина, значки, шапка и переезд карточек
+     страницы — --motion-sidebar; подписи и список наборов гаснут и проявляются за --motion-sidebar-fade. */
+  --motion-sidebar: 260ms;
+  --motion-sidebar-fade: 120ms;
   /*
    * Полосы прокрутки: --scrollbar-lane — ширина дорожки. У мыши и тачпада в Chrome, Edge и Safari —
    * 12 px (бегунок 4 px посередине), в Firefox и на сенсорных экранах полосы поверх содержимого — 0.
@@ -266,7 +270,8 @@
    */
   .app {
     display: grid;
-    grid-template-columns: var(--width-sidebar) minmax(0, 1fr);
+    /* Ширина первой колонки — у самой панели (.sidebar): так она плавно меняется при сворачивании. */
+    grid-template-columns: auto minmax(0, 1fr);
     min-height: 100vh;
   }
   .app-column {
@@ -288,6 +293,7 @@
     top: 0;
     display: flex;
     flex-direction: column;
+    width: var(--width-sidebar);
     height: 100vh;
     overflow-x: hidden;
     overflow-y: auto;
@@ -310,9 +316,25 @@
     display: inline-flex;
     color: var(--color-text-primary);
   }
-  /* Логотип — в рамке 20 px с полем 4 px снизу (кадр «Sidebar Header»): на 2 px выше середины полосы. */
+  /* Логотип — в рамке 77 × 20 с полем 4 px снизу (кадр «Sidebar Header»): на 2 px выше середины полосы.
+     Знак 18 × 18 свёрнутой панели лежит в той же рамке; при сворачивании рамка сужается до 18 px, а
+     логотип и знак сменяют друг друга. */
   .sidebar-brand {
-    padding-bottom: 0.25rem;
+    position: relative;
+    flex: none;
+    width: 4.8125rem;
+    height: 1.25rem;
+  }
+  .sidebar-logo,
+  .sidebar-mark {
+    position: absolute;
+    top: 0;
+    left: 0;
+  }
+  .sidebar-mark {
+    top: 0.0625rem;
+    opacity: 0;
+    visibility: hidden;
   }
   .sidebar-toggle,
   .sidebar-close,
@@ -375,6 +397,10 @@
     flex: none;
     font-size: 1rem;
     opacity: 0.5;
+  }
+  /* Подпись не переносится: в узкой панели она уходит под край, а не ломает высоту пункта. */
+  .sidebar-label {
+    white-space: nowrap;
   }
   .sidebar-item[aria-current="page"] .sidebar-item-icon {
     opacity: 1;
@@ -500,6 +526,10 @@
     gap: 0.5rem;
   }
   .sidebar-plan-label {
+    display: block;
+    height: 1rem;
+    overflow: hidden;
+    white-space: nowrap;
     opacity: 0.5;
   }
   .sidebar-plan-tier {
@@ -518,53 +548,122 @@
     background: var(--color-bg-surface-strong);
   }
 
-  .sidebar-mark {
-    display: none;
-  }
-
   /* Свёрнутая панель (макет «Icon Sets / Sidebar Collapsed»): 64 px, вверху знак 18 × 18 и стрелка через
-     6 px, пункты 40 × 36 через 8 px со значками 24 px. */
+     6 px, пункты 40 × 36 через 8 px со значками 24 px; значки пунктов и ромб тарифа — там же, где у
+     развёрнутой (x = 20). Скрытое гаснет прозрачностью и уходит под край панели — так сворачивание
+     плавное (lib/sidebar-motion.ts), а подписи пунктов остаются названиями для экранного диктора. После
+     перехода список наборов и Manage убираются совсем. */
   @media (min-width: 64rem) {
-    :root[data-sidebar="collapsed"] .app {
-      grid-template-columns: var(--width-sidebar-collapsed) minmax(0, 1fr);
+    :root[data-sidebar="collapsed"] .sidebar {
+      width: var(--width-sidebar-collapsed);
     }
     :root[data-sidebar="collapsed"] .sidebar-head {
       padding-inline: 0.75rem;
     }
     :root[data-sidebar="collapsed"] .sidebar-brand {
-      padding-bottom: 0;
+      width: 1.125rem;
     }
-    :root[data-sidebar="collapsed"] .sidebar-logo {
+    :root[data-sidebar="collapsed"] .sidebar-logo,
+    :root[data-sidebar="collapsed"] .sidebar-label,
+    :root[data-sidebar="collapsed"] .sidebar-body,
+    :root[data-sidebar="collapsed"] .sidebar-plan-label,
+    :root[data-sidebar="collapsed"] .sidebar-plan-manage {
+      opacity: 0;
+    }
+    :root[data-sidebar="collapsed"] .sidebar-logo,
+    :root[data-sidebar="collapsed"] .sidebar-body,
+    :root[data-sidebar="collapsed"] .sidebar-plan-manage {
+      visibility: hidden;
+    }
+    :root[data-sidebar="collapsed"]:not([data-sidebar-motion]) .sidebar-body,
+    :root[data-sidebar="collapsed"]:not([data-sidebar-motion])
+      .sidebar-plan-manage {
       display: none;
     }
     :root[data-sidebar="collapsed"] .sidebar-mark {
-      display: block;
-    }
-    :root[data-sidebar="collapsed"] .sidebar-body,
-    :root[data-sidebar="collapsed"] .sidebar-label,
-    :root[data-sidebar="collapsed"] .sidebar-plan-label,
-    :root[data-sidebar="collapsed"] .sidebar-plan-manage {
-      display: none;
+      opacity: 1;
+      visibility: visible;
     }
     :root[data-sidebar="collapsed"] .sidebar-nav {
-      background: none;
+      background-color: transparent;
     }
     :root[data-sidebar="collapsed"] .sidebar-nav ul {
       gap: 0.5rem;
-    }
-    :root[data-sidebar="collapsed"] .sidebar-item {
-      justify-content: center;
-      padding: 0.375rem 0.5rem;
     }
     :root[data-sidebar="collapsed"] .sidebar-item-icon {
       font-size: 1.5rem;
     }
     :root[data-sidebar="collapsed"] .sidebar-plan {
       margin-top: auto;
-      padding-inline: 0;
     }
-    :root[data-sidebar="collapsed"] .sidebar-plan-button {
-      justify-content: center;
+    :root[data-sidebar="collapsed"] .sidebar-plan-info {
+      gap: 0;
+    }
+    :root[data-sidebar="collapsed"] .sidebar-plan-label {
+      height: 0;
+    }
+    /* Во время перехода список держит ширину развёрнутой панели: не перестраивается, а уходит под край. */
+    :root[data-sidebar-motion] .sidebar-body {
+      min-width: calc(var(--width-sidebar) - 1px);
+    }
+    /* Сетки во время перехода уже конечной ширины (lib/sidebar-motion.ts) и при сворачивании шире
+       колонки: лишнее срезается, полоса прокрутки снизу не появляется. */
+    :root[data-sidebar-motion] .app-column {
+      overflow-x: clip;
+    }
+    /* Высота сетки во время перехода плавно меняется: строки не растягиваются под неё. */
+    :root[data-sidebar-motion] :is(.icon-grid, .result-grid, .set-grid) {
+      align-content: start;
+    }
+  }
+
+  /* Переходы сворачивания — только пока идёт анимация (атрибут data-sidebar-motion у <html>). Ширина,
+     значки, шапка и строка «Your Plan» — --motion-sidebar. Подписи, список, Manage и логотип при
+     сворачивании гаснут за --motion-sidebar-fade сразу, а при разворачивании проявляются в конце, когда
+     место уже есть; знак — наоборот. */
+  @media (min-width: 64rem) and (prefers-reduced-motion: no-preference) {
+    :root[data-sidebar-motion] .sidebar,
+    :root[data-sidebar-motion] .sidebar-brand {
+      transition: width var(--motion-sidebar) var(--motion-ease-out);
+    }
+    :root[data-sidebar-motion] .sidebar-head {
+      transition: padding var(--motion-sidebar) var(--motion-ease-out);
+    }
+    :root[data-sidebar-motion] .sidebar-nav {
+      transition: background-color var(--motion-sidebar) var(--motion-ease-out);
+    }
+    :root[data-sidebar-motion] .sidebar-nav ul,
+    :root[data-sidebar-motion] .sidebar-plan-info {
+      transition: gap var(--motion-sidebar) var(--motion-ease-out);
+    }
+    :root[data-sidebar-motion] .sidebar-item-icon {
+      transition: font-size var(--motion-sidebar) var(--motion-ease-out);
+    }
+    :root[data-sidebar-motion="collapse"]
+      :is(.sidebar-label, .sidebar-logo, .sidebar-body, .sidebar-plan-manage),
+    :root[data-sidebar-motion="expand"] .sidebar-mark {
+      transition:
+        opacity var(--motion-sidebar-fade) var(--motion-ease-in),
+        visibility 0s linear var(--motion-sidebar-fade);
+    }
+    :root[data-sidebar-motion="expand"]
+      :is(.sidebar-label, .sidebar-logo, .sidebar-body, .sidebar-plan-manage),
+    :root[data-sidebar-motion="collapse"] .sidebar-mark {
+      transition:
+        opacity var(--motion-sidebar-fade) var(--motion-ease-out)
+        calc(var(--motion-sidebar) - var(--motion-sidebar-fade)),
+        visibility 0s;
+    }
+    :root[data-sidebar-motion="collapse"] .sidebar-plan-label {
+      transition:
+        opacity var(--motion-sidebar-fade) var(--motion-ease-in),
+        height var(--motion-sidebar) var(--motion-ease-out);
+    }
+    :root[data-sidebar-motion="expand"] .sidebar-plan-label {
+      transition:
+        opacity var(--motion-sidebar-fade) var(--motion-ease-out)
+        calc(var(--motion-sidebar) - var(--motion-sidebar-fade)),
+        height var(--motion-sidebar) var(--motion-ease-out);
     }
   }
 
@@ -1472,6 +1571,9 @@
    */
   .home-groups {
     display: grid;
+    /* Одна колонка не шире страницы: сетка внутри, конечной ширины во время сворачивания панели
+       (lib/sidebar-motion.ts), не раздвигает соседей. */
+    grid-template-columns: minmax(0, 1fr);
     gap: 2.25rem;
   }
   .group-chips,
@@ -1485,6 +1587,9 @@
   }
   .set-group {
     display: grid;
+    /* Одна колонка не шире страницы: сетка внутри, конечной ширины во время сворачивания панели
+       (lib/sidebar-motion.ts), не раздвигает соседей. */
+    grid-template-columns: minmax(0, 1fr);
     gap: 1.25rem;
   }
   .set-group-head {
@@ -1806,6 +1911,9 @@
   }
   .set-browser {
     display: grid;
+    /* Одна колонка не шире страницы: сетка внутри, конечной ширины во время сворачивания панели
+       (lib/sidebar-motion.ts), не раздвигает соседей. */
+    grid-template-columns: minmax(0, 1fr);
     gap: 1.75rem;
     min-width: 0;
     align-content: start;
@@ -2217,6 +2325,9 @@
   }
   .grid-area {
     display: grid;
+    /* Одна колонка не шире страницы: сетка внутри, конечной ширины во время сворачивания панели
+       (lib/sidebar-motion.ts), не раздвигает соседей. */
+    grid-template-columns: minmax(0, 1fr);
     gap: 1.25rem;
     min-width: 0;
     align-content: start;

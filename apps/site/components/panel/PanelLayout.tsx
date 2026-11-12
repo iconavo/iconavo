@@ -1,7 +1,8 @@
 "use client";
 
 import { Component, createRef, type ReactNode } from "react";
-import { type Box, flipFrames, nearViewport } from "../../lib/flip";
+import type { Box } from "../../lib/flip";
+import { boxOf, motionMs, playFlip, reducedMotion } from "../../lib/motion";
 
 // Микроанимация открытия и закрытия панели иконки (решение владельца 12 ноября 2026). Панель
 // открывается и закрывается и через историю браузера (✕ и Esc уходят «назад»), поэтому переход
@@ -9,7 +10,7 @@ import { type Box, flipFrames, nearViewport } from "../../lib/flip";
 // - getSnapshotBeforeUpdate: старая раскладка ещё на экране — запоминаются места карточек и деталей
 //   строк над и под сеткой, а при закрытии — копия панели.
 // - componentDidUpdate: новая раскладка записана — элементы переходят со старых мест на новые
-//   (lib/flip.ts, Web Animations API), копия панели уходит и удаляется.
+//   (lib/motion.ts, Web Animations API), копия панели уходит и удаляется.
 // Появление самой панели — анимация в стилях (.icon-panel, app/globals.css). «Уменьшить движение» в
 // системе — без анимаций.
 
@@ -33,24 +34,6 @@ interface Snapshot {
   leaving: Leaving[];
 }
 
-const boxOf = (element: Element): Box => {
-  const r = element.getBoundingClientRect();
-  return { left: r.left, top: r.top, width: r.width, height: r.height };
-};
-
-const reducedMotion = () =>
-  window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-
-/** Длительность из переменной CSS: одно значение у стилей и у скрипта. */
-function motionMs(name: string, fallback: number): number {
-  const value = getComputedStyle(document.documentElement)
-    .getPropertyValue(name)
-    .trim();
-  const n = Number.parseFloat(value);
-  if (!Number.isFinite(n)) return fallback;
-  return value.endsWith("ms") ? n : value.endsWith("s") ? n * 1000 : n;
-}
-
 /** Копия уходящей панели (и затемнения на телефоне): без id, недоступная, со своим местом. */
 function copyOf(element: HTMLElement): Leaving {
   const node = element.cloneNode(true) as HTMLElement;
@@ -62,37 +45,6 @@ function copyOf(element: HTMLElement): Leaving {
   node.setAttribute("inert", "");
   node.classList.add("panel-leaving");
   return { node, box: boxOf(element), scrollTop: element.scrollTop };
-}
-
-/** Переход со старых мест на новые: недоигранный переход отменяется, новый начинается с текущего вида. */
-function playFlip(before: Map<HTMLElement, Box>) {
-  const timing: KeyframeAnimationOptions = {
-    duration: motionMs("--motion-panel-in", 240),
-    easing: "linear",
-    id: FLIP_ID,
-  };
-  const alive = [...before].filter(([element]) => element.isConnected);
-  for (const [element] of alive) {
-    for (const animation of element.getAnimations({ subtree: true })) {
-      if (animation.id === FLIP_ID) animation.cancel();
-    }
-  }
-  const moves = alive.map(([element, from]) => ({
-    element,
-    from,
-    to: boxOf(element),
-  }));
-  const height = window.innerHeight;
-  for (const { element, from, to } of moves) {
-    if (!nearViewport(from, height) && !nearViewport(to, height)) continue;
-    const frames = flipFrames(from, to);
-    if (frames === undefined) continue;
-    element.animate(frames.box, timing);
-    if (frames.content === undefined) continue;
-    for (const child of element.querySelectorAll<HTMLElement>(CONTENT)) {
-      child.animate(frames.content, timing);
-    }
-  }
 }
 
 /** Уходящая копия: на прежнем месте поверх страницы, анимация ухода — в стилях (.panel-leaving). */
@@ -151,7 +103,11 @@ export class PanelLayout extends Component<{
   ) {
     const root = this.root.current;
     if (snapshot === null || root === null) return;
-    playFlip(snapshot.boxes);
+    playFlip(snapshot.boxes, {
+      id: FLIP_ID,
+      duration: motionMs("--motion-panel-in", 240),
+      content: CONTENT,
+    });
     playLeaving(root, snapshot.leaving);
   }
 
