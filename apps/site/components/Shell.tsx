@@ -5,6 +5,7 @@ import { DICTIONARIES, type Lang } from "../lib/i18n";
 import { Footer } from "./Footer";
 import { HotKey } from "./shell/HotKey";
 import { MenuController } from "./shell/Menu";
+import { ScrollbarActivity } from "./shell/ScrollbarActivity";
 import { Sidebar } from "./shell/Sidebar";
 import { TopBar } from "./shell/TopBar";
 import { ThemeSync } from "./ThemeSync";
@@ -32,6 +33,7 @@ export function Shell({
   return (
     <IconavoProvider icons={icons}>
       <ThemeSync />
+      <ScrollbarActivity />
       <a className="skip-link" href="#content">
         {DICTIONARIES[lang].skip}
       </a>

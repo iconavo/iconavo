@@ -119,6 +119,12 @@
     }
   }
 }
+/* Цвет бегунка — зарегистрированное свойство: так он гаснет анимацией (полосы сами переходы не умеют). */
+@property --scrollbar-thumb {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: transparent;
+}
 
 @layer base {
   html {
@@ -129,10 +135,13 @@
 
   /*
    * Полосы прокрутки по макету (слой Scrollbar блока кода «Icon Panel/Code»): бегунок 4 px со
-   * скруглением 2 и отступом 4 px от края, цвет border/primary, без дорожки и стрелок; при наведении и
-   * перетаскивании — text/hover-muted. Место под полосу занято всегда (overflow scroll или
-   * scrollbar-gutter), поэтому вёрстка не двигается, когда прокрутка появляется или пропадает.
-   * Firefox рисует полосы сам — поверх содержимого, как в системе; наш у него только цвет.
+   * скруглением 2 и отступом 4 px от края, без дорожки и стрелок. Виден только при прокрутке (решение
+   * владельца 12 ноября 2026): lib/scrollbars.ts ставит прокручиваемому элементу data-scrolling — «on»
+   * зажигает бегунок цветом border/primary, «off» через 0,8 с после прокрутки гасит его за 0,3 с. При
+   * наведении и перетаскивании — text/hover-muted, и без прокрутки. Место под полосу занято всегда
+   * (overflow scroll или scrollbar-gutter), поэтому вёрстка не двигается.
+   * Firefox рисует полосы сам — поверх содержимого и только при прокрутке, как в системе; наш у него
+   * только цвет.
    */
   @supports not selector(::-webkit-scrollbar) {
     * {
@@ -157,10 +166,19 @@
     ::-webkit-scrollbar-track {
       margin: 0.25rem;
     }
+    /* У каждого элемента свой цвет бегунка: прокрутка страницы не зажигает полосы внутри неё. Кроме
+       <body>: полосу страницы Chrome и Safari красят его стилями, а пометку прокрутки страницы получает
+       <html> — <body> берёт цвет у него. */
+    *:not(body) {
+      --scrollbar-thumb: transparent;
+    }
+    [data-scrolling] {
+      --scrollbar-thumb: var(--color-border-primary);
+    }
     ::-webkit-scrollbar-thumb {
       border: 0.25rem solid transparent;
       border-radius: 0.375rem;
-      background: var(--color-border-primary) padding-box;
+      background: var(--scrollbar-thumb) padding-box;
     }
     ::-webkit-scrollbar-thumb:hover,
     ::-webkit-scrollbar-thumb:active {
@@ -168,6 +186,21 @@
     }
     ::-webkit-scrollbar-button {
       display: none;
+    }
+  }
+  @media (hover: hover) and (pointer: fine) and (
+      prefers-reduced-motion: no-preference
+    ) {
+    [data-scrolling="off"] {
+      animation: scrollbar-fade 0.3s linear forwards;
+    }
+  }
+  @keyframes scrollbar-fade {
+    from {
+      --scrollbar-thumb: var(--color-border-primary);
+    }
+    to {
+      --scrollbar-thumb: transparent;
     }
   }
   body {
