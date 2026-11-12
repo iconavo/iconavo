@@ -177,142 +177,144 @@ export function IconGrid({
   );
 
   return (
-    <div
-      className="with-panel"
-      data-panel={panel.icon === undefined ? undefined : ""}
-    >
-      <div className="set-browser" ref={top}>
-        <GridToolbar lang={lang} setName={setName} query={q} onQuery={search} />
-        <div className="grid-filters">
-          {styles.length > 1 ? (
-            <Chips
-              label={t.searchStyle}
-              chips={[
-                {
-                  key: "",
-                  label: t.styleAny,
-                  count: allCount,
-                  href: hrefOf(
-                    withParams(query, { style: undefined, page: undefined }),
-                  ),
-                  current: style === undefined,
-                  onSelect: () => go({ style: undefined, page: undefined }),
-                },
-                ...styles.map((s) => ({
-                  key: s.style,
-                  label: t[STYLE_KEYS[s.style]],
-                  count: s.count,
-                  href: hrefOf(
-                    withParams(query, { style: s.style, page: undefined }),
-                  ),
-                  current: s.style === style,
-                  onSelect: () => go({ style: s.style, page: undefined }),
-                })),
-              ]}
-            />
-          ) : null}
-          {categories.length > 0 ? (
-            <Chips
-              label={t.setCategories}
-              chips={[
-                {
-                  key: "",
-                  label: t.setAllIcons,
-                  count: allCount,
-                  href: hrefOf(
-                    withParams(query, { category: undefined, page: undefined }),
-                  ),
-                  current: category === undefined,
-                  onSelect: () => go({ category: undefined, page: undefined }),
-                },
-                ...categories.map((c) => ({
-                  key: c.slug,
-                  label: c.title,
-                  count: c.count,
-                  href: hrefOf(
-                    withParams(query, { category: c.slug, page: undefined }),
-                  ),
-                  current: c.slug === category?.slug,
-                  onSelect: () => go({ category: c.slug, page: undefined }),
-                })),
-              ]}
-            />
-          ) : null}
-        </div>
-        <GridBar
-          lang={lang}
-          top
-          start={<SelectToggle lang={lang} select={select} />}
-        >
-          {pagination(t.pagesTop)}
-        </GridBar>
-        {failed ? (
-          <p className="grid-status" role="alert">
-            {t.gridError}
-          </p>
-        ) : shown === undefined ? (
-          <p className="grid-status" aria-live="polite">
-            {t.gridLoading}
-          </p>
-        ) : shown.length === 0 && q !== "" ? (
-          <p className="grid-status grid-empty" role="status">
-            {t.setNothing.replace("{set}", setName).replace("{q}", q)}{" "}
-            <button
-              type="button"
-              className="grid-clear"
-              onClick={() => search("")}
-            >
-              {t.setSearchClear}
-            </button>
-          </p>
-        ) : (
-          <ul className="icon-grid" data-page={page}>
-            {shown.map((name) => {
-              const icon = `${prefix}:${name}`;
-              return (
-                <li key={name} className="icon-cell">
-                  {select.on ? (
-                    <button
-                      type="button"
-                      className={cn(CARD_LINK, "icon-card-pick")}
-                      data-icon={icon}
-                      aria-pressed={select.bag.includes(icon)}
-                      onClick={() => select.pick(icon)}
-                    >
-                      <span className="pick-box" aria-hidden="true">
-                        <Icon icon="lucide:check" />
-                      </span>
-                      <Icon icon={icon} className="icon-cell-svg" />
-                      <span className="icon-cell-name">{name}</span>
-                    </button>
-                  ) : (
-                    <a
-                      href={href(lang, iconPagePath(icon))}
-                      className={CARD_LINK}
-                      data-icon={icon}
-                      aria-current={panel.icon === icon ? "true" : undefined}
-                      onClick={(e) => panel.onCardClick(e, icon)}
-                    >
-                      <Icon icon={icon} className="icon-cell-svg" />
-                      <span className="icon-cell-name">{name}</span>
-                    </a>
-                  )}
-                </li>
-              );
-            })}
-          </ul>
-        )}
-        <GridBar lang={lang}>{pagination()}</GridBar>
+    <div className="set-browser" ref={top}>
+      <GridToolbar lang={lang} setName={setName} query={q} onQuery={search} />
+      <div className="grid-filters">
+        {styles.length > 1 ? (
+          <Chips
+            label={t.searchStyle}
+            chips={[
+              {
+                key: "",
+                label: t.styleAny,
+                count: allCount,
+                href: hrefOf(
+                  withParams(query, { style: undefined, page: undefined }),
+                ),
+                current: style === undefined,
+                onSelect: () => go({ style: undefined, page: undefined }),
+              },
+              ...styles.map((s) => ({
+                key: s.style,
+                label: t[STYLE_KEYS[s.style]],
+                count: s.count,
+                href: hrefOf(
+                  withParams(query, { style: s.style, page: undefined }),
+                ),
+                current: s.style === style,
+                onSelect: () => go({ style: s.style, page: undefined }),
+              })),
+            ]}
+          />
+        ) : null}
+        {categories.length > 0 ? (
+          <Chips
+            label={t.setCategories}
+            chips={[
+              {
+                key: "",
+                label: t.setAllIcons,
+                count: allCount,
+                href: hrefOf(
+                  withParams(query, { category: undefined, page: undefined }),
+                ),
+                current: category === undefined,
+                onSelect: () => go({ category: undefined, page: undefined }),
+              },
+              ...categories.map((c) => ({
+                key: c.slug,
+                label: c.title,
+                count: c.count,
+                href: hrefOf(
+                  withParams(query, { category: c.slug, page: undefined }),
+                ),
+                current: c.slug === category?.slug,
+                onSelect: () => go({ category: c.slug, page: undefined }),
+              })),
+            ]}
+          />
+        ) : null}
       </div>
-      {panel.icon === undefined ? null : (
-        <IconPanel
-          lang={lang}
-          icon={panel.icon}
-          focus={panel.focus}
-          onClose={panel.close}
-          onPick={(name) => panel.open(name)}
-        />
-      )}
+      <div
+        className="with-panel"
+        data-panel={panel.icon === undefined ? undefined : ""}
+      >
+        <div className="grid-area">
+          <GridBar
+            lang={lang}
+            top
+            start={<SelectToggle lang={lang} select={select} />}
+          >
+            {pagination(t.pagesTop)}
+          </GridBar>
+          {failed ? (
+            <p className="grid-status" role="alert">
+              {t.gridError}
+            </p>
+          ) : shown === undefined ? (
+            <p className="grid-status" aria-live="polite">
+              {t.gridLoading}
+            </p>
+          ) : shown.length === 0 && q !== "" ? (
+            <p className="grid-status grid-empty" role="status">
+              {t.setNothing.replace("{set}", setName).replace("{q}", q)}{" "}
+              <button
+                type="button"
+                className="grid-clear"
+                onClick={() => search("")}
+              >
+                {t.setSearchClear}
+              </button>
+            </p>
+          ) : (
+            <ul className="icon-grid" data-page={page}>
+              {shown.map((name) => {
+                const icon = `${prefix}:${name}`;
+                return (
+                  <li key={name} className="icon-cell">
+                    {select.on ? (
+                      <button
+                        type="button"
+                        className={cn(CARD_LINK, "icon-card-pick")}
+                        data-icon={icon}
+                        aria-pressed={select.bag.includes(icon)}
+                        onClick={() => select.pick(icon)}
+                      >
+                        <span className="pick-box" aria-hidden="true">
+                          <Icon icon="lucide:check" />
+                        </span>
+                        <Icon icon={icon} className="icon-cell-svg" />
+                        <span className="icon-cell-name">{name}</span>
+                      </button>
+                    ) : (
+                      <a
+                        href={href(lang, iconPagePath(icon))}
+                        className={CARD_LINK}
+                        data-icon={icon}
+                        aria-current={panel.icon === icon ? "true" : undefined}
+                        onClick={(e) => panel.onCardClick(e, icon)}
+                      >
+                        <Icon icon={icon} className="icon-cell-svg" />
+                        <span className="icon-cell-name">{name}</span>
+                      </a>
+                    )}
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+          <GridBar lang={lang}>{pagination()}</GridBar>
+        </div>
+        {panel.icon === undefined ? null : (
+          <IconPanel
+            lang={lang}
+            icon={panel.icon}
+            focus={panel.focus}
+            onClose={panel.close}
+            onPick={(name) => panel.open(name)}
+          />
+        )}
+      </div>
     </div>
   );
 }

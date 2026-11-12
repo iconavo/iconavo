@@ -7,10 +7,10 @@ import { cn } from "../../lib/cn";
 const BASE =
   "inline-flex shrink-0 cursor-pointer items-center justify-center gap-2 rounded-md text-body-base whitespace-nowrap disabled:pointer-events-none disabled:opacity-50";
 
-// Варианты — по компоненту Button макета (Figma «Iconavo — Макеты»): главная кнопка салатовая с чёрным
-// текстом (accent/highlight, text/onAccent), второстепенная — на bg/surfaceStrong.
+// Варианты — по компоненту Button макета (Figma «Iconavo — Макеты»): главная кнопка лимонная с чёрным
+// текстом (accent/lemon, text/onAccent — гайд Icon Panel), второстепенная — на bg/surfaceStrong.
 const VARIANTS = {
-  primary: "bg-accent-highlight text-text-on-accent hover:opacity-90",
+  primary: "bg-accent-lemon text-text-on-accent hover:opacity-90",
   secondary: "bg-bg-surface-strong text-text-primary hover:bg-bg-hover",
   outline:
     "border border-border-primary bg-bg-page text-text-primary hover:bg-bg-surface",

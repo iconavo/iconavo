@@ -21,6 +21,14 @@ describe("языки сайта", () => {
       "groupMaterialShort",
       "groupUi24Title",
       "groupUi24Short",
+      // Названия форматов кода и инструментов в панели иконки — одинаковы на обоих языках.
+      "pTabUnplugin",
+      "pTabUnpluginIcons",
+      "pTabUrl",
+      "pTabJsx",
+      "pTabSymbol",
+      "pTabTailwind",
+      "pTabUnocss",
     ]);
     const same = Object.keys(DICTIONARIES.en).filter(
       (key) =>

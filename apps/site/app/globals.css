@@ -90,9 +90,10 @@
   /* Боковая панель каркаса по макету: 224 px, свёрнутая — 56 px. */
   --width-sidebar: 14rem;
   --width-sidebar-collapsed: 3.5rem;
-  /* Боковая панель иконки (шаг 4 фазы 4) и высота шторки на телефоне. */
-  --width-panel: 24rem;
-  --height-sheet: 60vh;
+  /* Панель иконки по макету «Icon Panel»: 355 px. На телефоне — шторка: над ней, как в кадре 390 × 844,
+     остаются верхние 284 px страницы (шторка 560 px), но не меньше половины экрана. */
+  --width-panel: 22.1875rem;
+  --height-sheet: max(50dvh, 100dvh - 17.75rem);
 }
 
 @layer base {
@@ -661,6 +662,7 @@
       z-index: 30;
       display: block;
       background: var(--color-bg-overlay);
+      touch-action: none;
     }
     :root[data-menu="open"] {
       overflow: hidden;
@@ -1931,80 +1933,641 @@
     background: var(--color-bg-card-hover);
   }
 
-  /* Боковая панель: на телефоне — шторка снизу, выдача над ней видна и листается; «развернуть» — во весь
-     экран. На компьютере — колонка справа от сетки, сетка сужается сама. */
-  .icon-panel {
-    position: fixed;
-    inset-inline: 0;
-    inset-block-end: 0;
-    z-index: 20;
-    max-block-size: var(--height-sheet);
-    overflow-y: auto;
-    overscroll-behavior: contain;
-    padding: 0.75rem 1rem 1.5rem;
-    border-top: 1px solid var(--color-border-secondary);
-    border-radius: var(--radius-md) var(--radius-md) 0 0;
-    background: var(--color-bg-page);
-    box-shadow: var(--shadow-md);
-  }
-  .icon-panel[data-expanded] {
-    inset-block-start: 0;
-    max-block-size: none;
-    border-radius: 0;
-  }
-  /* Под шторкой — место: последние ряды выдачи прокручиваются выше неё. */
-  body:has(.icon-panel) {
-    padding-block-end: var(--height-sheet);
-  }
-  .icon-panel-head {
-    position: sticky;
-    inset-block-start: -0.75rem;
-    z-index: 1;
-    display: flex;
-    align-items: center;
-    gap: 0.25rem;
-    margin: -0.75rem -1rem 0.5rem;
-    padding: 0.5rem 0.5rem 0.5rem 1rem;
-    background: var(--color-bg-page);
-  }
-  .icon-panel-head h2 {
-    flex: 1;
-    min-inline-size: 0;
-    font-size: 1.125rem;
-    font-weight: 600;
-    overflow-wrap: anywhere;
-  }
-  .icon-panel-set {
-    display: block;
-    color: var(--color-text-secondary);
-    font-size: 0.75rem;
-    font-weight: 400;
-  }
-  @media (min-width: 48rem) {
+  /*
+   * Панель иконки по макету «Icon Panel» (Figma «Iconavo — Макеты»): 355 px, скругление 16, bg/surface.
+   * На компьютере — колонка справа от сетки на уровне строки номеров страниц, не выше окна, со своей
+   * прокруткой; поиск над ними — во всю ширину. На телефоне — шторка снизу (ниже).
+   */
+  @media (min-width: 64rem) {
     .with-panel[data-panel] {
       display: grid;
       grid-template-columns: minmax(0, 1fr) var(--width-panel);
-      gap: 1.5rem;
+      gap: 1.75rem;
       align-items: start;
     }
+    /* С открытой панелью — 6 колонок по 116 px, как в кадре «Selected Icon + Opened Panel». */
+    .with-panel[data-panel] .icon-grid {
+      grid-template-columns: repeat(auto-fill, minmax(7.125rem, 1fr));
+    }
+  }
+  .grid-area {
+    display: grid;
+    gap: 1.25rem;
+    min-width: 0;
+    align-content: start;
+  }
+  .icon-panel {
+    position: sticky;
+    top: 1rem;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    max-height: calc(100vh - 2rem);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    border-radius: 1rem;
+    background: var(--color-bg-surface);
+    font-size: var(--text-body-base);
+    line-height: var(--text-body-base--line-height);
+    scrollbar-width: thin;
+  }
+  .panel-backdrop,
+  .panel-handle {
+    display: none;
+  }
+  /* Колонка — minmax(0, 1fr): ширина текста кнопок в браузере на пиксель больше, чем в Figma, и не
+     должна раздвигать панель. */
+  .panel-top {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 1rem;
+    padding: 1.25rem;
+  }
+  .panel-head {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+  .page .panel-head h2 {
+    display: grid;
+    flex: 1;
+    gap: 0.375rem;
+    min-width: 0;
+    margin: 0;
+  }
+  .panel-title {
+    font-size: var(--text-heading-md);
+    font-weight: 600;
+    line-height: var(--text-heading-md--line-height);
+    overflow-wrap: anywhere;
+  }
+  .panel-set {
+    color: var(--color-text-secondary);
+    font-size: var(--text-body-xs);
+    font-weight: 400;
+    line-height: var(--text-body-xs--line-height);
+  }
+  .panel-head-actions {
+    display: flex;
+    flex: none;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .panel-head-button {
+    display: inline-flex;
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--color-text-primary);
+    font-size: 1.25rem;
+    cursor: pointer;
+  }
+  .panel-previews,
+  .panel-pair {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.75rem;
+  }
+  /* Превью — светлый фон с шахматкой и тёмный; от темы сайта не зависят (гайд макета). */
+  .panel-preview {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 6.25rem;
+    overflow: hidden;
+    border-radius: var(--radius-lg);
+    background-color: var(--color-bg-page);
+    color: var(--color-bg-inverse);
+  }
+  .panel-preview.preview-light {
+    color-scheme: light;
+    background-image: conic-gradient(
+      var(--color-bg-surface-strong) 25%,
+      var(--color-bg-page) 0 50%,
+      var(--color-bg-surface-strong) 0 75%,
+      var(--color-bg-page) 0
+    );
+    background-size: 1rem 1rem;
+  }
+  .panel-preview.preview-dark {
+    color-scheme: dark;
+  }
+  .panel-field {
+    display: grid;
+    gap: 0.25rem;
+    min-width: 0;
+  }
+  .panel-name-section .panel-field {
+    gap: 0.5rem;
+  }
+  .panel-label {
+    padding: 0;
+    color: var(--color-text-secondary);
+    font-size: var(--text-body-xs);
+    line-height: var(--text-body-xs--line-height);
+  }
+  .panel-control {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    width: 100%;
+    min-width: 0;
+    height: 2.125rem;
+    padding: 0.5rem 0.75rem;
+    border: 0;
+    border-radius: var(--radius-md);
+    background: var(--color-bg-surface-strong);
+    color: var(--color-text-primary);
+    font: inherit;
+    text-align: start;
+    cursor: pointer;
+  }
+  .panel-control-text {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .panel-icon {
+    flex: none;
+    font-size: 1rem;
+  }
+  .panel-icon-muted {
+    opacity: 0.5;
+  }
+  .panel-menu {
+    max-height: 20rem;
+    overflow-y: auto;
+  }
+  .panel-color {
+    cursor: default;
+  }
+  .panel-color:focus-within {
+    outline: 2px solid var(--color-selection-bg);
+  }
+  .color-swatch {
+    flex: none;
+    width: 1rem;
+    height: 1rem;
+    padding: 0;
+    border: 0;
+    border-radius: var(--radius-xs);
+    background: none;
+    cursor: pointer;
+  }
+  .color-swatch::-webkit-color-swatch-wrapper {
+    padding: 0;
+  }
+  .color-swatch::-webkit-color-swatch {
+    border: 0;
+    border-radius: var(--radius-xs);
+  }
+  .color-swatch::-moz-color-swatch {
+    border: 0;
+    border-radius: var(--radius-xs);
+  }
+  /* Своего цвета нет — квадратик цвета текста вокруг: иконка берёт его. */
+  .color-swatch[data-auto] {
+    border-radius: var(--radius-xs);
+    background: var(--color-text-primary);
+  }
+  .color-swatch[data-auto]::-webkit-color-swatch {
+    opacity: 0;
+  }
+  .color-swatch[data-auto]::-moz-color-swatch {
+    opacity: 0;
+  }
+  .color-hex {
+    flex: 1;
+    width: 100%;
+    min-width: 0;
+    padding: 0;
+    border: 0;
+    outline: none;
+    background: none;
+    color: var(--color-text-primary);
+    font: inherit;
+    text-transform: uppercase;
+  }
+  .color-hex::placeholder {
+    color: var(--color-text-primary);
+    text-transform: none;
+  }
+  .color-alpha {
+    display: inline-flex;
+    flex: none;
+    gap: 0.125rem;
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--color-text-primary);
+    font: inherit;
+  }
+  .color-alpha-unit {
+    color: var(--color-text-secondary);
+  }
+  .panel-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .panel-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.25rem;
+    /* Обводка в Figma внутри размера: 12/16 макета минус рамка 1 px — кнопка 42 px. */
+    padding: calc(0.75rem - 1px) calc(1rem - 1px);
+    border: 1px solid transparent;
+    border-radius: var(--radius-md);
+    font: inherit;
+    font-weight: 500;
+    white-space: nowrap;
+    cursor: pointer;
+  }
+  .panel-btn-primary {
+    background: var(--color-accent-lemon);
+    color: var(--color-text-on-accent);
+  }
+  .panel-btn-primary:hover {
+    opacity: 0.9;
+  }
+  .panel-btn-secondary {
+    background: var(--color-bg-surface-strong);
+    color: var(--color-text-primary);
+  }
+  .panel-btn-secondary:hover,
+  .panel-btn-outline:hover {
+    background: var(--color-bg-hover);
+  }
+  .panel-btn-outline {
+    border-color: var(--color-border-secondary-20);
+    background: none;
+    color: var(--color-text-primary);
+  }
+  .panel-actions .panel-btn-primary,
+  .panel-actions .panel-btn-secondary {
+    flex: none;
+  }
+  .panel-btn-sm {
+    padding: calc(0.5rem - 1px) calc(0.75rem - 1px);
+    font-weight: 400;
+  }
+  .code-download .panel-icon,
+  .code-copy .panel-icon {
+    opacity: 0.5;
+  }
+  .panel-btn-sm .panel-icon {
+    opacity: 0.5;
+  }
+  .panel-btn-sm[data-copied] .panel-icon {
+    opacity: 1;
+  }
+  .panel-btn[aria-disabled="true"] {
+    opacity: 0.5;
+    cursor: default;
+  }
+  /* Как в макете: Copy Icon и Download — по ширине надписи, сумка — на остаток (69 px из 315, 104 на
+     телефоне); по-русски надписи длиннее — сумка ужимается до своего содержимого. */
+  .panel-bag {
+    flex: 1 1 4.3125rem;
+  }
+  .label-swap {
+    display: inline-grid;
+  }
+  .label-swap > * {
+    grid-area: 1 / 1;
+  }
+  .label-swap > [aria-hidden="true"] {
+    visibility: hidden;
+  }
+  .panel-bag[aria-pressed="true"] {
+    border-color: var(--color-accent-mint);
+  }
+
+  /* Разделы под разделителем: Name и Stroke Width, блок кода, автор и лицензия. */
+  .panel-section {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 1.25rem;
+    padding: 1rem 1.25rem 1.25rem;
+    border-top: 1px solid var(--color-border-secondary-20);
+  }
+  .panel-code-section {
+    padding: 1.25rem;
+  }
+  .panel-name-row {
+    display: flex;
+    gap: 0.5rem;
+  }
+  .panel-name {
+    flex: 1;
+    width: auto;
+  }
+  .panel-name-row > .panel-btn {
+    flex: none;
+  }
+  .panel-stroke {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .panel-range {
+    flex: 1;
+    min-width: 0;
+    height: 1rem;
+    margin: 0;
+    appearance: none;
+    background: none;
+    cursor: pointer;
+  }
+  .panel-range::-webkit-slider-runnable-track {
+    height: 0.25rem;
+    border-radius: 9999px;
+    background: var(--color-bg-surface-strong);
+  }
+  .panel-range::-moz-range-track {
+    height: 0.25rem;
+    border-radius: 9999px;
+    background: var(--color-bg-surface-strong);
+  }
+  .panel-range::-webkit-slider-thumb {
+    width: 1rem;
+    height: 1rem;
+    margin-top: -0.375rem;
+    border: 0;
+    border-radius: 9999px;
+    appearance: none;
+    background: var(--color-selection-bg);
+  }
+  .panel-range::-moz-range-thumb {
+    width: 1rem;
+    height: 1rem;
+    border: 0;
+    border-radius: 9999px;
+    background: var(--color-selection-bg);
+  }
+  .panel-range:focus-visible {
+    outline: 2px solid var(--color-selection-bg);
+    outline-offset: 4px;
+  }
+  .panel-stroke-value {
+    display: inline-flex;
+    flex: none;
+    gap: 0.25rem;
+    color: var(--color-text-secondary);
+  }
+  .panel-stroke-value b {
+    color: var(--color-text-primary);
+    font-weight: 500;
+  }
+
+  /* Блок кода (Icon Panel/Code): форматы, вкладки, настройки, блоки кода. */
+  .panel-code {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 1rem;
+    min-width: 0;
+  }
+  .pill-groups {
+    display: grid;
+    gap: 0.75rem;
+  }
+  .pill-group {
+    min-width: 0;
+    margin: 0;
+    padding: 0;
+    border: 0;
+  }
+  .pill-group > legend {
+    float: left;
+    width: 100%;
+    margin-bottom: 0.5rem;
+  }
+  .pill-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    clear: both;
+  }
+  .pill-option {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: calc(0.375rem - 1px) calc(0.5rem - 1px);
+    border: 1px solid var(--color-border-secondary-20);
+    border-radius: var(--radius-md);
+    background: none;
+    color: var(--color-text-primary);
+    font: inherit;
+    cursor: pointer;
+  }
+  .pill-option:hover {
+    background: var(--color-bg-hover);
+  }
+  .pill-option[aria-pressed="true"] {
+    border-color: transparent;
+    background: var(--color-accent-mint);
+    color: var(--color-text-on-accent);
+  }
+  .pill-option:focus-visible {
+    outline: none;
+    border-color: var(--color-selection-bg);
+  }
+  .panel-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0 0.75rem;
+    min-width: 0;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    border-bottom: 1px solid var(--color-border-secondary-20);
+  }
+  .panel-tab {
+    margin-bottom: -1px;
+    padding: 0.5rem 0;
+    border: 0;
+    border-bottom: 1px solid transparent;
+    background: none;
+    color: var(--color-text-secondary);
+    font: inherit;
+    white-space: nowrap;
+    opacity: 0.5;
+    cursor: pointer;
+  }
+  .panel-tab[aria-pressed="true"] {
+    border-bottom-color: var(--color-text-primary);
+    color: var(--color-text-primary);
+    font-weight: 500;
+    opacity: 1;
+  }
+  .panel-options {
+    display: grid;
+    gap: 0.625rem;
+  }
+  .panel-option {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.5rem;
+    font-size: var(--text-body-sm);
+    line-height: var(--text-body-sm--line-height);
+    cursor: pointer;
+  }
+  .panel-option > span:last-child {
+    padding-top: 0.1875rem;
+  }
+  .panel-option-box {
+    flex: none;
+    color: var(--color-bg-inverse);
+    font-size: 1.5rem;
+  }
+  .panel-option input:focus-visible + .panel-option-box {
+    border-radius: var(--radius-xs);
+    outline: 2px solid var(--color-selection-bg);
+  }
+  .code-block {
+    min-width: 0;
+    margin: 0;
+    border-radius: var(--radius-md);
+    background: var(--color-bg-surface-strong);
+  }
+  .code-block-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    padding: 0.625rem 0.75rem 0.5rem;
+    border-bottom: 1px solid var(--color-border-primary);
+  }
+  .code-block-label {
+    color: var(--color-text-secondary);
+    font-size: var(--text-body-xs);
+    line-height: var(--text-body-xs--line-height);
+  }
+  .code-block-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+  .code-download,
+  .code-copy {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--color-text-secondary);
+    font: inherit;
+    font-size: var(--text-body-xs);
+    line-height: var(--text-body-xs--line-height);
+    cursor: pointer;
+  }
+  .code-copy[data-copied] {
+    color: var(--color-text-success);
+  }
+  .code-copy[data-copied] .panel-icon {
+    opacity: 1;
+  }
+  .code-block-code {
+    margin: 0;
+    padding: 0.75rem;
+    overflow-x: auto;
+    color: var(--color-text-primary);
+    font-family: var(--font-mono);
+    font-size: var(--text-body-xs);
+    line-height: var(--text-body-xs--line-height);
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+  }
+  .code-block-limited {
+    max-height: 10rem;
+    overflow-y: auto;
+    scrollbar-width: thin;
+  }
+  .panel-row {
+    display: flex;
+    gap: 0.5rem;
+  }
+  .page .panel-docs {
+    display: inline-flex;
+    align-items: center;
+    justify-self: start;
+    gap: 0.25rem;
+    margin: 0;
+    color: var(--color-link-unicode);
+    font-size: var(--text-body-xs);
+    line-height: var(--text-body-xs--line-height);
+  }
+  .panel-docs a {
+    color: var(--color-link-unicode);
+  }
+  .panel-facts {
+    display: grid;
+    gap: 0.75rem;
+    margin: 0;
+  }
+  .panel-facts > div {
+    display: grid;
+    gap: 0.25rem;
+  }
+  .panel-facts dd {
+    margin: 0;
+  }
+  .panel-facts a {
+    color: var(--color-link-unicode);
+  }
+
+  /*
+   * Телефон (кадры «Icon Set Page / Mobile — Selected Icon» и «Panel Expanded»): шторка снизу
+   * высотой --height-sheet поверх затемнения; ручка раскрывает её до 44 px от верха экрана, тап по
+   * затемнению закрывает.
+   */
+  @media (max-width: 63.98rem) {
     .icon-panel {
-      position: sticky;
-      inset-block-start: 1rem;
-      inset-inline: auto;
-      max-block-size: calc(100vh - 2rem);
-      border: 1px solid var(--color-border-secondary);
-      border-radius: var(--radius-md);
-      box-shadow: none;
+      position: fixed;
+      inset: auto 0 0;
+      z-index: 41;
+      max-height: var(--height-sheet);
+      border-radius: 1rem 1rem 0 0;
     }
     .icon-panel[data-expanded] {
-      max-block-size: calc(100vh - 2rem);
-      border-radius: var(--radius-md);
+      max-height: calc(100dvh - 2.75rem);
     }
-    .icon-panel-expand {
-      display: none;
+    .panel-backdrop {
+      position: fixed;
+      inset: 0;
+      z-index: 31;
+      display: block;
+      background: var(--color-bg-overlay);
     }
-    body:has(.icon-panel) {
-      padding-block-end: 0;
+    .panel-handle {
+      position: sticky;
+      top: 0;
+      z-index: 1;
+      display: flex;
+      flex: none;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      height: 1.25rem;
+      padding: 0;
+      border: 0;
+      background: var(--color-bg-surface);
+      cursor: grab;
+      touch-action: none;
+    }
+    .panel-handle::before {
+      content: "";
+      width: 2.25rem;
+      height: 0.25rem;
+      border-radius: 9999px;
+      background: var(--color-border-primary);
+    }
+    .panel-top {
+      padding-top: 0.75rem;
     }
   }
 
@@ -2328,6 +2891,10 @@
     flex-wrap: wrap;
     align-items: center;
     gap: 0.75rem;
+    margin: 0;
+  }
+  /* «Select several» в строке над сеткой — без полей абзаца страницы (.page p): строка не выше кнопки. */
+  .grid-bar .select-bar {
     margin: 0;
   }
   .select-status {

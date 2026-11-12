@@ -58,6 +58,22 @@ export const SITE_ICONS = [
   "lucide:grid-2x2",
   "lucide:list",
   "lucide:settings",
+  // Панель иконки по макету «Icon Panel»: значки Material Symbols, логотипы менеджеров пакетов.
+  "material-symbols:open-in-new",
+  "material-symbols:close",
+  "material-symbols:height",
+  "material-symbols:keyboard-arrow-down",
+  "material-symbols:content-copy",
+  "material-symbols:check",
+  "material-symbols:download",
+  "material-symbols:backpack",
+  "material-symbols:arrow-outward",
+  "material-symbols:link",
+  "material-symbols:check-box",
+  "material-symbols:check-box-outline-blank",
+  "tabler:brand-npm",
+  "tabler:brand-pnpm",
+  "tabler:brand-yarn",
 ] as const;
 
 export type SiteIcon = (typeof SITE_ICONS)[number];

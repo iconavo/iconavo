@@ -5,11 +5,12 @@
 import {
   type IconCredit,
   type IconDetails,
+  type IconSetSummary,
   isStyle,
   type StyleVariants,
 } from "@iconavo-ui/search";
 
-export type { IconDetails };
+export type { IconDetails, IconSetSummary };
 
 /** Параметр адреса открытой панели: ?icon=lucide:house (решение владельца 2 ноября 2026). */
 export const PANEL_PARAM = "icon";

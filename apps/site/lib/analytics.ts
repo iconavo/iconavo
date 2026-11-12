@@ -17,7 +17,8 @@ export type CopyWhat =
   | "name"
   | "attribution"
   | "icon"
-  | "png";
+  | "png"
+  | "data-url";
 
 export type SiteEvent =
   | {
