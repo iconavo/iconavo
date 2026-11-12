@@ -52,6 +52,12 @@ export const SITE_ICONS = [
   "lucide:sparkles",
   "tabler:brand-figma",
   "tabler:brand-vscode",
+  // Страница набора по макету: сведения, вид сетки, настройки.
+  "lucide:layout-grid",
+  "lucide:grid-3x3",
+  "lucide:grid-2x2",
+  "lucide:list",
+  "lucide:settings",
 ] as const;
 
 export type SiteIcon = (typeof SITE_ICONS)[number];

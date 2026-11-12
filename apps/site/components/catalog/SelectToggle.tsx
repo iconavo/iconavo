@@ -43,7 +43,7 @@ export function SelectToggle({ lang, select }: { lang: Lang; select: Select }) {
     <p className="select-bar">
       <button
         type="button"
-        className={buttonClass(select.on ? "primary" : "outline")}
+        className={buttonClass(select.on ? "primary" : "secondary")}
         aria-pressed={select.on}
         onClick={() => select.setOn(!select.on)}
       >

@@ -542,11 +542,13 @@
    * «Soon» (решение владельца 12 ноября 2026): элемент из макета без функции. Подсказка — из data-soon,
    * на наведении и фокусе с клавиатуры; под элементом, в подвале — над ним (soon-above).
    */
-  .soon {
+  .soon,
+  .tip {
     position: relative;
     cursor: default;
   }
-  .soon::after {
+  .soon::after,
+  .tip::after {
     content: attr(data-soon);
     position: absolute;
     top: calc(100% + 0.375rem);
@@ -568,12 +570,18 @@
     top: auto;
     bottom: calc(100% + 0.375rem);
   }
+  .tip::after {
+    content: attr(data-tip);
+  }
   .soon:hover::after,
-  .soon:focus-visible::after {
+  .soon:focus-visible::after,
+  .tip:hover::after,
+  .tip:focus-visible::after {
     opacity: 1;
   }
   @media (prefers-reduced-motion: no-preference) {
-    .soon::after {
+    .soon::after,
+    .tip::after {
       transition: opacity 0.12s;
     }
   }
@@ -982,10 +990,6 @@
     font-weight: 700;
     line-height: 1.3;
     margin-bottom: 0.75rem;
-  }
-  .crumbs {
-    font-size: 0.875rem;
-    margin-bottom: 0.25rem;
   }
   /*
    * Начало главной и поле поиска по макету (кадр Header главной): заголовок 32/36, поле 54 px со
@@ -1405,39 +1409,41 @@
     display: flex;
     flex-wrap: wrap;
     align-items: center;
-    gap: 0.5rem;
-    margin-block: 0.75rem;
+    gap: 0.5rem 0.75rem;
   }
   .chips-label {
     color: var(--color-text-secondary);
-    font-size: 0.875rem;
+    font-size: var(--text-body-sm);
+    line-height: var(--text-body-sm--line-height);
   }
   .chips {
     display: flex;
     flex-wrap: wrap;
     gap: 0.375rem;
-    list-style: none;
+    margin: 0;
     padding: 0;
+    list-style: none;
   }
+  /* Чипсы по макету (группы главной на телефоне): рамка, выбранный — мятный. */
   .chip {
     display: inline-flex;
     align-items: center;
     gap: 0.375rem;
-    min-height: 2rem;
-    padding: 0.25rem 0.75rem;
-    border: 1px solid var(--color-border-primary);
-    border-radius: 999px;
+    padding: 0.25rem 0.625rem;
+    border: 1px solid var(--color-border-secondary);
+    border-radius: var(--radius-md);
     color: var(--color-text-primary);
-    font-size: 0.875rem;
+    font-size: var(--text-body-sm);
+    line-height: var(--text-body-sm--line-height);
     text-decoration: none;
   }
   .chip:hover {
-    background: var(--color-bg-surface);
+    background: var(--color-bg-hover);
   }
   .chip[aria-current="true"] {
-    background: var(--color-link-unicode);
-    border-color: var(--color-link-unicode);
-    color: var(--color-bg-page);
+    border-color: transparent;
+    background: var(--color-accent-mint);
+    color: var(--color-text-on-accent);
   }
   .chip-count {
     color: var(--color-text-secondary);
@@ -1445,64 +1451,262 @@
   }
   .chip[aria-current="true"] .chip-count {
     color: inherit;
+    opacity: 0.6;
   }
 
-  /* Страница набора: сведения, витрина, сетка и номера страниц. */
-  .set-facts {
+  /*
+   * Страница набора по макету (Icon Set Page): шапка — крошки, название, «Subscribe», строка сведений;
+   * под разделителем — панель поиска, фильтры, строки номеров страниц и сетка карточек 152 × 101.
+   */
+  .set-page {
+    padding-block: 0;
+  }
+  .set-head {
     display: grid;
-    grid-template-columns: max-content minmax(0, 1fr);
-    gap: 0.25rem 1.5rem;
-    margin-block: 1rem;
+    grid-template-areas:
+      "title subscribe"
+      "meta meta";
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 1.5rem;
+    padding: 2rem 2.5rem 1.5rem;
+    border-bottom: 1px solid var(--color-border-secondary-20);
   }
-  .set-facts > div {
-    display: contents;
+  .set-head-title {
+    display: grid;
+    grid-area: title;
+    gap: 1rem;
   }
-  .set-facts dt {
-    color: var(--color-text-secondary);
+  .page .set-title {
+    margin: 0;
+    font-size: var(--text-display);
+    font-weight: 500;
+    line-height: var(--text-display--line-height);
   }
-  .set-facts dd {
-    overflow-wrap: anywhere;
-  }
-  .page .set-samples {
+  .crumbs ol {
     display: flex;
     flex-wrap: wrap;
-    gap: 1rem;
-    font-size: 2.5rem;
-    margin-block: 1.5rem;
-  }
-  .icon-grid {
-    display: grid;
     gap: 0.5rem;
-    grid-template-columns: repeat(auto-fill, minmax(6.5rem, 1fr));
-    list-style: none;
+    margin: 0;
     padding: 0;
-    margin-block: 1rem;
+    list-style: none;
+    font-size: var(--text-body-xs);
+    line-height: var(--text-body-xs--line-height);
   }
-  .icon-cell {
+  .crumbs li + li::before {
+    content: "/";
+    margin-inline-end: 0.5rem;
+    color: var(--color-text-secondary);
+  }
+  .crumbs a {
+    color: var(--color-text-secondary);
+    text-decoration: none;
+  }
+  .crumbs a:hover {
+    color: var(--color-text-primary);
+  }
+  .set-back {
+    display: none;
+  }
+  .subscribe {
+    display: inline-flex;
+    grid-area: subscribe;
+    align-items: center;
+    justify-self: end;
+    gap: 0.5rem;
+    padding: 0.375rem 0.5rem;
+    border: 0;
     border-radius: var(--radius-md);
-    text-align: center;
+    background: var(--color-bg-inverse);
+    color: var(--color-text-inverse);
+    font: inherit;
+    font-size: var(--text-body-base);
+    line-height: var(--text-body-base--line-height);
   }
-  .icon-cell-svg {
-    font-size: 2rem;
+  .set-meta {
+    display: flex;
+    flex-wrap: wrap;
+    grid-area: meta;
+    align-items: center;
+    gap: 0.5rem 0;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    font-size: var(--text-body-sm);
+    line-height: var(--text-body-sm--line-height);
   }
-  .icon-cell-name {
+  .set-meta li {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+  }
+  .set-meta li + li::before {
+    content: "";
+    width: 1px;
+    height: 1rem;
+    margin-inline: 0.375rem;
+    background: var(--color-border-secondary-20);
+  }
+  .set-meta-icon {
+    font-size: 1rem;
+    opacity: 0.5;
+  }
+  .set-meta-label {
     color: var(--color-text-secondary);
-    font-size: 0.75rem;
-    line-height: 1.3;
-    overflow-wrap: anywhere;
   }
-  .page .grid-status {
-    color: var(--color-text-secondary);
-    margin-block: 2rem;
+  .tip {
+    display: inline-flex;
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--color-text-primary);
+    cursor: help;
+  }
+  .set-body {
+    padding: 1.5rem 2.5rem 2.5rem;
+  }
+  .set-browser {
+    display: grid;
+    gap: 1.25rem;
+    min-width: 0;
+    align-content: start;
+  }
+
+  /* Панель над сеткой: поиск по набору, AI Search, вид, настройки — высота 46 px. */
+  .grid-toolbar {
+    display: flex;
+    align-items: stretch;
+    gap: 0.75rem;
+  }
+  .grid-search {
+    display: flex;
+    flex: 1;
+    min-width: 0;
+  }
+  .grid-field {
+    min-height: 2.875rem;
+    padding-block: 0.5rem;
+  }
+  .ai-search-md {
+    padding: 0.6875rem 0.5rem;
+  }
+  .ai-search-md .ai-toggle {
+    width: 2.5rem;
+    height: 1.5rem;
+  }
+  .ai-search-md .ai-knob {
+    width: 1rem;
+    height: 1rem;
+  }
+  .view-switch {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    min-width: 0;
+    margin: 0;
+    padding: 0.5rem 0.75rem;
+    border: 0;
+    border-radius: var(--radius-lg);
+    background: var(--color-bg-surface);
+  }
+  .view-item {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2rem;
+    height: 2rem;
+    padding: 0;
+    border: 0;
+    border-radius: var(--radius-xs);
+    background: none;
+    color: var(--color-text-primary);
+    font-size: 1.25rem;
+    opacity: 0.5;
+  }
+  .view-item[aria-current="true"] {
+    background: var(--color-bg-surface-strong);
+    opacity: 1;
+  }
+  .grid-settings {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem;
+    border: 0;
+    border-radius: var(--radius-lg);
+    background: var(--color-bg-surface);
+    color: var(--color-text-primary);
+    font: inherit;
+    font-size: var(--text-body-base);
+    line-height: var(--text-body-base--line-height);
+  }
+  .grid-settings-icon {
+    font-size: 1.5rem;
+    opacity: 0.5;
+  }
+  /* Стили и категории — строкой с прокруткой: в макете их нет, сетка начинается сразу. */
+  .grid-filters {
+    display: grid;
+    gap: 0.75rem;
+    min-width: 0;
+  }
+  .grid-filters:empty {
+    display: none;
+  }
+  .grid-filters .chips-nav {
+    flex-wrap: nowrap;
+    min-width: 0;
+  }
+  .grid-filters .chips-label {
+    flex: none;
+  }
+  .grid-filters .chips {
+    flex-wrap: nowrap;
+    min-width: 0;
+    padding-bottom: 0.25rem;
+    overflow-x: auto;
+    scrollbar-width: thin;
+  }
+  .grid-filters .chip {
+    white-space: nowrap;
+  }
+
+  /* Строки номеров страниц по макету: «Icons per page», пунктир, номера 28 px. */
+  .grid-bar {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    min-height: 1.75rem;
+  }
+  .per-page {
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--color-text-primary);
+    font: inherit;
+    font-size: var(--text-body-sm);
+    line-height: var(--text-body-sm--line-height);
+  }
+  .per-page-label {
+    margin-inline-end: 0.25rem;
+    opacity: 0.5;
+  }
+  .grid-bar-line {
+    flex: 1;
+    border-top: 1px dashed var(--color-border-secondary-20);
   }
   .pagination-list {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
     gap: 0.25rem;
-    list-style: none;
+    margin: 0;
     padding: 0;
-    margin-block: 1.5rem;
+    list-style: none;
   }
   .pagination a,
   .pagination-off,
@@ -1510,22 +1714,135 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    min-width: 2.25rem;
-    min-height: 2.25rem;
-    padding: 0 0.5rem;
-    border-radius: var(--radius-md);
+    min-width: 1.75rem;
+    height: 1.75rem;
+    padding: 0 0.25rem;
+    border-radius: var(--radius-xs);
     color: var(--color-text-primary);
+    font-size: var(--text-body-sm);
     text-decoration: none;
   }
-  .pagination a:hover {
+  .pagination a {
     background: var(--color-bg-surface);
   }
+  .pagination a[aria-label] {
+    background: none;
+  }
+  .pagination a:hover {
+    background: var(--color-bg-hover);
+  }
   .pagination a[aria-current="page"] {
-    background: var(--color-link-unicode);
-    color: var(--color-bg-page);
+    background: var(--color-bg-surface-strong);
   }
   .pagination-off {
+    opacity: 0.4;
+  }
+
+  /* Сетка карточек по макету (Icon Card): 152 × 101, значок 24 px, имя 13/17, 7 в ряд на 1440 px. */
+  .icon-grid {
+    display: grid;
+    gap: 0.75rem;
+    grid-template-columns: repeat(auto-fill, minmax(8.75rem, 1fr));
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .icon-cell {
+    min-width: 0;
+  }
+  .icon-cell-svg {
+    font-size: 1.5rem;
+  }
+  .icon-cell-name {
+    max-width: 100%;
+    overflow: hidden;
+    color: var(--color-text-primary);
+    font-size: var(--text-body-sm);
+    line-height: var(--text-body-sm--line-height);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .page .grid-status {
+    margin-block: 2rem;
     color: var(--color-text-secondary);
+  }
+  .grid-clear {
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--color-link-unicode);
+    font: inherit;
+    text-decoration: underline;
+    cursor: pointer;
+  }
+
+  /* Телефон (кадр «Icon Set Page / Mobile»): «‹ Icon Sets», поиск и настройки, ниже AI Search и вид. */
+  @media (max-width: 63.98rem) {
+    .set-head {
+      grid-template-areas:
+        "title"
+        "meta"
+        "subscribe";
+      grid-template-columns: minmax(0, 1fr);
+      gap: 1rem;
+      padding: 1rem 1rem 1.25rem;
+    }
+    .set-head .crumbs {
+      display: none;
+    }
+    .set-back {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.25rem;
+      color: var(--color-text-secondary);
+      font-size: var(--text-body-sm);
+      text-decoration: none;
+    }
+    .subscribe {
+      justify-self: start;
+    }
+    .set-body {
+      padding: 1rem 1rem 2rem;
+    }
+    .set-meta {
+      gap: 0.5rem 0.75rem;
+    }
+    .set-meta li + li::before {
+      display: none;
+    }
+    .grid-toolbar {
+      flex-wrap: wrap;
+    }
+    .grid-search {
+      flex: 1 1 calc(100% - 3.625rem);
+    }
+    .grid-settings {
+      flex: none;
+      justify-content: center;
+      width: 2.875rem;
+      padding: 0;
+    }
+    .grid-settings-label,
+    .grid-field .hero-keys,
+    .grid-bar-top,
+    .grid-bar .per-page,
+    .grid-bar .grid-bar-line {
+      display: none;
+    }
+    .ai-search-md {
+      order: 1;
+    }
+    .view-switch {
+      order: 2;
+      margin-inline-start: auto;
+    }
+    .grid-bar {
+      justify-content: center;
+    }
+    .icon-grid {
+      gap: 0.5rem;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
   }
 
   /* Лента «Что нового» и короткий список на главной. */
@@ -1590,26 +1907,28 @@
     white-space: pre-wrap;
   }
 
-  /* Карточка сетки — ссылка на страницу иконки; обычный щелчок открывает панель (шаг 4 фазы 4). */
+  /*
+   * Карточка сетки по макету (Icon Card) — ссылка на страницу иконки; обычный щелчок открывает панель
+   * (шаг 4 фазы 4). Наведение и открытая в панели — bg/cardHover.
+   */
   .icon-card-link {
+    position: relative;
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 0.375rem;
+    justify-content: center;
+    gap: 0.75rem;
     inline-size: 100%;
-    block-size: 100%;
-    padding: 0.75rem 0.25rem;
-    border-radius: var(--radius-md);
-    color: inherit;
+    min-block-size: 6.3125rem;
+    padding: 1.5rem 0.5rem;
+    border-radius: var(--radius-lg);
+    background: var(--color-bg-icon-card);
+    color: var(--color-text-primary);
     text-decoration: none;
   }
   .icon-card-link:hover,
   .icon-card-link[aria-current="true"] {
-    background: var(--color-bg-surface);
-  }
-  .icon-card-link[aria-current="true"] {
-    outline: 2px solid var(--color-link-unicode);
-    outline-offset: -2px;
+    background: var(--color-bg-card-hover);
   }
 
   /* Боковая панель: на телефоне — шторка снизу, выдача над ней видна и листается; «развернуть» — во весь
@@ -2009,21 +2328,43 @@
     flex-wrap: wrap;
     align-items: center;
     gap: 0.75rem;
-    margin-block: 0.75rem;
+    margin: 0;
   }
   .select-status {
     color: var(--color-text-secondary);
-    font-size: 0.875rem;
+    font-size: var(--text-body-sm);
   }
   button.icon-card-pick {
-    border: 1px solid transparent;
-    background: none;
+    border: 0;
     font: inherit;
     cursor: pointer;
   }
   button.icon-card-pick[aria-pressed="true"] {
+    background: var(--color-bg-card-hover);
+  }
+  .pick-box {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.5rem;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    width: 1rem;
+    height: 1rem;
+    border: 1px solid var(--color-border-primary);
+    border-radius: var(--radius-xs);
+    color: transparent;
+    font-size: 0.75rem;
+  }
+  button.icon-card-pick:hover .pick-box,
+  button.icon-card-pick:focus-visible .pick-box,
+  button.icon-card-pick[aria-pressed="true"] .pick-box {
+    display: inline-flex;
+  }
+  button.icon-card-pick[aria-pressed="true"] .pick-box {
     border-color: var(--color-link-unicode);
-    background: var(--color-bg-surface);
+    background: var(--color-link-unicode);
+    color: var(--color-text-inverse);
   }
   .icon-facts {
     display: grid;

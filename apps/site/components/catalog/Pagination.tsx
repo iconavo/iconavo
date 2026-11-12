@@ -13,10 +13,13 @@ export function Pagination({
   pages,
   hrefOf,
   onSelect,
+  label,
 }: {
   lang: Lang;
   page: number;
   pages: number;
+  /** Своё имя области: у страницы две строки номеров — над сеткой и под ней. */
+  label?: string;
   hrefOf: (page: number) => string;
   onSelect: (page: number) => void;
 }) {
@@ -37,7 +40,7 @@ export function Pagination({
     </a>
   );
   return (
-    <nav aria-label={t.setPages} className="pagination">
+    <nav aria-label={label ?? t.setPages} className="pagination">
       <ul className="pagination-list">
         <li>
           {page > 1 ? (

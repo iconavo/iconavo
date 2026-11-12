@@ -480,6 +480,29 @@ export const cardsInStyle = (cards: readonly Card[], style?: Style) =>
 export const shownName = (card: Card, style?: Style) =>
   (style === undefined ? undefined : card.styles[style]) ?? card.base;
 
+/** Текст поиска по набору как имя иконки: строчные, пробелы и дефисы — один дефис, края без дефисов. */
+export const nameQuery = (q: string) =>
+  q
+    .toLowerCase()
+    .trim()
+    .replace(/[\s_-]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+
+/**
+ * Поиск по набору на его странице (редизайн по макету Figma, шаг 2): карточки, у которых имя базы или
+ * любого варианта содержит текст запроса. Без смысла и тегов — по именам, прямо в браузере: Meilisearch
+ * для этого не нужен. Пустой запрос — все карточки.
+ */
+export function filterCards(cards: readonly Card[], q: string): Card[] {
+  const needle = nameQuery(q);
+  if (needle === "") return [...cards];
+  return cards.filter(
+    (card) =>
+      card.base.includes(needle) ||
+      card.variants.some((name) => name.includes(needle)),
+  );
+}
+
 /**
  * Стили набора по его странице /collection — для фильтра «Стиль» на /sets и карточек наборов на главной:
  * общие страницы, метка catalog.

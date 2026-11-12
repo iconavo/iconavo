@@ -1,0 +1,113 @@
+"use client";
+
+import { Icon } from "@iconavo-ui/react";
+import { useEffect, useRef, useState } from "react";
+import { DICTIONARIES, type Lang } from "../../lib/i18n";
+import { QUERY_MAX_LENGTH, TYPING_PAUSE_MS } from "../../lib/search";
+import { SEARCH_INPUT_ID } from "../shell/HotKey";
+import { Soon } from "../shell/Soon";
+
+/**
+ * Панель над сеткой набора по макету (Figma «Iconavo — Макеты», Search Bar страницы набора): поиск по
+ * набору, AI Search, вид и настройки. Поиск отбирает карточки по имени прямо в браузере (filterCards в
+ * lib/catalog.ts) и пишет запрос в адрес (?q=) после паузы набора. AI Search, крупная сетка, список и
+ * настройки — «Soon»: в продукте их пока нет.
+ */
+export function GridToolbar({
+  lang,
+  setName,
+  query,
+  onQuery,
+}: {
+  lang: Lang;
+  setName: string;
+  /** Запрос из адреса. */
+  query: string;
+  onQuery: (q: string) => void;
+}) {
+  const t = DICTIONARIES[lang];
+  const [text, setText] = useState(query);
+  const committed = useRef(query);
+  const timer = useRef<ReturnType<typeof setTimeout>>(undefined);
+
+  // Адрес сменился не из поля — «назад», ссылка, «Очистить»: поле показывает его.
+  useEffect(() => {
+    if (query === committed.current) return;
+    committed.current = query;
+    setText(query);
+  }, [query]);
+
+  useEffect(() => () => clearTimeout(timer.current), []);
+
+  const commit = (value: string) => {
+    clearTimeout(timer.current);
+    const q = value.trim();
+    if (q === committed.current) return;
+    committed.current = q;
+    onQuery(q);
+  };
+  const placeholder = t.setSearch.replace("{set}", setName);
+
+  return (
+    <div className="grid-toolbar">
+      <search className="grid-search">
+        <form
+          className="hero-field grid-field"
+          onSubmit={(e) => {
+            e.preventDefault();
+            commit(text);
+          }}
+        >
+          <Icon icon="lucide:search" className="hero-field-icon" />
+          <label htmlFor={SEARCH_INPUT_ID} className="sr-only">
+            {placeholder}
+          </label>
+          <input
+            id={SEARCH_INPUT_ID}
+            type="search"
+            className="hero-input"
+            value={text}
+            maxLength={QUERY_MAX_LENGTH}
+            placeholder={placeholder}
+            autoComplete="off"
+            aria-keyshortcuts="Control+K Meta+K"
+            onChange={(e) => {
+              const value = e.target.value;
+              setText(value);
+              clearTimeout(timer.current);
+              timer.current = setTimeout(() => commit(value), TYPING_PAUSE_MS);
+            }}
+          />
+          <span className="hero-keys" aria-hidden="true">
+            <kbd>Ctrl</kbd>
+            <kbd>K</kbd>
+          </span>
+        </form>
+      </search>
+      <Soon lang={lang} className="ai-search ai-search-md">
+        <span className="ai-toggle">
+          <span className="ai-knob" />
+        </span>
+        <span>{t.aiSearch}</span>
+        <Icon icon="lucide:circle-question-mark" className="pill-icon" />
+      </Soon>
+      <fieldset className="view-switch">
+        <legend className="sr-only">{t.viewLabel}</legend>
+        <span className="view-item" aria-current="true">
+          <Icon icon="lucide:grid-3x3" />
+          <span className="sr-only">{t.viewGrid}</span>
+        </span>
+        <Soon lang={lang} className="view-item" label={t.viewLarge}>
+          <Icon icon="lucide:grid-2x2" />
+        </Soon>
+        <Soon lang={lang} className="view-item" label={t.viewList}>
+          <Icon icon="lucide:list" />
+        </Soon>
+      </fieldset>
+      <Soon lang={lang} className="grid-settings">
+        <Icon icon="lucide:settings" className="grid-settings-icon" />
+        <span className="grid-settings-label">{t.gridSettings}</span>
+      </Soon>
+    </div>
+  );
+}

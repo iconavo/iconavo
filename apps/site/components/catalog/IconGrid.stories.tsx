@@ -22,6 +22,7 @@ type Story = StoryObj<typeof meta>;
 const LUCIDE = {
   lang: "en" as const,
   prefix: "lucide",
+  setName: "Lucide",
   first: [
     "a-arrow-down",
     "a-arrow-up",
@@ -57,6 +58,7 @@ export const Phosphor: Story = {
   args: {
     ...LUCIDE,
     prefix: "ph",
+    setName: "Phosphor",
     first: [
       "acorn",
       "address-book",
