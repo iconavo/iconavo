@@ -4,6 +4,20 @@
 Имена не пропадают: иконка, которую удалил автор, скрыта, но работает по имени, а старое имя переименованной ведёт на новое (ADR-0005).
 Скрытия и переименования вы одобряете лично в pull request (ADR-0019). Полные списки — в `changelog.json`.
 
+## 12 ноября 2026 · версия 4149b6cc
+
+Прошлая версия: 76e7ac83 · источник: 0.49.0 · иконок: 15 833.
+
+**Требуют вашего одобрения**
+
+- Скрыты — автор удалил, имя продолжает работать (2): `crop-landscape`, `crop-landscape-outline`
+- Переименованы — старое имя ведёт на новое (4): `crop-landscape-outline-sharp` → `rectangle-outline`, `crop-landscape-sharp` → `rectangle`, `mode-standby` → `adjust`, `mode-standby-outline` → `adjust-outline`
+
+**Изменения**
+
+- Добавлены (38): `document-share-off`, `document-share-off-outline`, `document-share-off-outline-rounded`, `document-share-off-outline-sharp`, `document-share-off-rounded`, `document-share-off-sharp`, `frame-person-2`, `frame-person-2-rounded`, `frame-person-2-sharp`, `print-landscape-long`, `print-landscape-long-outline`, `print-landscape-long-outline-rounded`, `print-landscape-long-outline-sharp`, `print-landscape-long-rounded`, `print-landscape-long-sharp`, `print-landscape-short`, `print-landscape-short-outline`, `print-landscape-short-outline-rounded`, `print-landscape-short-outline-sharp`, `print-landscape-short-sharp`, `print-portrait-long`, `print-portrait-long-outline`, `print-portrait-long-outline-rounded`, `print-portrait-long-outline-sharp`, `print-portrait-long-rounded`, `print-portrait-long-sharp`, `print-portrait-short`, `print-portrait-short-outline`, `print-portrait-short-outline-rounded`, `print-portrait-short-outline-sharp`, `print-portrait-short-rounded`, `print-portrait-short-sharp`, `touch-double-2-hold`, `touch-double-2-hold-outline`, `touch-double-2-hold-outline-rounded`, `touch-double-2-hold-outline-sharp`, `touch-double-2-hold-rounded`, `touch-double-2-hold-sharp`
+- Изменены (2): `eyeglasses-2-outline-rounded`, `eyeglasses-2-rounded`
+
 ## 4 ноября 2026 · версия 76e7ac83
 
 Прошлая версия: 3e14c00b · источник: 0.48.3 · иконок: 15 802.
