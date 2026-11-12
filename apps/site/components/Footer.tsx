@@ -34,6 +34,7 @@ export function Footer({
           <Icon icon="site:github" className="pill-icon" />
           <span>GitHub</span>
         </a>
+        <span className="topbar-divider footer-divider" aria-hidden="true" />
         <Soon lang={lang} className="footer-link" above>
           <span>{t.forAiAgents}</span>
           <AgentLogos />

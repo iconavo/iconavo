@@ -100,15 +100,28 @@ export async function SetPage({
             )}
           </li>
           {latest === undefined ? null : (
-            <li>
-              <span className="set-meta-label">{t.setLatest}:</span>
-              <time dateTime={latest.date}>
-                {formatDate(lang, latest.date)}
-              </time>
-              <PageLink lang={lang} path={`/changelog?set=${prefix}`}>
-                {t.setNews}
-              </PageLink>
-            </li>
+            <>
+              <li>
+                <span className="set-meta-label">{t.setLatest}:</span>
+                <time dateTime={latest.date}>
+                  {formatDate(lang, latest.date)}
+                </time>
+                <PageLink
+                  lang={lang}
+                  path={`/changelog?set=${prefix}`}
+                  className="set-meta-news-long"
+                >
+                  {t.setNews}
+                </PageLink>
+              </li>
+              {/* Телефон (кадр «Icon Set Page / Mobile»): короткая ссылка отдельной группой с разделителем.
+                  На компьютере её нет (display: none) — ссылка не повторяется. */}
+              <li className="set-meta-news">
+                <PageLink lang={lang} path={`/changelog?set=${prefix}`}>
+                  {t.setNewsShort}
+                </PageLink>
+              </li>
+            </>
           )}
         </ul>
       </header>

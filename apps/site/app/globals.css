@@ -310,6 +310,10 @@
     display: inline-flex;
     color: var(--color-text-primary);
   }
+  /* Логотип — в рамке 20 px с полем 4 px снизу (кадр «Sidebar Header»): на 2 px выше середины полосы. */
+  .sidebar-brand {
+    padding-bottom: 0.25rem;
+  }
   .sidebar-toggle,
   .sidebar-close,
   .topbar-menu {
@@ -527,6 +531,9 @@
     :root[data-sidebar="collapsed"] .sidebar-head {
       padding-inline: 0.75rem;
     }
+    :root[data-sidebar="collapsed"] .sidebar-brand {
+      padding-bottom: 0;
+    }
     :root[data-sidebar="collapsed"] .sidebar-logo {
       display: none;
     }
@@ -728,8 +735,9 @@
     align-items: center;
     justify-content: space-between;
     gap: 1rem 1.5rem;
-    margin-top: 2rem;
-    padding: 1.5rem var(--page-x-end) 2rem var(--page-x);
+    /* Подвал по кадру макета: 85 px, содержимое по центру — вровень с блоком тарифа в боковом меню. */
+    min-height: 5.3125rem;
+    padding: 1.5rem var(--page-x-end) 1.5rem var(--page-x);
     font-size: var(--text-body-sm);
     line-height: var(--text-body-sm--line-height);
   }
@@ -738,6 +746,26 @@
     flex-wrap: wrap;
     align-items: center;
     gap: 0.75rem 1rem;
+  }
+  .footer-group:last-child {
+    column-gap: 0.625rem;
+  }
+  .footer-divider {
+    margin-inline: -0.375rem;
+  }
+  /* Подвал на телефоне (кадр «Icon Sets / Mobile»): линия сверху, строки через 16 px, поле снизу 32 px;
+     «For AI agents» — своей строкой, без разделителя. */
+  @media (max-width: 63.98rem) {
+    .site-footer {
+      padding-bottom: 2rem;
+      border-top: 1px solid var(--color-border-secondary-20);
+    }
+    .footer-group {
+      row-gap: 1rem;
+    }
+    .footer-divider {
+      display: none;
+    }
   }
   .footer-link,
   .footer-text,
@@ -828,6 +856,10 @@
     }
     .topbar-group:first-child .theme-toggle {
       margin-inline-start: 0.375rem;
+    }
+    /* Логотип — на 2,5 px выше середины, как в кадре «Mobile App Bar». */
+    .topbar-brand {
+      padding-bottom: 0.3125rem;
     }
     .topbar-menu,
     .topbar .bag-button {
@@ -1213,7 +1245,7 @@
     gap: 0.5rem;
     min-width: 0;
     min-height: 3.375rem;
-    padding: 0.75rem 1rem;
+    padding: calc(0.75rem - 1px) calc(1rem - 1px);
     border: 1px solid transparent;
     border-radius: var(--radius-lg);
     background: var(--color-bg-surface);
@@ -1237,8 +1269,9 @@
     color: var(--color-text-primary);
     font: inherit;
   }
+  /* Подсказка в поле — text/primary, как в макете (Search Input, Placeholder) и в поле «Filter by name». */
   .hero-input::placeholder {
-    color: var(--color-text-secondary);
+    color: var(--color-text-primary);
   }
   .hero-keys {
     display: flex;
@@ -1274,6 +1307,9 @@
     border-radius: 9999px;
     background: var(--color-bg-surface-strong);
   }
+  .ai-help {
+    margin-inline-start: -0.25rem;
+  }
   .ai-knob {
     width: 1.25rem;
     height: 1.25rem;
@@ -1282,6 +1318,7 @@
   }
   @media (max-width: 63.98rem) {
     .hero {
+      gap: 1rem;
       padding-block: 1.5rem;
     }
     .find-body {
@@ -1289,7 +1326,7 @@
     }
     .page .hero-title {
       font-size: 1.75rem;
-      line-height: 2.125rem;
+      line-height: 2rem;
     }
     .hero-links,
     .hero-keys {
@@ -1299,8 +1336,25 @@
       flex-direction: column;
       align-items: flex-start;
     }
+    .hero-search-form {
+      gap: 1rem;
+    }
+    /* AI Search на телефоне — средний, 150 × 46, как на странице набора. */
+    .hero-search-form .ai-search {
+      padding: 0.6875rem 0.5rem;
+    }
+    .hero-search-form .ai-toggle {
+      width: 2.5rem;
+      height: 1.5rem;
+    }
+    .hero-search-form .ai-knob {
+      width: 1rem;
+      height: 1rem;
+    }
     .hero-field {
       width: 100%;
+      min-height: 2.875rem;
+      padding: calc(0.5rem - 1px) calc(1rem - 1px);
     }
   }
 
@@ -1460,7 +1514,7 @@
   }
   .set-grid {
     display: grid;
-    gap: 0.75rem;
+    gap: 1rem;
     grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr));
   }
   .set-card {
@@ -1505,24 +1559,26 @@
     font-size: 1rem;
   }
   @media (max-width: 63.98rem) {
+    /* Чипсы — 24 px до первой группы (группы между собой — через 32 px). */
     .group-chips {
       display: flex;
       gap: 0.5rem;
       min-width: 0;
-      margin: 0;
+      margin: 0 0 -0.5rem;
       padding: 0;
       border: 0;
       overflow-x: auto;
     }
     .group-chip {
       flex: none;
-      padding: 0.375rem 0.75rem;
+      padding: calc(0.375rem - 1px) calc(0.5rem - 1px);
       border: 1px solid var(--color-border-secondary);
       border-radius: var(--radius-md);
       background: none;
       color: var(--color-text-primary);
       font: inherit;
       font-size: var(--text-body-base);
+      line-height: var(--text-body-base--line-height);
       cursor: pointer;
     }
     .group-chip[aria-pressed="true"] {
@@ -1539,10 +1595,26 @@
       background: none;
       color: var(--color-text-primary);
       font: inherit;
-      font-size: var(--text-body-base);
+      font-size: var(--text-body-sm);
+      line-height: var(--text-body-sm--line-height);
       cursor: pointer;
     }
+    /* Группы: через 32 px, внутри — 12 px, заголовок и описание — через 6 px, описание 13/17. */
+    .home-groups {
+      gap: 2rem;
+    }
+    .set-group {
+      gap: 0.75rem;
+    }
+    .set-group-head {
+      gap: 0.375rem 0.5rem;
+    }
+    .page .set-group-text {
+      font-size: var(--text-body-sm);
+      line-height: var(--text-body-sm--line-height);
+    }
     .home-groups .set-grid {
+      gap: 0.75rem;
       grid-auto-columns: min(17rem, 80vw);
       grid-auto-flow: column;
       grid-template-columns: none;
@@ -1689,9 +1761,12 @@
     grid-area: meta;
     align-items: center;
     gap: 0.5rem 0;
-    margin: 0;
+    /* Группы через 12 px с разделителем 1 × 16 (кадр «Icon Set Page»). Разделитель стоит перед каждой
+       группой, а полоса 25 px слева срезана: у первой группы строки — и после переноса — его не видно. */
+    margin: 0 0 0 -1.5625rem;
     padding: 0;
     list-style: none;
+    clip-path: inset(-100vh -100vw -100vh 1.5625rem);
     font-size: var(--text-body-sm);
     line-height: var(--text-body-sm--line-height);
   }
@@ -1700,12 +1775,16 @@
     align-items: center;
     gap: 0.375rem;
   }
-  .set-meta li + li::before {
+  .set-meta li::before {
     content: "";
+    flex: none;
     width: 1px;
     height: 1rem;
-    margin-inline: 0.375rem;
+    margin-inline: 0.75rem 0.375rem;
     background: var(--color-border-secondary-20);
+  }
+  .set-meta .set-meta-news {
+    display: none;
   }
   .set-meta-icon {
     font-size: 1rem;
@@ -1727,7 +1806,7 @@
   }
   .set-browser {
     display: grid;
-    gap: 1.25rem;
+    gap: 1.75rem;
     min-width: 0;
     align-content: start;
   }
@@ -1745,7 +1824,7 @@
   }
   .grid-field {
     min-height: 2.875rem;
-    padding-block: 0.5rem;
+    padding: calc(0.5rem - 1px) calc(1rem - 1px);
   }
   .ai-search-md {
     padding: 0.6875rem 0.5rem;
@@ -1764,7 +1843,7 @@
     gap: 0.25rem;
     min-width: 0;
     margin: 0;
-    padding: 0.5rem 0.75rem;
+    padding: 0.4375rem 0.5rem;
     border: 0;
     border-radius: var(--radius-lg);
     background: var(--color-bg-surface);
@@ -1791,7 +1870,7 @@
     display: inline-flex;
     align-items: center;
     gap: 0.5rem;
-    padding: 0.75rem;
+    padding: 0.6875rem 0.75rem;
     border: 0;
     border-radius: var(--radius-lg);
     background: var(--color-bg-surface);
@@ -1949,8 +2028,16 @@
         "meta"
         "subscribe";
       grid-template-columns: minmax(0, 1fr);
-      gap: 1rem;
+      gap: 0.75rem;
       padding-block: 1rem 1.25rem;
+      border-bottom: 0;
+    }
+    .set-head-title {
+      gap: 0.75rem;
+    }
+    .page .set-title {
+      font-size: 1.75rem;
+      line-height: 2rem;
     }
     .set-head .crumbs {
       display: none;
@@ -1958,28 +2045,35 @@
     .set-back {
       display: inline-flex;
       align-items: center;
-      gap: 0.25rem;
+      gap: 0.125rem;
       color: var(--color-text-secondary);
       font-size: var(--text-body-sm);
+      line-height: var(--text-body-sm--line-height);
       text-decoration: none;
     }
     .subscribe {
       justify-self: start;
     }
     .set-body {
-      padding-block: 1rem 2rem;
+      padding-block: 0 1.5rem;
     }
-    .set-meta {
-      gap: 0.5rem 0.75rem;
+    .set-browser {
+      gap: 1rem;
     }
-    .set-meta li + li::before {
+    /* Кадр «Icon Set Page / Mobile»: без значка счётчика, «What’s new» — отдельной группой. */
+    .set-meta .set-meta-icon,
+    .set-meta .set-meta-news-long {
       display: none;
+    }
+    .set-meta .set-meta-news {
+      display: inline-flex;
     }
     .grid-toolbar {
       flex-wrap: wrap;
+      gap: 0.75rem 0.5rem;
     }
     .grid-search {
-      flex: 1 1 calc(100% - 3.625rem);
+      flex: 1 1 calc(100% - 3.375rem);
     }
     /* Settings на телефоне — квадратная кнопка 46 × 46 (Icon Button, вариант Secondary): фон ярче, значок
        20 px без приглушения. */

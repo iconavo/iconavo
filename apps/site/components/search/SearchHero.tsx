@@ -205,7 +205,7 @@ export function SearchHero({
               <span className="ai-knob" />
             </span>
             <span>{t.aiSearch}</span>
-            <Icon icon="material-symbols:help" className="pill-icon" />
+            <Icon icon="material-symbols:help" className="pill-icon ai-help" />
           </Soon>
         </form>
       </search>
