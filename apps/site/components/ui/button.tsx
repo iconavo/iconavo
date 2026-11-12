@@ -5,12 +5,16 @@ import type { ComponentProps } from "react";
 import { cn } from "../../lib/cn";
 
 const BASE =
-  "inline-flex shrink-0 cursor-pointer items-center justify-center gap-2 rounded-md text-sm font-medium whitespace-nowrap disabled:pointer-events-none disabled:opacity-50";
+  "inline-flex shrink-0 cursor-pointer items-center justify-center gap-2 rounded-md text-body-base whitespace-nowrap disabled:pointer-events-none disabled:opacity-50";
 
+// Варианты — по компоненту Button макета (Figma «Iconavo — Макеты»): главная кнопка салатовая с чёрным
+// текстом (accent/highlight, text/onAccent), второстепенная — на bg/surfaceStrong.
 const VARIANTS = {
-  primary: "bg-accent text-bg hover:opacity-90",
-  outline: "border border-control bg-bg text-fg hover:bg-surface",
-  ghost: "text-fg hover:bg-surface",
+  primary: "bg-accent-highlight text-text-on-accent hover:opacity-90",
+  secondary: "bg-bg-surface-strong text-text-primary hover:bg-bg-hover",
+  outline:
+    "border border-border-primary bg-bg-page text-text-primary hover:bg-bg-surface",
+  ghost: "text-text-primary hover:bg-bg-hover",
 } as const;
 
 const SIZES = {

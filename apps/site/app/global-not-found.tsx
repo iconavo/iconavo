@@ -2,6 +2,9 @@ import type { Metadata } from "next";
 import { NotFound } from "../components/pages/NotFound";
 import { Shell } from "../components/Shell";
 import { ThemeScript } from "../components/ThemeScript";
+import { getSets } from "../lib/catalog";
+import { sidebarGroups } from "../lib/catalog-view";
+import { interTight } from "../lib/fonts";
 import { loadSiteIcons } from "../lib/icons";
 import "./globals.css";
 
@@ -15,15 +18,20 @@ export const metadata: Metadata = {
 };
 
 export default async function GlobalNotFound() {
-  const icons = await loadSiteIcons();
+  const [icons, sets] = await Promise.all([loadSiteIcons(), getSets()]);
   return (
     // Атрибут data-theme ставит скрипт темы до гидратации — расхождение с сервером ожидаемо.
-    <html lang="en" suppressHydrationWarning>
+    <html lang="en" className={interTight.variable} suppressHydrationWarning>
       <head>
         <ThemeScript />
       </head>
       <body>
-        <Shell lang="en" icons={icons} languageSwitch={false}>
+        <Shell
+          lang="en"
+          icons={icons}
+          groups={sidebarGroups("en", sets)}
+          languageSwitch={false}
+        >
           <NotFound />
         </Shell>
       </body>

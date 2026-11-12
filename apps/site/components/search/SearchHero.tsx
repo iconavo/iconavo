@@ -1,8 +1,10 @@
 "use client";
 
+import { Icon } from "@iconavo-ui/react";
 import { usePathname, useRouter } from "next/navigation";
 import {
   type FormEvent,
+  type ReactNode,
   useEffect,
   useLayoutEffect,
   useRef,
@@ -12,8 +14,8 @@ import { DICTIONARIES, href, type Lang } from "../../lib/i18n";
 import { QUERY_MAX_LENGTH, TYPING_PAUSE_MS } from "../../lib/search";
 import { takeHandoff } from "../../lib/search-handoff";
 import { useUrlQuery, withParams } from "../../lib/url-query";
-import { Button } from "../ui/button";
-import { Input } from "../ui/input";
+import { SEARCH_INPUT_ID } from "../shell/HotKey";
+import { Soon } from "../shell/Soon";
 
 /**
  * Большое поле поиска главной и страницы поиска (шаг 3 фазы 4, ADR-0040). Оно в общей раскладке
@@ -26,7 +28,14 @@ import { Input } from "../ui/input";
  * - Пока идёт ввод иероглифов или диакритики (IME), запрос не уходит.
  * - Текст из поля шапки (lib/search-handoff) подхватывается вместе с фокусом.
  */
-export function SearchHero({ lang }: { lang: Lang }) {
+export function SearchHero({
+  lang,
+  intro,
+}: {
+  lang: Lang;
+  /** Начало главной по макету (HomeIntro): заголовок, подзаголовок, ссылки — только на главной. */
+  intro?: ReactNode;
+}) {
   const t = DICTIONARIES[lang];
   const router = useRouter();
   const pathname = usePathname();
@@ -147,43 +156,57 @@ export function SearchHero({ lang }: { lang: Lang }) {
 
   return (
     <>
-      <h1>{onSearch ? t.searchTitle : "Iconavo"}</h1>
-      {onSearch ? null : <p className="lead">{t.homeLead}</p>}
+      {onSearch ? <h1 className="search-title">{t.searchTitle}</h1> : intro}
       <search className="hero-search">
         <form
           action={searchPath}
           className="hero-search-form"
           onSubmit={submit}
         >
-          <label htmlFor="hero-search" className="sr-only">
-            {t.searchLabel}
-          </label>
-          <Input
-            ref={input}
-            id="hero-search"
-            type="search"
-            name="q"
-            value={value}
-            maxLength={QUERY_MAX_LENGTH}
-            placeholder={t.searchPlaceholder}
-            autoComplete="off"
-            onChange={(e) => {
-              setValue(e.target.value);
-              schedule(e.target.value);
-            }}
-            onCompositionStart={() => {
-              composing.current = true;
-            }}
-            onCompositionEnd={(e) => {
-              composing.current = false;
-              schedule(e.currentTarget.value);
-            }}
-            onFocus={() => router.prefetch(searchPath)}
-            onBlur={() => {
-              typing.current = false;
-            }}
-          />
-          <Button type="submit">{t.searchSubmit}</Button>
+          <div className="hero-field">
+            <Icon icon="lucide:search" className="hero-field-icon" />
+            <label htmlFor={SEARCH_INPUT_ID} className="sr-only">
+              {t.searchLabel}
+            </label>
+            <input
+              ref={input}
+              id={SEARCH_INPUT_ID}
+              type="search"
+              name="q"
+              className="hero-input"
+              value={value}
+              maxLength={QUERY_MAX_LENGTH}
+              placeholder={t.searchPlaceholder}
+              autoComplete="off"
+              aria-keyshortcuts="Control+K Meta+K"
+              onChange={(e) => {
+                setValue(e.target.value);
+                schedule(e.target.value);
+              }}
+              onCompositionStart={() => {
+                composing.current = true;
+              }}
+              onCompositionEnd={(e) => {
+                composing.current = false;
+                schedule(e.currentTarget.value);
+              }}
+              onFocus={() => router.prefetch(searchPath)}
+              onBlur={() => {
+                typing.current = false;
+              }}
+            />
+            <span className="hero-keys" aria-hidden="true">
+              <kbd>Ctrl</kbd>
+              <kbd>K</kbd>
+            </span>
+          </div>
+          <Soon lang={lang} className="ai-search">
+            <span className="ai-toggle">
+              <span className="ai-knob" />
+            </span>
+            <span>{t.aiSearch}</span>
+            <Icon icon="lucide:circle-question-mark" className="pill-icon" />
+          </Soon>
         </form>
       </search>
     </>

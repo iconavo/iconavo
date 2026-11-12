@@ -330,6 +330,69 @@ export function orderSets(ids: readonly string[]): string[] {
   return [...ids].sort((a, b) => rank(a) - rank(b) || order(a, b));
 }
 
+/**
+ * Группы наборов главной и боковой панели — по макету (Figma «Iconavo — Макеты»: Material, UI 24px,
+ * UI 16px / 32px, Brands, Emoji). У нас пока три: набора нет в списке — цветной идёт в эмодзи,
+ * остальные — в UI 24px.
+ */
+export const SET_GROUPS = [
+  { id: "material", sets: ["material-symbols"] },
+  { id: "ui-24", sets: ["lucide", "tabler", "ph"] },
+  { id: "emoji", sets: ["fluent-emoji-flat"] },
+] as const;
+
+export type SetGroupId = (typeof SET_GROUPS)[number]["id"];
+
+/** Наборы по группам, внутри — в порядке витрины; пустых групп нет. */
+export function groupSets(
+  sets: Record<string, Pick<SetInfo, "palette">>,
+): { id: SetGroupId; ids: string[] }[] {
+  const groupOf = (id: string): SetGroupId =>
+    SET_GROUPS.find((g) => (g.sets as readonly string[]).includes(id))?.id ??
+    (sets[id]?.palette ? "emoji" : "ui-24");
+  const ids = orderSets(Object.keys(sets));
+  return SET_GROUPS.map((g) => ({
+    id: g.id,
+    ids: ids.filter((id) => groupOf(id) === g.id),
+  })).filter((g) => g.ids.length > 0);
+}
+
+/** Знакомые имена для витрины карточки, если своих шести мало: их ищут по набору по порядку. */
+const SHOWCASE_EXTRAS = [
+  "star",
+  "heart",
+  "bell",
+  "camera",
+  "settings",
+  "user",
+  "mail",
+  "search",
+  "red-heart",
+  "fire",
+  "rocket",
+  "sparkles",
+  "light-bulb",
+];
+
+/**
+ * Витрина карточки набора — 3 × 3 по макету: шесть иконок витрины автора набора (info.samples) и
+ * знакомые имена из набора, затем первые его имена.
+ */
+export function showcase(
+  samples: readonly string[],
+  c: Collection,
+  size = 9,
+): string[] {
+  const names = visibleNames(c);
+  const have = new Set(names);
+  const picked = [...new Set(samples)].filter((n) => have.has(n));
+  for (const name of [...SHOWCASE_EXTRAS, ...names]) {
+    if (picked.length >= size) break;
+    if (have.has(name) && !picked.includes(name)) picked.push(name);
+  }
+  return picked.slice(0, size);
+}
+
 /** Видимые имена набора: категории и uncategorized, без повторов, по кодам символов, как у Iconify. */
 export function visibleNames(c: Collection): string[] {
   return [

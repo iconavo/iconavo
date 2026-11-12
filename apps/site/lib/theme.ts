@@ -24,6 +24,20 @@ export function storedTheme(): Theme {
   }
 }
 
+/** Тёмная ли тема на экране сейчас: выбранная или, без выбора, тема системы. */
+export function isDark(root = document.documentElement): boolean {
+  const value = root.dataset.theme;
+  if (explicit(value)) return value === "dark";
+  return window.matchMedia("(prefers-color-scheme: dark)").matches;
+}
+
+/** Подписка на смену темы системы: кнопка темы показывает тёмную, пока выбора нет. */
+export function subscribeScheme(listener: () => void): () => void {
+  const query = window.matchMedia("(prefers-color-scheme: dark)");
+  query.addEventListener("change", listener);
+  return () => query.removeEventListener("change", listener);
+}
+
 /** Применить тему к странице: «как в системе» — без атрибута. */
 export function applyTheme(theme: Theme, root = document.documentElement) {
   if (theme === "system") delete root.dataset.theme;

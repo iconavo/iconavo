@@ -37,6 +37,21 @@ export const SITE_ICONS = [
   // Сумка в шапке и список форматов имени (шаг 5 фазы 4).
   "lucide:shopping-bag",
   "lucide:chevron-down",
+  // Каркас по макету (Figma «Iconavo — Макеты»): боковая панель, верхняя полоса, подвал, главная.
+  "lucide:house",
+  "lucide:bell",
+  "lucide:book-open",
+  "lucide:wrench",
+  "lucide:gem",
+  "lucide:panel-left-close",
+  "lucide:panel-left-open",
+  "lucide:backpack",
+  "lucide:circle-user",
+  "lucide:circle-question-mark",
+  "lucide:bot",
+  "lucide:sparkles",
+  "tabler:brand-figma",
+  "tabler:brand-vscode",
 ] as const;
 
 export type SiteIcon = (typeof SITE_ICONS)[number];

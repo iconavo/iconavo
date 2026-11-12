@@ -13,18 +13,61 @@
   --inset-shadow-*: initial;
   --drop-shadow-*: initial;
   --text-shadow-*: initial;
-  --color-bg: light-dark(#ffffff, #0f0f12);
-  --color-fg: light-dark(#18181b, #ececf1);
-  --color-muted: light-dark(#52525b, #a1a1aa);
-  --color-line: light-dark(#e4e4e7, #2e2e35);
-  --color-control: light-dark(#71717a, #8b8b94);
-  --color-surface: light-dark(#f4f4f5, #1b1b20);
-  --color-accent: light-dark(#4338ca, #a5b4fc);
-  --color-focus: light-dark(#2563eb, #93c5fd);
+  --color-bg-page: light-dark(#ffffff, #0f131a);
+  --color-bg-surface: light-dark(#f5f7fb, #161c25);
+  --color-bg-surface-muted: light-dark(#f2f5fa, #1e2633);
+  --color-bg-surface-strong: light-dark(#e0e4eb, #2b3444);
+  --color-bg-overlay: light-dark(#00000040, #02050ab2);
+  --color-bg-hover: light-dark(#e0e4eb, #232d3b);
+  --color-bg-card-hover: light-dark(#e1f3ff, #203246);
+  --color-bg-inverse: light-dark(#000000, #f5f7fb);
+  --color-bg-inverse-hover: light-dark(#00000080, #f5f7fbcc);
+  --color-bg-icon-card: light-dark(#f5f7fb, #161c2559);
+  --color-border-primary: light-dark(#b4c0d0, #3a4658);
+  --color-border-secondary: light-dark(#e0e4eb, #3a4658);
+  --color-border-secondary-20: light-dark(#e0e4eb, #1e2633);
+  --color-text-primary: light-dark(#000000, #f5f7fb);
+  --color-text-secondary: light-dark(#00000099, #ffffff80);
+  --color-text-muted: light-dark(#b3b3b3, #94a1b3);
+  --color-text-hover-muted: light-dark(#778490, #b4c0d0);
+  --color-text-primary-hover: light-dark(#00000080, #ffffff80);
+  --color-text-inverse: light-dark(#ffffff, #11161d);
+  --color-text-on-accent: light-dark(#000000, #000000);
+  --color-text-success: light-dark(#15803d, #12ff12);
+  --color-text-danger: light-dark(#b91c1c, #ff6666);
+  --color-text-on-danger: light-dark(#ffffff, #000000);
+  --color-link-unicode: light-dark(#5555ff, #8d91ff);
+  --color-selection-bg: light-dark(#000000, #cbfd05);
+  --color-selection-text: light-dark(#ffffff, #000000);
+  --color-accent-highlight: light-dark(#cbfd05, #cbfd05);
+  --color-accent-highlight-subtle: light-dark(#faffdd, #cbfd051a);
+  --color-accent-cyan: light-dark(#9dfaff, #9dfaff);
+  --color-accent-mint: light-dark(#98ff98, #98ff98);
+  --color-accent-lemon: light-dark(#f8ff79, #f8ff79);
+  --color-status-danger: light-dark(#dd1e2c, #ff6666);
+  --color-status-badge: light-dark(#fc4708, #fc4708);
+  --color-status-success: light-dark(#12ff12, #12ff12);
   --shadow-md: 0 4px 12px light-dark(rgb(0 0 0 / 0.12), rgb(0 0 0 / 0.5));
-  --font-sans: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-sans:
+    var(--font-inter-tight, system-ui), -apple-system, "Segoe UI", Roboto,
+    sans-serif;
   --font-mono: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+  --radius-xs: 0.25rem;
+  --radius-sm: 0.375rem;
   --radius-md: 0.5rem;
+  --radius-lg: 0.75rem;
+  --text-display: 2rem;
+  --text-display--line-height: 2.25rem;
+  --text-heading-lg: 1.25rem;
+  --text-heading-lg--line-height: 1.75rem;
+  --text-heading-md: 1rem;
+  --text-heading-md--line-height: 1.25rem;
+  --text-body-base: 0.875rem;
+  --text-body-base--line-height: 1.125rem;
+  --text-body-sm: 0.8125rem;
+  --text-body-sm--line-height: 1.0625rem;
+  --text-body-xs: 0.75rem;
+  --text-body-xs--line-height: 1rem;
 }
 
 /*
@@ -44,6 +87,9 @@
   --width-text: 46rem;
   --width-nav: 14rem;
   --width-toc: 13rem;
+  /* Боковая панель каркаса по макету: 224 px, свёрнутая — 56 px. */
+  --width-sidebar: 14rem;
+  --width-sidebar-collapsed: 3.5rem;
   /* Боковая панель иконки (шаг 4 фазы 4) и высота шторки на телефоне. */
   --width-panel: 24rem;
   --height-sheet: 60vh;
@@ -54,18 +100,18 @@
     color-scheme: light dark;
   }
   body {
-    background: var(--color-bg);
-    color: var(--color-fg);
+    background: var(--color-bg-page);
+    color: var(--color-text-primary);
     font-family: var(--font-sans);
     line-height: 1.6;
   }
   a {
-    color: var(--color-accent);
+    color: var(--color-link-unicode);
     text-decoration: underline;
     text-underline-offset: 2px;
   }
   :focus-visible {
-    outline: 2px solid var(--color-focus);
+    outline: 2px solid var(--color-selection-bg);
     outline-offset: 2px;
   }
   code,
@@ -86,8 +132,8 @@
     left: 1rem;
     top: -3rem;
     padding: 0.5rem 1rem;
-    background: var(--color-bg);
-    border: 1px solid var(--color-line);
+    background: var(--color-bg-page);
+    border: 1px solid var(--color-border-secondary);
     border-radius: var(--radius-md);
     z-index: 10;
   }
@@ -96,91 +142,554 @@
   }
 
   /*
-   * Шапка: на телефоне — три строки (имя и переключатели, поиск во всю ширину, ссылки), с 64rem —
-   * одна строка.
+   * Каркас по макету (Figma «Iconavo — Макеты»): боковая панель 224 px и колонка — верхняя полоса,
+   * страница, подвал. До 64rem панель — шторка меню поверх страницы (lib/menu.ts, data-menu у <html>).
    */
-  .site-header {
-    border-bottom: 1px solid var(--color-line);
-  }
-  .header-row {
+  .app {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) auto;
-    grid-template-areas:
-      "brand tools"
-      "search search"
-      "nav nav";
-    align-items: center;
-    gap: 0.5rem 1rem;
-    padding-block: 0.5rem;
+    grid-template-columns: var(--width-sidebar) minmax(0, 1fr);
+    min-height: 100vh;
   }
-  .brand {
-    grid-area: brand;
-    justify-self: start;
-    color: var(--color-fg);
-    font-weight: 700;
-    font-size: 1.125rem;
-    text-decoration: none;
-  }
-  .header-search {
-    grid-area: search;
+  .app-column {
+    display: flex;
+    flex-direction: column;
     min-width: 0;
   }
-  .header-search-form {
+  .app-column > main {
+    flex: 1;
+  }
+  .app-backdrop {
+    display: none;
+  }
+
+  /* Боковая панель (компонент Sidebar). */
+  /* Низкий экран: панель прокручивается целиком, список наборов не сжимается до нуля. */
+  .sidebar {
+    position: sticky;
+    top: 0;
     display: flex;
+    flex-direction: column;
+    height: 100vh;
+    overflow-x: hidden;
+    overflow-y: auto;
+    background: var(--color-bg-page);
+    border-right: 1px solid var(--color-border-secondary-20);
+    font-size: var(--text-body-base);
+    line-height: var(--text-body-base--line-height);
+  }
+  .sidebar-head {
+    display: flex;
+    flex: none;
     align-items: center;
+    justify-content: space-between;
+    gap: 0.375rem;
+    height: 3.125rem;
+    padding-inline: 1.25rem;
+  }
+  .sidebar-brand,
+  .topbar-brand {
+    display: inline-flex;
+    color: var(--color-text-primary);
+  }
+  .sidebar-toggle,
+  .sidebar-close,
+  .topbar-menu {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--color-text-primary);
+    cursor: pointer;
+  }
+  .sidebar-toggle,
+  .sidebar-close {
+    font-size: 1rem;
+    opacity: 0.5;
+  }
+  .sidebar-toggle:hover,
+  .sidebar-close:hover {
+    opacity: 1;
+  }
+  .sidebar-close {
+    display: none;
+  }
+  .sidebar-nav {
+    flex: none;
+    padding: 0.75rem;
+    background: var(--color-bg-surface);
+  }
+  .sidebar-nav ul,
+  .sidebar-group ul {
+    display: grid;
     gap: 0.25rem;
   }
-  .header-nav {
-    grid-area: nav;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.25rem 1.25rem;
-  }
-  .header-nav a,
-  .lang-switch {
-    color: var(--color-fg);
-    text-decoration: none;
-  }
-  .header-nav a:hover,
-  .lang-switch:hover {
-    text-decoration: underline;
-  }
-  .header-tools {
-    grid-area: tools;
+  .sidebar-item,
+  .sidebar-set {
     display: flex;
     align-items: center;
-    gap: 0.75rem;
+    gap: 0.5rem;
+    width: 100%;
+    padding: 0.375rem 0.5rem;
+    border: 0;
+    border-radius: var(--radius-xs);
+    background: none;
+    color: var(--color-text-primary);
+    font: inherit;
+    text-align: start;
+    text-decoration: none;
   }
+  .sidebar-item:hover,
+  .sidebar-set:hover {
+    background: var(--color-bg-hover);
+  }
+  .sidebar-item[aria-current="page"],
+  .sidebar-set[aria-current="page"] {
+    background: var(--color-bg-surface-strong);
+  }
+  .sidebar-item-icon {
+    flex: none;
+    font-size: 1rem;
+    opacity: 0.5;
+  }
+  .sidebar-item[aria-current="page"] .sidebar-item-icon {
+    opacity: 1;
+  }
+  .sidebar-body {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    gap: 1rem;
+    min-height: 12rem;
+    padding: 0.5rem 0.75rem 1rem;
+  }
+  /* Вкладки не помещаются, как в макете: обрезаны справа, а подсказки «Soon» под ними видны. */
+  .sidebar-tabs {
+    display: flex;
+    flex: none;
+    overflow-x: clip;
+  }
+  .sidebar-tab {
+    flex: none;
+    padding: 0.5rem;
+    border: 0;
+    border-bottom: 1px solid transparent;
+    background: none;
+    color: var(--color-text-secondary);
+    font: inherit;
+    opacity: 0.5;
+    white-space: nowrap;
+  }
+  .sidebar-tab[aria-current="true"] {
+    border-bottom-color: var(--color-text-primary);
+    color: var(--color-text-primary);
+    font-weight: 500;
+    opacity: 1;
+  }
+  .sidebar-filter {
+    display: flex;
+    flex: none;
+    align-items: center;
+    gap: 0.375rem;
+    padding: 0.5rem 0.75rem;
+    border-radius: var(--radius-sm);
+    background: var(--color-bg-surface);
+  }
+  .sidebar-filter:focus-within {
+    outline: 2px solid var(--color-selection-bg);
+  }
+  .sidebar-filter input {
+    flex: 1;
+    min-width: 0;
+    border: 0;
+    outline: none;
+    background: none;
+    color: var(--color-text-primary);
+    font: inherit;
+  }
+  .sidebar-filter input::placeholder {
+    color: var(--color-text-primary);
+  }
+  .sidebar-filter-icon {
+    flex: none;
+    font-size: 1rem;
+    opacity: 0.5;
+  }
+  .sidebar-sets {
+    display: grid;
+    flex: 1;
+    align-content: start;
+    gap: 1rem;
+    min-height: 0;
+    overflow-y: auto;
+  }
+  .sidebar-group {
+    display: grid;
+    gap: 0.375rem;
+  }
+  .sidebar-group-title,
+  .sidebar-set-count,
+  .sidebar-plan-label {
+    color: var(--color-text-secondary);
+    font-size: var(--text-body-xs);
+    line-height: var(--text-body-xs--line-height);
+  }
+  .sidebar-group-title {
+    padding-inline: 0.5rem;
+  }
+  .sidebar-set {
+    justify-content: space-between;
+  }
+  .sidebar-set-name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .sidebar-set-count {
+    flex: none;
+  }
+  .sidebar-empty {
+    padding-inline: 0.5rem;
+    color: var(--color-text-secondary);
+  }
+  .sidebar-plan {
+    flex: none;
+    padding: 1rem 1.25rem 1.25rem;
+    border-top: 1px solid var(--color-border-secondary-20);
+  }
+  .sidebar-plan-button {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    width: 100%;
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--color-text-primary);
+    font: inherit;
+    text-align: start;
+  }
+  .sidebar-plan-info {
+    display: grid;
+    gap: 0.5rem;
+  }
+  .sidebar-plan-label {
+    opacity: 0.5;
+  }
+  .sidebar-plan-tier {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 500;
+  }
+  .sidebar-plan-icon {
+    font-size: 1.5rem;
+    color: var(--color-link-unicode);
+  }
+  .sidebar-plan-manage {
+    padding: 0.5rem 0.75rem;
+    border-radius: var(--radius-md);
+    background: var(--color-bg-surface-strong);
+  }
+
+  /* Свёрнутая панель (макет «Icon Sets / Sidebar Collapsed»): только значки разделов. */
   @media (min-width: 64rem) {
-    .header-row {
-      grid-template-columns: auto minmax(0, 28rem) minmax(0, 1fr) auto;
-      grid-template-areas: "brand search nav tools";
-      min-height: 3.5rem;
+    :root[data-sidebar="collapsed"] .app {
+      grid-template-columns: var(--width-sidebar-collapsed) minmax(0, 1fr);
     }
-    .header-nav {
-      justify-content: flex-end;
+    :root[data-sidebar="collapsed"] .sidebar-head {
+      justify-content: center;
+      padding-inline: 0;
+    }
+    :root[data-sidebar="collapsed"] .sidebar-brand,
+    :root[data-sidebar="collapsed"] .sidebar-body,
+    :root[data-sidebar="collapsed"] .sidebar-label,
+    :root[data-sidebar="collapsed"] .sidebar-plan-label,
+    :root[data-sidebar="collapsed"] .sidebar-plan-manage {
+      display: none;
+    }
+    :root[data-sidebar="collapsed"] .sidebar-nav {
+      padding-inline: 0.5rem;
+      background: none;
+    }
+    :root[data-sidebar="collapsed"] .sidebar-item {
+      justify-content: center;
+      padding: 0.5rem;
+    }
+    :root[data-sidebar="collapsed"] .sidebar-plan {
+      margin-top: auto;
+      padding-inline: 0;
+    }
+    :root[data-sidebar="collapsed"] .sidebar-plan-button {
+      justify-content: center;
     }
   }
 
-  /* Иконка на кнопке темы — по выбранной теме, без JavaScript (lib/theme.ts). */
+  /* Верхняя полоса (кадр Header): плашки, разделители, круглые кнопки. */
+  .topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.625rem;
+    min-height: 3.125rem;
+    padding: 0.625rem 2.5rem;
+    font-size: var(--text-body-sm);
+    line-height: var(--text-body-sm--line-height);
+  }
+  .topbar-group {
+    display: flex;
+    align-items: center;
+    gap: 0.625rem;
+    min-width: 0;
+  }
+  .pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.375rem 0.5rem;
+    border: 0;
+    border-radius: var(--radius-md);
+    background: var(--color-bg-surface-muted);
+    color: var(--color-text-primary);
+    font: inherit;
+    text-decoration: none;
+    white-space: nowrap;
+    cursor: pointer;
+  }
+  a.pill:hover,
+  button.pill:not([aria-disabled="true"]):hover {
+    background: var(--color-bg-hover);
+  }
+  .pill-icon {
+    flex: none;
+    font-size: 1rem;
+  }
+  .pill-chevron {
+    flex: none;
+    font-size: 1rem;
+    opacity: 0.5;
+  }
+  .topbar-divider {
+    flex: none;
+    width: 1px;
+    height: 1rem;
+    background: var(--color-border-secondary-20);
+  }
+  .top-circle {
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    justify-content: center;
+    width: 1.75rem;
+    height: 1.75rem;
+    border: 0;
+    border-radius: 9999px;
+    background: var(--color-bg-surface-strong);
+    color: var(--color-text-primary);
+    font-size: var(--text-body-xs);
+    font-weight: 500;
+    text-decoration: none;
+    cursor: pointer;
+  }
+  .topbar-account {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.625rem;
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--color-text-primary);
+    font: inherit;
+  }
+  .topbar-menu {
+    font-size: 1.25rem;
+  }
+  .bag-square {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.75rem;
+    height: 1.75rem;
+    border: 0;
+    border-radius: 9999px;
+    background: var(--color-bg-surface-strong);
+    color: var(--color-text-primary);
+    cursor: pointer;
+  }
+
+  /* Кнопка темы: значок — по теме на экране, без JavaScript (lib/theme.ts). */
   .theme-icon {
     display: none;
   }
-  :root:not([data-theme]) .theme-icon-system,
-  :root[data-theme="light"] .theme-icon-light,
-  :root[data-theme="dark"] .theme-icon-dark {
+  :root[data-theme="dark"] .theme-icon-dark,
+  :root[data-theme="light"] .theme-icon-light {
     display: inline-block;
   }
-
-  .site-footer {
-    border-top: 1px solid var(--color-line);
-    color: var(--color-muted);
-    font-size: 0.875rem;
-    margin-top: 4rem;
-    padding-block: 1.5rem;
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme]) .theme-icon-dark {
+      display: inline-block;
+    }
   }
-  .site-footer a {
-    color: var(--color-muted);
+  @media (prefers-color-scheme: light) {
+    :root:not([data-theme]) .theme-icon-light {
+      display: inline-block;
+    }
+  }
+
+  /*
+   * «Soon» (решение владельца 12 ноября 2026): элемент из макета без функции. Подсказка — из data-soon,
+   * на наведении и фокусе с клавиатуры; под элементом, в подвале — над ним (soon-above).
+   */
+  .soon {
+    position: relative;
+    cursor: default;
+  }
+  .soon::after {
+    content: attr(data-soon);
+    position: absolute;
+    top: calc(100% + 0.375rem);
+    left: 50%;
+    z-index: 50;
+    padding: 0.25rem 0.5rem;
+    border-radius: var(--radius-sm);
+    background: var(--color-bg-inverse);
+    color: var(--color-text-inverse);
+    font-size: var(--text-body-xs);
+    font-weight: 400;
+    line-height: var(--text-body-xs--line-height);
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    translate: -50% 0;
+  }
+  .soon-above::after {
+    top: auto;
+    bottom: calc(100% + 0.375rem);
+  }
+  .soon:hover::after,
+  .soon:focus-visible::after {
+    opacity: 1;
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .soon::after {
+      transition: opacity 0.12s;
+    }
+  }
+
+  /* Подвал по макету. */
+  .site-footer {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem 1.5rem;
+    margin-top: 2rem;
+    padding: 1.5rem 2.5rem 2rem;
+    font-size: var(--text-body-sm);
+    line-height: var(--text-body-sm--line-height);
+  }
+  .footer-group {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.75rem 1rem;
+  }
+  .footer-link,
+  .footer-text,
+  .hero-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    padding: 0;
+    border: 0;
+    background: none;
+    font: inherit;
+    text-decoration: none;
+  }
+  .footer-link,
+  .hero-link {
+    color: var(--color-text-primary);
+  }
+  .footer-text {
+    color: var(--color-text-secondary);
+  }
+  a.footer-link:hover,
+  a.footer-text:hover,
+  a.hero-link:hover {
+    color: var(--color-text-primary);
+    text-decoration: underline;
+  }
+
+  /* Страницы в колонке каркаса: поля — как у верхней полосы. */
+  @media (min-width: 64rem) {
+    .app-column .container {
+      max-width: none;
+      padding-inline: 2.5rem;
+    }
+  }
+
+  /* Телефон и планшет: шторка меню вместо боковой панели, полоса — меню, логотип, тема, сумка, аккаунт. */
+  @media (max-width: 63.98rem) {
+    .app {
+      grid-template-columns: minmax(0, 1fr);
+    }
+    .sidebar {
+      position: fixed;
+      inset: 0 auto 0 0;
+      z-index: 40;
+      width: min(18.75rem, 85vw);
+      visibility: hidden;
+      translate: -100% 0;
+    }
+    :root[data-menu="open"] .sidebar {
+      visibility: visible;
+      translate: 0 0;
+    }
+    :root[data-menu="open"] .app-backdrop {
+      position: fixed;
+      inset: 0;
+      z-index: 30;
+      display: block;
+      background: var(--color-bg-overlay);
+    }
+    :root[data-menu="open"] {
+      overflow: hidden;
+    }
+    .sidebar-toggle {
+      display: none;
+    }
+    .sidebar-close {
+      display: inline-flex;
+    }
+    .topbar {
+      padding-inline: 1rem;
+    }
+    .topbar-wide,
+    .topbar .pill-label {
+      display: none;
+    }
+    .topbar .bag-button {
+      padding: 0.5rem;
+      background: var(--color-bg-surface-strong);
+    }
+    .site-footer {
+      padding-inline: 1rem;
+    }
+  }
+  @media (max-width: 63.98rem) and (prefers-reduced-motion: no-preference) {
+    .sidebar {
+      transition:
+        translate 0.2s,
+        visibility 0.2s;
+    }
+  }
+  @media (min-width: 64rem) {
+    .topbar-menu,
+    .topbar-brand {
+      display: none;
+    }
   }
 
   .home {
@@ -205,8 +714,8 @@
     gap: 0.5rem;
     padding: 0.6rem 1.1rem;
     border-radius: var(--radius-md);
-    background: var(--color-accent);
-    color: var(--color-bg);
+    background: var(--color-link-unicode);
+    color: var(--color-bg-page);
     font-weight: 600;
     text-decoration: none;
   }
@@ -231,23 +740,23 @@
   .docs-menu a,
   .toc a {
     display: block;
-    color: var(--color-muted);
+    color: var(--color-text-secondary);
     padding-block: 0.25rem;
     text-decoration: none;
   }
   .docs-nav a[aria-current="page"],
   .docs-menu a[aria-current="page"] {
-    color: var(--color-fg);
+    color: var(--color-text-primary);
     font-weight: 600;
   }
   .docs-nav a:hover,
   .docs-menu a:hover,
   .toc a:hover {
-    color: var(--color-fg);
+    color: var(--color-text-primary);
     text-decoration: underline;
   }
   .docs-menu {
-    border: 1px solid var(--color-line);
+    border: 1px solid var(--color-border-secondary);
     border-radius: var(--radius-md);
     padding: 0.5rem 1rem;
   }
@@ -313,7 +822,7 @@
     margin-top: 2.5rem;
     margin-bottom: 0.75rem;
     padding-bottom: 0.25rem;
-    border-bottom: 1px solid var(--color-line);
+    border-bottom: 1px solid var(--color-border-secondary);
     scroll-margin-top: 1rem;
   }
   .prose h3 {
@@ -344,15 +853,15 @@
     margin-block: 0.25rem;
   }
   .prose :not(pre) > code {
-    background: var(--color-surface);
+    background: var(--color-bg-surface);
     border-radius: 0.25rem;
     font-size: 0.9em;
     padding: 0.1em 0.3em;
     overflow-wrap: anywhere;
   }
   .prose blockquote {
-    border-left: 3px solid var(--color-line);
-    color: var(--color-muted);
+    border-left: 3px solid var(--color-border-secondary);
+    color: var(--color-text-secondary);
     padding-left: 1rem;
   }
   .table-wrap {
@@ -366,7 +875,7 @@
   }
   .prose th,
   .prose td {
-    border-bottom: 1px solid var(--color-line);
+    border-bottom: 1px solid var(--color-border-secondary);
     padding: 0.4rem 0.75rem;
     text-align: left;
     vertical-align: top;
@@ -382,7 +891,7 @@
   }
 
   .code {
-    background: var(--color-surface);
+    background: var(--color-bg-surface);
     border-radius: var(--radius-md);
     margin-block: 1rem;
   }
@@ -390,8 +899,8 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    border-bottom: 1px solid var(--color-line);
-    color: var(--color-muted);
+    border-bottom: 1px solid var(--color-border-secondary);
+    color: var(--color-text-secondary);
     font-size: 0.8rem;
     padding: 0.25rem 0.5rem 0.25rem 1rem;
   }
@@ -409,11 +918,11 @@
     min-width: 2rem;
     padding: 0.25rem 0.5rem;
     border-radius: 0.25rem;
-    color: var(--color-muted);
+    color: var(--color-text-secondary);
     cursor: pointer;
   }
   .copy:hover {
-    color: var(--color-fg);
+    color: var(--color-text-primary);
   }
   /* Узкий блок кода — панель иконки (шаг 5 фазы 4): строки переносятся, длинный SVG прокручивается внутри. */
   .code-wrap pre {
@@ -427,7 +936,7 @@
     flex-wrap: wrap;
     justify-content: space-between;
     gap: 1rem;
-    border-top: 1px solid var(--color-line);
+    border-top: 1px solid var(--color-border-secondary);
     margin-top: 3rem;
     padding-top: 1.5rem;
   }
@@ -436,7 +945,7 @@
     margin-top: 1.5rem;
   }
   .edit a {
-    color: var(--color-muted);
+    color: var(--color-text-secondary);
   }
 
   .footer-links {
@@ -478,15 +987,157 @@
     font-size: 0.875rem;
     margin-bottom: 0.25rem;
   }
-  /* Поле поиска главной и страницы поиска — одно, в общей раскладке (шаг 3 фазы 4). */
+  /*
+   * Начало главной и поле поиска по макету (кадр Header главной): заголовок 32/36, поле 54 px со
+   * значком и подсказкой Ctrl K, рядом «AI Search». Поле одно у главной и /search (шаг 3 фазы 4).
+   */
+  .find-page {
+    padding-block: 0;
+  }
+  .hero {
+    display: grid;
+    gap: 1.5rem;
+    padding: 2rem 2.5rem 1.5rem;
+    border-bottom: 1px solid var(--color-border-secondary-20);
+  }
+  .find-body {
+    padding: 1.5rem 2.5rem 2.5rem;
+  }
+  .hero-intro {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem 1.5rem;
+  }
+  .hero-text {
+    display: grid;
+    gap: 1rem;
+  }
+  .page .hero-title,
+  .page .search-title {
+    margin: 0;
+    font-size: var(--text-display);
+    font-weight: 500;
+    line-height: var(--text-display--line-height);
+  }
+  .page .hero-subtitle {
+    margin: 0;
+    color: var(--color-text-secondary);
+    font-size: var(--text-body-base);
+    line-height: var(--text-body-base--line-height);
+  }
+  .hero-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    font-size: var(--text-body-sm);
+    line-height: var(--text-body-sm--line-height);
+  }
   .hero-search {
-    margin-block: 1.5rem;
-    max-width: var(--width-text);
+    margin: 0;
   }
   .hero-search-form {
     display: flex;
+    align-items: stretch;
+    gap: 0.75rem;
+  }
+  .hero-field {
+    display: flex;
+    flex: 1;
     align-items: center;
     gap: 0.5rem;
+    min-width: 0;
+    min-height: 3.375rem;
+    padding: 0.75rem 1rem;
+    border: 1px solid transparent;
+    border-radius: var(--radius-lg);
+    background: var(--color-bg-surface);
+    font-size: var(--text-body-base);
+    line-height: var(--text-body-base--line-height);
+  }
+  .hero-field:focus-within {
+    border-color: var(--color-selection-bg);
+  }
+  .hero-field-icon {
+    flex: none;
+    font-size: 1.25rem;
+    opacity: 0.5;
+  }
+  .hero-input {
+    flex: 1;
+    min-width: 0;
+    border: 0;
+    outline: none;
+    background: none;
+    color: var(--color-text-primary);
+    font: inherit;
+  }
+  .hero-input::placeholder {
+    color: var(--color-text-secondary);
+  }
+  .hero-keys {
+    display: flex;
+    flex: none;
+    gap: 0.25rem;
+  }
+  .hero-keys kbd {
+    padding: 0.375rem 0.5rem;
+    border-radius: var(--radius-md);
+    background: var(--color-bg-surface-strong);
+    font: inherit;
+  }
+  .ai-search {
+    display: flex;
+    flex: none;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem;
+    border: 0;
+    border-radius: var(--radius-lg);
+    background: var(--color-bg-surface);
+    color: var(--color-text-primary);
+    font: inherit;
+    font-size: var(--text-body-base);
+    line-height: var(--text-body-base--line-height);
+    white-space: nowrap;
+  }
+  .ai-toggle {
+    display: inline-flex;
+    width: 2.875rem;
+    height: 1.75rem;
+    padding: 0.25rem;
+    border-radius: 9999px;
+    background: var(--color-bg-surface-strong);
+  }
+  .ai-knob {
+    width: 1.25rem;
+    height: 1.25rem;
+    border-radius: 9999px;
+    background: var(--color-accent-lemon);
+  }
+  @media (max-width: 63.98rem) {
+    .hero {
+      padding: 1.5rem 1rem;
+    }
+    .find-body {
+      padding: 1rem 1rem 2rem;
+    }
+    .page .hero-title {
+      font-size: 1.75rem;
+      line-height: 2.125rem;
+    }
+    .hero-links,
+    .hero-keys {
+      display: none;
+    }
+    .hero-search-form {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+    .hero-field {
+      width: 100%;
+    }
   }
 
   /* Выдача поиска: клетки одного размера и места под строки статуса — замена выдачи не двигает
@@ -497,13 +1148,13 @@
     min-height: 100vh;
   }
   .search-commercial {
-    color: var(--color-muted);
+    color: var(--color-text-secondary);
     font-size: 0.875rem;
   }
   .page .search-status {
     min-height: 1.5rem;
     margin-block: 0.5rem;
-    color: var(--color-muted);
+    color: var(--color-text-secondary);
     font-size: 0.875rem;
   }
   .search-timing {
@@ -554,13 +1205,13 @@
   }
   .result-cell-set,
   .result-exact {
-    color: var(--color-muted);
+    color: var(--color-text-secondary);
     font-size: 0.75rem;
     line-height: 1.2;
   }
   .result-exact {
     padding: 0 0.375rem;
-    border: 1px solid var(--color-control);
+    border: 1px solid var(--color-border-primary);
     border-radius: 999px;
   }
   .result-skeleton-icon,
@@ -597,33 +1248,151 @@
     }
   }
 
-  /* Карточки наборов. */
+  /*
+   * Группы наборов главной и карточки по макету (Icon Set Card): 4 в ряд на компьютере, слева название,
+   * лицензия и число иконок, справа витрина 3 × 3. На телефоне — чипсы групп и ряд с прокруткой.
+   */
+  .home-groups {
+    display: grid;
+    gap: 2.25rem;
+  }
+  .group-chips,
+  .group-see-all {
+    display: none;
+  }
+  .home-groups[data-filter="material"] .set-group:not([data-group="material"]),
+  .home-groups[data-filter="ui-24"] .set-group:not([data-group="ui-24"]),
+  .home-groups[data-filter="emoji"] .set-group:not([data-group="emoji"]) {
+    display: none;
+  }
+  .set-group {
+    display: grid;
+    gap: 1.25rem;
+  }
+  .set-group-head {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: baseline;
+    gap: 0.5rem;
+  }
+  .page .set-group-title {
+    margin: 0;
+    font-size: var(--text-heading-md);
+    font-weight: 600;
+    line-height: var(--text-heading-md--line-height);
+  }
+  .set-group-count {
+    color: var(--color-text-secondary);
+    font-size: var(--text-body-base);
+    font-weight: 400;
+    line-height: var(--text-body-base--line-height);
+  }
+  .page .set-group-text {
+    grid-column: 1 / -1;
+    margin: 0;
+    color: var(--color-text-secondary);
+    font-size: var(--text-body-base);
+    line-height: var(--text-body-base--line-height);
+  }
   .set-grid {
     display: grid;
-    gap: 1rem;
-    grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr));
-    margin-block: 1rem;
+    gap: 0.75rem;
+    grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr));
   }
   .set-card {
-    border: 1px solid var(--color-line);
-    border-radius: var(--radius-md);
-    padding: 1rem;
-  }
-  .set-card-title {
-    font-size: 1.125rem;
-    font-weight: 600;
-  }
-  .page .set-card-samples {
     display: flex;
-    flex-wrap: wrap;
-    gap: 0.75rem;
-    font-size: 1.75rem;
-    margin-block: 0.75rem;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    min-height: 7rem;
+    padding: 1.25rem;
+    border-radius: var(--radius-md);
+    background: var(--color-bg-surface);
+    color: var(--color-text-primary);
+    text-decoration: none;
+  }
+  .set-card:hover {
+    background: var(--color-bg-card-hover);
+  }
+  .set-card-info {
+    display: grid;
+    gap: 0.25rem;
+    min-width: 0;
+  }
+  .page .set-card-title {
+    margin: 0 0 0.25rem;
+    font-size: var(--text-body-base);
+    font-weight: 400;
+    line-height: var(--text-body-base--line-height);
   }
   .page .set-card-meta {
-    color: var(--color-muted);
-    font-size: 0.875rem;
-    margin-block: 0.25rem;
+    margin: 0;
+    color: var(--color-text-secondary);
+    font-size: var(--text-body-sm);
+    line-height: var(--text-body-sm--line-height);
+  }
+  .set-card-samples {
+    display: grid;
+    flex: none;
+    grid-template-columns: repeat(3, 1rem);
+    gap: 0.75rem;
+  }
+  .set-card-icon {
+    font-size: 1rem;
+  }
+  @media (max-width: 63.98rem) {
+    .group-chips {
+      display: flex;
+      gap: 0.5rem;
+      min-width: 0;
+      margin: 0;
+      padding: 0;
+      border: 0;
+      overflow-x: auto;
+    }
+    .group-chip {
+      flex: none;
+      padding: 0.375rem 0.75rem;
+      border: 1px solid var(--color-border-secondary);
+      border-radius: var(--radius-md);
+      background: none;
+      color: var(--color-text-primary);
+      font: inherit;
+      font-size: var(--text-body-base);
+      cursor: pointer;
+    }
+    .group-chip[aria-pressed="true"] {
+      border-color: transparent;
+      background: var(--color-accent-mint);
+      color: var(--color-text-on-accent);
+    }
+    .group-see-all {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.25rem;
+      padding: 0;
+      border: 0;
+      background: none;
+      color: var(--color-text-primary);
+      font: inherit;
+      font-size: var(--text-body-base);
+      cursor: pointer;
+    }
+    .home-groups .set-grid {
+      grid-auto-columns: min(17rem, 80vw);
+      grid-auto-flow: column;
+      grid-template-columns: none;
+      overflow-x: auto;
+      scroll-snap-type: x mandatory;
+    }
+    .home-groups .set-grid[data-expanded] {
+      grid-auto-flow: row;
+      grid-template-columns: minmax(0, 1fr);
+      overflow: visible;
+    }
+    .home-groups .set-card {
+      scroll-snap-align: start;
+    }
   }
 
   /* Фильтры «чипсами»: ссылки с параметрами адреса. */
@@ -640,7 +1409,7 @@
     margin-block: 0.75rem;
   }
   .chips-label {
-    color: var(--color-muted);
+    color: var(--color-text-secondary);
     font-size: 0.875rem;
   }
   .chips {
@@ -656,22 +1425,22 @@
     gap: 0.375rem;
     min-height: 2rem;
     padding: 0.25rem 0.75rem;
-    border: 1px solid var(--color-control);
+    border: 1px solid var(--color-border-primary);
     border-radius: 999px;
-    color: var(--color-fg);
+    color: var(--color-text-primary);
     font-size: 0.875rem;
     text-decoration: none;
   }
   .chip:hover {
-    background: var(--color-surface);
+    background: var(--color-bg-surface);
   }
   .chip[aria-current="true"] {
-    background: var(--color-accent);
-    border-color: var(--color-accent);
-    color: var(--color-bg);
+    background: var(--color-link-unicode);
+    border-color: var(--color-link-unicode);
+    color: var(--color-bg-page);
   }
   .chip-count {
-    color: var(--color-muted);
+    color: var(--color-text-secondary);
     font-variant-numeric: tabular-nums;
   }
   .chip[aria-current="true"] .chip-count {
@@ -689,7 +1458,7 @@
     display: contents;
   }
   .set-facts dt {
-    color: var(--color-muted);
+    color: var(--color-text-secondary);
   }
   .set-facts dd {
     overflow-wrap: anywhere;
@@ -717,13 +1486,13 @@
     font-size: 2rem;
   }
   .icon-cell-name {
-    color: var(--color-muted);
+    color: var(--color-text-secondary);
     font-size: 0.75rem;
     line-height: 1.3;
     overflow-wrap: anywhere;
   }
   .page .grid-status {
-    color: var(--color-muted);
+    color: var(--color-text-secondary);
     margin-block: 2rem;
   }
   .pagination-list {
@@ -745,18 +1514,18 @@
     min-height: 2.25rem;
     padding: 0 0.5rem;
     border-radius: var(--radius-md);
-    color: var(--color-fg);
+    color: var(--color-text-primary);
     text-decoration: none;
   }
   .pagination a:hover {
-    background: var(--color-surface);
+    background: var(--color-bg-surface);
   }
   .pagination a[aria-current="page"] {
-    background: var(--color-accent);
-    color: var(--color-bg);
+    background: var(--color-link-unicode);
+    color: var(--color-bg-page);
   }
   .pagination-off {
-    color: var(--color-muted);
+    color: var(--color-text-secondary);
   }
 
   /* Лента «Что нового» и короткий список на главной. */
@@ -765,11 +1534,11 @@
     padding: 0;
   }
   .news-lines li {
-    border-bottom: 1px solid var(--color-line);
+    border-bottom: 1px solid var(--color-border-secondary);
     padding-block: 0.5rem;
   }
   .release {
-    border-bottom: 1px solid var(--color-line);
+    border-bottom: 1px solid var(--color-border-secondary);
     padding-block: 1.25rem;
     scroll-margin-top: 1rem;
   }
@@ -778,7 +1547,7 @@
     font-weight: 600;
   }
   .page .release-meta {
-    color: var(--color-muted);
+    color: var(--color-text-secondary);
     font-size: 0.875rem;
     margin-block: 0.25rem;
   }
@@ -798,7 +1567,7 @@
     margin-block: 0.25rem;
   }
   .page .release-names {
-    color: var(--color-muted);
+    color: var(--color-text-secondary);
     font-family: var(--font-mono);
     font-size: 0.8rem;
     overflow-wrap: anywhere;
@@ -807,13 +1576,13 @@
 
   /* Лицензии наборов. */
   .license {
-    border-top: 1px solid var(--color-line);
+    border-top: 1px solid var(--color-border-secondary);
     margin-top: 1.5rem;
     padding-top: 1rem;
     scroll-margin-top: 1rem;
   }
   .license-text {
-    background: var(--color-surface);
+    background: var(--color-bg-surface);
     border-radius: var(--radius-md);
     font-size: 0.8rem;
     overflow-wrap: anywhere;
@@ -836,10 +1605,10 @@
   }
   .icon-card-link:hover,
   .icon-card-link[aria-current="true"] {
-    background: var(--color-surface);
+    background: var(--color-bg-surface);
   }
   .icon-card-link[aria-current="true"] {
-    outline: 2px solid var(--color-accent);
+    outline: 2px solid var(--color-link-unicode);
     outline-offset: -2px;
   }
 
@@ -854,9 +1623,9 @@
     overflow-y: auto;
     overscroll-behavior: contain;
     padding: 0.75rem 1rem 1.5rem;
-    border-top: 1px solid var(--color-line);
+    border-top: 1px solid var(--color-border-secondary);
     border-radius: var(--radius-md) var(--radius-md) 0 0;
-    background: var(--color-bg);
+    background: var(--color-bg-page);
     box-shadow: var(--shadow-md);
   }
   .icon-panel[data-expanded] {
@@ -877,7 +1646,7 @@
     gap: 0.25rem;
     margin: -0.75rem -1rem 0.5rem;
     padding: 0.5rem 0.5rem 0.5rem 1rem;
-    background: var(--color-bg);
+    background: var(--color-bg-page);
   }
   .icon-panel-head h2 {
     flex: 1;
@@ -888,7 +1657,7 @@
   }
   .icon-panel-set {
     display: block;
-    color: var(--color-muted);
+    color: var(--color-text-secondary);
     font-size: 0.75rem;
     font-weight: 400;
   }
@@ -904,7 +1673,7 @@
       inset-block-start: 1rem;
       inset-inline: auto;
       max-block-size: calc(100vh - 2rem);
-      border: 1px solid var(--color-line);
+      border: 1px solid var(--color-border-secondary);
       border-radius: var(--radius-md);
       box-shadow: none;
     }
@@ -934,15 +1703,15 @@
     margin: 0;
     padding: 1rem;
     overflow: hidden;
-    border: 1px solid var(--color-line);
+    border: 1px solid var(--color-border-secondary);
     border-radius: var(--radius-md);
-    background: var(--color-bg);
-    color: var(--color-fg);
+    background: var(--color-bg-page);
+    color: var(--color-text-primary);
   }
   /* Размер копии, файла и кода под крупным превью (решение владельца 3 ноября 2026). */
   .icon-preview-size {
     margin-block: 0.375rem 0;
-    color: var(--color-muted);
+    color: var(--color-text-secondary);
     font-size: 0.8rem;
     font-variant-numeric: tabular-nums;
     text-align: center;
@@ -965,14 +1734,42 @@
   .mockup-light,
   .mockup-dark {
     /* biome-ignore-start lint/correctness/noMissingVarFunction: --theme(… inline) Tailwind подставляет значение токена из @theme, а не ссылку на переменную */
-    --color-bg: --theme(--color-bg inline);
-    --color-fg: --theme(--color-fg inline);
-    --color-muted: --theme(--color-muted inline);
-    --color-line: --theme(--color-line inline);
-    --color-control: --theme(--color-control inline);
-    --color-surface: --theme(--color-surface inline);
-    --color-accent: --theme(--color-accent inline);
-    --color-focus: --theme(--color-focus inline);
+    --color-bg-page: --theme(--color-bg-page inline);
+    --color-bg-surface: --theme(--color-bg-surface inline);
+    --color-bg-surface-muted: --theme(--color-bg-surface-muted inline);
+    --color-bg-surface-strong: --theme(--color-bg-surface-strong inline);
+    --color-bg-overlay: --theme(--color-bg-overlay inline);
+    --color-bg-hover: --theme(--color-bg-hover inline);
+    --color-bg-card-hover: --theme(--color-bg-card-hover inline);
+    --color-bg-inverse: --theme(--color-bg-inverse inline);
+    --color-bg-inverse-hover: --theme(--color-bg-inverse-hover inline);
+    --color-bg-icon-card: --theme(--color-bg-icon-card inline);
+    --color-border-primary: --theme(--color-border-primary inline);
+    --color-border-secondary: --theme(--color-border-secondary inline);
+    --color-border-secondary-20: --theme(--color-border-secondary-20 inline);
+    --color-text-primary: --theme(--color-text-primary inline);
+    --color-text-secondary: --theme(--color-text-secondary inline);
+    --color-text-muted: --theme(--color-text-muted inline);
+    --color-text-hover-muted: --theme(--color-text-hover-muted inline);
+    --color-text-primary-hover: --theme(--color-text-primary-hover inline);
+    --color-text-inverse: --theme(--color-text-inverse inline);
+    --color-text-on-accent: --theme(--color-text-on-accent inline);
+    --color-text-success: --theme(--color-text-success inline);
+    --color-text-danger: --theme(--color-text-danger inline);
+    --color-text-on-danger: --theme(--color-text-on-danger inline);
+    --color-link-unicode: --theme(--color-link-unicode inline);
+    --color-selection-bg: --theme(--color-selection-bg inline);
+    --color-selection-text: --theme(--color-selection-text inline);
+    --color-accent-highlight: --theme(--color-accent-highlight inline);
+    --color-accent-highlight-subtle: --theme(
+      --color-accent-highlight-subtle inline
+    );
+    --color-accent-cyan: --theme(--color-accent-cyan inline);
+    --color-accent-mint: --theme(--color-accent-mint inline);
+    --color-accent-lemon: --theme(--color-accent-lemon inline);
+    --color-status-danger: --theme(--color-status-danger inline);
+    --color-status-badge: --theme(--color-status-badge inline);
+    --color-status-success: --theme(--color-status-success inline);
     --shadow-md: --theme(--shadow-md inline);
     /* biome-ignore-end lint/correctness/noMissingVarFunction: конец значений из @theme */
   }
@@ -992,7 +1789,7 @@
     overflow-wrap: anywhere;
   }
   .name-format-label {
-    color: var(--color-muted);
+    color: var(--color-text-secondary);
     font-size: 0.75rem;
   }
   .icon-actions {
@@ -1015,7 +1812,7 @@
     margin-block-end: 0.5rem;
   }
   .icon-variants-style {
-    color: var(--color-muted);
+    color: var(--color-text-secondary);
     font-size: 0.75rem;
   }
   .icon-variants-list {
@@ -1045,11 +1842,11 @@
     cursor: pointer;
   }
   .icon-variant:hover {
-    background: var(--color-surface);
+    background: var(--color-bg-surface);
   }
   .icon-variant[aria-pressed="true"],
   .icon-variant[aria-current="page"] {
-    border-color: var(--color-accent);
+    border-color: var(--color-link-unicode);
   }
   .icon-variant-svg {
     font-size: 1.5rem;
@@ -1062,7 +1859,7 @@
     overflow-wrap: anywhere;
   }
   .icon-variant-set {
-    color: var(--color-muted);
+    color: var(--color-text-secondary);
   }
   .icon-settings {
     display: grid;
@@ -1085,7 +1882,7 @@
   .icon-setting input[type="range"] {
     flex: 1;
     min-inline-size: 6rem;
-    accent-color: var(--color-accent);
+    accent-color: var(--color-link-unicode);
   }
   .icon-setting output {
     min-inline-size: 3.5rem;
@@ -1112,7 +1909,7 @@
     padding-inline: 0.625rem;
   }
   .icon-setting-note {
-    color: var(--color-muted);
+    color: var(--color-text-secondary);
     font-size: 0.8rem;
     margin-block: 0.25rem;
   }
@@ -1145,8 +1942,8 @@
     min-inline-size: 1.125rem;
     padding-inline: 0.25rem;
     border-radius: 999px;
-    background: var(--color-accent);
-    color: var(--color-bg);
+    background: var(--color-status-badge);
+    color: var(--color-text-on-accent);
     font-size: 0.7rem;
     font-weight: 600;
     line-height: 1.125rem;
@@ -1170,7 +1967,7 @@
     font-weight: 600;
   }
   .bag-empty {
-    color: var(--color-muted);
+    color: var(--color-text-secondary);
     font-size: 0.875rem;
   }
   .bag-list {
@@ -1200,12 +1997,12 @@
     min-block-size: 2rem;
     min-inline-size: 2rem;
     border-radius: 0.25rem;
-    color: var(--color-muted);
+    color: var(--color-text-secondary);
     cursor: pointer;
   }
   .bag-remove:hover {
-    color: var(--color-fg);
-    background: var(--color-surface);
+    color: var(--color-text-primary);
+    background: var(--color-bg-surface);
   }
   .select-bar {
     display: flex;
@@ -1215,7 +2012,7 @@
     margin-block: 0.75rem;
   }
   .select-status {
-    color: var(--color-muted);
+    color: var(--color-text-secondary);
     font-size: 0.875rem;
   }
   button.icon-card-pick {
@@ -1225,8 +2022,8 @@
     cursor: pointer;
   }
   button.icon-card-pick[aria-pressed="true"] {
-    border-color: var(--color-accent);
-    background: var(--color-surface);
+    border-color: var(--color-link-unicode);
+    background: var(--color-bg-surface);
   }
   .icon-facts {
     display: grid;
@@ -1235,11 +2032,11 @@
     font-size: 0.875rem;
   }
   .icon-facts dt {
-    color: var(--color-muted);
+    color: var(--color-text-secondary);
   }
   .icon-credit {
     display: block;
-    color: var(--color-muted);
+    color: var(--color-text-secondary);
   }
   /* Указание авторства — свёрнуто под стрелкой (решение владельца 3 ноября 2026). */
   .icon-attribution {
@@ -1254,14 +2051,14 @@
     margin-block: 0.5rem;
     padding: 0.5rem 0.75rem;
     border-radius: var(--radius-md);
-    background: var(--color-surface);
+    background: var(--color-bg-surface);
     font-size: 0.8rem;
     overflow-wrap: anywhere;
   }
   .icon-hidden,
   .icon-alias {
     padding: 0.5rem 0.75rem;
-    border: 1px solid var(--color-control);
+    border: 1px solid var(--color-border-primary);
     border-radius: var(--radius-md);
     font-size: 0.875rem;
   }
@@ -1295,7 +2092,7 @@
      в светлой и тёмной теме. У панели темы свой color-scheme — пары light-dark() токенов подстраиваются
      сами, новых цветов нет. Иконки в серверном HTML — заглушки того же размера: место не прыгает. */
   .mockups-lead {
-    color: var(--color-muted);
+    color: var(--color-text-secondary);
   }
   .mockup {
     display: grid;
@@ -1309,7 +2106,7 @@
   }
   .mockup-size {
     margin: 0.25rem 0 0;
-    color: var(--color-muted);
+    color: var(--color-text-secondary);
     font-size: 0.875rem;
   }
   .mockup-pane {
@@ -1320,10 +2117,10 @@
     min-block-size: 12.5rem;
     padding: 1.75rem 1rem 1rem;
     overflow: hidden;
-    border: 1px solid var(--color-line);
+    border: 1px solid var(--color-border-secondary);
     border-radius: var(--radius-md);
-    background: var(--color-bg);
-    color: var(--color-fg);
+    background: var(--color-bg-page);
+    color: var(--color-text-primary);
   }
   .mockup-light {
     color-scheme: light;
@@ -1335,7 +2132,7 @@
     position: absolute;
     inset-block-start: 0.5rem;
     inset-inline-start: 0.75rem;
-    color: var(--color-muted);
+    color: var(--color-text-secondary);
     font-size: 0.75rem;
   }
   .mockup-pane svg {
@@ -1343,7 +2140,7 @@
   }
   .mockup-muted {
     display: inline-flex;
-    color: var(--color-muted);
+    color: var(--color-text-secondary);
   }
   @media (min-width: 48rem) {
     .mockup {
@@ -1371,26 +2168,26 @@
     font-weight: 600;
   }
   .mockup-btn-primary {
-    background: var(--color-accent);
-    color: var(--color-bg);
+    background: var(--color-link-unicode);
+    color: var(--color-bg-page);
   }
   .mockup-btn-outline {
-    border-color: var(--color-control);
+    border-color: var(--color-border-primary);
   }
   .mockup-btn-icon {
     justify-content: center;
     inline-size: 2.5rem;
     padding: 0;
-    background: var(--color-surface);
+    background: var(--color-bg-surface);
   }
 
   /* Нижняя панель вкладок приложения на телефоне. */
   .mockup-phone {
     inline-size: min(20rem, 100%);
     overflow: hidden;
-    border: 1px solid var(--color-line);
+    border: 1px solid var(--color-border-secondary);
     border-radius: 1.25rem;
-    background: var(--color-surface);
+    background: var(--color-bg-surface);
   }
   .mockup-screen {
     block-size: 3.5rem;
@@ -1399,19 +2196,19 @@
     display: flex;
     justify-content: space-around;
     padding-block: 0.5rem 0.625rem;
-    border-block-start: 1px solid var(--color-line);
-    background: var(--color-bg);
+    border-block-start: 1px solid var(--color-border-secondary);
+    background: var(--color-bg-page);
   }
   .mockup-tab {
     display: flex;
     flex-direction: column;
     align-items: center;
     gap: 0.125rem;
-    color: var(--color-muted);
+    color: var(--color-text-secondary);
     font-size: 0.75rem;
   }
   .mockup-tab.mockup-active {
-    color: var(--color-accent);
+    color: var(--color-link-unicode);
     font-weight: 600;
   }
 
@@ -1419,9 +2216,9 @@
   .mockup-menu {
     inline-size: min(15rem, 100%);
     padding: 0.375rem;
-    border: 1px solid var(--color-line);
+    border: 1px solid var(--color-border-secondary);
     border-radius: var(--radius-md);
-    background: var(--color-bg);
+    background: var(--color-bg-page);
     box-shadow: var(--shadow-md);
   }
   .mockup-item {
@@ -1433,11 +2230,11 @@
     font-size: 0.875rem;
   }
   .mockup-item.mockup-hover {
-    background: var(--color-surface);
+    background: var(--color-bg-surface);
   }
   .mockup-item kbd {
     margin-inline-start: auto;
-    color: var(--color-muted);
+    color: var(--color-text-secondary);
     font: 0.75rem var(--font-mono);
   }
 
@@ -1449,9 +2246,9 @@
     inline-size: min(18rem, 100%);
     block-size: 2.5rem;
     padding-inline: 0.625rem;
-    border: 1px solid var(--color-control);
+    border: 1px solid var(--color-border-primary);
     border-radius: var(--radius-md);
-    background: var(--color-bg);
+    background: var(--color-bg-page);
   }
   .mockup-input-text {
     flex: 1;
@@ -1468,9 +2265,9 @@
     gap: 0.75rem;
     inline-size: min(20rem, 100%);
     padding: 0.875rem 1rem;
-    border: 1px solid var(--color-line);
+    border: 1px solid var(--color-border-secondary);
     border-radius: var(--radius-md);
-    background: var(--color-bg);
+    background: var(--color-bg-page);
     box-shadow: var(--shadow-md);
     font-size: 0.875rem;
   }
@@ -1483,7 +2280,7 @@
   }
   .mockup-toast-text p {
     margin: 0.125rem 0 0;
-    color: var(--color-muted);
+    color: var(--color-text-secondary);
   }
 
   /* Экран приложений: плитка 60 px, иконка 36 px. */
@@ -1512,11 +2309,11 @@
     inline-size: 3.75rem;
     block-size: 3.75rem;
     border-radius: 1rem;
-    background: var(--color-surface);
+    background: var(--color-bg-surface);
   }
   .mockup-tile-box.mockup-tile-main {
-    background: var(--color-accent);
-    color: var(--color-bg);
+    background: var(--color-link-unicode);
+    color: var(--color-bg-page);
   }
 
   /* Панель инструментов: ряд кнопок-иконок, выбранная нажата. */
@@ -1524,9 +2321,9 @@
     display: flex;
     gap: 0.25rem;
     padding: 0.25rem;
-    border: 1px solid var(--color-line);
+    border: 1px solid var(--color-border-secondary);
     border-radius: var(--radius-md);
-    background: var(--color-bg);
+    background: var(--color-bg-page);
   }
   .mockup-tool {
     display: flex;
@@ -1535,11 +2332,11 @@
     inline-size: 2.25rem;
     block-size: 2.25rem;
     border-radius: calc(var(--radius-md) - 0.125rem);
-    color: var(--color-muted);
+    color: var(--color-text-secondary);
   }
   .mockup-tool.mockup-on {
-    background: var(--color-surface);
-    color: var(--color-fg);
+    background: var(--color-bg-surface);
+    color: var(--color-text-primary);
   }
 
   /* Боковое меню: навигация, выбранный раздел подсвечен. */
@@ -1549,7 +2346,7 @@
     gap: 0.125rem;
     inline-size: min(13rem, 100%);
     padding: 0.5rem;
-    border-inline-end: 1px solid var(--color-line);
+    border-inline-end: 1px solid var(--color-border-secondary);
   }
   .mockup-nav {
     display: flex;
@@ -1557,12 +2354,12 @@
     gap: 0.625rem;
     padding: 0.375rem 0.625rem;
     border-radius: calc(var(--radius-md) - 0.125rem);
-    color: var(--color-muted);
+    color: var(--color-text-secondary);
     font-size: 0.875rem;
   }
   .mockup-nav.mockup-active {
-    background: var(--color-surface);
-    color: var(--color-fg);
+    background: var(--color-bg-surface);
+    color: var(--color-text-primary);
     font-weight: 600;
   }
 }

@@ -31,10 +31,13 @@ import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
 export function BagMenu({
   lang,
   defaultOpen = false,
+  variant = "icon",
 }: {
   lang: Lang;
   /** Меню открыто сразу — для Storybook. */
   defaultOpen?: boolean;
+  /** Вид кнопки по макету: «pill» — значок и слово Bag в верхней полосе, «icon» — квадратная кнопка. */
+  variant?: "pill" | "icon";
 }) {
   const t = DICTIONARIES[lang];
   const bag = useBag();
@@ -108,21 +111,27 @@ export function BagMenu({
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="bag-button"
+        <button
+          type="button"
+          className={
+            variant === "pill" ? "bag-button pill" : "bag-button bag-square"
+          }
           aria-label={
             bag.length === 0 ? t.bag : t.bagLabel.replace("{count}", count)
           }
         >
-          <Icon icon="lucide:shopping-bag" />
+          <Icon icon="lucide:backpack" className="pill-chevron" />
+          {variant === "pill" ? (
+            <span className="pill-label" aria-hidden="true">
+              {t.bag}
+            </span>
+          ) : null}
           {bag.length > 0 ? (
             <span className="bag-count" aria-hidden="true">
               {bag.length}
             </span>
           ) : null}
-        </Button>
+        </button>
       </PopoverTrigger>
       <PopoverContent className="bag-menu" aria-labelledby={`${id}-title`}>
         <div className="bag-head">
