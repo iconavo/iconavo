@@ -143,13 +143,17 @@ export function Pill({
   lang: Lang;
   selected?: boolean;
   soon?: boolean;
+  /** Адрес логотипа 16 × 16 (public/logos): украшение, название написано рядом. */
   logo?: string;
   onSelect?: () => void;
   children: ReactNode;
 }) {
   const content = (
     <>
-      {logo === undefined ? null : <Icon icon={logo} className="panel-icon" />}
+      {logo === undefined ? null : (
+        // biome-ignore lint/performance/noImgElement: маленький SVG-файл, оптимизация next/image ему не нужна
+        <img src={logo} alt="" width={16} height={16} className="pill-logo" />
+      )}
       {children}
     </>
   );

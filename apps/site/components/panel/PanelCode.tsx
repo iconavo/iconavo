@@ -47,11 +47,11 @@ import {
   PillGroup,
 } from "./parts";
 
-/** Значки менеджеров пакетов — одноцветные Tabler: цветных логотипов в наших наборах нет. */
+/** Логотипы менеджеров пакетов — как в макете (Figma, icons/brand/…), файлами в public/logos. */
 const PM_LOGOS: Record<PackageManager, string> = {
-  npm: "tabler:brand-npm",
-  pnpm: "tabler:brand-pnpm",
-  yarn: "tabler:brand-yarn",
+  npm: "/logos/npm.svg",
+  pnpm: "/logos/pnpm.svg",
+  yarn: "/logos/yarn.svg",
 };
 
 const pick = (view: PanelView) => () => panelViewStore.set(view);
