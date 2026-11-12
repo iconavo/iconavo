@@ -25,6 +25,7 @@ import { isStyle, type Style } from "../../lib/search";
 import { useUrlQuery, withParams } from "../../lib/url-query";
 import { IconPanel } from "../icon/IconPanel";
 import { CARD_LINK, usePanel } from "../icon/usePanel";
+import { PanelLayout } from "../panel/PanelLayout";
 import { Chips } from "./Chips";
 import { GridBar } from "./GridBar";
 import { GridToolbar } from "./GridToolbar";
@@ -235,10 +236,7 @@ export function IconGrid({
           />
         ) : null}
       </div>
-      <div
-        className="with-panel"
-        data-panel={panel.icon === undefined ? undefined : ""}
-      >
+      <PanelLayout open={panel.icon !== undefined}>
         <div className="grid-area">
           <GridBar
             lang={lang}
@@ -314,7 +312,7 @@ export function IconGrid({
             onPick={(name) => panel.open(name)}
           />
         )}
-      </div>
+      </PanelLayout>
     </div>
   );
 }

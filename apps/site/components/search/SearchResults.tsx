@@ -24,6 +24,7 @@ import { SelectToggle, useSelect } from "../catalog/SelectToggle";
 import { IconPanel } from "../icon/IconPanel";
 import { usePanel } from "../icon/usePanel";
 import { PageLink } from "../PageLink";
+import { PanelLayout } from "../panel/PanelLayout";
 import { Button } from "../ui/button";
 import { ResultGrid } from "./ResultGrid";
 
@@ -477,10 +478,7 @@ export function SearchResults({
   const final =
     phase.kind === "answer" && !phase.repeating ? phase.answer : undefined;
   return (
-    <div
-      className="with-panel"
-      data-panel={panel.icon === undefined ? undefined : ""}
-    >
+    <PanelLayout open={panel.icon !== undefined}>
       <section
         ref={top}
         className="search-results"
@@ -588,6 +586,6 @@ export function SearchResults({
           onPick={(name) => panel.open(name)}
         />
       )}
-    </div>
+    </PanelLayout>
   );
 }

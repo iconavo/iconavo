@@ -95,6 +95,21 @@
   --width-panel: 22.1875rem;
   --height-sheet: max(50dvh, 100dvh - 17.75rem);
   /*
+   * Микроанимация панели иконки (решение владельца 12 ноября 2026): длительности и кривые. Переход
+   * карточек и строк над сеткой (components/panel/PanelLayout.tsx) берёт --motion-panel-in отсюда, его
+   * кривая — та же, что --motion-ease-out (ease-out quart в lib/flip.ts).
+   */
+  --motion-panel-in: 240ms;
+  /* Панель появляется чуть позже, чем начинают двигаться карточки: место под ней уже свободно, и
+     сквозь полупрозрачную панель не видно проезжающих номеров страниц. */
+  --motion-panel-delay: 60ms;
+  --motion-panel-out: 180ms;
+  --motion-sheet-in: 280ms;
+  --motion-sheet-out: 220ms;
+  --motion-fade: 200ms;
+  --motion-ease-out: cubic-bezier(0.25, 1, 0.5, 1);
+  --motion-ease-in: cubic-bezier(0.5, 0, 0.75, 0);
+  /*
    * Полосы прокрутки: --scrollbar-lane — ширина дорожки. У мыши и тачпада в Chrome, Edge и Safari —
    * 12 px (бегунок 4 px посередине), в Firefox и на сенсорных экранах полосы поверх содержимого — 0.
    * Правое поле у края страницы, панели, блоков кода, списка наборов и под строкой чипсов — за вычетом
@@ -2670,6 +2685,87 @@
     }
     .panel-top {
       padding-top: 0.75rem;
+    }
+  }
+
+  /*
+   * Микроанимация панели. Появление — проявляется и въезжает справа на 24 px (на телефоне шторка
+   * выезжает снизу, затемнение проявляется). Закрытие — копия панели (PanelLayout) на прежнем месте
+   * поверх страницы гаснет и уезжает, затем удаляется. Раскрытие шторки ручкой — плавная высота.
+   * «Уменьшить движение» в системе — всё мгновенно.
+   */
+  .panel-leaving {
+    position: fixed;
+    inset: auto;
+    top: var(--leave-top);
+    left: var(--leave-left);
+    width: var(--leave-width);
+    height: var(--leave-height);
+    max-height: none;
+    margin: 0;
+    pointer-events: none;
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .icon-panel {
+      animation: panel-in var(--motion-panel-in) var(--motion-ease-out)
+        var(--motion-panel-delay) both;
+    }
+    .icon-panel.panel-leaving {
+      animation: panel-out var(--motion-panel-out) var(--motion-ease-in)
+        forwards;
+    }
+  }
+  @media (max-width: 63.98rem) and (prefers-reduced-motion: no-preference) {
+    .icon-panel {
+      animation-name: sheet-in;
+      animation-duration: var(--motion-sheet-in);
+      animation-delay: 0s;
+      transition: max-height var(--motion-sheet-in) var(--motion-ease-out);
+    }
+    .icon-panel.panel-leaving {
+      animation-name: sheet-out;
+      animation-duration: var(--motion-sheet-out);
+    }
+    .panel-backdrop {
+      animation: fade-in var(--motion-fade) var(--motion-ease-out) both;
+    }
+    .panel-backdrop.panel-leaving {
+      animation: fade-out var(--motion-fade) var(--motion-ease-in) forwards;
+    }
+  }
+  @keyframes panel-in {
+    from {
+      opacity: 0;
+      translate: 1.5rem 0;
+    }
+    60% {
+      opacity: 1;
+    }
+  }
+  @keyframes panel-out {
+    to {
+      opacity: 0;
+      translate: 1.5rem 0;
+    }
+  }
+  @keyframes sheet-in {
+    from {
+      translate: 0 100%;
+    }
+  }
+  @keyframes sheet-out {
+    to {
+      translate: 0 100%;
+    }
+  }
+  @keyframes fade-in {
+    from {
+      opacity: 0;
+    }
+  }
+  @keyframes fade-out {
+    to {
+      opacity: 0;
     }
   }
 
