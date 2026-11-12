@@ -41,7 +41,7 @@ export function DocPage({
       </nav>
       <details className="docs-menu">
         <summary>
-          <Icon icon="lucide:menu" className="inline-block" /> Menu
+          <Icon icon="material-symbols:menu" className="inline-block" /> Menu
         </summary>
         <nav aria-label="Documentation">
           <Pages pages={pages} current={page} />
@@ -53,7 +53,10 @@ export function DocPage({
         <nav className="pager" aria-label="Previous and next pages">
           {prev ? (
             <Link href={prev.path} rel="prev">
-              <Icon icon="lucide:arrow-left" className="inline-block" />{" "}
+              <Icon
+                icon="material-symbols:arrow-back"
+                className="inline-block"
+              />{" "}
               Previous: {prev.title}
             </Link>
           ) : (
@@ -62,14 +65,17 @@ export function DocPage({
           {next ? (
             <Link href={next.path} rel="next">
               Next: {next.title}{" "}
-              <Icon icon="lucide:arrow-right" className="inline-block" />
+              <Icon
+                icon="material-symbols:arrow-forward"
+                className="inline-block"
+              />
             </Link>
           ) : null}
         </nav>
         <p className="edit">
           <a href={page.edit}>
-            <Icon icon="lucide:pencil" className="inline-block" /> Edit this
-            page on GitHub
+            <Icon icon="material-symbols:edit" className="inline-block" /> Edit
+            this page on GitHub
           </a>
         </p>
       </main>

@@ -44,7 +44,10 @@ export function IconName({ lang, name }: { lang: Lang; name: string }) {
             aria-label={`${t.iconNameFormat}: ${shown}`}
           >
             <code className="name-format-text">{shown}</code>
-            <Icon icon="lucide:chevron-down" className="inline-block" />
+            <Icon
+              icon="material-symbols:keyboard-arrow-down"
+              className="inline-block"
+            />
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start">

@@ -279,7 +279,7 @@ export function IconGrid({
                         onClick={() => select.pick(icon)}
                       >
                         <span className="pick-box" aria-hidden="true">
-                          <Icon icon="lucide:check" />
+                          <Icon icon="material-symbols:check" />
                         </span>
                         <Icon icon={icon} className="icon-cell-svg" />
                         <span className="icon-cell-name">{name}</span>

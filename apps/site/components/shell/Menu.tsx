@@ -23,7 +23,7 @@ export function MenuButton({ lang }: { lang: Lang }) {
       aria-controls="sidebar"
       onClick={() => menuStore.set(true)}
     >
-      <Icon icon="lucide:menu" />
+      <Icon icon="material-symbols:menu" />
     </button>
   );
 }
@@ -42,7 +42,7 @@ export function MenuClose({ lang }: { lang: Lang }) {
         document.getElementById(MENU_BUTTON_ID)?.focus();
       }}
     >
-      <Icon icon="lucide:x" />
+      <Icon icon="material-symbols:close" />
     </button>
   );
 }

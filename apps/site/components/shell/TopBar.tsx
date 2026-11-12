@@ -4,6 +4,7 @@ import { BagMenu } from "../BagMenu";
 import { LanguageSwitch } from "../LanguageSwitch";
 import { PageLink } from "../PageLink";
 import { Logo } from "./Logo";
+import { AgentLogos, ExtensionLogos } from "./Logos";
 import { MenuButton } from "./Menu";
 import { Soon } from "./Soon";
 import { ThemeToggle } from "./ThemeToggle";
@@ -30,36 +31,40 @@ export function TopBar({
           <span className="sr-only">Iconavo</span>
         </PageLink>
         <Soon lang={lang} className="pill topbar-wide">
-          <Icon icon="tabler:brand-figma" className="pill-icon" />
-          <Icon icon="tabler:brand-vscode" className="pill-icon" />
+          <ExtensionLogos />
           <span>{t.extensions}</span>
-          <Icon icon="lucide:chevron-down" className="pill-chevron" />
+          <Icon
+            icon="material-symbols:keyboard-arrow-down"
+            className="pill-chevron"
+          />
         </Soon>
         <span className="topbar-divider topbar-wide" aria-hidden="true" />
         <Soon lang={lang} className="pill topbar-wide">
           <span>{t.forAiAgents}</span>
-          <Icon icon="lucide:bot" className="pill-icon" />
-          <Icon icon="lucide:sparkles" className="pill-icon" />
+          <AgentLogos />
         </Soon>
         <span className="topbar-divider topbar-wide" aria-hidden="true" />
         <ThemeToggle lang={lang} />
       </div>
       <div className="topbar-group">
         <PageLink lang={lang} path="/search" className="pill topbar-wide">
-          <Icon icon="lucide:search" className="pill-chevron" />
+          <Icon icon="material-symbols:search" className="pill-chevron" />
           <span>{t.topSearch}</span>
         </PageLink>
         <span className="topbar-divider topbar-wide" aria-hidden="true" />
         <BagMenu lang={lang} variant="pill" />
         <span className="topbar-divider topbar-wide" aria-hidden="true" />
         {languageSwitch ? (
-          <LanguageSwitch variant="code" className="top-circle topbar-wide" />
+          <LanguageSwitch variant="flag" className="top-circle topbar-wide" />
         ) : null}
         <Soon lang={lang} className="topbar-account" label={t.account}>
           <span className="top-circle">
-            <Icon icon="lucide:circle-user" />
+            <Icon icon="material-symbols:account-circle" />
           </span>
-          <Icon icon="lucide:chevron-down" className="topbar-wide" />
+          <Icon
+            icon="material-symbols:keyboard-arrow-down"
+            className="topbar-wide topbar-account-chevron"
+          />
         </Soon>
       </div>
     </header>

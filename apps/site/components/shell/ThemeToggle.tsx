@@ -44,8 +44,14 @@ export function ThemeToggle({
       aria-pressed={dark}
       onClick={() => store.set(isDark() ? "light" : "dark")}
     >
-      <Icon icon="lucide:moon" className="theme-icon theme-icon-dark" />
-      <Icon icon="lucide:sun" className="theme-icon theme-icon-light" />
+      <Icon
+        icon="material-symbols:moon-stars"
+        className="theme-icon theme-icon-dark"
+      />
+      <Icon
+        icon="material-symbols:wb-sunny"
+        className="theme-icon theme-icon-light"
+      />
     </button>
   );
 }

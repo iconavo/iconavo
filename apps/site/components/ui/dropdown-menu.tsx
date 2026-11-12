@@ -53,7 +53,7 @@ export function DropdownMenuRadioItem({
     >
       <span className="pointer-events-none absolute left-2 flex size-4 items-center justify-center">
         <Primitive.ItemIndicator>
-          <Icon icon="lucide:check" />
+          <Icon icon="material-symbols:check" />
         </Primitive.ItemIndicator>
       </span>
       {children}

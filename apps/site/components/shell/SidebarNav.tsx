@@ -33,13 +33,13 @@ export function SidebarNav({ lang }: { lang: Lang }) {
             className="sidebar-item"
             aria-current={iconSets ? "page" : undefined}
           >
-            <Icon icon="lucide:house" className="sidebar-item-icon" />
+            <Icon icon="material-symbols:home" className="sidebar-item-icon" />
             <span className="sidebar-label">{t.navIconSets}</span>
           </PageLink>
         </li>
         <li>
           <Soon lang={lang} className="sidebar-item">
-            <Icon icon="lucide:bell" className="sidebar-item-icon" />
+            <Icon icon="site:add-alert-light" className="sidebar-item-icon" />
             <span className="sidebar-label">{t.navSubscribed}</span>
           </Soon>
         </li>
@@ -50,19 +50,25 @@ export function SidebarNav({ lang }: { lang: Lang }) {
             className="sidebar-item"
             aria-current={docs ? "page" : undefined}
           >
-            <Icon icon="lucide:book-open" className="sidebar-item-icon" />
+            <Icon
+              icon="material-symbols:auto-stories"
+              className="sidebar-item-icon"
+            />
             <span className="sidebar-label">{t.docs}</span>
           </PageLink>
         </li>
         <li>
           <Soon lang={lang} className="sidebar-item">
-            <Icon icon="lucide:wrench" className="sidebar-item-icon" />
+            <Icon
+              icon="material-symbols:handyman"
+              className="sidebar-item-icon"
+            />
             <span className="sidebar-label">{t.navTools}</span>
           </Soon>
         </li>
         <li>
           <a href="https://github.com/iconavo/iconavo" className="sidebar-item">
-            <Icon icon="tabler:brand-github" className="sidebar-item-icon" />
+            <Icon icon="site:github" className="sidebar-item-icon" />
             <span className="sidebar-label">GitHub</span>
           </a>
         </li>

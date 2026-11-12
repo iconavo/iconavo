@@ -58,7 +58,7 @@ export function GridToolbar({
             commit(text);
           }}
         >
-          <Icon icon="lucide:search" className="hero-field-icon" />
+          <Icon icon="material-symbols:search" className="hero-field-icon" />
           <label htmlFor={SEARCH_INPUT_ID} className="sr-only">
             {placeholder}
           </label>
@@ -89,23 +89,23 @@ export function GridToolbar({
           <span className="ai-knob" />
         </span>
         <span>{t.aiSearch}</span>
-        <Icon icon="lucide:circle-question-mark" className="pill-icon" />
+        <Icon icon="material-symbols:help" className="pill-icon" />
       </Soon>
       <fieldset className="view-switch">
         <legend className="sr-only">{t.viewLabel}</legend>
         <span className="view-item" aria-current="true">
-          <Icon icon="lucide:grid-3x3" />
+          <Icon icon="material-symbols:grid-on" />
           <span className="sr-only">{t.viewGrid}</span>
         </span>
         <Soon lang={lang} className="view-item" label={t.viewLarge}>
-          <Icon icon="lucide:grid-2x2" />
+          <Icon icon="material-symbols:grid-view" />
         </Soon>
         <Soon lang={lang} className="view-item" label={t.viewList}>
-          <Icon icon="lucide:list" />
+          <Icon icon="material-symbols:list" />
         </Soon>
       </fieldset>
       <Soon lang={lang} className="grid-settings">
-        <Icon icon="lucide:settings" className="grid-settings-icon" />
+        <Icon icon="material-symbols:settings" className="grid-settings-icon" />
         <span className="grid-settings-label">{t.gridSettings}</span>
       </Soon>
     </div>

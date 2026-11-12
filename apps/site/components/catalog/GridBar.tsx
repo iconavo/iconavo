@@ -29,7 +29,10 @@ export function GridBar({
       <Soon lang={lang} className="per-page" above={!top}>
         <span className="per-page-label">{t.perPage}</span>
         <span>96</span>
-        <Icon icon="lucide:chevron-down" className="pill-chevron" />
+        <Icon
+          icon="material-symbols:keyboard-arrow-down"
+          className="pill-chevron"
+        />
       </Soon>
       <span className="grid-bar-line" aria-hidden="true" />
       {children}

@@ -3,6 +3,7 @@
 import { usePathname } from "next/navigation";
 import { counterpart, isTranslated, LANGUAGE_NAMES } from "../lib/i18n";
 import { useUrlQuery } from "../lib/url-query";
+import { FlagLogo } from "./shell/Logos";
 
 /**
  * Та же страница на другом языке. Языки — две корневые раскладки Next.js, переход между ними —
@@ -10,14 +11,15 @@ import { useUrlQuery } from "../lib/url-query";
  * и в браузере одинаков (ADR-0037). После гидратации к ссылке добавляются параметры адреса — запрос
  * поиска, фильтры, страница (шаг 3 фазы 4); в серверном HTML их нет, как и у самой страницы.
  *
- * variant="code" — круглая кнопка верхней полосы и подвала по макету: на ней код языка, на который
- * ведёт ссылка (флагов стран в наших наборах нет); имя для скринридера — «Русский (RU)».
+ * variant="flag" — круглая кнопка верхней полосы и подвала по макету: флаг текущего языка (решение
+ * владельца 12 ноября 2026, картинки в public/logos); ссылка ведёт на другой язык, имя для скринридера —
+ * «Русский (RU)».
  */
 export function LanguageSwitch({
   variant = "name",
   className = "lang-switch",
 }: {
-  variant?: "name" | "code";
+  variant?: "name" | "flag";
   className?: string;
 }) {
   const pathname = usePathname();
@@ -32,9 +34,13 @@ export function LanguageSwitch({
       hrefLang={other.lang}
       lang={other.lang}
       className={className}
-      aria-label={variant === "code" ? `${name} (${code})` : undefined}
+      aria-label={variant === "flag" ? `${name} (${code})` : undefined}
     >
-      {variant === "code" ? code : name}
+      {variant === "flag" ? (
+        <FlagLogo lang={other.lang === "ru" ? "en" : "ru"} />
+      ) : (
+        name
+      )}
     </a>
   );
 }

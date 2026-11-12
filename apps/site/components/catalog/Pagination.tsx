@@ -44,10 +44,14 @@ export function Pagination({
       <ul className="pagination-list">
         <li>
           {page > 1 ? (
-            link(page - 1, <Icon icon="lucide:chevron-left" />, t.pagePrev)
+            link(
+              page - 1,
+              <Icon icon="material-symbols:keyboard-arrow-left" />,
+              t.pagePrev,
+            )
           ) : (
             <span className="pagination-off" aria-hidden="true">
-              <Icon icon="lucide:chevron-left" />
+              <Icon icon="material-symbols:keyboard-arrow-left" />
             </span>
           )}
         </li>
@@ -62,10 +66,14 @@ export function Pagination({
         ))}
         <li>
           {page < pages ? (
-            link(page + 1, <Icon icon="lucide:chevron-right" />, t.pageNext)
+            link(
+              page + 1,
+              <Icon icon="material-symbols:keyboard-arrow-right" />,
+              t.pageNext,
+            )
           ) : (
             <span className="pagination-off" aria-hidden="true">
-              <Icon icon="lucide:chevron-right" />
+              <Icon icon="material-symbols:keyboard-arrow-right" />
             </span>
           )}
         </li>

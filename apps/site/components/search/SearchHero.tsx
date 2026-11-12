@@ -164,7 +164,7 @@ export function SearchHero({
           onSubmit={submit}
         >
           <div className="hero-field">
-            <Icon icon="lucide:search" className="hero-field-icon" />
+            <Icon icon="material-symbols:search" className="hero-field-icon" />
             <label htmlFor={SEARCH_INPUT_ID} className="sr-only">
               {t.searchLabel}
             </label>
@@ -205,7 +205,7 @@ export function SearchHero({
               <span className="ai-knob" />
             </span>
             <span>{t.aiSearch}</span>
-            <Icon icon="lucide:circle-question-mark" className="pill-icon" />
+            <Icon icon="material-symbols:help" className="pill-icon" />
           </Soon>
         </form>
       </search>

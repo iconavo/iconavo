@@ -35,3 +35,26 @@ export function Logo({ className }: { className?: string }) {
     </svg>
   );
 }
+
+/**
+ * Знак iconavo — компонент «Logo/Mark/Color=Adaptive» макета, 18 × 18: свёрнутое боковое меню (кадр «Icon
+ * Sets / Sidebar Collapsed»). Цвет — currentColor, как у логотипа.
+ */
+export function LogoMark({ className }: { className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 18 18"
+      width="18"
+      height="18"
+      fill="currentColor"
+      aria-hidden="true"
+      className={className}
+    >
+      <path
+        fillRule="evenodd"
+        clipRule="evenodd"
+        d="M18 9C18 11.3869 17.0518 13.6761 15.364 15.364C13.6761 17.0518 11.3869 18 9 18H0V9C0 6.61305 0.948205 4.32386 2.63603 2.63603C4.32386 0.948205 6.61305 0 9 0H18V9ZM9 3.1875C7.50816 3.1875 6.07741 3.79989 5.02251 4.88995C3.96763 5.98 3.375 7.45843 3.375 9V14.8125H9C10.4918 14.8125 11.9226 14.2001 12.9775 13.1101C14.0324 12.02 14.625 10.5416 14.625 9V3.1875H9Z"
+      />
+    </svg>
+  );
+}

@@ -3,6 +3,7 @@ import { DICTIONARIES, type Lang } from "../lib/i18n";
 import { BagMenu } from "./BagMenu";
 import { LanguageSwitch } from "./LanguageSwitch";
 import { PageLink } from "./PageLink";
+import { AgentLogos, FigmaLogo, VSCodeLogo } from "./shell/Logos";
 import { Soon } from "./shell/Soon";
 
 /**
@@ -22,21 +23,20 @@ export function Footer({
     <footer className="site-footer">
       <div className="footer-group">
         <Soon lang={lang} className="footer-link" above>
-          <Icon icon="tabler:brand-figma" className="pill-icon" />
+          <FigmaLogo />
           <span>{t.figmaPlugin}</span>
         </Soon>
         <Soon lang={lang} className="footer-link" above>
-          <Icon icon="tabler:brand-vscode" className="pill-icon" />
+          <VSCodeLogo />
           <span>{t.vscodeExtension}</span>
         </Soon>
         <a href="https://github.com/iconavo/iconavo" className="footer-link">
-          <Icon icon="tabler:brand-github" className="pill-icon" />
+          <Icon icon="site:github" className="pill-icon" />
           <span>GitHub</span>
         </a>
         <Soon lang={lang} className="footer-link" above>
           <span>{t.forAiAgents}</span>
-          <Icon icon="lucide:bot" className="pill-icon" />
-          <Icon icon="lucide:sparkles" className="pill-icon" />
+          <AgentLogos />
         </Soon>
       </div>
       <div className="footer-group">
@@ -57,7 +57,7 @@ export function Footer({
         </Soon>
         <span className="topbar-divider" aria-hidden="true" />
         {languageSwitch ? (
-          <LanguageSwitch variant="code" className="top-circle" />
+          <LanguageSwitch variant="flag" className="top-circle" />
         ) : null}
         <BagMenu lang={lang} variant="icon" />
       </div>

@@ -1,0 +1,9 @@
+<svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+<title>Русский</title>
+<clipPath id="r"><rect y="2.22266" width="16" height="11.5555" rx="1.77778"/></clipPath>
+<g clip-path="url(#r)">
+<path d="M0 2.22266H16V6.07450H0Z" fill="#EEEEEE"/>
+<path d="M0 6.07450H16V9.92635H0Z" fill="#0039A6"/>
+<path d="M0 9.92635H16V13.7782H0Z" fill="#D52B1E"/>
+</g>
+</svg>

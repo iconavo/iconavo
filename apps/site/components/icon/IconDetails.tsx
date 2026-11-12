@@ -352,7 +352,10 @@ export function IconDetails({
             className={buttonClass("primary")}
           >
             {t.panelOpenPage}
-            <Icon icon="lucide:arrow-up-right" className="inline-block" />
+            <Icon
+              icon="material-symbols:arrow-outward"
+              className="inline-block"
+            />
           </Link>
         </p>
       ) : null}

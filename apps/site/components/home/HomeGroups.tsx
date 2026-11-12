@@ -64,7 +64,11 @@ export function SeeAll({ lang, group }: { lang: Lang; group: string }) {
     >
       {open ? t.groupShowLess : t.groupSeeAll}
       <Icon
-        icon={open ? "lucide:chevron-down" : "lucide:chevron-right"}
+        icon={
+          open
+            ? "material-symbols:keyboard-arrow-down"
+            : "material-symbols:keyboard-arrow-right"
+        }
         className="pill-chevron"
       />
     </button>

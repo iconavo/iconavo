@@ -120,7 +120,7 @@ export function BagMenu({
             bag.length === 0 ? t.bag : t.bagLabel.replace("{count}", count)
           }
         >
-          <Icon icon="lucide:backpack" className="pill-chevron" />
+          <Icon icon="material-symbols:backpack" className="pill-chevron" />
           {variant === "pill" ? (
             <span className="pill-label" aria-hidden="true">
               {t.bag}
@@ -160,7 +160,10 @@ export function BagMenu({
                     aria-label={t.bagRemove.replace("{name}", name)}
                     onClick={() => bagStore.remove(name)}
                   >
-                    <Icon icon="lucide:x" className="inline-block" />
+                    <Icon
+                      icon="material-symbols:close"
+                      className="inline-block"
+                    />
                   </button>
                 </li>
               ))}

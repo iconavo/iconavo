@@ -26,7 +26,7 @@ export interface IconMockupsProps {
 }
 
 /** Иконка рамки мокапов: «закрыть» — Lucide, как у сайта. */
-const CLOSE = "lucide:x";
+const CLOSE = "material-symbols:close";
 
 export function IconMockups({
   lang,

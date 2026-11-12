@@ -65,18 +65,21 @@ export async function SetPage({
             </ol>
           </nav>
           <PageLink lang={lang} path="/" className="set-back">
-            <Icon icon="lucide:chevron-left" className="pill-chevron" />
+            <Icon
+              icon="material-symbols:keyboard-arrow-left"
+              className="pill-chevron"
+            />
             {t.navIconSets}
           </PageLink>
           <h1 className="set-title">{info.name}</h1>
         </div>
         <Soon lang={lang} className="subscribe">
-          <Icon icon="lucide:bell" className="pill-icon" />
+          <Icon icon="site:add-alert-light" className="pill-icon" />
           <span>{t.setSubscribe}</span>
         </Soon>
         <ul className="set-meta">
           <li>
-            <Icon icon="lucide:layout-grid" className="set-meta-icon" />
+            <Icon icon="site:set-count" className="set-meta-icon" />
             <span>{countOf(lang, names.length, ICON_FORMS[lang])}</span>
           </li>
           <li>
@@ -85,7 +88,7 @@ export async function SetPage({
               {info.license.title}
             </PageLink>
             <Tip text={t.setCommercialHint}>
-              <Icon icon="lucide:circle-question-mark" className="pill-icon" />
+              <Icon icon="material-symbols:help" className="pill-icon" />
             </Tip>
           </li>
           <li>

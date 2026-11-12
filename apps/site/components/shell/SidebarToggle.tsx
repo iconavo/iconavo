@@ -35,7 +35,11 @@ export function SidebarToggle({ lang }: { lang: Lang }) {
       }}
     >
       <Icon
-        icon={collapsed ? "lucide:panel-left-open" : "lucide:panel-left-close"}
+        icon={
+          collapsed
+            ? "material-symbols:arrow-menu-open"
+            : "material-symbols:arrow-menu-close"
+        }
       />
     </button>
   );

@@ -40,7 +40,7 @@ export function SidebarSets({
   return (
     <>
       <div className="sidebar-filter">
-        <Icon icon="lucide:search" className="sidebar-filter-icon" />
+        <Icon icon="material-symbols:search" className="sidebar-filter-icon" />
         <input
           type="search"
           value={filter}

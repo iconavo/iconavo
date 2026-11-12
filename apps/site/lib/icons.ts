@@ -12,66 +12,44 @@
 import type { IconavoIconSet } from "@iconavo-ui/react";
 import { cache } from "react";
 import { API } from "./api";
+import { SITE_SET } from "./site-icons";
 
 export const SITE_ICONS = [
-  "lucide:menu",
-  "lucide:copy",
-  "lucide:check",
-  "lucide:arrow-left",
-  "lucide:arrow-right",
-  "lucide:pencil",
-  "tabler:brand-github",
-  // Шапка: поиск и меню темы.
-  "lucide:search",
-  "lucide:monitor",
-  "lucide:sun",
-  "lucide:moon",
-  // Номера страниц сетки набора.
-  "lucide:chevron-left",
-  "lucide:chevron-right",
-  // Панель иконки (шаг 4 фазы 4): закрыть, развернуть и свернуть шторку, открыть страницу.
-  "lucide:x",
-  "lucide:maximize-2",
-  "lucide:minimize-2",
-  "lucide:arrow-up-right",
-  // Сумка в шапке и список форматов имени (шаг 5 фазы 4).
-  "lucide:shopping-bag",
-  "lucide:chevron-down",
-  // Каркас по макету (Figma «Iconavo — Макеты»): боковая панель, верхняя полоса, подвал, главная.
-  "lucide:house",
-  "lucide:bell",
-  "lucide:book-open",
-  "lucide:wrench",
-  "lucide:gem",
-  "lucide:panel-left-close",
-  "lucide:panel-left-open",
-  "lucide:backpack",
-  "lucide:circle-user",
-  "lucide:circle-question-mark",
-  "lucide:bot",
-  "lucide:sparkles",
-  "tabler:brand-figma",
-  "tabler:brand-vscode",
-  // Страница набора по макету: сведения, вид сетки, настройки.
-  "lucide:layout-grid",
-  "lucide:grid-3x3",
-  "lucide:grid-2x2",
-  "lucide:list",
-  "lucide:settings",
-  // Панель иконки по макету «Icon Panel»: значки Material Symbols (логотипы npm, pnpm, yarn — файлами в
-  // public/logos).
-  "material-symbols:open-in-new",
-  "material-symbols:close",
-  "material-symbols:height",
-  "material-symbols:keyboard-arrow-down",
-  "material-symbols:content-copy",
-  "material-symbols:check",
-  "material-symbols:download",
-  "material-symbols:backpack",
+  // Интерфейс — по библиотеке макета (Figma «Iconavo — Макеты», страница «Icons»): Material Symbols,
+  // сплошные варианты. Свои рисунки макета — набор site: (lib/site-icons.ts), цветные картинки —
+  // public/logos (components/shell/Logos.tsx).
+  "material-symbols:account-circle",
+  "material-symbols:arrow-back",
+  "material-symbols:arrow-forward",
+  "material-symbols:arrow-menu-close",
+  "material-symbols:arrow-menu-open",
   "material-symbols:arrow-outward",
-  "material-symbols:link",
+  "material-symbols:auto-stories",
+  "material-symbols:backpack",
+  "material-symbols:check",
   "material-symbols:check-box",
   "material-symbols:check-box-outline-blank",
+  "material-symbols:close",
+  "material-symbols:content-copy",
+  "material-symbols:download",
+  "material-symbols:edit",
+  "material-symbols:grid-on",
+  "material-symbols:grid-view",
+  "material-symbols:handyman",
+  "material-symbols:height",
+  "material-symbols:help",
+  "material-symbols:home",
+  "material-symbols:keyboard-arrow-down",
+  "material-symbols:keyboard-arrow-left",
+  "material-symbols:keyboard-arrow-right",
+  "material-symbols:link",
+  "material-symbols:list",
+  "material-symbols:menu",
+  "material-symbols:moon-stars",
+  "material-symbols:open-in-new",
+  "material-symbols:search",
+  "material-symbols:settings",
+  "material-symbols:wb-sunny",
 ] as const;
 
 export type SiteIcon = (typeof SITE_ICONS)[number];
@@ -176,9 +154,11 @@ async function loadAll(
   return sets;
 }
 
-/** Все иконки сайта; не хватает хоть одной — ошибка. */
-export const loadSiteIcons = (): Promise<IconavoIconSet[]> =>
-  loadAll(SITE_ICONS, "иконки сайта");
+/** Все иконки сайта и свои рисунки макета (набор site:); не хватает хоть одной — ошибка. */
+export const loadSiteIcons = async (): Promise<IconavoIconSet[]> => [
+  ...(await loadAll(SITE_ICONS, "иконки сайта")),
+  SITE_SET,
+];
 
 /**
  * Какие из имён есть в наборах и не скрыты — для соседей в мокапах страницы иконки (lib/mockups.ts):

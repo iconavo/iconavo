@@ -1,8 +1,8 @@
-import { Icon } from "@iconavo-ui/react";
 import type { SidebarGroup } from "../../lib/catalog-view";
 import { DICTIONARIES, type Lang } from "../../lib/i18n";
 import { PageLink } from "../PageLink";
-import { Logo } from "./Logo";
+import { Logo, LogoMark } from "./Logo";
+import { PlanLogo } from "./Logos";
 import { MenuClose } from "./Menu";
 import { SidebarNav } from "./SidebarNav";
 import { SidebarSets } from "./SidebarSets";
@@ -27,6 +27,7 @@ export function Sidebar({
       <div className="sidebar-head">
         <PageLink lang={lang} path="/" className="sidebar-brand">
           <Logo className="sidebar-logo" />
+          <LogoMark className="sidebar-mark" />
           <span className="sr-only">Iconavo</span>
         </PageLink>
         <SidebarToggle lang={lang} />
@@ -58,7 +59,7 @@ export function Sidebar({
           <span className="sidebar-plan-info">
             <span className="sidebar-plan-label">{t.planLabel}</span>
             <span className="sidebar-plan-tier">
-              <Icon icon="lucide:gem" className="sidebar-plan-icon" />
+              <PlanLogo />
               <span className="sidebar-label">{t.planName}</span>
             </span>
           </span>

@@ -2,6 +2,7 @@ import { Icon } from "@iconavo-ui/react";
 import { getSets } from "../../lib/catalog";
 import { countOf, FAMILY_FORMS, ICON_FORMS } from "../../lib/format";
 import { DICTIONARIES, type Lang } from "../../lib/i18n";
+import { FigmaLogo, VSCodeLogo } from "../shell/Logos";
 import { Soon } from "../shell/Soon";
 
 /**
@@ -23,15 +24,15 @@ export async function HomeIntro({ lang }: { lang: Lang }) {
       </div>
       <div className="hero-links">
         <Soon lang={lang} className="hero-link">
-          <Icon icon="tabler:brand-figma" className="pill-icon" />
+          <FigmaLogo />
           <span>{t.figmaPlugin}</span>
         </Soon>
         <Soon lang={lang} className="hero-link">
-          <Icon icon="tabler:brand-vscode" className="pill-icon" />
+          <VSCodeLogo />
           <span>{t.vscodeExtension}</span>
         </Soon>
         <a href="https://github.com/iconavo/iconavo" className="hero-link">
-          <Icon icon="tabler:brand-github" className="pill-icon" />
+          <Icon icon="site:github" className="pill-icon" />
           <span>GitHub</span>
         </a>
       </div>
