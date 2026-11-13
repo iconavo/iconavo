@@ -1,8 +1,10 @@
 "use client";
 
 import { type ReactNode, useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { API } from "../../lib/api";
 import { DICTIONARIES, type Lang, STYLE_KEYS } from "../../lib/i18n";
+import { PAGE_PANEL_ID } from "../../lib/panel-layout";
 import {
   allCommercial,
   hasFilters,
@@ -89,6 +91,11 @@ export function SearchResults({
   const { query, ready, hrefOf, navigate } = useUrlQuery();
   // Боковая панель иконки (шаг 4 фазы 4): открыта, пока в адресе есть icon.
   const panel = usePanel(query, navigate);
+  // Панель — во всю высоту страницы (lib/panel-layout.ts): её место справа от всей страницы поиска.
+  const [panelSlot, setPanelSlot] = useState<HTMLElement | null>(null);
+  useEffect(() => {
+    setPanelSlot(document.getElementById(PAGE_PANEL_ID));
+  }, []);
   const selection = useSelection();
   const known = useMemo(
     () => ({ sets: sets.map((s) => s.id), licenses }),
@@ -477,115 +484,128 @@ export function SearchResults({
   const commercial = allCommercial(licenses);
   const final =
     phase.kind === "answer" && !phase.repeating ? phase.answer : undefined;
+  const panelNode =
+    panel.icon === undefined ? null : (
+      <IconPanel
+        lang={lang}
+        icon={panel.icon}
+        focus={panel.focus}
+        onClose={panel.close}
+        onPick={(name) => panel.open(name)}
+      />
+    );
   return (
-    <PanelLayout open={panel.icon !== undefined}>
-      <section
-        ref={top}
-        className="search-results"
-        aria-labelledby="search-results-title"
-        data-search={phaseName(phase)}
-        data-semantic={
-          phase.kind === "answer" ? phase.answer.semantic : undefined
-        }
-      >
-        <h2 id="search-results-title" className="sr-only">
-          {t.searchResults}
-        </h2>
-        <div className="filters">
-          <Chips
-            label={t.searchStyle}
-            chips={[
-              chip(
-                "",
-                t.styleAny,
-                "style",
-                undefined,
-                state.style === undefined,
-              ),
-              ...STYLES.map((s) =>
-                chip(s, t[STYLE_KEYS[s]], "style", s, state.style === s),
-              ),
-            ]}
-          />
-          <Chips
-            label={t.filterSet}
-            chips={[
-              chip("", t.filterAll, "set", undefined, state.set === undefined),
-              ...sets.map((s) =>
-                chip(s.id, s.title, "set", s.id, state.set === s.id),
-              ),
-            ]}
-          />
-          <Chips
-            label={t.filterLicense}
-            chips={[
-              chip(
-                "",
-                t.filterAll,
-                "license",
-                undefined,
-                state.license === undefined,
-              ),
-              ...licenses.map((l) =>
-                chip(l, l, "license", l, state.license === l),
-              ),
-            ]}
-          />
-        </div>
-        {commercial ? (
-          <p className="search-commercial">
-            {t.searchCommercial}{" "}
-            <PageLink lang={lang} path="/licenses">
-              {t.searchCommercialLink}
-            </PageLink>
+    <>
+      <PanelLayout open={panel.icon !== undefined} slot={panelSlot}>
+        <section
+          ref={top}
+          className="search-results"
+          aria-labelledby="search-results-title"
+          data-search={phaseName(phase)}
+          data-semantic={
+            phase.kind === "answer" ? phase.answer.semantic : undefined
+          }
+        >
+          <h2 id="search-results-title" className="sr-only">
+            {t.searchResults}
+          </h2>
+          <div className="filters">
+            <Chips
+              label={t.searchStyle}
+              chips={[
+                chip(
+                  "",
+                  t.styleAny,
+                  "style",
+                  undefined,
+                  state.style === undefined,
+                ),
+                ...STYLES.map((s) =>
+                  chip(s, t[STYLE_KEYS[s]], "style", s, state.style === s),
+                ),
+              ]}
+            />
+            <Chips
+              label={t.filterSet}
+              chips={[
+                chip(
+                  "",
+                  t.filterAll,
+                  "set",
+                  undefined,
+                  state.set === undefined,
+                ),
+                ...sets.map((s) =>
+                  chip(s.id, s.title, "set", s.id, state.set === s.id),
+                ),
+              ]}
+            />
+            <Chips
+              label={t.filterLicense}
+              chips={[
+                chip(
+                  "",
+                  t.filterAll,
+                  "license",
+                  undefined,
+                  state.license === undefined,
+                ),
+                ...licenses.map((l) =>
+                  chip(l, l, "license", l, state.license === l),
+                ),
+              ]}
+            />
+          </div>
+          {commercial ? (
+            <p className="search-commercial">
+              {t.searchCommercial}{" "}
+              <PageLink lang={lang} path="/licenses">
+                {t.searchCommercialLink}
+              </PageLink>
+            </p>
+          ) : (
+            <Chips
+              label={t.searchCommercialLabel}
+              chips={[
+                chip(
+                  "commercial",
+                  t.searchCommercialOnly,
+                  "commercial",
+                  state.commercial ? undefined : "1",
+                  state.commercial === true,
+                ),
+              ]}
+            />
+          )}
+          <p className="search-status" role="status">
+            {status}
+            {query.get("timing") === "1" && timing !== undefined ? (
+              <span className="search-timing">
+                {t.searchTiming.replace("{ms}", String(Math.round(timing)))}
+              </span>
+            ) : null}
           </p>
-        ) : (
-          <Chips
-            label={t.searchCommercialLabel}
-            chips={[
-              chip(
-                "commercial",
-                t.searchCommercialOnly,
-                "commercial",
-                state.commercial ? undefined : "1",
-                state.commercial === true,
-              ),
-            ]}
-          />
-        )}
-        <p className="search-status" role="status">
-          {status}
-          {query.get("timing") === "1" && timing !== undefined ? (
-            <span className="search-timing">
-              {t.searchTiming.replace("{ms}", String(Math.round(timing)))}
-            </span>
+          <SelectionBar lang={lang} selection={selection} />
+          <div ref={selection.anchor}>{body}</div>
+          {final !== undefined && (state.page > 1 || final.hasNext) ? (
+            <Pagination
+              lang={lang}
+              page={state.page}
+              pages={knownPages(state.page, final.hasNext)}
+              hrefOf={(p) =>
+                hrefOf(
+                  withParams(query, { page: p === 1 ? undefined : String(p) }),
+                )
+              }
+              onSelect={goPage}
+            />
           ) : null}
-        </p>
-        <SelectionBar lang={lang} selection={selection} />
-        <div ref={selection.anchor}>{body}</div>
-        {final !== undefined && (state.page > 1 || final.hasNext) ? (
-          <Pagination
-            lang={lang}
-            page={state.page}
-            pages={knownPages(state.page, final.hasNext)}
-            hrefOf={(p) =>
-              hrefOf(
-                withParams(query, { page: p === 1 ? undefined : String(p) }),
-              )
-            }
-            onSelect={goPage}
-          />
-        ) : null}
-      </section>
-      {panel.icon === undefined ? null : (
-        <IconPanel
-          lang={lang}
-          icon={panel.icon}
-          focus={panel.focus}
-          onClose={panel.close}
-          onPick={(name) => panel.open(name)}
-        />
-      )}
-    </PanelLayout>
+        </section>
+        {panelSlot === null ? panelNode : null}
+      </PanelLayout>
+      {panelSlot !== null && panelNode !== null
+        ? createPortal(panelNode, panelSlot)
+        : null}
+    </>
   );
 }

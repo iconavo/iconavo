@@ -2726,7 +2726,8 @@
   /*
    * Панель во всю высоту страницы (решение владельца 13 ноября 2026, lib/panel-layout.ts): пока панель
    * открыта, страница набора — две колонки: слева заголовок, строка поиска, фильтры и сетка, справа —
-   * панель от уровня хлебных крошек до низа. Прилипает к верху окна и помещается в окно
+   * панель от уровня хлебных крошек до низа. Поиск — так же (план, шаг 4): слева заголовок «Search», поле
+   * и выдача, справа панель; главная — та же раскладка, но панели на ней нет. Прилипает к верху окна и помещается в окно
    * (lib/panel-fit.ts).
    *
    * Открытие и закрытие — одним движением (план, шаг 2): правая колонка раздвигается от 0 до ширины
@@ -2737,38 +2738,38 @@
    * (PanelLayout). Анимация карточек PanelLayout здесь не нужна — двигается сама раскладка.
    */
   @media (min-width: 64rem) {
-    .set-page {
+    :is(.set-page, .find-page) {
       display: grid;
       grid-template-columns: minmax(0, 1fr) 0px;
       grid-template-rows: auto 1fr;
       align-items: start;
     }
-    .set-page:has(> .page-panel > .icon-panel) {
+    :is(.set-page, .find-page):has(> .page-panel > .icon-panel) {
       grid-template-columns:
         minmax(0, 1fr)
         calc(var(--width-panel) + var(--page-x-end));
     }
-    .set-page > :is(.set-head, .set-body) {
+    :is(.set-page, .find-page) > :is(.set-head, .set-body, .hero, .find-body) {
       grid-column: 1;
       min-width: 0;
     }
-    .set-page > .page-panel {
+    :is(.set-page, .find-page) > .page-panel {
       grid-column: 2;
       grid-row: 1 / span 2;
       align-self: stretch;
       min-width: 0;
       overflow-x: clip;
     }
-    .set-page > .page-panel:has(> .icon-panel) {
+    :is(.set-page, .find-page) > .page-panel:has(> .icon-panel) {
       padding: 2rem var(--page-x-end) 2.5rem 0;
     }
-    .set-page > .page-panel > .icon-panel {
+    :is(.set-page, .find-page) > .page-panel > .icon-panel {
       width: var(--width-panel);
       margin-left: auto;
     }
   }
   @media (min-width: 64rem) and (prefers-reduced-motion: no-preference) {
-    .set-page {
+    :is(.set-page, .find-page) {
       transition: grid-template-columns var(--motion-panel-in)
         var(--motion-ease-out);
     }
