@@ -2100,14 +2100,255 @@
     opacity: 0.4;
   }
 
-  /* Сетка карточек по макету (Icon Card): 152 × 101, значок 24 px, имя 13/17, 7 в ряд на 1440 px. */
+  /* Сетка карточек по макету (Icon Card): 152 × 101, значок 24 px, имя 13/17, 7 в ряд на 1440 px.
+     Колонок — --icon-cols, от ширины окна (ниже). */
   .icon-grid {
     display: grid;
     gap: 0.75rem;
-    grid-template-columns: repeat(auto-fill, minmax(8.75rem, 1fr));
+    grid-template-columns: repeat(var(--icon-cols), minmax(0, 1fr));
     margin: 0;
     padding: 0;
     list-style: none;
+  }
+
+  /*
+   * Колонки сетки набора и выдачи поиска — только от ширины окна (решение владельца 13 ноября 2026): ни
+   * боковая панель слева, ни панель иконки справа их не меняют — карточки только растягиваются и
+   * сужаются, а число иконок на странице (целые ряды, pageSizeFor в lib/catalog.ts) не прыгает. Как в
+   * кадре макета «Контекст: свёрнутый сайдбар»: при свёрнутой панели карточек в ряду столько же, они
+   * шире. Колонок — сколько карточек встало бы в колонку страницы при развёрнутой боковой панели: окно
+   * − 19rem (панель 14rem и поля страницы по 2,5rem; полоса прокрутки — внутри правого поля). Карточка
+   * набора — не уже 8,75rem с зазором 0,75rem: n колонок — с окна 9,5n + 18,25rem; выдачи поиска —
+   * 7,5rem с зазором 0,5rem: с окна 8n + 18,5rem. До 64rem у сетки набора — 3 колонки, у выдачи —
+   * сколько влезет. Таблица стилей задаёт колонки сразу, ещё до скриптов страницы; число на странице
+   * считает браузер по --icon-cols (lib/grid-columns.ts). Пороги сверяет lib/grid-columns.test.ts.
+   */
+  :root {
+    --icon-cols: 3;
+  }
+  @media (min-width: 64rem) {
+    :root {
+      --icon-cols: 4;
+      --result-cols: 5;
+    }
+    .result-grid {
+      grid-template-columns: repeat(var(--result-cols), minmax(0, 1fr));
+    }
+  }
+  @media (min-width: 65.75rem) {
+    :root {
+      --icon-cols: 5;
+    }
+  }
+  @media (min-width: 66.5rem) {
+    :root {
+      --result-cols: 6;
+    }
+  }
+  @media (min-width: 74.5rem) {
+    :root {
+      --result-cols: 7;
+    }
+  }
+  @media (min-width: 75.25rem) {
+    :root {
+      --icon-cols: 6;
+    }
+  }
+  @media (min-width: 82.5rem) {
+    :root {
+      --result-cols: 8;
+    }
+  }
+  @media (min-width: 84.75rem) {
+    :root {
+      --icon-cols: 7;
+    }
+  }
+  @media (min-width: 90.5rem) {
+    :root {
+      --result-cols: 9;
+    }
+  }
+  @media (min-width: 94.25rem) {
+    :root {
+      --icon-cols: 8;
+    }
+  }
+  @media (min-width: 98.5rem) {
+    :root {
+      --result-cols: 10;
+    }
+  }
+  @media (min-width: 103.75rem) {
+    :root {
+      --icon-cols: 9;
+    }
+  }
+  @media (min-width: 106.5rem) {
+    :root {
+      --result-cols: 11;
+    }
+  }
+  @media (min-width: 113.25rem) {
+    :root {
+      --icon-cols: 10;
+    }
+  }
+  @media (min-width: 114.5rem) {
+    :root {
+      --result-cols: 12;
+    }
+  }
+  @media (min-width: 122.5rem) {
+    :root {
+      --result-cols: 13;
+    }
+  }
+  @media (min-width: 122.75rem) {
+    :root {
+      --icon-cols: 11;
+    }
+  }
+  @media (min-width: 130.5rem) {
+    :root {
+      --result-cols: 14;
+    }
+  }
+  @media (min-width: 132.25rem) {
+    :root {
+      --icon-cols: 12;
+    }
+  }
+  @media (min-width: 138.5rem) {
+    :root {
+      --result-cols: 15;
+    }
+  }
+  @media (min-width: 141.75rem) {
+    :root {
+      --icon-cols: 13;
+    }
+  }
+  @media (min-width: 146.5rem) {
+    :root {
+      --result-cols: 16;
+    }
+  }
+  @media (min-width: 151.25rem) {
+    :root {
+      --icon-cols: 14;
+    }
+  }
+  @media (min-width: 154.5rem) {
+    :root {
+      --result-cols: 17;
+    }
+  }
+  @media (min-width: 160.75rem) {
+    :root {
+      --icon-cols: 15;
+    }
+  }
+  @media (min-width: 162.5rem) {
+    :root {
+      --result-cols: 18;
+    }
+  }
+  @media (min-width: 170.25rem) {
+    :root {
+      --icon-cols: 16;
+    }
+  }
+  @media (min-width: 170.5rem) {
+    :root {
+      --result-cols: 19;
+    }
+  }
+  @media (min-width: 178.5rem) {
+    :root {
+      --result-cols: 20;
+    }
+  }
+  @media (min-width: 179.75rem) {
+    :root {
+      --icon-cols: 17;
+    }
+  }
+  @media (min-width: 186.5rem) {
+    :root {
+      --result-cols: 21;
+    }
+  }
+  @media (min-width: 189.25rem) {
+    :root {
+      --icon-cols: 18;
+    }
+  }
+  @media (min-width: 194.5rem) {
+    :root {
+      --result-cols: 22;
+    }
+  }
+  @media (min-width: 198.75rem) {
+    :root {
+      --icon-cols: 19;
+    }
+  }
+  @media (min-width: 202.5rem) {
+    :root {
+      --result-cols: 23;
+    }
+  }
+  @media (min-width: 208.25rem) {
+    :root {
+      --icon-cols: 20;
+    }
+  }
+  @media (min-width: 210.5rem) {
+    :root {
+      --result-cols: 24;
+    }
+  }
+  @media (min-width: 217.75rem) {
+    :root {
+      --icon-cols: 21;
+    }
+  }
+  @media (min-width: 218.5rem) {
+    :root {
+      --result-cols: 25;
+    }
+  }
+  @media (min-width: 226.5rem) {
+    :root {
+      --result-cols: 26;
+    }
+  }
+  @media (min-width: 227.25rem) {
+    :root {
+      --icon-cols: 22;
+    }
+  }
+  @media (min-width: 234.5rem) {
+    :root {
+      --result-cols: 27;
+    }
+  }
+  @media (min-width: 236.75rem) {
+    :root {
+      --icon-cols: 23;
+    }
+  }
+  @media (min-width: 242.5rem) {
+    :root {
+      --result-cols: 28;
+    }
+  }
+  @media (min-width: 246.25rem) {
+    :root {
+      --icon-cols: 24;
+    }
   }
   .icon-cell {
     min-width: 0;
@@ -2226,7 +2467,6 @@
     }
     .icon-grid {
       gap: 0.5rem;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
     }
   }
 
@@ -2330,33 +2570,9 @@
       gap: 1.75rem;
       align-items: start;
     }
-    /*
-     * С открытой панелью — столько же колонок, сколько без неё (решение владельца 13 ноября 2026, вместо
-     * кадра «Selected Icon + Opened Panel» с 6 колонками по 116 px): карточки сужаются и сдвигаются, но
-     * не перескакивают в другие ряды. Число — от пробника во всю ширину (lib/grid-columns.ts).
-     */
-    .with-panel[data-panel][data-cols]
-      :is(.icon-grid, .result-grid):not(.grid-probe) {
-      grid-template-columns: repeat(var(--cols), minmax(0, 1fr));
-    }
-  }
-  /* Раскладка с панелью — точка отсчёта пробника колонок. */
-  .with-panel {
-    position: relative;
-  }
-  /*
-   * Пробник колонок (lib/grid-columns.ts): пустая сетка с правилами настоящей во всю ширину раскладки,
-   * открыта панель или нет. Сколько у него колонок, столько держит и сетка с открытой панелью. Невидим и
-   * места не занимает.
-   */
-  .grid-probe {
-    position: absolute;
-    inset-inline: 0;
-    top: 0;
-    height: 0;
-    margin: 0;
-    visibility: hidden;
-    pointer-events: none;
+    /* Колонок с открытой панелью столько же, сколько без неё (--icon-cols, --result-cols — от ширины
+       окна; решение владельца 13 ноября 2026, вместо кадра «Selected Icon + Opened Panel» с 6 колонками
+       по 116 px): карточки сужаются и сдвигаются, но не перескакивают в другие ряды. */
   }
   .grid-area {
     display: grid;

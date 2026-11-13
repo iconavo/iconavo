@@ -11,7 +11,6 @@
 // движение» в системе и шторка на телефоне — без этой анимации.
 
 import type { Box } from "./flip";
-import { PROBES, syncColumns } from "./grid-columns";
 import { boxOf, motionMs, playFlip, reducedMotion } from "./motion";
 import { setCollapsed } from "./sidebar";
 
@@ -148,11 +147,6 @@ export function toggleSidebar(collapse: boolean): void {
   }
   for (const [grid, { to }] of widths) {
     if (to > 0) grid.style.width = `${to}px`;
-  }
-  // Пробники колонок (lib/grid-columns.ts) — тоже сетки и тоже уже конечной ширины: сетка с открытой
-  // панелью сразу получает конечное число колонок, а не на следующем кадре.
-  for (const probe of document.querySelectorAll<HTMLElement>(PROBES)) {
-    syncColumns(probe);
   }
 
   const root = document.documentElement;

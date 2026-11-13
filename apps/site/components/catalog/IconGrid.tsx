@@ -57,7 +57,7 @@ interface Loaded {
 /**
  * Сетка набора (шаги 2 и 3 фазы 4, вид — по макету Figma «Iconavo — Макеты»): карточки — база со своими
  * вариантами (ADR-0052), около 96 на страницу целыми рядами (решение владельца 13 ноября 2026: число
- * колонок — от ширины окна, с открытой панелью их столько же, lib/grid-columns.ts); поиск по набору, стиль, категория автора и номер страницы —
+ * колонок — от ширины окна, ни боковая панель, ни панель иконки их не меняют, app/globals.css); поиск по набору, стиль, категория автора и номер страницы —
  * в адресе (?q=…&style=…&category=…&page=…). Первая страница всех карточек — в серверном HTML с
  * иконками, без мигания. Остальное — в браузере: список имён он один раз берёт у edge API (/collection)
  * и собирает карточки тем же правилом, что индекс поиска; поиск по набору отбирает их по имени
@@ -106,11 +106,10 @@ export function IconGrid({
   const [loaded, setLoaded] = useState<Loaded>();
   const [failed, setFailed] = useState(false);
   const top = useRef<HTMLDivElement>(null);
-  // Колонок во всю ширину и иконок на странице; до замера в браузере — 96, а строки с номерами страниц
+  // Колонок (от ширины окна) и иконок на странице; до гидратации — 96, а строки с номерами страниц
   // невидимы (GridBar).
-  const grid = useGridColumns();
-  const size =
-    grid.columns === undefined ? undefined : pageSizeFor(grid.columns);
+  const columns = useGridColumns();
+  const size = columns === undefined ? undefined : pageSizeFor(columns);
   const pageSize = size ?? PAGE_SIZE;
 
   const list =
@@ -255,11 +254,6 @@ export function IconGrid({
         ) : null}
       </div>
       <PanelLayout open={panel.icon !== undefined}>
-        <div
-          ref={grid.probe}
-          className="icon-grid grid-probe"
-          aria-hidden="true"
-        />
         <div className="grid-area" ref={selection.anchor}>
           <GridBar lang={lang} top perPage={size}>
             {pagination(t.pagesTop)}
