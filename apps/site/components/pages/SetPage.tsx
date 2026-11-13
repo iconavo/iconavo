@@ -151,7 +151,7 @@ export async function SetPage({
           />
         </IconavoProvider>
       </div>
-      {/* Место панели иконки во всю высоту страницы — прототип ?panel-layout=page (lib/panel-layout.ts). */}
+      {/* Место панели иконки во всю высоту страницы (lib/panel-layout.ts). */}
       <div id={PAGE_PANEL_ID} className="page-panel" />
     </main>
   );

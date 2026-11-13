@@ -71,8 +71,8 @@ function playLeaving(root: HTMLElement, leaving: Leaving[]) {
 export class PanelLayout extends Component<{
   open: boolean;
   /**
-   * Место панели вне раскладки (прототип «во всю высоту страницы», lib/panel-layout.ts): тогда раскладка
-   * не делает колонку под панель, а уходящую панель ищет там.
+   * Место панели вне раскладки (панель во всю высоту страницы, lib/panel-layout.ts): тогда раскладка не
+   * делает колонку под панель, а уходящую панель ищет там.
    */
   slot?: HTMLElement | null;
   children: ReactNode;

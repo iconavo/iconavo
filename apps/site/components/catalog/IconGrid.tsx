@@ -22,7 +22,7 @@ import {
 import { useGridColumns } from "../../lib/grid-columns";
 import { DICTIONARIES, href, type Lang, STYLE_KEYS } from "../../lib/i18n";
 import { iconPagePath } from "../../lib/icon";
-import { PAGE_PANEL_ID, readPanelLayout } from "../../lib/panel-layout";
+import { PAGE_PANEL_ID } from "../../lib/panel-layout";
 // Хосты иконок — для ядра браузера: страницы и категории сетка грузит сама (lib/iconavo.ts).
 import "../../lib/iconavo";
 import { isStyle, type Style } from "../../lib/search";
@@ -110,18 +110,10 @@ export function IconGrid({
   const top = useRef<HTMLDivElement>(null);
   // Колонок (от ширины окна) и иконок на странице; до гидратации — 96, а строки с номерами страниц
   // невидимы (GridBar).
-  // Прототип «панель во всю высоту страницы» (?panel-layout=page, lib/panel-layout.ts): место панели —
-  // справа от всей страницы набора; в нынешнем варианте — рядом с сеткой.
+  // Панель — во всю высоту страницы (lib/panel-layout.ts): её место справа от всей страницы набора.
   const [slot, setSlot] = useState<HTMLElement | null>(null);
   useEffect(() => {
-    let storage: Storage | undefined;
-    try {
-      storage = window.localStorage;
-    } catch {
-      // Хранилище запрещено — нынешний вариант.
-    }
-    const mode = storage ? readPanelLayout(location.search, storage) : "grid";
-    setSlot(mode === "page" ? document.getElementById(PAGE_PANEL_ID) : null);
+    setSlot(document.getElementById(PAGE_PANEL_ID));
   }, []);
   const columns = useGridColumns();
   const size = columns === undefined ? undefined : pageSizeFor(columns);
