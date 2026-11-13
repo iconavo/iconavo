@@ -9,13 +9,16 @@ import {
   categoryCards,
   filterCards,
   getNames,
+  PAGE_SIZE,
   pageCount,
   pageOf,
   pageParam,
+  pageSizeFor,
   type SetCards,
   setCards,
   shownName,
 } from "../../lib/catalog";
+import { useGridColumns } from "../../lib/grid-columns";
 import { DICTIONARIES, href, type Lang, STYLE_KEYS } from "../../lib/i18n";
 import { iconPagePath } from "../../lib/icon";
 // Хосты иконок — для ядра браузера: страницы и категории сетка грузит сама (lib/iconavo.ts).
@@ -53,7 +56,8 @@ interface Loaded {
 
 /**
  * Сетка набора (шаги 2 и 3 фазы 4, вид — по макету Figma «Iconavo — Макеты»): карточки — база со своими
- * вариантами (ADR-0052), по 96 на страницу; поиск по набору, стиль, категория автора и номер страницы —
+ * вариантами (ADR-0052), около 96 на страницу целыми рядами (решение владельца 13 ноября 2026: число
+ * колонок — от ширины окна, с открытой панелью их столько же, lib/grid-columns.ts); поиск по набору, стиль, категория автора и номер страницы —
  * в адресе (?q=…&style=…&category=…&page=…). Первая страница всех карточек — в серверном HTML с
  * иконками, без мигания. Остальное — в браузере: список имён он один раз берёт у edge API (/collection)
  * и собирает карточки тем же правилом, что индекс поиска; поиск по набору отбирает их по имени
@@ -77,7 +81,7 @@ export function IconGrid({
   prefix: string;
   /** Название набора — в подсказке поля поиска. */
   setName: string;
-  /** Первая страница карточек: имена баз. */
+  /** Начало списка карточек — на первую страницу при любой ширине (FIRST_PAGE_MAX): имена баз. */
   first: string[];
   /** Карточек в наборе. */
   total: number;
@@ -102,6 +106,12 @@ export function IconGrid({
   const [loaded, setLoaded] = useState<Loaded>();
   const [failed, setFailed] = useState(false);
   const top = useRef<HTMLDivElement>(null);
+  // Колонок во всю ширину и иконок на странице; до замера в браузере — 96, а строки с номерами страниц
+  // невидимы (GridBar).
+  const grid = useGridColumns();
+  const size =
+    grid.columns === undefined ? undefined : pageSizeFor(grid.columns);
+  const pageSize = size ?? PAGE_SIZE;
 
   const list =
     loaded === undefined
@@ -126,10 +136,16 @@ export function IconGrid({
         : style === undefined
           ? (category?.size ?? total)
           : (styles.find((s) => s.style === style)?.size ?? total)),
+    pageSize,
   );
   const page = pageParam(query.get("page"), pages);
+  // Первая страница всех карточек — из серверного HTML, если её хватает на ряды этой ширины.
   const initial =
-    category === undefined && style === undefined && page === 1 && q === "";
+    category === undefined &&
+    style === undefined &&
+    page === 1 &&
+    q === "" &&
+    (pageSize <= first.length || first.length >= total);
 
   useEffect(() => {
     if (initial || loaded !== undefined || failed) return;
@@ -162,8 +178,9 @@ export function IconGrid({
     );
   };
   const shown = initial
-    ? first
-    : list && pageOf(list, page).map((card) => shownName(card, style));
+    ? first.slice(0, pageSize)
+    : list &&
+      pageOf(list, page, pageSize).map((card) => shownName(card, style));
   const pageHref = (p: number) =>
     hrefOf(withParams(query, { page: p === 1 ? undefined : String(p) }));
   const pagination = (label?: string) => (
@@ -238,8 +255,13 @@ export function IconGrid({
         ) : null}
       </div>
       <PanelLayout open={panel.icon !== undefined}>
+        <div
+          ref={grid.probe}
+          className="icon-grid grid-probe"
+          aria-hidden="true"
+        />
         <div className="grid-area" ref={selection.anchor}>
-          <GridBar lang={lang} top>
+          <GridBar lang={lang} top perPage={size}>
             {pagination(t.pagesTop)}
           </GridBar>
           {failed ? (
@@ -294,7 +316,9 @@ export function IconGrid({
               })}
             </ul>
           )}
-          <GridBar lang={lang}>{pagination()}</GridBar>
+          <GridBar lang={lang} perPage={size}>
+            {pagination()}
+          </GridBar>
         </div>
         {panel.icon === undefined ? null : (
           <IconPanel

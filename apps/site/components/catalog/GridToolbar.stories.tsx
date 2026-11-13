@@ -30,7 +30,7 @@ export const WithQuery: Story = {
 export const PagesBar: StoryObj<typeof GridBar> = {
   name: "GridBar",
   render: () => (
-    <GridBar lang="en" top>
+    <GridBar lang="en" top perPage={98}>
       <Pagination
         lang="en"
         page={3}

@@ -3,9 +3,9 @@ import { notFound } from "next/navigation";
 import {
   categoriesOf,
   categoryCards,
+  FIRST_PAGE_MAX,
   getReleases,
   getSet,
-  pageOf,
   setCards,
   setStyles,
   setTag,
@@ -48,7 +48,7 @@ export async function SetPage({
   );
   const names = visibleNames(set);
   const grouped = setCards(set);
-  const first = pageOf(grouped.cards, 1).map((card) => card.base);
+  const first = grouped.cards.slice(0, FIRST_PAGE_MAX).map((card) => card.base);
   const icons = await loadPageIcons(first.map((name) => `${prefix}:${name}`));
   return (
     <main id="content" className="page set-page">

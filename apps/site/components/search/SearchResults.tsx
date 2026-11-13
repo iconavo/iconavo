@@ -2,6 +2,7 @@
 
 import { type ReactNode, useEffect, useMemo, useRef, useState } from "react";
 import { API } from "../../lib/api";
+import { useGridColumns } from "../../lib/grid-columns";
 import { DICTIONARIES, type Lang, STYLE_KEYS } from "../../lib/i18n";
 import {
   allCommercial,
@@ -89,6 +90,8 @@ export function SearchResults({
   const { query, ready, hrefOf, navigate } = useUrlQuery();
   // Боковая панель иконки (шаг 4 фазы 4): открыта, пока в адресе есть icon.
   const panel = usePanel(query, navigate);
+  // С открытой панелью колонок выдачи столько же, сколько без неё (lib/grid-columns.ts).
+  const grid = useGridColumns();
   const selection = useSelection();
   const known = useMemo(
     () => ({ sets: sets.map((s) => s.id), licenses }),
@@ -479,6 +482,11 @@ export function SearchResults({
     phase.kind === "answer" && !phase.repeating ? phase.answer : undefined;
   return (
     <PanelLayout open={panel.icon !== undefined}>
+      <div
+        ref={grid.probe}
+        className="result-grid grid-probe"
+        aria-hidden="true"
+      />
       <section
         ref={top}
         className="search-results"

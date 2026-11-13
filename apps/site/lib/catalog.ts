@@ -317,8 +317,27 @@ export async function getReleases(
 
 const order = (a: string, b: string) => (a < b ? -1 : a > b ? 1 : 0);
 
-/** Иконок на странице сетки — как в поиске (ADR-0040). */
+/**
+ * Иконок на странице сетки — около 96, как в поиске (ADR-0040), но всегда целыми рядами (решение
+ * владельца 13 ноября 2026): сколько колонок, знает только браузер (lib/grid-columns.ts), и страница —
+ * столько полных рядов, сколько ближе всего к 96 (pageSizeFor). Пока колонки не посчитаны (серверный HTML
+ * и гидратация) — ровно 96.
+ */
 export const PAGE_SIZE = 96;
+
+/** Иконок на странице при columns колонках: целые ряды, ближе всего к PAGE_SIZE. */
+export function pageSizeFor(columns: number): number {
+  const cols = Math.max(1, Math.floor(columns));
+  return cols * Math.max(1, Math.round(PAGE_SIZE / cols));
+}
+
+/**
+ * Сколько первых карточек набора сервер отдаёт браузеру: первой страницы хватает при любой ширине до 32
+ * колонок, и браузер дополняет ряд без запроса к API.
+ */
+export const FIRST_PAGE_MAX = Math.max(
+  ...Array.from({ length: 32 }, (_, i) => pageSizeFor(i + 1)),
+);
 
 /**
  * Наборы в витрине: популярность ещё не измерить (аналитика — шаг 7), поэтому порядок задан списком;
@@ -523,13 +542,16 @@ export async function getSetStyles(prefix: string): Promise<Style[]> {
   return set === undefined ? [] : setStyles(set);
 }
 
-/** Страниц в списке имён. */
-export const pageCount = (total: number) =>
-  Math.max(1, Math.ceil(total / PAGE_SIZE));
+/** Страниц в списке имён при size на странице. */
+export const pageCount = (total: number, size = PAGE_SIZE) =>
+  Math.max(1, Math.ceil(total / size));
 
-/** Элементы страницы page (с 1): имена или карточки. */
-export const pageOf = <T>(items: readonly T[], page: number): T[] =>
-  items.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+/** Элементы страницы page (с 1) при size на странице: имена или карточки. */
+export const pageOf = <T>(
+  items: readonly T[],
+  page: number,
+  size = PAGE_SIZE,
+): T[] => items.slice((page - 1) * size, page * size);
 
 /** Номера для навигации: первая, соседние с текущей и последняя; между ними — пропуск «gap». */
 export function pageItems(page: number, pages: number): (number | "gap")[] {

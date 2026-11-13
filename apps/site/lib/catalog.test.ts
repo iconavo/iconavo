@@ -4,6 +4,7 @@ import {
   categoriesOf,
   categoryCards,
   categorySlug,
+  FIRST_PAGE_MAX,
   filterCards,
   groupSets,
   nameQuery,
@@ -13,6 +14,7 @@ import {
   pageItems,
   pageOf,
   pageParam,
+  pageSizeFor,
   parseCollection,
   parseReleases,
   parseSets,
@@ -115,6 +117,17 @@ describe("имена, категории и страницы", () => {
     ).toEqual(["a-b", "a-b-1"]);
   });
 
+  it("страница — целые ряды, ближе всего к 96 (решение владельца 13 ноября 2026)", () => {
+    expect([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 14].map(pageSizeFor)).toEqual([
+      96, 96, 96, 96, 95, 96, 98, 96, 99, 100, 98,
+    ]);
+    for (let columns = 1; columns <= 32; columns++) {
+      expect(pageSizeFor(columns) % columns).toBe(0);
+      expect(pageSizeFor(columns)).toBeLessThanOrEqual(FIRST_PAGE_MAX);
+    }
+    expect(FIRST_PAGE_MAX).toBe(108);
+  });
+
   it("страницы по 96, номера — первая, соседние и последняя", () => {
     const names = Array.from({ length: 200 }, (_, i) => `n${i}`);
     expect(PAGE_SIZE).toBe(96);
@@ -130,6 +143,8 @@ describe("имена, категории и страницы", () => {
       "n198",
       "n199",
     ]);
+    expect(pageCount(2029, 98)).toBe(21);
+    expect(pageOf(names, 2, 98)).toEqual(names.slice(98, 196));
     expect(pageItems(1, 1)).toEqual([1]);
     expect(pageItems(1, 3)).toEqual([1, 2, 3]);
     expect(pageItems(10, 165)).toEqual([1, "gap", 9, 10, 11, "gap", 165]);

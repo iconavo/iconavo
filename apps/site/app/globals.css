@@ -2030,6 +2030,11 @@
     gap: 1rem;
     min-height: 1.75rem;
   }
+  /* Пока браузер не посчитал колонки (lib/grid-columns.ts), число на странице и номера страниц ещё не
+     известны: строка держит место, но не видна — неверные цифры не мелькают. */
+  .grid-bar[data-pending] {
+    visibility: hidden;
+  }
   .per-page {
     display: inline-flex;
     flex: none;
@@ -2325,10 +2330,33 @@
       gap: 1.75rem;
       align-items: start;
     }
-    /* С открытой панелью — 6 колонок по 116 px, как в кадре «Selected Icon + Opened Panel». */
-    .with-panel[data-panel] .icon-grid {
-      grid-template-columns: repeat(auto-fill, minmax(7.125rem, 1fr));
+    /*
+     * С открытой панелью — столько же колонок, сколько без неё (решение владельца 13 ноября 2026, вместо
+     * кадра «Selected Icon + Opened Panel» с 6 колонками по 116 px): карточки сужаются и сдвигаются, но
+     * не перескакивают в другие ряды. Число — от пробника во всю ширину (lib/grid-columns.ts).
+     */
+    .with-panel[data-panel][data-cols]
+      :is(.icon-grid, .result-grid):not(.grid-probe) {
+      grid-template-columns: repeat(var(--cols), minmax(0, 1fr));
     }
+  }
+  /* Раскладка с панелью — точка отсчёта пробника колонок. */
+  .with-panel {
+    position: relative;
+  }
+  /*
+   * Пробник колонок (lib/grid-columns.ts): пустая сетка с правилами настоящей во всю ширину раскладки,
+   * открыта панель или нет. Сколько у него колонок, столько держит и сетка с открытой панелью. Невидим и
+   * места не занимает.
+   */
+  .grid-probe {
+    position: absolute;
+    inset-inline: 0;
+    top: 0;
+    height: 0;
+    margin: 0;
+    visibility: hidden;
+    pointer-events: none;
   }
   .grid-area {
     display: grid;
