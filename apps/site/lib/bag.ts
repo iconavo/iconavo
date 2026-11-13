@@ -37,6 +37,17 @@ export function toggled(
   return { bag: [...bag, name], change: "added" };
 }
 
+/**
+ * Вернуть очищенное («Undo» в рюкзаке): прежние имена в прежнем порядке, за ними — то, что успели
+ * положить после очистки (в другой вкладке); без повторов, не больше лимита.
+ */
+export function restored(
+  bag: readonly string[],
+  previous: readonly string[],
+): readonly string[] {
+  return [...new Set([...previous, ...bag])].slice(0, BAG_LIMIT);
+}
+
 let current: readonly string[] | undefined;
 const listeners = new Set<() => void>();
 
@@ -73,6 +84,9 @@ export const bagStore = {
   },
   clear() {
     write(EMPTY);
+  },
+  restore(previous: readonly string[]) {
+    write(restored(bagStore.get(), previous));
   },
   subscribe(listener: () => void): () => void {
     listeners.add(listener);

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { BAG_LIMIT, parseBag, toggled } from "./bag";
+import { BAG_LIMIT, parseBag, restored, toggled } from "./bag";
 
 describe("сумка (шаг 5 фазы 4)", () => {
   it("из хранилища — только имена по правилу, без повторов, не больше лимита", () => {
@@ -26,5 +26,19 @@ describe("сумка (шаг 5 фазы 4)", () => {
     const full = Array.from({ length: BAG_LIMIT }, (_, i) => `set:i${i}`);
     expect(toggled(full, "lucide:house").change).toBe("full");
     expect(toggled(full, "set:i0").change).toBe("removed");
+  });
+
+  it("Undo после Clear: прежний порядок, за ним положенное после, без повторов, не больше лимита", () => {
+    expect(restored([], ["lucide:house", "ph:x"])).toEqual([
+      "lucide:house",
+      "ph:x",
+    ]);
+    expect(restored(["ph:y", "ph:x"], ["lucide:house", "ph:x"])).toEqual([
+      "lucide:house",
+      "ph:x",
+      "ph:y",
+    ]);
+    const full = Array.from({ length: BAG_LIMIT }, (_, i) => `set:i${i}`);
+    expect(restored(["lucide:house"], full)).toEqual(full);
   });
 });

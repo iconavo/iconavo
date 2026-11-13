@@ -3347,7 +3347,10 @@
     align-content: start;
     gap: 1rem;
     min-height: 0;
-    overflow-y: auto;
+    /* Место под полосу — overflow scroll вместе со scrollbar-gutter, как у страницы: по одному
+       scrollbar-gutter WebKit места не оставляет (в Safari список стоял бы на 12 px правее), по одному
+       overflow scroll — Chrome со спрятанными полосами. */
+    overflow-y: scroll;
     padding: 1rem calc(1.25rem - var(--scrollbar-lane)) 1rem 1.25rem;
     scrollbar-gutter: stable;
   }
@@ -3356,6 +3359,33 @@
     color: var(--color-text-secondary);
     font-size: var(--text-body-xs);
     line-height: var(--text-body-xs--line-height);
+  }
+  /* Строка счётчика с Clear справа (решение владельца 13 ноября 2026, в макете кнопки нет). Высота строки —
+     по тексту, 16 px: зона нажатия Clear и «Undo» шире букв за счёт отрицательных полей. */
+  .bag-picked-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+  }
+  .bag-clear,
+  .bag-undo {
+    margin: -0.25rem;
+    padding: 0.25rem;
+    border: 0;
+    background: none;
+    color: var(--color-text-primary);
+    font: inherit;
+    font-weight: 500;
+    cursor: pointer;
+  }
+  .bag-clear {
+    font-size: var(--text-body-xs);
+    line-height: var(--text-body-xs--line-height);
+  }
+  .bag-clear:hover,
+  .bag-undo:hover {
+    text-decoration: underline;
   }
   .bag-list {
     display: grid;
@@ -3540,10 +3570,15 @@
     .bag-item {
       min-height: 2.5rem;
     }
+    /* Как в кадре: кнопка 40 × 40 — внутри строки, значок посередине. */
     .bag-item-remove {
       width: 2.5rem;
       height: 2.5rem;
-      margin-inline-end: -0.625rem;
+    }
+    /* Clear — под палец: зона нажатия 40 px в высоту, строка счётчика остаётся 16 px. */
+    .bag-clear {
+      margin-block: -0.75rem;
+      padding-block: 0.75rem;
     }
     .bag-panel-section {
       padding: 1rem 1rem 1.25rem;

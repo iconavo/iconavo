@@ -2,6 +2,7 @@
 
 import { Icon } from "@iconavo-ui/react";
 import { useEffect, useId, useRef, useState } from "react";
+import { flushSync } from "react-dom";
 import { track } from "../../lib/analytics";
 import { bagPanelStore, bagStore, useBag, useBagPanel } from "../../lib/bag";
 import { type BagLook, SPRITE_NAME, ZIP_NAME } from "../../lib/bag-files";
@@ -26,9 +27,11 @@ const DRAG = 24;
  * на компьютере — панель справа во всю высоту поверх страницы, немодальная: сетку рядом можно листать и
  * класть иконки дальше; на телефоне — шторка почти на весь экран с затемнением. Внутри — «N icons
  * picked», список с ✕, внизу Color, Stroke Width, «Download SVG without fill color» (галочка — цвет
- * не вшивается в файлы, остаётся currentColor), Download ZIP и Download SVG Sprite. Кнопки «Очистить» в
- * макете нет. Закрывают ✕, Esc и кнопка Bag; на телефоне ещё протяжка ручки вниз и тап по затемнению.
- * Фокус — на заголовок при открытии и обратно на кнопку при закрытии.
+ * не вшивается в файлы, остаётся currentColor), Download ZIP и Download SVG Sprite. Clear — справа в строке
+ * счётчика (в макете её нет; решение владельца 13 ноября 2026): рюкзак пустеет сразу, а пока панель
+ * открыта, на месте списка — «Backpack cleared · Undo». Закрывают ✕, Esc и кнопка Bag; на телефоне ещё
+ * протяжка ручки вниз и тап по затемнению. Фокус — на заголовок при открытии и обратно на кнопку при
+ * закрытии.
  */
 export function BagPanel({ lang }: { lang: Lang }) {
   const t = DICTIONARIES[lang];
@@ -44,6 +47,11 @@ export function BagPanel({ lang }: { lang: Lang }) {
   const [applies, setApplies] = useState({ color: false, stroke: false });
   const [busy, setBusy] = useState(false);
   const [failed, setFailed] = useState(false);
+  // Очищенный рюкзак — для «Undo»: предложение живёт, пока панель открыта и рюкзак пуст.
+  const [cleared, setCleared] = useState<readonly string[]>();
+  const clearedId = useId();
+  const clearButton = useRef<HTMLButtonElement>(null);
+  const undoButton = useRef<HTMLButtonElement>(null);
 
   // Открыть и закрыть: на компьютере — немодально, на телефоне — модально, с затемнением. Пока панель
   // открыта, у <html> — data-bag-panel: полоса прокрутки страницы спрятана, и панель встаёт вплотную к
@@ -84,6 +92,28 @@ export function BagPanel({ lang }: { lang: Lang }) {
     document.addEventListener("keydown", onKey, true);
     return () => document.removeEventListener("keydown", onKey, true);
   }, [open]);
+
+  useEffect(() => {
+    if (!open || bag.length > 0) setCleared(undefined);
+  }, [open, bag.length]);
+
+  // Кнопки, на которой был фокус, после Clear и Undo больше нет: фокус — на «Undo», после возврата —
+  // снова на Clear. flushSync — чтобы новая кнопка была на странице до фокуса.
+  function clear() {
+    const previous = bag;
+    flushSync(() => {
+      setCleared(previous);
+      bagStore.clear();
+    });
+    undoButton.current?.focus();
+  }
+
+  function undo() {
+    if (cleared === undefined) return;
+    const previous = cleared;
+    flushSync(() => bagStore.restore(previous));
+    clearButton.current?.focus();
+  }
 
   // Что применимо к иконкам рюкзака: у цветных наборов нет цвета, толщина — только у линий.
   useEffect(() => {
@@ -193,18 +223,44 @@ export function BagPanel({ lang }: { lang: Lang }) {
         {bag.length === 0 ? (
           <div className="bag-empty">
             <Icon icon="material-symbols:toc" className="bag-empty-icon" />
-            <p className="bag-empty-text">{t.bagEmpty}</p>
+            {cleared === undefined ? (
+              <p className="bag-empty-text">{t.bagEmpty}</p>
+            ) : (
+              <p className="bag-empty-text">
+                <span id={clearedId}>{t.bagCleared}</span>
+                <span aria-hidden="true"> · </span>
+                <button
+                  ref={undoButton}
+                  type="button"
+                  className="bag-undo"
+                  aria-describedby={clearedId}
+                  onClick={undo}
+                >
+                  {t.bagUndo}
+                </button>
+              </p>
+            )}
             <p className="bag-empty-hint">{t.bagEmptyHint}</p>
           </div>
         ) : (
           <>
             <div className="bag-panel-list">
-              <p className="bag-picked">
-                {t.bagPicked.replace(
-                  "{count}",
-                  countOf(lang, bag.length, ICON_FORMS[lang]),
-                )}
-              </p>
+              <div className="bag-picked-row">
+                <p className="bag-picked">
+                  {t.bagPicked.replace(
+                    "{count}",
+                    countOf(lang, bag.length, ICON_FORMS[lang]),
+                  )}
+                </p>
+                <button
+                  ref={clearButton}
+                  type="button"
+                  className="bag-clear"
+                  onClick={clear}
+                >
+                  {t.bagClear}
+                </button>
+              </div>
               <ul className="bag-list">
                 {bag.map((name) => (
                   <li key={name} className="bag-item" data-icon={name}>
