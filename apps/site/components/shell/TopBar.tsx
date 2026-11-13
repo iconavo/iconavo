@@ -1,6 +1,6 @@
 import { Icon } from "@iconavo-ui/react";
 import { DICTIONARIES, type Lang } from "../../lib/i18n";
-import { BagMenu } from "../BagMenu";
+import { BagButton } from "../bag/BagButton";
 import { LanguageSwitch } from "../LanguageSwitch";
 import { PageLink } from "../PageLink";
 import { Logo } from "./Logo";
@@ -52,7 +52,7 @@ export function TopBar({
           <span>{t.topSearch}</span>
         </PageLink>
         <span className="topbar-divider topbar-wide" aria-hidden="true" />
-        <BagMenu lang={lang} variant="pill" />
+        <BagButton lang={lang} variant="pill" />
         <span className="topbar-divider topbar-wide" aria-hidden="true" />
         {languageSwitch ? (
           <LanguageSwitch variant="flag" className="top-circle topbar-wide" />

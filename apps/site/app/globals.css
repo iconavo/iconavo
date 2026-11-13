@@ -976,6 +976,11 @@
       font-size: 1.25rem;
       opacity: 1;
     }
+    .topbar .bag-count {
+      position: absolute;
+      top: -0.25rem;
+      right: -0.25rem;
+    }
   }
   @media (max-width: 63.98rem) and (prefers-reduced-motion: no-preference) {
     .sidebar {
@@ -2284,7 +2289,7 @@
 
   /*
    * Карточка сетки по макету (Icon Card) — ссылка на страницу иконки; обычный щелчок открывает панель
-   * (шаг 4 фазы 4). Наведение и открытая в панели — bg/cardHover.
+   * (шаг 4 фазы 4). Наведение — bg/hover, открытая в панели — bg/cardHover (варианты Icon Card).
    */
   .icon-card-link {
     position: relative;
@@ -2301,7 +2306,9 @@
     color: var(--color-text-primary);
     text-decoration: none;
   }
-  .icon-card-link:hover,
+  .icon-card-link:hover {
+    background: var(--color-bg-hover);
+  }
   .icon-card-link[aria-current="true"] {
     background: var(--color-bg-card-hover);
   }
@@ -3098,181 +3105,459 @@
     color: var(--color-text-secondary);
     font-size: 0.75rem;
   }
-  .icon-setting {
+  /*
+   * Выделение и рюкзак по макету (редизайн, шаг 5; сценарии «Выделение» и «Рюкзак» Figma). Кнопки
+   * карточки при наведении (Icon Card, State=Hover): слева «в рюкзак», справа чекбокс — 20 × 20 в 8 px от
+   * углов, полупрозрачные; отмеченная карточка держит чекбокс (link/unicode). На экранах уже 768 px их
+   * нет — выделения на телефоне нет (гайд макета).
+   */
+  .icon-cell,
+  .result-cell {
+    position: relative;
+  }
+  .card-tool {
+    position: absolute;
+    top: 0.5rem;
+    z-index: 1;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    width: 1.25rem;
+    height: 1.25rem;
+    padding: 0;
+    border: 0;
+    border-radius: var(--radius-xs);
+    background: none;
+    color: var(--color-bg-inverse);
+    font-size: 1.25rem;
+    opacity: 0.5;
+    cursor: pointer;
+  }
+  .card-bag {
+    left: 0.5rem;
+  }
+  .card-check {
+    right: 0.5rem;
+  }
+  .card-tool:hover,
+  .card-tool:focus-visible,
+  .card-check:has(:focus-visible) {
+    opacity: 1;
+  }
+  .card-tool:focus-visible,
+  .card-check:has(:focus-visible) {
+    outline: 2px solid var(--color-selection-bg);
+  }
+  .card-tool-on {
+    opacity: 1;
+  }
+  .card-check.card-tool-on {
+    color: var(--color-link-unicode);
+  }
+  .card-tool-icon {
+    font-size: 1.25rem;
+  }
+  /* Чекбокс — родной, невидимый поверх значка: щелчок, Пробел и экранный диктор работают сами. */
+  .card-check-input {
+    position: absolute;
+    inset: 0;
+    margin: 0;
+    opacity: 0;
+    cursor: pointer;
+  }
+  .card-check-input:disabled {
+    cursor: not-allowed;
+  }
+  @media (min-width: 48rem) {
+    .icon-cell:focus-within > .card-tool,
+    .result-cell:focus-within > .card-tool,
+    [data-picked] > .card-check {
+      display: inline-flex;
+    }
+  }
+  @media (min-width: 48rem) and (hover: hover) {
+    .icon-cell:hover > .card-tool,
+    .result-cell:hover > .card-tool {
+      display: inline-flex;
+    }
+  }
+  /* Наведение — bg/hover; отмеченная и открытая в панели — bg/cardHover (варианты Icon Card). */
+  .icon-cell:hover > .icon-card-link,
+  .result-cell:hover > .icon-card-link {
+    background: var(--color-bg-hover);
+  }
+  .icon-cell[data-picked] > .icon-card-link,
+  .result-cell[data-picked] > .icon-card-link {
+    background: var(--color-bg-card-hover);
+  }
+
+  /*
+   * Строка выбора (Selection Mode / Selected): Download N Icons, Cancel Selection и «N/100» над поиском,
+   * до строки поиска 28 px. Прилипает к верху окна; поля сверху и снизу — за счёт отрицательных отступов:
+   * в потоке строка занимает свои 42 px, как в кадре.
+   */
+  .select-bar {
+    position: sticky;
+    top: 0;
+    z-index: 5;
     display: flex;
     flex-wrap: wrap;
     align-items: center;
-    gap: 0.5rem;
-    font-size: 0.875rem;
+    justify-content: space-between;
+    gap: 0.75rem;
+    margin-block: -0.5rem 1.25rem;
+    padding-block: 0.5rem;
+    background: var(--color-bg-page);
+    font-size: var(--text-body-base);
+    line-height: var(--text-body-base--line-height);
   }
-  .icon-setting > label:first-child,
-  .icon-setting-label {
-    min-inline-size: 7rem;
+  /* На странице набора отступ до строки поиска — зазор сетки страницы (28 px). */
+  .set-browser > .select-bar {
+    margin-bottom: -0.5rem;
   }
-  .icon-setting input[type="range"] {
-    flex: 1;
-    min-inline-size: 6rem;
-    accent-color: var(--color-link-unicode);
+  .select-actions {
+    display: flex;
+    gap: 0.75rem;
   }
-  .icon-setting output {
-    min-inline-size: 3.5rem;
-    font-variant-numeric: tabular-nums;
+  .select-cancel {
+    border-color: var(--color-text-danger);
+    background: none;
+    color: var(--color-text-danger);
   }
-  fieldset.icon-setting {
-    min-inline-size: 0;
+  .select-cancel:hover {
+    background: var(--color-bg-hover);
+  }
+  .page .select-count {
     margin: 0;
-    padding: 0;
-    border: 0;
-  }
-  /* Легенда группы — в строку с кнопками, как подпись поля. */
-  fieldset.icon-setting > legend {
-    float: inline-start;
-    margin-inline-end: 0.5rem;
-    padding: 0;
-  }
-  .icon-setting-buttons {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.25rem;
-  }
-  .icon-setting-toggle {
-    padding-inline: 0.625rem;
-  }
-  .icon-setting-note {
-    color: var(--color-text-secondary);
-    font-size: 0.8rem;
-    margin-block: 0.25rem;
-  }
-  /* Скачивание в меню сумки (шаг 5 фазы 4, ADR-0042). */
-  .icon-download {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.5rem;
-    margin-block-end: 0.5rem;
+    font-size: var(--text-body-base);
+    line-height: var(--text-body-base--line-height);
   }
 
-  /* Сумка (шаг 5 фазы 4, ADR-0042): кнопка с числом в шапке и немодальное меню; режим «Выбрать
-     несколько» над сетками. Число — поверх кнопки: появляется после гидратации и шапку не сдвигает. */
+  /*
+   * Кнопка рюкзака (Bag в шапке): число — лаймовая таблетка справа от слова; у квадратной кнопки
+   * (телефон, подвал) — кружок 16 px в углу, на 4 px за краем (Mobile App Bar, Bag Count).
+   */
   .bag-button {
     position: relative;
   }
   .bag-count {
-    position: absolute;
-    inset-block-start: 0;
-    inset-inline-end: 0;
-    min-inline-size: 1.125rem;
-    padding-inline: 0.25rem;
-    border-radius: 999px;
-    background: var(--color-status-badge);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 1rem;
+    height: 1rem;
+    padding-inline: 0.1875rem;
+    border-radius: 9999px;
+    background: var(--color-accent-lemon);
     color: var(--color-text-on-accent);
-    font-size: 0.7rem;
-    font-weight: 600;
-    line-height: 1.125rem;
-    text-align: center;
+    font-size: var(--text-body-xs);
+    font-variant-numeric: tabular-nums;
+    line-height: var(--text-body-xs--line-height);
   }
-  .bag-menu {
-    display: grid;
-    gap: 0.5rem;
-    inline-size: min(24rem, calc(100vw - 1rem));
-    max-block-size: min(36rem, calc(100vh - 5rem));
-    overflow-y: auto;
+  .bag-square .bag-count {
+    position: absolute;
+    top: -0.25rem;
+    right: -0.25rem;
   }
-  .bag-head {
+
+  /*
+   * Панель рюкзака (кадр Backpack): справа во всю высоту поверх страницы, 320 px, bg/surface; сверху —
+   * «Backpack» и ✕, список прокручивается, настройки и строки скачивания закреплены внизу. Немодальная.
+   */
+  .bag-panel {
+    position: fixed;
+    inset: 0 0 0 auto;
+    z-index: 60;
+    width: 20rem;
+    max-width: 100%;
+    height: 100dvh;
+    max-height: none;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    border: 0;
+    background: var(--color-bg-surface);
+    color: var(--color-text-primary);
+    font-size: var(--text-body-base);
+    line-height: var(--text-body-base--line-height);
+  }
+  .bag-panel::backdrop {
+    background: var(--color-bg-overlay);
+  }
+  .bag-panel-body {
     display: flex;
+    flex-direction: column;
+    height: 100%;
+  }
+  .bag-grabber {
+    display: none;
+  }
+  .bag-panel-head {
+    display: flex;
+    flex: none;
     align-items: center;
     justify-content: space-between;
+    gap: 0.625rem;
+    padding: 1rem 1.25rem;
+    border-bottom: 1px solid var(--color-border-secondary-20);
+  }
+  .bag-panel-title {
+    display: flex;
+    align-items: center;
     gap: 0.5rem;
+    margin: 0;
+    font-size: var(--text-body-base);
+    font-weight: 500;
+    line-height: var(--text-body-base--line-height);
+    outline: none;
   }
-  .bag-title {
+  .bag-panel-title-icon {
     font-size: 1rem;
-    font-weight: 600;
   }
-  .bag-empty {
+  .bag-panel-close,
+  .bag-item-remove {
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--color-text-primary);
+    font-size: 1.25rem;
+    cursor: pointer;
+  }
+  .bag-panel-list {
+    display: grid;
+    flex: 1;
+    align-content: start;
+    gap: 1rem;
+    min-height: 0;
+    overflow-y: auto;
+    padding: 1rem calc(1.25rem - var(--scrollbar-lane)) 1rem 1.25rem;
+    scrollbar-gutter: stable;
+  }
+  .bag-picked {
+    margin: 0;
     color: var(--color-text-secondary);
-    font-size: 0.875rem;
+    font-size: var(--text-body-xs);
+    line-height: var(--text-body-xs--line-height);
   }
   .bag-list {
     display: grid;
-    gap: 0.125rem;
-    max-block-size: 14rem;
-    overflow-y: auto;
-    scrollbar-gutter: stable;
+    gap: 1rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
   }
-  .bag-list li {
+  .bag-item {
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
+  }
+  .bag-item-icon {
+    flex: none;
+    margin-inline-end: 0.125rem;
+    font-size: 1.25rem;
+  }
+  .bag-item-name {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .bag-panel-section {
+    display: grid;
+    flex: none;
+    gap: 1.25rem;
+    padding: 1rem 1.25rem 1.25rem;
+    border-top: 1px solid var(--color-border-secondary-20);
+  }
+  .bag-options .panel-field:has(.panel-stroke) {
+    gap: 0.5rem;
+  }
+  .bag-without-fill {
+    position: relative;
     display: flex;
     align-items: center;
     gap: 0.5rem;
+    color: var(--color-text-secondary);
+    cursor: pointer;
   }
-  .bag-name {
+  .bag-without-fill > span {
     flex: 1;
-    font-size: 0.8rem;
-    overflow-wrap: anywhere;
   }
-  .bag-svg {
+  .bag-check-input {
+    position: absolute;
+    inset: 0;
+    margin: 0;
+    opacity: 0;
+    cursor: pointer;
+  }
+  .bag-check-icon {
     flex: none;
+    color: var(--color-text-primary);
+    font-size: 1.5rem;
+  }
+  .bag-without-fill:has(:checked) .bag-check-icon {
+    color: var(--color-link-unicode);
+  }
+  .bag-without-fill:has(:focus-visible) .bag-check-icon {
+    outline: 2px solid var(--color-selection-bg);
+    border-radius: var(--radius-xs);
+  }
+  .bag-downloads {
+    gap: 1rem;
+    padding-bottom: 1.5rem;
+  }
+  .bag-download {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--color-text-primary);
+    font: inherit;
+    font-weight: 500;
+    text-align: start;
+    cursor: pointer;
+  }
+  .bag-download:hover {
+    text-decoration: underline;
+  }
+  .bag-download[aria-disabled="true"] {
+    opacity: 0.5;
+    cursor: default;
+  }
+  .bag-download-icon {
+    flex: none;
+    font-size: 1rem;
+    opacity: 0.5;
+  }
+  .bag-failed {
+    margin: 0;
+    color: var(--color-text-danger);
+    font-size: var(--text-body-xs);
+  }
+  /* Пустой рюкзак (кадр Backpack-Empty): значок и «Backpack is empty…» посередине. */
+  .bag-empty {
+    display: grid;
+    justify-items: center;
+    gap: 1rem;
+    padding: 2.25rem 1.25rem;
+    color: var(--color-text-secondary);
+    text-align: center;
+  }
+  .bag-empty-icon {
+    color: var(--color-text-primary);
     font-size: 1.25rem;
   }
-  .bag-remove {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    min-block-size: 2rem;
-    min-inline-size: 2rem;
-    border-radius: 0.25rem;
-    color: var(--color-text-secondary);
-    cursor: pointer;
-  }
-  .bag-remove:hover {
-    color: var(--color-text-primary);
-    background: var(--color-bg-surface);
-  }
-  .select-bar {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 0.75rem;
+  .bag-empty-text,
+  .bag-empty-hint {
     margin: 0;
   }
-  /* «Select several» в строке над сеткой — без полей абзаца страницы (.page p): строка не выше кнопки. */
-  .grid-bar .select-bar {
-    margin: 0;
-  }
-  .select-status {
-    color: var(--color-text-secondary);
-    font-size: var(--text-body-sm);
-  }
-  button.icon-card-pick {
-    border: 0;
-    font: inherit;
-    cursor: pointer;
-  }
-  button.icon-card-pick[aria-pressed="true"] {
-    background: var(--color-bg-card-hover);
-  }
-  .pick-box {
-    position: absolute;
-    top: 0.5rem;
-    right: 0.5rem;
+  .bag-empty-hint {
     display: none;
-    align-items: center;
-    justify-content: center;
-    width: 1rem;
-    height: 1rem;
-    border: 1px solid var(--color-border-primary);
-    border-radius: var(--radius-xs);
-    color: transparent;
-    font-size: 0.75rem;
   }
-  button.icon-card-pick:hover .pick-box,
-  button.icon-card-pick:focus-visible .pick-box,
-  button.icon-card-pick[aria-pressed="true"] .pick-box {
-    display: inline-flex;
+  @media (prefers-reduced-motion: no-preference) {
+    .bag-panel[open] {
+      animation: bag-panel-in var(--motion-panel-in) var(--motion-ease-out);
+    }
+    .bag-panel[open]::backdrop {
+      animation: fade-in var(--motion-fade);
+    }
   }
-  button.icon-card-pick[aria-pressed="true"] .pick-box {
-    border-color: var(--color-link-unicode);
-    background: var(--color-link-unicode);
-    color: var(--color-text-inverse);
+  @keyframes bag-panel-in {
+    from {
+      translate: 100% 0;
+    }
   }
+
+  /*
+   * Телефон (кадры «Backpack / Mobile — Opened» и «— Empty»): шторка снизу почти на весь экран, сверху
+   * 44 px страницы под затемнением; ручка, ✕ 40 × 40, строки скачивания по 44 px. Пустая — по высоте
+   * содержимого, с подсказкой про «+» в панели иконки.
+   */
+  @media (max-width: 63.98rem) {
+    .bag-panel {
+      inset: auto 0 0;
+      width: 100%;
+      height: calc(100dvh - 2.75rem);
+      border-radius: 1rem 1rem 0 0;
+    }
+    .bag-panel[data-empty] {
+      height: auto;
+    }
+    .bag-grabber {
+      display: flex;
+      flex: none;
+      justify-content: center;
+      width: 100%;
+      padding: 0.5rem 0 0.25rem;
+      border: 0;
+      background: none;
+      cursor: grab;
+      touch-action: none;
+    }
+    .bag-grabber-bar {
+      width: 2.25rem;
+      height: 0.25rem;
+      border-radius: 9999px;
+      background: var(--color-border-primary);
+    }
+    .bag-panel-head {
+      padding: 0.25rem 0.5rem 0.5rem 1rem;
+    }
+    .bag-panel-close {
+      width: 2.5rem;
+      height: 2.5rem;
+    }
+    .bag-panel-list {
+      padding: 1rem;
+    }
+    /* Строки по 40 px: ✕ — кнопка 40 × 40 под палец (гайд макета). */
+    .bag-list {
+      gap: 0;
+    }
+    .bag-item {
+      min-height: 2.5rem;
+    }
+    .bag-item-remove {
+      width: 2.5rem;
+      height: 2.5rem;
+      margin-inline-end: -0.625rem;
+    }
+    .bag-panel-section {
+      padding: 1rem 1rem 1.25rem;
+    }
+    .bag-downloads {
+      gap: 0;
+      padding-top: 0.25rem;
+    }
+    .bag-download {
+      min-height: 2.75rem;
+    }
+    .bag-empty {
+      gap: 0.5rem;
+      padding: 1.5rem 1rem 2.5rem;
+    }
+    .bag-empty-icon {
+      margin-bottom: 0.5rem;
+    }
+    .bag-empty-hint {
+      display: block;
+      font-size: var(--text-body-sm);
+      line-height: var(--text-body-sm--line-height);
+    }
+    @media (prefers-reduced-motion: no-preference) {
+      .bag-panel[open] {
+        animation: ip-sheet-in var(--motion-sheet-in) var(--motion-ease-out);
+      }
+    }
+  }
+
   /*
    * Страница иконки по макету Figma «Страница иконки» (редизайн, шаг 4): кадры «Icon Page / Similar Icons»,
    * «Code», «In Context», «Copy Menu», «Loading», «Removed Icon» и их телефонные пары. Первый экран — две

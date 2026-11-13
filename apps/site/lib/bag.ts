@@ -93,3 +93,42 @@ export const bagStore = {
 export function useBag(): readonly string[] {
   return useSyncExternalStore(bagStore.subscribe, bagStore.get, () => EMPTY);
 }
+
+// Панель рюкзака (редизайн, шаг 5; сценарий «Рюкзак» макета): одна на страницу, её открывают кнопки Bag
+// в шапке и подвале. Открыта ли — только в памяти вкладки: после перезагрузки панель закрыта.
+let panelOpen = false;
+let panelOpener: HTMLElement | null = null;
+const panelListeners = new Set<() => void>();
+
+export const bagPanelStore = {
+  get: (): boolean => panelOpen,
+  /**
+   * Открыть или закрыть; opener — кнопка, которой вернуть фокус после закрытия. Передаётся явно: Safari
+   * при щелчке не даёт кнопке фокус, и document.activeElement её бы не знал.
+   */
+  set(open: boolean, opener?: HTMLElement) {
+    if (opener !== undefined) panelOpener = opener;
+    if (open === panelOpen) return;
+    panelOpen = open;
+    for (const listener of panelListeners) listener();
+  },
+  /** Кнопка, которая открыла панель, — забирается один раз. */
+  takeOpener(): HTMLElement | null {
+    const el = panelOpener;
+    panelOpener = null;
+    return el;
+  },
+  subscribe(listener: () => void): () => void {
+    panelListeners.add(listener);
+    return () => panelListeners.delete(listener);
+  },
+};
+
+/** Открыта ли панель рюкзака; на сервере — закрыта. */
+export function useBagPanel(): boolean {
+  return useSyncExternalStore(
+    bagPanelStore.subscribe,
+    bagPanelStore.get,
+    () => false,
+  );
+}

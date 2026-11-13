@@ -32,6 +32,7 @@ export const SITE_ICONS = [
   "material-symbols:close",
   "material-symbols:content-copy",
   "material-symbols:download",
+  "material-symbols:folder-zip",
   "material-symbols:edit",
   "material-symbols:grid-on",
   "material-symbols:grid-view",
@@ -51,6 +52,7 @@ export const SITE_ICONS = [
   "material-symbols:report",
   "material-symbols:search",
   "material-symbols:settings",
+  "material-symbols:toc",
   "material-symbols:wb-sunny",
 ] as const;
 

@@ -16,7 +16,6 @@ import {
   setCards,
   shownName,
 } from "../../lib/catalog";
-import { cn } from "../../lib/cn";
 import { DICTIONARIES, href, type Lang, STYLE_KEYS } from "../../lib/i18n";
 import { iconPagePath } from "../../lib/icon";
 // Хосты иконок — для ядра браузера: страницы и категории сетка грузит сама (lib/iconavo.ts).
@@ -30,7 +29,7 @@ import { Chips } from "./Chips";
 import { GridBar } from "./GridBar";
 import { GridToolbar } from "./GridToolbar";
 import { Pagination } from "./Pagination";
-import { SelectToggle, useSelect } from "./SelectToggle";
+import { CardTools, SelectionBar, useSelection } from "./Selection";
 
 /** Категория для сетки: адрес, название, число карточек и оно же строкой на языке страницы. */
 export interface GridCategory {
@@ -60,8 +59,9 @@ interface Loaded {
  * и собирает карточки тем же правилом, что индекс поиска; поиск по набору отбирает их по имени
  * (filterCards); иконки грузит ядро пакета, пачками; пока грузятся — скелетоны. Карточка показывает
  * главное имя выбранного стиля, без стиля — как у автора. Карточка — ссылка на страницу иконки: обычный
- * щелчок открывает боковую панель, с Ctrl — страницу в новой вкладке (шаг 4 фазы 4). В режиме «Выбрать
- * несколько» карточка — кнопка: щелчок кладёт иконку в сумку или убирает (шаг 5 фазы 4).
+ * щелчок открывает боковую панель, с Ctrl — страницу в новой вкладке (шаг 4 фазы 4). При наведении у
+ * карточки — кнопка «в рюкзак» и чекбокс выбора; выбранные скачиваются строкой над поиском (сценарий
+ * «Выделение» макета, components/catalog/Selection.tsx).
  */
 export function IconGrid({
   lang,
@@ -90,7 +90,7 @@ export function IconGrid({
   const t = DICTIONARIES[lang];
   const { query, hrefOf, navigate } = useUrlQuery();
   const panel = usePanel(query, navigate);
-  const select = useSelect();
+  const selection = useSelection();
   const slug = query.get("category");
   const category = categories.find((c) => c.slug === slug);
   const styleParam = query.get("style");
@@ -179,6 +179,7 @@ export function IconGrid({
 
   return (
     <div className="set-browser" ref={top}>
+      <SelectionBar lang={lang} selection={selection} />
       <GridToolbar lang={lang} setName={setName} query={q} onQuery={search} />
       <div className="grid-filters">
         {styles.length > 1 ? (
@@ -237,12 +238,8 @@ export function IconGrid({
         ) : null}
       </div>
       <PanelLayout open={panel.icon !== undefined}>
-        <div className="grid-area">
-          <GridBar
-            lang={lang}
-            top
-            start={<SelectToggle lang={lang} select={select} />}
-          >
+        <div className="grid-area" ref={selection.anchor}>
+          <GridBar lang={lang} top>
             {pagination(t.pagesTop)}
           </GridBar>
           {failed ? (
@@ -269,33 +266,29 @@ export function IconGrid({
               {shown.map((name) => {
                 const icon = `${prefix}:${name}`;
                 return (
-                  <li key={name} className="icon-cell">
-                    {select.on ? (
-                      <button
-                        type="button"
-                        className={cn(CARD_LINK, "icon-card-pick")}
-                        data-icon={icon}
-                        aria-pressed={select.bag.includes(icon)}
-                        onClick={() => select.pick(icon)}
-                      >
-                        <span className="pick-box" aria-hidden="true">
-                          <Icon icon="material-symbols:check" />
-                        </span>
-                        <Icon icon={icon} className="icon-cell-svg" />
-                        <span className="icon-cell-name">{name}</span>
-                      </button>
-                    ) : (
-                      <a
-                        href={href(lang, iconPagePath(icon))}
-                        className={CARD_LINK}
-                        data-icon={icon}
-                        aria-current={panel.icon === icon ? "true" : undefined}
-                        onClick={(e) => panel.onCardClick(e, icon)}
-                      >
-                        <Icon icon={icon} className="icon-cell-svg" />
-                        <span className="icon-cell-name">{name}</span>
-                      </a>
-                    )}
+                  <li
+                    key={name}
+                    className="icon-cell"
+                    data-picked={
+                      selection.picked.includes(icon) ? "" : undefined
+                    }
+                  >
+                    <a
+                      href={href(lang, iconPagePath(icon))}
+                      className={CARD_LINK}
+                      data-icon={icon}
+                      aria-current={panel.icon === icon ? "true" : undefined}
+                      onClick={(e) => panel.onCardClick(e, icon)}
+                    >
+                      <Icon icon={icon} className="icon-cell-svg" />
+                      <span className="icon-cell-name">{name}</span>
+                    </a>
+                    <CardTools
+                      lang={lang}
+                      name={icon}
+                      label={name}
+                      selection={selection}
+                    />
                   </li>
                 );
               })}

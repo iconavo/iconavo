@@ -20,7 +20,7 @@ import {
 import { useUrlQuery, withParams } from "../../lib/url-query";
 import { type Chip, Chips, plainClick } from "../catalog/Chips";
 import { Pagination } from "../catalog/Pagination";
-import { SelectToggle, useSelect } from "../catalog/SelectToggle";
+import { SelectionBar, useSelection } from "../catalog/Selection";
 import { IconPanel } from "../icon/IconPanel";
 import { usePanel } from "../icon/usePanel";
 import { PageLink } from "../PageLink";
@@ -89,7 +89,7 @@ export function SearchResults({
   const { query, ready, hrefOf, navigate } = useUrlQuery();
   // Боковая панель иконки (шаг 4 фазы 4): открыта, пока в адресе есть icon.
   const panel = usePanel(query, navigate);
-  const select = useSelect();
+  const selection = useSelection();
   const known = useMemo(
     () => ({ sets: sets.map((s) => s.id), licenses }),
     [sets, licenses],
@@ -323,7 +323,7 @@ export function SearchResults({
             setTitles={setTitles}
             current={panel.icon}
             onOpen={panel.onCardClick}
-            select={select}
+            selection={selection}
           />
         ) : (
           <ResultGrid
@@ -332,7 +332,7 @@ export function SearchResults({
             setTitles={setTitles}
             current={panel.icon}
             onOpen={panel.onCardClick}
-            select={select}
+            selection={selection}
             busy
           />
         );
@@ -355,7 +355,7 @@ export function SearchResults({
             setTitles={setTitles}
             current={panel.icon}
             onOpen={panel.onCardClick}
-            select={select}
+            selection={selection}
           />
         );
       break;
@@ -374,7 +374,7 @@ export function SearchResults({
             setTitles={setTitles}
             current={panel.icon}
             onOpen={panel.onCardClick}
-            select={select}
+            selection={selection}
           />
         );
       break;
@@ -404,7 +404,7 @@ export function SearchResults({
             setTitles={setTitles}
             current={panel.icon}
             onOpen={panel.onCardClick}
-            select={select}
+            selection={selection}
           />
         );
       } else if (state.page > 1) {
@@ -457,7 +457,7 @@ export function SearchResults({
                   setTitles={setTitles}
                   current={panel.icon}
                   onOpen={panel.onCardClick}
-                  select={select}
+                  selection={selection}
                 />
               </section>
             ) : null}
@@ -561,8 +561,8 @@ export function SearchResults({
             </span>
           ) : null}
         </p>
-        <SelectToggle lang={lang} select={select} />
-        {body}
+        <SelectionBar lang={lang} selection={selection} />
+        <div ref={selection.anchor}>{body}</div>
         {final !== undefined && (state.page > 1 || final.hasNext) ? (
           <Pagination
             lang={lang}

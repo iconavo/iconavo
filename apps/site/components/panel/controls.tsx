@@ -1,6 +1,7 @@
 "use client";
 
 import { Icon } from "@iconavo-ui/react";
+import { useId } from "react";
 import { track } from "../../lib/analytics";
 import { DICTIONARIES, type Lang } from "../../lib/i18n";
 import {
@@ -80,40 +81,51 @@ export function PanelSize({ lang, s }: { lang: Lang; s: IconSettings }) {
 }
 
 /**
- * Color: квадратик — выбор цвета браузера, рядом HEX. Пока свой цвет не выбран, иконка берёт цвет текста
- * вокруг — в поле «Auto». Прозрачности в коде нет — «100 %» с подсказкой «Soon».
+ * Поле Color (Color Field макета): квадратик — выбор цвета браузера, рядом HEX. Пока свой цвет не выбран,
+ * иконка берёт цвет текста вокруг — в поле «Auto». Прозрачности в коде нет — «100 %» с подсказкой «Soon».
+ * Одно у панели иконки и рюкзака: значение и его смена — у того, кто зовёт.
  */
-export function PanelColor({ lang, s }: { lang: Lang; s: IconSettings }) {
+export function ColorField({
+  lang,
+  value,
+  onChange,
+}: {
+  lang: Lang;
+  /** Свой цвет #rrggbb; нет — «Auto». */
+  value: string | undefined;
+  onChange: (color: string | undefined) => void;
+}) {
   const t = DICTIONARIES[lang];
+  const labelId = `${useId()}-color`;
   return (
     <div className="panel-field">
-      <span className="panel-label" id="panel-color-label">
+      <span className="panel-label" id={labelId}>
         {t.iconColor}
       </span>
       <div className="panel-control panel-color">
         <input
           type="color"
           className="color-swatch"
-          value={s.color ?? COLOR_START}
+          value={value ?? COLOR_START}
           aria-label={t.iconColorCustom}
-          data-auto={s.color === undefined ? "" : undefined}
-          onChange={(e) => update(s, { color: parseColor(e.target.value) })}
+          data-auto={value === undefined ? "" : undefined}
+          onChange={(e) => onChange(parseColor(e.target.value))}
         />
         <input
           type="text"
           className="color-hex"
-          value={s.color === undefined ? "" : s.color.slice(1).toUpperCase()}
+          value={value === undefined ? "" : value.slice(1).toUpperCase()}
           placeholder={t.pColorAuto}
           maxLength={7}
           spellCheck={false}
           autoComplete="off"
-          aria-labelledby="panel-color-label"
+          aria-labelledby={labelId}
           onChange={(e) => {
-            const value = e.target.value.trim();
-            if (value === "") update(s, { color: undefined });
+            const text = e.target.value.trim();
+            if (text === "") onChange(undefined);
             else {
-              const color = parseColor(value);
-              if (color !== undefined) update(s, { color });
+              const color = parseColor(text);
+              if (color !== undefined) onChange(color);
             }
           }}
         />
@@ -126,32 +138,66 @@ export function PanelColor({ lang, s }: { lang: Lang; s: IconSettings }) {
   );
 }
 
-/** Stroke Width: ползунок и значение «2 px» — только у иконок, где толщина меняет рисунок. */
-export function PanelStroke({ lang, s }: { lang: Lang; s: IconSettings }) {
+/** Color панели и страницы иконки — настройки вкладки. */
+export function PanelColor({ lang, s }: { lang: Lang; s: IconSettings }) {
+  return (
+    <ColorField
+      lang={lang}
+      value={s.color}
+      onChange={(color) => update(s, { color })}
+    />
+  );
+}
+
+/**
+ * Поле Stroke Width: ползунок и значение «2 px» — только у иконок, где толщина меняет рисунок. Своей
+ * толщины нет — ползунок на толщине Lucide и Tabler (STROKE_DEFAULT), рисунок как у автора.
+ */
+export function StrokeField({
+  lang,
+  value,
+  onChange,
+}: {
+  lang: Lang;
+  value: number | undefined;
+  onChange: (stroke: number) => void;
+}) {
   const t = DICTIONARIES[lang];
-  const value = s.stroke ?? STROKE_DEFAULT;
+  const id = `${useId()}-stroke`;
+  const shown = value ?? STROKE_DEFAULT;
   return (
     <div className="panel-field">
-      <label className="panel-label" htmlFor="panel-stroke">
+      <label className="panel-label" htmlFor={id}>
         {t.pStroke}
       </label>
       <div className="panel-stroke">
         <input
-          id="panel-stroke"
+          id={id}
           type="range"
           className="panel-range"
           min={STROKE_MIN}
           max={STROKE_MAX}
           step={STROKE_STEP}
-          value={value}
-          onChange={(e) => update(s, { stroke: Number(e.target.value) })}
+          value={shown}
+          onChange={(e) => onChange(Number(e.target.value))}
         />
         <span className="panel-stroke-value" aria-hidden="true">
-          <b>{value}</b>
+          <b>{shown}</b>
           <span>px</span>
         </span>
       </div>
     </div>
+  );
+}
+
+/** Stroke Width панели и страницы иконки — настройки вкладки. */
+export function PanelStroke({ lang, s }: { lang: Lang; s: IconSettings }) {
+  return (
+    <StrokeField
+      lang={lang}
+      value={s.stroke}
+      onChange={(stroke) => update(s, { stroke })}
+    />
   );
 }
 

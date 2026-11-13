@@ -1,6 +1,6 @@
 import { Icon } from "@iconavo-ui/react";
 import { DICTIONARIES, type Lang } from "../lib/i18n";
-import { BagMenu } from "./BagMenu";
+import { BagButton } from "./bag/BagButton";
 import { LanguageSwitch } from "./LanguageSwitch";
 import { PageLink } from "./PageLink";
 import { AgentLogos, FigmaLogo, VSCodeLogo } from "./shell/Logos";
@@ -60,7 +60,7 @@ export function Footer({
         {languageSwitch ? (
           <LanguageSwitch variant="flag" className="top-circle" />
         ) : null}
-        <BagMenu lang={lang} variant="icon" />
+        <BagButton lang={lang} variant="icon" />
       </div>
     </footer>
   );

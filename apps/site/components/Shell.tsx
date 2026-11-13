@@ -2,6 +2,7 @@ import { type IconavoIconSet, IconavoProvider } from "@iconavo-ui/react";
 import type { ReactNode } from "react";
 import type { SidebarGroup } from "../lib/catalog-view";
 import { DICTIONARIES, type Lang } from "../lib/i18n";
+import { BagPanel } from "./bag/BagPanel";
 import { Footer } from "./Footer";
 import { HotKey } from "./shell/HotKey";
 import { MenuController } from "./shell/Menu";
@@ -45,6 +46,7 @@ export function Shell({
           {children}
           <Footer lang={lang} languageSwitch={languageSwitch} />
         </div>
+        <BagPanel lang={lang} />
       </div>
       <HotKey lang={lang} />
     </IconavoProvider>
