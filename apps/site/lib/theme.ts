@@ -3,6 +3,8 @@
 // скрипт в <head> ещё до отрисовки — без вспышки (руководство Next.js «Preventing flash before
 // hydration»); токены в globals.css переключает color-scheme.
 
+import { reducedMotion } from "./motion";
+
 export const THEME_KEY = "iconavo-theme";
 
 export const THEMES = ["system", "light", "dark"] as const;
@@ -44,6 +46,24 @@ export function applyTheme(theme: Theme, root = document.documentElement) {
   else root.dataset.theme = theme;
 }
 
+/**
+ * Смена темы — лёгким перетеканием всей страницы (решение владельца 13 ноября 2026): View Transitions —
+ * браузер снимает страницу до смены и после и плавно сменяет один снимок другим, разом фон, текст,
+ * иконки и картинки (длительность — --motion-theme в globals.css). Нет такого API или в системе
+ * «уменьшить движение» — тема меняется сразу.
+ */
+export function withThemeTransition(
+  change: () => void,
+  doc: Pick<Document, "startViewTransition"> = document,
+  reduced: () => boolean = reducedMotion,
+) {
+  if (typeof doc.startViewTransition !== "function" || reduced()) {
+    change();
+    return;
+  }
+  doc.startViewTransition(change);
+}
+
 /** Хранилище выбора для меню темы; в Storybook тему ставит аддон, и меню получает своё. */
 export interface ThemeStore {
   get(): Theme;
@@ -65,8 +85,10 @@ export const themeStore: ThemeStore = {
     } catch {
       // Хранилище запрещено — тема держится до перезагрузки.
     }
-    applyTheme(theme);
-    for (const listener of listeners) listener();
+    withThemeTransition(() => {
+      applyTheme(theme);
+      for (const listener of listeners) listener();
+    });
   },
   subscribe(listener) {
     listeners.add(listener);

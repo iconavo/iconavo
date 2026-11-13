@@ -113,6 +113,8 @@
      страницы — --motion-sidebar; подписи и список наборов гаснут и проявляются за --motion-sidebar-fade. */
   --motion-sidebar: 260ms;
   --motion-sidebar-fade: 120ms;
+  /* Смена темы кнопкой в шапке (lib/theme.ts): старый вид страницы перетекает в новый. */
+  --motion-theme: 300ms;
   /*
    * Полосы прокрутки: --scrollbar-lane — ширина дорожки. У мыши и тачпада в Chrome, Edge и Safari —
    * 12 px (бегунок 4 px посередине), в Firefox и на сенсорных экранах полосы поверх содержимого — 0.
@@ -677,6 +679,15 @@
         calc(var(--motion-sidebar) - var(--motion-sidebar-fade)),
         height var(--motion-sidebar) var(--motion-ease-out);
     }
+  }
+
+  /*
+   * Смена темы (решение владельца 13 ноября 2026, lib/theme.ts): View Transitions — снимок страницы в
+   * старой теме плавно сменяется снимком в новой, разом фон, текст, иконки и картинки. Кривая — как у
+   * браузера по умолчанию (ease): ровное перетекание, без резкого старта.
+   */
+  ::view-transition-group(root) {
+    animation-duration: var(--motion-theme);
   }
 
   /* Верхняя полоса (кадр Header): плашки, разделители, круглые кнопки. */
