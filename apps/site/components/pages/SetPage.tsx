@@ -19,6 +19,7 @@ import {
 } from "../../lib/format";
 import { DICTIONARIES, type Lang } from "../../lib/i18n";
 import { loadPageIcons } from "../../lib/icons";
+import { PAGE_PANEL_ID } from "../../lib/panel-layout";
 import { IconGrid } from "../catalog/IconGrid";
 import { PageLink } from "../PageLink";
 import { Soon } from "../shell/Soon";
@@ -150,6 +151,8 @@ export async function SetPage({
           />
         </IconavoProvider>
       </div>
+      {/* Место панели иконки во всю высоту страницы — прототип ?panel-layout=page (lib/panel-layout.ts). */}
+      <div id={PAGE_PANEL_ID} className="page-panel" />
     </main>
   );
 }

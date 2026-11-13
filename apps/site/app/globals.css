@@ -2681,6 +2681,32 @@
        окна; решение владельца 13 ноября 2026, вместо кадра «Selected Icon + Opened Panel» с 6 колонками
        по 116 px): карточки сужаются и сдвигаются, но не перескакивают в другие ряды. */
   }
+  /*
+   * Прототип «панель во всю высоту страницы» (?panel-layout=page, lib/panel-layout.ts): пока панель
+   * открыта, страница набора — две колонки: слева заголовок, строка поиска, фильтры и сетка, справа —
+   * панель от уровня хлебных крошек до низа. Прилипает к верху окна и помещается в окно, как и в нынешнем
+   * варианте (lib/panel-fit.ts). Ширина сетки — та же, что с панелью рядом с ней.
+   */
+  @media (min-width: 64rem) {
+    .set-page:has(> .page-panel > .icon-panel) {
+      display: grid;
+      grid-template-columns:
+        minmax(0, 1fr)
+        calc(var(--width-panel) + var(--page-x-end));
+      grid-template-rows: auto 1fr;
+      align-items: start;
+    }
+    .set-page:has(> .page-panel > .icon-panel) > :is(.set-head, .set-body) {
+      grid-column: 1;
+      min-width: 0;
+    }
+    .set-page > .page-panel:has(> .icon-panel) {
+      grid-column: 2;
+      grid-row: 1 / span 2;
+      align-self: stretch;
+      padding: 2rem var(--page-x-end) 2.5rem 0;
+    }
+  }
   .grid-area {
     display: grid;
     /* Одна колонка не шире страницы: сетка внутри, конечной ширины во время сворачивания панели

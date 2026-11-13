@@ -70,6 +70,11 @@ function playLeaving(root: HTMLElement, leaving: Leaving[]) {
  */
 export class PanelLayout extends Component<{
   open: boolean;
+  /**
+   * Место панели вне раскладки (прототип «во всю высоту страницы», lib/panel-layout.ts): тогда раскладка
+   * не делает колонку под панель, а уходящую панель ищет там.
+   */
+  slot?: HTMLElement | null;
   children: ReactNode;
 }> {
   private readonly root = createRef<HTMLDivElement>();
@@ -85,7 +90,8 @@ export class PanelLayout extends Component<{
     }
     const leaving: Leaving[] = [];
     if (previous.open) {
-      for (const element of root.querySelectorAll<HTMLElement>(
+      const home = this.props.slot ?? root;
+      for (const element of home.querySelectorAll<HTMLElement>(
         ":scope > .icon-panel, :scope > .panel-backdrop",
       )) {
         if (getComputedStyle(element).display !== "none") {
@@ -116,7 +122,7 @@ export class PanelLayout extends Component<{
       <div
         ref={this.root}
         className="with-panel"
-        data-panel={this.props.open ? "" : undefined}
+        data-panel={this.props.open && !this.props.slot ? "" : undefined}
       >
         {this.props.children}
       </div>

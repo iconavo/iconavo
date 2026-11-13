@@ -2,6 +2,7 @@
 
 import { Icon } from "@iconavo-ui/react";
 import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import {
   type Category,
   cardsInStyle,
@@ -21,6 +22,7 @@ import {
 import { useGridColumns } from "../../lib/grid-columns";
 import { DICTIONARIES, href, type Lang, STYLE_KEYS } from "../../lib/i18n";
 import { iconPagePath } from "../../lib/icon";
+import { PAGE_PANEL_ID, readPanelLayout } from "../../lib/panel-layout";
 // Хосты иконок — для ядра браузера: страницы и категории сетка грузит сама (lib/iconavo.ts).
 import "../../lib/iconavo";
 import { isStyle, type Style } from "../../lib/search";
@@ -108,6 +110,19 @@ export function IconGrid({
   const top = useRef<HTMLDivElement>(null);
   // Колонок (от ширины окна) и иконок на странице; до гидратации — 96, а строки с номерами страниц
   // невидимы (GridBar).
+  // Прототип «панель во всю высоту страницы» (?panel-layout=page, lib/panel-layout.ts): место панели —
+  // справа от всей страницы набора; в нынешнем варианте — рядом с сеткой.
+  const [slot, setSlot] = useState<HTMLElement | null>(null);
+  useEffect(() => {
+    let storage: Storage | undefined;
+    try {
+      storage = window.localStorage;
+    } catch {
+      // Хранилище запрещено — нынешний вариант.
+    }
+    const mode = storage ? readPanelLayout(location.search, storage) : "grid";
+    setSlot(mode === "page" ? document.getElementById(PAGE_PANEL_ID) : null);
+  }, []);
   const columns = useGridColumns();
   const size = columns === undefined ? undefined : pageSizeFor(columns);
   const pageSize = size ?? PAGE_SIZE;
@@ -182,6 +197,16 @@ export function IconGrid({
       pageOf(list, page, pageSize).map((card) => shownName(card, style));
   const pageHref = (p: number) =>
     hrefOf(withParams(query, { page: p === 1 ? undefined : String(p) }));
+  const panelNode =
+    panel.icon === undefined ? null : (
+      <IconPanel
+        lang={lang}
+        icon={panel.icon}
+        focus={panel.focus}
+        onClose={panel.close}
+        onPick={(name) => panel.open(name)}
+      />
+    );
   const pagination = (label?: string) => (
     <Pagination
       lang={lang}
@@ -253,7 +278,7 @@ export function IconGrid({
           />
         ) : null}
       </div>
-      <PanelLayout open={panel.icon !== undefined}>
+      <PanelLayout open={panel.icon !== undefined} slot={slot}>
         <div className="grid-area" ref={selection.anchor}>
           <GridBar lang={lang} top perPage={size}>
             {pagination(t.pagesTop)}
@@ -314,16 +339,11 @@ export function IconGrid({
             {pagination()}
           </GridBar>
         </div>
-        {panel.icon === undefined ? null : (
-          <IconPanel
-            lang={lang}
-            icon={panel.icon}
-            focus={panel.focus}
-            onClose={panel.close}
-            onPick={(name) => panel.open(name)}
-          />
-        )}
+        {slot === null ? panelNode : null}
       </PanelLayout>
+      {slot !== null && panelNode !== null
+        ? createPortal(panelNode, slot)
+        : null}
     </div>
   );
 }
