@@ -193,6 +193,8 @@ describe("контраст токенов (WCAG 2.2 AA)", () => {
     ["text-primary", "bg-surface", 4.5],
     ["text-secondary", "bg-page", 4.5],
     ["text-secondary", "bg-surface", 4.5],
+    // Выбранный набор в сайдбаре и подписи блоков кода в панели (решение владельца 13 ноября 2026).
+    ["text-secondary", "bg-surface-strong", 4.5],
     ["link-unicode", "bg-page", 4.5],
     ["link-unicode", "bg-surface", 4.5],
     ["text-on-accent", "accent-highlight", 4.5],
@@ -211,9 +213,6 @@ describe("контраст токенов (WCAG 2.2 AA)", () => {
     ["text-hover-muted", "bg-page", 4.5],
     ["border-primary", "bg-page", 3],
     ["border-primary", "bg-surface", 3],
-    // Выбранный набор в сайдбаре и подписи блоков кода в панели (axe, план редизайна, шаг 5): 4,42:1 в
-    // тёмной теме.
-    ["text-secondary", "bg-surface-strong", 4.5],
   ];
 
   it("у каждого токена цвета — пара light-dark, имена — переменные макета", () => {

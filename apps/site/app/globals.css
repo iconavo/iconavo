@@ -27,7 +27,9 @@
   --color-border-secondary: light-dark(#e0e4eb, #3a4658);
   --color-border-secondary-20: light-dark(#e0e4eb, #1e2633);
   --color-text-primary: light-dark(#000000, #f5f7fb);
-  --color-text-secondary: light-dark(#00000099, #ffffff80);
+  /* Тёмная — 52%, а не 50% макета: на bg/surface-strong контраст 4,66:1 вместо 4,42:1 (WCAG AA; решение
+     владельца 13 ноября 2026). */
+  --color-text-secondary: light-dark(#00000099, #ffffff85);
   --color-text-muted: light-dark(#b3b3b3, #94a1b3);
   --color-text-hover-muted: light-dark(#778490, #b4c0d0);
   --color-text-primary-hover: light-dark(#00000080, #ffffff80);
@@ -2861,6 +2863,11 @@
     display: flex;
     align-items: center;
     gap: 1rem;
+  }
+  /* Иконки с таким именем нет — строка вместо превью, настроек и кода. */
+  .page .panel-missing {
+    margin: 0;
+    color: var(--color-text-secondary);
   }
   .page .panel-head h2 {
     display: grid;

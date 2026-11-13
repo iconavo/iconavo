@@ -361,6 +361,28 @@ export async function panelProblems(
   f = await shown(page, CRAWL_ICON_NAMES[4] as string);
   no(f.drawn === 2, `${CRAWL_ICON_NAMES[4]} в панели не нарисована`);
   no(!f.color && !f.stroke, "у цветной иконки есть выбор цвета или толщины");
+
+  // Ссылка на несуществующую иконку: строка «нет» вместо превью, настроек и кода (решение владельца
+  // 13 ноября 2026). Своя вкладка: ядро пишет в консоль о каждой ненайденной иконке, а сторож консоли
+  // сценария этого не ждёт.
+  const other = await page.context().newPage();
+  await other.goto(`${base}/${CATALOG_SET}?icon=${CATALOG_SET}:no-such-icon`);
+  await hydrated(other);
+  await other
+    .waitForSelector(`${PANEL} .panel-missing`, { timeout: PANEL_WAIT_MS })
+    .catch(() => {});
+  const missing = await other.evaluate(() => {
+    const panel = document.querySelector("#page-panel > aside.icon-panel");
+    return {
+      text: panel?.querySelector(".panel-missing")?.textContent ?? "",
+      previews: panel?.querySelectorAll(".panel-preview").length ?? 0,
+    };
+  });
+  no(
+    missing.text !== "" && missing.previews === 0,
+    `ссылка на несуществующую иконку: строки «такой иконки нет» не видно${missing.previews > 0 ? ", а превью есть" : ""}`,
+  );
+  await other.close();
   return problems;
 }
 
@@ -401,7 +423,7 @@ export async function checkPanel(
   await context.close();
   return problems.length === 0
     ? pass(
-        "мышью и с клавиатуры: адрес, фокус, Esc, ✕, «назад» и «вперёд», ссылка с ?icon=; сетка не прыгает при открытии и закрытии (1040 px); вторая страница сетки и поиск с панелью; цвет и толщина — где положено; axe в обеих темах",
+        "мышью и с клавиатуры: адрес, фокус, Esc, ✕, «назад» и «вперёд», ссылка с ?icon=; сетка не прыгает при открытии и закрытии (1040 px); вторая страница сетки и поиск с панелью; цвет и толщина — где положено; несуществующая иконка — «нет»; axe в обеих темах",
       )
     : fail(problems.slice(0, 4).join("; "));
 }

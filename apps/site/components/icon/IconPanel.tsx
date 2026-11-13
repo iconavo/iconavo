@@ -1,6 +1,6 @@
 "use client";
 
-import { hasStrokeWidth } from "@iconavo-ui/core/internal";
+import { getIcon, hasStrokeWidth } from "@iconavo-ui/core/internal";
 import { Icon } from "@iconavo-ui/react";
 import { useEffect, useRef, useState } from "react";
 import { DICTIONARIES, href, type Lang } from "../../lib/i18n";
@@ -97,6 +97,9 @@ export function IconPanel({
     return () => document.removeEventListener("keydown", onKey);
   }, [onClose]);
 
+  // Иконки с таким именем нет (ссылка с ?icon=): вместо превью, настроек и кода — одна строка
+  // (решение владельца 13 ноября 2026).
+  const missing = data === null && getIcon(icon) === "missing";
   const palette = info?.palette ?? false;
   const strokes = data ? hasStrokeWidth(data.body) : false;
   const applies = { palette, strokes };
@@ -166,15 +169,17 @@ export function IconPanel({
               <span className="panel-set">{info?.name ?? prefix}</span>
             </h2>
             <div className="panel-head-actions">
-              <a
-                href={href(lang, iconPagePath(icon))}
-                className="panel-head-button"
-                aria-label={t.panelOpenPage}
-                target="_blank"
-                rel="noopener"
-              >
-                <Icon icon="material-symbols:open-in-new" />
-              </a>
+              {missing ? null : (
+                <a
+                  href={href(lang, iconPagePath(icon))}
+                  className="panel-head-button"
+                  aria-label={t.panelOpenPage}
+                  target="_blank"
+                  rel="noopener"
+                >
+                  <Icon icon="material-symbols:open-in-new" />
+                </a>
+              )}
               <button
                 type="button"
                 className="panel-head-button"
@@ -185,40 +190,52 @@ export function IconPanel({
               </button>
             </div>
           </div>
-          <div className="panel-previews">
-            <div className="panel-preview preview-light">
-              <Icon icon={icon} {...preview} />
+          {missing ? (
+            <p className="panel-missing">
+              {t.panelMissing.replace("{set}", info?.name ?? prefix)}
+            </p>
+          ) : (
+            <>
+              <div className="panel-previews">
+                <div className="panel-preview preview-light">
+                  <Icon icon={icon} {...preview} />
+                </div>
+                <div className="panel-preview preview-dark">
+                  <Icon icon={icon} {...preview} />
+                </div>
+              </div>
+              <div className="panel-pair">
+                <PanelSize lang={lang} s={s} />
+                {palette ? null : <PanelColor lang={lang} s={s} />}
+              </div>
+              <PanelActions
+                lang={lang}
+                name={icon}
+                s={s}
+                applies={applies}
+                set={set}
+              />
+            </>
+          )}
+        </div>
+        {missing ? null : (
+          <>
+            <div className="panel-section panel-name-section">
+              <PanelName lang={lang} name={icon} />
+              {strokes ? <PanelStroke lang={lang} s={s} /> : null}
             </div>
-            <div className="panel-preview preview-dark">
-              <Icon icon={icon} {...preview} />
+            <div className="panel-section panel-code-section">
+              <PanelCode
+                lang={lang}
+                name={icon}
+                icon={data}
+                s={s}
+                applies={applies}
+              />
             </div>
-          </div>
-          <div className="panel-pair">
-            <PanelSize lang={lang} s={s} />
-            {palette ? null : <PanelColor lang={lang} s={s} />}
-          </div>
-          <PanelActions
-            lang={lang}
-            name={icon}
-            s={s}
-            applies={applies}
-            set={set}
-          />
-        </div>
-        <div className="panel-section panel-name-section">
-          <PanelName lang={lang} name={icon} />
-          {strokes ? <PanelStroke lang={lang} s={s} /> : null}
-        </div>
-        <div className="panel-section panel-code-section">
-          <PanelCode
-            lang={lang}
-            name={icon}
-            icon={data}
-            s={s}
-            applies={applies}
-          />
-        </div>
-        <PanelCredits lang={lang} name={icon} set={set} />
+            <PanelCredits lang={lang} name={icon} set={set} />
+          </>
+        )}
         <p className="sr-only" role="status">
           {icon}
         </p>
