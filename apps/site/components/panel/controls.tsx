@@ -236,14 +236,20 @@ export function PanelName({ lang, name }: { lang: Lang; name: string }) {
               />
             </button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="start" className="panel-menu">
+          <DropdownMenuContent
+            align="start"
+            collisionPadding={16}
+            className="panel-menu"
+          >
             <DropdownMenuRadioGroup
               value={format}
               onValueChange={(value) => nameStore.set(value as NameFormat)}
             >
               {NAME_FORMATS.map((f) => (
                 <DropdownMenuRadioItem key={f} value={f}>
-                  <code>{formatName(name, f)}</code>
+                  <code className="name-format-code">
+                    {formatName(name, f)}
+                  </code>
                   <span className="name-format-label">{labels[f]}</span>
                 </DropdownMenuRadioItem>
               ))}

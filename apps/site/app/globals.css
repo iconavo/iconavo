@@ -2786,8 +2786,11 @@
   .panel-preview.preview-dark {
     color-scheme: dark;
   }
+  /* Колонка поля — не шире панели (замечание владельца 13 ноября 2026): иначе длинное имя иконки в
+     Name раздвигало колонку под себя, и панель прокручивалась вбок. Теперь текст в поле уходит в «…». */
   .panel-field {
     display: grid;
+    grid-template-columns: minmax(0, 1fr);
     gap: 0.25rem;
     min-width: 0;
   }
@@ -2830,9 +2833,18 @@
   .panel-icon-muted {
     opacity: 0.5;
   }
+  /* Списки полей панели не шире места в окне (Radix считает его с отступом collisionPadding): длинное
+     имя в строке формата уходит в «…», подпись формата видна (замечание владельца 13 ноября 2026). */
   .panel-menu {
+    max-width: var(--radix-dropdown-menu-content-available-width);
     max-height: 20rem;
     overflow-y: auto;
+  }
+  .name-format-code {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
   .panel-color {
     cursor: default;
@@ -3453,8 +3465,10 @@
   }
   /* Подпись формата в списке Name панели иконки (шаг 5 фазы 4). */
   .name-format-label {
+    flex: none;
     color: var(--color-text-secondary);
     font-size: 0.75rem;
+    white-space: nowrap;
   }
   /*
    * Выделение и рюкзак по макету (редизайн, шаг 5; сценарии «Выделение» и «Рюкзак» Figma). Кнопки
