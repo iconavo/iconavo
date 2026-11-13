@@ -3284,6 +3284,20 @@
   .bag-panel::backdrop {
     background: var(--color-bg-overlay);
   }
+  /*
+   * Пока рюкзак открыт, полоса прокрутки страницы спрятана, а её место отдано полю справа: панель встаёт
+   * вплотную к краю окна, как в макете, а не в 12 px от него; страница под ней не сдвигается и по-прежнему
+   * прокручивается колесом. Ширину полосы BagPanel замеряет до того, как спрятать. Chrome и Safari рисуют
+   * полосу страницы стилями <body> — прячутся обе.
+   */
+  :root[data-bag-panel] {
+    padding-right: var(--bag-page-lane, 0px);
+    scrollbar-width: none;
+  }
+  :root[data-bag-panel]::-webkit-scrollbar,
+  :root[data-bag-panel] body::-webkit-scrollbar {
+    display: none;
+  }
   .bag-panel-body {
     display: flex;
     flex-direction: column;
@@ -3514,8 +3528,10 @@
       width: 2.5rem;
       height: 2.5rem;
     }
+    /* Справа, как на компьютере, — поле за вычетом дорожки полосы списка: в узком окне с мышью ✕ строк
+       стоят в 16 px от края, а не в 28. */
     .bag-panel-list {
-      padding: 1rem;
+      padding: 1rem calc(1rem - var(--scrollbar-lane)) 1rem 1rem;
     }
     /* Строки по 40 px: ✕ — кнопка 40 × 40 под палец (гайд макета). */
     .bag-list {

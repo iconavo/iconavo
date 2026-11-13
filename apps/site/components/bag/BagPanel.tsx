@@ -45,10 +45,24 @@ export function BagPanel({ lang }: { lang: Lang }) {
   const [busy, setBusy] = useState(false);
   const [failed, setFailed] = useState(false);
 
-  // Открыть и закрыть: на компьютере — немодально, на телефоне — модально, с затемнением.
+  // Открыть и закрыть: на компьютере — немодально, на телефоне — модально, с затемнением. Пока панель
+  // открыта, у <html> — data-bag-panel: полоса прокрутки страницы спрятана, и панель встаёт вплотную к
+  // краю окна (globals.css). Ширина полосы замеряется до того, как она спрячется: столько же отдаётся полю
+  // справа, и страница не сдвигается — при любой полосе (Firefox с обычными полосами, сенсорный экран).
   useEffect(() => {
     const el = dialog.current;
     if (el === null) return;
+    const root = document.documentElement;
+    if (open && root.dataset.bagPanel === undefined) {
+      root.style.setProperty(
+        "--bag-page-lane",
+        `${window.innerWidth - root.clientWidth}px`,
+      );
+      root.dataset.bagPanel = "";
+    } else if (!open) {
+      delete root.dataset.bagPanel;
+      root.style.removeProperty("--bag-page-lane");
+    }
     if (open && !el.open) {
       if (window.matchMedia(PHONE).matches) el.showModal();
       else el.show();
