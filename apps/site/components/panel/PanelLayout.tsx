@@ -84,9 +84,13 @@ export class PanelLayout extends Component<{
     if (previous.open === this.props.open || root === null || reducedMotion()) {
       return null;
     }
+    // Панель во всю высоту страницы (slot) сдвигает раскладку сама — переходом колонок в стилях, без
+    // анимации карточек (app/globals.css).
     const boxes = new Map<HTMLElement, Box>();
-    for (const element of root.querySelectorAll<HTMLElement>(MOVING)) {
-      boxes.set(element, boxOf(element));
+    if (!this.props.slot) {
+      for (const element of root.querySelectorAll<HTMLElement>(MOVING)) {
+        boxes.set(element, boxOf(element));
+      }
     }
     const leaving: Leaving[] = [];
     if (previous.open) {
