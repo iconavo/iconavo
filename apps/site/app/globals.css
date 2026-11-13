@@ -1639,6 +1639,90 @@
     gap: 1rem;
     grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr));
   }
+  /*
+   * Колонки карточек наборов — тоже только от ширины окна (решение владельца 13 ноября 2026, как в кадре
+   * макета «Контекст: свёрнутый сайдбар»): при свёрнутой боковой панели карточек в ряду столько же, они
+   * шире. Колонок — сколько карточек не уже 15rem с зазором 1rem встало бы при развёрнутой панели: на
+   * главной колонка страницы — окно − 19rem, n колонок — с окна 16n + 18rem. Список наборов лежит в
+   * .container, который не шире 96rem (контейнер Tailwind), — там не больше 5 колонок (--sets-cols).
+   * До 64rem — как было: на главной карусель, в списке — сколько влезет. Пороги сверяет
+   * lib/grid-columns.test.ts.
+   */
+  @media (min-width: 64rem) {
+    :root {
+      --set-cols: 2;
+      --sets-cols: 2;
+    }
+    .set-grid {
+      grid-template-columns: repeat(var(--set-cols), minmax(0, 1fr));
+    }
+    .container .set-grid {
+      grid-template-columns: repeat(var(--sets-cols), minmax(0, 1fr));
+    }
+  }
+  @media (min-width: 66rem) {
+    :root {
+      --set-cols: 3;
+      --sets-cols: 3;
+    }
+  }
+  @media (min-width: 82rem) {
+    :root {
+      --set-cols: 4;
+      --sets-cols: 4;
+    }
+  }
+  @media (min-width: 98rem) {
+    :root {
+      --set-cols: 5;
+      --sets-cols: 5;
+    }
+  }
+  @media (min-width: 114rem) {
+    :root {
+      --set-cols: 6;
+    }
+  }
+  @media (min-width: 130rem) {
+    :root {
+      --set-cols: 7;
+    }
+  }
+  @media (min-width: 146rem) {
+    :root {
+      --set-cols: 8;
+    }
+  }
+  @media (min-width: 162rem) {
+    :root {
+      --set-cols: 9;
+    }
+  }
+  @media (min-width: 178rem) {
+    :root {
+      --set-cols: 10;
+    }
+  }
+  @media (min-width: 194rem) {
+    :root {
+      --set-cols: 11;
+    }
+  }
+  @media (min-width: 210rem) {
+    :root {
+      --set-cols: 12;
+    }
+  }
+  @media (min-width: 226rem) {
+    :root {
+      --set-cols: 13;
+    }
+  }
+  @media (min-width: 242rem) {
+    :root {
+      --set-cols: 14;
+    }
+  }
   .set-card {
     display: flex;
     align-items: center;
