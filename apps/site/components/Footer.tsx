@@ -48,7 +48,7 @@ export function Footer({
           {t.footerLicenses}
         </PageLink>
         <PageLink lang={lang} path="/docs" className="footer-text">
-          {t.docs}
+          {t.footerDocs}
         </PageLink>
         <Soon lang={lang} className="footer-text" above>
           {t.navTools}

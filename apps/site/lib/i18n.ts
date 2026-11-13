@@ -21,6 +21,7 @@ const en = {
   searchLabel: "Search icons",
   searchPlaceholder: "Search icons — home, arrow, user, github…",
   footerNews: "What’s new",
+  footerDocs: "Docs",
   footerLicenses: "Licenses",
   // Каркас по макету (Figma «Iconavo — Макеты»): боковая панель, верхняя полоса, подвал.
   soon: "Soon",
@@ -323,6 +324,8 @@ const ru: Dictionary = {
   docs: "Документация (англ.)",
   searchLabel: "Поиск иконок",
   searchPlaceholder: "Найти иконку — дом, стрелка, пользователь…",
+  /** В подвале без «(англ.)»: на 1440 px русский подвал иначе не помещается в строку (решение владельца 13 ноября 2026). */
+  footerDocs: "Документация",
   footerNews: "Что нового",
   footerLicenses: "Лицензии",
   soon: "Скоро",
@@ -352,7 +355,7 @@ const ru: Dictionary = {
   themeToggle: "Тёмная тема",
   figmaPlugin: "Плагин для Figma",
   vscodeExtension: "Расширение для VS Code",
-  privacy: "Конфиденциальность",
+  privacy: "Приватность",
   aiSearch: "ИИ-поиск",
   homeTitle: "Иконки, которые действительно подходят",
   homeSubtitle:
