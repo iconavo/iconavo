@@ -542,10 +542,18 @@
     font-size: 1.5rem;
     color: var(--color-link-unicode);
   }
+  /* Manage — поверх строки, а не в ней (замечание владельца 13 ноября 2026): высоту блока задают только
+     «Your Plan» и тариф. Иначе при сворачивании и разворачивании панели гаснущая Manage держала высоту
+     строки, ромб с тарифом поднимался к её середине, а в конце блок разом опускался. */
   .sidebar-plan-manage {
+    position: absolute;
+    top: 50%;
+    right: 0;
+    translate: 0 -50%;
     padding: 0.5rem 0.75rem;
     border-radius: var(--radius-md);
     background: var(--color-bg-surface-strong);
+    white-space: nowrap;
   }
 
   /* Свёрнутая панель (макет «Icon Sets / Sidebar Collapsed»): 64 px, вверху знак 18 × 18 и стрелка через
@@ -602,9 +610,13 @@
     :root[data-sidebar="collapsed"] .sidebar-plan-label {
       height: 0;
     }
-    /* Во время перехода список держит ширину развёрнутой панели: не перестраивается, а уходит под край. */
+    /* Во время перехода список и строка тарифа держат ширину развёрнутой панели: не перестраиваются, а
+       уходят под край — Manage гаснет на месте и не наезжает на тариф. */
     :root[data-sidebar-motion] .sidebar-body {
       min-width: calc(var(--width-sidebar) - 1px);
+    }
+    :root[data-sidebar-motion] .sidebar-plan-button {
+      min-width: calc(var(--width-sidebar) - 1px - 2.5rem);
     }
     /* Сетки во время перехода уже конечной ширины (lib/sidebar-motion.ts) и при сворачивании шире
        колонки: лишнее срезается, полоса прокрутки снизу не появляется. */
