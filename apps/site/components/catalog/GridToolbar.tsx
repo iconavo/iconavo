@@ -48,66 +48,75 @@ export function GridToolbar({
   };
   const placeholder = t.setSearch.replace("{set}", setName);
 
+  // Обёртка — точка отсчёта для компактной строки (контейнерные запросы, app/globals.css).
   return (
-    <div className="grid-toolbar">
-      <search className="grid-search">
-        <form
-          className="hero-field grid-field"
-          onSubmit={(e) => {
-            e.preventDefault();
-            commit(text);
-          }}
-        >
-          <Icon icon="material-symbols:search" className="hero-field-icon" />
-          <label htmlFor={SEARCH_INPUT_ID} className="sr-only">
-            {placeholder}
-          </label>
-          <input
-            id={SEARCH_INPUT_ID}
-            type="search"
-            className="hero-input"
-            value={text}
-            maxLength={QUERY_MAX_LENGTH}
-            placeholder={placeholder}
-            autoComplete="off"
-            aria-keyshortcuts="Control+K Meta+K"
-            onChange={(e) => {
-              const value = e.target.value;
-              setText(value);
-              clearTimeout(timer.current);
-              timer.current = setTimeout(() => commit(value), TYPING_PAUSE_MS);
+    <div className="grid-toolbar-box">
+      <div className="grid-toolbar">
+        <search className="grid-search">
+          <form
+            className="hero-field grid-field"
+            onSubmit={(e) => {
+              e.preventDefault();
+              commit(text);
             }}
-          />
-          <span className="hero-keys" aria-hidden="true">
-            <kbd>Ctrl</kbd>
-            <kbd>K</kbd>
+          >
+            <Icon icon="material-symbols:search" className="hero-field-icon" />
+            <label htmlFor={SEARCH_INPUT_ID} className="sr-only">
+              {placeholder}
+            </label>
+            <input
+              id={SEARCH_INPUT_ID}
+              type="search"
+              className="hero-input"
+              value={text}
+              maxLength={QUERY_MAX_LENGTH}
+              placeholder={placeholder}
+              autoComplete="off"
+              aria-keyshortcuts="Control+K Meta+K"
+              onChange={(e) => {
+                const value = e.target.value;
+                setText(value);
+                clearTimeout(timer.current);
+                timer.current = setTimeout(
+                  () => commit(value),
+                  TYPING_PAUSE_MS,
+                );
+              }}
+            />
+            <span className="hero-keys" aria-hidden="true">
+              <kbd>Ctrl</kbd>
+              <kbd>K</kbd>
+            </span>
+          </form>
+        </search>
+        <Soon lang={lang} className="ai-search ai-search-md">
+          <span className="ai-toggle">
+            <span className="ai-knob" />
           </span>
-        </form>
-      </search>
-      <Soon lang={lang} className="ai-search ai-search-md">
-        <span className="ai-toggle">
-          <span className="ai-knob" />
-        </span>
-        <span>{t.aiSearch}</span>
-        <Icon icon="material-symbols:help" className="pill-icon ai-help" />
-      </Soon>
-      <fieldset className="view-switch">
-        <legend className="sr-only">{t.viewLabel}</legend>
-        <span className="view-item" aria-current="true">
-          <Icon icon="material-symbols:grid-on" />
-          <span className="sr-only">{t.viewGrid}</span>
-        </span>
-        <Soon lang={lang} className="view-item" label={t.viewLarge}>
-          <Icon icon="material-symbols:grid-view" />
+          <span>{t.aiSearch}</span>
+          <Icon icon="material-symbols:help" className="pill-icon ai-help" />
         </Soon>
-        <Soon lang={lang} className="view-item" label={t.viewList}>
-          <Icon icon="material-symbols:list" />
+        <fieldset className="view-switch">
+          <legend className="sr-only">{t.viewLabel}</legend>
+          <span className="view-item" aria-current="true">
+            <Icon icon="material-symbols:grid-on" />
+            <span className="sr-only">{t.viewGrid}</span>
+          </span>
+          <Soon lang={lang} className="view-item" label={t.viewLarge}>
+            <Icon icon="material-symbols:grid-view" />
+          </Soon>
+          <Soon lang={lang} className="view-item" label={t.viewList}>
+            <Icon icon="material-symbols:list" />
+          </Soon>
+        </fieldset>
+        <Soon lang={lang} className="grid-settings">
+          <Icon
+            icon="material-symbols:settings"
+            className="grid-settings-icon"
+          />
+          <span className="grid-settings-label">{t.gridSettings}</span>
         </Soon>
-      </fieldset>
-      <Soon lang={lang} className="grid-settings">
-        <Icon icon="material-symbols:settings" className="grid-settings-icon" />
-        <span className="grid-settings-label">{t.gridSettings}</span>
-      </Soon>
+      </div>
     </div>
   );
 }

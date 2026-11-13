@@ -2104,6 +2104,48 @@
     opacity: 0.5;
   }
   /* Стили и категории — строкой с прокруткой: в макете их нет, сетка начинается сразу. */
+  /*
+   * Строка поиска набора сжимается по своей ширине, а не по ширине окна (план, шаг 3): с открытой панелью
+   * во всю высоту левая колонка узкая. Уже 44rem — без подсказки «Ctrl K», Settings — квадратная кнопка
+   * со значком; уже 34rem — два ряда, как на телефоне: поиск и Settings, под ними AI Search и вид.
+   */
+  .grid-toolbar-box {
+    container: toolbar / inline-size;
+  }
+  @container toolbar (max-width: 44rem) {
+    .grid-field .hero-keys,
+    .grid-settings-label {
+      display: none;
+    }
+    .grid-settings {
+      flex: none;
+      justify-content: center;
+      width: 2.875rem;
+      padding: 0;
+      border-radius: 0.625rem;
+      background: var(--color-bg-surface-strong);
+    }
+    .grid-settings-icon {
+      font-size: 1.25rem;
+      opacity: 1;
+    }
+  }
+  @container toolbar (max-width: 34rem) {
+    .grid-toolbar {
+      flex-wrap: wrap;
+      gap: 0.75rem 0.5rem;
+    }
+    .grid-search {
+      flex: 1 1 calc(100% - 3.375rem);
+    }
+    .ai-search-md {
+      order: 1;
+    }
+    .view-switch {
+      order: 2;
+      margin-inline-start: auto;
+    }
+  }
   .grid-filters {
     display: grid;
     gap: 0.75rem;
@@ -2731,7 +2773,21 @@
         var(--motion-ease-out);
     }
   }
+  /* Строка с номерами страниц в узкой колонке — без «Icons per page» (как на телефоне): номера страниц
+     помещаются в одну строку. */
+  @media (min-width: 64rem) {
+    @container grid-area (max-width: 34rem) {
+      .grid-bar .per-page,
+      .grid-bar .grid-bar-line {
+        display: none;
+      }
+      .grid-bar {
+        justify-content: flex-end;
+      }
+    }
+  }
   .grid-area {
+    container: grid-area / inline-size;
     display: grid;
     /* Одна колонка не шире страницы: сетка внутри, конечной ширины во время сворачивания панели
        (lib/sidebar-motion.ts), не раздвигает соседей. */
