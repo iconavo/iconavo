@@ -7,6 +7,7 @@ import { DICTIONARIES, href, type Lang } from "../../lib/i18n";
 import { bareName, type IconSetSummary, iconPagePath } from "../../lib/icon";
 import { iconProps, useIconSettings } from "../../lib/icon-settings";
 import { panelSettings } from "../../lib/panel-code";
+import { fitPanel } from "../../lib/panel-fit";
 import { PanelActions } from "../panel/actions";
 import {
   PanelColor,
@@ -77,6 +78,12 @@ export function IconPanel({
   useEffect(() => {
     if (focus > 0) heading.current?.focus();
   }, [focus]);
+
+  // На компьютере панель всегда помещается в видимую часть окна (lib/panel-fit.ts).
+  useEffect(() => {
+    const element = panel.current;
+    return element === null ? undefined : fitPanel(element);
+  }, []);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {

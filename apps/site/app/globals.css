@@ -2696,7 +2696,9 @@
     display: flex;
     flex-direction: column;
     width: 100%;
-    max-height: calc(100vh - 2rem);
+    /* Не выше места от верха панели до низа окна (--panel-fit, lib/panel-fit.ts): пока страница не
+       прокручена, низ панели не уходит за край окна. */
+    max-height: var(--panel-fit, calc(100vh - 2rem));
     overflow-y: scroll;
     overscroll-behavior: contain;
     border-radius: 1rem;
