@@ -43,10 +43,12 @@ export const SITE_ICONS = [
   "material-symbols:keyboard-arrow-left",
   "material-symbols:keyboard-arrow-right",
   "material-symbols:link",
+  "material-symbols:link-2",
   "material-symbols:list",
   "material-symbols:menu",
   "material-symbols:moon-stars",
   "material-symbols:open-in-new",
+  "material-symbols:report",
   "material-symbols:search",
   "material-symbols:settings",
   "material-symbols:wb-sunny",
@@ -161,27 +163,37 @@ export const loadSiteIcons = async (): Promise<IconavoIconSet[]> => [
 ];
 
 /**
- * Какие из имён есть в наборах и не скрыты — для соседей в мокапах страницы иконки (lib/mockups.ts):
- * рисунки в страницу не идут, их догружает браузер.
+ * Иконки страницы иконки одной пачкой на набор (редизайн, шаг 4): обязательных не хватает — ошибка,
+ * необязательные (соседи в «In context») — только те, что есть и не скрыты. Рисунки всех найденных
+ * идут во вложенный IconavoProvider — в серверный HTML.
  */
-export async function existingIcons(
-  names: readonly string[],
-): Promise<Set<string>> {
-  const wanted = [...new Set(names)];
-  if (wanted.length === 0) return new Set();
+export async function loadIconPageIcons(
+  required: readonly string[],
+  optional: readonly string[],
+): Promise<{ icons: IconavoIconSet[]; existing: Set<string> }> {
+  const wanted = [...new Set([...required, ...optional])];
   const sets = await Promise.all(
     batchUrls(API, wanted).map(([prefix, url]) => fetchBatch(prefix, url)),
   );
-  return new Set(
-    sets.flatMap((set) =>
-      [
-        ...Object.entries(set.icons),
-        ...Object.entries(set.aliases ?? {}),
-      ].flatMap(([name, entry]) =>
-        entry.hidden ? [] : [`${set.prefix}:${name}`],
-      ),
-    ),
-  );
+  const found = new Map<string, boolean>();
+  for (const set of sets) {
+    for (const [name, entry] of [
+      ...Object.entries(set.icons),
+      ...Object.entries(set.aliases ?? {}),
+    ]) {
+      found.set(`${set.prefix}:${name}`, entry.hidden !== true);
+    }
+  }
+  const missing = required.filter((name) => !found.has(name));
+  if (missing.length > 0) {
+    throw new Error(
+      `СТОП: иконки страницы не загрузились: ${missing.slice(0, 10).join(", ")} — хосты иконок не ответили или имени нет`,
+    );
+  }
+  return {
+    icons: sets,
+    existing: new Set(optional.filter((name) => found.get(name) === true)),
+  };
 }
 
 /** Иконки страницы — для вложенного IconavoProvider; не хватает хоть одной — ошибка. */

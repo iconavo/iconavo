@@ -235,9 +235,14 @@ function getJson(path: string, tag: string): Promise<Got | undefined> {
   return promise;
 }
 
-/** Все наборы каталога. */
-export async function getSets(): Promise<Record<string, SetInfo>> {
-  const got = await getJson("/collections", CATALOG_TAG);
+/**
+ * Все наборы каталога. Метка — по странице: страница иконки берёт отсюда только названия наборов похожих
+ * иконок и передаёт setTag своего набора.
+ */
+export async function getSets(
+  tag: string = CATALOG_TAG,
+): Promise<Record<string, SetInfo>> {
+  const got = await getJson("/collections", tag);
   if (got === undefined) stop("/collections — 404");
   return parseSets(got.data);
 }
@@ -293,13 +298,19 @@ export async function getNames(prefix: string): Promise<Collection> {
 }
 
 /**
- * Выпуски всех наборов, свежие сверху. Метка — по странице: страница набора берёт отсюда только свой
- * последний выпуск и передаёт setTag.
+ * Выпуски всех наборов, свежие сверху; с prefix — только этого набора. Метка — по странице: страница
+ * набора берёт отсюда только свой последний выпуск, страница иконки — даты иконки, обе передают setTag.
  */
 export async function getReleases(
   tag: string = CATALOG_TAG,
+  prefix?: string,
 ): Promise<Release[]> {
-  const got = await getJson("/changelog", tag);
+  const got = await getJson(
+    prefix === undefined
+      ? "/changelog"
+      : `/changelog?prefix=${encodeURIComponent(prefix)}`,
+    tag,
+  );
   if (got === undefined) stop("/changelog — 404");
   return parseReleases(got.data);
 }

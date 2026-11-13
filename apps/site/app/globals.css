@@ -3044,50 +3044,15 @@
     }
   }
 
-  /* Сведения об иконке — в панели и на странице иконки. */
-  .icon-preview-pair {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 0.5rem;
-  }
-  .icon-preview {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    min-block-size: 9rem;
-    margin: 0;
-    padding: 1rem;
-    overflow: hidden;
-    border: 1px solid var(--color-border-secondary);
-    border-radius: var(--radius-md);
-    background: var(--color-bg-page);
-    color: var(--color-text-primary);
-  }
-  /* Размер копии, файла и кода под крупным превью (решение владельца 3 ноября 2026). */
-  .icon-preview-size {
-    margin-block: 0.375rem 0;
-    color: var(--color-text-secondary);
-    font-size: 0.8rem;
-    font-variant-numeric: tabular-nums;
-    text-align: center;
-  }
-  .icon-preview.preview-light {
-    color-scheme: light;
-  }
-  .icon-preview.preview-dark {
-    color-scheme: dark;
-  }
   /*
-   * Панели со своей темой: превью и мокапы страницы иконки. Lightning CSS, которым Tailwind собирает
+   * Панели со своей темой: превью панели и страницы иконки, «In context» на светлом и тёмном фоне. Lightning CSS, которым Tailwind собирает
    * стили, заменяет light-dark() переменными --lightningcss-light и --lightningcss-dark, и токен
    * вычисляется один раз — у :root: color-scheme вложенного элемента его уже не меняет. Здесь токены
    * объявлены заново — значениями из @theme (--theme(… inline)), без новых цветов: элемент со своим
    * color-scheme вычисляет их сам. Список токенов сверяет lib/tokens.test.ts.
    */
   .preview-light,
-  .preview-dark,
-  .mockup-light,
-  .mockup-dark {
+  .preview-dark {
     /* biome-ignore-start lint/correctness/noMissingVarFunction: --theme(… inline) Tailwind подставляет значение токена из @theme, а не ссылку на переменную */
     --color-bg-page: --theme(--color-bg-page inline);
     --color-bg-surface: --theme(--color-bg-surface inline);
@@ -3128,100 +3093,10 @@
     --shadow-md: --theme(--shadow-md inline);
     /* biome-ignore-end lint/correctness/noMissingVarFunction: конец значений из @theme */
   }
-  .icon-name-row {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 0.5rem;
-    overflow-wrap: anywhere;
-  }
-  /* Формат имени и главные действия под превью (шаг 5 фазы 4): «нашёл, скопировал, вставил». */
-  .name-format {
-    max-inline-size: 100%;
-    white-space: normal;
-  }
-  .name-format-text {
-    overflow-wrap: anywhere;
-  }
+  /* Подпись формата в списке Name панели иконки (шаг 5 фазы 4). */
   .name-format-label {
     color: var(--color-text-secondary);
     font-size: 0.75rem;
-  }
-  .icon-actions {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.5rem;
-    margin-block: 0.75rem;
-  }
-  .icon-section {
-    margin-block-start: 1.25rem;
-  }
-  .icon-section-title {
-    margin-block: 0.75rem 0.375rem;
-    font-size: 0.875rem;
-    font-weight: 600;
-  }
-  .icon-variants {
-    display: grid;
-    gap: 0.25rem;
-    margin-block-end: 0.5rem;
-  }
-  .icon-variants-style {
-    color: var(--color-text-secondary);
-    font-size: 0.75rem;
-  }
-  .icon-variants-list {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.25rem;
-  }
-  .icon-similar {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(5.5rem, 1fr));
-    gap: 0.25rem;
-  }
-  .icon-variant {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 0.25rem;
-    min-inline-size: 3rem;
-    padding: 0.5rem 0.25rem;
-    border: 1px solid transparent;
-    border-radius: var(--radius-md);
-    background: none;
-    color: inherit;
-    font: inherit;
-    text-align: center;
-    text-decoration: none;
-    cursor: pointer;
-  }
-  .icon-variant:hover {
-    background: var(--color-bg-surface);
-  }
-  .icon-variant[aria-pressed="true"],
-  .icon-variant[aria-current="page"] {
-    border-color: var(--color-link-unicode);
-  }
-  .icon-variant-svg {
-    font-size: 1.5rem;
-  }
-  .icon-variant-name,
-  .icon-variant-set {
-    max-inline-size: 6rem;
-    font-size: 0.7rem;
-    line-height: 1.2;
-    overflow-wrap: anywhere;
-  }
-  .icon-variant-set {
-    color: var(--color-text-secondary);
-  }
-  .icon-settings {
-    display: grid;
-    gap: 0.5rem;
-    margin-block-start: 1.25rem;
-    padding: 0;
-    border: 0;
   }
   .icon-setting {
     display: flex;
@@ -3268,16 +3143,7 @@
     font-size: 0.8rem;
     margin-block: 0.25rem;
   }
-  /* Генератор кода и скачивание (шаг 5 фазы 4, ADR-0042). */
-  .icon-code .code {
-    margin-block: 0.5rem;
-  }
-  .icon-code-choice {
-    min-inline-size: 0;
-    margin: 0 0 0.5rem;
-    padding: 0;
-    border: 0;
-  }
+  /* Скачивание в меню сумки (шаг 5 фазы 4, ADR-0042). */
   .icon-download {
     display: flex;
     flex-wrap: wrap;
@@ -3407,341 +3273,977 @@
     background: var(--color-link-unicode);
     color: var(--color-text-inverse);
   }
-  .icon-facts {
+  /*
+   * Страница иконки по макету Figma «Страница иконки» (редизайн, шаг 4): кадры «Icon Page / Similar Icons»,
+   * «Code», «In Context», «Copy Menu», «Loading», «Removed Icon» и их телефонные пары. Первый экран — две
+   * колонки: превью 320 px с фоном, сеткой и размерами слева, сведения справа; ниже — вкладки.
+   */
+  .icon-page {
+    padding: 2rem var(--page-x-end) 2.5rem var(--page-x);
+    font-size: var(--text-body-base);
+    line-height: var(--text-body-base--line-height);
+  }
+  .ip-crumbs {
+    margin-bottom: 1.5rem;
+  }
+  .ip-hero {
     display: grid;
-    grid-template-columns: auto 1fr;
-    gap: 0.25rem 0.75rem;
-    font-size: 0.875rem;
+    grid-template-areas:
+      "visual head"
+      "visual info";
+    grid-template-columns: 20rem minmax(0, 1fr);
+    grid-template-rows: auto 1fr;
+    gap: 1.25rem 2.5rem;
+    align-items: start;
+    padding-bottom: 2rem;
   }
-  .icon-facts dt {
-    color: var(--color-text-secondary);
+  .ip-head {
+    display: grid;
+    grid-area: head;
+    gap: 1.25rem;
+    min-width: 0;
   }
-  .icon-credit {
-    display: block;
-    color: var(--color-text-secondary);
+  .ip-visual {
+    display: grid;
+    grid-area: visual;
+    gap: 1rem;
+    min-width: 0;
   }
-  /* Указание авторства — свёрнуто под стрелкой (решение владельца 3 ноября 2026). */
-  .icon-attribution {
-    margin-block-start: 0.75rem;
+  .ip-info {
+    display: grid;
+    grid-area: info;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 1.25rem;
+    min-width: 0;
   }
-  .icon-attribution summary {
-    cursor: pointer;
-    font-size: 0.875rem;
-    font-weight: 600;
+
+  /* Имя 32/36, пометка Removed и кнопка-ссылка 20 px. */
+  .ip-title-row {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    min-width: 0;
   }
-  .icon-attribution-text {
-    margin-block: 0.5rem;
-    padding: 0.5rem 0.75rem;
-    border-radius: var(--radius-md);
-    background: var(--color-bg-surface);
-    font-size: 0.8rem;
+  .page .ip-title {
+    margin: 0;
+    font-size: var(--text-display);
+    font-weight: 500;
+    line-height: var(--text-display--line-height);
     overflow-wrap: anywhere;
   }
-  .icon-hidden,
-  .icon-alias {
-    padding: 0.5rem 0.75rem;
-    border: 1px solid var(--color-border-primary);
+  .ip-link {
+    display: inline-flex;
+    flex: none;
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--color-text-primary);
+    font-size: 1.25rem;
+    cursor: pointer;
+  }
+  .ip-badge {
+    flex: none;
+    padding: calc(0.125rem - 1px) calc(0.5rem - 1px);
+    border: 1px solid var(--color-status-danger);
+    border-radius: var(--radius-sm);
+    color: var(--color-text-danger);
+    font-size: var(--text-body-sm);
+    line-height: var(--text-body-sm--line-height);
+  }
+
+  /* Мета-строка и строка дат: подпись, значение, разделитель 1 × 16 через 12 px. */
+  .ip-meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.75rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    font-size: var(--text-body-sm);
+    line-height: var(--text-body-sm--line-height);
+  }
+  .ip-meta li {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+  }
+  .ip-meta li + li::before {
+    content: "";
+    flex: none;
+    width: 1px;
+    height: 1rem;
+    margin-inline-end: 0.375rem;
+    background: var(--color-border-secondary-20);
+  }
+  .ip-meta-label {
+    color: var(--color-text-secondary);
+  }
+  .ip-link-text {
+    color: var(--color-link-unicode);
+    text-decoration: underline;
+  }
+  .page .ip-notice {
+    display: flex;
+    gap: 0.5rem;
+    margin: 0;
+    padding: calc(0.625rem - 1px) calc(0.75rem - 1px);
+    border: 1px solid var(--color-status-badge);
     border-radius: var(--radius-md);
-    font-size: 0.875rem;
+    font-size: var(--text-body-xs);
+    line-height: var(--text-body-xs--line-height);
   }
-  .icon-open-page {
-    margin-block-start: 1.25rem;
+  .ip-notice-icon {
+    flex: none;
+    color: var(--color-status-badge);
+    font-size: 1rem;
   }
-  .icon-loading {
+
+  /* Превью: плитка 320, внутри сетка и иконка во все 288 px; фон — по выбору или как тема. */
+  .ip-tile {
     display: grid;
+    place-items: center;
+    aspect-ratio: 1;
+    width: 100%;
+    padding: 1rem;
+    border-radius: 1rem;
+    background: var(--color-bg-surface);
+    color: var(--color-text-primary);
+  }
+  .ip-tile.preview-light {
+    color-scheme: light;
+  }
+  .ip-tile.preview-dark {
+    color-scheme: dark;
+  }
+  .ip-tile-transparent {
+    background-color: var(--color-bg-page);
+    background-image: conic-gradient(
+      var(--color-bg-surface-strong) 25%,
+      var(--color-bg-page) 0 50%,
+      var(--color-bg-surface-strong) 0 75%,
+      var(--color-bg-page) 0
+    );
+    background-size: 1rem 1rem;
+  }
+  .ip-tile-canvas {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 1;
+  }
+  .ip-grid,
+  .ip-tile-icon {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+  }
+  /* Крайние линии — на краю холста: половина обводки вышла бы за него. */
+  .ip-grid {
+    overflow: visible;
+    fill: none;
+    stroke: var(--color-border-secondary-20);
+  }
+  .ip-grid path {
+    stroke-width: 1px;
+    vector-effect: non-scaling-stroke;
+  }
+  .ip-tile-removed .ip-tile-icon {
+    opacity: 0.3;
+  }
+  /* По-русски фон и сетка в 320 px не помещаются — выключатель уходит строкой ниже. */
+  .ip-controls {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
     gap: 0.5rem;
   }
-  .icon-skeleton {
-    display: block;
-    block-size: 2.5rem;
+  .ip-bg {
+    display: flex;
+    gap: 0.5rem;
+    min-width: 0;
+    margin: 0;
+    padding: 0;
+    border: 0;
+  }
+  .pill-option.ip-pressed {
+    border-color: transparent;
+    background: var(--color-accent-mint);
+    color: var(--color-text-on-accent);
+  }
+  /* Выключатель сетки (Toggle макета): 40 × 24, ручка 16, включён — справа и лимонная. */
+  .ip-switch {
+    position: relative;
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--color-text-secondary);
+    font-size: var(--text-body-sm);
+    line-height: var(--text-body-sm--line-height);
+    cursor: pointer;
+  }
+  .ip-switch-input {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    overflow: hidden;
+    clip-path: inset(50%);
+    border: 0;
+    white-space: nowrap;
+    appearance: none;
+  }
+  .ip-switch-track,
+  .ctx-switch {
+    position: relative;
+    flex: none;
+    width: 2.5rem;
+    height: 1.5rem;
+    border-radius: 9999px;
+    background: var(--color-bg-surface-strong);
+  }
+  .ip-switch-track::after,
+  .ctx-switch::after {
+    content: "";
+    position: absolute;
+    top: 0.25rem;
+    left: 0.25rem;
+    width: 1rem;
+    height: 1rem;
+    border-radius: 9999px;
+    background: var(--color-text-secondary);
+  }
+  .ip-switch-input:checked + .ip-switch-track::after,
+  .ip-switch-on::after,
+  .ctx-switch-on::after {
+    translate: 1rem 0;
+    background: var(--color-accent-lemon);
+  }
+  .ctx-switch::after {
+    background: var(--color-accent-lemon);
+  }
+  .ip-switch-input:focus-visible + .ip-switch-track {
+    outline: 2px solid var(--color-selection-bg);
+    outline-offset: 2px;
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .ip-switch-track::after {
+      transition: translate 0.15s var(--motion-ease-out);
+    }
+  }
+
+  /* Подписи разделов 12/16 и блок «подпись — содержимое» через 8 px. */
+  .ip-block {
+    display: grid;
+    gap: 0.5rem;
+    min-width: 0;
+  }
+  .ip-label {
+    margin: 0;
+    color: var(--color-text-secondary);
+    font-size: var(--text-body-xs);
+    font-weight: 400;
+    line-height: var(--text-body-xs--line-height);
+  }
+  /* Ряд «Sizes»: плитки 74 × 84, иконка в поле 48, подпись под ней. */
+  .ip-size-row {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 0.5rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .ip-size {
+    display: grid;
+    justify-items: center;
+    align-content: start;
+    gap: 0.375rem;
+    height: 5.25rem;
+    padding-top: 0.4375rem;
     border-radius: var(--radius-md);
-    background: currentColor;
-    opacity: 0.12;
+    background: var(--color-bg-surface);
+  }
+  .ip-size-box {
+    display: grid;
+    place-items: center;
+    width: 3rem;
+    height: 3rem;
+    color: var(--color-text-primary);
+  }
+  .ip-size-label {
+    color: var(--color-text-secondary);
+    font-size: var(--text-body-xs);
+    line-height: var(--text-body-xs--line-height);
+  }
+
+  /* Теги — строкой через «·», «+N» — в конце строки; категории — таблетки-ссылки на набор. */
+  .page .ip-tag-list {
+    margin: 0;
+    font-size: var(--text-body-sm);
+    line-height: var(--text-body-sm--line-height);
+  }
+  .ip-more {
+    margin-inline-start: 0.5rem;
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--color-link-unicode);
+    font: inherit;
+    text-decoration: underline;
+    cursor: pointer;
+  }
+  .ip-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .ip-chips .pill-option {
+    text-decoration: none;
+  }
+  .ip-pair {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.75rem;
+    width: min(100%, 27.625rem);
+  }
+
+  /* Действия: Copy SVG ▾ — одна лимонная кнопка из двух частей, Download ▾ и сумка. */
+  .ip-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+  .ip-actions-off .panel-btn {
+    opacity: 0.5;
+  }
+  .ip-split {
+    display: inline-flex;
+    flex: none;
+  }
+  .ip-split-main {
+    padding-inline-end: calc(0.125rem - 1px);
+    border-start-end-radius: 0;
+    border-end-end-radius: 0;
+  }
+  .ip-split-arrow {
+    padding-inline: calc(0.125rem - 1px) calc(1rem - 1px);
+    border-start-start-radius: 0;
+    border-end-start-radius: 0;
+  }
+  .ip-bag-narrow {
+    display: none;
+  }
+  .ip-bag[aria-pressed="true"] {
+    border-color: var(--color-accent-mint);
+  }
+  .ip-open-set {
+    text-decoration: none;
+  }
+
+  /* Другие стили — плитки 116 × 101 карточки сетки; текущая — bg/cardHover. */
+  .ip-style-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .ip-style {
+    width: 7.25rem;
+  }
+  .icon-card-link.ip-style[aria-current="page"] {
+    background: var(--color-bg-card-hover);
+  }
+  .ip-style-label {
+    font-size: var(--text-body-sm);
+    line-height: var(--text-body-sm--line-height);
+    text-align: center;
+  }
+  .ip-style-skeleton {
+    display: block;
+    min-block-size: 6.3125rem;
+    border-radius: var(--radius-lg);
+    background: var(--color-bg-surface);
+  }
+
+  /* Меню выбора на компьютере (Copy Menu макета): 224 px, пункты 30 px, галочка справа. */
+  .ip-menu {
+    z-index: 50;
+    min-width: 14rem;
+    font-size: var(--text-body-base);
+    line-height: var(--text-body-base--line-height);
+    padding: 0.25rem;
+    border-radius: var(--radius-lg);
+    background: var(--color-bg-surface-muted);
+    color: var(--color-text-primary);
+    box-shadow: var(--shadow-md);
+  }
+  .ip-menu-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    min-height: 1.875rem;
+    padding: 0.375rem 0.5rem;
+    border-radius: var(--radius-md);
+    outline: none;
+    cursor: default;
+    user-select: none;
+  }
+  .ip-menu-item[data-highlighted] {
+    background: var(--color-bg-surface-strong);
+  }
+  .ip-menu-check {
+    flex: none;
+    font-size: 1rem;
+  }
+  .ip-menu-separator {
+    height: 1px;
+    margin-block: 0.25rem;
+    background: var(--color-border-secondary);
+  }
+
+  /* Шторка на телефоне («Bottom Sheet — Copy as»): снизу во всю ширину, строки по 44 px. */
+  .ip-sheet {
+    inset: auto 0 0;
+    width: 100%;
+    max-width: none;
+    max-height: 85dvh;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    border-radius: 1rem 1rem 0 0;
+    background: var(--color-bg-surface);
+    color: var(--color-text-primary);
+  }
+  .ip-sheet::backdrop {
+    background: var(--color-bg-overlay);
+  }
+  .ip-sheet-body {
+    display: grid;
+    padding: 0.5rem 0 1rem;
+    outline: none;
+  }
+  .ip-sheet-handle {
+    justify-self: center;
+    width: 2.25rem;
+    height: 0.25rem;
+    margin-bottom: 0.5rem;
+    border-radius: 9999px;
+    background: var(--color-border-primary);
+  }
+  .ip-sheet-head {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem 1rem;
+    border-bottom: 1px solid var(--color-border-secondary-20);
+  }
+  .ip-sheet-icon {
+    flex: none;
+    font-size: 1rem;
+    opacity: 0.5;
+  }
+  .ip-sheet-title {
+    flex: 1;
+  }
+  .ip-sheet-close {
+    display: inline-flex;
+    padding: 0;
+    border: 0;
+    background: none;
+    color: inherit;
+    font-size: 1.25rem;
+    cursor: pointer;
+  }
+  .ip-sheet-list {
+    display: grid;
+    margin: 0;
+    padding: 0.5rem 0.5rem 0;
+    list-style: none;
+  }
+  .ip-sheet-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    height: 2.75rem;
+    padding: 0 0.5rem;
+    border: 0;
+    border-radius: var(--radius-md);
+    background: none;
+    color: inherit;
+    font: inherit;
+    text-align: start;
+    cursor: pointer;
+  }
+  .ip-sheet-item:hover {
+    background: var(--color-bg-surface-strong);
+  }
+  .ip-sheet-separated {
+    margin-top: 0.5rem;
+    padding-top: 0.5rem;
+    border-top: 1px solid var(--color-border-secondary);
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .ip-sheet[open] {
+      animation: ip-sheet-in var(--motion-sheet-in) var(--motion-ease-out);
+    }
+    .ip-sheet[open]::backdrop {
+      animation: fade-in var(--motion-fade);
+    }
+  }
+  @keyframes ip-sheet-in {
+    from {
+      translate: 0 100%;
+    }
+  }
+
+  /* Вкладки: 14/18, между ними 20 px, выбранная — с чертой; ширина — по жирной подписи, без сдвигов. */
+  .ip-tabs {
+    display: flex;
+    gap: 1.25rem;
+    border-bottom: 1px solid var(--color-border-secondary-20);
+  }
+  .ip-tab {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: -1px;
+    padding: 0.5rem 0;
+    border: 0;
+    border-bottom: 1px solid transparent;
+    background: none;
+    color: var(--color-text-secondary);
+    font: inherit;
+    white-space: nowrap;
+    cursor: pointer;
+  }
+  .ip-tab::after {
+    content: attr(data-label);
+    height: 0;
+    overflow: hidden;
+    font-weight: 500;
+    visibility: hidden;
+  }
+  .ip-tab[aria-selected="true"],
+  .ip-tab-selected {
+    border-bottom-color: var(--color-text-primary);
+    color: var(--color-text-primary);
+    font-weight: 500;
+  }
+  .ip-tabpanel {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 1rem;
+    padding-top: 1.5rem;
+  }
+  .page .ip-lead {
+    margin: 0;
+    color: var(--color-text-secondary);
+    font-size: var(--text-body-sm);
+    line-height: var(--text-body-sm--line-height);
+  }
+  .ip-failed {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  /* Похожие: карточки 152 × 113 — иконка 24, имя и набор; на телефоне — три колонки. */
+  .ip-similar {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(9.5rem, 1fr));
+    gap: 0.75rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .ip-similar-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+    height: 100%;
+    min-height: 7.0625rem;
+    padding: 1rem 0.5rem;
+    border-radius: var(--radius-lg);
+    background: var(--color-bg-icon-card);
+    color: var(--color-text-primary);
+    text-decoration: none;
+  }
+  a.ip-similar-card:hover {
+    background: var(--color-bg-card-hover);
+  }
+  .ip-similar-icon {
+    flex: none;
+    font-size: 1.5rem;
+  }
+  .ip-similar-text {
+    display: grid;
+    gap: 0.5rem;
+    width: 100%;
+    text-align: center;
+  }
+  .ip-similar-name,
+  .ip-similar-set {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .ip-similar-name {
+    font-size: var(--text-body-sm);
+    line-height: var(--text-body-sm--line-height);
+  }
+  .ip-similar-set {
+    color: var(--color-text-secondary);
+    font-size: var(--text-body-xs);
+    line-height: var(--text-body-xs--line-height);
+  }
+  .ip-similar-skeleton {
+    gap: 0.625rem;
+    padding-top: 1.625rem;
+    background: var(--color-bg-surface);
+  }
+
+  /* Скелетоны кадра Loading: полосы bg/surfaceStrong, видны через 150 мс и мерцают, как в поиске. */
+  .ip-skeleton {
+    display: block;
+    flex: none;
+    border-radius: var(--radius-xs);
+    background: var(--color-bg-surface-strong);
     animation:
       search-h 0.15s step-end,
       search-p 1s 0.15s infinite alternate;
   }
   @media (prefers-reduced-motion: reduce) {
-    .icon-skeleton {
+    .ip-skeleton {
       animation: search-h 0.15s step-end;
     }
   }
-  .icon-page .icon-details {
-    max-inline-size: var(--width-text);
+  .ip-skeleton-crumbs {
+    width: 16rem;
+    height: 1rem;
+  }
+  .ip-skeleton-title {
+    width: 15rem;
+    height: 2rem;
+    border-radius: var(--radius-sm);
+  }
+  .ip-skeleton-meta {
+    width: min(100%, 23.75rem);
+    height: 0.875rem;
+  }
+  .ip-skeleton-tile {
+    width: 7.5rem;
+    height: 7.5rem;
+    border-radius: 1rem;
+  }
+  .ip-skeleton-tags {
+    width: min(100%, 28.75rem);
+    height: 0.875rem;
+  }
+  .ip-skeleton-chip {
+    width: 5.25rem;
+    height: 1.875rem;
+    border-radius: var(--radius-md);
+  }
+  .ip-skeleton-dates {
+    width: min(100%, 18.75rem);
+    height: 0.875rem;
+  }
+  .ip-skeleton-lead {
+    width: min(100%, 17.5rem);
+    height: 0.75rem;
+  }
+  .ip-skeleton-icon {
+    width: 1.5rem;
+    height: 1.5rem;
+    border-radius: var(--radius-sm);
+  }
+  .ip-skeleton-name {
+    width: 5rem;
+    height: 0.625rem;
+  }
+  .ip-skeleton-set {
+    width: 6.25rem;
+    height: 0.5rem;
   }
 
-  /* Мокапы страницы иконки (шаг 4 фазы 4, ADR-0041; утверждены владельцем 2 ноября 2026): места интерфейса
-     в светлой и тёмной теме. У панели темы свой color-scheme — пары light-dark() токенов подстраиваются
-     сами, новых цветов нет. Иконки в серверном HTML — заглушки того же размера: место не прыгает. */
-  .mockups-lead {
-    color: var(--color-text-secondary);
-  }
-  .mockup {
+  /* Вкладка Code: Name и Stroke Width, блок кода панели в карточке 760 px, автор и лицензия. */
+  .ip-code-fields {
     display: grid;
-    gap: 0.75rem;
-    margin-block-start: 1.25rem;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: end;
+    gap: 1.25rem;
+    max-width: 47.5rem;
   }
-  .mockup-head h3 {
-    margin: 0;
-    font-size: 1rem;
-    font-weight: 600;
-  }
-  .mockup-size {
-    margin: 0.25rem 0 0;
-    color: var(--color-text-secondary);
-    font-size: 0.875rem;
-  }
-  .mockup-pane {
-    position: relative;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    min-block-size: 12.5rem;
-    padding: 1.75rem 1rem 1rem;
-    overflow: hidden;
-    border: 1px solid var(--color-border-secondary);
-    border-radius: var(--radius-md);
-    background: var(--color-bg-page);
-    color: var(--color-text-primary);
-  }
-  .mockup-light {
-    color-scheme: light;
-  }
-  .mockup-dark {
-    color-scheme: dark;
-  }
-  .mockup-theme {
-    position: absolute;
-    inset-block-start: 0.5rem;
-    inset-inline-start: 0.75rem;
-    color: var(--color-text-secondary);
-    font-size: 0.75rem;
-  }
-  .mockup-pane svg {
-    flex: none;
-  }
-  .mockup-muted {
-    display: inline-flex;
-    color: var(--color-text-secondary);
-  }
-  @media (min-width: 48rem) {
-    .mockup {
-      grid-template-columns: 12rem 1fr 1fr;
-      gap: 1rem;
-    }
-  }
-
-  /* Кнопки: основная, обычная и кнопка-иконка. */
-  .mockup-buttons {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    justify-content: center;
-    gap: 0.75rem;
-  }
-  .mockup-btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    block-size: 2.5rem;
-    padding-inline: 1rem;
-    border: 1px solid transparent;
-    border-radius: var(--radius-md);
-    font-weight: 600;
-  }
-  .mockup-btn-primary {
-    background: var(--color-link-unicode);
-    color: var(--color-bg-page);
-  }
-  .mockup-btn-outline {
-    border-color: var(--color-border-primary);
-  }
-  .mockup-btn-icon {
-    justify-content: center;
-    inline-size: 2.5rem;
-    padding: 0;
-    background: var(--color-bg-surface);
-  }
-
-  /* Нижняя панель вкладок приложения на телефоне. */
-  .mockup-phone {
-    inline-size: min(20rem, 100%);
-    overflow: hidden;
-    border: 1px solid var(--color-border-secondary);
-    border-radius: 1.25rem;
-    background: var(--color-bg-surface);
-  }
-  .mockup-screen {
-    block-size: 3.5rem;
-  }
-  .mockup-tabs {
-    display: flex;
-    justify-content: space-around;
-    padding-block: 0.5rem 0.625rem;
-    border-block-start: 1px solid var(--color-border-secondary);
-    background: var(--color-bg-page);
-  }
-  .mockup-tab {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 0.125rem;
-    color: var(--color-text-secondary);
-    font-size: 0.75rem;
-  }
-  .mockup-tab.mockup-active {
-    color: var(--color-link-unicode);
-    font-weight: 600;
-  }
-
-  /* Выпадающее меню: пункт с иконкой — под курсором. */
-  .mockup-menu {
-    inline-size: min(15rem, 100%);
-    padding: 0.375rem;
-    border: 1px solid var(--color-border-secondary);
-    border-radius: var(--radius-md);
-    background: var(--color-bg-page);
-    box-shadow: var(--shadow-md);
-  }
-  .mockup-item {
-    display: flex;
-    align-items: center;
-    gap: 0.625rem;
-    padding: 0.375rem 0.625rem;
-    border-radius: calc(var(--radius-md) - 0.125rem);
-    font-size: 0.875rem;
-  }
-  .mockup-item.mockup-hover {
-    background: var(--color-bg-surface);
-  }
-  .mockup-item kbd {
-    margin-inline-start: auto;
-    color: var(--color-text-secondary);
-    font: 0.75rem var(--font-mono);
-  }
-
-  /* Поле ввода: иконка в начале, справа — «очистить». */
-  .mockup-input {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    inline-size: min(18rem, 100%);
-    block-size: 2.5rem;
-    padding-inline: 0.625rem;
-    border: 1px solid var(--color-border-primary);
-    border-radius: var(--radius-md);
-    background: var(--color-bg-page);
-  }
-  .mockup-input-text {
-    flex: 1;
-    overflow: hidden;
-    font-size: 0.875rem;
-    white-space: nowrap;
-    text-overflow: ellipsis;
-  }
-
-  /* Всплывающее уведомление с заголовком. */
-  .mockup-toast {
-    display: flex;
-    align-items: flex-start;
-    gap: 0.75rem;
-    inline-size: min(20rem, 100%);
-    padding: 0.875rem 1rem;
-    border: 1px solid var(--color-border-secondary);
-    border-radius: var(--radius-md);
-    background: var(--color-bg-page);
-    box-shadow: var(--shadow-md);
-    font-size: 0.875rem;
-  }
-  .mockup-toast-text {
-    flex: 1;
-    min-inline-size: 0;
-  }
-  .mockup-toast-text strong {
-    display: block;
-  }
-  .mockup-toast-text p {
-    margin: 0.125rem 0 0;
-    color: var(--color-text-secondary);
-  }
-
-  /* Экран приложений: плитка 60 px, иконка 36 px. */
-  .mockup-tiles {
-    display: flex;
-    gap: 1rem;
-  }
-  .mockup-tile {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 0.375rem;
-    max-inline-size: 4.5rem;
-    font-size: 0.75rem;
-  }
-  .mockup-tile-label {
-    max-inline-size: 100%;
-    overflow: hidden;
-    white-space: nowrap;
-    text-overflow: ellipsis;
-  }
-  .mockup-tile-box {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    inline-size: 3.75rem;
-    block-size: 3.75rem;
+  .ip-code-card {
+    max-width: 47.5rem;
+    padding: 1.25rem;
     border-radius: 1rem;
     background: var(--color-bg-surface);
   }
-  .mockup-tile-box.mockup-tile-main {
-    background: var(--color-link-unicode);
-    color: var(--color-bg-page);
+  .icon-page .panel-credits {
+    max-width: 47.5rem;
+    padding: 0;
+    border-top: 0;
   }
 
-  /* Панель инструментов: ряд кнопок-иконок, выбранная нажата. */
-  .mockup-toolbar {
-    display: flex;
-    gap: 0.25rem;
-    padding: 0.25rem;
-    border: 1px solid var(--color-border-secondary);
-    border-radius: var(--radius-md);
-    background: var(--color-bg-page);
+  /* Вкладка In context: шесть карточек 368 × 248 — компоненты сайта с иконкой. */
+  .ctx-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(18rem, 1fr));
+    gap: 1rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
   }
-  .mockup-tool {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    inline-size: 2.25rem;
-    block-size: 2.25rem;
-    border-radius: calc(var(--radius-md) - 0.125rem);
-    color: var(--color-text-secondary);
-  }
-  .mockup-tool.mockup-on {
+  .ctx-card {
+    display: grid;
+    grid-template-rows: auto 1fr;
+    gap: 1rem;
+    min-height: 15.5rem;
+    padding: 1.5rem;
+    border-radius: 1rem;
     background: var(--color-bg-surface);
-    color: var(--color-text-primary);
   }
-
-  /* Боковое меню: навигация, выбранный раздел подсвечен. */
-  .mockup-sidebar {
-    display: flex;
-    flex-direction: column;
-    gap: 0.125rem;
-    inline-size: min(13rem, 100%);
-    padding: 0.5rem;
-    border-inline-end: 1px solid var(--color-border-secondary);
+  .ctx-title {
+    margin: 0;
+    color: var(--color-text-secondary);
+    font-size: var(--text-body-xs);
+    font-weight: 400;
+    line-height: var(--text-body-xs--line-height);
   }
-  .mockup-nav {
+  .ctx-stage {
+    display: grid;
+    align-content: center;
+    justify-items: center;
+    gap: 0.75rem;
+    min-height: 10.5rem;
+  }
+  .ctx-stage .panel-btn {
+    cursor: default;
+  }
+  .ctx-input {
     display: flex;
     align-items: center;
     gap: 0.625rem;
-    padding: 0.375rem 0.625rem;
-    border-radius: calc(var(--radius-md) - 0.125rem);
-    color: var(--color-text-secondary);
-    font-size: 0.875rem;
+    width: 100%;
+    height: 2.75rem;
+    padding-inline: calc(1rem - 1px);
+    border: 1px solid var(--color-border-secondary);
+    border-radius: var(--radius-md);
   }
-  .mockup-nav.mockup-active {
-    background: var(--color-bg-surface);
+  .ctx-input-text {
+    flex: 1;
+    min-width: 0;
+  }
+  .ctx-nav,
+  .ctx-toggles {
+    justify-items: stretch;
+  }
+  .ctx-nav {
+    gap: 0.25rem;
+  }
+  .ctx-nav-item,
+  .ctx-menu-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    min-height: 1.875rem;
+    padding: 0.375rem 0.5rem;
+  }
+  .ctx-nav-item {
+    border-radius: var(--radius-xs);
+  }
+  .ctx-nav-current {
+    background: var(--color-bg-surface-strong);
+  }
+  .ctx-menu {
+    display: grid;
+    width: 14rem;
+    padding: 0.25rem;
+    border-radius: var(--radius-lg);
+    background: var(--color-bg-surface-muted);
+    box-shadow: var(--shadow-md);
+  }
+  .ctx-menu-item {
+    border-radius: var(--radius-md);
+  }
+  .ctx-menu-separator {
+    height: 1px;
+    margin-block: 0.25rem;
+    background: var(--color-border-secondary);
+  }
+  .ctx-toggles {
+    gap: 1rem;
+  }
+  .ctx-toggle {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+  .ctx-toggle-text {
+    display: grid;
+    flex: 1;
+    gap: 0.125rem;
+  }
+  .ctx-toggle-state {
+    color: var(--color-text-secondary);
+    font-size: var(--text-body-sm);
+    line-height: var(--text-body-sm--line-height);
+  }
+  .ctx-themes {
+    grid-template-columns: repeat(2, 9.25rem);
+    justify-content: center;
+    justify-items: stretch;
+  }
+  .ctx-theme {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    height: 7.5rem;
+    border-radius: var(--radius-lg);
+    background: var(--color-bg-page);
     color: var(--color-text-primary);
-    font-weight: 600;
+  }
+  .ctx-theme.preview-light {
+    color-scheme: light;
+  }
+  .ctx-theme.preview-dark {
+    color-scheme: dark;
+  }
+
+  /*
+   * Телефон (кадры «Icon Page / Mobile — …»): «‹ Набор» вместо крошек, одна колонка в порядке панели
+   * иконки — имя и мета-строка, превью на всю ширину, фон и сетка, Size и Color, кнопки (Copy SVG видна
+   * без прокрутки), затем размеры, теги, категории, стили 3 × 2 и даты.
+   */
+  @media (max-width: 63.98rem) {
+    .icon-page {
+      padding-block: 1rem 2rem;
+    }
+    .ip-crumbs {
+      display: none;
+    }
+    .ip-back {
+      margin-bottom: 0.75rem;
+    }
+    .ip-hero {
+      display: flex;
+      flex-direction: column;
+      align-items: stretch;
+      gap: 1.25rem;
+    }
+    .ip-visual,
+    .ip-info {
+      display: contents;
+    }
+    .ip-tile {
+      order: 1;
+      padding: 1.125rem;
+      border-radius: 1.125rem;
+    }
+    .ip-controls {
+      order: 2;
+    }
+    .ip-pair {
+      order: 3;
+      width: 100%;
+    }
+    .ip-actions {
+      order: 4;
+      flex-wrap: nowrap;
+    }
+    .ip-sizes {
+      order: 5;
+    }
+    .ip-tags {
+      order: 6;
+    }
+    .ip-cats {
+      order: 7;
+    }
+    .ip-styles {
+      order: 8;
+    }
+    .ip-dates {
+      order: 9;
+    }
+    .page .ip-title {
+      font-size: 1.75rem;
+      line-height: 2rem;
+    }
+    .ip-head .ip-meta {
+      gap: 0.5rem 1rem;
+    }
+    .ip-head .ip-meta li + li::before {
+      display: none;
+    }
+    /*
+     * Copy SVG и Download растут поровну от своей ширины, сумка — по себе: по-английски выходит, как в кадре
+     * «Mobile — Similar Icons» (141 + 141 + 61). Поля у этих двух — 12 px вместо 16: иначе русские
+     * «Копировать» и «Скачать» рядом с сумкой не помещаются.
+     */
+    .ip-split,
+    .ip-download {
+      flex: 1 1 auto;
+    }
+    .ip-split-main {
+      flex: 1 1 auto;
+      padding-inline-start: calc(0.75rem - 1px);
+    }
+    .ip-split-arrow {
+      padding-inline-end: calc(0.75rem - 1px);
+    }
+    .ip-download {
+      padding-inline: calc(0.75rem - 1px);
+    }
+    :lang(ru) .ip-copy-format {
+      display: none;
+    }
+    /* Removed: «Download last version» и «Open Lucide» — поровну на всю строку (кадр «Mobile — Removed Icon»). */
+    .ip-actions-removed > * {
+      flex: 1 1 0;
+      min-width: 0;
+    }
+    .ip-bag-wide {
+      display: none;
+    }
+    .ip-bag-narrow {
+      display: inline-flex;
+    }
+    .ip-style-row {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+    .ip-style {
+      width: auto;
+    }
+    .ip-tabpanel {
+      padding-top: 1rem;
+    }
+    .ip-similar {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 0.5rem;
+    }
+    .ip-code-fields,
+    .ctx-grid {
+      grid-template-columns: minmax(0, 1fr);
+    }
+    .ctx-grid {
+      gap: 0.75rem;
+    }
   }
 }
