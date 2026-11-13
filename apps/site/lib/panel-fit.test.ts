@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { panelFit } from "./panel-fit";
+import { panelFit, panelGrows } from "./panel-fit";
 
 describe("высота панели иконки — по месту в окне", () => {
   it("страница не прокручена: от верха панели до низа окна с отступом", () => {
@@ -16,5 +16,17 @@ describe("высота панели иконки — по месту в окне
   it("места совсем мало — не ниже предела", () => {
     expect(panelFit(900, 850, 16)).toBe(240);
     expect(panelFit(900, 850, 16, 300)).toBe(300);
+  });
+});
+
+describe("колесо над панелью — сначала растит её", () => {
+  it("панель ниже верха окна, страница прокручивается дальше, содержимое длиннее — растёт", () => {
+    expect(panelGrows(373, 16, 0, 2400, true)).toBe(true);
+  });
+
+  it("прилипла к верху, страница в самом низу или содержимое помещается — крутится содержимое", () => {
+    expect(panelGrows(16, 16, 600, 2400, true)).toBe(false);
+    expect(panelGrows(373, 16, 2400, 2400, true)).toBe(false);
+    expect(panelGrows(373, 16, 0, 2400, false)).toBe(false);
   });
 });

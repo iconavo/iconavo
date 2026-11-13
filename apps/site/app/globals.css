@@ -2707,6 +2707,15 @@
     line-height: var(--text-body-base--line-height);
     --panel-x-end: calc(1.25rem - var(--scrollbar-lane));
   }
+  /* Панель ещё растёт (lib/panel-fit.ts): её содержимое не прокручивается — колесо над ней крутит
+     страницу, панель поднимается и растёт. Полосы прокрутки нет — её место отдано правому полю, и
+     содержимое не сдвигается. */
+  .icon-panel[data-fit="grow"] {
+    overflow-y: hidden;
+    /* Иначе Chrome не передаёт колесо странице и с панели, которая сама не прокручивается. */
+    overscroll-behavior: auto;
+    --panel-x-end: 1.25rem;
+  }
   .panel-backdrop,
   .panel-handle {
     display: none;
