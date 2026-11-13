@@ -211,6 +211,9 @@ describe("контраст токенов (WCAG 2.2 AA)", () => {
     ["text-hover-muted", "bg-page", 4.5],
     ["border-primary", "bg-page", 3],
     ["border-primary", "bg-surface", 3],
+    // Выбранный набор в сайдбаре и подписи блоков кода в панели (axe, план редизайна, шаг 5): 4,42:1 в
+    // тёмной теме.
+    ["text-secondary", "bg-surface-strong", 4.5],
   ];
 
   it("у каждого токена цвета — пара light-dark, имена — переменные макета", () => {

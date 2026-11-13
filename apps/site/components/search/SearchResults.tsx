@@ -496,7 +496,11 @@ export function SearchResults({
     );
   return (
     <>
-      <PanelLayout open={panel.icon !== undefined} slot={panelSlot}>
+      <PanelLayout
+        open={panel.icon !== undefined}
+        slot={panelSlot}
+        icon={panel.icon}
+      >
         <section
           ref={top}
           className="search-results"

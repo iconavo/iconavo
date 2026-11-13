@@ -129,7 +129,8 @@ export function ColorField({
             }
           }}
         />
-        <Soon lang={lang} className="color-alpha" label={t.pOpacity}>
+        {/* Имя для скринридера — с видимым «100%» (WCAG 2.5.3, axe label-content-name-mismatch). */}
+        <Soon lang={lang} className="color-alpha" label={`${t.pOpacity} 100%`}>
           <span>100</span>
           <span className="color-alpha-unit">%</span>
         </Soon>

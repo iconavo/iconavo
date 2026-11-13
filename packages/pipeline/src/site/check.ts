@@ -67,8 +67,10 @@ import {
 } from "./crawl.js";
 import {
   checkIconPage,
+  checkLayout,
   checkPanel,
   checkSheet,
+  layoutProblems,
   panelProblems,
 } from "./panel.js";
 import { checkSearchPage, searchCanaryCaught } from "./search.js";
@@ -125,7 +127,11 @@ export const CHECKS = [
   ["copy", "Кнопка Copy копирует код"],
   [
     "panel",
-    "Панель иконки мышью и с клавиатуры: адрес, фокус, Esc, ✕, «назад»; фильтр при открытой панели; варианты, похожие, толщина и цвет; axe",
+    "Панель иконки мышью и с клавиатуры: адрес, фокус, Esc, ✕, «назад» и «вперёд»; сетка не прыгает при открытии и закрытии; вторая страница сетки и поиск с панелью; толщина и цвет; axe",
+  ],
+  [
+    "layout",
+    "Панель во всю высоту: справа от страницы на ширине 1040–2560 px и со свёрнутым сайдбаром, колонки сетки те же, в окне и прилипает, подвал, короткая страница, окно уже 1024 px и обратно",
   ],
   [
     "iconpage",
@@ -133,7 +139,7 @@ export const CHECKS = [
   ],
   [
     "sheet",
-    "Панель на телефоне: шторка снизу, выдача над ней щёлкается, «развернуть», «назад»",
+    "Панель на телефоне: шторка снизу во всю ширину, ручка раскрывает и сворачивает, затемнение и «назад» закрывают",
   ],
   [
     "code",
@@ -1268,14 +1274,27 @@ async function checkCanary(
       },
     ],
     [
-      "смена фильтра закрывает панель",
+      "другая страница сетки закрывает панель",
       () => {
         const push = history.pushState.bind(history);
         history.pushState = (state, unused, url) => {
           const next = new URL(String(url ?? location.href), location.href);
-          if (next.searchParams.has("style")) next.searchParams.delete("icon");
+          if (next.searchParams.has("page")) next.searchParams.delete("icon");
           push(state, unused, next);
         };
+      },
+    ],
+    [
+      // Панель во всю высоту: сайт не держит карточку, пока колонки переходят (lib/panel-anchor.ts), —
+      // сетка прыгает на высоту разницы шапки и строки поиска.
+      "сетка прыгает при открытии и закрытии панели",
+      () => {
+        const by = window.scrollBy.bind(window);
+        window.scrollBy = ((...args: Parameters<typeof window.scrollBy>) => {
+          if (document.documentElement.hasAttribute("data-panel-anchor"))
+            return;
+          (by as (...a: unknown[]) => void)(...args);
+        }) as typeof window.scrollBy;
       },
     ],
   ];
@@ -1286,6 +1305,28 @@ async function checkCanary(
     const caught = await panelProblems(p, o.base).catch(() => ["остановился"]);
     if (caught.length === 0) missed.push(title);
     await ctx.close();
+  }
+  // Панель во всю высоту: у страницы нет колонки под панель — строка «Раскладка» обязана заметить.
+  const layoutBreaks: [string, () => void][] = [
+    [
+      "панель без своей колонки",
+      () => {
+        document.addEventListener("DOMContentLoaded", () => {
+          const sheet = new CSSStyleSheet();
+          sheet.replaceSync(
+            ".set-page, .set-page:has(> .page-panel > .icon-panel) { grid-template-columns: minmax(0, 1fr) 0px !important }",
+          );
+          document.adoptedStyleSheets = [...document.adoptedStyleSheets, sheet];
+        });
+      },
+    ],
+  ];
+  for (const [title, init] of layoutBreaks) {
+    const caught = await layoutProblems(browser, o.base, {
+      widths: [1440],
+      init,
+    }).catch(() => ["остановился"]);
+    if (caught.length === 0) missed.push(title);
   }
   // Код и скачивание (шаг 5 фазы 4): поломки — скриптом до страницы или подменой ответа API; строки «Код»
   // и «Скачивание» обязаны заметить.
@@ -1441,6 +1482,7 @@ export async function checkSite(o: SiteCheckOptions): Promise<SiteResult[]> {
       await checkCatalog(browser, o, expected, result);
       o.log?.(`${BROWSER_TITLES[name]}: панель и страница иконки…`);
       result.verdicts.panel = await checkPanel(browser, o, result.shots);
+      result.verdicts.layout = await checkLayout(browser, o, result.shots);
       result.verdicts.iconpage = await checkIconPage(browser, o, result.shots);
       result.verdicts.sheet = await checkSheet(browser, o, result.shots);
       o.log?.(`${BROWSER_TITLES[name]}: код и скачивание…`);

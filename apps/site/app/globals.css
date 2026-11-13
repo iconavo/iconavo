@@ -2018,6 +2018,15 @@
     color: var(--color-text-primary);
     cursor: help;
   }
+  /*
+   * Цели нажатия не меньше 24 px (WCAG 2.2, 2.5.8; axe target-size): «?» после лицензии рисуется 16 px, а
+   * поле нажатия — 24 × 24, наружу от ссылки лицензии (вправо, вверх и вниз): строка не сдвигается, и
+   * круг 24 px вокруг ссылки его не задевает (план редизайна, шаг 5).
+   */
+  .set-meta .tip {
+    padding: 0.25rem 0.5rem 0.25rem 0;
+    margin: -0.25rem -0.5rem -0.25rem 0;
+  }
   .set-body {
     padding: 1.5rem var(--page-x-end) 2.5rem var(--page-x);
   }
@@ -2111,6 +2120,7 @@
    */
   .grid-toolbar-box {
     container: toolbar / inline-size;
+    overflow-anchor: none;
   }
   @container toolbar (max-width: 44rem) {
     .grid-field .hero-keys,
@@ -2774,21 +2784,33 @@
         var(--motion-ease-out);
     }
   }
-  /* Строка с номерами страниц в узкой колонке — без «Icons per page» (как на телефоне): номера страниц
-     помещаются в одну строку. */
+  /*
+   * Строка с номерами страниц в узкой колонке — без «Icons per page» (как на телефоне): номера страниц
+   * помещаются в одну строку. Контейнер — сама строка, не вся область сетки.
+   */
+  /* Пока панель во всю высоту открывается или закрывается, прокрутку держит сайт (lib/panel-anchor.ts). */
+  :root[data-panel-anchor],
+  :root[data-panel-anchor] body {
+    overflow-anchor: none;
+  }
+  .grid-bar {
+    container: grid-bar / inline-size;
+    /* Строки над сеткой — не опора прокрутки: иначе Chrome держал на месте строку, а не карточки, и при
+       открытии панели сетка прыгала (план редизайна, шаг 5). */
+    overflow-anchor: none;
+  }
   @media (min-width: 64rem) {
-    @container grid-area (max-width: 34rem) {
-      .grid-bar .per-page,
-      .grid-bar .grid-bar-line {
+    @container grid-bar (max-width: 34rem) {
+      .per-page,
+      .grid-bar-line {
         display: none;
       }
-      .grid-bar {
-        justify-content: flex-end;
+      .pagination {
+        margin-inline-start: auto;
       }
     }
   }
   .grid-area {
-    container: grid-area / inline-size;
     display: grid;
     /* Одна колонка не шире страницы: сетка внутри, конечной ширины во время сворачивания панели
        (lib/sidebar-motion.ts), не раздвигает соседей. */

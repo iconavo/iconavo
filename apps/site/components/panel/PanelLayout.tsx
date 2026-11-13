@@ -3,6 +3,7 @@
 import { Component, createRef, type ReactNode } from "react";
 import type { Box } from "../../lib/flip";
 import { boxOf, motionMs, playFlip, reducedMotion } from "../../lib/motion";
+import { type Anchor, findAnchor, holdAnchor } from "../../lib/panel-anchor";
 
 // Микроанимация открытия и закрытия панели иконки (решение владельца 12 ноября 2026). Панель
 // открывается и закрывается и через историю браузера (✕ и Esc уходят «назад»), поэтому переход
@@ -32,7 +33,13 @@ interface Leaving {
 interface Snapshot {
   boxes: Map<HTMLElement, Box>;
   leaving: Leaving[];
+  /** Панель во всю высоту: карточка, которая не должна сдвинуться (lib/panel-anchor.ts). */
+  anchor: Anchor | undefined;
 }
+
+/** Опора держится дольше перехода колонок на этот запас; без анимаций — столько. */
+const HOLD_EXTRA_MS = 150;
+const HOLD_STILL_MS = 100;
 
 /** Копия уходящей панели (и затемнения на телефоне): без id, недоступная, со своим местом. */
 function copyOf(element: HTMLElement): Leaving {
@@ -70,6 +77,8 @@ function playLeaving(root: HTMLElement, leaving: Leaving[]) {
  */
 export class PanelLayout extends Component<{
   open: boolean;
+  /** Иконка панели: её карточка — опора, пока колонки переходят (панель во всю высоту). */
+  icon?: string | undefined;
   /**
    * Место панели вне раскладки (панель во всю высоту страницы, lib/panel-layout.ts): тогда раскладка не
    * делает колонку под панель, а уходящую панель ищет там.
@@ -79,10 +88,17 @@ export class PanelLayout extends Component<{
 }> {
   private readonly root = createRef<HTMLDivElement>();
 
-  getSnapshotBeforeUpdate(previous: Readonly<{ open: boolean }>) {
+  getSnapshotBeforeUpdate(
+    previous: Readonly<{ open: boolean; icon?: string | undefined }>,
+  ) {
     const root = this.root.current;
-    if (previous.open === this.props.open || root === null || reducedMotion()) {
-      return null;
+    if (previous.open === this.props.open || root === null) return null;
+    // Панель во всю высоту: карточка не сдвигается — и без анимаций (lib/panel-anchor.ts).
+    const anchor = this.props.slot
+      ? findAnchor(root, this.props.open ? this.props.icon : previous.icon)
+      : undefined;
+    if (reducedMotion()) {
+      return { boxes: new Map(), leaving: [], anchor } satisfies Snapshot;
     }
     // Панель во всю высоту страницы (slot) сдвигает раскладку сама — переходом колонок в стилях, без
     // анимации карточек (app/globals.css).
@@ -103,7 +119,7 @@ export class PanelLayout extends Component<{
         }
       }
     }
-    return { boxes, leaving } satisfies Snapshot;
+    return { boxes, leaving, anchor } satisfies Snapshot;
   }
 
   componentDidUpdate(
@@ -113,6 +129,14 @@ export class PanelLayout extends Component<{
   ) {
     const root = this.root.current;
     if (snapshot === null || root === null) return;
+    if (snapshot.anchor !== undefined) {
+      holdAnchor(
+        snapshot.anchor,
+        reducedMotion()
+          ? HOLD_STILL_MS
+          : motionMs("--motion-panel-in", 240) + HOLD_EXTRA_MS,
+      );
+    }
     playFlip(snapshot.boxes, {
       id: FLIP_ID,
       duration: motionMs("--motion-panel-in", 240),

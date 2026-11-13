@@ -270,7 +270,11 @@ export function IconGrid({
           />
         ) : null}
       </div>
-      <PanelLayout open={panel.icon !== undefined} slot={slot}>
+      <PanelLayout
+        open={panel.icon !== undefined}
+        slot={slot}
+        icon={panel.icon}
+      >
         <div className="grid-area" ref={selection.anchor}>
           <GridBar lang={lang} top perPage={size}>
             {pagination(t.pagesTop)}
