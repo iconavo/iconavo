@@ -3,6 +3,69 @@
   "releases": [
     {
       "added": [
+        "asterism",
+        "cap",
+        "cheese",
+        "exclamation-mark",
+        "graph-ring",
+        "layout-grid-plus",
+        "mound-shovel",
+        "question-mark",
+        "route-arrow-right",
+        "square-arrow-down-enter",
+        "square-arrow-down-exit",
+        "square-arrow-down-left-enter",
+        "square-arrow-down-right-enter",
+        "square-arrow-left-enter",
+        "square-arrow-left-exit",
+        "square-arrow-up-enter",
+        "square-arrow-up-exit",
+        "square-arrow-up-left-enter",
+        "square-arrow-up-right-enter",
+        "stroke-line-cap-butt",
+        "stroke-line-cap-round",
+        "stroke-line-cap-square",
+        "stroke-line-join-bevel",
+        "stroke-line-join-miter",
+        "stroke-line-join-round",
+        "text-pen"
+      ],
+      "aliases": {
+        "grid-3-x-2": "grid-3x2",
+        "grid-3-x-3-off": "grid-3x3-off",
+        "printer-3-d": "printer-3d"
+      },
+      "changed": [
+        "badge-question-mark",
+        "battery-exclamation-point",
+        "circle-question-mark",
+        "file-question-mark",
+        "mail-question-mark",
+        "message-circle-question-mark",
+        "package-question-mark",
+        "route",
+        "shield-question-mark",
+        "square-arrow-right-enter",
+        "square-arrow-right-exit"
+      ],
+      "date": "2026-11-14T10:25:53Z",
+      "previous": "ac88e2c8",
+      "renamed": {
+        "circle-arrow-out-down-left": "circle-arrow-down-left-exit",
+        "circle-arrow-out-down-right": "circle-arrow-down-right-exit",
+        "circle-arrow-out-up-left": "circle-arrow-up-left-exit",
+        "circle-arrow-out-up-right": "circle-arrow-up-right-exit",
+        "square-arrow-out-down-left": "square-arrow-down-left-exit",
+        "square-arrow-out-down-right": "square-arrow-down-right-exit",
+        "square-arrow-out-up-left": "square-arrow-up-left-exit",
+        "square-arrow-out-up-right": "square-arrow-up-right-exit"
+      },
+      "revision": "55782beff3a0133df79c417eb68f96e8f19e2404",
+      "total": 2055,
+      "version": "09cf60cb"
+    },
+    {
+      "added": [
         "grid-3x3-off",
         "moped",
         "square-dashed-search",
