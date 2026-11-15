@@ -4,6 +4,19 @@
 Имена не пропадают: иконка, которую удалил автор, скрыта, но работает по имени, а старое имя переименованной ведёт на новое (ADR-0005).
 Скрытия и переименования вы одобряете лично в pull request (ADR-0019). Полные списки — в `changelog.json`.
 
+## 15 ноября 2026 · версия 11c2a09a
+
+Прошлая версия: aa280c18 · источник: 3.52.0 · иконок: 6 545.
+
+**Требуют вашего одобрения**
+
+- Скрыты — автор удалил, имя продолжает работать (1): `align-justified`
+
+**Изменения**
+
+- Добавлены (259): `align-center-justified`, `align-left-justified`, `align-right-justified`, `basket-flame`, `basket-key`, `basket-spark`, `bell-flame`, `bell-key`, `bell-spark`, `bookmark-bolt`, `bookmark-cancel`, `bookmark-check`, `bookmark-code`, `bookmark-cog`, `bookmark-dollar`, `bookmark-down`, `bookmark-exclamation`, `bookmark-heart`, `bookmark-pause`, `bookmark-pin`, `bookmark-search`, `bookmark-share`, `bookmark-star`, `bookmark-up`, `bookmark-x`, `building-bolt`, `building-cancel`, `building-check`, `building-code`, `building-dollar`, `building-down`, `building-exclamation`, `building-heart`, `building-pause`, `building-pin`, `building-question`, `building-search`, `building-share`, `building-star`, `building-up`, `building-x`, `calendar-flame`, `calendar-key`, `calendar-spark`, `cash-banknote-bolt`, `cash-banknote-cancel`, `cash-banknote-check`, `cash-banknote-code`, `cash-banknote-cog`, `cash-banknote-dollar` … и ещё 209 — полный список в changelog.json
+- Изменены (2): `barcode`, `barcode-off`
+
 ## 9 ноября 2026 · версия aa280c18
 
 Прошлая версия: 87c41c5e · источник: 3.51.0 · иконок: 6 287.
