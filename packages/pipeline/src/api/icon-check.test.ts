@@ -105,7 +105,23 @@ const DOCS: FakeDoc[] = [
   },
 ];
 
-function world(o: { content?: boolean; about?: boolean } = {}) {
+/** Lucide 1.69.0: circle-alert стала circle-exclamation-point, оба старых имени — её алиасы. */
+const RENAMED: FakeDoc = {
+  icon: "lucide:circle-exclamation-point",
+  set: "lucide",
+  names: ["alert-circle", "circle-alert", "circle-exclamation-point"].flatMap(
+    (n) => [n, `lucide:${n}`],
+  ),
+  words: ["alert", "circle", "exclamation", "point"],
+  style: ["outline"],
+  styles: { outline: "circle-exclamation-point" },
+  about: ABOUT,
+};
+
+function world(
+  o: { content?: boolean; about?: boolean; renamed?: boolean } = {},
+) {
+  const alert = o.renamed ? "circle-exclamation-point" : "circle-alert";
   const entry = (prefix: string, styles: object, extra: object = {}) => ({
     collection: "bbbbbbbbbbbb",
     info: info(prefix, prefix === "fluent"),
@@ -129,7 +145,7 @@ function world(o: { content?: boolean; about?: boolean } = {}) {
                 author: "Cole Bemis",
                 url: "https://github.com/feathericons/feather",
                 license: "MIT",
-                icons: ["circle-alert"],
+                icons: [alert],
               },
             ],
           },
@@ -147,8 +163,8 @@ function world(o: { content?: boolean; about?: boolean } = {}) {
     }),
     [`v/${V.lucide}/lucide/alert-circle.json`]: nameFileText(
       "lucide",
-      { "circle-alert": { body: LINE } },
-      { "alert-circle": { parent: "circle-alert" } },
+      { [alert]: { body: LINE } },
+      { "alert-circle": { parent: alert } },
     ),
     [`v/${V.lucide}/lucide/circle-parking.json`]: nameFileText("lucide", {
       "circle-parking": { body: LINE, hidden: true },
@@ -160,10 +176,13 @@ function world(o: { content?: boolean; about?: boolean } = {}) {
       "waving-hand": { body: COLOR },
     }),
   };
+  const base = o.renamed
+    ? DOCS.map((d) => (d.icon === "lucide:circle-alert" ? RENAMED : d))
+    : DOCS;
   const docs =
     o.about === false
-      ? DOCS.map(({ about: _, ...d }) => d)
-      : DOCS.map((d) => d);
+      ? base.map(({ about: _, ...d }) => d)
+      : base.map((d) => d);
   const net = fakeSearchFetch({ docs });
   const handler = createHandler({
     bucket: fakeBucket(files),
@@ -217,6 +236,47 @@ describe("pnpm api check — сведения об иконке", () => {
     expect(formatIconCheck(r).at(-1)).toBe(
       "Итог сведений об иконке: всё в порядке.",
     );
+  });
+
+  it("старое имя после переименования в Lucide (1.69.0) — тоже в порядке", async () => {
+    const { fetchFn } = world({ renamed: true });
+    const r = await checkIcon({
+      fetch: live(fetchFn),
+      sleep: async () => {},
+      maxAttempts: 1,
+    });
+    const alias = r.targets.find((t) => t.name === "Старое имя и Feather");
+    expect(alias?.issues).toEqual([]);
+    expect(alias?.notes).toEqual([
+      "основное имя: lucide:circle-exclamation-point",
+    ]);
+    expect(iconCheckFailed(r)).toBe(false);
+  });
+
+  it("алиас не привёл к основному имени — проблема", async () => {
+    const { fetchFn } = world();
+    // Ответ как есть, только icon — само старое имя: так ответила бы функция, не нашедшая родителя.
+    const unresolved: FetchFn = async (input, init) => {
+      const res = await fetchFn(input, init);
+      if (!String(input).includes("icon=lucide:alert-circle")) return res;
+      const body = (await res.json()) as Record<string, unknown>;
+      const headers = new Headers(res.headers);
+      headers.delete("content-length");
+      return new Response(
+        JSON.stringify({ ...body, icon: "lucide:alert-circle" }),
+        { status: res.status, headers },
+      );
+    };
+    const r = await checkIcon({
+      fetch: live(unresolved),
+      sleep: async () => {},
+      maxAttempts: 1,
+    });
+    const alias = r.targets.find((t) => t.name === "Старое имя и Feather");
+    expect(alias?.issues.map((i) => i.message)).toEqual([
+      "icon: lucide:alert-circle — алиас не привёл к основному имени Lucide",
+    ]);
+    expect(iconCheckFailed(r)).toBe(true);
   });
 
   it("каталог без отпечатка и индекс без about — проблемы с подсказкой", async () => {
