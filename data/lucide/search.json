@@ -5003,7 +5003,34 @@
       ]
     },
     "asterism": {
+      "en": {
+        "description": "Three asterisk shapes arranged in a triangle, usually meaning a constellation, favorites, or a decorative divider.",
+        "synonyms": [
+          "asterisks",
+          "constellation",
+          "three stars",
+          "star",
+          "divider",
+          "ornament",
+          "footnote mark",
+          "decoration"
+        ]
+      },
       "fingerprint": "d2f3dc2e357f",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Три звёздочки-асфлека в треугольнике, обычно означают созвездие, избранное или декоративный разделитель.",
+        "synonyms": [
+          "звёздочки",
+          "созвездие",
+          "три звезды",
+          "звезда",
+          "астеризм",
+          "разделитель",
+          "украшение",
+          "знак сноски"
+        ]
+      },
       "tags": [
         "asterisk",
         "fediverse",
@@ -6640,7 +6667,38 @@
       ]
     },
     "badge-question-mark": {
+      "en": {
+        "description": "A question mark inside a scalloped badge or seal, usually signaling help, a question, or unknown status.",
+        "synonyms": [
+          "question mark",
+          "help",
+          "faq",
+          "unknown",
+          "hint",
+          "support",
+          "seal badge",
+          "quiz",
+          "inquiry",
+          "uncertain"
+        ]
+      },
       "fingerprint": "b1b15cdda1f7",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Изображение показывает question mark внутри волнистой печати или розетки; обозначает помощь, вопрос или неизвестный статус.",
+        "synonyms": [
+          "знак вопроса",
+          "помощь",
+          "вопрос",
+          "подсказка",
+          "faq",
+          "неизвестно",
+          "значок",
+          "печать",
+          "поддержка",
+          "инструкция"
+        ]
+      },
       "tags": [
         "seal",
         "emblem",
@@ -7811,7 +7869,38 @@
       ]
     },
     "battery-exclamation-point": {
+      "en": {
+        "description": "A battery outline with an exclamation mark inside, indicating a low charge or a power-related warning.",
+        "synonyms": [
+          "battery",
+          "battery alert",
+          "low battery",
+          "charge",
+          "power warning",
+          "energy issue",
+          "accumulator",
+          "caution",
+          "battery error",
+          "power problem"
+        ]
+      },
       "fingerprint": "cbbd70f43f10",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Контур батарейки с восклицательным знаком внутри, обозначает предупреждение о низком заряде или проблеме с питанием.",
+        "synonyms": [
+          "батарея",
+          "батарейка",
+          "заряд",
+          "разряд",
+          "низкий заряд",
+          "предупреждение",
+          "ошибка питания",
+          "аккумулятор",
+          "внимание",
+          "опасность"
+        ]
+      },
       "tags": [
         "power",
         "electricity",
@@ -16925,7 +17014,36 @@
       ]
     },
     "cap": {
+      "en": {
+        "description": "A baseball cap with a rounded crown and curved brim; the icon represents headwear, apparel, or fashion accessories.",
+        "synonyms": [
+          "baseball cap",
+          "hat",
+          "headwear",
+          "visor",
+          "peak",
+          "snapback",
+          "clothing",
+          "apparel",
+          "merchandise"
+        ]
+      },
       "fingerprint": "7f26ec6b31e5",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Изображена бейсболка с округлой тульёй и козырьком; значок обозначает головной убор, одежду или магазин одежды.",
+        "synonyms": [
+          "кепка",
+          "бейсболка",
+          "головной убор",
+          "козырёк",
+          "шапка",
+          "одежда",
+          "аксессуар",
+          "мерч",
+          "спорт"
+        ]
+      },
       "tags": [
         "hat",
         "baseball",
@@ -19533,7 +19651,38 @@
       ]
     },
     "cheese": {
+      "en": {
+        "description": "A wedge of cheese with holes and a cut edge, usually representing cheese or dairy food.",
+        "synonyms": [
+          "swiss cheese",
+          "cheese slice",
+          "dairy",
+          "food",
+          "snack",
+          "dish",
+          "meal",
+          "lunch",
+          "fondue",
+          "holes"
+        ]
+      },
       "fingerprint": "545ddd44d93f",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Изображена половина ломтика сыра с дырками и срезом сверху; значок обозначает сыр или молочную продукцию.",
+        "synonyms": [
+          "сыр",
+          "ломтик сыра",
+          "сырная нарезка",
+          "молочка",
+          "продукты",
+          "еда",
+          "закуска",
+          "блюдо",
+          "фондю",
+          "бутерброд"
+        ]
+      },
       "tags": [
         "swiss",
         "holes",
@@ -22433,7 +22582,36 @@
       ]
     },
     "circle-fading-check": {
+      "en": {
+        "description": "A checkmark inside a partially dashed circle, indicating a completed, confirmed, or in-progress task.",
+        "synonyms": [
+          "checkmark",
+          "done",
+          "completed",
+          "confirmed",
+          "approved",
+          "verified",
+          "success",
+          "pending",
+          "processing"
+        ]
+      },
       "fingerprint": "16cf53c8f5dd",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Изображена галочка внутри частично прерывистого круга, что означает успешно выполненное действие или подтверждение.",
+        "synonyms": [
+          "галочка",
+          "выполнено",
+          "готово",
+          "подтверждено",
+          "принято",
+          "проверено",
+          "завершено",
+          "в процессе",
+          "загрузка"
+        ]
+      },
       "tags": [
         "checkmark",
         "done",
@@ -24459,7 +24637,38 @@
       ]
     },
     "circle-question-mark": {
+      "en": {
+        "description": "A black circle enclosing a question mark, usually indicating help, support, or a frequently asked questions section.",
+        "synonyms": [
+          "help",
+          "support",
+          "faq",
+          "question",
+          "hint",
+          "info",
+          "assistance",
+          "unknown",
+          "tutorial",
+          "guide"
+        ]
+      },
       "fingerprint": "7e063719b23a",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Черный круг с вопросительным знаком внутри; обозначает помощь, справку или вопрос.",
+        "synonyms": [
+          "помощь",
+          "справка",
+          "вопрос",
+          "фак",
+          "подсказка",
+          "инструкция",
+          "поддержка",
+          "неизвестно",
+          "вопросик",
+          "спросить"
+        ]
+      },
       "tags": [
         "help",
         "assistance",
@@ -35309,7 +35518,36 @@
       ]
     },
     "exclamation-mark": {
+      "en": {
+        "description": "A vertical bar above a dot, the exclamation mark, usually signals a warning, alert, or important notice.",
+        "synonyms": [
+          "exclamation point",
+          "warning",
+          "alert",
+          "caution",
+          "danger",
+          "error",
+          "notice",
+          "attention",
+          "bang"
+        ]
+      },
       "fingerprint": "0641e770486e",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Изображена вертикальная черта с точкой под ней, это восклицательный знак, обозначающий предупреждение, важность или ошибку.",
+        "synonyms": [
+          "восклицательный знак",
+          "внимание",
+          "предупреждение",
+          "ошибка",
+          "опасность",
+          "важно",
+          "осторожно",
+          "тревога",
+          "восклицание"
+        ]
+      },
       "tags": [
         "alert",
         "warning",
@@ -38090,7 +38328,38 @@
       ]
     },
     "file-question-mark": {
+      "en": {
+        "description": "Icon shows a document page with a question mark inside, meaning help, unknown file, or unclear content.",
+        "synonyms": [
+          "document",
+          "file",
+          "help",
+          "question",
+          "question mark",
+          "faq",
+          "unknown file",
+          "support",
+          "manual",
+          "guide"
+        ]
+      },
       "fingerprint": "d6f2bc51f467",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Иконка изображает документ с отметкой вопроса внутри, обозначая справку, неизвестный или неопределённый файл.",
+        "synonyms": [
+          "документ",
+          "файл",
+          "справка",
+          "помощь",
+          "вопрос",
+          "знак вопроса",
+          "faq",
+          "неизвестно",
+          "инструкция",
+          "поддержка"
+        ]
+      },
       "tags": [
         "document",
         "help",
@@ -44779,7 +45048,38 @@
       ]
     },
     "graph-ring": {
+      "en": {
+        "description": "Three circular nodes connected by arcs form a ring; the icon represents a network, connections, or ring topology.",
+        "synonyms": [
+          "network",
+          "nodes",
+          "links",
+          "connections",
+          "ring",
+          "topology",
+          "mesh",
+          "peer-to-peer",
+          "cluster",
+          "distributed"
+        ]
+      },
       "fingerprint": "2240e3ea1d69",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Изображение показывает три круглых узла, соединённых дугами в кольцо; значок обозначает сеть, связи или кольцевую топологию.",
+        "synonyms": [
+          "сеть",
+          "узлы",
+          "связи",
+          "соединения",
+          "кольцо",
+          "топология",
+          "распределённая сеть",
+          "одноранговая сеть",
+          "кластер",
+          "связанные узлы"
+        ]
+      },
       "tags": [
         "network",
         "nodes",
@@ -45206,7 +45506,34 @@
       ]
     },
     "grid-3x3-off": {
+      "en": {
+        "description": "A 3×3 grid drawn in a square with a diagonal strike line; it means hiding or turning off the grid.",
+        "synonyms": [
+          "hide grid",
+          "grid off",
+          "table",
+          "disable grid",
+          "crossed out grid",
+          "cells",
+          "turn off grid",
+          "spreadsheet"
+        ]
+      },
       "fingerprint": "897fabc71e87",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Квадрат с сеткой 3×3, перечёркнутый диагональной линией; означает скрытие или отключение сетки.",
+        "synonyms": [
+          "сетка выключена",
+          "скрыть сетку",
+          "таблица",
+          "выключить сетку",
+          "отключить сетку",
+          "перечёркнутая сетка",
+          "ячейки",
+          "запрещено"
+        ]
+      },
       "tags": [
         "table",
         "rows",
@@ -51565,7 +51892,38 @@
       ]
     },
     "layout-grid-plus": {
+      "en": {
+        "description": "Shows three squares and a plus sign arranged as a grid; it usually means adding a new app, tile, or widget.",
+        "synonyms": [
+          "add",
+          "plus",
+          "new widget",
+          "grid",
+          "tiles",
+          "apps",
+          "create",
+          "dashboard",
+          "menu",
+          "add tile"
+        ]
+      },
       "fingerprint": "6061f4c5ff71",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Изображены три квадрата с плюсом в четвёртой ячейке сетки; значок обозначает добавление нового элемента или виджета на экран.",
+        "synonyms": [
+          "добавить",
+          "плюс",
+          "новый виджет",
+          "сетка",
+          "плитка",
+          "приложения",
+          "создать",
+          "меню",
+          "панель",
+          "добавить плитку"
+        ]
+      },
       "tags": [
         "app",
         "home",
@@ -56608,7 +56966,38 @@
       ]
     },
     "mail-question-mark": {
+      "en": {
+        "description": "An outlined envelope with a question mark at its lower right, usually meaning an unknown email or a mail-related question.",
+        "synonyms": [
+          "letter",
+          "envelope",
+          "mail",
+          "message",
+          "question",
+          "question mark",
+          "help",
+          "unknown mail",
+          "inquiry",
+          "support"
+        ]
+      },
       "fingerprint": "2992d3098934",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Контур конверта с вопросительным знаком справа снизу; обозначает непрочитанное или неизвестное письмо, вопрос по почте.",
+        "synonyms": [
+          "письмо",
+          "конверт",
+          "почта",
+          "email",
+          "сообщение",
+          "вопрос",
+          "вопросительный знак",
+          "помощь",
+          "неизвестно",
+          "faq"
+        ]
+      },
       "tags": [
         "email",
         "message",
@@ -56849,7 +57238,38 @@
       ]
     },
     "mango": {
+      "en": {
+        "description": "Outline drawing of a mango with a stem on top, representing the fruit or fresh produce.",
+        "synonyms": [
+          "fruit",
+          "tropical fruit",
+          "food",
+          "produce",
+          "exotic",
+          "juice",
+          "smoothie",
+          "snack",
+          "summer",
+          "healthy"
+        ]
+      },
       "fingerprint": "ad6b830aa9d1",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Контурное изображение манго с черенком сверху; обозначает фрукт, продукты или тропическую еду.",
+        "synonyms": [
+          "манго",
+          "фрукт",
+          "фрукты",
+          "тропический фрукт",
+          "еда",
+          "продукты",
+          "экзотика",
+          "сок",
+          "смузи",
+          "перекус"
+        ]
+      },
       "tags": [
         "fruit",
         "food",
@@ -59211,7 +59631,38 @@
       ]
     },
     "message-circle-question-mark": {
+      "en": {
+        "description": "A speech bubble containing a question mark, usually meaning help, support, or a question in a chat.",
+        "synonyms": [
+          "question",
+          "help",
+          "chat",
+          "support",
+          "faq",
+          "question mark",
+          "dialog",
+          "inquiry",
+          "feedback",
+          "hint"
+        ]
+      },
       "fingerprint": "3a63b7ac541e",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Изображена речевая кнопка-облачко с вопросительным знаком внутри, обозначающая вопрос, помощь или поддержку в чате.",
+        "synonyms": [
+          "вопрос",
+          "помощь",
+          "чат",
+          "справка",
+          "поддержка",
+          "faq",
+          "вопросительный знак",
+          "диалог",
+          "обратная связь",
+          "подсказка"
+        ]
+      },
       "tags": [
         "comment",
         "chat",
@@ -62443,7 +62894,37 @@
       ]
     },
     "moped": {
+      "en": {
+        "description": "Shows a moped or scooter with two wheels, handlebars and a seat, representing personal transport or delivery.",
+        "synonyms": [
+          "scooter",
+          "motorbike",
+          "two wheeler",
+          "vehicle",
+          "transport",
+          "delivery",
+          "courier",
+          "commute",
+          "ride"
+        ]
+      },
       "fingerprint": "3c2b0fdf79f9",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Изображена мопед или скутер с двумя колёсами, рулём и сиденьем; обозначает транспорт, поездку или доставку.",
+        "synonyms": [
+          "мопед",
+          "скутер",
+          "мотоцикл",
+          "мотороллер",
+          "мотоцикл для города",
+          "доставка",
+          "транспорт",
+          "байк",
+          "курьер",
+          "поездка"
+        ]
+      },
       "tags": [
         "scooter",
         "two-wheeler",
@@ -62575,7 +63056,38 @@
       ]
     },
     "mound-shovel": {
+      "en": {
+        "description": "Shows a mound of dirt or sand with a shovel stuck into it, usually meaning digging, excavation, or earthwork.",
+        "synonyms": [
+          "shovel",
+          "spade",
+          "dirt pile",
+          "sand",
+          "soil",
+          "digging",
+          "excavation",
+          "construction",
+          "gravel",
+          "mining"
+        ]
+      },
       "fingerprint": "494738a035b0",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Изображена куча земли или песка с воткнутой лопатой; значок обозначает раскопки, земляные работы или сыпучие материалы.",
+        "synonyms": [
+          "лопата",
+          "куча земли",
+          "песок",
+          "грунт",
+          "земляные работы",
+          "раскопки",
+          "стройка",
+          "копать",
+          "карьер",
+          "гравий"
+        ]
+      },
       "tags": [
         "dig",
         "spade",
@@ -65160,7 +65672,37 @@
       ]
     },
     "opacity": {
+      "en": {
+        "description": "A set of dots fading across an L-shaped corner, usually representing opacity or transparency adjustment in an interface.",
+        "synonyms": [
+          "transparency",
+          "translucency",
+          "fade",
+          "visibility",
+          "gradient",
+          "blend",
+          "alpha",
+          "dots",
+          "mask",
+          "dissolve"
+        ]
+      },
       "fingerprint": "9749d476f161",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Рисунок показывает группу точек в углу уголка, символ означает прозрачность или степень непрозрачности элемента.",
+        "synonyms": [
+          "прозрачность",
+          "непрозрачность",
+          "видимость",
+          "затухание",
+          "размытие",
+          "фильтр",
+          "градиент",
+          "маска",
+          "полупрозрачность"
+        ]
+      },
       "tags": [
         "opacity",
         "opaque",
@@ -65573,7 +66115,36 @@
       ]
     },
     "package-pen": {
+      "en": {
+        "description": "A closed package box with a pencil overlaid, meaning edit or modify a package, product, or order.",
+        "synonyms": [
+          "edit package",
+          "modify order",
+          "box",
+          "parcel",
+          "pencil",
+          "edit product",
+          "update shipment",
+          "inventory edit",
+          "packaging"
+        ]
+      },
       "fingerprint": "704e742beaad",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Изображена коробка-посылка с карандашом в углу; означает редактирование или изменение товара, заказа или содержимого упаковки.",
+        "synonyms": [
+          "редактировать посылку",
+          "изменить заказ",
+          "коробка",
+          "упаковка",
+          "карандаш",
+          "правка",
+          "изменить товар",
+          "редактирование",
+          "обновить заказ"
+        ]
+      },
       "tags": [
         "box",
         "container",
@@ -65683,7 +66254,38 @@
       ]
     },
     "package-question-mark": {
+      "en": {
+        "description": "A closed box with a question mark beside it, usually meaning an unknown, undelivered, or unidentified package.",
+        "synonyms": [
+          "box",
+          "package",
+          "parcel",
+          "shipping",
+          "delivery",
+          "unknown",
+          "question mark",
+          "lost order",
+          "undelivered",
+          "inventory"
+        ]
+      },
       "fingerprint": "c4f912c05b51",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Изображена коробка с крышкой и знаком вопроса сбоку; обычно означает неизвестную, недоставленную или неопределённую посылку.",
+        "synonyms": [
+          "коробка",
+          "посылка",
+          "упаковка",
+          "доставка",
+          "неизвестно",
+          "вопрос",
+          "знак вопроса",
+          "потерянный заказ",
+          "неопределённо",
+          "помощь"
+        ]
+      },
       "tags": [
         "box",
         "container",
@@ -71287,7 +71889,38 @@
       ]
     },
     "question-mark": {
+      "en": {
+        "description": "Draws a question mark, a curved stroke above a dot. It usually signals help, FAQ, or an unknown value.",
+        "synonyms": [
+          "question",
+          "help",
+          "faq",
+          "hint",
+          "support",
+          "unknown",
+          "doubt",
+          "query",
+          "quiz",
+          "inquiry"
+        ]
+      },
       "fingerprint": "8999e99547e2",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Изображён знак вопроса: изогнутая линия над точкой. Обозначает помощь, справку или неизвестное.",
+        "synonyms": [
+          "вопрос",
+          "справка",
+          "помощь",
+          "подсказка",
+          "фака",
+          "неизвестно",
+          "сомнение",
+          "знак вопроса",
+          "инструкция",
+          "поддержка"
+        ]
+      },
       "tags": [
         "help",
         "assistance",
@@ -74325,7 +74958,37 @@
       ]
     },
     "route": {
+      "en": {
+        "description": "A winding line connecting two circular points at its ends, representing a route or path between locations.",
+        "synonyms": [
+          "path",
+          "navigation",
+          "directions",
+          "journey",
+          "waypoints",
+          "stops",
+          "map",
+          "trip",
+          "gps"
+        ]
+      },
       "fingerprint": "d95c13619976",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Изображена извилистая линия с двумя кружками на концах, обозначающая маршрут между двумя точками.",
+        "synonyms": [
+          "маршрут",
+          "путь",
+          "навигация",
+          "карта",
+          "дорога",
+          "путешествие",
+          "остановки",
+          "направление",
+          "план маршрута",
+          "геолокация"
+        ]
+      },
       "tags": [
         "path",
         "journey",
@@ -74350,7 +75013,36 @@
       ]
     },
     "route-arrow-right": {
+      "en": {
+        "description": "A winding line starts at a circle point and ends in a right-pointing arrow, representing a route or path with turns.",
+        "synonyms": [
+          "route",
+          "path",
+          "navigation",
+          "journey",
+          "directions",
+          "waypoint",
+          "detour",
+          "trip",
+          "forward arrow"
+        ]
+      },
       "fingerprint": "19e2dd1199b6",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Изображена извилистая линия от кружка-точки к стрелке вправо, обозначающая маршрут или путь с поворотами.",
+        "synonyms": [
+          "маршрут",
+          "путь",
+          "навигация",
+          "дорога",
+          "стрелка вправо",
+          "поворот",
+          "путешествие",
+          "карта",
+          "направление"
+        ]
+      },
       "tags": [
         "path",
         "journey",
@@ -79624,7 +80316,38 @@
       ]
     },
     "shield-question-mark": {
+      "en": {
+        "description": "Outlined shield with a question mark inside, usually meaning unknown security status or help and information.",
+        "synonyms": [
+          "shield",
+          "security",
+          "protection",
+          "privacy",
+          "question",
+          "help",
+          "safety",
+          "unverified",
+          "vulnerability",
+          "support"
+        ]
+      },
       "fingerprint": "f54cfad887b5",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Изображён контур щита с знаком вопроса внутри; обозначает неизвестную или неподтверждённую защиту, справку.",
+        "synonyms": [
+          "щит",
+          "безопасность",
+          "защита",
+          "вопрос",
+          "справка",
+          "помощь",
+          "защищённость",
+          "приватность",
+          "угроза",
+          "проверка"
+        ]
+      },
       "tags": [
         "shield",
         "privacy",
@@ -83016,7 +83739,38 @@
       ]
     },
     "square-arrow-down-enter": {
+      "en": {
+        "description": "A rounded square open at the top with a downward arrow pointing inside, meaning import, download, or insert.",
+        "synonyms": [
+          "download",
+          "import",
+          "insert",
+          "incoming",
+          "save",
+          "inbox",
+          "arrow down",
+          "enter",
+          "input",
+          "receive"
+        ]
+      },
       "fingerprint": "10ecc793380e",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Квадратная рамка с открытым верхом и стрелкой, направленной вниз внутрь; обозначает загрузку, импорт или ввод данных.",
+        "synonyms": [
+          "скачать",
+          "загрузка",
+          "импорт",
+          "вставить",
+          "вход",
+          "стрелка вниз",
+          "внутрь",
+          "ввод",
+          "входящие",
+          "сохранить"
+        ]
+      },
       "tags": [
         "direction",
         "movement",
@@ -83049,7 +83803,38 @@
       ]
     },
     "square-arrow-down-exit": {
+      "en": {
+        "description": "A rounded open square with a downward arrow inside, usually meaning export, exit, or move down.",
+        "synonyms": [
+          "export",
+          "download",
+          "save out",
+          "arrow down",
+          "output",
+          "leave",
+          "outbound",
+          "descend",
+          "eject",
+          "logout"
+        ]
+      },
       "fingerprint": "ac550befa250",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Квадрат с незамкнутым контуром и стрелкой вниз внутри, обозначает экспорт, выход или перемещение вниз.",
+        "synonyms": [
+          "экспорт",
+          "выход",
+          "вниз",
+          "стрелка вниз",
+          "выгрузить",
+          "скачать",
+          "наружу",
+          "вынести",
+          "покинуть",
+          "сохранить"
+        ]
+      },
       "tags": [
         "direction",
         "movement",
@@ -83125,7 +83910,34 @@
       ]
     },
     "square-arrow-down-left-enter": {
+      "en": {
+        "description": "A rounded square with a diagonal arrow pointing inward toward the bottom-left corner, usually meaning import, enter, or collapse inward.",
+        "synonyms": [
+          "arrow down left",
+          "import",
+          "enter",
+          "inward",
+          "incoming",
+          "insert",
+          "collapse",
+          "southwest arrow"
+        ]
+      },
       "fingerprint": "bb9f4c66713a",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Квадрат со скруглёнными углами и стрелкой, направленной внутрь к левому нижнему углу; означает вход, импорт или сворачивание внутрь.",
+        "synonyms": [
+          "стрелка вниз влево",
+          "вход",
+          "импорт",
+          "внутрь",
+          "вставить",
+          "сворачивание",
+          "диагональная стрелка",
+          "направление юго-запад"
+        ]
+      },
       "tags": [
         "direction",
         "movement",
@@ -83250,7 +84062,38 @@
       ]
     },
     "square-arrow-down-right-enter": {
+      "en": {
+        "description": "A rounded square with an open corner and a diagonal arrow pointing down-right inward, meaning enter, import, or move inside.",
+        "synonyms": [
+          "arrow down right",
+          "diagonal arrow",
+          "enter",
+          "import",
+          "inwards",
+          "insert",
+          "incoming",
+          "entry",
+          "move inside",
+          "southeast"
+        ]
+      },
       "fingerprint": "9bd3d0685a29",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Квадрат с открытым углом и стрелкой, направленной внутрь по диагонали вниз-вправо; обозначает вход, импорт или перемещение внутрь.",
+        "synonyms": [
+          "стрелка вниз вправо",
+          "диагональ",
+          "вход",
+          "внутрь",
+          "импорт",
+          "войти",
+          "вставить",
+          "сжать окно",
+          "перемещение внутрь",
+          "вставка"
+        ]
+      },
       "tags": [
         "direction",
         "movement",
@@ -83378,7 +84221,38 @@
       ]
     },
     "square-arrow-left-enter": {
+      "en": {
+        "description": "A rounded square with an open right side and a left-pointing arrow inside, usually meaning enter, input or import.",
+        "synonyms": [
+          "enter",
+          "login",
+          "sign in",
+          "input",
+          "import",
+          "arrow left",
+          "incoming",
+          "entrance",
+          "inward",
+          "back"
+        ]
+      },
       "fingerprint": "0735bd58df84",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Рисунок показывает квадрат с незамкнутым правым краем и стрелку влево внутри, что означает вход или ввод внутрь.",
+        "synonyms": [
+          "вход",
+          "войти",
+          "ввод",
+          "импорт",
+          "стрелка влево",
+          "назад",
+          "внутрь",
+          "поместить",
+          "влево",
+          "входящий"
+        ]
+      },
       "tags": [
         "direction",
         "movement",
@@ -83412,7 +84286,38 @@
       ]
     },
     "square-arrow-left-exit": {
+      "en": {
+        "description": "Draws a rounded square with an open left side and a leftward arrow, commonly meaning exit, logout, or export.",
+        "synonyms": [
+          "exit",
+          "logout",
+          "sign out",
+          "export",
+          "leave",
+          "log out",
+          "leftward arrow",
+          "back",
+          "egress",
+          "output"
+        ]
+      },
       "fingerprint": "50b97cdd7083",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Рисует квадрат с открытой левой стороной и стрелку, направленную влево от него; обозначает выход, выгрузку или возврат назад.",
+        "synonyms": [
+          "выход",
+          "выйти",
+          "выгрузка",
+          "экспорт",
+          "назад",
+          "влево",
+          "стрелка влево",
+          "покинуть",
+          "закрыть панель",
+          "отправить наружу"
+        ]
+      },
       "tags": [
         "direction",
         "movement",
@@ -83494,7 +84399,38 @@
       ]
     },
     "square-arrow-right-enter": {
+      "en": {
+        "description": "A rounded square with an open left side and a right-pointing arrow entering it, meaning sign in, import or entry.",
+        "synonyms": [
+          "sign in",
+          "log in",
+          "login",
+          "enter",
+          "import",
+          "entrance",
+          "arrow right",
+          "incoming",
+          "auth",
+          "join"
+        ]
+      },
       "fingerprint": "2f935fbd290b",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Квадрат с открытой левой стороной и стрелкой, направленной вправо внутрь; обозначает вход, импорт или авторизацию.",
+        "synonyms": [
+          "вход",
+          "войти",
+          "логин",
+          "авторизация",
+          "импорт",
+          "стрелка вправо",
+          "зайти",
+          "впустить",
+          "аутентификация",
+          "выход из системы"
+        ]
+      },
       "tags": [
         "direction",
         "movement",
@@ -83534,7 +84470,38 @@
       ]
     },
     "square-arrow-right-exit": {
+      "en": {
+        "description": "A rounded square with an open right side and a right-pointing arrow, usually meaning exit, sign out, or export.",
+        "synonyms": [
+          "exit",
+          "sign out",
+          "logout",
+          "log out",
+          "export",
+          "leave",
+          "arrow right",
+          "output",
+          "egress",
+          "door"
+        ]
+      },
       "fingerprint": "f44b2b881ec8",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Квадрат с незамкнутой правой стороной и стрелкой, направленной вправо наружу; обозначает выход, экспорт или отправку.",
+        "synonyms": [
+          "выход",
+          "выйти",
+          "выход из системы",
+          "экспорт",
+          "покинуть",
+          "стрелка вправо",
+          "уйти",
+          "вынести",
+          "разлогиниться",
+          "отправить"
+        ]
+      },
       "tags": [
         "direction",
         "movement",
@@ -83623,7 +84590,34 @@
       ]
     },
     "square-arrow-up-enter": {
+      "en": {
+        "description": "A square with an open bottom edge and an upward arrow inside, usually meaning import, input, or move up.",
+        "synonyms": [
+          "arrow up",
+          "upload",
+          "import",
+          "input",
+          "enter",
+          "up",
+          "square",
+          "ascend"
+        ]
+      },
       "fingerprint": "92eb01c829b2",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Квадрат с разрывом внизу и стрелкой вверх внутри, означает ввод, импорт или подъём.",
+        "synonyms": [
+          "стрелка вверх",
+          "вверх",
+          "импорт",
+          "ввод",
+          "вход",
+          "загрузка",
+          "квадрат",
+          "подъём"
+        ]
+      },
       "tags": [
         "direction",
         "movement",
@@ -83659,7 +84653,34 @@
       ]
     },
     "square-arrow-up-exit": {
+      "en": {
+        "description": "An open square with an upward arrow inside, usually meaning export, upload, share, or exit outward.",
+        "synonyms": [
+          "export",
+          "upload",
+          "share",
+          "exit",
+          "outgoing",
+          "open outside",
+          "eject",
+          "external link"
+        ]
+      },
       "fingerprint": "36953196ddba",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Открытый квадрат с направленной вверх стрелкой внутри, означает выгрузку, экспорт или вынос наружу.",
+        "synonyms": [
+          "экспорт",
+          "выгрузить",
+          "загрузить наверх",
+          "поделиться",
+          "выход",
+          "стрелка вверх",
+          "вынести",
+          "отправить"
+        ]
+      },
       "tags": [
         "direction",
         "movement",
@@ -83728,7 +84749,38 @@
       ]
     },
     "square-arrow-up-left-enter": {
+      "en": {
+        "description": "A rounded square with an arrow pointing diagonally up-left into it, usually meaning enter, import or move inward.",
+        "synonyms": [
+          "arrow up left",
+          "diagonal",
+          "enter",
+          "inward",
+          "import",
+          "insert",
+          "incoming",
+          "northwest",
+          "entrance",
+          "resize"
+        ]
+      },
       "fingerprint": "ea383437884a",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Квадрат со скруглёнными углами и стрелкой, направленной внутрь к левому верхнему углу; обозначает вход, ввод или перемещение внутрь.",
+        "synonyms": [
+          "стрелка влево вверх",
+          "диагональ",
+          "вход",
+          "внутрь",
+          "импорт",
+          "вставить",
+          "входящий",
+          "направление северо-запад",
+          "развернуть",
+          "окно"
+        ]
+      },
       "tags": [
         "direction",
         "movement",
@@ -83847,7 +84899,38 @@
       ]
     },
     "square-arrow-up-right-enter": {
+      "en": {
+        "description": "A rounded square with a diagonal arrow pointing up and right; usually means entering, importing, or moving inward.",
+        "synonyms": [
+          "entrance",
+          "import",
+          "incoming",
+          "inward",
+          "diagonal",
+          "northeast",
+          "input",
+          "expand",
+          "window",
+          "insert"
+        ]
+      },
       "fingerprint": "d160bbd43735",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Скруглённый квадрат с диагональной стрелкой, направленной вверх и вправо; обычно означает вход, импорт или перемещение внутрь.",
+        "synonyms": [
+          "вход",
+          "импорт",
+          "входящий",
+          "внутрь",
+          "диагональ",
+          "северо-восток",
+          "стрелка вверх вправо",
+          "развернуть",
+          "окно",
+          "ввод"
+        ]
+      },
       "tags": [
         "direction",
         "movement",
@@ -85147,7 +86230,38 @@
       ]
     },
     "square-dashed-search": {
+      "en": {
+        "description": "A dashed square selection frame with a magnifying glass in the corner, meaning search within a selected area.",
+        "synonyms": [
+          "search",
+          "magnifier",
+          "selection",
+          "region search",
+          "scan",
+          "find",
+          "visual search",
+          "dashed box",
+          "marquee",
+          "zoom"
+        ]
+      },
       "fingerprint": "210de110ef24",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Пунктирная квадратная рамка с лупой в углу; обозначает поиск или выделение области для поиска.",
+        "synonyms": [
+          "поиск",
+          "лупа",
+          "выделение",
+          "область поиска",
+          "сканирование",
+          "найти",
+          "поиск по изображению",
+          "пунктир",
+          "рамка",
+          "просмотр"
+        ]
+      },
       "tags": [
         "dashed",
         "dotted",
@@ -90690,7 +91804,38 @@
       ]
     },
     "stroke-line-cap-butt": {
+      "en": {
+        "description": "A bracket-like outline with a dashed line inside, representing a flat, butt-style stroke end in drawing tools.",
+        "synonyms": [
+          "stroke",
+          "line cap",
+          "dashed line",
+          "outline",
+          "endpoint",
+          "flat end",
+          "border",
+          "path",
+          "segment",
+          "vector"
+        ]
+      },
       "fingerprint": "a6f72145e3bf",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Изображена прямоугольная скобка с пунктирной линией внутри; обозначает плоское окончание линии или обводки без выступа.",
+        "synonyms": [
+          "обводка",
+          "линия",
+          "штрих",
+          "пунктир",
+          "контур",
+          "концы линии",
+          "скругление",
+          "форма",
+          "вектор",
+          "граница"
+        ]
+      },
       "tags": [
         "stroke",
         "path",
@@ -90706,7 +91851,38 @@
       ]
     },
     "stroke-line-cap-round": {
+      "en": {
+        "description": "Drawing shows a rounded D-shaped stroke with dashed segments and a dot, representing round line cap styling in graphics tools.",
+        "synonyms": [
+          "stroke",
+          "outline",
+          "line cap",
+          "rounded line",
+          "arc",
+          "dashed line",
+          "path",
+          "curve",
+          "endpoint",
+          "vector line"
+        ]
+      },
       "fingerprint": "101baea31029",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Изображение показывает D-образную линию с точками и пунктиром внутри, символизируя закруглённые концы обводки контура.",
+        "synonyms": [
+          "обводка",
+          "контур",
+          "линия",
+          "скругление",
+          "дуга",
+          "штрих",
+          "пунктир",
+          "концы линии",
+          "векторная линия",
+          "кривая"
+        ]
+      },
       "tags": [
         "stroke",
         "path",
@@ -90723,7 +91899,38 @@
       ]
     },
     "stroke-line-cap-square": {
+      "en": {
+        "description": "Shows a bracket shape with three dashes of decreasing length, illustrating a square line cap style for strokes.",
+        "synonyms": [
+          "stroke",
+          "line cap",
+          "line ends",
+          "outline style",
+          "dash",
+          "border style",
+          "path endpoint",
+          "square cap",
+          "stroke settings",
+          "line style"
+        ]
+      },
       "fingerprint": "f4a6ff819f14",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Изображена скобка с тремя штрихами разной длины, показывающая стиль концов линии; обозначает настройку формы обводки.",
+        "synonyms": [
+          "обводка",
+          "концы линии",
+          "скругление",
+          "линия",
+          "штрих",
+          "контур",
+          "форма линии",
+          "стиль линии",
+          "квадратные концы",
+          "редактор обводки"
+        ]
+      },
       "tags": [
         "stroke",
         "path",
@@ -90740,7 +91947,38 @@
       ]
     },
     "stroke-line-join-bevel": {
+      "en": {
+        "description": "The icon shows a stroked path with a diagonal bevel cutting across a corner, representing a flat line join style.",
+        "synonyms": [
+          "bevel",
+          "chamfer",
+          "corner",
+          "diagonal",
+          "stroke",
+          "line join",
+          "angle",
+          "edge",
+          "path",
+          "vector line"
+        ]
+      },
       "fingerprint": "b519a72bce6b",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Изображение показывает путь с плоским срезом угла в виде диагональной линии между двумя сегментами, обозначая скос соединения линий.",
+        "synonyms": [
+          "скос",
+          "срез угла",
+          "соединение линий",
+          "диагональ",
+          "фаска",
+          "контур",
+          "обводка",
+          "угол",
+          "путь",
+          "векторная линия"
+        ]
+      },
       "tags": [
         "stroke",
         "path",
@@ -90760,7 +91998,36 @@
       ]
     },
     "stroke-line-join-miter": {
+      "en": {
+        "description": "Draws a corner outline with broken line segments, illustrating a sharp miter line join used in stroke settings.",
+        "synonyms": [
+          "stroke",
+          "line join",
+          "miter",
+          "sharp corner",
+          "corner",
+          "outline",
+          "path",
+          "segment",
+          "edge"
+        ]
+      },
       "fingerprint": "ec995e5f6f34",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Рисует угол контура с фрагментами линий, показывая стиль соединения линий острым углом; обычно используется для настройки обводки.",
+        "synonyms": [
+          "обводка",
+          "соединение линий",
+          "острый угол",
+          "угол",
+          "контур",
+          "линия",
+          "стиль обводки",
+          "векторный путь",
+          "граница"
+        ]
+      },
       "tags": [
         "stroke",
         "path",
@@ -90778,7 +92045,38 @@
       ]
     },
     "stroke-line-join-round": {
+      "en": {
+        "description": "Draws strokes meeting at a rounded corner, showing a smooth line join style used for editing path outlines.",
+        "synonyms": [
+          "round join",
+          "rounded corner",
+          "stroke join",
+          "line join",
+          "corner",
+          "arc",
+          "curve",
+          "outline",
+          "smooth edge",
+          "path style"
+        ]
+      },
       "fingerprint": "1bd857263beb",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Рисует линии с закруглённым изгибом в углу, показывая скругление соединения контура; значок обозначает настройку типа стыка линий.",
+        "synonyms": [
+          "закругление",
+          "скругление линии",
+          "угол",
+          "дуга",
+          "обводка",
+          "контур",
+          "кривая",
+          "соединение линий",
+          "стык",
+          "сглаживание"
+        ]
+      },
       "tags": [
         "stroke",
         "path",
@@ -93255,7 +94553,38 @@
       ]
     },
     "text-pen": {
+      "en": {
+        "description": "Three text lines ending in a pencil, indicating editing or writing text, such as drafting or composing content.",
+        "synonyms": [
+          "edit text",
+          "write",
+          "draft",
+          "compose",
+          "pencil",
+          "revise",
+          "annotate",
+          "note",
+          "modify",
+          "writing"
+        ]
+      },
       "fingerprint": "1a3a85e4b97d",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Три строки текста, последняя укорочена и переходит в карандаш; обозначает редактирование или написание текста.",
+        "synonyms": [
+          "редактировать",
+          "написать текст",
+          "правка",
+          "черновик",
+          "карандаш",
+          "писать",
+          "изменить",
+          "заметка",
+          "комментарий",
+          "составить текст"
+        ]
+      },
       "tags": [
         "edit",
         "modify",
@@ -97742,7 +99071,36 @@
       ]
     },
     "user-exclamation-point": {
+      "en": {
+        "description": "A user silhouette with an exclamation mark at its right side, indicating a user account warning or issue.",
+        "synonyms": [
+          "user warning",
+          "alert",
+          "caution",
+          "exclamation point",
+          "account issue",
+          "suspicious user",
+          "flagged user",
+          "error",
+          "notice"
+        ]
+      },
       "fingerprint": "df299aa32618",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Изображена фигура пользователя с восклицательным знаком справа, что обозначает предупреждение о проблеме с пользователем или аккаунтом.",
+        "synonyms": [
+          "пользователь с ошибкой",
+          "предупреждение",
+          "внимание",
+          "восклицательный знак",
+          "аккаунт проблема",
+          "ошибка аккаунта",
+          "жалоба",
+          "подозрительный пользователь",
+          "опасность"
+        ]
+      },
       "tags": [
         "user",
         "people",
@@ -98429,7 +99787,36 @@
       ]
     },
     "user-round-exclamation-point": {
+      "en": {
+        "description": "Draws a user silhouette with an exclamation mark at its right side, indicating a user account with a warning or issue.",
+        "synonyms": [
+          "user warning",
+          "account alert",
+          "flagged user",
+          "suspicious user",
+          "user error",
+          "person alert",
+          "account issue",
+          "user notice",
+          "reported user"
+        ]
+      },
       "fingerprint": "4821054877ad",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Изображён силуэт пользователя в круглой голове и плече с восклицательным знаком справа; обозначает пользователя с предупреждением или проблемой.",
+        "synonyms": [
+          "пользователь с ошибкой",
+          "предупреждение о пользователе",
+          "профиль внимание",
+          "аккаунт проблема",
+          "человек восклицательный знак",
+          "нарушитель",
+          "подозрительный пользователь",
+          "ошибка аккаунта",
+          "жалоба на пользователя"
+        ]
+      },
       "tags": [
         "user",
         "people",

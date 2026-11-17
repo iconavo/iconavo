@@ -59127,7 +59127,35 @@
       ]
     },
     "devices-2": {
+      "en": {
+        "description": "Two overlapping devices, a wide screen and a smartphone with a dot, usually meaning multiple devices or cross-device use.",
+        "synonyms": [
+          "gadgets",
+          "electronics",
+          "smartphone",
+          "tablet",
+          "sync",
+          "screens",
+          "hardware",
+          "multiple screens",
+          "cross-device"
+        ]
+      },
       "fingerprint": "2547c2165e75",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Изображены два перекрывающихся устройства: широкий экран и смартфон с кнопкой; обычно означает несколько устройств или работу на разных экранах.",
+        "synonyms": [
+          "гаджеты",
+          "техника",
+          "смартфон",
+          "планшет",
+          "синхронизация",
+          "экраны",
+          "электроника",
+          "мультиустройства"
+        ]
+      },
       "tags": [
         "devices",
         "2"
@@ -63345,7 +63373,36 @@
       ]
     },
     "document-share-off": {
+      "en": {
+        "description": "A document with a folded corner and a diagonal strike line over share nodes, meaning file sharing is turned off.",
+        "synonyms": [
+          "disable sharing",
+          "no sharing",
+          "file",
+          "document",
+          "share off",
+          "private file",
+          "block share",
+          "restricted access",
+          "unshare"
+        ]
+      },
       "fingerprint": "bb3532a6e41e",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Документ с фрагментом сбоку и диагональной чертой поверх, с точками-узлами внизу справа; означает, что общий доступ к файлу выключен.",
+        "synonyms": [
+          "отключить доступ",
+          "запретить отправку",
+          "документ",
+          "файл",
+          "общий доступ",
+          "поделиться",
+          "нет доступа",
+          "скрыть файл",
+          "перечеркнутый"
+        ]
+      },
       "tags": [
         "document",
         "share",
@@ -89186,7 +89243,36 @@
       ]
     },
     "frame-person-2": {
+      "en": {
+        "description": "Shows a person silhouette inside viewfinder corner brackets, usually meaning face detection or framing a person.",
+        "synonyms": [
+          "face detection",
+          "face scan",
+          "face recognition",
+          "portrait",
+          "camera frame",
+          "viewfinder",
+          "selfie",
+          "person focus",
+          "biometric"
+        ]
+      },
       "fingerprint": "c4a4e1f8e463",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Изображает силуэт человека внутри рамки видоискателя; обычно означает распознавание лица или съёмку человека.",
+        "synonyms": [
+          "распознавание лица",
+          "фейсконтроль",
+          "сканер лица",
+          "человек в рамке",
+          "камера",
+          "фото человека",
+          "селфи",
+          "портрет",
+          "видоискатель"
+        ]
+      },
       "tags": [
         "frame",
         "person",
@@ -119473,7 +119559,34 @@
       ]
     },
     "looks-0": {
+      "en": {
+        "description": "A black rounded square with a white digit zero inside, usually representing the number 0 or a numeric value.",
+        "synonyms": [
+          "digit zero",
+          "number 0",
+          "zero",
+          "numeral",
+          "figure 0",
+          "numeric",
+          "square digit",
+          "counter"
+        ]
+      },
       "fingerprint": "fac1bdfe625b",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Черный квадрат с белой цифрой ноль в виде вытянутого прямоугольника; обозначает число 0 или стиль «looks» в интерфейсе.",
+        "synonyms": [
+          "цифра 0",
+          "ноль",
+          "число ноль",
+          "символ 0",
+          "цифра",
+          "номер",
+          "нуль",
+          "квадрат с цифрой"
+        ]
+      },
       "tags": [
         "looks",
         "0"
@@ -119779,7 +119892,36 @@
       ]
     },
     "looks-7": {
+      "en": {
+        "description": "A black rounded square with a white digit 7, usually meaning number seven, a seventh item, or a numbered step.",
+        "synonyms": [
+          "seven",
+          "number 7",
+          "digit 7",
+          "seventh",
+          "numeral seven",
+          "square number",
+          "numbered list",
+          "step seven",
+          "figure"
+        ]
+      },
       "fingerprint": "dbce75193daf",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Чёрный скруглённый квадрат с белой цифрой 7; обозначает номер, пункт седьмой или элемент списка с этим номером.",
+        "synonyms": [
+          "семёрка",
+          "цифра 7",
+          "номер семь",
+          "седьмой",
+          "число 7",
+          "квадрат с цифрой",
+          "нумерация",
+          "пункт списка",
+          "цифра"
+        ]
+      },
       "tags": [
         "looks",
         "7"
@@ -119821,7 +119963,38 @@
       ]
     },
     "looks-8": {
+      "en": {
+        "description": "A black rounded square with a white digit 8 inside, representing the number eight or an eighth item.",
+        "synonyms": [
+          "number 8",
+          "digit 8",
+          "eight",
+          "numeral 8",
+          "square",
+          "number",
+          "figure 8",
+          "button 8",
+          "eighth",
+          "numbered"
+        ]
+      },
       "fingerprint": "105ac6eef097",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Чёрный квадрат с белой цифрой 8 внутри; обозначает число восемь или номер в списке.",
+        "synonyms": [
+          "цифра 8",
+          "восемь",
+          "число 8",
+          "номер 8",
+          "квадрат",
+          "цифра",
+          "номер",
+          "знак восемь",
+          "кнопка 8",
+          "восьмёрка"
+        ]
+      },
       "tags": [
         "looks",
         "8"
@@ -119849,7 +120022,36 @@
       ]
     },
     "looks-9": {
+      "en": {
+        "description": "A white digit 9 inside a black rounded square, usually representing the number nine or a numbered item.",
+        "synonyms": [
+          "nine",
+          "digit 9",
+          "number 9",
+          "numeral",
+          "square number",
+          "counter",
+          "numbered box",
+          "ninth",
+          "count"
+        ]
+      },
       "fingerprint": "3da20ccfa4d2",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Белая цифра 9 на черном скругленном квадрате; обозначает номер или число девять в интерфейсе.",
+        "synonyms": [
+          "девятка",
+          "цифра 9",
+          "число 9",
+          "номер 9",
+          "нумерация",
+          "квадрат с цифрой",
+          "иконка цифры",
+          "девять",
+          "счетчик"
+        ]
+      },
       "tags": [
         "looks",
         "9"
@@ -126403,7 +126605,36 @@
       ]
     },
     "mirror-stack": {
+      "en": {
+        "description": "Two overlapping rounded rectangles, one offset up and right, usually representing a stack, layers, or mirrored copies.",
+        "synonyms": [
+          "stack",
+          "layers",
+          "copy",
+          "duplicate",
+          "overlap",
+          "cards",
+          "multiple windows",
+          "pile",
+          "reflect"
+        ]
+      },
       "fingerprint": "0ae80376d508",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Два перекрывающихся прямоугольника, один смещён вверх и вправо; обычно обозначает стопку, копию или наложение слоёв.",
+        "synonyms": [
+          "стопка",
+          "слои",
+          "копия",
+          "зеркало",
+          "наложение",
+          "дублировать",
+          "несколько окон",
+          "карточки",
+          "сложить"
+        ]
+      },
       "tags": [
         "mirror",
         "stack"
@@ -159372,7 +159603,34 @@
       ]
     },
     "print-landscape-long": {
+      "en": {
+        "description": "A solid shape with two tabs on top and a rounded lower corner, resembling a printer tray; it means printing.",
+        "synonyms": [
+          "printer",
+          "printing",
+          "paper tray",
+          "print output",
+          "horizontal print",
+          "document",
+          "landscape orientation",
+          "paper"
+        ]
+      },
       "fingerprint": "b18bdd6c209a",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Залитая фигура с двумя выступами сверху и скруглённым нижним углом, напоминающая лоток принтера; обозначает печать.",
+        "synonyms": [
+          "печать",
+          "принтер",
+          "печатать",
+          "лоток для бумаги",
+          "альбомная ориентация",
+          "горизонтальная печать",
+          "вывод на печать",
+          "бумага"
+        ]
+      },
       "tags": [
         "print",
         "landscape",
@@ -159420,7 +159678,36 @@
       ]
     },
     "print-landscape-short": {
+      "en": {
+        "description": "Two overlapping black sheets with a curved edge and small tabs on the left, showing landscape printing orientation.",
+        "synonyms": [
+          "print",
+          "landscape",
+          "orientation",
+          "printer",
+          "horizontal page",
+          "paper",
+          "document",
+          "printout",
+          "page layout"
+        ]
+      },
       "fingerprint": "8669d0b49c22",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Чёрная фигура из двух наложенных листов с изогнутым краем и маленькими выступами слева; обозначает печать в альбомной ориентации.",
+        "synonyms": [
+          "печать",
+          "альбомная",
+          "альбомный лист",
+          "ориентация",
+          "горизонтальная печать",
+          "принтер",
+          "распечатать",
+          "документ",
+          "бумага"
+        ]
+      },
       "tags": [
         "print",
         "landscape",
@@ -159551,7 +159838,36 @@
       ]
     },
     "print-portrait-long": {
+      "en": {
+        "description": "Black silhouette of a door or panel with small hinge tabs on the left, usually meaning entrance, exit or opening.",
+        "synonyms": [
+          "door",
+          "exit",
+          "entrance",
+          "panel",
+          "hinge",
+          "open",
+          "cabinet",
+          "portrait",
+          "leave"
+        ]
+      },
       "fingerprint": "1eae653805a6",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Чёрный силуэт двери или створки с петлями слева; обычно означает вход, выход или открытие.",
+        "synonyms": [
+          "дверь",
+          "выход",
+          "вход",
+          "створка",
+          "дверца",
+          "открыть",
+          "петли",
+          "шкаф",
+          "портрет"
+        ]
+      },
       "tags": [
         "print",
         "portrait",
@@ -159599,7 +159915,38 @@
       ]
     },
     "print-portrait-short": {
+      "en": {
+        "description": "A tilted sheet of paper with two small tabs on top and a base beneath it; usually means printing a document.",
+        "synonyms": [
+          "printer",
+          "printing",
+          "document",
+          "paper",
+          "page",
+          "copy",
+          "hardcopy",
+          "output",
+          "sheet",
+          "file"
+        ]
+      },
       "fingerprint": "c2374776842e",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Наклонённый лист бумаги с двумя выступами сверху и подложкой снизу; обычно означает печать документа.",
+        "synonyms": [
+          "печать",
+          "принтер",
+          "распечатать",
+          "документ",
+          "бумага",
+          "лист",
+          "страница",
+          "печатать",
+          "копия",
+          "вывод на печать"
+        ]
+      },
       "tags": [
         "print",
         "portrait",
@@ -160793,7 +161140,38 @@
       ]
     },
     "pull-request": {
+      "en": {
+        "description": "Two vertical lines with dots at their ends and a left-pointing arrow between the top dots, representing a code pull request or merge.",
+        "synonyms": [
+          "merge request",
+          "branch",
+          "git",
+          "fork",
+          "code review",
+          "version control",
+          "arrow left",
+          "commit",
+          "repository",
+          "merge"
+        ]
+      },
       "fingerprint": "7752f31740ee",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Два вертикальных отрезка с точками на концах и стрелка влево между верхними точками, обозначающие запрос на слияние кода (pull request).",
+        "synonyms": [
+          "запрос на слияние",
+          "пулл реквест",
+          "слияние веток",
+          "ветка",
+          "git",
+          "merge",
+          "стрелка влево",
+          "коммит",
+          "разветвление",
+          "репозиторий"
+        ]
+      },
       "tags": [
         "pull",
         "request"
@@ -208570,7 +208948,38 @@
       ]
     },
     "touch-double-2-hold": {
+      "en": {
+        "description": "Shows a hand with two fingers touching a screen with arcs around them, meaning a double tap or press and hold.",
+        "synonyms": [
+          "touch",
+          "tap",
+          "press",
+          "hold",
+          "gesture",
+          "finger",
+          "hand",
+          "double tap",
+          "long press",
+          "pointer"
+        ]
+      },
       "fingerprint": "f2c688d7527e",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Рисует руку с двумя пальцами, касающуюся экрана, с дугами вокруг, что означает двойное касание и удержание.",
+        "synonyms": [
+          "касание",
+          "двойное касание",
+          "нажатие",
+          "тап",
+          "удержание",
+          "жест",
+          "палец",
+          "рука",
+          "сенсор",
+          "долгое нажатие"
+        ]
+      },
       "tags": [
         "touch",
         "double",
