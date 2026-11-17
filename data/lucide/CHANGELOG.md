@@ -4,6 +4,20 @@
 Имена не пропадают: иконка, которую удалил автор, скрыта, но работает по имени, а старое имя переименованной ведёт на новое (ADR-0005).
 Скрытия и переименования вы одобряете лично в pull request (ADR-0019). Полные списки — в `changelog.json`.
 
+## 14 ноября 2026 · версия 09cf60cb
+
+Прошлая версия: ac88e2c8 · источник: 55782be · иконок: 2 055.
+
+**Требуют вашего одобрения**
+
+- Переименованы — старое имя ведёт на новое (8): `circle-arrow-out-down-left` → `circle-arrow-down-left-exit`, `circle-arrow-out-down-right` → `circle-arrow-down-right-exit`, `circle-arrow-out-up-left` → `circle-arrow-up-left-exit`, `circle-arrow-out-up-right` → `circle-arrow-up-right-exit`, `square-arrow-out-down-left` → `square-arrow-down-left-exit`, `square-arrow-out-down-right` → `square-arrow-down-right-exit`, `square-arrow-out-up-left` → `square-arrow-up-left-exit`, `square-arrow-out-up-right` → `square-arrow-up-right-exit`
+
+**Изменения**
+
+- Добавлены (26): `asterism`, `cap`, `cheese`, `exclamation-mark`, `graph-ring`, `layout-grid-plus`, `mound-shovel`, `question-mark`, `route-arrow-right`, `square-arrow-down-enter`, `square-arrow-down-exit`, `square-arrow-down-left-enter`, `square-arrow-down-right-enter`, `square-arrow-left-enter`, `square-arrow-left-exit`, `square-arrow-up-enter`, `square-arrow-up-exit`, `square-arrow-up-left-enter`, `square-arrow-up-right-enter`, `stroke-line-cap-butt`, `stroke-line-cap-round`, `stroke-line-cap-square`, `stroke-line-join-bevel`, `stroke-line-join-miter`, `stroke-line-join-round`, `text-pen`
+- Изменены (11): `badge-question-mark`, `battery-exclamation-point`, `circle-question-mark`, `file-question-mark`, `mail-question-mark`, `message-circle-question-mark`, `package-question-mark`, `route`, `shield-question-mark`, `square-arrow-right-enter`, `square-arrow-right-exit`
+- Новые алиасы (3): `grid-3-x-2` → `grid-3x2`, `grid-3-x-3-off` → `grid-3x3-off`, `printer-3-d` → `printer-3d`
+
 ## 6 ноября 2026 · версия ac88e2c8
 
 Прошлая версия: 9c26bcf3 · источник: b826f0c · иконок: 2 029.
