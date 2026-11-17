@@ -56,14 +56,27 @@ export const isRequestFailure = (text: string) =>
 export const isAbortedPrefetch = (text: string) =>
   /[?&]_rsc=\S* due to access control checks\.$/.test(text);
 
+/**
+ * Firefox: подгрузка скрипта Next.js с самого сайта (`/_next/static/`), оборванная перезагрузкой или
+ * уходом со страницы, — предупреждение «Loading failed for the <script> …». Так 17 ноября 2026 дважды
+ * падала проверка кнопки темы, которая перезагружает главную. Это не ошибка страницы: скрипт, который
+ * по-настоящему не загрузился, ломает гидратацию, и её ловят остальные строки проверки. Скрипты
+ * не из `/_next/static/` — тег иконок, пример с хэшем — по-прежнему проблема.
+ */
+export const isAbortedScript = (text: string) =>
+  /Loading failed for the <script> with source “[^”]*\/_next\/static\//.test(
+    text,
+  );
+
 /** Что пишет страница: предупреждения и ошибки, кроме записей о неудавшихся запросах. */
 export function watch(page: Page) {
   const warnings: string[] = [];
   const errors: string[] = [];
   page.on("console", (message) => {
     const text = message.text();
-    if (message.type() === "warning") warnings.push(text);
-    else if (message.type() === "error" && !isRequestFailure(text)) {
+    if (message.type() === "warning") {
+      if (!isAbortedScript(text)) warnings.push(text);
+    } else if (message.type() === "error" && !isRequestFailure(text)) {
       errors.push(text);
     }
   });
