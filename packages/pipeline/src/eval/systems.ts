@@ -27,9 +27,20 @@ import {
 } from "./config.js";
 import { fitsOf, type GoldenQuery, type Labels, type Split } from "./golden.js";
 import { type CurvePoint, hitAt, pickAlpha, summarize } from "./metrics.js";
+import { FAMILIES, type Family, familyKey } from "./service.js";
 
-/** deep — места 11–30 сервиса у худших запросов рабочей части: только для разметки и диагноза. */
-export type Role = "main" | "alpha" | "length" | "set" | "ratio" | "deep";
+/**
+ * deep — места 11–30 сервиса у худших запросов рабочей части: только для разметки и диагноза;
+ * explore — семейства опыта этапа 2 шага 8 фазы 4 (ADR-0053), только рабочая часть.
+ */
+export type Role =
+  | "main"
+  | "alpha"
+  | "length"
+  | "set"
+  | "ratio"
+  | "deep"
+  | "explore";
 
 export interface System {
   key: string;
@@ -46,6 +57,8 @@ export interface System {
   role: Role;
   /** Списки варианта приходят готовыми — от поискового сервиса, а не из прототипа. */
   remote?: true;
+  /** Ключ готового списка в eval/service.ts; нет — «text» или «ratio:доля». */
+  remoteKey?: string;
   /** Размечаются только запросы этой части эталона. */
   split?: Split;
   /**
@@ -61,6 +74,16 @@ export const SERVICE_TEXT_KEY = "service-text:gemini";
 export const SERVICE_MISS_KEY = "service-miss:gemini";
 export const SERVICE_CEILING_KEY = "service-ceiling:gemini";
 export const ratioKey = (ratio: number) => `ratio:gemini@${ratio}`;
+/** Вариант семейства опыта этапа 2: «m:gemini@0.3», «c-abs:gemini@0.5». */
+export const exploreKey = (family: Family, x: number) =>
+  `${family}:gemini@${x}`;
+
+/** Подписи семейств опыта этапа 2. */
+export const FAMILY_TITLES: Record<Family, string> = {
+  m: "Meilisearch с калибровкой",
+  "c-abs": "Сумма, слова как есть",
+  "c-rel": "Сумма, слова от лучшей в запросе",
+};
 
 export interface Choice {
   /** Доля смысловой части каждой модели — подобранная или из настроек. */
@@ -95,12 +118,20 @@ export const modelLengths = (m: EmbeddingModel): number[] => [
   m.dims,
 ];
 
-/** Все варианты замера; service — доля смысла сервиса, нет — сервис не меряется. */
+/**
+ * Все варианты замера; service — доля смысла сервиса, нет — сервис не меряется; explore — и
+ * семейства опыта этапа 2 (ADR-0053).
+ */
 export function systems(
   models: readonly EmbeddingModel[],
   choice: Choice,
   sets: readonly string[],
-  service?: { ratio: number },
+  service?: {
+    ratio: number;
+    explore?: boolean;
+    /** Семейства опыта; нет — все. */
+    families?: readonly Family[];
+  },
 ): System[] {
   const out: System[] = [
     {
@@ -237,6 +268,25 @@ export function systems(
         when: "ceiling",
       },
     );
+    // Опыт этапа 2 (ADR-0053): семейства на сетке 0…1 — только рабочая часть, по ней выбирают.
+    if (service.explore) {
+      for (const family of service.families ?? FAMILIES) {
+        for (const x of ALPHA_GRID) {
+          out.push({
+            key: exploreKey(family, x),
+            title: `${FAMILY_TITLES[family]}, ${family === "m" ? "доля" : "α"} ${fraction(x)}`,
+            mode: "hybrid",
+            alpha: x,
+            length: SEARCH_MODEL.dims,
+            depth: DEPTH,
+            role: "explore",
+            remote: true,
+            remoteKey: familyKey(family, x),
+            split: "work",
+          });
+        }
+      }
+    }
   }
   return out;
 }
@@ -280,7 +330,8 @@ export async function rankAll(
   );
   // Варианты сервиса — готовыми списками: «только слова» и гибрид при своей доле смысла.
   for (const def of defs.filter((d) => d.remote)) {
-    const key = def.mode === "text" ? "text" : `ratio:${def.alpha}`;
+    const key =
+      def.remoteKey ?? (def.mode === "text" ? "text" : `ratio:${def.alpha}`);
     const list = input.remote?.get(key);
     lists.set(
       def.key,
@@ -416,6 +467,26 @@ function workCurve(
     curve.push({ alpha: a, hit: s.hit, mrr: s.mrr });
   }
   return curve;
+}
+
+/**
+ * Семейство опыта этапа 2 по рабочей части (ADR-0053) — по тому же правилу, что доля смысла: середина
+ * лучшего плато по Hit@5, при равенстве — по MRR@10.
+ */
+export function tuneFamily(
+  rankings: Rankings,
+  queries: readonly GoldenQuery[],
+  labels: Labels,
+  family: Family,
+): Tuned | undefined {
+  const curve = workCurve(
+    rankings,
+    queries,
+    labels,
+    (x) => exploreKey(family, x),
+    true,
+  );
+  return curve ? { alpha: pickAlpha(curve), curve } : undefined;
 }
 
 /** Доля смысла сервиса по рабочей части — по тому же правилу, что α прототипа (ADR-0049). */

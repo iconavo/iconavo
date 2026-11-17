@@ -19,12 +19,13 @@ import {
 import { type GoldenQuery, TYPES, type Verdict } from "./golden.js";
 import { type JudgeReport, shuffle, verdictCounts } from "./judge.js";
 import type { Summary } from "./metrics.js";
-import type {
-  Diagnosis,
-  EvalReport,
-  SetShares,
-  SystemResult,
-  WorstEntry,
+import {
+  COMPLEXITY_MARGIN,
+  type Diagnosis,
+  type EvalReport,
+  type SetShares,
+  type SystemResult,
+  type WorstEntry,
 } from "./run.js";
 
 const rub = (n: number) => `${n.toFixed(2).replace(".", ",")} ₽`;
@@ -261,6 +262,7 @@ export function formatEvalReport(r: EvalReport): string {
     }
     const service = serviceText(r);
     if (service !== "") lines.push(service);
+    lines.push(...exploreLines(r));
     const rec = r.recommendation;
     if (rec) {
       lines.push(
@@ -326,7 +328,76 @@ function serviceSection(r: EvalReport): string {
 <p><b>${esc(serviceText(r))}</b></p>
 <p class="muted">«Сервис» — гибрид Meilisearch теми же запросами, что у функции edge API, при её доле смысла; «Сервис, только слова» — выдача, которая приходит первой, пока смысл не посчитан. Цель шага 8 фазы 4 (ADR-0021, ADR-0053): строго не ниже 90% и на русском, и на английском; Hit@5 контрольной части не ниже, чем до правок.</p>
 ${serviceStrictTable(r)}
-${curve}`;
+${curve}
+${exploreSection(r)}`;
+}
+
+const deviceTitle = (r: EvalReport, device: string) =>
+  r.explore?.curves.find((c) => c.device === device)?.title ?? device;
+
+/** Опыт этапа 2 (ADR-0053) для терминала. */
+function exploreLines(r: EvalReport): string[] {
+  const e = r.explore;
+  if (!e) return [];
+  const lines = [
+    `Опыт этапа 2 (ADR-0053): калибровка смысла — среднее ${fixed(e.distribution.mean, 3)}, разброс ${fixed(e.distribution.sigma, 3)}; копия слияния Meilisearch совпала с живой выдачей в ${e.checked - e.mismatches.length} из ${e.checked}.`,
+  ];
+  for (const c of e.curves) {
+    lines.push(
+      `  ${c.title}: ${c.tuned && c.hits !== undefined ? `${fixed(c.tuned.alpha, 1)} — ${c.hits} попаданий на рабочей части, MRR@10 ${fixed(c.mrr ?? 0)}` : "разметка неполная — запустите pnpm judge --service-only --explore"}`,
+    );
+  }
+  if (e.choice) {
+    const ids = (qs: readonly GoldenQuery[]) =>
+      qs.length === 0 ? "—" : qs.map((q) => q.id).join(", ");
+    lines.push(
+      `Выбор по правилам (от простого к сложному, запас ${COMPLEXITY_MARGIN}): ${deviceTitle(r, e.choice.device)} ${fixed(e.choice.x, 1)}; против сервиса сейчас чинит ${e.fixed.length} (${ids(e.fixed)}), ломает ${e.broken.length} (${ids(e.broken)}).`,
+    );
+  }
+  return lines;
+}
+
+/** Опыт этапа 2 (ADR-0053) на странице: кривые устройств, проверка копии, выбор. */
+function exploreSection(r: EvalReport): string {
+  const e = r.explore;
+  if (!e) return "";
+  const grid =
+    e.curves.find((c) => c.tuned)?.tuned?.curve.map((p) => p.alpha) ?? [];
+  const head = e.curves.map((c) => `<th>${esc(c.title)}</th>`).join("");
+  const rows = grid
+    .map(
+      (x) =>
+        `<tr><td class="num">${fixed(x, 1)}</td>${e.curves
+          .map((c) => {
+            const p = c.tuned?.curve.find((q) => q.alpha === x);
+            if (!p) return "<td></td>";
+            const picked = c.tuned?.alpha === x;
+            return `<td class="num${picked ? " best" : ""}">${pct(p.hit)} <span class="muted">${fixed(p.mrr)}</span></td>`;
+          })
+          .join("")}</tr>`,
+    )
+    .join("");
+  const list = (qs: readonly GoldenQuery[]) =>
+    qs.length === 0
+      ? `<span class="muted">нет</span>`
+      : qs.map((q) => `${esc(q.id)} «${esc(q.query)}»`).join(", ");
+  const choice = e.choice
+    ? `<p><b>Выбор по правилам ADR-0053: ${esc(deviceTitle(r, e.choice.device))}, ${e.choice.device === "now" || e.choice.device === "m" ? "доля смысла" : "α"} ${fixed(e.choice.x, 1)} — ${e.choice.hits} попаданий на рабочей части, MRR@10 ${fixed(e.choice.mrr)}.</b></p>
+<p>Против сервиса сейчас чинит (${e.fixed.length}): ${list(e.fixed)}.</p>
+<p>Ломает (${e.broken.length}): ${list(e.broken)}.</p>`
+    : `<p class="muted">Выбора нет: разметка рабочей части неполная — запустите pnpm judge --service-only --explore.</p>`;
+  const mismatches = e.mismatches
+    .slice(0, 5)
+    .map(
+      (m) =>
+        `<li>${esc(m.query)}, доля ${fixed(m.ratio, 1)}: живая выдача <code>${esc(m.live.slice(0, 5).join(" "))}</code>, копия <code>${esc(m.replica.slice(0, 5).join(" "))}</code></li>`,
+    )
+    .join("");
+  return `<h2>Опыт этапа 2: слияние слов и смысла</h2>
+<p class="muted">Шаг 8 фазы 4, ADR-0053. Выдача собрана локально из двух списков Meilisearch с оценками — «только слова» и «только смысл». «Как сейчас» — слияние самого Meilisearch при доле смысла из сетки; M — оно же с калибровкой шкалы смысла (среднее ${fixed(e.distribution.mean, 3)}, разброс ${fixed(e.distribution.sigma, 3)} — по первым 100 местам рабочей части); суммы — как у прототипа: α · смысл + (1 − α) · слова, смысл нормирован между 1-м и 100-м местом. Рабочая часть, Hit@5 и MRR@10; жирным — выбор правила внутри устройства. Между устройствами — от простого к сложному: более сложное побеждает, только если даёт хотя бы на ${COMPLEXITY_MARGIN} попадания больше.</p>
+<p>Копия слияния Meilisearch совпала с живой выдачей в ${e.checked - e.mismatches.length} из ${e.checked} пар «запрос × доля»${e.mismatches.length > 0 ? ` — расхождения:</p><ul>${mismatches}</ul>` : ".</p>"}
+<table><thead><tr><th>Доля / α</th>${head}</tr></thead><tbody>${rows}</tbody></table>
+${choice}`;
 }
 
 /** Сервис строго по языкам, контрольная и рабочая части и оракул рабочей части. */

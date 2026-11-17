@@ -49,7 +49,7 @@ import {
   writeJudgments,
 } from "./golden.js";
 import { type Candidate, judgeBody, parseVerdicts } from "./prompt.js";
-import { serviceLists } from "./service.js";
+import { type Family, serviceLists } from "./service.js";
 import {
   configChoice,
   rankAll,
@@ -177,9 +177,10 @@ export interface JudgeOptions {
   concurrency?: number;
   /**
    * Поисковый сервис — клиент Meilisearch только для чтения; only — без моделей прототипа, как у
-   * pnpm eval --service-only (шаг 8 фазы 4): размечаются только сервис и «Текст».
+   * pnpm eval --service-only (шаг 8 фазы 4): размечаются только сервис и «Текст»; explore — и
+   * семейства опыта этапа 2, только рабочая часть (ADR-0053).
    */
-  service?: { client: MeiliClient; only?: boolean };
+  service?: { client: MeiliClient; only?: boolean; explore?: boolean };
   log?: (line: string) => void;
 }
 
@@ -293,6 +294,7 @@ export async function judgeEval(
   if (report.stop.length > 0) return report;
 
   let remote: Map<string, string[][]> | undefined;
+  let families: readonly Family[] | undefined;
   if (options.service) {
     log("Сервис: ответы Meilisearch на запросы эталона…");
     const s = await serviceLists({
@@ -301,6 +303,7 @@ export async function judgeEval(
       queries,
       queryDir: options.queryDir,
       ...(options.embedClient ? { embedClient: options.embedClient } : {}),
+      explore: options.service.explore === true,
       log,
     });
     report.notes.push(...s.notes);
@@ -309,8 +312,15 @@ export async function judgeEval(
       return report;
     }
     remote = s.lists;
+    families = s.explore?.families;
   }
-  const service = options.service ? { ratio: SEMANTIC_RATIO } : undefined;
+  const service = options.service
+    ? {
+        ratio: SEMANTIC_RATIO,
+        explore: options.service.explore === true,
+        ...(families ? { families } : {}),
+      }
+    : undefined;
 
   const allWork =
     queries.filter((q) => q.split === "work").length ===

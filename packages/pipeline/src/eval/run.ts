@@ -50,6 +50,8 @@ import {
   summarize,
 } from "./metrics.js";
 import {
+  type ExploreLists,
+  type Family,
   firstFit,
   type ScoredLists,
   serviceLists,
@@ -58,18 +60,80 @@ import {
 import {
   type Choice,
   configChoice,
+  exploreKey,
+  FAMILY_TITLES,
   modelLengths,
   type Rankings,
   rankAll,
+  ratioKey,
   SERVICE_KEY,
   SERVICE_TEXT_KEY,
   type System,
   systems,
   type Tuned,
   tuneAlphas,
+  tuneFamily,
   tuneRatio,
   unlabeled,
 } from "./systems.js";
+
+/** Устройство в опыте этапа 2: «как сейчас» — слияние Meilisearch без калибровки; семейства. */
+export type Device = "now" | Family;
+
+/** Запас, с которым более сложное устройство побеждает более простое (ADR-0053). */
+export const COMPLEXITY_MARGIN = 2;
+
+export interface DeviceCurve {
+  device: Device;
+  title: string;
+  /** Кривая на рабочей части и выбор правила; нет — разметка неполная. */
+  tuned?: Tuned;
+  /** Попаданий в пятёрку на рабочей части при выбранной точке. */
+  hits?: number;
+  mrr?: number;
+}
+
+/**
+ * Опыт этапа 2 (ADR-0053): калибровка, проверка копии слияния, кривые устройств на рабочей части и
+ * выбор по цепочке «как сейчас → M → C» с запасом COMPLEXITY_MARGIN попаданий.
+ */
+export interface ExploreResult extends ExploreLists {
+  curves: DeviceCurve[];
+  choice?: { device: Device; x: number; hits: number; mrr: number };
+  /** Запросы рабочей части, которые выбор чинит и ломает против сервиса сейчас. */
+  fixed: GoldenQuery[];
+  broken: GoldenQuery[];
+}
+
+/**
+ * Выбор устройства: от простого к сложному, более сложное побеждает действующее, только если даёт
+ * хотя бы на COMPLEXITY_MARGIN попаданий больше. Суммы C-abs и C-rel — одной сложности: между ними
+ * решают попадания, затем MRR@10, затем «как есть».
+ */
+export function pickDevice(
+  curves: readonly DeviceCurve[],
+): ExploreResult["choice"] {
+  const ready = (d: DeviceCurve | undefined) =>
+    d?.tuned !== undefined && d.hits !== undefined && d.mrr !== undefined
+      ? {
+          device: d.device,
+          x: d.tuned.alpha,
+          hits: d.hits,
+          mrr: d.mrr,
+        }
+      : undefined;
+  const of = (device: Device) => ready(curves.find((c) => c.device === device));
+  const sums = [of("c-abs"), of("c-rel")].filter((x) => x !== undefined);
+  const sum = sums.sort((a, b) => b.hits - a.hits || b.mrr - a.mrr)[0];
+  let best = of("now");
+  for (const next of [of("m"), sum]) {
+    if (next === undefined) continue;
+    if (best === undefined || next.hits >= best.hits + COMPLEXITY_MARGIN) {
+      best = next;
+    }
+  }
+  return best;
+}
 
 export type Group = Split | "all";
 export type LangKey = Lang | "all";
@@ -196,6 +260,8 @@ export interface EvalReport {
   };
   /** Списки сервиса с оценками — для диагноза худших запросов. */
   scored?: ScoredLists;
+  /** Опыт этапа 2 — только с explore (ADR-0053). */
+  explore?: ExploreResult;
   /** Худшие запросы рабочей части у сервиса — с диагнозом (шаг 8 фазы 4, ADR-0053). */
   worst: WorstEntry[];
   /**
@@ -228,9 +294,10 @@ export interface EvalOptions {
   models?: readonly EmbeddingModel[];
   /**
    * Поисковый сервис: клиент Meilisearch только для чтения; only — без моделей прототипа (в CI нет
-   * векторов иконок), а неразмеченные пары — заметка, а не «СТОП».
+   * векторов иконок), а неразмеченные пары — заметка, а не «СТОП»; explore — опыт этапа 2 шага 8
+   * фазы 4 (ADR-0053).
    */
-  service?: { client: MeiliClient; only?: boolean };
+  service?: { client: MeiliClient; only?: boolean; explore?: boolean };
   log?: (line: string) => void;
 }
 
@@ -337,6 +404,7 @@ export async function evaluate(
       queries,
       queryDir: options.queryDir,
       ...(options.embedClient ? { embedClient: options.embedClient } : {}),
+      explore: options.service.explore === true,
       log,
     });
     report.notes.push(...s.notes);
@@ -347,6 +415,23 @@ export async function evaluate(
     remote = s.lists;
     report.scored = s.scored;
     report.service = { ratio: SEMANTIC_RATIO };
+    if (s.explore) {
+      report.explore = { ...s.explore, curves: [], fixed: [], broken: [] };
+      // Копия слияния обязана повторить живую выдачу: иначе опыт с семейством M недостоверен.
+      if (s.explore.mismatches.length > 0) {
+        const byRatio = new Map<number, number>();
+        for (const m of s.explore.mismatches) {
+          byRatio.set(m.ratio, (byRatio.get(m.ratio) ?? 0) + 1);
+        }
+        report.stop.push(
+          `копия слияния Meilisearch не повторила живую выдачу: ${s.explore.mismatches.length} из ${s.explore.checked}; по долям — ${[
+            ...byRatio,
+          ]
+            .map(([r, n]) => `${String(r).replace(".", ",")}: ${n}`)
+            .join(", ")}`,
+        );
+      }
+    }
   }
   const input = {
     catalog,
@@ -360,7 +445,13 @@ export async function evaluate(
   };
   const sets = catalog.sets.map((s) => s.id);
   const service = () =>
-    report.service ? { ratio: report.service.ratio } : undefined;
+    report.service
+      ? {
+          ratio: report.service.ratio,
+          explore: options.service?.explore === true,
+          ...(report.explore ? { families: report.explore.families } : {}),
+        }
+      : undefined;
   let defs = systems(models, report.choice, sets, service());
   let rankings = await rankAll(input, defs);
   // «Сервис» — всегда выдача функции, при доле из настроек; правило на рабочей части только советует
@@ -643,6 +734,52 @@ export async function evaluate(
       })
       .sort(worstOrder)
       .slice(0, WORST);
+
+    // Опыт этапа 2 (ADR-0053): кривые устройств на рабочей части и выбор по цепочке.
+    if (report.explore) {
+      const n = work.filter((q) => fitsOf(labels, q.id).size > 0).length;
+      const nowTuned = report.service.tuned;
+      const curveOf = (device: Device): DeviceCurve => {
+        const tuned =
+          device === "now"
+            ? nowTuned
+            : tuneFamily(rankings, queries, labels, device);
+        const title =
+          device === "now"
+            ? "Как сейчас — слияние Meilisearch"
+            : FAMILY_TITLES[device];
+        const point = tuned?.curve.find((p) => p.alpha === tuned.alpha);
+        return tuned === undefined || point === undefined
+          ? { device, title }
+          : {
+              device,
+              title,
+              tuned,
+              hits: Math.round(point.hit * n),
+              mrr: point.mrr,
+            };
+      };
+      report.explore.curves = (
+        ["now", ...report.explore.families] as Device[]
+      ).map(curveOf);
+      const choice = pickDevice(report.explore.curves);
+      if (choice) {
+        report.explore.choice = choice;
+        const chosen = listOf(
+          choice.device === "now"
+            ? ratioKey(choice.x)
+            : exploreKey(choice.device, choice.x),
+        );
+        for (const q of work) {
+          const i = index.get(q.id) as number;
+          const fits = fitsOf(labels, q.id);
+          const was = hitAt(serviceList[i] ?? [], fits);
+          const now = hitAt(chosen[i] ?? [], fits);
+          if (now && !was) report.explore.fixed.push(q);
+          if (was && !now) report.explore.broken.push(q);
+        }
+      }
+    }
   }
   return report;
 }

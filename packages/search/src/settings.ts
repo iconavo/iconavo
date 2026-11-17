@@ -3,7 +3,12 @@
 // описаний: описания идут только в вектор (решение владельца, ADR-0048). Опечатки — как у
 // Meilisearch по умолчанию, с ними сверялся и прототип. Точное имя ищется фильтром по полю names.
 
-import { EMBEDDER, MAX_TOTAL_HITS, SEARCH_MODEL } from "./config.js";
+import {
+  EMBEDDER,
+  MAX_TOTAL_HITS,
+  SEARCH_MODEL,
+  SEMANTIC_DISTRIBUTION,
+} from "./config.js";
 
 /**
  * Служебные слова: в запросе они не ищутся. «в» есть в синонимах 697 иконок и перевешивало бы
@@ -100,7 +105,12 @@ export const INDEX_SETTINGS = {
     minWordSizeForTypos: { oneTypo: 5, twoTypos: 9 },
   },
   embedders: {
-    [EMBEDDER]: { source: "userProvided", dimensions: SEARCH_MODEL.dims },
+    [EMBEDDER]: {
+      source: "userProvided",
+      dimensions: SEARCH_MODEL.dims,
+      // Калибровка шкалы смысла (ADR-0053): смена — обычная настройка, векторы не пересчитываются.
+      distribution: { ...SEMANTIC_DISTRIBUTION },
+    },
   },
   pagination: { maxTotalHits: MAX_TOTAL_HITS },
 };

@@ -4,7 +4,14 @@ import { fakeJudgeClient } from "./client.testing.js";
 import { config, type Env, rule, setupEnv } from "./env.testing.js";
 import { judgeEval } from "./judge.js";
 import { baselineJson, formatEvalReport, renderEvalPage } from "./report.js";
-import { diagnose, evaluate, type WorstEntry, worstOrder } from "./run.js";
+import {
+  type DeviceCurve,
+  diagnose,
+  evaluate,
+  pickDevice,
+  type WorstEntry,
+  worstOrder,
+} from "./run.js";
 
 let env: Env;
 beforeEach(async () => {
@@ -76,6 +83,65 @@ describe("диагноз худших запросов (ADR-0053)", () => {
       "ru-004",
       "ru-003",
     ]);
+  });
+});
+
+describe("выбор устройства в опыте этапа 2 (ADR-0053)", () => {
+  const curve = (
+    device: DeviceCurve["device"],
+    hits: number,
+    mrr = 0.7,
+    x = 0.5,
+  ): DeviceCurve => ({
+    device,
+    title: device,
+    tuned: { alpha: x, curve: [{ alpha: x, hit: hits / 100, mrr }] },
+    hits,
+    mrr,
+  });
+
+  it("более сложное побеждает только с запасом в 2 попадания", () => {
+    expect(
+      pickDevice([curve("now", 81), curve("m", 82), curve("c-abs", 82)])
+        ?.device,
+    ).toBe("now");
+    expect(
+      pickDevice([curve("now", 81), curve("m", 83), curve("c-abs", 84)])
+        ?.device,
+    ).toBe("m");
+    expect(
+      pickDevice([curve("now", 81), curve("m", 83), curve("c-abs", 85)])
+        ?.device,
+    ).toBe("c-abs");
+    // M не победил — сумма сравнивается с «как сейчас».
+    expect(
+      pickDevice([curve("now", 81), curve("m", 82), curve("c-rel", 83)])
+        ?.device,
+    ).toBe("c-rel");
+  });
+
+  it("суммы одной сложности: попадания, затем MRR, затем «как есть»", () => {
+    expect(
+      pickDevice([
+        curve("now", 80),
+        curve("c-abs", 84, 0.7),
+        curve("c-rel", 84, 0.8),
+      ])?.device,
+    ).toBe("c-rel");
+    expect(
+      pickDevice([
+        curve("now", 80),
+        curve("c-abs", 84, 0.8),
+        curve("c-rel", 84, 0.8),
+      ])?.device,
+    ).toBe("c-abs");
+  });
+
+  it("неразмеченное устройство не участвует", () => {
+    expect(
+      pickDevice([{ device: "now", title: "now" }, curve("m", 84)])?.device,
+    ).toBe("m");
+    expect(pickDevice([{ device: "now", title: "now" }])).toBeUndefined();
   });
 });
 
