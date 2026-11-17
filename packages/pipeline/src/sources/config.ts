@@ -90,7 +90,8 @@ export const NOTICE_FILES = ["NOTICE", "NOTICE.txt", "NOTICE.md"] as const;
 
 /**
  * Служебные слова сайта (ADR-0037): адрес набора — /{префикс}, поэтому префикс не может совпасть со
- * страницей сайта. На changelog держится и путь выпусков в каталоге раздачи (catalog/changelog/…).
+ * страницей сайта. На changelog держится и путь выпусков в каталоге раздачи (catalog/changelog/…), на
+ * index — главная: «/index» — её внутреннее имя у Next.js и Vercel, сайт читает его как «/» (ADR-0039).
  */
 export const RESERVED_PREFIXES: readonly string[] = [
   "sets",
@@ -99,6 +100,7 @@ export const RESERVED_PREFIXES: readonly string[] = [
   "changelog",
   "licenses",
   "ru",
+  "index",
 ];
 
 /** Конфиг одного набора: `sources/{id}.ts` (ADR-0012). */

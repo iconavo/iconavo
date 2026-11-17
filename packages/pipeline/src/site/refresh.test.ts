@@ -4,12 +4,15 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   CATALOG_TAG,
   CONTENT_META,
+  CRAWL_ICON_NAMES,
+  iconPath,
   REFRESH_SKEW_MS,
   RENDERED_META,
 } from "./config.js";
 import {
   compareSite,
   getWithRetry,
+  iconPaths,
   invalidateGroups,
   type LivePage,
   pageRefreshed,
@@ -169,6 +172,32 @@ describe("сброс кэша страниц по наборам (шаг 4 фа�
       "/lucide",
       "/ru/lucide",
       "/lucide/house",
+      "/ru/lucide/house",
+      "/lucide/circle-parking",
+      "/ru/lucide/circle-parking",
     ]);
+  });
+
+  it("ожидание — и страницы иконок, которые смотрит --live, на обоих языках", () => {
+    // Витрина и выборка обхода: каждая страница — на двух языках, без повторов.
+    expect(iconPaths("lucide", "house")).toEqual([
+      "/lucide/house",
+      "/ru/lucide/house",
+      "/lucide/circle-parking",
+      "/ru/lucide/circle-parking",
+    ]);
+    expect(iconPaths("tabler", "home")).toEqual([
+      "/tabler/home",
+      "/ru/tabler/home",
+      "/tabler/home-filled",
+      "/ru/tabler/home-filled",
+    ]);
+    // Каждая иконка выборки обхода попадает в ожидание своего набора.
+    for (const name of CRAWL_ICON_NAMES) {
+      const id = name.slice(0, name.indexOf(":"));
+      expect(iconPaths(id)).toContain(iconPath(name));
+      expect(iconPaths(id)).toContain(`/ru${iconPath(name)}`);
+    }
+    expect(iconPaths("new-set")).toEqual([]);
   });
 });
