@@ -5137,39 +5137,8 @@
         "center"
       ]
     },
-    "align-justified": {
-      "en": {
-        "description": "Three horizontal bars, the top two full width and the bottom one shorter, representing justified text alignment.",
-        "synonyms": [
-          "text align",
-          "justify",
-          "justified text",
-          "alignment",
-          "paragraph",
-          "format",
-          "typography",
-          "text block",
-          "lines",
-          "hamburger menu"
-        ]
-      },
-      "fingerprint": "95ab48670131",
-      "promptVersion": 1,
-      "ru": {
-        "description": "Три горизонтальные линии, верхние две полной длины, нижняя короче; обозначает выравнивание текста по ширине.",
-        "synonyms": [
-          "выравнивание",
-          "выравнивание по ширине",
-          "по ширине",
-          "абзац",
-          "текст",
-          "форматирование",
-          "выровнять текст",
-          "блок текста",
-          "строки",
-          "меню"
-        ]
-      },
+    "align-center-justified": {
+      "fingerprint": "222f9db7b5df",
       "tags": [
         "text-align",
         "alignment",
@@ -5182,7 +5151,10 @@
         "justification",
         "block",
         "align",
-        "justified"
+        "justified",
+        "last-line-center",
+        "center",
+        "centered"
       ]
     },
     "align-left": {
@@ -5277,6 +5249,25 @@
         "left"
       ]
     },
+    "align-left-justified": {
+      "fingerprint": "4cf9ceaf0249",
+      "tags": [
+        "text-align",
+        "alignment",
+        "paragraph",
+        "typography",
+        "text",
+        "format",
+        "formatting",
+        "justify",
+        "justification",
+        "block",
+        "align",
+        "justified",
+        "last-line-left",
+        "left"
+      ]
+    },
     "align-right": {
       "en": {
         "description": "Three horizontal lines aligned to the right edge, indicating right-aligned text in an editor toolbar.",
@@ -5365,6 +5356,25 @@
         "flush-right",
         "right-align",
         "align",
+        "right"
+      ]
+    },
+    "align-right-justified": {
+      "fingerprint": "a8a730f91bfa",
+      "tags": [
+        "text-align",
+        "alignment",
+        "paragraph",
+        "typography",
+        "text",
+        "format",
+        "formatting",
+        "justify",
+        "justification",
+        "block",
+        "align",
+        "justified",
+        "last-line-right",
         "right"
       ]
     },
@@ -21006,38 +21016,7 @@
       ]
     },
     "barcode": {
-      "en": {
-        "description": "A scan frame with corner brackets around vertical bars, representing a barcode or scanning a product code.",
-        "synonyms": [
-          "barcode scanner",
-          "scan",
-          "qr code",
-          "product code",
-          "upc",
-          "ean",
-          "inventory",
-          "price tag",
-          "checkout",
-          "shop"
-        ]
-      },
-      "fingerprint": "8e05c3e27c13",
-      "promptVersion": 1,
-      "ru": {
-        "description": "Изображение показывает четыре угловые скобки рамки сканирования с полосами штрихкода внутри; обозначает штрихкод или сканирование товара.",
-        "synonyms": [
-          "штрихкод",
-          "сканер",
-          "сканирование",
-          "код товара",
-          "считыватель",
-          "qr код",
-          "артикул",
-          "магазин",
-          "инвентаризация",
-          "цена"
-        ]
-      },
+      "fingerprint": "bc89c0d6a195",
       "tags": [
         "scan",
         "scanner",
@@ -21052,34 +21031,7 @@
       ]
     },
     "barcode-off": {
-      "en": {
-        "description": "A barcode inside scan corners crossed by a diagonal line, meaning barcode scanning is disabled or unavailable.",
-        "synonyms": [
-          "disable scanner",
-          "no barcode",
-          "scan off",
-          "barcode disabled",
-          "upc off",
-          "product code off",
-          "scanning disabled",
-          "inventory off"
-        ]
-      },
-      "fingerprint": "30c895dffdfc",
-      "promptVersion": 1,
-      "ru": {
-        "description": "Изображён значок сканирования штрихкода в углах с перечёркивающей диагональной линией, означающий, что сканирование или штрихкод недоступны или выключены.",
-        "synonyms": [
-          "штрихкод выключен",
-          "сканер выкл",
-          "нет штрихкода",
-          "сканирование отключено",
-          "считыватель",
-          "qr код выключен",
-          "товар без кода",
-          "инвентаризация"
-        ]
-      },
+      "fingerprint": "bc362f72c467",
       "tags": [
         "scan",
         "scanner",
@@ -21927,6 +21879,26 @@
         "basket"
       ]
     },
+    "basket-flame": {
+      "fingerprint": "20ceb4347cd1",
+      "tags": [
+        "shopping",
+        "cart",
+        "shopping-basket",
+        "ecommerce",
+        "shop",
+        "store",
+        "buy",
+        "checkout",
+        "basket",
+        "flame",
+        "fire",
+        "hot",
+        "burn",
+        "heat",
+        "trending"
+      ]
+    },
     "basket-heart": {
       "en": {
         "description": "Draws a shopping basket with a heart beside it, usually meaning saved favorites or a wishlist of products.",
@@ -21970,6 +21942,27 @@
         "love",
         "like",
         "wishlist"
+      ]
+    },
+    "basket-key": {
+      "fingerprint": "625f1b66af05",
+      "tags": [
+        "shopping",
+        "cart",
+        "shopping-basket",
+        "ecommerce",
+        "shop",
+        "store",
+        "buy",
+        "checkout",
+        "basket",
+        "key",
+        "password",
+        "access",
+        "login",
+        "security",
+        "unlock",
+        "auth"
       ]
     },
     "basket-minus": {
@@ -22322,6 +22315,24 @@
         "forward",
         "export",
         "social"
+      ]
+    },
+    "basket-spark": {
+      "fingerprint": "78a493cdd896",
+      "tags": [
+        "shopping",
+        "cart",
+        "shopping-basket",
+        "ecommerce",
+        "shop",
+        "store",
+        "buy",
+        "checkout",
+        "basket",
+        "spark",
+        "sparkle",
+        "magic",
+        "shine"
       ]
     },
     "basket-star": {
@@ -24589,6 +24600,27 @@
         "bell"
       ]
     },
+    "bell-flame": {
+      "fingerprint": "2ecbca7d612c",
+      "tags": [
+        "notification",
+        "alert",
+        "reminder",
+        "notify",
+        "alarm",
+        "notifications",
+        "ring",
+        "inbox",
+        "subscribe",
+        "bell",
+        "flame",
+        "fire",
+        "hot",
+        "burn",
+        "heat",
+        "trending"
+      ]
+    },
     "bell-heart": {
       "en": {
         "description": "Outlined bell with a small heart at its lower right; usually means favorite notifications or liked alerts.",
@@ -24632,6 +24664,28 @@
         "love",
         "like",
         "wishlist"
+      ]
+    },
+    "bell-key": {
+      "fingerprint": "c0d4fe015d65",
+      "tags": [
+        "notification",
+        "alert",
+        "reminder",
+        "notify",
+        "alarm",
+        "notifications",
+        "ring",
+        "inbox",
+        "subscribe",
+        "bell",
+        "key",
+        "password",
+        "access",
+        "login",
+        "security",
+        "unlock",
+        "auth"
       ]
     },
     "bell-minus": {
@@ -25187,6 +25241,25 @@
         "forward",
         "export",
         "social"
+      ]
+    },
+    "bell-spark": {
+      "fingerprint": "d15a151df005",
+      "tags": [
+        "notification",
+        "alert",
+        "reminder",
+        "notify",
+        "alarm",
+        "notifications",
+        "ring",
+        "inbox",
+        "subscribe",
+        "bell",
+        "spark",
+        "sparkle",
+        "magic",
+        "shine"
       ]
     },
     "bell-star": {
@@ -27704,6 +27777,147 @@
         "ai"
       ]
     },
+    "bookmark-bolt": {
+      "fingerprint": "37b49ce6395f",
+      "tags": [
+        "save",
+        "saved",
+        "favorite",
+        "read-later",
+        "tag",
+        "marker",
+        "bookmarks",
+        "ribbon",
+        "bookmark",
+        "lightning",
+        "flash",
+        "energy",
+        "fast",
+        "power",
+        "bolt"
+      ]
+    },
+    "bookmark-cancel": {
+      "fingerprint": "d2333107431b",
+      "tags": [
+        "save",
+        "saved",
+        "favorite",
+        "read-later",
+        "tag",
+        "marker",
+        "bookmarks",
+        "ribbon",
+        "bookmark",
+        "forbidden",
+        "stop",
+        "cancel",
+        "abort",
+        "blocked",
+        "denied"
+      ]
+    },
+    "bookmark-check": {
+      "fingerprint": "c32055d845ef",
+      "tags": [
+        "save",
+        "saved",
+        "favorite",
+        "read-later",
+        "tag",
+        "marker",
+        "bookmarks",
+        "ribbon",
+        "bookmark",
+        "check",
+        "done",
+        "success",
+        "confirmed",
+        "approved",
+        "verified"
+      ]
+    },
+    "bookmark-code": {
+      "fingerprint": "bee4bea1ab47",
+      "tags": [
+        "save",
+        "saved",
+        "favorite",
+        "read-later",
+        "tag",
+        "marker",
+        "bookmarks",
+        "ribbon",
+        "bookmark",
+        "developer",
+        "programming",
+        "code",
+        "embed",
+        "coding",
+        "script"
+      ]
+    },
+    "bookmark-cog": {
+      "fingerprint": "c333b5b07cfb",
+      "tags": [
+        "save",
+        "saved",
+        "favorite",
+        "read-later",
+        "tag",
+        "marker",
+        "bookmarks",
+        "ribbon",
+        "bookmark",
+        "settings",
+        "cog",
+        "gear",
+        "configure",
+        "preferences",
+        "options"
+      ]
+    },
+    "bookmark-dollar": {
+      "fingerprint": "83bd66d2014c",
+      "tags": [
+        "save",
+        "saved",
+        "favorite",
+        "read-later",
+        "tag",
+        "marker",
+        "bookmarks",
+        "ribbon",
+        "bookmark",
+        "money",
+        "payment",
+        "price",
+        "cost",
+        "usd",
+        "finance",
+        "currency",
+        "dollar"
+      ]
+    },
+    "bookmark-down": {
+      "fingerprint": "92fb19007ec3",
+      "tags": [
+        "save",
+        "saved",
+        "favorite",
+        "read-later",
+        "tag",
+        "marker",
+        "bookmarks",
+        "ribbon",
+        "bookmark",
+        "arrow-down",
+        "download",
+        "decrease",
+        "lower",
+        "down"
+      ]
+    },
     "bookmark-edit": {
       "en": {
         "description": "Outlined bookmark with a pencil at its corner, meaning edit a saved or bookmarked item.",
@@ -27751,6 +27965,26 @@
         "rename"
       ]
     },
+    "bookmark-exclamation": {
+      "fingerprint": "476935e62497",
+      "tags": [
+        "save",
+        "saved",
+        "favorite",
+        "read-later",
+        "tag",
+        "marker",
+        "bookmarks",
+        "ribbon",
+        "bookmark",
+        "warning",
+        "alert",
+        "error",
+        "attention",
+        "important",
+        "exclamation"
+      ]
+    },
     "bookmark-filled": {
       "fingerprint": "d60cf5b0ed35",
       "tags": [
@@ -27763,6 +27997,25 @@
         "bookmarks",
         "ribbon",
         "bookmark"
+      ]
+    },
+    "bookmark-heart": {
+      "fingerprint": "63dfdeea3fe1",
+      "tags": [
+        "save",
+        "saved",
+        "favorite",
+        "read-later",
+        "tag",
+        "marker",
+        "bookmarks",
+        "ribbon",
+        "bookmark",
+        "love",
+        "like",
+        "heart",
+        "favourite",
+        "wishlist"
       ]
     },
     "bookmark-minus": {
@@ -27852,6 +28105,46 @@
         "disabled",
         "bookmark",
         "off"
+      ]
+    },
+    "bookmark-pause": {
+      "fingerprint": "8eec355b0b2f",
+      "tags": [
+        "save",
+        "saved",
+        "favorite",
+        "read-later",
+        "tag",
+        "marker",
+        "bookmarks",
+        "ribbon",
+        "bookmark",
+        "hold",
+        "paused",
+        "wait",
+        "suspend",
+        "pause",
+        "break"
+      ]
+    },
+    "bookmark-pin": {
+      "fingerprint": "23f187f98593",
+      "tags": [
+        "save",
+        "saved",
+        "favorite",
+        "read-later",
+        "tag",
+        "marker",
+        "bookmarks",
+        "ribbon",
+        "bookmark",
+        "location",
+        "place",
+        "map-pin",
+        "pinned",
+        "pin",
+        "gps"
       ]
     },
     "bookmark-plus": {
@@ -27946,6 +28239,104 @@
         "unknown",
         "support",
         "question-mark"
+      ]
+    },
+    "bookmark-search": {
+      "fingerprint": "2b8db7551486",
+      "tags": [
+        "save",
+        "saved",
+        "favorite",
+        "read-later",
+        "tag",
+        "marker",
+        "bookmarks",
+        "ribbon",
+        "bookmark",
+        "find",
+        "lookup",
+        "magnifier",
+        "search",
+        "zoom",
+        "magnifying-glass"
+      ]
+    },
+    "bookmark-share": {
+      "fingerprint": "1f755a71bd4f",
+      "tags": [
+        "save",
+        "saved",
+        "favorite",
+        "read-later",
+        "tag",
+        "marker",
+        "bookmarks",
+        "ribbon",
+        "bookmark",
+        "send",
+        "forward",
+        "export",
+        "social",
+        "share",
+        "distribute"
+      ]
+    },
+    "bookmark-star": {
+      "fingerprint": "027258370765",
+      "tags": [
+        "save",
+        "saved",
+        "favorite",
+        "read-later",
+        "tag",
+        "marker",
+        "bookmarks",
+        "ribbon",
+        "bookmark",
+        "rating",
+        "featured",
+        "starred",
+        "star"
+      ]
+    },
+    "bookmark-up": {
+      "fingerprint": "e8bcee58f4f9",
+      "tags": [
+        "save",
+        "saved",
+        "favorite",
+        "read-later",
+        "tag",
+        "marker",
+        "bookmarks",
+        "ribbon",
+        "bookmark",
+        "arrow-up",
+        "upload",
+        "increase",
+        "raise",
+        "up"
+      ]
+    },
+    "bookmark-x": {
+      "fingerprint": "cace7fbff207",
+      "tags": [
+        "save",
+        "saved",
+        "favorite",
+        "read-later",
+        "tag",
+        "marker",
+        "bookmarks",
+        "ribbon",
+        "bookmark",
+        "remove",
+        "delete",
+        "close",
+        "cancel",
+        "error",
+        "clear",
+        "x"
       ]
     },
     "bookmarks": {
@@ -50319,6 +50710,26 @@
         "building"
       ]
     },
+    "building-bolt": {
+      "fingerprint": "cf010139c13a",
+      "tags": [
+        "building",
+        "office",
+        "city",
+        "architecture",
+        "skyscraper",
+        "real-estate",
+        "company",
+        "apartment",
+        "tower",
+        "lightning",
+        "flash",
+        "energy",
+        "fast",
+        "power",
+        "bolt"
+      ]
+    },
     "building-bridge": {
       "en": {
         "description": "Shows a bridge with two vertical towers, a horizontal deck and curved cables; it usually represents a bridge, crossing or road infrastructure.",
@@ -50527,6 +50938,26 @@
         "uae"
       ]
     },
+    "building-cancel": {
+      "fingerprint": "b06a4e548fe1",
+      "tags": [
+        "building",
+        "office",
+        "city",
+        "architecture",
+        "skyscraper",
+        "real-estate",
+        "company",
+        "apartment",
+        "tower",
+        "forbidden",
+        "stop",
+        "cancel",
+        "abort",
+        "blocked",
+        "denied"
+      ]
+    },
     "building-carousel": {
       "en": {
         "description": "Shows a carousel with a central canopy and six round seats around it; it represents amusement rides, a merry-go-round, or a funfair.",
@@ -50613,6 +51044,26 @@
         "tower",
         "fort",
         "building"
+      ]
+    },
+    "building-check": {
+      "fingerprint": "8bfebf3803a3",
+      "tags": [
+        "building",
+        "office",
+        "city",
+        "architecture",
+        "skyscraper",
+        "real-estate",
+        "company",
+        "apartment",
+        "tower",
+        "check",
+        "done",
+        "success",
+        "confirmed",
+        "approved",
+        "verified"
       ]
     },
     "building-church": {
@@ -50702,6 +51153,26 @@
         "building",
         "big-top",
         "clown"
+      ]
+    },
+    "building-code": {
+      "fingerprint": "a892aed053d8",
+      "tags": [
+        "building",
+        "office",
+        "city",
+        "architecture",
+        "skyscraper",
+        "real-estate",
+        "company",
+        "apartment",
+        "tower",
+        "developer",
+        "programming",
+        "code",
+        "embed",
+        "coding",
+        "script"
       ]
     },
     "building-cog": {
@@ -50843,6 +51314,47 @@
         "building"
       ]
     },
+    "building-dollar": {
+      "fingerprint": "5ea21b55abfe",
+      "tags": [
+        "building",
+        "office",
+        "city",
+        "architecture",
+        "skyscraper",
+        "real-estate",
+        "company",
+        "apartment",
+        "tower",
+        "money",
+        "payment",
+        "price",
+        "cost",
+        "usd",
+        "finance",
+        "currency",
+        "dollar"
+      ]
+    },
+    "building-down": {
+      "fingerprint": "ebf942e4536f",
+      "tags": [
+        "building",
+        "office",
+        "city",
+        "architecture",
+        "skyscraper",
+        "real-estate",
+        "company",
+        "apartment",
+        "tower",
+        "arrow-down",
+        "download",
+        "decrease",
+        "lower",
+        "down"
+      ]
+    },
     "building-eiffel-tower": {
       "en": {
         "description": "A silhouette of the Eiffel Tower with its arched base and platforms, usually representing a Paris landmark or tourism.",
@@ -50931,6 +51443,26 @@
         "headquarters",
         "building",
         "apartment"
+      ]
+    },
+    "building-exclamation": {
+      "fingerprint": "dd71c24f62be",
+      "tags": [
+        "building",
+        "office",
+        "city",
+        "architecture",
+        "skyscraper",
+        "real-estate",
+        "company",
+        "apartment",
+        "tower",
+        "warning",
+        "alert",
+        "error",
+        "attention",
+        "important",
+        "exclamation"
       ]
     },
     "building-factory": {
@@ -51060,6 +51592,26 @@
         "defense",
         "tower",
         "building"
+      ]
+    },
+    "building-heart": {
+      "fingerprint": "293e9c008094",
+      "tags": [
+        "building",
+        "office",
+        "city",
+        "architecture",
+        "skyscraper",
+        "real-estate",
+        "company",
+        "apartment",
+        "tower",
+        "favorite",
+        "love",
+        "like",
+        "heart",
+        "favourite",
+        "wishlist"
       ]
     },
     "building-hospital": {
@@ -51331,6 +51883,26 @@
         "inactive"
       ]
     },
+    "building-pause": {
+      "fingerprint": "bcad9ca9c416",
+      "tags": [
+        "building",
+        "office",
+        "city",
+        "architecture",
+        "skyscraper",
+        "real-estate",
+        "company",
+        "apartment",
+        "tower",
+        "hold",
+        "paused",
+        "wait",
+        "suspend",
+        "pause",
+        "break"
+      ]
+    },
     "building-pavilion": {
       "en": {
         "description": "Outline of a pavilion with a curved roof and arched doorway, representing a gazebo, pavilion, or Asian-style building.",
@@ -51373,6 +51945,27 @@
         "chinese",
         "architecture",
         "building"
+      ]
+    },
+    "building-pin": {
+      "fingerprint": "bd2190b1c977",
+      "tags": [
+        "building",
+        "office",
+        "city",
+        "architecture",
+        "skyscraper",
+        "real-estate",
+        "company",
+        "apartment",
+        "tower",
+        "location",
+        "marker",
+        "place",
+        "map-pin",
+        "pinned",
+        "pin",
+        "gps"
       ]
     },
     "building-plus": {
@@ -51420,6 +52013,66 @@
         "new",
         "create",
         "plus"
+      ]
+    },
+    "building-question": {
+      "fingerprint": "f21dea4eae4c",
+      "tags": [
+        "building",
+        "office",
+        "city",
+        "architecture",
+        "skyscraper",
+        "real-estate",
+        "company",
+        "apartment",
+        "tower",
+        "help",
+        "unknown",
+        "faq",
+        "support",
+        "ask",
+        "question"
+      ]
+    },
+    "building-search": {
+      "fingerprint": "2b09e0e4b66b",
+      "tags": [
+        "building",
+        "office",
+        "city",
+        "architecture",
+        "skyscraper",
+        "real-estate",
+        "company",
+        "apartment",
+        "tower",
+        "find",
+        "lookup",
+        "magnifier",
+        "search",
+        "zoom",
+        "magnifying-glass"
+      ]
+    },
+    "building-share": {
+      "fingerprint": "198e985895ec",
+      "tags": [
+        "building",
+        "office",
+        "city",
+        "architecture",
+        "skyscraper",
+        "real-estate",
+        "company",
+        "apartment",
+        "tower",
+        "send",
+        "forward",
+        "export",
+        "social",
+        "share",
+        "distribute"
       ]
     },
     "building-skyscraper": {
@@ -51506,6 +52159,26 @@
         "building",
         "event",
         "concert"
+      ]
+    },
+    "building-star": {
+      "fingerprint": "e1724bc02188",
+      "tags": [
+        "building",
+        "office",
+        "city",
+        "architecture",
+        "skyscraper",
+        "real-estate",
+        "company",
+        "apartment",
+        "tower",
+        "favorite",
+        "rating",
+        "bookmark",
+        "featured",
+        "starred",
+        "star"
       ]
     },
     "building-store": {
@@ -51595,6 +52268,25 @@
         "transit",
         "infrastructure",
         "building"
+      ]
+    },
+    "building-up": {
+      "fingerprint": "c0299ae2186e",
+      "tags": [
+        "building",
+        "office",
+        "city",
+        "architecture",
+        "skyscraper",
+        "real-estate",
+        "company",
+        "apartment",
+        "tower",
+        "arrow-up",
+        "upload",
+        "increase",
+        "raise",
+        "up"
       ]
     },
     "building-warehouse": {
@@ -51687,6 +52379,27 @@
         "green",
         "building",
         "turbine"
+      ]
+    },
+    "building-x": {
+      "fingerprint": "7a77ddcad044",
+      "tags": [
+        "building",
+        "office",
+        "city",
+        "architecture",
+        "skyscraper",
+        "real-estate",
+        "company",
+        "apartment",
+        "tower",
+        "remove",
+        "delete",
+        "close",
+        "cancel",
+        "error",
+        "clear",
+        "x"
       ]
     },
     "buildings": {
@@ -53127,6 +53840,27 @@
         "calender"
       ]
     },
+    "calendar-flame": {
+      "fingerprint": "c2dda7003b41",
+      "tags": [
+        "calendar",
+        "date",
+        "schedule",
+        "event",
+        "day",
+        "month",
+        "planner",
+        "agenda",
+        "appointment",
+        "calender",
+        "flame",
+        "fire",
+        "hot",
+        "burn",
+        "heat",
+        "trending"
+      ]
+    },
     "calendar-heart": {
       "en": {
         "description": "Outline of a calendar with binder rings and a heart in the lower corner, meaning a favorite date, anniversary, or romantic event.",
@@ -53176,6 +53910,28 @@
         "valentine",
         "date-night",
         "appointment"
+      ]
+    },
+    "calendar-key": {
+      "fingerprint": "5d92abb81708",
+      "tags": [
+        "calendar",
+        "date",
+        "schedule",
+        "event",
+        "day",
+        "month",
+        "planner",
+        "agenda",
+        "appointment",
+        "calender",
+        "key",
+        "password",
+        "access",
+        "login",
+        "security",
+        "unlock",
+        "auth"
       ]
     },
     "calendar-minus": {
@@ -53768,6 +54524,25 @@
         "good-day",
         "emoji",
         "appointment"
+      ]
+    },
+    "calendar-spark": {
+      "fingerprint": "8786bcdb8dbc",
+      "tags": [
+        "calendar",
+        "date",
+        "schedule",
+        "event",
+        "day",
+        "month",
+        "planner",
+        "agenda",
+        "appointment",
+        "calender",
+        "spark",
+        "sparkle",
+        "magic",
+        "shine"
       ]
     },
     "calendar-star": {
@@ -57904,6 +58679,156 @@
         "note"
       ]
     },
+    "cash-banknote-bolt": {
+      "fingerprint": "2b93f5b1a519",
+      "tags": [
+        "banknote",
+        "cash",
+        "money",
+        "bill",
+        "payment",
+        "currency",
+        "finance",
+        "pay",
+        "salary",
+        "dollar",
+        "note",
+        "lightning",
+        "flash",
+        "energy",
+        "fast",
+        "power",
+        "bolt"
+      ]
+    },
+    "cash-banknote-cancel": {
+      "fingerprint": "7decb36411cd",
+      "tags": [
+        "banknote",
+        "cash",
+        "money",
+        "bill",
+        "payment",
+        "currency",
+        "finance",
+        "pay",
+        "salary",
+        "dollar",
+        "note",
+        "forbidden",
+        "stop",
+        "cancel",
+        "abort",
+        "blocked",
+        "denied"
+      ]
+    },
+    "cash-banknote-check": {
+      "fingerprint": "ed0e5370f51c",
+      "tags": [
+        "banknote",
+        "cash",
+        "money",
+        "bill",
+        "payment",
+        "currency",
+        "finance",
+        "pay",
+        "salary",
+        "dollar",
+        "note",
+        "check",
+        "done",
+        "success",
+        "confirmed",
+        "approved",
+        "verified"
+      ]
+    },
+    "cash-banknote-code": {
+      "fingerprint": "9df0053f87f1",
+      "tags": [
+        "banknote",
+        "cash",
+        "money",
+        "bill",
+        "payment",
+        "currency",
+        "finance",
+        "pay",
+        "salary",
+        "dollar",
+        "note",
+        "developer",
+        "programming",
+        "code",
+        "embed",
+        "coding",
+        "script"
+      ]
+    },
+    "cash-banknote-cog": {
+      "fingerprint": "7f49f6b9a3c1",
+      "tags": [
+        "banknote",
+        "cash",
+        "money",
+        "bill",
+        "payment",
+        "currency",
+        "finance",
+        "pay",
+        "salary",
+        "dollar",
+        "note",
+        "settings",
+        "cog",
+        "gear",
+        "configure",
+        "preferences",
+        "options"
+      ]
+    },
+    "cash-banknote-dollar": {
+      "fingerprint": "532c9c3b6bb6",
+      "tags": [
+        "banknote",
+        "cash",
+        "money",
+        "bill",
+        "payment",
+        "currency",
+        "finance",
+        "pay",
+        "salary",
+        "dollar",
+        "note",
+        "price",
+        "cost",
+        "usd"
+      ]
+    },
+    "cash-banknote-down": {
+      "fingerprint": "8936bdc439dd",
+      "tags": [
+        "banknote",
+        "cash",
+        "money",
+        "bill",
+        "payment",
+        "currency",
+        "finance",
+        "pay",
+        "salary",
+        "dollar",
+        "note",
+        "arrow-down",
+        "download",
+        "decrease",
+        "lower",
+        "down"
+      ]
+    },
     "cash-banknote-edit": {
       "en": {
         "description": "A banknote with a central circle and a pencil at the corner, meaning edit or modify a payment or cash amount.",
@@ -57951,6 +58876,28 @@
         "update",
         "dollar",
         "note"
+      ]
+    },
+    "cash-banknote-exclamation": {
+      "fingerprint": "01e9b28e2d91",
+      "tags": [
+        "banknote",
+        "cash",
+        "money",
+        "bill",
+        "payment",
+        "currency",
+        "finance",
+        "pay",
+        "salary",
+        "dollar",
+        "note",
+        "warning",
+        "alert",
+        "error",
+        "attention",
+        "important",
+        "exclamation"
       ]
     },
     "cash-banknote-filled": {
@@ -58224,6 +59171,51 @@
         "note"
       ]
     },
+    "cash-banknote-pause": {
+      "fingerprint": "d94ef0622297",
+      "tags": [
+        "banknote",
+        "cash",
+        "money",
+        "bill",
+        "payment",
+        "currency",
+        "finance",
+        "pay",
+        "salary",
+        "dollar",
+        "note",
+        "hold",
+        "paused",
+        "wait",
+        "suspend",
+        "pause",
+        "break"
+      ]
+    },
+    "cash-banknote-pin": {
+      "fingerprint": "1526920e5dc0",
+      "tags": [
+        "banknote",
+        "cash",
+        "money",
+        "bill",
+        "payment",
+        "currency",
+        "finance",
+        "pay",
+        "salary",
+        "dollar",
+        "note",
+        "location",
+        "marker",
+        "place",
+        "map-pin",
+        "pinned",
+        "pin",
+        "gps"
+      ]
+    },
     "cash-banknote-plus": {
       "en": {
         "description": "A banknote with a circle in the center and a plus sign in the corner, usually meaning add money, deposit, or new payment.",
@@ -58275,6 +59267,238 @@
         "note"
       ]
     },
+    "cash-banknote-question": {
+      "fingerprint": "aee3d79f2ea0",
+      "tags": [
+        "banknote",
+        "cash",
+        "money",
+        "bill",
+        "payment",
+        "currency",
+        "finance",
+        "pay",
+        "salary",
+        "dollar",
+        "note",
+        "help",
+        "unknown",
+        "faq",
+        "support",
+        "ask",
+        "question"
+      ]
+    },
+    "cash-banknote-search": {
+      "fingerprint": "c53800998ccc",
+      "tags": [
+        "banknote",
+        "cash",
+        "money",
+        "bill",
+        "payment",
+        "currency",
+        "finance",
+        "pay",
+        "salary",
+        "dollar",
+        "note",
+        "find",
+        "lookup",
+        "magnifier",
+        "search",
+        "zoom",
+        "magnifying-glass"
+      ]
+    },
+    "cash-banknote-share": {
+      "fingerprint": "70e85cfe38b7",
+      "tags": [
+        "banknote",
+        "cash",
+        "money",
+        "bill",
+        "payment",
+        "currency",
+        "finance",
+        "pay",
+        "salary",
+        "dollar",
+        "note",
+        "send",
+        "forward",
+        "export",
+        "social",
+        "share",
+        "distribute"
+      ]
+    },
+    "cash-banknote-star": {
+      "fingerprint": "12848966d9ec",
+      "tags": [
+        "banknote",
+        "cash",
+        "money",
+        "bill",
+        "payment",
+        "currency",
+        "finance",
+        "pay",
+        "salary",
+        "dollar",
+        "note",
+        "favorite",
+        "rating",
+        "bookmark",
+        "featured",
+        "starred",
+        "star"
+      ]
+    },
+    "cash-banknote-up": {
+      "fingerprint": "4571585b5b07",
+      "tags": [
+        "banknote",
+        "cash",
+        "money",
+        "bill",
+        "payment",
+        "currency",
+        "finance",
+        "pay",
+        "salary",
+        "dollar",
+        "note",
+        "arrow-up",
+        "upload",
+        "increase",
+        "raise",
+        "up"
+      ]
+    },
+    "cash-banknote-x": {
+      "fingerprint": "3c25a9b89741",
+      "tags": [
+        "banknote",
+        "cash",
+        "money",
+        "bill",
+        "payment",
+        "currency",
+        "finance",
+        "pay",
+        "salary",
+        "dollar",
+        "note",
+        "remove",
+        "delete",
+        "close",
+        "cancel",
+        "error",
+        "clear",
+        "x"
+      ]
+    },
+    "cash-bolt": {
+      "fingerprint": "4f1dfbf64745",
+      "tags": [
+        "cash",
+        "money",
+        "payment",
+        "currency",
+        "finance",
+        "dollar",
+        "banknote",
+        "pay",
+        "bill",
+        "lightning",
+        "flash",
+        "energy",
+        "fast",
+        "power",
+        "bolt"
+      ]
+    },
+    "cash-cancel": {
+      "fingerprint": "b6f6a7f40a64",
+      "tags": [
+        "cash",
+        "money",
+        "payment",
+        "currency",
+        "finance",
+        "dollar",
+        "banknote",
+        "pay",
+        "bill",
+        "forbidden",
+        "stop",
+        "cancel",
+        "abort",
+        "blocked",
+        "denied"
+      ]
+    },
+    "cash-check": {
+      "fingerprint": "f56a0846e612",
+      "tags": [
+        "cash",
+        "money",
+        "payment",
+        "currency",
+        "finance",
+        "dollar",
+        "banknote",
+        "pay",
+        "bill",
+        "check",
+        "done",
+        "success",
+        "confirmed",
+        "approved",
+        "verified"
+      ]
+    },
+    "cash-code": {
+      "fingerprint": "681b0ed03750",
+      "tags": [
+        "cash",
+        "money",
+        "payment",
+        "currency",
+        "finance",
+        "dollar",
+        "banknote",
+        "pay",
+        "bill",
+        "developer",
+        "programming",
+        "code",
+        "embed",
+        "coding",
+        "script"
+      ]
+    },
+    "cash-cog": {
+      "fingerprint": "623f1f7b022b",
+      "tags": [
+        "cash",
+        "money",
+        "payment",
+        "currency",
+        "finance",
+        "dollar",
+        "banknote",
+        "pay",
+        "bill",
+        "settings",
+        "cog",
+        "gear",
+        "configure",
+        "preferences",
+        "options"
+      ]
+    },
     "cash-coin": {
       "en": {
         "description": "Shows a banknote with a stack of coins overlapping it, representing cash payments, money, or change.",
@@ -58322,6 +59546,42 @@
         "bill"
       ]
     },
+    "cash-dollar": {
+      "fingerprint": "d45ca1732f1d",
+      "tags": [
+        "cash",
+        "money",
+        "payment",
+        "currency",
+        "finance",
+        "dollar",
+        "banknote",
+        "pay",
+        "bill",
+        "price",
+        "cost",
+        "usd"
+      ]
+    },
+    "cash-down": {
+      "fingerprint": "afdee7e31ac1",
+      "tags": [
+        "cash",
+        "money",
+        "payment",
+        "currency",
+        "finance",
+        "dollar",
+        "banknote",
+        "pay",
+        "bill",
+        "arrow-down",
+        "download",
+        "decrease",
+        "lower",
+        "down"
+      ]
+    },
     "cash-edit": {
       "en": {
         "description": "Shows stacked banknotes with a pencil overlay, usually meaning editing cash, payment, or billing information.",
@@ -58364,6 +59624,26 @@
         "modify",
         "update",
         "bill"
+      ]
+    },
+    "cash-exclamation": {
+      "fingerprint": "b80c70af4704",
+      "tags": [
+        "cash",
+        "money",
+        "payment",
+        "currency",
+        "finance",
+        "dollar",
+        "banknote",
+        "pay",
+        "bill",
+        "warning",
+        "alert",
+        "error",
+        "attention",
+        "important",
+        "exclamation"
       ]
     },
     "cash-heart": {
@@ -58612,6 +59892,47 @@
         "bill"
       ]
     },
+    "cash-pause": {
+      "fingerprint": "be7b31481ab2",
+      "tags": [
+        "cash",
+        "money",
+        "payment",
+        "currency",
+        "finance",
+        "dollar",
+        "banknote",
+        "pay",
+        "bill",
+        "hold",
+        "paused",
+        "wait",
+        "suspend",
+        "pause",
+        "break"
+      ]
+    },
+    "cash-pin": {
+      "fingerprint": "bda31a583c5b",
+      "tags": [
+        "cash",
+        "money",
+        "payment",
+        "currency",
+        "finance",
+        "dollar",
+        "banknote",
+        "pay",
+        "bill",
+        "location",
+        "marker",
+        "place",
+        "map-pin",
+        "pinned",
+        "pin",
+        "gps"
+      ]
+    },
     "cash-plus": {
       "en": {
         "description": "Shows a banknote with a circle in the center and a plus sign at the corner, meaning adding cash or depositing money.",
@@ -58662,6 +59983,26 @@
         "bill"
       ]
     },
+    "cash-question": {
+      "fingerprint": "2381dd845351",
+      "tags": [
+        "cash",
+        "money",
+        "payment",
+        "currency",
+        "finance",
+        "dollar",
+        "banknote",
+        "pay",
+        "bill",
+        "help",
+        "unknown",
+        "faq",
+        "support",
+        "ask",
+        "question"
+      ]
+    },
     "cash-register": {
       "en": {
         "description": "Shows a cash register with keypad buttons and a dollar sign, representing checkout, payments, and point-of-sale transactions.",
@@ -58707,6 +60048,106 @@
         "shop",
         "payment",
         "cash"
+      ]
+    },
+    "cash-search": {
+      "fingerprint": "3510804db6ae",
+      "tags": [
+        "cash",
+        "money",
+        "payment",
+        "currency",
+        "finance",
+        "dollar",
+        "banknote",
+        "pay",
+        "bill",
+        "find",
+        "lookup",
+        "magnifier",
+        "search",
+        "zoom",
+        "magnifying-glass"
+      ]
+    },
+    "cash-share": {
+      "fingerprint": "0d2fda4b6989",
+      "tags": [
+        "cash",
+        "money",
+        "payment",
+        "currency",
+        "finance",
+        "dollar",
+        "banknote",
+        "pay",
+        "bill",
+        "send",
+        "forward",
+        "export",
+        "social",
+        "share",
+        "distribute"
+      ]
+    },
+    "cash-star": {
+      "fingerprint": "5ad3c15f212d",
+      "tags": [
+        "cash",
+        "money",
+        "payment",
+        "currency",
+        "finance",
+        "dollar",
+        "banknote",
+        "pay",
+        "bill",
+        "favorite",
+        "rating",
+        "bookmark",
+        "featured",
+        "starred",
+        "star"
+      ]
+    },
+    "cash-up": {
+      "fingerprint": "a1c20b48b5e9",
+      "tags": [
+        "cash",
+        "money",
+        "payment",
+        "currency",
+        "finance",
+        "dollar",
+        "banknote",
+        "pay",
+        "bill",
+        "arrow-up",
+        "upload",
+        "increase",
+        "raise",
+        "up"
+      ]
+    },
+    "cash-x": {
+      "fingerprint": "58eded9f60f9",
+      "tags": [
+        "cash",
+        "money",
+        "payment",
+        "currency",
+        "finance",
+        "dollar",
+        "banknote",
+        "pay",
+        "bill",
+        "remove",
+        "delete",
+        "close",
+        "cancel",
+        "error",
+        "clear",
+        "x"
       ]
     },
     "cast": {
@@ -74613,6 +76054,28 @@
         "clock"
       ]
     },
+    "clock-flame": {
+      "fingerprint": "2036e5ef22ab",
+      "tags": [
+        "time",
+        "watch",
+        "hour",
+        "schedule",
+        "timer",
+        "clock-face",
+        "history",
+        "pending",
+        "wall-clock",
+        "minutes",
+        "clock",
+        "flame",
+        "fire",
+        "hot",
+        "burn",
+        "heat",
+        "trending"
+      ]
+    },
     "clock-heart": {
       "en": {
         "description": "Shows a clock with a heart in the lower right corner, meaning a favorite time, anniversary, or scheduled special moment.",
@@ -75327,6 +76790,29 @@
         "clock-face"
       ]
     },
+    "clock-key": {
+      "fingerprint": "0ecfeddf55f1",
+      "tags": [
+        "time",
+        "watch",
+        "hour",
+        "schedule",
+        "timer",
+        "clock-face",
+        "history",
+        "pending",
+        "wall-clock",
+        "minutes",
+        "clock",
+        "key",
+        "password",
+        "access",
+        "login",
+        "security",
+        "unlock",
+        "auth"
+      ]
+    },
     "clock-minus": {
       "en": {
         "description": "A clock face with a minus sign at the lower right, usually meaning subtracting or reducing time.",
@@ -75802,6 +77288,26 @@
         "clock",
         "time",
         "secure"
+      ]
+    },
+    "clock-spark": {
+      "fingerprint": "26b6ab857bf6",
+      "tags": [
+        "time",
+        "watch",
+        "hour",
+        "schedule",
+        "timer",
+        "clock-face",
+        "history",
+        "pending",
+        "wall-clock",
+        "minutes",
+        "clock",
+        "spark",
+        "sparkle",
+        "magic",
+        "shine"
       ]
     },
     "clock-star": {
@@ -76689,6 +78195,28 @@
         "cloud"
       ]
     },
+    "cloud-flame": {
+      "fingerprint": "f57a397b82a7",
+      "tags": [
+        "weather",
+        "cloudy",
+        "cloud-storage",
+        "online",
+        "server",
+        "sync",
+        "internet",
+        "overcast",
+        "forecast",
+        "icloud",
+        "cloud",
+        "flame",
+        "fire",
+        "hot",
+        "burn",
+        "heat",
+        "trending"
+      ]
+    },
     "cloud-fog": {
       "en": {
         "description": "An outlined cloud above a horizontal line, representing fog or mist in weather forecasts.",
@@ -76777,6 +78305,29 @@
         "sync",
         "storage",
         "weather"
+      ]
+    },
+    "cloud-key": {
+      "fingerprint": "b486f842cf77",
+      "tags": [
+        "weather",
+        "cloudy",
+        "cloud-storage",
+        "online",
+        "server",
+        "sync",
+        "internet",
+        "overcast",
+        "forecast",
+        "icloud",
+        "cloud",
+        "key",
+        "password",
+        "access",
+        "login",
+        "security",
+        "unlock",
+        "auth"
       ]
     },
     "cloud-lock": {
@@ -77348,6 +78899,26 @@
         "weather",
         "forecast",
         "cloud"
+      ]
+    },
+    "cloud-spark": {
+      "fingerprint": "9cc20cfcace7",
+      "tags": [
+        "weather",
+        "cloudy",
+        "cloud-storage",
+        "online",
+        "server",
+        "sync",
+        "internet",
+        "overcast",
+        "forecast",
+        "icloud",
+        "cloud",
+        "spark",
+        "sparkle",
+        "magic",
+        "shine"
       ]
     },
     "cloud-star": {
@@ -88313,6 +89884,90 @@
         "disk"
       ]
     },
+    "database-bolt": {
+      "fingerprint": "83162431db89",
+      "tags": [
+        "database",
+        "db",
+        "data",
+        "storage",
+        "sql",
+        "server",
+        "records",
+        "table",
+        "backend",
+        "disk",
+        "lightning",
+        "flash",
+        "energy",
+        "fast",
+        "power",
+        "bolt"
+      ]
+    },
+    "database-cancel": {
+      "fingerprint": "42c75632acb0",
+      "tags": [
+        "database",
+        "db",
+        "data",
+        "storage",
+        "sql",
+        "server",
+        "records",
+        "table",
+        "backend",
+        "disk",
+        "forbidden",
+        "stop",
+        "cancel",
+        "abort",
+        "blocked",
+        "denied"
+      ]
+    },
+    "database-check": {
+      "fingerprint": "dcb216c29448",
+      "tags": [
+        "database",
+        "db",
+        "data",
+        "storage",
+        "sql",
+        "server",
+        "records",
+        "table",
+        "backend",
+        "disk",
+        "check",
+        "done",
+        "success",
+        "confirmed",
+        "approved",
+        "verified"
+      ]
+    },
+    "database-code": {
+      "fingerprint": "05b369491c64",
+      "tags": [
+        "database",
+        "db",
+        "data",
+        "storage",
+        "sql",
+        "server",
+        "records",
+        "table",
+        "backend",
+        "disk",
+        "developer",
+        "programming",
+        "code",
+        "embed",
+        "coding",
+        "script"
+      ]
+    },
     "database-cog": {
       "en": {
         "description": "A database cylinder with a gear in the bottom-right corner, representing database settings or data storage configuration.",
@@ -88406,6 +90061,26 @@
         "storage",
         "sql",
         "server"
+      ]
+    },
+    "database-down": {
+      "fingerprint": "2892ed1d506c",
+      "tags": [
+        "database",
+        "db",
+        "data",
+        "storage",
+        "sql",
+        "server",
+        "records",
+        "table",
+        "backend",
+        "disk",
+        "arrow-down",
+        "download",
+        "decrease",
+        "lower",
+        "down"
       ]
     },
     "database-edit": {
@@ -88784,6 +90459,49 @@
         "storage"
       ]
     },
+    "database-pause": {
+      "fingerprint": "c3594b75cc2a",
+      "tags": [
+        "database",
+        "db",
+        "data",
+        "storage",
+        "sql",
+        "server",
+        "records",
+        "table",
+        "backend",
+        "disk",
+        "hold",
+        "paused",
+        "wait",
+        "suspend",
+        "pause",
+        "break"
+      ]
+    },
+    "database-pin": {
+      "fingerprint": "fffc82ae3086",
+      "tags": [
+        "database",
+        "db",
+        "data",
+        "storage",
+        "sql",
+        "server",
+        "records",
+        "table",
+        "backend",
+        "disk",
+        "location",
+        "marker",
+        "place",
+        "map-pin",
+        "pinned",
+        "pin",
+        "gps"
+      ]
+    },
     "database-plus": {
       "en": {
         "description": "A database cylinder with a plus sign at the bottom right, meaning adding new data or creating a database entry.",
@@ -88828,6 +90546,27 @@
         "storage",
         "sql",
         "server"
+      ]
+    },
+    "database-question": {
+      "fingerprint": "cb3bcd42a432",
+      "tags": [
+        "database",
+        "db",
+        "data",
+        "storage",
+        "sql",
+        "server",
+        "records",
+        "table",
+        "backend",
+        "disk",
+        "help",
+        "unknown",
+        "faq",
+        "support",
+        "ask",
+        "question"
       ]
     },
     "database-search": {
@@ -89011,6 +90750,26 @@
         "storage",
         "sql",
         "server"
+      ]
+    },
+    "database-up": {
+      "fingerprint": "100f863bbc1d",
+      "tags": [
+        "database",
+        "db",
+        "data",
+        "storage",
+        "sql",
+        "server",
+        "records",
+        "table",
+        "backend",
+        "disk",
+        "arrow-up",
+        "upload",
+        "increase",
+        "raise",
+        "up"
       ]
     },
     "database-x": {
@@ -90642,6 +92401,26 @@
         "imac"
       ]
     },
+    "device-desktop-flame": {
+      "fingerprint": "a492bb1ebc77",
+      "tags": [
+        "desktop",
+        "monitor",
+        "computer",
+        "screen",
+        "pc",
+        "display",
+        "workstation",
+        "device",
+        "imac",
+        "flame",
+        "fire",
+        "hot",
+        "burn",
+        "heat",
+        "trending"
+      ]
+    },
     "device-desktop-heart": {
       "en": {
         "description": "Draws a desktop monitor with a heart in its lower right corner, indicating favorite or liked screen content.",
@@ -90685,6 +92464,27 @@
         "computer",
         "screen",
         "pc"
+      ]
+    },
+    "device-desktop-key": {
+      "fingerprint": "1bd9b26652c2",
+      "tags": [
+        "desktop",
+        "monitor",
+        "computer",
+        "screen",
+        "pc",
+        "display",
+        "workstation",
+        "device",
+        "imac",
+        "key",
+        "password",
+        "access",
+        "login",
+        "security",
+        "unlock",
+        "auth"
       ]
     },
     "device-desktop-minus": {
@@ -91037,6 +92837,24 @@
         "computer",
         "screen",
         "pc"
+      ]
+    },
+    "device-desktop-spark": {
+      "fingerprint": "81224805454c",
+      "tags": [
+        "desktop",
+        "monitor",
+        "computer",
+        "screen",
+        "pc",
+        "display",
+        "workstation",
+        "device",
+        "imac",
+        "spark",
+        "sparkle",
+        "magic",
+        "shine"
       ]
     },
     "device-desktop-star": {
@@ -91913,6 +93731,27 @@
         "device"
       ]
     },
+    "device-imac-flame": {
+      "fingerprint": "ae61ffc0b612",
+      "tags": [
+        "imac",
+        "mac",
+        "apple",
+        "computer",
+        "desktop",
+        "monitor",
+        "all-in-one",
+        "screen",
+        "pc",
+        "device",
+        "flame",
+        "fire",
+        "hot",
+        "burn",
+        "heat",
+        "trending"
+      ]
+    },
     "device-imac-heart": {
       "en": {
         "description": "A desktop monitor with a heart in the lower right corner, usually meaning favorites, likes, or a loved device.",
@@ -91957,6 +93796,28 @@
         "computer",
         "desktop",
         "monitor"
+      ]
+    },
+    "device-imac-key": {
+      "fingerprint": "cc001f8b396d",
+      "tags": [
+        "imac",
+        "mac",
+        "apple",
+        "computer",
+        "desktop",
+        "monitor",
+        "all-in-one",
+        "screen",
+        "pc",
+        "device",
+        "key",
+        "password",
+        "access",
+        "login",
+        "security",
+        "unlock",
+        "auth"
       ]
     },
     "device-imac-minus": {
@@ -92322,6 +94183,25 @@
         "computer",
         "desktop",
         "monitor"
+      ]
+    },
+    "device-imac-spark": {
+      "fingerprint": "69da90e37689",
+      "tags": [
+        "imac",
+        "mac",
+        "apple",
+        "computer",
+        "desktop",
+        "monitor",
+        "all-in-one",
+        "screen",
+        "pc",
+        "device",
+        "spark",
+        "sparkle",
+        "magic",
+        "shine"
       ]
     },
     "device-imac-star": {
@@ -92878,6 +94758,25 @@
         "touchscreen"
       ]
     },
+    "device-ipad-flame": {
+      "fingerprint": "8a36242fa629",
+      "tags": [
+        "ipad",
+        "tablet",
+        "apple",
+        "ios",
+        "mobile",
+        "device",
+        "portrait",
+        "touchscreen",
+        "flame",
+        "fire",
+        "hot",
+        "burn",
+        "heat",
+        "trending"
+      ]
+    },
     "device-ipad-heart": {
       "en": {
         "description": "A tablet outline with a heart in its lower right corner, typically meaning favorites, liked content, or saving to favorites.",
@@ -93332,6 +95231,26 @@
         "landscape"
       ]
     },
+    "device-ipad-horizontal-flame": {
+      "fingerprint": "184a2dd1e02f",
+      "tags": [
+        "ipad",
+        "tablet",
+        "apple",
+        "ios",
+        "mobile",
+        "landscape",
+        "horizontal",
+        "device",
+        "touchscreen",
+        "flame",
+        "fire",
+        "hot",
+        "burn",
+        "heat",
+        "trending"
+      ]
+    },
     "device-ipad-horizontal-heart": {
       "en": {
         "description": "A horizontal tablet outline with a heart in its lower right corner, usually meaning favorites or liked content on a device.",
@@ -93375,6 +95294,27 @@
         "apple",
         "ios",
         "landscape"
+      ]
+    },
+    "device-ipad-horizontal-key": {
+      "fingerprint": "68669bfd66b4",
+      "tags": [
+        "ipad",
+        "tablet",
+        "apple",
+        "ios",
+        "mobile",
+        "landscape",
+        "horizontal",
+        "device",
+        "touchscreen",
+        "key",
+        "password",
+        "access",
+        "login",
+        "security",
+        "unlock",
+        "auth"
       ]
     },
     "device-ipad-horizontal-minus": {
@@ -93728,6 +95668,24 @@
         "landscape"
       ]
     },
+    "device-ipad-horizontal-spark": {
+      "fingerprint": "1f4041903bf9",
+      "tags": [
+        "ipad",
+        "tablet",
+        "apple",
+        "ios",
+        "mobile",
+        "landscape",
+        "horizontal",
+        "device",
+        "touchscreen",
+        "spark",
+        "sparkle",
+        "magic",
+        "shine"
+      ]
+    },
     "device-ipad-horizontal-star": {
       "en": {
         "description": "A horizontal tablet outline with a star in the lower corner, indicating favorites or featured content on a device.",
@@ -93862,6 +95820,26 @@
         "device",
         "clear",
         "error"
+      ]
+    },
+    "device-ipad-key": {
+      "fingerprint": "80019a5bdfdf",
+      "tags": [
+        "ipad",
+        "tablet",
+        "apple",
+        "ios",
+        "mobile",
+        "device",
+        "portrait",
+        "touchscreen",
+        "key",
+        "password",
+        "access",
+        "login",
+        "security",
+        "unlock",
+        "auth"
       ]
     },
     "device-ipad-minus": {
@@ -94238,6 +96216,23 @@
         "device",
         "mobile",
         "distribute"
+      ]
+    },
+    "device-ipad-spark": {
+      "fingerprint": "17b3c00ce763",
+      "tags": [
+        "ipad",
+        "tablet",
+        "apple",
+        "ios",
+        "mobile",
+        "device",
+        "portrait",
+        "touchscreen",
+        "spark",
+        "sparkle",
+        "magic",
+        "shine"
       ]
     },
     "device-ipad-star": {
@@ -95003,6 +96998,28 @@
         "mobile"
       ]
     },
+    "device-mobile-flame": {
+      "fingerprint": "9cdff2fb39e2",
+      "tags": [
+        "phone",
+        "smartphone",
+        "iphone",
+        "android",
+        "cellphone",
+        "cell-phone",
+        "mobile-phone",
+        "handset",
+        "device",
+        "app",
+        "mobile",
+        "flame",
+        "fire",
+        "hot",
+        "burn",
+        "heat",
+        "trending"
+      ]
+    },
     "device-mobile-heart": {
       "en": {
         "description": "A smartphone outline with a heart in its lower right corner, usually meaning favorites or liked content on mobile.",
@@ -95045,6 +97062,29 @@
         "android",
         "cellphone",
         "device"
+      ]
+    },
+    "device-mobile-key": {
+      "fingerprint": "0cf6a38ebadf",
+      "tags": [
+        "phone",
+        "smartphone",
+        "iphone",
+        "android",
+        "cellphone",
+        "cell-phone",
+        "mobile-phone",
+        "handset",
+        "device",
+        "app",
+        "mobile",
+        "key",
+        "password",
+        "access",
+        "login",
+        "security",
+        "unlock",
+        "auth"
       ]
     },
     "device-mobile-message": {
@@ -95513,6 +97553,26 @@
         "cellphone",
         "device",
         "distribute"
+      ]
+    },
+    "device-mobile-spark": {
+      "fingerprint": "75c35c54b02f",
+      "tags": [
+        "phone",
+        "smartphone",
+        "iphone",
+        "android",
+        "cellphone",
+        "cell-phone",
+        "mobile-phone",
+        "handset",
+        "device",
+        "app",
+        "mobile",
+        "spark",
+        "sparkle",
+        "magic",
+        "shine"
       ]
     },
     "device-mobile-star": {
@@ -96716,6 +98776,26 @@
         "device"
       ]
     },
+    "device-tablet-flame": {
+      "fingerprint": "fd02b2fbe08f",
+      "tags": [
+        "tablet",
+        "ipad",
+        "android",
+        "touchscreen",
+        "e-reader",
+        "kindle",
+        "portable",
+        "mobile",
+        "device",
+        "flame",
+        "fire",
+        "hot",
+        "burn",
+        "heat",
+        "trending"
+      ]
+    },
     "device-tablet-heart": {
       "en": {
         "description": "Draws a tablet outline with a heart in the lower right corner, meaning favorite or liked on a mobile device.",
@@ -96760,6 +98840,27 @@
         "touchscreen",
         "device",
         "mobile"
+      ]
+    },
+    "device-tablet-key": {
+      "fingerprint": "97726524a153",
+      "tags": [
+        "tablet",
+        "ipad",
+        "android",
+        "touchscreen",
+        "e-reader",
+        "kindle",
+        "portable",
+        "mobile",
+        "device",
+        "key",
+        "password",
+        "access",
+        "login",
+        "security",
+        "unlock",
+        "auth"
       ]
     },
     "device-tablet-minus": {
@@ -97136,6 +99237,24 @@
         "device",
         "mobile",
         "distribute"
+      ]
+    },
+    "device-tablet-spark": {
+      "fingerprint": "303bd3c4e9b1",
+      "tags": [
+        "tablet",
+        "ipad",
+        "android",
+        "touchscreen",
+        "e-reader",
+        "kindle",
+        "portable",
+        "mobile",
+        "device",
+        "spark",
+        "sparkle",
+        "magic",
+        "shine"
       ]
     },
     "device-tablet-star": {
@@ -98116,6 +100235,26 @@
         "device"
       ]
     },
+    "device-watch-flame": {
+      "fingerprint": "621315d17c0a",
+      "tags": [
+        "smartwatch",
+        "watch",
+        "wristwatch",
+        "apple-watch",
+        "wearable",
+        "fitness-tracker",
+        "time",
+        "clock",
+        "device",
+        "flame",
+        "fire",
+        "hot",
+        "burn",
+        "heat",
+        "trending"
+      ]
+    },
     "device-watch-heart": {
       "en": {
         "description": "Shows a smartwatch with a heart beside it, usually representing heart rate, health tracking, or wearable fitness data.",
@@ -98158,6 +100297,27 @@
         "wearable",
         "cardio",
         "apple-watch"
+      ]
+    },
+    "device-watch-key": {
+      "fingerprint": "7cdff06ef4fa",
+      "tags": [
+        "smartwatch",
+        "watch",
+        "wristwatch",
+        "apple-watch",
+        "wearable",
+        "fitness-tracker",
+        "time",
+        "clock",
+        "device",
+        "key",
+        "password",
+        "access",
+        "login",
+        "security",
+        "unlock",
+        "auth"
       ]
     },
     "device-watch-minus": {
@@ -98531,6 +100691,24 @@
         "device",
         "fitness-tracker",
         "distribute"
+      ]
+    },
+    "device-watch-spark": {
+      "fingerprint": "a31b85252941",
+      "tags": [
+        "smartwatch",
+        "watch",
+        "wristwatch",
+        "apple-watch",
+        "wearable",
+        "fitness-tracker",
+        "time",
+        "clock",
+        "device",
+        "spark",
+        "sparkle",
+        "magic",
+        "shine"
       ]
     },
     "device-watch-star": {
@@ -99288,6 +101466,27 @@
         "caution"
       ]
     },
+    "devices-flame": {
+      "fingerprint": "67daa7d48270",
+      "tags": [
+        "devices",
+        "responsive",
+        "multi-device",
+        "cross-platform",
+        "computer",
+        "laptop",
+        "phone",
+        "tablet",
+        "desktop",
+        "mobile",
+        "flame",
+        "fire",
+        "hot",
+        "burn",
+        "heat",
+        "trending"
+      ]
+    },
     "devices-heart": {
       "en": {
         "description": "A device screen outline with a heart at its lower right, meaning favorite or liked devices.",
@@ -99333,6 +101532,28 @@
         "phone",
         "tablet",
         "desktop"
+      ]
+    },
+    "devices-key": {
+      "fingerprint": "ef77396acd07",
+      "tags": [
+        "devices",
+        "responsive",
+        "multi-device",
+        "cross-platform",
+        "computer",
+        "laptop",
+        "phone",
+        "tablet",
+        "desktop",
+        "mobile",
+        "key",
+        "password",
+        "access",
+        "login",
+        "security",
+        "unlock",
+        "auth"
       ]
     },
     "devices-minus": {
@@ -99810,6 +102031,25 @@
         "tablet",
         "desktop",
         "distribute"
+      ]
+    },
+    "devices-spark": {
+      "fingerprint": "b7aeec2a687c",
+      "tags": [
+        "devices",
+        "responsive",
+        "multi-device",
+        "cross-platform",
+        "computer",
+        "laptop",
+        "phone",
+        "tablet",
+        "desktop",
+        "mobile",
+        "spark",
+        "sparkle",
+        "magic",
+        "shine"
       ]
     },
     "devices-star": {
@@ -103283,6 +105523,27 @@
         "humidity"
       ]
     },
+    "droplet-flame": {
+      "fingerprint": "16cfe4fb1974",
+      "tags": [
+        "droplet",
+        "drop",
+        "water",
+        "liquid",
+        "rain",
+        "blood",
+        "ink",
+        "color",
+        "fill",
+        "humidity",
+        "flame",
+        "fire",
+        "hot",
+        "burn",
+        "heat",
+        "trending"
+      ]
+    },
     "droplet-half": {
       "en": {
         "description": "An outlined droplet split vertically down the middle, usually representing contrast, fill, or partial opacity.",
@@ -103449,6 +105710,28 @@
         "rain",
         "ink",
         "color"
+      ]
+    },
+    "droplet-key": {
+      "fingerprint": "d061d2a8f622",
+      "tags": [
+        "droplet",
+        "drop",
+        "water",
+        "liquid",
+        "rain",
+        "blood",
+        "ink",
+        "color",
+        "fill",
+        "humidity",
+        "key",
+        "password",
+        "access",
+        "login",
+        "security",
+        "unlock",
+        "auth"
       ]
     },
     "droplet-minus": {
@@ -103824,6 +106107,25 @@
         "ink",
         "color",
         "distribute"
+      ]
+    },
+    "droplet-spark": {
+      "fingerprint": "a013511bc76f",
+      "tags": [
+        "droplet",
+        "drop",
+        "water",
+        "liquid",
+        "rain",
+        "blood",
+        "ink",
+        "color",
+        "fill",
+        "humidity",
+        "spark",
+        "sparkle",
+        "magic",
+        "shine"
       ]
     },
     "droplet-star": {
@@ -112644,6 +114946,175 @@
         "file"
       ]
     },
+    "file-text-bolt": {
+      "fingerprint": "240040fe8ac9",
+      "tags": [
+        "text",
+        "document",
+        "txt",
+        "doc",
+        "article",
+        "page",
+        "notes",
+        "file",
+        "content",
+        "paper",
+        "lightning",
+        "flash",
+        "energy",
+        "fast",
+        "power",
+        "bolt"
+      ]
+    },
+    "file-text-cancel": {
+      "fingerprint": "ddaf27168c81",
+      "tags": [
+        "text",
+        "document",
+        "txt",
+        "doc",
+        "article",
+        "page",
+        "notes",
+        "file",
+        "content",
+        "paper",
+        "forbidden",
+        "stop",
+        "cancel",
+        "abort",
+        "blocked",
+        "denied"
+      ]
+    },
+    "file-text-check": {
+      "fingerprint": "ea25b00c14d1",
+      "tags": [
+        "text",
+        "document",
+        "txt",
+        "doc",
+        "article",
+        "page",
+        "notes",
+        "file",
+        "content",
+        "paper",
+        "check",
+        "done",
+        "success",
+        "confirmed",
+        "approved",
+        "verified"
+      ]
+    },
+    "file-text-code": {
+      "fingerprint": "1dd59828146a",
+      "tags": [
+        "text",
+        "document",
+        "txt",
+        "doc",
+        "article",
+        "page",
+        "notes",
+        "file",
+        "content",
+        "paper",
+        "developer",
+        "programming",
+        "code",
+        "embed",
+        "coding",
+        "script"
+      ]
+    },
+    "file-text-cog": {
+      "fingerprint": "7d2fb383aa0b",
+      "tags": [
+        "text",
+        "document",
+        "txt",
+        "doc",
+        "article",
+        "page",
+        "notes",
+        "file",
+        "content",
+        "paper",
+        "settings",
+        "cog",
+        "gear",
+        "configure",
+        "preferences",
+        "options"
+      ]
+    },
+    "file-text-dollar": {
+      "fingerprint": "c0ba7952af60",
+      "tags": [
+        "text",
+        "document",
+        "txt",
+        "doc",
+        "article",
+        "page",
+        "notes",
+        "file",
+        "content",
+        "paper",
+        "money",
+        "payment",
+        "price",
+        "cost",
+        "usd",
+        "finance",
+        "currency",
+        "dollar"
+      ]
+    },
+    "file-text-down": {
+      "fingerprint": "b73786965a8a",
+      "tags": [
+        "text",
+        "document",
+        "txt",
+        "doc",
+        "article",
+        "page",
+        "notes",
+        "file",
+        "content",
+        "paper",
+        "arrow-down",
+        "download",
+        "decrease",
+        "lower",
+        "down"
+      ]
+    },
+    "file-text-exclamation": {
+      "fingerprint": "d342d37611af",
+      "tags": [
+        "text",
+        "document",
+        "txt",
+        "doc",
+        "article",
+        "page",
+        "notes",
+        "file",
+        "content",
+        "paper",
+        "warning",
+        "alert",
+        "error",
+        "attention",
+        "important",
+        "exclamation"
+      ]
+    },
     "file-text-filled": {
       "fingerprint": "744644694630",
       "tags": [
@@ -112657,6 +115128,175 @@
         "file",
         "content",
         "paper"
+      ]
+    },
+    "file-text-heart": {
+      "fingerprint": "f1853069b076",
+      "tags": [
+        "text",
+        "document",
+        "txt",
+        "doc",
+        "article",
+        "page",
+        "notes",
+        "file",
+        "content",
+        "paper",
+        "favorite",
+        "love",
+        "like",
+        "heart",
+        "favourite",
+        "wishlist"
+      ]
+    },
+    "file-text-minus": {
+      "fingerprint": "ee3bc9034b69",
+      "tags": [
+        "text",
+        "document",
+        "txt",
+        "doc",
+        "article",
+        "page",
+        "notes",
+        "file",
+        "content",
+        "paper",
+        "remove",
+        "subtract",
+        "delete",
+        "minus",
+        "less",
+        "reduce"
+      ]
+    },
+    "file-text-pause": {
+      "fingerprint": "59bf4eabf44d",
+      "tags": [
+        "text",
+        "document",
+        "txt",
+        "doc",
+        "article",
+        "page",
+        "notes",
+        "file",
+        "content",
+        "paper",
+        "hold",
+        "paused",
+        "wait",
+        "suspend",
+        "pause",
+        "break"
+      ]
+    },
+    "file-text-pin": {
+      "fingerprint": "3caba001437b",
+      "tags": [
+        "text",
+        "document",
+        "txt",
+        "doc",
+        "article",
+        "page",
+        "notes",
+        "file",
+        "content",
+        "paper",
+        "location",
+        "marker",
+        "place",
+        "map-pin",
+        "pinned",
+        "pin",
+        "gps"
+      ]
+    },
+    "file-text-plus": {
+      "fingerprint": "fe16ce2c4fb9",
+      "tags": [
+        "text",
+        "document",
+        "txt",
+        "doc",
+        "article",
+        "page",
+        "notes",
+        "file",
+        "content",
+        "paper",
+        "add",
+        "new",
+        "create",
+        "plus",
+        "insert",
+        "more"
+      ]
+    },
+    "file-text-question": {
+      "fingerprint": "6a5504662fab",
+      "tags": [
+        "text",
+        "document",
+        "txt",
+        "doc",
+        "article",
+        "page",
+        "notes",
+        "file",
+        "content",
+        "paper",
+        "help",
+        "unknown",
+        "faq",
+        "support",
+        "ask",
+        "question"
+      ]
+    },
+    "file-text-search": {
+      "fingerprint": "0d63d9529022",
+      "tags": [
+        "text",
+        "document",
+        "txt",
+        "doc",
+        "article",
+        "page",
+        "notes",
+        "file",
+        "content",
+        "paper",
+        "find",
+        "lookup",
+        "magnifier",
+        "search",
+        "zoom",
+        "magnifying-glass"
+      ]
+    },
+    "file-text-share": {
+      "fingerprint": "424a475d36bc",
+      "tags": [
+        "text",
+        "document",
+        "txt",
+        "doc",
+        "article",
+        "page",
+        "notes",
+        "file",
+        "content",
+        "paper",
+        "send",
+        "forward",
+        "export",
+        "social",
+        "share",
+        "distribute"
       ]
     },
     "file-text-shield": {
@@ -112750,6 +115390,69 @@
         "new",
         "file",
         "spark"
+      ]
+    },
+    "file-text-star": {
+      "fingerprint": "342b9ba592aa",
+      "tags": [
+        "text",
+        "document",
+        "txt",
+        "doc",
+        "article",
+        "page",
+        "notes",
+        "file",
+        "content",
+        "paper",
+        "favorite",
+        "rating",
+        "bookmark",
+        "featured",
+        "starred",
+        "star"
+      ]
+    },
+    "file-text-up": {
+      "fingerprint": "8cf3f3c28eaf",
+      "tags": [
+        "text",
+        "document",
+        "txt",
+        "doc",
+        "article",
+        "page",
+        "notes",
+        "file",
+        "content",
+        "paper",
+        "arrow-up",
+        "upload",
+        "increase",
+        "raise",
+        "up"
+      ]
+    },
+    "file-text-x": {
+      "fingerprint": "d5d9a16062a7",
+      "tags": [
+        "text",
+        "document",
+        "txt",
+        "doc",
+        "article",
+        "page",
+        "notes",
+        "file",
+        "content",
+        "paper",
+        "remove",
+        "delete",
+        "close",
+        "cancel",
+        "error",
+        "clear",
+        "x"
       ]
     },
     "file-time": {
@@ -120380,6 +123083,26 @@
         "storage"
       ]
     },
+    "folder-flame": {
+      "fingerprint": "762dad2fbd0b",
+      "tags": [
+        "folder",
+        "directory",
+        "dir",
+        "files",
+        "archive",
+        "project",
+        "category",
+        "organize",
+        "storage",
+        "flame",
+        "fire",
+        "hot",
+        "burn",
+        "heat",
+        "trending"
+      ]
+    },
     "folder-heart": {
       "en": {
         "description": "Outline of a folder with a heart in the lower right corner, usually meaning favorite or liked files.",
@@ -120423,6 +123146,27 @@
         "favourite",
         "archive",
         "project"
+      ]
+    },
+    "folder-key": {
+      "fingerprint": "0dd7938bfa3a",
+      "tags": [
+        "folder",
+        "directory",
+        "dir",
+        "files",
+        "archive",
+        "project",
+        "category",
+        "organize",
+        "storage",
+        "key",
+        "password",
+        "access",
+        "login",
+        "security",
+        "unlock",
+        "auth"
       ]
     },
     "folder-lock": {
@@ -120937,6 +123681,24 @@
         "archive",
         "project",
         "distribute"
+      ]
+    },
+    "folder-spark": {
+      "fingerprint": "8f01ece75af6",
+      "tags": [
+        "folder",
+        "directory",
+        "dir",
+        "files",
+        "archive",
+        "project",
+        "category",
+        "organize",
+        "storage",
+        "spark",
+        "sparkle",
+        "magic",
+        "shine"
       ]
     },
     "folder-sparkle": {
@@ -148686,6 +151448,159 @@
         "attach"
       ]
     },
+    "link-bolt": {
+      "fingerprint": "58c4e7c24c79",
+      "tags": [
+        "link",
+        "url",
+        "hyperlink",
+        "chain",
+        "anchor",
+        "connection",
+        "href",
+        "attach",
+        "lightning",
+        "flash",
+        "energy",
+        "fast",
+        "power",
+        "bolt"
+      ]
+    },
+    "link-cancel": {
+      "fingerprint": "87978ea503c0",
+      "tags": [
+        "link",
+        "url",
+        "hyperlink",
+        "chain",
+        "anchor",
+        "connection",
+        "href",
+        "attach",
+        "forbidden",
+        "stop",
+        "cancel",
+        "abort",
+        "blocked",
+        "denied"
+      ]
+    },
+    "link-check": {
+      "fingerprint": "f8fa908df5fb",
+      "tags": [
+        "link",
+        "url",
+        "hyperlink",
+        "chain",
+        "anchor",
+        "connection",
+        "href",
+        "attach",
+        "check",
+        "done",
+        "success",
+        "confirmed",
+        "approved",
+        "verified"
+      ]
+    },
+    "link-code": {
+      "fingerprint": "f45354b59c82",
+      "tags": [
+        "link",
+        "url",
+        "hyperlink",
+        "chain",
+        "anchor",
+        "connection",
+        "href",
+        "attach",
+        "developer",
+        "programming",
+        "code",
+        "embed",
+        "coding",
+        "script"
+      ]
+    },
+    "link-cog": {
+      "fingerprint": "8fe2833fc8c4",
+      "tags": [
+        "link",
+        "url",
+        "hyperlink",
+        "chain",
+        "anchor",
+        "connection",
+        "href",
+        "attach",
+        "settings",
+        "cog",
+        "gear",
+        "configure",
+        "preferences",
+        "options"
+      ]
+    },
+    "link-dollar": {
+      "fingerprint": "93b3e936d9fb",
+      "tags": [
+        "link",
+        "url",
+        "hyperlink",
+        "chain",
+        "anchor",
+        "connection",
+        "href",
+        "attach",
+        "money",
+        "payment",
+        "price",
+        "cost",
+        "usd",
+        "finance",
+        "currency",
+        "dollar"
+      ]
+    },
+    "link-down": {
+      "fingerprint": "955abe282095",
+      "tags": [
+        "link",
+        "url",
+        "hyperlink",
+        "chain",
+        "anchor",
+        "connection",
+        "href",
+        "attach",
+        "arrow-down",
+        "download",
+        "decrease",
+        "lower",
+        "down"
+      ]
+    },
+    "link-exclamation": {
+      "fingerprint": "d7d23f4c74be",
+      "tags": [
+        "link",
+        "url",
+        "hyperlink",
+        "chain",
+        "anchor",
+        "connection",
+        "href",
+        "attach",
+        "warning",
+        "alert",
+        "error",
+        "attention",
+        "important",
+        "exclamation"
+      ]
+    },
     "link-filled": {
       "fingerprint": "12823ee48f18",
       "tags": [
@@ -148697,6 +151612,25 @@
         "connection",
         "href",
         "attach"
+      ]
+    },
+    "link-heart": {
+      "fingerprint": "d7414b2e9cce",
+      "tags": [
+        "link",
+        "url",
+        "hyperlink",
+        "chain",
+        "anchor",
+        "connection",
+        "href",
+        "attach",
+        "favorite",
+        "love",
+        "like",
+        "heart",
+        "favourite",
+        "wishlist"
       ]
     },
     "link-minus": {
@@ -148784,6 +151718,45 @@
         "off"
       ]
     },
+    "link-pause": {
+      "fingerprint": "fe0474b97f98",
+      "tags": [
+        "link",
+        "url",
+        "hyperlink",
+        "chain",
+        "anchor",
+        "connection",
+        "href",
+        "attach",
+        "hold",
+        "paused",
+        "wait",
+        "suspend",
+        "pause",
+        "break"
+      ]
+    },
+    "link-pin": {
+      "fingerprint": "a89b64d121d6",
+      "tags": [
+        "link",
+        "url",
+        "hyperlink",
+        "chain",
+        "anchor",
+        "connection",
+        "href",
+        "attach",
+        "location",
+        "marker",
+        "place",
+        "map-pin",
+        "pinned",
+        "pin",
+        "gps"
+      ]
+    },
     "link-plus": {
       "en": {
         "description": "Shows two chain links with a plus sign at the bottom right, meaning add a link or insert a hyperlink.",
@@ -148826,6 +151799,120 @@
         "insert-link",
         "attach",
         "plus"
+      ]
+    },
+    "link-question": {
+      "fingerprint": "e68a7ce6890f",
+      "tags": [
+        "link",
+        "url",
+        "hyperlink",
+        "chain",
+        "anchor",
+        "connection",
+        "href",
+        "attach",
+        "help",
+        "unknown",
+        "faq",
+        "support",
+        "ask",
+        "question"
+      ]
+    },
+    "link-search": {
+      "fingerprint": "488cced7eb48",
+      "tags": [
+        "link",
+        "url",
+        "hyperlink",
+        "chain",
+        "anchor",
+        "connection",
+        "href",
+        "attach",
+        "find",
+        "lookup",
+        "magnifier",
+        "search",
+        "zoom",
+        "magnifying-glass"
+      ]
+    },
+    "link-share": {
+      "fingerprint": "24367b237870",
+      "tags": [
+        "link",
+        "url",
+        "hyperlink",
+        "chain",
+        "anchor",
+        "connection",
+        "href",
+        "attach",
+        "send",
+        "forward",
+        "export",
+        "social",
+        "share",
+        "distribute"
+      ]
+    },
+    "link-star": {
+      "fingerprint": "64e44b76b9aa",
+      "tags": [
+        "link",
+        "url",
+        "hyperlink",
+        "chain",
+        "anchor",
+        "connection",
+        "href",
+        "attach",
+        "favorite",
+        "rating",
+        "bookmark",
+        "featured",
+        "starred",
+        "star"
+      ]
+    },
+    "link-up": {
+      "fingerprint": "7ab4e3792c93",
+      "tags": [
+        "link",
+        "url",
+        "hyperlink",
+        "chain",
+        "anchor",
+        "connection",
+        "href",
+        "attach",
+        "arrow-up",
+        "upload",
+        "increase",
+        "raise",
+        "up"
+      ]
+    },
+    "link-x": {
+      "fingerprint": "9e5b5597752f",
+      "tags": [
+        "link",
+        "url",
+        "hyperlink",
+        "chain",
+        "anchor",
+        "connection",
+        "href",
+        "attach",
+        "remove",
+        "delete",
+        "close",
+        "cancel",
+        "error",
+        "clear",
+        "x"
       ]
     },
     "list": {
@@ -150127,6 +153214,26 @@
         "position"
       ]
     },
+    "location-flame": {
+      "fingerprint": "b4dea7949712",
+      "tags": [
+        "location",
+        "navigation",
+        "gps",
+        "arrow",
+        "pointer",
+        "direction",
+        "map",
+        "compass",
+        "position",
+        "flame",
+        "fire",
+        "hot",
+        "burn",
+        "heat",
+        "trending"
+      ]
+    },
     "location-heart": {
       "en": {
         "description": "A navigation arrow pointer above an outlined heart, usually meaning a favorite or liked location on a map.",
@@ -150173,6 +153280,27 @@
         "love",
         "like",
         "favourite"
+      ]
+    },
+    "location-key": {
+      "fingerprint": "d021c266f6e6",
+      "tags": [
+        "location",
+        "navigation",
+        "gps",
+        "arrow",
+        "pointer",
+        "direction",
+        "map",
+        "compass",
+        "position",
+        "key",
+        "password",
+        "access",
+        "login",
+        "security",
+        "unlock",
+        "auth"
       ]
     },
     "location-minus": {
@@ -150544,6 +153672,24 @@
         "share",
         "send",
         "forward"
+      ]
+    },
+    "location-spark": {
+      "fingerprint": "cb5aed3fbbb8",
+      "tags": [
+        "location",
+        "navigation",
+        "gps",
+        "arrow",
+        "pointer",
+        "direction",
+        "map",
+        "compass",
+        "position",
+        "spark",
+        "sparkle",
+        "magic",
+        "shine"
       ]
     },
     "location-star": {
@@ -151277,6 +154423,25 @@
         "protected"
       ]
     },
+    "lock-flame": {
+      "fingerprint": "ab02035cf526",
+      "tags": [
+        "lock",
+        "padlock",
+        "locked",
+        "security",
+        "secure",
+        "password",
+        "private",
+        "protected",
+        "flame",
+        "fire",
+        "hot",
+        "burn",
+        "heat",
+        "trending"
+      ]
+    },
     "lock-heart": {
       "en": {
         "description": "Shows a padlock with a heart in the lower right corner, usually meaning protected or private favorites.",
@@ -151322,6 +154487,24 @@
         "love",
         "like",
         "favourite"
+      ]
+    },
+    "lock-key": {
+      "fingerprint": "55865a84c6c1",
+      "tags": [
+        "lock",
+        "padlock",
+        "locked",
+        "security",
+        "secure",
+        "password",
+        "private",
+        "protected",
+        "key",
+        "access",
+        "login",
+        "unlock",
+        "auth"
       ]
     },
     "lock-minus": {
@@ -151867,6 +155050,23 @@
         "share",
         "send",
         "forward"
+      ]
+    },
+    "lock-spark": {
+      "fingerprint": "791e8cde6517",
+      "tags": [
+        "lock",
+        "padlock",
+        "locked",
+        "security",
+        "secure",
+        "password",
+        "private",
+        "protected",
+        "spark",
+        "sparkle",
+        "magic",
+        "shine"
       ]
     },
     "lock-square": {
@@ -155356,6 +158556,24 @@
         "attention"
       ]
     },
+    "map-flame": {
+      "fingerprint": "eb2867cd33d2",
+      "tags": [
+        "map",
+        "navigation",
+        "location",
+        "travel",
+        "geography",
+        "directions",
+        "atlas",
+        "flame",
+        "fire",
+        "hot",
+        "burn",
+        "heat",
+        "trending"
+      ]
+    },
     "map-heart": {
       "en": {
         "description": "A folded map with a heart in the lower right corner, representing a favorite or saved location.",
@@ -155401,6 +158619,25 @@
         "love",
         "like",
         "favourite"
+      ]
+    },
+    "map-key": {
+      "fingerprint": "ca39ba94626c",
+      "tags": [
+        "map",
+        "navigation",
+        "location",
+        "travel",
+        "geography",
+        "directions",
+        "atlas",
+        "key",
+        "password",
+        "access",
+        "login",
+        "security",
+        "unlock",
+        "auth"
       ]
     },
     "map-lock": {
@@ -156118,6 +159355,26 @@
         "destination"
       ]
     },
+    "map-pin-flame": {
+      "fingerprint": "368f0bf6ec4d",
+      "tags": [
+        "pin",
+        "marker",
+        "location",
+        "place",
+        "gps",
+        "map",
+        "point",
+        "poi",
+        "destination",
+        "flame",
+        "fire",
+        "hot",
+        "burn",
+        "heat",
+        "trending"
+      ]
+    },
     "map-pin-heart": {
       "en": {
         "description": "An ear outline with a heart in the lower right corner, usually meaning hearing, listening or saving to favorites.",
@@ -156162,6 +159419,27 @@
         "love",
         "like",
         "favourite"
+      ]
+    },
+    "map-pin-key": {
+      "fingerprint": "994c4d2a00a1",
+      "tags": [
+        "pin",
+        "marker",
+        "location",
+        "place",
+        "gps",
+        "map",
+        "point",
+        "poi",
+        "destination",
+        "key",
+        "password",
+        "access",
+        "login",
+        "security",
+        "unlock",
+        "auth"
       ]
     },
     "map-pin-minus": {
@@ -156540,6 +159818,24 @@
         "share",
         "send",
         "forward"
+      ]
+    },
+    "map-pin-spark": {
+      "fingerprint": "aa4b1de58a81",
+      "tags": [
+        "pin",
+        "marker",
+        "location",
+        "place",
+        "gps",
+        "map",
+        "point",
+        "poi",
+        "destination",
+        "spark",
+        "sparkle",
+        "magic",
+        "shine"
       ]
     },
     "map-pin-star": {
@@ -157125,6 +160421,22 @@
         "south-arrow",
         "navigation",
         "cardinal"
+      ]
+    },
+    "map-spark": {
+      "fingerprint": "a98117a3ad47",
+      "tags": [
+        "map",
+        "navigation",
+        "location",
+        "travel",
+        "geography",
+        "directions",
+        "atlas",
+        "spark",
+        "sparkle",
+        "magic",
+        "shine"
       ]
     },
     "map-star": {
@@ -161139,6 +164451,30 @@
         "message"
       ]
     },
+    "message-2-flame": {
+      "fingerprint": "a5f74a497084",
+      "tags": [
+        "chat",
+        "comment",
+        "speech-bubble",
+        "conversation",
+        "sms",
+        "text-message",
+        "reply",
+        "communication",
+        "dm",
+        "messaging",
+        "feedback",
+        "lines",
+        "message",
+        "flame",
+        "fire",
+        "hot",
+        "burn",
+        "heat",
+        "trending"
+      ]
+    },
     "message-2-heart": {
       "en": {
         "description": "Outline of a speech bubble with two text lines and a heart in the lower right, meaning a loved or favorite message.",
@@ -161185,6 +164521,31 @@
         "reply",
         "communication",
         "dm"
+      ]
+    },
+    "message-2-key": {
+      "fingerprint": "44ae141a5fc4",
+      "tags": [
+        "chat",
+        "comment",
+        "speech-bubble",
+        "conversation",
+        "sms",
+        "text-message",
+        "reply",
+        "communication",
+        "dm",
+        "messaging",
+        "feedback",
+        "lines",
+        "message",
+        "key",
+        "password",
+        "access",
+        "login",
+        "security",
+        "unlock",
+        "auth"
       ]
     },
     "message-2-minus": {
@@ -161577,6 +164938,28 @@
         "dm",
         "message",
         "share"
+      ]
+    },
+    "message-2-spark": {
+      "fingerprint": "32b1c3af7db2",
+      "tags": [
+        "chat",
+        "comment",
+        "speech-bubble",
+        "conversation",
+        "sms",
+        "text-message",
+        "reply",
+        "communication",
+        "dm",
+        "messaging",
+        "feedback",
+        "lines",
+        "message",
+        "spark",
+        "sparkle",
+        "magic",
+        "shine"
       ]
     },
     "message-2-sparkle": {
@@ -162505,6 +165888,31 @@
         "circle"
       ]
     },
+    "message-circle-flame": {
+      "fingerprint": "78f99547e81b",
+      "tags": [
+        "chat",
+        "comment",
+        "speech-bubble",
+        "round",
+        "conversation",
+        "sms",
+        "reply",
+        "communication",
+        "dm",
+        "messaging",
+        "bubble",
+        "whatsapp",
+        "message",
+        "circle",
+        "flame",
+        "fire",
+        "hot",
+        "burn",
+        "heat",
+        "trending"
+      ]
+    },
     "message-circle-heart": {
       "en": {
         "description": "Outlined speech bubble with a heart in its lower right corner, signaling favorite messages or affectionate chat.",
@@ -162551,6 +165959,32 @@
         "reply",
         "communication",
         "dm"
+      ]
+    },
+    "message-circle-key": {
+      "fingerprint": "9041c939da2f",
+      "tags": [
+        "chat",
+        "comment",
+        "speech-bubble",
+        "round",
+        "conversation",
+        "sms",
+        "reply",
+        "communication",
+        "dm",
+        "messaging",
+        "bubble",
+        "whatsapp",
+        "message",
+        "circle",
+        "key",
+        "password",
+        "access",
+        "login",
+        "security",
+        "unlock",
+        "auth"
       ]
     },
     "message-circle-minus": {
@@ -162933,6 +166367,29 @@
         "reply",
         "communication",
         "dm"
+      ]
+    },
+    "message-circle-spark": {
+      "fingerprint": "2dcd8a1a33d3",
+      "tags": [
+        "chat",
+        "comment",
+        "speech-bubble",
+        "round",
+        "conversation",
+        "sms",
+        "reply",
+        "communication",
+        "dm",
+        "messaging",
+        "bubble",
+        "whatsapp",
+        "message",
+        "circle",
+        "spark",
+        "sparkle",
+        "magic",
+        "shine"
       ]
     },
     "message-circle-star": {
@@ -163444,6 +166901,30 @@
         "message"
       ]
     },
+    "message-flame": {
+      "fingerprint": "7b0049b7a3e4",
+      "tags": [
+        "chat",
+        "comment",
+        "speech-bubble",
+        "conversation",
+        "sms",
+        "text-message",
+        "reply",
+        "communication",
+        "dm",
+        "messaging",
+        "feedback",
+        "inbox",
+        "message",
+        "flame",
+        "fire",
+        "hot",
+        "burn",
+        "heat",
+        "trending"
+      ]
+    },
     "message-forward": {
       "en": {
         "description": "A speech bubble containing a right-pointing arrow, usually meaning forward or pass along a message.",
@@ -163537,6 +167018,31 @@
         "reply",
         "communication",
         "dm"
+      ]
+    },
+    "message-key": {
+      "fingerprint": "a5f68e448252",
+      "tags": [
+        "chat",
+        "comment",
+        "speech-bubble",
+        "conversation",
+        "sms",
+        "text-message",
+        "reply",
+        "communication",
+        "dm",
+        "messaging",
+        "feedback",
+        "inbox",
+        "message",
+        "key",
+        "password",
+        "access",
+        "login",
+        "security",
+        "unlock",
+        "auth"
       ]
     },
     "message-language": {
@@ -164079,6 +167585,28 @@
         "dm",
         "message",
         "share"
+      ]
+    },
+    "message-spark": {
+      "fingerprint": "b03147856f10",
+      "tags": [
+        "chat",
+        "comment",
+        "speech-bubble",
+        "conversation",
+        "sms",
+        "text-message",
+        "reply",
+        "communication",
+        "dm",
+        "messaging",
+        "feedback",
+        "inbox",
+        "message",
+        "spark",
+        "sparkle",
+        "magic",
+        "shine"
       ]
     },
     "message-sparkle": {
@@ -170564,6 +174092,30 @@
         "player"
       ]
     },
+    "music-flame": {
+      "fingerprint": "4e4fb2f2cee2",
+      "tags": [
+        "song",
+        "audio",
+        "sound",
+        "note",
+        "melody",
+        "track",
+        "mp3",
+        "playlist",
+        "player",
+        "tune",
+        "media",
+        "spotify",
+        "music",
+        "flame",
+        "fire",
+        "hot",
+        "burn",
+        "heat",
+        "trending"
+      ]
+    },
     "music-heart": {
       "en": {
         "description": "Shows a musical note with a small heart at its lower right, meaning a favorite or liked song.",
@@ -170610,6 +174162,31 @@
         "mp3",
         "playlist",
         "player"
+      ]
+    },
+    "music-key": {
+      "fingerprint": "7246090a891a",
+      "tags": [
+        "song",
+        "audio",
+        "sound",
+        "note",
+        "melody",
+        "track",
+        "mp3",
+        "playlist",
+        "player",
+        "tune",
+        "media",
+        "spotify",
+        "music",
+        "key",
+        "password",
+        "access",
+        "login",
+        "security",
+        "unlock",
+        "auth"
       ]
     },
     "music-minus": {
@@ -171005,6 +174582,28 @@
         "mp3",
         "playlist",
         "player"
+      ]
+    },
+    "music-spark": {
+      "fingerprint": "25e8ec69ad15",
+      "tags": [
+        "song",
+        "audio",
+        "sound",
+        "note",
+        "melody",
+        "track",
+        "mp3",
+        "playlist",
+        "player",
+        "tune",
+        "media",
+        "spotify",
+        "music",
+        "spark",
+        "sparkle",
+        "magic",
+        "shine"
       ]
     },
     "music-star": {
@@ -171715,6 +175314,31 @@
         "navigation"
       ]
     },
+    "navigation-flame": {
+      "fingerprint": "7284ab66bd8f",
+      "tags": [
+        "gps",
+        "arrow",
+        "direction",
+        "location",
+        "cursor",
+        "compass",
+        "route",
+        "map",
+        "pointer",
+        "send",
+        "current-location",
+        "near-me",
+        "travel",
+        "navigation",
+        "flame",
+        "fire",
+        "hot",
+        "burn",
+        "heat",
+        "trending"
+      ]
+    },
     "navigation-heart": {
       "en": {
         "description": "Shows a navigation arrow cursor beside a heart, representing a favorite location or saved route.",
@@ -171759,6 +175383,32 @@
         "route",
         "map",
         "pointer"
+      ]
+    },
+    "navigation-key": {
+      "fingerprint": "9aac2adaaedb",
+      "tags": [
+        "gps",
+        "arrow",
+        "direction",
+        "location",
+        "cursor",
+        "compass",
+        "route",
+        "map",
+        "pointer",
+        "send",
+        "current-location",
+        "near-me",
+        "travel",
+        "navigation",
+        "key",
+        "password",
+        "access",
+        "login",
+        "security",
+        "unlock",
+        "auth"
       ]
     },
     "navigation-minus": {
@@ -172239,6 +175889,29 @@
         "cardinal",
         "orientation",
         "bottom"
+      ]
+    },
+    "navigation-spark": {
+      "fingerprint": "c092b361267a",
+      "tags": [
+        "gps",
+        "arrow",
+        "direction",
+        "location",
+        "cursor",
+        "compass",
+        "route",
+        "map",
+        "pointer",
+        "send",
+        "current-location",
+        "near-me",
+        "travel",
+        "navigation",
+        "spark",
+        "sparkle",
+        "magic",
+        "shine"
       ]
     },
     "navigation-star": {
@@ -181985,6 +185658,29 @@
         "pencil"
       ]
     },
+    "pencil-flame": {
+      "fingerprint": "aa990982a65d",
+      "tags": [
+        "edit",
+        "write",
+        "draw",
+        "modify",
+        "pen",
+        "compose",
+        "update",
+        "change",
+        "rename",
+        "sketch",
+        "annotate",
+        "pencil",
+        "flame",
+        "fire",
+        "hot",
+        "burn",
+        "heat",
+        "trending"
+      ]
+    },
     "pencil-heart": {
       "en": {
         "description": "Shows a pencil beside a heart, usually meaning editing favorites or writing something loved.",
@@ -182029,6 +185725,30 @@
         "love",
         "update",
         "change"
+      ]
+    },
+    "pencil-key": {
+      "fingerprint": "60e5aacc8bcf",
+      "tags": [
+        "edit",
+        "write",
+        "draw",
+        "modify",
+        "pen",
+        "compose",
+        "update",
+        "change",
+        "rename",
+        "sketch",
+        "annotate",
+        "pencil",
+        "key",
+        "password",
+        "access",
+        "login",
+        "security",
+        "unlock",
+        "auth"
       ]
     },
     "pencil-minus": {
@@ -182457,6 +186177,27 @@
         "social",
         "update",
         "change"
+      ]
+    },
+    "pencil-spark": {
+      "fingerprint": "6d7313a3c88d",
+      "tags": [
+        "edit",
+        "write",
+        "draw",
+        "modify",
+        "pen",
+        "compose",
+        "update",
+        "change",
+        "rename",
+        "sketch",
+        "annotate",
+        "pencil",
+        "spark",
+        "sparkle",
+        "magic",
+        "shine"
       ]
     },
     "pencil-star": {
@@ -192411,6 +196152,25 @@
         "pointer"
       ]
     },
+    "pointer-flame": {
+      "fingerprint": "eef518bb758a",
+      "tags": [
+        "cursor",
+        "mouse-pointer",
+        "mouse",
+        "arrow",
+        "click",
+        "select",
+        "cursor-arrow",
+        "pointer",
+        "flame",
+        "fire",
+        "hot",
+        "burn",
+        "heat",
+        "trending"
+      ]
+    },
     "pointer-heart": {
       "en": {
         "description": "A mouse pointer arrow with a heart beside it, usually meaning favorite, like, or love.",
@@ -192452,6 +196212,26 @@
         "wishlist",
         "arrow",
         "click"
+      ]
+    },
+    "pointer-key": {
+      "fingerprint": "24237328aa35",
+      "tags": [
+        "cursor",
+        "mouse-pointer",
+        "mouse",
+        "arrow",
+        "click",
+        "select",
+        "cursor-arrow",
+        "pointer",
+        "key",
+        "password",
+        "access",
+        "login",
+        "security",
+        "unlock",
+        "auth"
       ]
     },
     "pointer-minus": {
@@ -192813,6 +196593,23 @@
         "forward",
         "arrow",
         "click"
+      ]
+    },
+    "pointer-spark": {
+      "fingerprint": "bcd72aa1a700",
+      "tags": [
+        "cursor",
+        "mouse-pointer",
+        "mouse",
+        "arrow",
+        "click",
+        "select",
+        "cursor-arrow",
+        "pointer",
+        "spark",
+        "sparkle",
+        "magic",
+        "shine"
       ]
     },
     "pointer-star": {
@@ -208297,6 +212094,26 @@
         "shield"
       ]
     },
+    "shield-flame": {
+      "fingerprint": "5cefa0b12d58",
+      "tags": [
+        "security",
+        "protection",
+        "protect",
+        "guard",
+        "safety",
+        "secure",
+        "defense",
+        "antivirus",
+        "shield",
+        "flame",
+        "fire",
+        "hot",
+        "burn",
+        "heat",
+        "trending"
+      ]
+    },
     "shield-half": {
       "en": {
         "description": "Outlined shield split by a vertical line down the middle, usually meaning partial protection or a half-secure state.",
@@ -208398,6 +212215,26 @@
         "guard",
         "safety",
         "secure"
+      ]
+    },
+    "shield-key": {
+      "fingerprint": "416b59d03911",
+      "tags": [
+        "security",
+        "protection",
+        "protect",
+        "guard",
+        "safety",
+        "secure",
+        "defense",
+        "antivirus",
+        "shield",
+        "key",
+        "password",
+        "access",
+        "login",
+        "unlock",
+        "auth"
       ]
     },
     "shield-lock": {
@@ -208827,6 +212664,24 @@
         "guard",
         "safety",
         "secure"
+      ]
+    },
+    "shield-spark": {
+      "fingerprint": "606299a984eb",
+      "tags": [
+        "security",
+        "protection",
+        "protect",
+        "guard",
+        "safety",
+        "secure",
+        "defense",
+        "antivirus",
+        "shield",
+        "spark",
+        "sparkle",
+        "magic",
+        "shine"
       ]
     },
     "shield-star": {
@@ -209347,6 +213202,46 @@
         "shopping"
       ]
     },
+    "shopping-bag-bolt": {
+      "fingerprint": "bb1c8547951d",
+      "tags": [
+        "bag",
+        "shop",
+        "store",
+        "purchase",
+        "buy",
+        "ecommerce",
+        "retail",
+        "checkout",
+        "shopping",
+        "lightning",
+        "flash",
+        "energy",
+        "fast",
+        "power",
+        "bolt"
+      ]
+    },
+    "shopping-bag-cancel": {
+      "fingerprint": "6ed757ca5db9",
+      "tags": [
+        "bag",
+        "shop",
+        "store",
+        "purchase",
+        "buy",
+        "ecommerce",
+        "retail",
+        "checkout",
+        "shopping",
+        "forbidden",
+        "stop",
+        "cancel",
+        "abort",
+        "blocked",
+        "denied"
+      ]
+    },
     "shopping-bag-check": {
       "en": {
         "description": "Outlined shopping bag with a checkmark at the bottom right, meaning a confirmed or successful purchase.",
@@ -209396,6 +213291,46 @@
         "ecommerce"
       ]
     },
+    "shopping-bag-code": {
+      "fingerprint": "aa8e56d46627",
+      "tags": [
+        "bag",
+        "shop",
+        "store",
+        "purchase",
+        "buy",
+        "ecommerce",
+        "retail",
+        "checkout",
+        "shopping",
+        "developer",
+        "programming",
+        "code",
+        "embed",
+        "coding",
+        "script"
+      ]
+    },
+    "shopping-bag-cog": {
+      "fingerprint": "c52bb69dd5b7",
+      "tags": [
+        "bag",
+        "shop",
+        "store",
+        "purchase",
+        "buy",
+        "ecommerce",
+        "retail",
+        "checkout",
+        "shopping",
+        "settings",
+        "cog",
+        "gear",
+        "configure",
+        "preferences",
+        "options"
+      ]
+    },
     "shopping-bag-discount": {
       "en": {
         "description": "Outlined shopping bag with a percent sign in the corner, meaning a discount or sale in a store.",
@@ -209440,6 +213375,47 @@
         "purchase",
         "buy",
         "ecommerce"
+      ]
+    },
+    "shopping-bag-dollar": {
+      "fingerprint": "e46e2628c3bc",
+      "tags": [
+        "bag",
+        "shop",
+        "store",
+        "purchase",
+        "buy",
+        "ecommerce",
+        "retail",
+        "checkout",
+        "shopping",
+        "money",
+        "payment",
+        "price",
+        "cost",
+        "usd",
+        "finance",
+        "currency",
+        "dollar"
+      ]
+    },
+    "shopping-bag-down": {
+      "fingerprint": "29dc6fa10ff2",
+      "tags": [
+        "bag",
+        "shop",
+        "store",
+        "purchase",
+        "buy",
+        "ecommerce",
+        "retail",
+        "checkout",
+        "shopping",
+        "arrow-down",
+        "download",
+        "decrease",
+        "lower",
+        "down"
       ]
     },
     "shopping-bag-edit": {
@@ -209627,6 +213603,47 @@
         "ecommerce"
       ]
     },
+    "shopping-bag-pause": {
+      "fingerprint": "c11be992efc0",
+      "tags": [
+        "bag",
+        "shop",
+        "store",
+        "purchase",
+        "buy",
+        "ecommerce",
+        "retail",
+        "checkout",
+        "shopping",
+        "hold",
+        "paused",
+        "wait",
+        "suspend",
+        "pause",
+        "break"
+      ]
+    },
+    "shopping-bag-pin": {
+      "fingerprint": "7e7f3b7aa6ef",
+      "tags": [
+        "bag",
+        "shop",
+        "store",
+        "purchase",
+        "buy",
+        "ecommerce",
+        "retail",
+        "checkout",
+        "shopping",
+        "location",
+        "marker",
+        "place",
+        "map-pin",
+        "pinned",
+        "pin",
+        "gps"
+      ]
+    },
     "shopping-bag-plus": {
       "en": {
         "description": "Outline of a shopping bag with a plus sign at the bottom right, meaning add a new item or purchase.",
@@ -209672,6 +213689,26 @@
         "ecommerce"
       ]
     },
+    "shopping-bag-question": {
+      "fingerprint": "4e4f00442dd4",
+      "tags": [
+        "bag",
+        "shop",
+        "store",
+        "purchase",
+        "buy",
+        "ecommerce",
+        "retail",
+        "checkout",
+        "shopping",
+        "help",
+        "unknown",
+        "faq",
+        "support",
+        "ask",
+        "question"
+      ]
+    },
     "shopping-bag-search": {
       "en": {
         "description": "Outlined shopping bag with a handle and a magnifying glass at the bottom right, meaning product search in a store.",
@@ -209715,6 +213752,65 @@
         "purchase",
         "buy",
         "ecommerce"
+      ]
+    },
+    "shopping-bag-share": {
+      "fingerprint": "164840d91970",
+      "tags": [
+        "bag",
+        "shop",
+        "store",
+        "purchase",
+        "buy",
+        "ecommerce",
+        "retail",
+        "checkout",
+        "shopping",
+        "send",
+        "forward",
+        "export",
+        "social",
+        "share",
+        "distribute"
+      ]
+    },
+    "shopping-bag-star": {
+      "fingerprint": "5e339360b27f",
+      "tags": [
+        "bag",
+        "shop",
+        "store",
+        "purchase",
+        "buy",
+        "ecommerce",
+        "retail",
+        "checkout",
+        "shopping",
+        "favorite",
+        "rating",
+        "bookmark",
+        "featured",
+        "starred",
+        "star"
+      ]
+    },
+    "shopping-bag-up": {
+      "fingerprint": "d94538c5ea65",
+      "tags": [
+        "bag",
+        "shop",
+        "store",
+        "purchase",
+        "buy",
+        "ecommerce",
+        "retail",
+        "checkout",
+        "shopping",
+        "arrow-up",
+        "upload",
+        "increase",
+        "raise",
+        "up"
       ]
     },
     "shopping-bag-x": {
@@ -210291,6 +214387,28 @@
         "shopping"
       ]
     },
+    "shopping-cart-flame": {
+      "fingerprint": "110a4a6c1967",
+      "tags": [
+        "cart",
+        "basket",
+        "trolley",
+        "shop",
+        "store",
+        "checkout",
+        "ecommerce",
+        "buy",
+        "purchase",
+        "supermarket",
+        "shopping",
+        "flame",
+        "fire",
+        "hot",
+        "burn",
+        "heat",
+        "trending"
+      ]
+    },
     "shopping-cart-heart": {
       "en": {
         "description": "Shopping cart drawn with a heart beside it; usually means wishlist or saved favorite products in a shop.",
@@ -210338,6 +214456,29 @@
         "ecommerce",
         "buy",
         "shopping"
+      ]
+    },
+    "shopping-cart-key": {
+      "fingerprint": "5b2a8628acc6",
+      "tags": [
+        "cart",
+        "basket",
+        "trolley",
+        "shop",
+        "store",
+        "checkout",
+        "ecommerce",
+        "buy",
+        "purchase",
+        "supermarket",
+        "shopping",
+        "key",
+        "password",
+        "access",
+        "login",
+        "security",
+        "unlock",
+        "auth"
       ]
     },
     "shopping-cart-minus": {
@@ -210720,6 +214861,26 @@
         "checkout",
         "ecommerce",
         "buy"
+      ]
+    },
+    "shopping-cart-spark": {
+      "fingerprint": "a67bafb12a7a",
+      "tags": [
+        "cart",
+        "basket",
+        "trolley",
+        "shop",
+        "store",
+        "checkout",
+        "ecommerce",
+        "buy",
+        "purchase",
+        "supermarket",
+        "shopping",
+        "spark",
+        "sparkle",
+        "magic",
+        "shine"
       ]
     },
     "shopping-cart-star": {
@@ -227031,6 +231192,111 @@
         "sheet"
       ]
     },
+    "table-bolt": {
+      "fingerprint": "c7ed36f9b19f",
+      "tags": [
+        "spreadsheet",
+        "grid",
+        "data",
+        "rows",
+        "columns",
+        "sheet",
+        "excel",
+        "cells",
+        "database",
+        "table",
+        "lightning",
+        "flash",
+        "energy",
+        "fast",
+        "power",
+        "bolt"
+      ]
+    },
+    "table-cancel": {
+      "fingerprint": "a6763b73df37",
+      "tags": [
+        "spreadsheet",
+        "grid",
+        "data",
+        "rows",
+        "columns",
+        "sheet",
+        "excel",
+        "cells",
+        "database",
+        "table",
+        "forbidden",
+        "stop",
+        "cancel",
+        "abort",
+        "blocked",
+        "denied"
+      ]
+    },
+    "table-check": {
+      "fingerprint": "fd7051a7bc55",
+      "tags": [
+        "spreadsheet",
+        "grid",
+        "data",
+        "rows",
+        "columns",
+        "sheet",
+        "excel",
+        "cells",
+        "database",
+        "table",
+        "check",
+        "done",
+        "success",
+        "confirmed",
+        "approved",
+        "verified"
+      ]
+    },
+    "table-code": {
+      "fingerprint": "9ffc34331a78",
+      "tags": [
+        "spreadsheet",
+        "grid",
+        "data",
+        "rows",
+        "columns",
+        "sheet",
+        "excel",
+        "cells",
+        "database",
+        "table",
+        "developer",
+        "programming",
+        "code",
+        "embed",
+        "coding",
+        "script"
+      ]
+    },
+    "table-cog": {
+      "fingerprint": "8d9cced9a2d5",
+      "tags": [
+        "spreadsheet",
+        "grid",
+        "data",
+        "rows",
+        "columns",
+        "sheet",
+        "excel",
+        "cells",
+        "database",
+        "table",
+        "settings",
+        "cog",
+        "gear",
+        "configure",
+        "preferences",
+        "options"
+      ]
+    },
     "table-column": {
       "en": {
         "description": "A rounded square split into cells with one hatched left column, representing a table or column in spreadsheets.",
@@ -227121,6 +231387,29 @@
         "sheet"
       ]
     },
+    "table-dollar": {
+      "fingerprint": "9e78c6427635",
+      "tags": [
+        "spreadsheet",
+        "grid",
+        "data",
+        "rows",
+        "columns",
+        "sheet",
+        "excel",
+        "cells",
+        "database",
+        "table",
+        "money",
+        "payment",
+        "price",
+        "cost",
+        "usd",
+        "finance",
+        "currency",
+        "dollar"
+      ]
+    },
     "table-down": {
       "en": {
         "description": "A grid table with a downward arrow at the bottom right, usually meaning download or export of a table.",
@@ -227165,6 +231454,27 @@
         "excel",
         "sheet",
         "down"
+      ]
+    },
+    "table-exclamation": {
+      "fingerprint": "04de3695840c",
+      "tags": [
+        "spreadsheet",
+        "grid",
+        "data",
+        "rows",
+        "columns",
+        "sheet",
+        "excel",
+        "cells",
+        "database",
+        "table",
+        "warning",
+        "alert",
+        "error",
+        "attention",
+        "important",
+        "exclamation"
       ]
     },
     "table-export": {
@@ -227440,6 +231750,49 @@
         "sheet"
       ]
     },
+    "table-pause": {
+      "fingerprint": "15bdddefa8a9",
+      "tags": [
+        "spreadsheet",
+        "grid",
+        "data",
+        "rows",
+        "columns",
+        "sheet",
+        "excel",
+        "cells",
+        "database",
+        "table",
+        "hold",
+        "paused",
+        "wait",
+        "suspend",
+        "pause",
+        "break"
+      ]
+    },
+    "table-pin": {
+      "fingerprint": "29107948218f",
+      "tags": [
+        "spreadsheet",
+        "grid",
+        "data",
+        "rows",
+        "columns",
+        "sheet",
+        "excel",
+        "cells",
+        "database",
+        "table",
+        "location",
+        "marker",
+        "place",
+        "map-pin",
+        "pinned",
+        "pin",
+        "gps"
+      ]
+    },
     "table-plus": {
       "en": {
         "description": "Draws a table grid with a plus sign at the corner, usually meaning insert a new table, row, or column.",
@@ -227479,6 +231832,27 @@
         "spreadsheet",
         "data",
         "plus"
+      ]
+    },
+    "table-question": {
+      "fingerprint": "caf60c0b8584",
+      "tags": [
+        "spreadsheet",
+        "grid",
+        "data",
+        "rows",
+        "columns",
+        "sheet",
+        "excel",
+        "cells",
+        "database",
+        "table",
+        "help",
+        "unknown",
+        "faq",
+        "support",
+        "ask",
+        "question"
       ]
     },
     "table-row": {
@@ -227522,6 +231896,27 @@
         "cells",
         "sheet",
         "tabular"
+      ]
+    },
+    "table-search": {
+      "fingerprint": "174f37a6ad6d",
+      "tags": [
+        "spreadsheet",
+        "grid",
+        "data",
+        "rows",
+        "columns",
+        "sheet",
+        "excel",
+        "cells",
+        "database",
+        "table",
+        "find",
+        "lookup",
+        "magnifier",
+        "search",
+        "zoom",
+        "magnifying-glass"
       ]
     },
     "table-share": {
@@ -227657,6 +232052,69 @@
         "spark"
       ]
     },
+    "table-star": {
+      "fingerprint": "94559fcc4ff8",
+      "tags": [
+        "spreadsheet",
+        "grid",
+        "data",
+        "rows",
+        "columns",
+        "sheet",
+        "excel",
+        "cells",
+        "database",
+        "table",
+        "favorite",
+        "rating",
+        "bookmark",
+        "featured",
+        "starred",
+        "star"
+      ]
+    },
+    "table-up": {
+      "fingerprint": "ffde01280535",
+      "tags": [
+        "spreadsheet",
+        "grid",
+        "data",
+        "rows",
+        "columns",
+        "sheet",
+        "excel",
+        "cells",
+        "database",
+        "table",
+        "arrow-up",
+        "upload",
+        "increase",
+        "raise",
+        "up"
+      ]
+    },
+    "table-x": {
+      "fingerprint": "00c52eaa6e36",
+      "tags": [
+        "spreadsheet",
+        "grid",
+        "data",
+        "rows",
+        "columns",
+        "sheet",
+        "excel",
+        "cells",
+        "database",
+        "table",
+        "remove",
+        "delete",
+        "close",
+        "cancel",
+        "error",
+        "clear",
+        "x"
+      ]
+    },
     "tabs": {
       "en": {
         "description": "A rounded window outline with tab shapes along the top edge, representing tabs or tabbed navigation panels in an interface.",
@@ -227745,6 +232203,166 @@
         "tag"
       ]
     },
+    "tag-bolt": {
+      "fingerprint": "c99856bbc441",
+      "tags": [
+        "label",
+        "price-tag",
+        "price",
+        "sale",
+        "discount",
+        "shopping",
+        "category",
+        "tagging",
+        "tag",
+        "lightning",
+        "flash",
+        "energy",
+        "fast",
+        "power",
+        "bolt"
+      ]
+    },
+    "tag-cancel": {
+      "fingerprint": "251d1965ffb3",
+      "tags": [
+        "label",
+        "price-tag",
+        "price",
+        "sale",
+        "discount",
+        "shopping",
+        "category",
+        "tagging",
+        "tag",
+        "forbidden",
+        "stop",
+        "cancel",
+        "abort",
+        "blocked",
+        "denied"
+      ]
+    },
+    "tag-check": {
+      "fingerprint": "79f68766279d",
+      "tags": [
+        "label",
+        "price-tag",
+        "price",
+        "sale",
+        "discount",
+        "shopping",
+        "category",
+        "tagging",
+        "tag",
+        "check",
+        "done",
+        "success",
+        "confirmed",
+        "approved",
+        "verified"
+      ]
+    },
+    "tag-code": {
+      "fingerprint": "e52fb9a28a32",
+      "tags": [
+        "label",
+        "price-tag",
+        "price",
+        "sale",
+        "discount",
+        "shopping",
+        "category",
+        "tagging",
+        "tag",
+        "developer",
+        "programming",
+        "code",
+        "embed",
+        "coding",
+        "script"
+      ]
+    },
+    "tag-cog": {
+      "fingerprint": "7f7b8857e0da",
+      "tags": [
+        "label",
+        "price-tag",
+        "price",
+        "sale",
+        "discount",
+        "shopping",
+        "category",
+        "tagging",
+        "tag",
+        "settings",
+        "cog",
+        "gear",
+        "configure",
+        "preferences",
+        "options"
+      ]
+    },
+    "tag-dollar": {
+      "fingerprint": "10452178a86f",
+      "tags": [
+        "label",
+        "price-tag",
+        "price",
+        "sale",
+        "discount",
+        "shopping",
+        "category",
+        "tagging",
+        "tag",
+        "money",
+        "payment",
+        "cost",
+        "usd",
+        "finance",
+        "currency",
+        "dollar"
+      ]
+    },
+    "tag-down": {
+      "fingerprint": "f56f41385308",
+      "tags": [
+        "label",
+        "price-tag",
+        "price",
+        "sale",
+        "discount",
+        "shopping",
+        "category",
+        "tagging",
+        "tag",
+        "arrow-down",
+        "download",
+        "decrease",
+        "lower",
+        "down"
+      ]
+    },
+    "tag-exclamation": {
+      "fingerprint": "2207b1d60687",
+      "tags": [
+        "label",
+        "price-tag",
+        "price",
+        "sale",
+        "discount",
+        "shopping",
+        "category",
+        "tagging",
+        "tag",
+        "warning",
+        "alert",
+        "error",
+        "attention",
+        "important",
+        "exclamation"
+      ]
+    },
     "tag-filled": {
       "fingerprint": "fa825a284ba6",
       "tags": [
@@ -227757,6 +232375,26 @@
         "category",
         "tagging",
         "tag"
+      ]
+    },
+    "tag-heart": {
+      "fingerprint": "f040cce6d4b4",
+      "tags": [
+        "label",
+        "price-tag",
+        "price",
+        "sale",
+        "discount",
+        "shopping",
+        "category",
+        "tagging",
+        "tag",
+        "favorite",
+        "love",
+        "like",
+        "heart",
+        "favourite",
+        "wishlist"
       ]
     },
     "tag-minus": {
@@ -227853,6 +232491,47 @@
         "off"
       ]
     },
+    "tag-pause": {
+      "fingerprint": "572ffa922a54",
+      "tags": [
+        "label",
+        "price-tag",
+        "price",
+        "sale",
+        "discount",
+        "shopping",
+        "category",
+        "tagging",
+        "tag",
+        "hold",
+        "paused",
+        "wait",
+        "suspend",
+        "pause",
+        "break"
+      ]
+    },
+    "tag-pin": {
+      "fingerprint": "bf792f84b9db",
+      "tags": [
+        "label",
+        "price-tag",
+        "price",
+        "sale",
+        "discount",
+        "shopping",
+        "category",
+        "tagging",
+        "tag",
+        "location",
+        "marker",
+        "place",
+        "map-pin",
+        "pinned",
+        "pin",
+        "gps"
+      ]
+    },
     "tag-plus": {
       "en": {
         "description": "A price tag with a hole and a plus sign in the corner, meaning add a new tag or label.",
@@ -227900,6 +232579,86 @@
         "plus"
       ]
     },
+    "tag-question": {
+      "fingerprint": "d856c6de1882",
+      "tags": [
+        "label",
+        "price-tag",
+        "price",
+        "sale",
+        "discount",
+        "shopping",
+        "category",
+        "tagging",
+        "tag",
+        "help",
+        "unknown",
+        "faq",
+        "support",
+        "ask",
+        "question"
+      ]
+    },
+    "tag-search": {
+      "fingerprint": "379e50420515",
+      "tags": [
+        "label",
+        "price-tag",
+        "price",
+        "sale",
+        "discount",
+        "shopping",
+        "category",
+        "tagging",
+        "tag",
+        "find",
+        "lookup",
+        "magnifier",
+        "search",
+        "zoom",
+        "magnifying-glass"
+      ]
+    },
+    "tag-share": {
+      "fingerprint": "49bbbf116a33",
+      "tags": [
+        "label",
+        "price-tag",
+        "price",
+        "sale",
+        "discount",
+        "shopping",
+        "category",
+        "tagging",
+        "tag",
+        "send",
+        "forward",
+        "export",
+        "social",
+        "share",
+        "distribute"
+      ]
+    },
+    "tag-star": {
+      "fingerprint": "ab5ac4728eff",
+      "tags": [
+        "label",
+        "price-tag",
+        "price",
+        "sale",
+        "discount",
+        "shopping",
+        "category",
+        "tagging",
+        "tag",
+        "favorite",
+        "rating",
+        "bookmark",
+        "featured",
+        "starred",
+        "star"
+      ]
+    },
     "tag-starred": {
       "en": {
         "description": "Outlined price tag with a hole and a star inside, meaning a favorite or featured item.",
@@ -227945,6 +232704,46 @@
         "shopping",
         "tag",
         "starred"
+      ]
+    },
+    "tag-up": {
+      "fingerprint": "85356accf6b5",
+      "tags": [
+        "label",
+        "price-tag",
+        "price",
+        "sale",
+        "discount",
+        "shopping",
+        "category",
+        "tagging",
+        "tag",
+        "arrow-up",
+        "upload",
+        "increase",
+        "raise",
+        "up"
+      ]
+    },
+    "tag-x": {
+      "fingerprint": "b63d8dfe87fe",
+      "tags": [
+        "label",
+        "price-tag",
+        "price",
+        "sale",
+        "discount",
+        "shopping",
+        "category",
+        "tagging",
+        "tag",
+        "remove",
+        "delete",
+        "close",
+        "cancel",
+        "error",
+        "clear",
+        "x"
       ]
     },
     "tags": {
@@ -239549,6 +244348,167 @@
         "users"
       ]
     },
+    "users-bolt": {
+      "fingerprint": "53e763bc7bbe",
+      "tags": [
+        "people",
+        "group",
+        "team",
+        "persons",
+        "accounts",
+        "members",
+        "community",
+        "user",
+        "users",
+        "lightning",
+        "flash",
+        "energy",
+        "fast",
+        "power",
+        "bolt"
+      ]
+    },
+    "users-cancel": {
+      "fingerprint": "964877cd7d66",
+      "tags": [
+        "people",
+        "group",
+        "team",
+        "persons",
+        "accounts",
+        "members",
+        "community",
+        "user",
+        "users",
+        "forbidden",
+        "stop",
+        "cancel",
+        "abort",
+        "blocked",
+        "denied"
+      ]
+    },
+    "users-check": {
+      "fingerprint": "a1925ee9a66d",
+      "tags": [
+        "people",
+        "group",
+        "team",
+        "persons",
+        "accounts",
+        "members",
+        "community",
+        "user",
+        "users",
+        "check",
+        "done",
+        "success",
+        "confirmed",
+        "approved",
+        "verified"
+      ]
+    },
+    "users-code": {
+      "fingerprint": "fac54228cd79",
+      "tags": [
+        "people",
+        "group",
+        "team",
+        "persons",
+        "accounts",
+        "members",
+        "community",
+        "user",
+        "users",
+        "developer",
+        "programming",
+        "code",
+        "embed",
+        "coding",
+        "script"
+      ]
+    },
+    "users-cog": {
+      "fingerprint": "9a8a3e1a0d21",
+      "tags": [
+        "people",
+        "group",
+        "team",
+        "persons",
+        "accounts",
+        "members",
+        "community",
+        "user",
+        "users",
+        "settings",
+        "cog",
+        "gear",
+        "configure",
+        "preferences",
+        "options"
+      ]
+    },
+    "users-dollar": {
+      "fingerprint": "dff69ed18585",
+      "tags": [
+        "people",
+        "group",
+        "team",
+        "persons",
+        "accounts",
+        "members",
+        "community",
+        "user",
+        "users",
+        "money",
+        "payment",
+        "price",
+        "cost",
+        "usd",
+        "finance",
+        "currency",
+        "dollar"
+      ]
+    },
+    "users-down": {
+      "fingerprint": "345cd85cf503",
+      "tags": [
+        "people",
+        "group",
+        "team",
+        "persons",
+        "accounts",
+        "members",
+        "community",
+        "user",
+        "users",
+        "arrow-down",
+        "download",
+        "decrease",
+        "lower",
+        "down"
+      ]
+    },
+    "users-exclamation": {
+      "fingerprint": "a0e15a80b3ae",
+      "tags": [
+        "people",
+        "group",
+        "team",
+        "persons",
+        "accounts",
+        "members",
+        "community",
+        "user",
+        "users",
+        "warning",
+        "alert",
+        "error",
+        "attention",
+        "important",
+        "exclamation"
+      ]
+    },
     "users-group": {
       "en": {
         "description": "Three simplified person figures grouped together, representing a group of users, a team, or community members.",
@@ -239591,6 +244551,26 @@
         "crowd"
       ]
     },
+    "users-heart": {
+      "fingerprint": "0046eb1944ae",
+      "tags": [
+        "people",
+        "group",
+        "team",
+        "persons",
+        "accounts",
+        "members",
+        "community",
+        "user",
+        "users",
+        "favorite",
+        "love",
+        "like",
+        "heart",
+        "favourite",
+        "wishlist"
+      ]
+    },
     "users-minus": {
       "en": {
         "description": "Shows a user silhouette with a minus sign and a partial second figure, meaning removing a member from a group.",
@@ -239629,6 +244609,47 @@
         "subtract",
         "members",
         "user"
+      ]
+    },
+    "users-pause": {
+      "fingerprint": "7403a04d689b",
+      "tags": [
+        "people",
+        "group",
+        "team",
+        "persons",
+        "accounts",
+        "members",
+        "community",
+        "user",
+        "users",
+        "hold",
+        "paused",
+        "wait",
+        "suspend",
+        "pause",
+        "break"
+      ]
+    },
+    "users-pin": {
+      "fingerprint": "b283f61f557f",
+      "tags": [
+        "people",
+        "group",
+        "team",
+        "persons",
+        "accounts",
+        "members",
+        "community",
+        "user",
+        "users",
+        "location",
+        "marker",
+        "place",
+        "map-pin",
+        "pinned",
+        "pin",
+        "gps"
       ]
     },
     "users-plus": {
@@ -239673,6 +244694,126 @@
         "new",
         "members",
         "user"
+      ]
+    },
+    "users-question": {
+      "fingerprint": "f195ccea3327",
+      "tags": [
+        "people",
+        "group",
+        "team",
+        "persons",
+        "accounts",
+        "members",
+        "community",
+        "user",
+        "users",
+        "help",
+        "unknown",
+        "faq",
+        "support",
+        "ask",
+        "question"
+      ]
+    },
+    "users-search": {
+      "fingerprint": "2d126e74c0fc",
+      "tags": [
+        "people",
+        "group",
+        "team",
+        "persons",
+        "accounts",
+        "members",
+        "community",
+        "user",
+        "users",
+        "find",
+        "lookup",
+        "magnifier",
+        "search",
+        "zoom",
+        "magnifying-glass"
+      ]
+    },
+    "users-share": {
+      "fingerprint": "286734bb7783",
+      "tags": [
+        "people",
+        "group",
+        "team",
+        "persons",
+        "accounts",
+        "members",
+        "community",
+        "user",
+        "users",
+        "send",
+        "forward",
+        "export",
+        "social",
+        "share",
+        "distribute"
+      ]
+    },
+    "users-star": {
+      "fingerprint": "f7c712c7e9a9",
+      "tags": [
+        "people",
+        "group",
+        "team",
+        "persons",
+        "accounts",
+        "members",
+        "community",
+        "user",
+        "users",
+        "favorite",
+        "rating",
+        "bookmark",
+        "featured",
+        "starred",
+        "star"
+      ]
+    },
+    "users-up": {
+      "fingerprint": "c801bfcb5392",
+      "tags": [
+        "people",
+        "group",
+        "team",
+        "persons",
+        "accounts",
+        "members",
+        "community",
+        "user",
+        "users",
+        "arrow-up",
+        "upload",
+        "increase",
+        "raise",
+        "up"
+      ]
+    },
+    "users-x": {
+      "fingerprint": "4b50afcd06f0",
+      "tags": [
+        "people",
+        "group",
+        "team",
+        "persons",
+        "accounts",
+        "members",
+        "community",
+        "user",
+        "users",
+        "remove",
+        "delete",
+        "close",
+        "cancel",
+        "error",
+        "clear",
+        "x"
       ]
     },
     "uv-index": {
@@ -246002,6 +251143,26 @@
         "planet"
       ]
     },
+    "world-flame": {
+      "fingerprint": "1c9eea1f1c96",
+      "tags": [
+        "globe",
+        "earth",
+        "world",
+        "internet",
+        "global",
+        "web",
+        "international",
+        "language",
+        "planet",
+        "flame",
+        "fire",
+        "hot",
+        "burn",
+        "heat",
+        "trending"
+      ]
+    },
     "world-heart": {
       "en": {
         "description": "A globe with latitude and longitude lines and a heart at its lower right, often meaning global charity, love, or favorites.",
@@ -246047,6 +251208,27 @@
         "love",
         "like",
         "charity"
+      ]
+    },
+    "world-key": {
+      "fingerprint": "0898a8315947",
+      "tags": [
+        "globe",
+        "earth",
+        "world",
+        "internet",
+        "global",
+        "web",
+        "international",
+        "language",
+        "planet",
+        "key",
+        "password",
+        "access",
+        "login",
+        "security",
+        "unlock",
+        "auth"
       ]
     },
     "world-latitude": {
@@ -246598,6 +251780,24 @@
         "send",
         "forward",
         "distribute"
+      ]
+    },
+    "world-spark": {
+      "fingerprint": "c6aaa9bbc46f",
+      "tags": [
+        "globe",
+        "earth",
+        "world",
+        "internet",
+        "global",
+        "web",
+        "international",
+        "language",
+        "planet",
+        "spark",
+        "sparkle",
+        "magic",
+        "shine"
       ]
     },
     "world-star": {
