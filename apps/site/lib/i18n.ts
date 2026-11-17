@@ -221,7 +221,7 @@ const en = {
   nameCssClass: "CSS class",
   iconDownloadFailed: "Could not prepare the file. Try again.",
   bag: "Bag",
-  bagLabel: "Bag: {count}",
+  bagLabel: "Bag {count}",
   // Рюкзак и выделение по макету (редизайн, шаг 5; сценарии «Рюкзак» и «Выделение»).
   bagTitle: "Backpack",
   bagPicked: "{count} picked",
@@ -522,7 +522,7 @@ const ru: Dictionary = {
   nameCssClass: "Класс CSS",
   iconDownloadFailed: "Не удалось подготовить файл. Попробуйте ещё раз.",
   bag: "Сумка",
-  bagLabel: "Сумка: {count}",
+  bagLabel: "Сумка {count}",
   bagTitle: "Сумка",
   bagPicked: "{count} в сумке",
   bagEmpty: "Сумка пуста…",

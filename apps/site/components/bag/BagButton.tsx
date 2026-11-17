@@ -45,6 +45,9 @@ export function BagButton({
           {t.bag}
         </span>
       ) : null}
+      {/* Пробел между «Bag» и числом: в кнопке-flex он не виден, а видимый текст — «Bag 2», и подпись
+          «Bag 2 icons» его содержит (WCAG 2.5.3, axe label-content-name-mismatch, 17 ноября 2026). */}
+      {variant === "pill" && bag.length > 0 ? " " : null}
       {bag.length > 0 ? (
         <span className="bag-count" aria-hidden="true">
           {bag.length}

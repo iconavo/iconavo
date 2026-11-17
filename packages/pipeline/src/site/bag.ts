@@ -1,9 +1,10 @@
-// Сценарий сумки проверки сайта (шаг 5 фазы 4, ADR-0042; решения владельца 3 ноября 2026): режим «Выбрать
-// несколько» в сетке набора и в выдаче поиска, «В сумку» в панели, число в шапке и сумка после
-// перезагрузки, меню с клавиатуры, «Убрать», axe с открытым меню в обеих темах и телефон; ZIP — файлы,
-// контрольные суммы, полные тексты лицензий как у /collection?info=true и README с указанием авторства;
-// спрайт — символы, ID, комментарий и каждая <use> рисует иконку. ZIP читается своим разбором с CRC из
-// node:zlib — независимо от записи на сайте (apps/site/lib/zip.ts).
+// Сценарий выделения и рюкзака проверки сайта (шаг 5 фазы 4, ADR-0042; редизайн — решения владельца 13
+// ноября 2026): чекбоксы карточек и «Download N icons», «в рюкзак» на карточке, в панели иконки и в выдаче
+// поиска, число на «Bag» и рюкзак после перезагрузки, рюкзак с клавиатуры, «Clear» и «Undo», «Remove», axe с
+// открытым рюкзаком в обеих темах и телефон; ZIP — файлы, контрольные суммы, полные тексты лицензий как у
+// /collection?info=true и README с указанием авторства; спрайт — символы, ID, комментарий и каждая <use>
+// рисует иконку. ZIP читается своим разбором с CRC из node:zlib — независимо от записи на сайте
+// (apps/site/lib/zip.ts).
 
 import { readFile } from "node:fs/promises";
 import { crc32 } from "node:zlib";
@@ -107,18 +108,20 @@ export function zipProblems(
   return problems;
 }
 
-/** Число в шапке: значок кнопки сумки. */
+/** Число на кнопке «Bag» верхней полосы. */
 const badge = (page: Page) =>
   page.evaluate(
-    () => document.querySelector(".bag-button .bag-count")?.textContent ?? "0",
+    () =>
+      document.querySelector(".topbar .bag-button .bag-count")?.textContent ??
+      "0",
   );
 
 async function badgeIs(page: Page, count: number): Promise<string> {
   await page
     .waitForFunction(
       (n) =>
-        (document.querySelector(".bag-button .bag-count")?.textContent ??
-          "0") === String(n),
+        (document.querySelector(".topbar .bag-button .bag-count")
+          ?.textContent ?? "0") === String(n),
       count,
       { timeout: PANEL_WAIT_MS },
     )
@@ -126,15 +129,12 @@ async function badgeIs(page: Page, count: number): Promise<string> {
   return badge(page);
 }
 
-/** Файл скачивания из меню сумки. */
-async function downloaded(page: Page, button: string) {
+/** Файл скачивания по щелчку. */
+async function downloaded(page: Page, click: () => Promise<void>) {
   try {
     const [download] = await Promise.all([
       page.waitForEvent("download", { timeout: PANEL_WAIT_MS * 2 }),
-      page
-        .locator(".bag-menu")
-        .getByRole("button", { name: button, exact: true })
-        .click(),
+      click(),
     ]);
     return {
       name: download.suggestedFilename(),
@@ -173,9 +173,32 @@ async function spriteDrawn(
   return sizes.length === ids.length && sizes.every((s) => s > 0);
 }
 
+/** Карточка сетки по номеру: ячейка (кнопки карточки — её дети), имя иконки. */
+async function card(page: Page, cells: string, n: number) {
+  const cell = page.locator(cells).nth(n);
+  const name =
+    (await cell.locator("a.icon-card-link").getAttribute("data-icon")) ?? "";
+  await cell.hover();
+  return { cell, name };
+}
+
+/** Тексты лицензий наборов — как у /collection?info=true превью API. */
+async function licensesOf(api: string, sets: string[]) {
+  const licenses: Record<string, string> = {};
+  for (const set of sets) {
+    const info = (await (
+      await fetch(`${api}/collection?prefix=${set}&info=true`)
+    ).json()) as { info: { license: { text: string } } };
+    licenses[set] = info.info.license.text;
+  }
+  return licenses;
+}
+
 /**
- * Сумка: режим выбора на странице набора и в поиске, «В сумку» в панели, число в шапке и перезагрузка,
- * меню с клавиатуры, «Убрать», общий цвет, ZIP и спрайт, Esc и фокус, метки аналитики.
+ * Выделение и рюкзак (редизайн, решения владельца 13 ноября 2026): чекбоксы карточек — полоса выделения
+ * и «Download N icons» (ZIP исходных SVG с лицензиями и README), «Cancel Selection», панель при этом не
+ * открывается; «в рюкзак» на карточке и в панели иконки, число на «Bag» и после перезагрузки; рюкзак с
+ * клавиатуры, «Remove», «Clear» и «Undo», общий цвет, ZIP и спрайт, Esc и фокус; карточки поиска; метки.
  */
 export async function bagProblems(
   page: Page,
@@ -186,139 +209,184 @@ export async function bagProblems(
   const no = (ok: boolean, message: string) => {
     if (!ok) problems.push(message);
   };
+  const cells = ".icon-grid > li.icon-cell";
 
-  // Режим «Выбрать несколько»: щелчок кладёт и убирает, панель не открывается.
+  // Выделение: два чекбокса — полоса с числом; панель не открылась.
   await page.goto(`${o.base}/${CATALOG_SET}`);
   await hydrated(page);
   await page
-    .getByRole("button", { name: "Select several", exact: true })
-    .click();
-  const picks = page.locator("button.icon-card-pick");
-  await picks
+    .locator(cells)
     .first()
     .waitFor({ timeout: PANEL_WAIT_MS })
     .catch(() => {});
-  const first = (await picks.nth(0).getAttribute("data-icon")) ?? "";
-  const second = (await picks.nth(1).getAttribute("data-icon")) ?? "";
-  await picks.nth(0).click();
-  await picks.nth(1).click();
+  const picked: string[] = [];
+  for (const n of [0, 1]) {
+    const { cell, name } = await card(page, cells, n);
+    await cell.locator("input.card-check-input").check();
+    picked.push(name);
+  }
+  const status = page.locator(".select-bar .select-count");
+  await status.waitFor({ timeout: PANEL_WAIT_MS }).catch(() => {});
   no(
-    (await badgeIs(page, 2)) === "2",
-    `после двух щелчков в шапке ${await badge(page)}`,
+    ((await status.textContent().catch(() => "")) ?? "").startsWith("2/100"),
+    `полоса выделения: «${await status.textContent().catch(() => "нет")}»`,
   );
   no(
     (await page.locator("aside.icon-panel").count()) === 0,
-    "в режиме выбора щелчок открыл панель",
+    "выбор чекбоксом открыл панель",
+  );
+  // «Download N icons» — ZIP исходных SVG с лицензиями и README (решение владельца 13 ноября 2026).
+  const lucideLicense = await licensesOf(o.api, [CATALOG_SET]);
+  const selected = await downloaded(page, () =>
+    page.locator(".select-bar .select-actions button").first().click(),
+  );
+  if (selected === undefined) {
+    problems.push("ZIP выделенных не скачался");
+  } else {
+    no(selected.name === "iconavo-icons.zip", `имя ZIP — ${selected.name}`);
+    try {
+      problems.push(
+        ...zipProblems(readZip(selected.body), {
+          icons: picked,
+          licenses: lucideLicense,
+        }).map((p) => `выделенные: ${p}`),
+      );
+    } catch (e) {
+      problems.push(`ZIP выделенных не читается: ${(e as Error).message}`);
+    }
+  }
+  await page.locator(".select-bar .select-cancel").click();
+  await page
+    .locator(".select-bar")
+    .waitFor({ state: "detached", timeout: PANEL_WAIT_MS })
+    .catch(() => {});
+  no(
+    (await page.locator(".select-bar").count()) === 0,
+    "«Cancel Selection» не сняла выделение",
+  );
+
+  // «В рюкзак» на карточке и в панели иконки.
+  const third = await card(page, cells, 2);
+  await third.cell.locator("button.card-bag").click();
+  no(
+    (await badgeIs(page, 1)) === "1",
+    "«в рюкзак» на карточке не положила иконку",
   );
   no(
-    (await picks.nth(0).getAttribute("aria-pressed")) === "true",
-    "выбранная карточка не отмечена",
+    (await third.cell
+      .locator("button.card-bag")
+      .getAttribute("aria-pressed")) === "true",
+    "кнопка рюкзака на карточке не отмечена",
   );
-  await picks.nth(0).click();
-  no((await badgeIs(page, 1)) === "1", "повторный щелчок не убрал иконку");
-  await picks.nth(0).click();
-  await badgeIs(page, 2);
-
-  // «В сумку» в панели — после выключения режима карточки снова открывают панель.
-  await page
-    .getByRole("button", { name: "Select several", exact: true })
-    .click();
-  const link = page.locator("a.icon-card-link").nth(2);
-  const third = (await link.getAttribute("data-icon")) ?? "";
-  await link.click();
-  const add = page
-    .locator("aside.icon-panel")
-    .getByRole("button", { name: "Add to bag", exact: true });
+  const fourth = await card(page, cells, 3);
+  await fourth.cell.locator("a.icon-card-link").click();
+  const add = page.locator("aside.icon-panel button.panel-bag");
   await add.waitFor({ timeout: PANEL_WAIT_MS }).catch(() => {});
   await add.click().catch(() => {});
-  no((await badgeIs(page, 3)) === "3", "«В сумку» в панели не положила иконку");
+  no((await badgeIs(page, 2)) === "2", "«В сумку» в панели не положила иконку");
   no(
     (await add.getAttribute("aria-pressed").catch(() => null)) === "true",
-    "«В сумку» не отмечена",
+    "«В сумку» в панели не отмечена",
   );
   await page.goto(`${o.base}/ph?icon=ph:house-bold`);
   await hydrated(page);
-  const addPh = page
-    .locator("aside.icon-panel")
-    .getByRole("button", { name: "Add to bag", exact: true });
+  const addPh = page.locator("aside.icon-panel button.panel-bag");
   await addPh.waitFor({ timeout: PANEL_WAIT_MS }).catch(() => {});
   await addPh.click().catch(() => {});
-  await badgeIs(page, 4);
+  await badgeIs(page, 3);
 
-  // Перезагрузка: сумка на месте.
+  // Перезагрузка: рюкзак на месте.
   await page.reload();
   await hydrated(page);
   no(
-    (await badgeIs(page, 4)) === "4",
-    `после перезагрузки в шапке ${await badge(page)}, а ждали 4`,
+    (await badgeIs(page, 3)) === "3",
+    `после перезагрузки на «Bag» ${await badge(page)}, а ждали 3`,
   );
 
-  // Меню с клавиатуры: Enter на кнопке, фокус внутри, «Убрать».
-  const button = page.locator(".bag-button");
+  // Рюкзак с клавиатуры: Enter на «Bag», фокус в панели, список по порядку.
+  const button = page.locator(".topbar .bag-button");
   await button.focus();
   await page.keyboard.press("Enter");
-  const menu = page.locator(".bag-menu");
-  await menu.waitFor({ timeout: PANEL_WAIT_MS }).catch(() => {});
+  const panel = page.locator("dialog.bag-panel[open]");
+  await panel.waitFor({ timeout: PANEL_WAIT_MS }).catch(() => {});
   no(
     await page.evaluate(
       () =>
         document
-          .querySelector(".bag-menu")
+          .querySelector("dialog.bag-panel")
           ?.contains(document.activeElement) === true,
     ),
-    "фокус не в меню сумки",
+    "фокус не в рюкзаке",
   );
-  const listed = await menu
-    .locator("li[data-icon]")
-    .evaluateAll((items) =>
-      items.map((i) => i.getAttribute("data-icon") ?? ""),
-    );
+  const listed = () =>
+    panel
+      .locator("li.bag-item[data-icon]")
+      .evaluateAll((items) =>
+        items.map((i) => i.getAttribute("data-icon") ?? ""),
+      );
+  const bag = [third.name, fourth.name, "ph:house-bold"];
   no(
-    // Первую убрали и положили снова — она в конце.
-    listed.join(" ") === [second, first, third, "ph:house-bold"].join(" "),
-    `в меню ${listed.join(", ")}`,
+    (await listed()).join(" ") === bag.join(" "),
+    `в рюкзаке ${(await listed()).join(", ")}`,
   );
-  await menu
-    .getByRole("button", { name: `Remove ${first}`, exact: true })
+
+  // «Clear» — сразу пусто и «Undo»; «Undo» возвращает всё.
+  await panel.locator("button.bag-clear").click();
+  await badgeIs(page, 0);
+  await panel
+    .locator("button.bag-undo")
+    .waitFor({ timeout: PANEL_WAIT_MS })
+    .catch(() => {});
+  await panel
+    .locator("button.bag-undo")
+    .click()
+    .catch(() => {});
+  no((await badgeIs(page, 3)) === "3", "«Undo» не вернул рюкзак после «Clear»");
+
+  // «Remove» у первой — две иконки.
+  await panel
+    .getByRole("button", { name: `Remove ${third.name}`, exact: true })
     .click();
-  await badgeIs(page, 3);
-  const bag = [second, third, "ph:house-bold"];
+  await badgeIs(page, 2);
+  const left = [fourth.name, "ph:house-bold"];
 
-  // Общий цвет — когда меню узнало, что в сумке есть монохромные.
-  const custom = menu.getByLabel("Custom color");
-  await custom.waitFor({ timeout: PANEL_WAIT_MS }).catch(() => {});
-  await custom.check().catch(() => {});
+  // Общий цвет (поле Color рюкзака).
+  await panel.locator("input.color-hex").fill(BAG_COLOR.slice(1).toUpperCase());
 
-  // ZIP: файлы, суммы, тексты лицензий и README.
-  const zip = await downloaded(page, "Download ZIP");
+  // ZIP: файлы, суммы, тексты лицензий и README; общий цвет — в SVG.
+  const zip = await downloaded(page, () =>
+    panel.locator("button.bag-download", { hasText: "Download ZIP" }).click(),
+  );
   if (zip === undefined) {
-    problems.push("ZIP не скачался");
+    problems.push("ZIP рюкзака не скачался");
   } else {
     no(zip.name === "iconavo-icons.zip", `имя ZIP — ${zip.name}`);
     try {
       const files = readZip(zip.body);
-      const licenses: Record<string, string> = {};
-      for (const set of [CATALOG_SET, "ph"]) {
-        const info = (await (
-          await fetch(`${o.api}/collection?prefix=${set}&info=true`)
-        ).json()) as { info: { license: { text: string } } };
-        licenses[set] = info.info.license.text;
-      }
-      problems.push(...zipProblems(files, { icons: bag, licenses }));
+      problems.push(
+        ...zipProblems(files, {
+          icons: left,
+          licenses: await licensesOf(o.api, [CATALOG_SET, "ph"]),
+        }),
+      );
       const colored = files
-        .find((f) => f.path === `${second.replace(":", "/")}.svg`)
+        .find((f) => f.path === `${fourth.name.replace(":", "/")}.svg`)
         ?.data.toString("utf8");
       no(
         colored?.includes(BAG_COLOR) === true,
-        "общий цвет сумки не дошёл до SVG в ZIP",
+        "общий цвет рюкзака не дошёл до SVG в ZIP",
       );
     } catch (e) {
-      problems.push(`ZIP не читается: ${(e as Error).message}`);
+      problems.push(`ZIP рюкзака не читается: ${(e as Error).message}`);
     }
   }
 
   // Спрайт: комментарий, символы, ID и каждая <use> рисует иконку.
-  const sprite = await downloaded(page, "Download sprite");
+  const sprite = await downloaded(page, () =>
+    panel
+      .locator("button.bag-download", { hasText: "Download SVG Sprite" })
+      .click(),
+  );
   if (sprite === undefined) {
     problems.push("спрайт не скачался");
   } else {
@@ -334,7 +402,7 @@ export async function bagProblems(
     const symbols = [...text.matchAll(/<symbol id="([^"]+)"/g)].map(
       (m) => m[1] ?? "",
     );
-    const ids = bag.map((n) => n.replace(":", "-"));
+    const ids = left.map((n) => n.replace(":", "-"));
     no(
       symbols.join(" ") === ids.join(" "),
       `символы спрайта: ${symbols.join(", ")}`,
@@ -350,51 +418,57 @@ export async function bagProblems(
     "нет меток аналитики download для ZIP и спрайта",
   );
 
-  // Esc закрывает меню, фокус — на кнопке.
+  // Esc закрывает рюкзак, фокус — на «Bag».
   await page.keyboard.press("Escape");
-  await menu
+  await page
+    .locator("dialog.bag-panel[open]")
     .waitFor({ state: "detached", timeout: PANEL_WAIT_MS })
     .catch(() => {});
-  no((await menu.count()) === 0, "Esc не закрыл меню сумки");
+  no(
+    (await page.locator("dialog.bag-panel[open]").count()) === 0,
+    "Esc не закрыл рюкзак",
+  );
   no(
     await page.evaluate(
-      () => document.activeElement?.classList.contains("bag-button") === true,
+      () =>
+        document.activeElement
+          ?.closest(".topbar")
+          ?.querySelector(".bag-button") === document.activeElement,
     ),
-    "после Esc фокус не на кнопке сумки",
+    "после Esc фокус не на «Bag»",
   );
 
-  // Выдача поиска: тот же режим.
+  // Выдача поиска: те же кнопки карточек.
   await page.goto(`${o.base}/search?q=${SEARCH_QUERY}`);
   await hydrated(page);
+  const results = ".result-grid li.result-cell";
   await page
-    .locator(".result-grid a.icon-card-link")
+    .locator(results)
     .first()
     .waitFor({ timeout: PANEL_WAIT_MS })
     .catch(() => {});
-  await page
-    .getByRole("button", { name: "Select several", exact: true })
-    .click();
-  const results = page.locator(".result-grid button.icon-card-pick");
-  await results
-    .first()
-    .waitFor({ timeout: PANEL_WAIT_MS })
-    .catch(() => {});
-  const names = await results.evaluateAll((cards) =>
-    cards.map((c) => c.getAttribute("data-icon") ?? ""),
+  const names = await page
+    .locator(`${results} a.icon-card-link`)
+    .evaluateAll((cards) =>
+      cards.map((c) => c.getAttribute("data-icon") ?? ""),
+    );
+  const fresh = Math.max(
+    names.findIndex((n) => !left.includes(n)),
+    0,
   );
-  const fresh = names.findIndex((n) => !bag.includes(n));
-  await results
-    .nth(Math.max(fresh, 0))
+  const result = await card(page, results, fresh);
+  await result.cell
+    .locator("button.card-bag")
     .click()
     .catch(() => {});
   no(
-    (await badgeIs(page, 4)) === "4",
-    "в поиске режим выбора не положил иконку",
+    (await badgeIs(page, 3)) === "3",
+    "в поиске «в рюкзак» на карточке не положила иконку",
   );
   return problems;
 }
 
-/** Строка «Сумка»: сценарий, CSP и консоль, axe с открытым меню в обеих темах, телефон. */
+/** Строка «Рюкзак»: сценарий, CSP и консоль, axe с открытым рюкзаком в обеих темах, телефон. */
 export async function checkBag(
   browser: Browser,
   o: BagCheckOptions,
@@ -432,16 +506,16 @@ export async function checkBag(
     await recordViolations(p);
     await p.goto(`${o.base}/${CATALOG_SET}`);
     await hydrated(p);
-    await p.locator(".bag-button").click();
+    await p.locator(".topbar .bag-button").click();
     await p
-      .locator(".bag-menu li[data-icon]")
+      .locator("dialog.bag-panel li.bag-item[data-icon]")
       .nth(1)
       .waitFor({ timeout: PANEL_WAIT_MS })
       .catch(() => {});
     if (viewport === PHONE) {
       const wide = await p.evaluate(() => {
         const box = document
-          .querySelector(".bag-menu")
+          .querySelector("dialog.bag-panel")
           ?.getBoundingClientRect();
         return (
           document.documentElement.scrollWidth > innerWidth ||
@@ -450,17 +524,17 @@ export async function checkBag(
           box.left < 0
         );
       });
-      if (wide) problems.push("на телефоне меню сумки шире экрана");
-      shots.push({ title: "Сумка на телефоне", png: await shot(p, pageSeen) });
+      if (wide) problems.push("на телефоне рюкзак шире экрана");
+      shots.push({ title: "Рюкзак на телефоне", png: await shot(p, pageSeen) });
     } else {
       await runAxe(
         p,
         await axe(),
-        `/${CATALOG_SET}, меню сумки, ${scheme}`,
+        `/${CATALOG_SET}, рюкзак, ${scheme}`,
         axePages,
       );
       if (scheme === "light") {
-        shots.push({ title: "Меню сумки", png: await shot(p, pageSeen) });
+        shots.push({ title: "Рюкзак", png: await shot(p, pageSeen) });
       }
     }
     problems.push(...(await violations(p)).map((x) => `CSP: ${x}`));
@@ -470,7 +544,7 @@ export async function checkBag(
   if (access.ok === false) problems.push(`axe: ${access.note}`);
   return problems.length === 0
     ? pass(
-        "режим выбора в сетке и поиске, «В сумку» в панели, число в шапке после перезагрузки; меню с клавиатуры, «Убрать», Esc; ZIP с текстами лицензий и README, спрайт рисует; axe в обеих темах, телефон",
+        "выделение — «Download N icons» (ZIP с лицензиями) и «Cancel Selection»; «в рюкзак» на карточке, в панели и в поиске, число на «Bag» после перезагрузки; рюкзак с клавиатуры, «Clear» и «Undo», «Remove», общий цвет; ZIP с текстами лицензий и README, спрайт рисует; Esc; axe в обеих темах, телефон",
       )
     : fail(problems.slice(0, 4).join("; "));
 }
