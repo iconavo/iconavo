@@ -504,6 +504,7 @@
         "selected",
         "okay",
         "ok",
+        "enabled",
         "reminder",
         "wake-up"
       ]
@@ -792,6 +793,9 @@
         ]
       },
       "tags": [
+        "center",
+        "centre",
+        "middle",
         "items",
         "flex",
         "justify"
@@ -831,6 +835,9 @@
         ]
       },
       "tags": [
+        "center",
+        "centre",
+        "middle",
         "items",
         "flex",
         "justify"
@@ -962,6 +969,9 @@
         ]
       },
       "tags": [
+        "center",
+        "centre",
+        "middle",
         "items",
         "flex",
         "justify",
@@ -1096,6 +1106,8 @@
       },
       "tags": [
         "center",
+        "centre",
+        "middle",
         "items",
         "flex",
         "justify"
@@ -1414,6 +1426,9 @@
         ]
       },
       "tags": [
+        "center",
+        "centre",
+        "middle",
         "items",
         "flex",
         "justify",
@@ -1549,6 +1564,8 @@
       },
       "tags": [
         "center",
+        "centre",
+        "middle",
         "items",
         "flex",
         "justify",
@@ -2474,6 +2491,10 @@
         "deny",
         "decline",
         "refuse",
+        "disabled",
+        "failed",
+        "unavailable",
+        "error",
         "junk"
       ]
     },
@@ -3291,7 +3312,7 @@
         "reverse",
         "download",
         "expand",
-        "fold"
+        "unfold"
       ]
     },
     "arrow-down-left": {
@@ -3835,7 +3856,7 @@
         "previous",
         "<-",
         "expand",
-        "fold",
+        "unfold",
         "<-|"
       ]
     },
@@ -4043,7 +4064,7 @@
         "->",
         "export",
         "expand",
-        "fold",
+        "unfold",
         "|->"
       ]
     },
@@ -4576,7 +4597,7 @@
         "version control",
         "push",
         "expand",
-        "fold"
+        "unfold"
       ]
     },
     "arrow-up-left": {
@@ -4899,6 +4920,74 @@
         "filter",
         "alphabetical",
         "reverse"
+      ]
+    },
+    "arrows-from-axis-dashed-horizontal": {
+      "fingerprint": "d6d146bc6142",
+      "tags": [
+        "dashed",
+        "dotted",
+        "broken line",
+        "expand",
+        "unfold"
+      ]
+    },
+    "arrows-from-axis-dashed-vertical": {
+      "fingerprint": "4674ecf94a60",
+      "tags": [
+        "dashed",
+        "dotted",
+        "broken line",
+        "expand",
+        "unfold"
+      ]
+    },
+    "arrows-from-axis-horizontal": {
+      "fingerprint": "75df0603d8a7",
+      "tags": [
+        "expand",
+        "unfold"
+      ]
+    },
+    "arrows-from-axis-vertical": {
+      "fingerprint": "5b4f5f5544a0",
+      "tags": [
+        "expand",
+        "unfold"
+      ]
+    },
+    "arrows-to-axis-dashed-horizontal": {
+      "fingerprint": "d33e02659fb3",
+      "tags": [
+        "dashed",
+        "dotted",
+        "broken line",
+        "collapse",
+        "fold"
+      ]
+    },
+    "arrows-to-axis-dashed-vertical": {
+      "fingerprint": "2d8b958cdb90",
+      "tags": [
+        "dashed",
+        "dotted",
+        "broken line",
+        "collapse",
+        "fold"
+      ]
+    },
+    "arrows-to-axis-horizontal": {
+      "fingerprint": "9a185e759edd",
+      "tags": [
+        "collapse",
+        "fold"
+      ]
+    },
+    "arrows-to-axis-vertical": {
+      "fingerprint": "feb0fb7f9014",
+      "tags": [
+        "collapse",
+        "fold"
       ]
     },
     "arrows-up-from-line": {
@@ -5403,10 +5492,12 @@
         "deny",
         "decline",
         "refuse",
+        "disabled",
+        "failed",
+        "unavailable",
+        "error",
         "mute",
         "silence",
-        "disabled",
-        "unavailable",
         "equalizer",
         "equaliser",
         "waveform"
@@ -6046,6 +6137,7 @@
         "selected",
         "okay",
         "ok",
+        "enabled",
         "premium",
         "vip",
         "exclusive",
@@ -6961,6 +7053,10 @@
         "deny",
         "decline",
         "refuse",
+        "disabled",
+        "failed",
+        "unavailable",
+        "error",
         "lost"
       ]
     },
@@ -7534,6 +7630,7 @@
         "selected",
         "okay",
         "ok",
+        "enabled",
         "banknote",
         "document",
         "verification",
@@ -7605,8 +7702,10 @@
         "deny",
         "decline",
         "refuse",
-        "error",
+        "disabled",
         "failed",
+        "unavailable",
+        "error",
         "rejected",
         "declined",
         "lost"
@@ -8741,7 +8840,8 @@
         "todo",
         "selected",
         "okay",
-        "ok"
+        "ok",
+        "enabled"
       ]
     },
     "bell-dot": {
@@ -10637,6 +10737,7 @@
         "selected",
         "okay",
         "ok",
+        "enabled",
         "read",
         "authored",
         "published",
@@ -11651,6 +11752,7 @@
         "selected",
         "okay",
         "ok",
+        "enabled",
         "read",
         "authored",
         "published",
@@ -12392,6 +12494,10 @@
         "deny",
         "decline",
         "refuse",
+        "disabled",
+        "failed",
+        "unavailable",
+        "error",
         "code",
         "coding",
         "version control",
@@ -12523,7 +12629,8 @@
         "todo",
         "selected",
         "okay",
-        "ok"
+        "ok",
+        "enabled"
       ]
     },
     "bookmark-minus": {
@@ -12785,7 +12892,11 @@
         "×",
         "deny",
         "decline",
-        "refuse"
+        "refuse",
+        "disabled",
+        "failed",
+        "unavailable",
+        "error"
       ]
     },
     "boom-box": {
@@ -12867,7 +12978,48 @@
         "robot",
         "ai",
         "chat",
-        "assistant"
+        "assistant",
+        "chatbot",
+        "automation",
+        "machine-learning",
+        "ai-assistant",
+        "intelligent-assistant",
+        "agent"
+      ]
+    },
+    "bot-check": {
+      "fingerprint": "1c41b158dd7b",
+      "tags": [
+        "robot",
+        "ai",
+        "chat",
+        "assistant",
+        "chatbot",
+        "automation",
+        "machine-learning",
+        "ai-assistant",
+        "intelligent-assistant",
+        "agent",
+        "checkmark",
+        "done",
+        "completed",
+        "finished",
+        "successful",
+        "confirmed",
+        "verified",
+        "validated",
+        "approved",
+        "accepted",
+        "correct",
+        "valid",
+        "ticked",
+        "task",
+        "todo",
+        "selected",
+        "okay",
+        "ok",
+        "enabled",
+        "connected"
       ]
     },
     "bot-message-square": {
@@ -12905,7 +13057,40 @@
         "robot",
         "ai",
         "chat",
-        "assistant"
+        "assistant",
+        "chatbot",
+        "automation",
+        "machine-learning",
+        "ai-assistant",
+        "intelligent-assistant",
+        "agent"
+      ]
+    },
+    "bot-minus": {
+      "fingerprint": "bd08d11dcd7b",
+      "tags": [
+        "robot",
+        "ai",
+        "chat",
+        "assistant",
+        "chatbot",
+        "automation",
+        "machine-learning",
+        "ai-assistant",
+        "intelligent-assistant",
+        "agent",
+        "minus",
+        "remove",
+        "delete",
+        "cancel",
+        "erase",
+        "subtract",
+        "reduce",
+        "clear",
+        "exclude",
+        "-",
+        "integration",
+        "deactivate"
       ]
     },
     "bot-off": {
@@ -12946,6 +13131,12 @@
         "ai",
         "chat",
         "assistant",
+        "chatbot",
+        "automation",
+        "machine-learning",
+        "ai-assistant",
+        "intelligent-assistant",
+        "agent",
         "off",
         "disable",
         "hide",
@@ -12970,6 +13161,75 @@
         "strikethrough",
         "crossed out",
         "diagonal line"
+      ]
+    },
+    "bot-plus": {
+      "fingerprint": "c07aaf60c705",
+      "tags": [
+        "robot",
+        "ai",
+        "chat",
+        "assistant",
+        "chatbot",
+        "automation",
+        "machine-learning",
+        "ai-assistant",
+        "intelligent-assistant",
+        "agent",
+        "plus",
+        "add",
+        "new",
+        "create",
+        "+",
+        "increase",
+        "increment",
+        "extra",
+        "insert",
+        "addition",
+        "added"
+      ]
+    },
+    "bot-x": {
+      "fingerprint": "dd97b642752d",
+      "tags": [
+        "robot",
+        "ai",
+        "chat",
+        "assistant",
+        "chatbot",
+        "automation",
+        "machine-learning",
+        "ai-assistant",
+        "intelligent-assistant",
+        "agent",
+        "x",
+        "remove",
+        "delete",
+        "cancel",
+        "clear",
+        "close",
+        "discard",
+        "dismiss",
+        "erase",
+        "abort",
+        "reject",
+        "canceled",
+        "cancelled",
+        "cancellation",
+        "cross",
+        "times",
+        "ex",
+        "×",
+        "deny",
+        "decline",
+        "refuse",
+        "disabled",
+        "failed",
+        "unavailable",
+        "error",
+        "disconnected",
+        "offline",
+        "integration"
       ]
     },
     "bottle-wine": {
@@ -15475,6 +15735,7 @@
         "selected",
         "okay",
         "ok",
+        "enabled",
         "subscribe",
         "schedule",
         "today"
@@ -15540,6 +15801,7 @@
         "selected",
         "okay",
         "ok",
+        "enabled",
         "subscribe",
         "schedule",
         "today"
@@ -16459,6 +16721,10 @@
         "deny",
         "decline",
         "refuse",
+        "disabled",
+        "failed",
+        "unavailable",
+        "error",
         "busy"
       ]
     },
@@ -16525,6 +16791,10 @@
         "deny",
         "decline",
         "refuse",
+        "disabled",
+        "failed",
+        "unavailable",
+        "error",
         "busy"
       ]
     },
@@ -17429,6 +17699,170 @@
         "contractual",
         "circuit board",
         "chip"
+      ]
+    },
+    "carets-from-axis-dashed-horizontal": {
+      "fingerprint": "93cefc0297ba",
+      "tags": [
+        "dashed",
+        "dotted",
+        "broken line",
+        "triangle",
+        "expand",
+        "unfold",
+        "reflect",
+        "flip",
+        "mirror",
+        "alignment"
+      ]
+    },
+    "carets-from-axis-dashed-vertical": {
+      "fingerprint": "7f5f6a6478d2",
+      "tags": [
+        "dashed",
+        "dotted",
+        "broken line",
+        "triangle",
+        "expand",
+        "unfold",
+        "reflect",
+        "flip",
+        "mirror",
+        "alignment"
+      ]
+    },
+    "carets-from-axis-horizontal": {
+      "fingerprint": "bcab1b758df2",
+      "tags": [
+        "triangle",
+        "expand",
+        "unfold",
+        "reflect",
+        "flip",
+        "mirror",
+        "alignment"
+      ]
+    },
+    "carets-from-axis-vertical": {
+      "fingerprint": "8002f6f49d0b",
+      "tags": [
+        "triangle",
+        "expand",
+        "unfold",
+        "reflect",
+        "flip",
+        "mirror",
+        "alignment"
+      ]
+    },
+    "carets-to-axis-dashed-horizontal": {
+      "en": {
+        "description": "Two triangles pointing toward each other across a dashed horizontal line, typically representing mirroring or reflection across an axis.",
+        "synonyms": [
+          "reflect",
+          "mirror",
+          "flip",
+          "reflection",
+          "alignment",
+          "dashed line",
+          "symmetry",
+          "axis",
+          "vertical flip"
+        ]
+      },
+      "fingerprint": "f92151b9a75b",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Два треугольника, направленных друг к другу, с пунктирной горизонтальной линией между ними; обозначает отражение или зеркальное расположение относительно оси.",
+        "synonyms": [
+          "отразить",
+          "зеркало",
+          "зеркальное отражение",
+          "выравнивание",
+          "пунктир",
+          "пунктирная линия",
+          "симметрия",
+          "перевернуть",
+          "ось"
+        ]
+      },
+      "tags": [
+        "dashed",
+        "dotted",
+        "broken line",
+        "collapse",
+        "fold",
+        "reflect",
+        "flip",
+        "mirror",
+        "alignment"
+      ]
+    },
+    "carets-to-axis-dashed-vertical": {
+      "en": {
+        "description": "Two opposite triangles face away from each other across a dashed vertical centerline, symbolizing mirroring or reflection.",
+        "synonyms": [
+          "mirror",
+          "flip horizontal",
+          "symmetry",
+          "reflect",
+          "align center",
+          "dotted line",
+          "divider",
+          "mirror image",
+          "flip"
+        ]
+      },
+      "fingerprint": "cd04119b1bd7",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Два треугольника-стрелки смотрят в противоположные стороны по обе стороны от пунктирной вертикальной линии, обозначая отражение или зеркальное отображение.",
+        "synonyms": [
+          "отразить",
+          "зеркало",
+          "зеркально",
+          "симметрия",
+          "выравнивание",
+          "пунктир",
+          "отражение",
+          "центральная линия",
+          "перевернуть"
+        ]
+      },
+      "tags": [
+        "dashed",
+        "dotted",
+        "broken line",
+        "collapse",
+        "fold",
+        "reflect",
+        "flip",
+        "mirror",
+        "alignment"
+      ]
+    },
+    "carets-to-axis-horizontal": {
+      "fingerprint": "6ae63fe0a38d",
+      "tags": [
+        "triangle",
+        "collapse",
+        "fold",
+        "reflect",
+        "flip",
+        "mirror",
+        "alignment"
+      ]
+    },
+    "carets-to-axis-vertical": {
+      "fingerprint": "6413e9997946",
+      "tags": [
+        "triangle",
+        "collapse",
+        "fold",
+        "reflect",
+        "flip",
+        "mirror",
+        "alignment"
       ]
     },
     "carrot": {
@@ -19541,7 +19975,8 @@
         "todo",
         "selected",
         "okay",
-        "ok"
+        "ok",
+        "enabled"
       ]
     },
     "check-check": {
@@ -19592,6 +20027,7 @@
         "selected",
         "okay",
         "ok",
+        "enabled",
         "received",
         "double"
       ]
@@ -19647,7 +20083,8 @@
         "todo",
         "selected",
         "okay",
-        "ok"
+        "ok",
+        "enabled"
       ]
     },
     "cheese": {
@@ -20451,6 +20888,40 @@
         "fold"
       ]
     },
+    "chevrons-from-axis-dashed-horizontal": {
+      "fingerprint": "ac1780a030e7",
+      "tags": [
+        "dashed",
+        "dotted",
+        "broken line",
+        "expand",
+        "unfold"
+      ]
+    },
+    "chevrons-from-axis-dashed-vertical": {
+      "fingerprint": "534d2ff2ea78",
+      "tags": [
+        "dashed",
+        "dotted",
+        "broken line",
+        "expand",
+        "unfold"
+      ]
+    },
+    "chevrons-from-axis-horizontal": {
+      "fingerprint": "d8638daa8351",
+      "tags": [
+        "expand",
+        "unfold"
+      ]
+    },
+    "chevrons-from-axis-vertical": {
+      "fingerprint": "0a1387757dc2",
+      "tags": [
+        "expand",
+        "unfold"
+      ]
+    },
     "chevrons-left": {
       "en": {
         "description": "Two stacked chevron arrows pointing left, usually meaning rewind, go back, or jump to the start.",
@@ -20720,6 +21191,40 @@
         "fold"
       ]
     },
+    "chevrons-to-axis-dashed-horizontal": {
+      "fingerprint": "896562101f8f",
+      "tags": [
+        "dashed",
+        "dotted",
+        "broken line",
+        "collapse",
+        "fold"
+      ]
+    },
+    "chevrons-to-axis-dashed-vertical": {
+      "fingerprint": "9b0acda11f5b",
+      "tags": [
+        "dashed",
+        "dotted",
+        "broken line",
+        "collapse",
+        "fold"
+      ]
+    },
+    "chevrons-to-axis-horizontal": {
+      "fingerprint": "749a315746e6",
+      "tags": [
+        "collapse",
+        "fold"
+      ]
+    },
+    "chevrons-to-axis-vertical": {
+      "fingerprint": "08b87acff5ec",
+      "tags": [
+        "collapse",
+        "fold"
+      ]
+    },
     "chevrons-up": {
       "en": {
         "description": "Two stacked upward chevrons pointing up; usually means scroll to top, increase, or move upward.",
@@ -20965,6 +21470,25 @@
         "crossed out",
         "diagonal line",
         "no-smoking"
+      ]
+    },
+    "cinema": {
+      "fingerprint": "bd7829a8afc5",
+      "tags": [
+        "movie",
+        "theater",
+        "theatre",
+        "screen",
+        "projector",
+        "seats",
+        "film",
+        "watching",
+        "streaming",
+        "entertainment",
+        "auditorium",
+        "show times",
+        "tickets",
+        "venue"
       ]
     },
     "circle": {
@@ -21420,6 +21944,24 @@
         "exit"
       ]
     },
+    "circle-bounce": {
+      "fingerprint": "a351cf9da7cd",
+      "tags": [
+        "ball",
+        "trajectory",
+        "rebound",
+        "motion",
+        "physics",
+        "animation",
+        "easing",
+        "analytics",
+        "collision",
+        "impact",
+        "curve",
+        "arc",
+        "kinematics"
+      ]
+    },
     "circle-check": {
       "en": {
         "description": "A checkmark inside a circle, usually meaning success, confirmation, or a completed task.",
@@ -21469,7 +22011,8 @@
         "todo",
         "selected",
         "okay",
-        "ok"
+        "ok",
+        "enabled"
       ]
     },
     "circle-check-big": {
@@ -21523,7 +22066,8 @@
         "todo",
         "selected",
         "okay",
-        "ok"
+        "ok",
+        "enabled"
       ]
     },
     "circle-chevron-down": {
@@ -22103,6 +22647,7 @@
         "selected",
         "okay",
         "ok",
+        "enabled",
         "changes",
         "revision",
         "reapproval",
@@ -22631,6 +23176,7 @@
         "selected",
         "okay",
         "ok",
+        "enabled",
         "pending",
         "progress",
         "processing",
@@ -24358,6 +24904,20 @@
         "sticker"
       ]
     },
+    "circle-person-arms-spread": {
+      "fingerprint": "1cbcf24ee85b",
+      "tags": [
+        "universal access",
+        "accessibility",
+        "disability",
+        "disabled",
+        "dda",
+        "inclusive",
+        "universal",
+        "human",
+        "people"
+      ]
+    },
     "circle-pile": {
       "en": {
         "description": "It shows six identical circles arranged in a pyramid pile, representing a stack, group, or stored collection of items.",
@@ -25134,6 +25694,9 @@
         "deny",
         "decline",
         "refuse",
+        "disabled",
+        "failed",
+        "unavailable",
         "error",
         "incorrect",
         "wrong",
@@ -25500,6 +26063,7 @@
         "selected",
         "okay",
         "ok",
+        "enabled",
         "copied",
         "pasted",
         "result",
@@ -26000,7 +26564,11 @@
         "×",
         "deny",
         "decline",
-        "refuse"
+        "refuse",
+        "disabled",
+        "failed",
+        "unavailable",
+        "error"
       ]
     },
     "clock": {
@@ -27001,7 +27569,8 @@
         "todo",
         "selected",
         "okay",
-        "ok"
+        "ok",
+        "enabled"
       ]
     },
     "clock-exclamation-point": {
@@ -27372,6 +27941,7 @@
         "selected",
         "okay",
         "ok",
+        "enabled",
         "sync",
         "network",
         "saved",
@@ -29348,7 +29918,8 @@
         "todo",
         "selected",
         "okay",
-        "ok"
+        "ok",
+        "enabled"
       ]
     },
     "copy-minus": {
@@ -29568,6 +30139,10 @@
         "deny",
         "decline",
         "refuse",
+        "disabled",
+        "failed",
+        "unavailable",
+        "error",
         "multiply",
         "multiplication"
       ]
@@ -30232,6 +30807,7 @@
         "selected",
         "okay",
         "ok",
+        "enabled",
         "debit",
         "banking",
         "finance",
@@ -30481,6 +31057,10 @@
         "deny",
         "decline",
         "refuse",
+        "disabled",
+        "failed",
+        "unavailable",
+        "error",
         "debit",
         "banking",
         "finance",
@@ -30492,9 +31072,7 @@
         "cardholder",
         "declined",
         "rejected",
-        "failed",
-        "invalid",
-        "error"
+        "invalid"
       ]
     },
     "croissant": {
@@ -31330,7 +31908,8 @@
         "todo",
         "selected",
         "okay",
-        "ok"
+        "ok",
+        "enabled"
       ]
     },
     "database-cog": {
@@ -31720,8 +32299,10 @@
         "deny",
         "decline",
         "refuse",
-        "error",
+        "disabled",
         "failed",
+        "unavailable",
+        "error",
         "invalid",
         "rejected",
         "denied",
@@ -33170,6 +33751,17 @@
         "puppy",
         "hound",
         "canine"
+      ]
+    },
+    "doghouse": {
+      "fingerprint": "d04c5479b496",
+      "tags": [
+        "kennel",
+        "pet",
+        "shelter",
+        "canine",
+        "puppy",
+        "backyard"
       ]
     },
     "dollar-sign": {
@@ -35604,6 +36196,8 @@
         ]
       },
       "tags": [
+        "expand",
+        "unfold",
         "scale",
         "fullscreen",
         "maximize",
@@ -37104,7 +37698,8 @@
         "todo",
         "selected",
         "okay",
-        "ok"
+        "ok",
+        "enabled"
       ]
     },
     "file-check-corner": {
@@ -37158,7 +37753,8 @@
         "todo",
         "selected",
         "okay",
-        "ok"
+        "ok",
+        "enabled"
       ]
     },
     "file-clock": {
@@ -39186,6 +39782,10 @@
         "deny",
         "decline",
         "refuse",
+        "disabled",
+        "failed",
+        "unavailable",
+        "error",
         "lost",
         "404",
         "not found",
@@ -39248,6 +39848,10 @@
         "deny",
         "decline",
         "refuse",
+        "disabled",
+        "failed",
+        "unavailable",
+        "error",
         "lost",
         "404",
         "not found",
@@ -40356,82 +40960,6 @@
         "dashed"
       ]
     },
-    "fold-horizontal": {
-      "en": {
-        "description": "A dashed vertical line with two arrows pointing toward it from both sides, usually meaning collapse or fold horizontally.",
-        "synonyms": [
-          "collapse",
-          "fold",
-          "squeeze",
-          "compress",
-          "shrink",
-          "arrows inward",
-          "merge",
-          "narrow",
-          "dashed line"
-        ]
-      },
-      "fingerprint": "8e61a0f26cbd",
-      "promptVersion": 1,
-      "ru": {
-        "description": "Вертикальная пунктирная линия с двумя стрелками, направленными к ней с двух сторон; обозначает сворачивание или сжатие по горизонтали.",
-        "synonyms": [
-          "сложить",
-          "свернуть",
-          "сжать",
-          "схлопнуть",
-          "сведение",
-          "стрелки внутрь",
-          "сжатие",
-          "уменьшить",
-          "пунктир"
-        ]
-      },
-      "tags": [
-        "arrow",
-        "collapse",
-        "fold",
-        "vertical",
-        "dashed"
-      ]
-    },
-    "fold-vertical": {
-      "en": {
-        "description": "Two arrows point toward a dashed horizontal line in the center, usually meaning collapse or fold vertically.",
-        "synonyms": [
-          "collapse",
-          "fold",
-          "squeeze",
-          "shrink",
-          "vertical fold",
-          "arrows together",
-          "compress",
-          "minimize"
-        ]
-      },
-      "fingerprint": "b945e22355ad",
-      "promptVersion": 1,
-      "ru": {
-        "description": "Две стрелки указывают к пунктирной линии по центру, так обозначается сворачивание или схлопывание по вертикали.",
-        "synonyms": [
-          "свернуть",
-          "сложить",
-          "схлопнуть",
-          "сжать",
-          "вертикально",
-          "стрелки к центру",
-          "сложить вертикально",
-          "уменьшить"
-        ]
-      },
-      "tags": [
-        "arrow",
-        "collapse",
-        "fold",
-        "vertical",
-        "dashed"
-      ]
-    },
     "folder": {
       "en": {
         "description": "Outlined folder shape with a rounded tab at the top; represents a folder or directory holding files.",
@@ -40606,7 +41134,8 @@
         "todo",
         "selected",
         "okay",
-        "ok"
+        "ok",
+        "enabled"
       ]
     },
     "folder-clock": {
@@ -42003,7 +42532,11 @@
         "×",
         "deny",
         "decline",
-        "refuse"
+        "refuse",
+        "disabled",
+        "failed",
+        "unavailable",
+        "error"
       ]
     },
     "folders": {
@@ -42328,6 +42861,7 @@
       },
       "tags": [
         "expand",
+        "unfold",
         "zoom",
         "preview",
         "focus",
@@ -42476,7 +43010,11 @@
         "×",
         "deny",
         "decline",
-        "refuse"
+        "refuse",
+        "disabled",
+        "failed",
+        "unavailable",
+        "error"
       ]
     },
     "galaxy": {
@@ -44445,6 +44983,7 @@
         "selected",
         "okay",
         "ok",
+        "enabled",
         "web",
         "available",
         "online",
@@ -44806,6 +45345,10 @@
         "deny",
         "decline",
         "refuse",
+        "disabled",
+        "failed",
+        "unavailable",
+        "error",
         "offline",
         "disconnected",
         "no connection",
@@ -45277,6 +45820,7 @@
         "selected",
         "okay",
         "ok",
+        "enabled",
         "data"
       ]
     },
@@ -45411,6 +45955,10 @@
         "deny",
         "decline",
         "refuse",
+        "disabled",
+        "failed",
+        "unavailable",
+        "error",
         "data"
       ]
     },
@@ -46429,6 +46977,34 @@
         "meal",
         "course",
         "luxury"
+      ]
+    },
+    "hand-truck": {
+      "fingerprint": "8be9cb0b7d74",
+      "tags": [
+        "dolly",
+        "trolley",
+        "cart",
+        "delivery",
+        "moving",
+        "warehouse",
+        "logistics",
+        "shipping",
+        "package",
+        "transport",
+        "box",
+        "storage",
+        "packed",
+        "inventory",
+        "tracking",
+        "order",
+        "product",
+        "barrow",
+        "cargo",
+        "freight",
+        "hauling",
+        "loading",
+        "unloading"
       ]
     },
     "handbag": {
@@ -47863,6 +48439,10 @@
         "deny",
         "decline",
         "refuse",
+        "disabled",
+        "failed",
+        "unavailable",
+        "error",
         "unlike",
         "unfavorite"
       ]
@@ -48516,6 +49096,76 @@
         "residence",
         "architecture",
         "homepage"
+      ]
+    },
+    "house-arrow-left": {
+      "fingerprint": "91aee8555dfd",
+      "tags": [
+        "home",
+        "living",
+        "building",
+        "residence",
+        "architecture",
+        "homepage",
+        "direction",
+        "movement",
+        "horizontal",
+        "leftward",
+        "leftwards",
+        "west",
+        "enter",
+        "entry",
+        "check-in",
+        "arrival",
+        "ingress",
+        "sign in",
+        "automation",
+        "check in",
+        "arriving",
+        "sign-in",
+        "signin",
+        "login",
+        "presence",
+        "presence detection",
+        "smart home",
+        "iot",
+        "geofencing",
+        "access",
+        "welcome"
+      ]
+    },
+    "house-arrow-right": {
+      "fingerprint": "f6f9a30e5836",
+      "tags": [
+        "home",
+        "living",
+        "building",
+        "residence",
+        "architecture",
+        "homepage",
+        "direction",
+        "movement",
+        "horizontal",
+        "rightward",
+        "rightwards",
+        "east",
+        "exit",
+        "checkout",
+        "departure",
+        "egress",
+        "sign out",
+        "automation",
+        "rental",
+        "booking",
+        "vacating",
+        "move-out",
+        "guest",
+        "tenant",
+        "property management",
+        "presence detection",
+        "away mode",
+        "security",
+        "logout"
       ]
     },
     "house-cog": {
@@ -51026,7 +51676,8 @@
         "todo",
         "selected",
         "okay",
-        "ok"
+        "ok",
+        "enabled"
       ]
     },
     "laser": {
@@ -54701,6 +55352,7 @@
         "selected",
         "okay",
         "ok",
+        "enabled",
         "list",
         "bom",
         "checklist"
@@ -54756,6 +55408,7 @@
         "selected",
         "okay",
         "ok",
+        "enabled",
         "items",
         "pending",
         "checklist"
@@ -54811,7 +55464,9 @@
         "page up",
         "items",
         "collapse",
+        "fold",
         "expand",
+        "unfold",
         "details",
         "disclosure",
         "show",
@@ -54819,9 +55474,7 @@
         "toggle",
         "accordion",
         "more",
-        "less",
-        "fold",
-        "unfold"
+        "less"
       ]
     },
     "list-chevrons-up-down": {
@@ -54874,7 +55527,9 @@
         "page down",
         "items",
         "collapse",
+        "fold",
         "expand",
+        "unfold",
         "details",
         "disclosure",
         "show",
@@ -54882,9 +55537,7 @@
         "toggle",
         "accordion",
         "more",
-        "less",
-        "fold",
-        "unfold"
+        "less"
       ]
     },
     "list-clock": {
@@ -54978,7 +55631,9 @@
       "tags": [
         "items",
         "collapse",
+        "fold",
         "expand",
+        "unfold",
         "details",
         "disclosure",
         "show",
@@ -54986,9 +55641,7 @@
         "toggle",
         "accordion",
         "more",
-        "less",
-        "fold",
-        "unfold"
+        "less"
       ]
     },
     "list-end": {
@@ -55718,6 +56371,10 @@
         "deny",
         "decline",
         "refuse",
+        "disabled",
+        "failed",
+        "unavailable",
+        "error",
         "playlist",
         "subtract",
         "unqueue"
@@ -55809,38 +56466,7 @@
       ]
     },
     "loader-pinwheel": {
-      "en": {
-        "description": "A black circle with curved white swirling blades like a pinwheel; usually means loading or a process in progress.",
-        "synonyms": [
-          "loading",
-          "spinner",
-          "wait",
-          "busy",
-          "throbber",
-          "progress indicator",
-          "spinning",
-          "beach ball",
-          "freeze",
-          "pinwheel"
-        ]
-      },
-      "fingerprint": "f06e41a532c8",
-      "promptVersion": 1,
-      "ru": {
-        "description": "Черный круг с закрученными белыми лепестками-спиралями; обычно означает загрузку или ожидание процесса.",
-        "synonyms": [
-          "загрузка",
-          "ожидание",
-          "крутилка",
-          "вращение",
-          "спиннер",
-          "прогресс",
-          "зависание",
-          "пинвил",
-          "подождите",
-          "занято"
-        ]
-      },
+      "fingerprint": "b31c204ee2f6",
       "tags": [
         "loading",
         "wait",
@@ -56585,6 +57211,7 @@
         "selected",
         "okay",
         "ok",
+        "enabled",
         "subscribe",
         "delivered",
         "read"
@@ -57153,7 +57780,11 @@
         "×",
         "deny",
         "decline",
-        "refuse"
+        "refuse",
+        "disabled",
+        "failed",
+        "unavailable",
+        "error"
       ]
     },
     "mailbox": {
@@ -57466,6 +58097,7 @@
         "selected",
         "okay",
         "ok",
+        "enabled",
         "added"
       ]
     },
@@ -57523,6 +58155,7 @@
         "selected",
         "okay",
         "ok",
+        "enabled",
         "added"
       ]
     },
@@ -58027,7 +58660,11 @@
         "×",
         "deny",
         "decline",
-        "refuse"
+        "refuse",
+        "disabled",
+        "failed",
+        "unavailable",
+        "error"
       ]
     },
     "map-pin-x-inside": {
@@ -58088,7 +58725,11 @@
         "×",
         "deny",
         "decline",
-        "refuse"
+        "refuse",
+        "disabled",
+        "failed",
+        "unavailable",
+        "error"
       ]
     },
     "map-pinned": {
@@ -58760,6 +59401,7 @@
       "tags": [
         "fullscreen",
         "expand",
+        "unfold",
         "dashed"
       ]
     },
@@ -58797,6 +59439,7 @@
       "tags": [
         "fullscreen",
         "expand",
+        "unfold",
         "dashed",
         "arrows"
       ]
@@ -59165,6 +59808,7 @@
         "selected",
         "okay",
         "ok",
+        "enabled",
         "moderate"
       ]
     },
@@ -59321,6 +59965,7 @@
         "selected",
         "okay",
         "ok",
+        "enabled",
         "pending",
         "provisional",
         "verification",
@@ -59552,6 +60197,10 @@
         "deny",
         "decline",
         "refuse",
+        "disabled",
+        "failed",
+        "unavailable",
+        "error",
         "off",
         "disable",
         "hide",
@@ -59559,9 +60208,7 @@
         "turn off",
         "block",
         "/",
-        "disabled",
         "inactive",
-        "unavailable",
         "deactivated",
         "slash",
         "blocked",
@@ -59859,6 +60506,10 @@
         "deny",
         "decline",
         "refuse",
+        "disabled",
+        "failed",
+        "unavailable",
+        "error",
         "silence",
         "mute",
         "moderate"
@@ -59962,6 +60613,7 @@
         "selected",
         "okay",
         "ok",
+        "enabled",
         "moderate"
       ]
     },
@@ -60445,6 +61097,10 @@
         "deny",
         "decline",
         "refuse",
+        "disabled",
+        "failed",
+        "unavailable",
+        "error",
         "off",
         "disable",
         "hide",
@@ -60452,9 +61108,7 @@
         "turn off",
         "block",
         "/",
-        "disabled",
         "inactive",
-        "unavailable",
         "deactivated",
         "slash",
         "blocked",
@@ -60755,6 +61409,10 @@
         "deny",
         "decline",
         "refuse",
+        "disabled",
+        "failed",
+        "unavailable",
+        "error",
         "silence",
         "mute",
         "moderate"
@@ -61536,6 +62194,8 @@
         ]
       },
       "tags": [
+        "collapse",
+        "fold",
         "exit fullscreen",
         "close",
         "shrink"
@@ -61572,6 +62232,8 @@
         ]
       },
       "tags": [
+        "collapse",
+        "fold",
         "exit fullscreen",
         "close",
         "shrink",
@@ -61930,6 +62592,7 @@
         "selected",
         "okay",
         "ok",
+        "enabled",
         "connected",
         "running",
         "active"
@@ -62690,8 +63353,10 @@
         "deny",
         "decline",
         "refuse",
-        "error",
+        "disabled",
         "failed",
+        "unavailable",
+        "error",
         "disconnected",
         "stop",
         "suspend"
@@ -64685,6 +65350,41 @@
         "near-field communication"
       ]
     },
+    "nigerian-naira": {
+      "fingerprint": "d01d484ef790",
+      "tags": [
+        "currency",
+        "money",
+        "cash",
+        "banknote",
+        "funds",
+        "finance",
+        "payment",
+        "balance",
+        "transaction",
+        "bill",
+        "invoice",
+        "receipt",
+        "fee",
+        "subscription",
+        "price",
+        "cost",
+        "amount",
+        "revenue",
+        "income",
+        "expense",
+        "banking",
+        "exchange",
+        "financial",
+        "economy",
+        "pricing",
+        "prices",
+        "monetization",
+        "nigeria",
+        "nigerian",
+        "ngn"
+      ]
+    },
     "non-binary": {
       "en": {
         "description": "A circle with a six-pointed asterisk-like cross above it, symbolizing non-binary gender identity.",
@@ -65614,6 +66314,10 @@
         "deny",
         "decline",
         "refuse",
+        "disabled",
+        "failed",
+        "unavailable",
+        "error",
         "stop",
         "alert",
         "warning",
@@ -66007,6 +66711,7 @@
         "selected",
         "okay",
         "ok",
+        "enabled",
         "delivered"
       ]
     },
@@ -66489,7 +67194,11 @@
         "×",
         "deny",
         "decline",
-        "refuse"
+        "refuse",
+        "disabled",
+        "failed",
+        "unavailable",
+        "error"
       ]
     },
     "paint-bucket": {
@@ -71601,6 +72310,7 @@
         "selected",
         "okay",
         "ok",
+        "enabled",
         "printed"
       ]
     },
@@ -71662,6 +72372,9 @@
         "deny",
         "decline",
         "refuse",
+        "disabled",
+        "failed",
+        "unavailable",
         "error"
       ]
     },
@@ -76007,6 +76720,7 @@
         "selected",
         "okay",
         "ok",
+        "enabled",
         "save",
         "save-check",
         "floppy-disk",
@@ -77602,6 +78316,7 @@
         "selected",
         "okay",
         "ok",
+        "enabled",
         "found"
       ]
     },
@@ -77885,6 +78600,10 @@
         "deny",
         "decline",
         "refuse",
+        "disabled",
+        "failed",
+        "unavailable",
+        "error",
         "stop",
         "404",
         "not found",
@@ -79129,6 +79848,7 @@
         "selected",
         "okay",
         "ok",
+        "enabled",
         "secured",
         "guarded",
         "defended",
@@ -79136,7 +79856,6 @@
         "prevented",
         "active",
         "activated",
-        "enabled",
         "scanned",
         "found",
         "audited",
@@ -80651,6 +81370,10 @@
         "deny",
         "decline",
         "refuse",
+        "disabled",
+        "failed",
+        "unavailable",
+        "error",
         "unshielded",
         "insecure",
         "unsecured",
@@ -80683,7 +81406,6 @@
         "audited",
         "unverified",
         "inactive",
-        "error",
         "wrong",
         "false",
         "attacked",
@@ -81441,6 +82163,8 @@
         ]
       },
       "tags": [
+        "collapse",
+        "fold",
         "scale",
         "fullscreen"
       ]
@@ -83138,6 +83862,7 @@
         "selected",
         "okay",
         "ok",
+        "enabled",
         "spelling",
         "error",
         "mistake",
@@ -83204,6 +83929,7 @@
         "selected",
         "okay",
         "ok",
+        "enabled",
         "spelling",
         "error",
         "mistake",
@@ -83862,7 +84588,8 @@
         "pour",
         "empty",
         "cell",
-        "expand"
+        "expand",
+        "unfold"
       ]
     },
     "square-arrow-down-left": {
@@ -83962,6 +84689,7 @@
         "merge",
         "resizing",
         "collapse",
+        "fold",
         "exit",
         "close",
         "return",
@@ -84281,7 +85009,9 @@
         "<-",
         "cell",
         "expand",
+        "unfold",
         "collapse",
+        "fold",
         "split"
       ]
     },
@@ -84343,7 +85073,8 @@
         "back",
         "reverse",
         "<-",
-        "collapse"
+        "collapse",
+        "fold"
       ]
     },
     "square-arrow-right": {
@@ -84466,7 +85197,8 @@
         "data flow",
         "node editor",
         "panel",
-        "expand"
+        "expand",
+        "unfold"
       ]
     },
     "square-arrow-right-exit": {
@@ -84532,6 +85264,7 @@
         "data flow",
         "node editor",
         "expand",
+        "unfold",
         "panel",
         "cell",
         "outbound"
@@ -84649,6 +85382,7 @@
         "projection",
         "presentation",
         "expand",
+        "unfold",
         "cell"
       ]
     },
@@ -84955,6 +85689,9 @@
         "merge",
         "resizing",
         "expand",
+        "unfold",
+        "collapse",
+        "fold",
         "contract"
       ]
     },
@@ -85059,6 +85796,52 @@
         "mandatory"
       ]
     },
+    "square-axis-dashed-horizontal": {
+      "fingerprint": "a23eabbdfe5c",
+      "tags": [
+        "dashed",
+        "dotted",
+        "broken line",
+        "reflect",
+        "flip",
+        "mirror",
+        "alignment",
+        "centerline"
+      ]
+    },
+    "square-axis-dashed-vertical": {
+      "fingerprint": "196e837f0675",
+      "tags": [
+        "dashed",
+        "dotted",
+        "broken line",
+        "reflect",
+        "flip",
+        "mirror",
+        "alignment",
+        "centerline"
+      ]
+    },
+    "square-axis-horizontal": {
+      "fingerprint": "b1f7bf816d4e",
+      "tags": [
+        "reflect",
+        "flip",
+        "mirror",
+        "alignment",
+        "centerline"
+      ]
+    },
+    "square-axis-vertical": {
+      "fingerprint": "d58ec02259da",
+      "tags": [
+        "reflect",
+        "flip",
+        "mirror",
+        "alignment",
+        "centerline"
+      ]
+    },
     "square-bookmark": {
       "en": {
         "description": "A rounded square outline with a bookmark ribbon hanging from its top, usually meaning save or bookmark.",
@@ -85137,89 +85920,6 @@
         "chop",
         "stationery",
         "crafts"
-      ]
-    },
-    "square-centerline-dashed-horizontal": {
-      "en": {
-        "description": "Shows square brackets on both sides with a dashed vertical centerline in the middle, often meaning mirror or center alignment.",
-        "synonyms": [
-          "reflect",
-          "mirror",
-          "alignment",
-          "dashed",
-          "centerline",
-          "center",
-          "brackets",
-          "divider",
-          "symmetry",
-          "flip"
-        ]
-      },
-      "fingerprint": "fb8390e76ef1",
-      "promptVersion": 1,
-      "ru": {
-        "description": "Изображение показывает квадратные скобки по бокам и пунктирную вертикальную линию посередине, что обозначает отражение или выравнивание по центру.",
-        "synonyms": [
-          "отражение",
-          "зеркало",
-          "выравнивание",
-          "пунктир",
-          "центр",
-          "средняя линия",
-          "скобки",
-          "разделитель",
-          "симметрия"
-        ]
-      },
-      "tags": [
-        "dashed",
-        "dotted",
-        "broken line",
-        "reflect",
-        "mirror",
-        "alignment"
-      ]
-    },
-    "square-centerline-dashed-vertical": {
-      "en": {
-        "description": "Draws a square outline with a dashed horizontal centerline, usually meaning mirroring, reflection, or center alignment.",
-        "synonyms": [
-          "reflect",
-          "mirror",
-          "alignment",
-          "dashed line",
-          "centerline",
-          "flip",
-          "divider",
-          "axis",
-          "center",
-          "symmetry"
-        ]
-      },
-      "fingerprint": "94ccd710bf6b",
-      "promptVersion": 1,
-      "ru": {
-        "description": "Рисунок показывает квадратную рамку с пунктирной горизонтальной линией посередине; обычно означает зеркальное отражение или выравнивание по центру.",
-        "synonyms": [
-          "отражение",
-          "зеркало",
-          "выравнивание",
-          "пунктир",
-          "центр",
-          "разделитель",
-          "граница",
-          "отразить",
-          "пунктирная линия",
-          "рамка"
-        ]
-      },
-      "tags": [
-        "dashed",
-        "dotted",
-        "broken line",
-        "reflect",
-        "mirror",
-        "alignment"
       ]
     },
     "square-chart-gantt": {
@@ -85342,7 +86042,8 @@
         "todo",
         "selected",
         "okay",
-        "ok"
+        "ok",
+        "enabled"
       ]
     },
     "square-check-big": {
@@ -85396,7 +86097,8 @@
         "todo",
         "selected",
         "okay",
-        "ok"
+        "ok",
+        "enabled"
       ]
     },
     "square-chevron-down": {
@@ -86460,6 +87162,10 @@
         "deny",
         "decline",
         "refuse",
+        "disabled",
+        "failed",
+        "unavailable",
+        "error",
         "deselect",
         "unselect",
         "select",
@@ -86540,6 +87246,10 @@
         "deny",
         "decline",
         "refuse",
+        "disabled",
+        "failed",
+        "unavailable",
+        "error",
         "deselect",
         "unselect",
         "select",
@@ -89776,6 +90486,8 @@
       "tags": [
         "float",
         "center",
+        "centre",
+        "middle",
         "rectangle"
       ]
     },
@@ -90189,6 +90901,10 @@
         "deny",
         "decline",
         "refuse",
+        "disabled",
+        "failed",
+        "unavailable",
+        "error",
         "math",
         "multiply",
         "multiplication"
@@ -90644,7 +91360,8 @@
         "todo",
         "selected",
         "okay",
-        "ok"
+        "ok",
+        "enabled"
       ]
     },
     "star-half": {
@@ -90978,6 +91695,10 @@
         "deny",
         "decline",
         "refuse",
+        "disabled",
+        "failed",
+        "unavailable",
+        "error",
         "mark",
         "symbol",
         "shape",
@@ -91262,7 +91983,8 @@
         "ticked",
         "selected",
         "okay",
-        "ok"
+        "ok",
+        "enabled"
       ]
     },
     "sticky-note-minus": {
@@ -91533,7 +92255,11 @@
         "×",
         "deny",
         "decline",
-        "refuse"
+        "refuse",
+        "disabled",
+        "failed",
+        "unavailable",
+        "error"
       ]
     },
     "sticky-notes": {
@@ -92092,6 +92818,28 @@
         "arc",
         "circular",
         "smooth"
+      ]
+    },
+    "stroke-width": {
+      "fingerprint": "9277af9f2b31",
+      "tags": [
+        "stroke",
+        "path",
+        "segment",
+        "vector",
+        "graphics",
+        "design",
+        "shape",
+        "curve",
+        "line",
+        "thickness",
+        "weight",
+        "outline",
+        "brush size",
+        "pen size",
+        "drawing",
+        "editor",
+        "vector graphics"
       ]
     },
     "subscript": {
@@ -93434,7 +94182,11 @@
         "×",
         "deny",
         "decline",
-        "refuse"
+        "refuse",
+        "disabled",
+        "failed",
+        "unavailable",
+        "error"
       ]
     },
     "tags": {
@@ -94156,7 +94908,9 @@
       "tags": [
         "text",
         "alignment",
-        "center"
+        "center",
+        "centre",
+        "middle"
       ]
     },
     "text-align-end": {
@@ -94276,6 +95030,7 @@
         "alignment",
         "justified",
         "center",
+        "centre",
         "middle",
         "typography",
         "editor",
@@ -95134,6 +95889,7 @@
         "selected",
         "okay",
         "ok",
+        "enabled",
         "booked",
         "purchased",
         "receipt",
@@ -95485,6 +96241,10 @@
         "deny",
         "decline",
         "refuse",
+        "disabled",
+        "failed",
+        "unavailable",
+        "error",
         "refunded",
         "used",
         "void",
@@ -95495,8 +96255,7 @@
         "banned",
         "barred",
         "forbidden",
-        "prohibited",
-        "error"
+        "prohibited"
       ]
     },
     "tickets": {
@@ -97515,86 +98274,6 @@
         "increase"
       ]
     },
-    "triangles-centerline-dashed-horizontal": {
-      "en": {
-        "description": "Two triangles pointing toward each other across a dashed horizontal line, typically representing mirroring or reflection across an axis.",
-        "synonyms": [
-          "reflect",
-          "mirror",
-          "flip",
-          "reflection",
-          "alignment",
-          "dashed line",
-          "symmetry",
-          "axis",
-          "vertical flip"
-        ]
-      },
-      "fingerprint": "f92151b9a75b",
-      "promptVersion": 1,
-      "ru": {
-        "description": "Два треугольника, направленных друг к другу, с пунктирной горизонтальной линией между ними; обозначает отражение или зеркальное расположение относительно оси.",
-        "synonyms": [
-          "отразить",
-          "зеркало",
-          "зеркальное отражение",
-          "выравнивание",
-          "пунктир",
-          "пунктирная линия",
-          "симметрия",
-          "перевернуть",
-          "ось"
-        ]
-      },
-      "tags": [
-        "dashed",
-        "dotted",
-        "broken line",
-        "reflect",
-        "mirror",
-        "alignment"
-      ]
-    },
-    "triangles-centerline-dashed-vertical": {
-      "en": {
-        "description": "Two opposite triangles face away from each other across a dashed vertical centerline, symbolizing mirroring or reflection.",
-        "synonyms": [
-          "mirror",
-          "flip horizontal",
-          "symmetry",
-          "reflect",
-          "align center",
-          "dotted line",
-          "divider",
-          "mirror image",
-          "flip"
-        ]
-      },
-      "fingerprint": "cd04119b1bd7",
-      "promptVersion": 1,
-      "ru": {
-        "description": "Два треугольника-стрелки смотрят в противоположные стороны по обе стороны от пунктирной вертикальной линии, обозначая отражение или зеркальное отображение.",
-        "synonyms": [
-          "отразить",
-          "зеркало",
-          "зеркально",
-          "симметрия",
-          "выравнивание",
-          "пунктир",
-          "отражение",
-          "центральная линия",
-          "перевернуть"
-        ]
-      },
-      "tags": [
-        "dashed",
-        "dotted",
-        "broken line",
-        "reflect",
-        "mirror",
-        "alignment"
-      ]
-    },
     "trophy": {
       "en": {
         "description": "Shows a cup with handles on a base, usually representing an award, victory, or achievement.",
@@ -98497,79 +99176,6 @@
         "back"
       ]
     },
-    "unfold-horizontal": {
-      "en": {
-        "description": "Shows two arrows pointing outward from a dashed vertical line; it usually means expand or unfold horizontally.",
-        "synonyms": [
-          "expand",
-          "spread",
-          "split",
-          "arrows apart",
-          "widen",
-          "horizontal",
-          "dashed line",
-          "separate"
-        ]
-      },
-      "fingerprint": "c78184a8feb5",
-      "promptVersion": 1,
-      "ru": {
-        "description": "Изображены две стрелки, направленные в стороны, и вертикальная пунктирная линия посередине; обозначает разворачивание или раздвижение по горизонтали.",
-        "synonyms": [
-          "развернуть",
-          "раздвинуть",
-          "стрелки в стороны",
-          "разворот",
-          "расширить",
-          "пунктир",
-          "горизонтально",
-          "разделить"
-        ]
-      },
-      "tags": [
-        "arrow",
-        "collapse",
-        "fold",
-        "vertical",
-        "dashed"
-      ]
-    },
-    "unfold-vertical": {
-      "en": {
-        "description": "Shows an upward and downward arrow on either side of a dashed line, meaning expand or unfold vertically.",
-        "synonyms": [
-          "expand",
-          "unfold",
-          "vertical",
-          "stretch",
-          "arrows up down",
-          "split",
-          "dashed line",
-          "spread"
-        ]
-      },
-      "fingerprint": "28b349f664e6",
-      "promptVersion": 1,
-      "ru": {
-        "description": "Изображены стрелка вверх и стрелка вниз по обе стороны от пунктирной линии; обозначает разворачивание или расширение по вертикали.",
-        "synonyms": [
-          "развернуть",
-          "раскрыть",
-          "расширить",
-          "вертикально",
-          "стрелки вверх вниз",
-          "разделить",
-          "растянуть",
-          "пунктир"
-        ]
-      },
-      "tags": [
-        "arrow",
-        "expand",
-        "vertical",
-        "dashed"
-      ]
-    },
     "ungroup": {
       "en": {
         "description": "Two rounded rectangles offset diagonally from each other, representing ungrouping or separating grouped elements.",
@@ -99003,6 +99609,7 @@
         "selected",
         "okay",
         "ok",
+        "enabled",
         "followed",
         "subscribed"
       ]
@@ -99719,6 +100326,7 @@
         "selected",
         "okay",
         "ok",
+        "enabled",
         "followed",
         "subscribed"
       ]
@@ -100462,9 +101070,12 @@
         "deny",
         "decline",
         "refuse",
+        "disabled",
+        "failed",
+        "unavailable",
+        "error",
         "unfollow",
-        "unsubscribe",
-        "unavailable"
+        "unsubscribe"
       ]
     },
     "user-search": {
@@ -100742,9 +101353,12 @@
         "deny",
         "decline",
         "refuse",
+        "disabled",
+        "failed",
+        "unavailable",
+        "error",
         "unfollow",
-        "unsubscribe",
-        "unavailable"
+        "unsubscribe"
       ]
     },
     "users": {
@@ -102639,6 +103253,28 @@
         "building"
       ]
     },
+    "warehouse-waves": {
+      "fingerprint": "eb63d089e3fb",
+      "tags": [
+        "storage",
+        "storehouse",
+        "depot",
+        "depository",
+        "repository",
+        "stockroom",
+        "logistics",
+        "building",
+        "lakehouse",
+        "lake warehouse",
+        "data lake",
+        "data warehouse",
+        "data platform",
+        "analytics",
+        "big data",
+        "water",
+        "lake"
+      ]
+    },
     "washing-machine": {
       "en": {
         "description": "A front-loading washing machine with a round drum, control panel and button; it represents laundry or household appliances.",
@@ -104480,6 +105116,10 @@
         "deny",
         "decline",
         "refuse",
+        "disabled",
+        "failed",
+        "unavailable",
+        "error",
         "math",
         "multiply",
         "multiplication"
@@ -104543,6 +105183,10 @@
         "deny",
         "decline",
         "refuse",
+        "disabled",
+        "failed",
+        "unavailable",
+        "error",
         "math",
         "multiply",
         "multiplication",
