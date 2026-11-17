@@ -506,6 +506,9 @@ export function SearchResults({
           className="search-results"
           aria-labelledby="search-results-title"
           data-search={phaseName(phase)}
+          // Адрес, по которому нарисована выдача: адрес страницы меняется сразу, а выдача — со следующей
+          // отрисовкой; проверка сайта сверяет оба и не принимает прежнюю выдачу за новую.
+          data-query={query.toString()}
           data-semantic={
             phase.kind === "answer" ? phase.answer.semantic : undefined
           }
@@ -590,7 +593,10 @@ export function SearchResults({
             ) : null}
           </p>
           <SelectionBar lang={lang} selection={selection} />
-          <div ref={selection.anchor}>{body}</div>
+          {/* search-body — место выдачи: по нему её находит проверка сайта (pnpm site --check). */}
+          <div ref={selection.anchor} className="search-body">
+            {body}
+          </div>
           {final !== undefined && (state.page > 1 || final.hasNext) ? (
             <Pagination
               lang={lang}

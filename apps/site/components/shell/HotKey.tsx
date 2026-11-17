@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { href, type Lang } from "../../lib/i18n";
+import { handOff } from "../../lib/search-handoff";
 
 /** Поле поиска главной и /search (SearchHero). */
 export const SEARCH_INPUT_ID = "hero-search";
@@ -23,6 +24,8 @@ export function HotKey({ lang }: { lang: Lang }) {
         input.focus();
         input.select();
       } else {
+        // Пустая передача: большое поле страницы поиска возьмёт фокус само (lib/search-handoff).
+        handOff("");
         router.push(href(lang, "/search"));
       }
     };

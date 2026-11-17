@@ -6,6 +6,7 @@ import { PageLink } from "../PageLink";
 import { Logo } from "./Logo";
 import { AgentLogos, ExtensionLogos } from "./Logos";
 import { MenuButton } from "./Menu";
+import { SearchPill } from "./SearchPill";
 import { Soon } from "./Soon";
 import { ThemeToggle } from "./ThemeToggle";
 
@@ -47,10 +48,7 @@ export function TopBar({
         <ThemeToggle lang={lang} />
       </div>
       <div className="topbar-group">
-        <PageLink lang={lang} path="/search" className="pill topbar-wide">
-          <Icon icon="material-symbols:search" className="pill-chevron" />
-          <span>{t.topSearch}</span>
-        </PageLink>
+        <SearchPill lang={lang} />
         <span className="topbar-divider topbar-wide" aria-hidden="true" />
         <BagButton lang={lang} variant="pill" />
         <span className="topbar-divider topbar-wide" aria-hidden="true" />

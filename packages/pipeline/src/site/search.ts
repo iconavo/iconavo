@@ -34,14 +34,17 @@ function searchFacts() {
   const section = document.querySelector("section.search-results");
   const cells = [
     ...document.querySelectorAll(
-      "section.search-results > .result-grid .result-cell:not(.result-skeleton)",
+      "section.search-results > .search-body > .result-grid .result-cell:not(.result-skeleton)",
     ),
   ];
   const input = document.getElementById(
     "hero-search",
   ) as HTMLInputElement | null;
-  const grid = document.querySelector("section.search-results > .result-grid");
+  const grid = document.querySelector(
+    "section.search-results > .search-body > .result-grid",
+  );
   const box = grid?.getBoundingClientRect();
+  const shown = section?.getAttribute("data-query") ?? "";
   return {
     state: section?.getAttribute("data-search") ?? "",
     semantic: section?.getAttribute("data-semantic") ?? "",
@@ -56,18 +59,17 @@ function searchFacts() {
       (s) => getComputedStyle(s).visibility === "visible",
     ).length,
     status: document.querySelector(".search-status")?.textContent?.trim() ?? "",
-    paragraphs: [...(section?.querySelectorAll(":scope > p") ?? [])]
-      .filter(
-        (p) =>
-          !p.classList.contains("search-status") &&
-          !p.classList.contains("search-commercial"),
-      )
-      .map((p) => p.textContent?.trim() ?? ""),
+    // Сообщения выдачи: «ничего не нашлось», «с фильтрами пусто», «дальше ничего» — в месте выдачи.
+    paragraphs: [
+      ...(section?.querySelectorAll(":scope > .search-body > p") ?? []),
+    ].map((p) => p.textContent?.trim() ?? ""),
     unfiltered: document.querySelector("#search-unfiltered") !== null,
     focus: document.activeElement?.id ?? "",
     value: input?.value ?? "",
     path: location.pathname,
     search: location.search,
+    // Адрес, по которому React нарисовал выдачу: сразу после смены адреса он ещё прежний.
+    rendered: shown === "" ? "" : `?${shown}`,
     mark: (window as { __iconavoMark?: number }).__iconavoMark ?? 0,
     grid: box === undefined ? undefined : { top: box.top, height: box.height },
   };
@@ -109,7 +111,10 @@ async function waitFor(
 }
 
 const final = (search: string) => (f: Facts) =>
-  f.state === "final" && f.search === search && f.drawn === f.icons.length;
+  f.state === "final" &&
+  f.search === search &&
+  f.rendered === search &&
+  f.drawn === f.icons.length;
 
 /** Выдача — та, что API ответил на последний запрос страницы; проблема — строкой. */
 async function matchesApi(
@@ -169,28 +174,69 @@ async function homeProblems(
   return problems;
 }
 
-/** Набор в шапке другой страницы: открывается /search, текст и фокус — в большом поле. */
+/**
+ * Поиск с другой страницы (редизайн): поля в шапке больше нет. Ctrl K на странице без поля и «Поиск» в
+ * верхней полосе открывают /search с фокусом в большом поле; набранное ищется без перезагрузки.
+ */
 async function headerProblems(
   page: Page,
   o: SearchCheckContext,
 ): Promise<string[]> {
-  await page.goto(`${o.base}/sets`, { waitUntil: "load" });
-  await waitForHydration(page);
-  await page.locator("#site-search").click();
-  await page.keyboard.type("heart", { delay: 30 });
-  const { facts, ok } = await waitFor(
-    page,
-    (f) =>
-      f.path === "/search" &&
-      final("?q=heart")(f) &&
-      f.focus === "hero-search" &&
-      f.value === "heart",
-  );
-  return ok
-    ? []
-    : [
-        `из шапки: адрес ${facts.path}${facts.search}, выдача «${facts.state}», фокус «${facts.focus}», в поле «${facts.value}»`,
-      ];
+  const problems: string[] = [];
+  for (const [how, open] of [
+    [
+      "Ctrl K",
+      async () => {
+        // Слушатель Ctrl K ставит эффект после гидратации: нажатие до него теряется — как у человека,
+        // который нажал раньше, чем страница ожила, и нажимает ещё раз (WebKit, 17 ноября 2026).
+        for (let i = 0; i < 5; i++) {
+          await page.keyboard.press("Control+k");
+          const moved = await page
+            .waitForFunction(() => location.pathname === "/search", undefined, {
+              timeout: 1000,
+            })
+            .then(
+              () => true,
+              () => false,
+            );
+          if (moved) return;
+        }
+      },
+    ],
+    [
+      "«Поиск» в верхней полосе",
+      () => page.locator(".topbar a.pill", { hasText: "Search" }).click(),
+    ],
+  ] as const) {
+    await page.goto(`${o.base}/sets`, { waitUntil: "load" });
+    await waitForHydration(page);
+    await open();
+    const opened = await waitFor(
+      page,
+      (f) => f.path === "/search" && f.focus === "hero-search",
+    );
+    if (!opened.ok) {
+      problems.push(
+        `${how}: адрес ${opened.facts.path}${opened.facts.search}, фокус «${opened.facts.focus}»`,
+      );
+      continue;
+    }
+    await page.keyboard.type("heart", { delay: 30 });
+    const { facts, ok } = await waitFor(
+      page,
+      (f) =>
+        f.path === "/search" &&
+        final("?q=heart")(f) &&
+        f.focus === "hero-search" &&
+        f.value === "heart",
+    );
+    if (!ok) {
+      problems.push(
+        `${how}, набор: адрес ${facts.path}${facts.search}, выдача «${facts.state}», фокус «${facts.focus}», в поле «${facts.value}»`,
+      );
+    }
+  }
+  return problems;
 }
 
 /** Чипсы стиля и набора — в адресе и в запросе; «назад» — из памяти вкладки, без нового запроса. */
@@ -529,7 +575,7 @@ async function waitForHydration(page: Page) {
 }
 
 /**
- * Сценарий «Поиск»: набор с главной и из шапки, фильтры и «назад», вторая страница, ссылка с
+ * Сценарий «Поиск»: набор с главной, Ctrl K и «Поиск» верхней полосы, фильтры и «назад», вторая страница, ссылка с
  * фильтрами в чистом окне, неполная выдача без сдвигов, пустые ответы и 429; axe и ширина телефона на
  * выдаче; ошибки страницы и нарушения CSP — тоже проблемы.
  */
@@ -607,7 +653,7 @@ export async function checkSearchPage(
   problems.push(...(await emptyProblems(browser, o)));
   return problems.length === 0
     ? pass(
-        "набор с главной и из шапки — без перезагрузки, фокус на месте; стиль, набор, «назад» из памяти, страница 2, ссылка с фильтрами — как у API; по словам → полная без сдвигов; «ничего», «по смыслу», «с фильтрами пусто», 429; axe и 375 px",
+        "набор с главной, Ctrl K и «Поиск» в верхней полосе — без перезагрузки, фокус в поле; стиль, набор, «назад» из памяти, страница 2, ссылка с фильтрами — как у API; по словам → полная без сдвигов; «ничего», «по смыслу», «с фильтрами пусто», 429; axe и 375 px",
       )
     : fail(problems.slice(0, 4).join("; "));
 }
