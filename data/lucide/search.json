@@ -4923,7 +4923,38 @@
       ]
     },
     "arrows-from-axis-dashed-horizontal": {
+      "en": {
+        "description": "Up and down arrows pointing away from a dashed horizontal line, usually meaning expand, unfold, or split from an axis.",
+        "synonyms": [
+          "arrows",
+          "up down",
+          "dashed line",
+          "dashed",
+          "dotted line",
+          "expand",
+          "unfold",
+          "split",
+          "axis",
+          "spread"
+        ]
+      },
       "fingerprint": "d6d146bc6142",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Две стрелки вверх и вниз по обе стороны пунктирной горизонтальной линии, обозначают раскрытие, разделение или распространение от оси.",
+        "synonyms": [
+          "стрелки",
+          "вверх вниз",
+          "пунктир",
+          "пунктирная линия",
+          "развернуть",
+          "раскрыть",
+          "разделить",
+          "разделитель",
+          "ось",
+          "растянуть"
+        ]
+      },
       "tags": [
         "dashed",
         "dotted",
@@ -4933,7 +4964,38 @@
       ]
     },
     "arrows-from-axis-dashed-vertical": {
+      "en": {
+        "description": "Shows a vertical dashed line with arrows pointing left and right from the center, meaning expand or spread out from an axis.",
+        "synonyms": [
+          "arrows apart",
+          "spread",
+          "expand",
+          "unfold",
+          "dashed line",
+          "broken line",
+          "split",
+          "divide",
+          "axis",
+          "horizontal arrows"
+        ]
+      },
       "fingerprint": "4674ecf94a60",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Изображена вертикальная пунктирная линия с стрелками влево и вправо по бокам; обозначает разведение или расширение от центральной оси.",
+        "synonyms": [
+          "стрелки в стороны",
+          "разделить",
+          "расширить",
+          "развернуть",
+          "пунктир",
+          "прерывистая линия",
+          "разнести",
+          "выровнять по оси",
+          "распространить",
+          "влево вправо"
+        ]
+      },
       "tags": [
         "dashed",
         "dotted",
@@ -4943,21 +5005,110 @@
       ]
     },
     "arrows-from-axis-horizontal": {
+      "en": {
+        "description": "Shows a horizontal line with arrows pointing up and down away from it, usually meaning expand or unfold content.",
+        "synonyms": [
+          "expand",
+          "unfold",
+          "arrows up down",
+          "split",
+          "spread",
+          "separate",
+          "divide",
+          "collapse",
+          "vertical expand",
+          "open"
+        ]
+      },
       "fingerprint": "75df0603d8a7",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Изображена горизонтальная линия с стрелками вверх и вниз от неё, обозначающими раскрытие или распределение содержимого по обеим сторонам.",
+        "synonyms": [
+          "развернуть",
+          "раскрыть",
+          "развернуть вверх вниз",
+          "распределить",
+          "разделить",
+          "стрелки вверх вниз",
+          "сжать",
+          "расширить",
+          "разворот",
+          "выровнять"
+        ]
+      },
       "tags": [
         "expand",
         "unfold"
       ]
     },
     "arrows-from-axis-vertical": {
+      "en": {
+        "description": "A vertical line with two arrows pointing outward left and right from it, meaning expand or spread apart from the center.",
+        "synonyms": [
+          "arrows apart",
+          "expand",
+          "spread",
+          "unfold",
+          "split",
+          "left right",
+          "outward",
+          "stretch",
+          "center axis",
+          "separate"
+        ]
+      },
       "fingerprint": "5b4f5f5544a0",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Вертикальная линия с двумя стрелками, направленными влево и вправо от неё; обозначает разведение или расширение в стороны.",
+        "synonyms": [
+          "стрелки в стороны",
+          "расширить",
+          "развернуть",
+          "раздвинуть",
+          "разделить",
+          "влево вправо",
+          "разнести",
+          "растянуть",
+          "центр",
+          "ось"
+        ]
+      },
       "tags": [
         "expand",
         "unfold"
       ]
     },
     "arrows-to-axis-dashed-horizontal": {
+      "en": {
+        "description": "Two arrows point inward toward a dashed horizontal line in the center, usually meaning collapse or align to axis.",
+        "synonyms": [
+          "dashed line",
+          "dotted line",
+          "broken line",
+          "collapse",
+          "fold",
+          "align center",
+          "arrows inward",
+          "divider"
+        ]
+      },
       "fingerprint": "d33e02659fb3",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Изображены два стрелки, направленные к пунктирной горизонтальной линии по центру; обозначает сжатие или выравнивание по оси.",
+        "synonyms": [
+          "пунктир",
+          "пунктирная линия",
+          "сжать",
+          "свернуть",
+          "схлопнуть",
+          "выровнять по центру",
+          "стрелки к центру",
+          "разделитель"
+        ]
+      },
       "tags": [
         "dashed",
         "dotted",
@@ -4967,7 +5118,38 @@
       ]
     },
     "arrows-to-axis-dashed-vertical": {
+      "en": {
+        "description": "Shows a vertical dashed line with two arrows pointing toward it from both sides, meaning collapse or align to a central axis.",
+        "synonyms": [
+          "collapse",
+          "fold",
+          "merge",
+          "center",
+          "align center",
+          "converge",
+          "squeeze",
+          "dashed line",
+          "arrows inward",
+          "compress"
+        ]
+      },
       "fingerprint": "2d8b958cdb90",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Изображены вертикальная пунктирная линия и две стрелки, направленные к ней с обеих сторон; обозначает сведение или схлопывание к центральной оси.",
+        "synonyms": [
+          "сжатие",
+          "схлопнуть",
+          "свернуть",
+          "сведение к центру",
+          "пунктир",
+          "пунктирная линия",
+          "стрелки к центру",
+          "центр",
+          "выравнивание",
+          "сложить"
+        ]
+      },
       "tags": [
         "dashed",
         "dotted",
@@ -4977,14 +5159,75 @@
       ]
     },
     "arrows-to-axis-horizontal": {
+      "en": {
+        "description": "A horizontal line with two arrows pointing toward it from above and below, meaning collapse or fold to a central axis.",
+        "synonyms": [
+          "collapse",
+          "fold",
+          "squeeze",
+          "compress",
+          "shrink",
+          "center align",
+          "converge",
+          "arrows to center",
+          "minimize",
+          "merge"
+        ]
+      },
       "fingerprint": "9a185e759edd",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Горизонтальная линия с двумя стрелками, направленными к ней сверху и снизу; обозначает сворачивание или схлопывание к центральной оси.",
+        "synonyms": [
+          "свернуть",
+          "схлопнуть",
+          "сжать",
+          "сократить",
+          "сжатие",
+          "выровнять по центру",
+          "центрировать",
+          "стрелки к центру",
+          "уменьшить",
+          "схлопывание"
+        ]
+      },
       "tags": [
         "collapse",
         "fold"
       ]
     },
     "arrows-to-axis-vertical": {
+      "en": {
+        "description": "A vertical line with two arrows pointing inward toward it from both sides, meaning collapse, fold, or align to center.",
+        "synonyms": [
+          "collapse",
+          "fold",
+          "compress",
+          "squeeze",
+          "shrink",
+          "converge",
+          "merge",
+          "center",
+          "inward arrows",
+          "narrow"
+        ]
+      },
       "fingerprint": "feb0fb7f9014",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Вертикальная линия с двумя стрелками, направленными к ней с обеих сторон; обозначает сжатие, схлопывание или сведение к центру.",
+        "synonyms": [
+          "сжать",
+          "свернуть",
+          "схлопнуть",
+          "сложить",
+          "свести к центру",
+          "стрелки к центру",
+          "сблизить",
+          "уменьшить",
+          "сворачивание"
+        ]
+      },
       "tags": [
         "collapse",
         "fold"
@@ -12988,7 +13231,38 @@
       ]
     },
     "bot-check": {
+      "en": {
+        "description": "A robot head with an antenna and eyes, paired with a checkmark; usually means a verified bot or a completed assistant task.",
+        "synonyms": [
+          "robot",
+          "bot",
+          "assistant",
+          "chatbot",
+          "ai",
+          "verified",
+          "done",
+          "checkmark",
+          "confirmed",
+          "automation"
+        ]
+      },
       "fingerprint": "1c41b158dd7b",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Изображена голова робота с антенной и глазами, рядом с ней галочка; обычно означает подтверждённого бота или выполненную задачу ассистента.",
+        "synonyms": [
+          "робот",
+          "бот",
+          "ассистент",
+          "чат-бот",
+          "ии",
+          "подтверждено",
+          "готово",
+          "галочка",
+          "проверено",
+          "автоматизация"
+        ]
+      },
       "tags": [
         "robot",
         "ai",
@@ -13067,7 +13341,38 @@
       ]
     },
     "bot-minus": {
+      "en": {
+        "description": "Draws a robot head with an antenna, eyes and a minus sign, meaning removing or deactivating a bot.",
+        "synonyms": [
+          "robot",
+          "bot",
+          "assistant",
+          "chatbot",
+          "ai",
+          "remove bot",
+          "deactivate bot",
+          "minus",
+          "delete",
+          "cancel"
+        ]
+      },
       "fingerprint": "bd08d11dcd7b",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Рисует голову робота с антенной, глазами и знаком минус, означает удаление или отключение бота.",
+        "synonyms": [
+          "робот",
+          "бот",
+          "ассистент",
+          "чат-бот",
+          "ии",
+          "удалить бота",
+          "отключить бота",
+          "минус",
+          "убрать",
+          "отмена"
+        ]
+      },
       "tags": [
         "robot",
         "ai",
@@ -13164,7 +13469,38 @@
       ]
     },
     "bot-plus": {
+      "en": {
+        "description": "A robot head with an antenna, two eyes and a plus sign at the corner, meaning add a new bot or AI assistant.",
+        "synonyms": [
+          "robot",
+          "bot",
+          "ai",
+          "assistant",
+          "chatbot",
+          "add bot",
+          "create bot",
+          "new bot",
+          "automation",
+          "agent"
+        ]
+      },
       "fingerprint": "c07aaf60c705",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Рисунок робота с антенной, глазами и знаком плюс в углу; обозначает добавление нового бота или ИИ-ассистента.",
+        "synonyms": [
+          "робот",
+          "бот",
+          "ии",
+          "ассистент",
+          "чат-бот",
+          "добавить бота",
+          "создать бота",
+          "новый бот",
+          "автоматизация",
+          "агент"
+        ]
+      },
       "tags": [
         "robot",
         "ai",
@@ -13190,7 +13526,38 @@
       ]
     },
     "bot-x": {
+      "en": {
+        "description": "A robot head with an antenna and two eyes, paired with an X mark; it signals a disabled or unavailable bot.",
+        "synonyms": [
+          "robot",
+          "bot",
+          "assistant",
+          "chatbot",
+          "error",
+          "cancel",
+          "close",
+          "delete",
+          "disabled",
+          "offline"
+        ]
+      },
       "fingerprint": "dd97b642752d",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Изображена голова робота с антенной и двумя глазами, рядом с крестиком; обозначает отключенного или недоступного бота.",
+        "synonyms": [
+          "робот",
+          "бот",
+          "ассистент",
+          "чатбот",
+          "ошибка",
+          "отмена",
+          "закрыть",
+          "удалить",
+          "отключен",
+          "недоступен"
+        ]
+      },
       "tags": [
         "robot",
         "ai",
@@ -17702,7 +18069,36 @@
       ]
     },
     "carets-from-axis-dashed-horizontal": {
+      "en": {
+        "description": "Shows an upward and downward triangle caret pointing away from a dashed horizontal line, usually meaning expand, flip or align about an axis.",
+        "synonyms": [
+          "expand",
+          "unfold",
+          "flip",
+          "mirror",
+          "reflect",
+          "dashed line",
+          "alignment",
+          "axis",
+          "up down arrows"
+        ]
+      },
       "fingerprint": "93cefc0297ba",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Изображены верхний и нижний треугольники-стрелки, направленные от пунктирной горизонтальной линии; обозначает разворот, раскрытие или выравнивание по оси.",
+        "synonyms": [
+          "развернуть",
+          "отразить",
+          "зеркало",
+          "перевернуть",
+          "выравнивание",
+          "пунктир",
+          "раскрыть",
+          "ось",
+          "стрелки вверх вниз"
+        ]
+      },
       "tags": [
         "dashed",
         "dotted",
@@ -17717,7 +18113,38 @@
       ]
     },
     "carets-from-axis-dashed-vertical": {
+      "en": {
+        "description": "Draws two outward-pointing triangular carets on either side of a dashed vertical line, indicating expanding, flipping, or mirroring around an axis.",
+        "synonyms": [
+          "mirror",
+          "flip",
+          "reflect",
+          "expand",
+          "unfold",
+          "alignment",
+          "dashed line",
+          "axis",
+          "split",
+          "arrows apart"
+        ]
+      },
       "fingerprint": "7f5f6a6478d2",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Рисует два треугольника-указателя по сторонам от пунктирной вертикальной линии; обозначает разворот, отражение или выравнивание по оси.",
+        "synonyms": [
+          "отражение",
+          "зеркало",
+          "разворот",
+          "развернуть",
+          "отразить",
+          "выравнивание",
+          "пунктир",
+          "ось",
+          "стрелки в стороны",
+          "сместить"
+        ]
+      },
       "tags": [
         "dashed",
         "dotted",
@@ -17732,7 +18159,38 @@
       ]
     },
     "carets-from-axis-horizontal": {
+      "en": {
+        "description": "Two triangle carets pointing up and down on either side of a horizontal line, usually meaning expand, unfold, or flip across an axis.",
+        "synonyms": [
+          "expand",
+          "unfold",
+          "collapse",
+          "reflect",
+          "flip",
+          "mirror",
+          "alignment",
+          "up down arrows",
+          "sort",
+          "triangle"
+        ]
+      },
       "fingerprint": "bcab1b758df2",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Две стрелки-треугольника, направленные вверх и вниз, по обе стороны горизонтальной линии; обозначает разворот, раскрытие или выравнивание по оси.",
+        "synonyms": [
+          "развернуть",
+          "раскрыть",
+          "свернуть",
+          "отразить",
+          "перевернуть",
+          "зеркало",
+          "выравнивание",
+          "стрелки вверх вниз",
+          "сортировка",
+          "треугольник"
+        ]
+      },
       "tags": [
         "triangle",
         "expand",
@@ -17744,7 +18202,36 @@
       ]
     },
     "carets-from-axis-vertical": {
+      "en": {
+        "description": "Two triangles point outward from a central vertical line, symbolizing mirroring, flipping, or expanding content along an axis.",
+        "synonyms": [
+          "mirror",
+          "flip",
+          "reflect",
+          "symmetry",
+          "horizontal flip",
+          "unfold",
+          "expand",
+          "align",
+          "triangles"
+        ]
+      },
       "fingerprint": "8002f6f49d0b",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Два треугольника смотрят в разные стороны от вертикальной линии, символизируя отражение, разворот или зеркалирование.",
+        "synonyms": [
+          "отразить",
+          "зеркало",
+          "перевернуть",
+          "разворот",
+          "зеркально",
+          "симметрия",
+          "выравнивание",
+          "треугольники",
+          "развернуть"
+        ]
+      },
       "tags": [
         "triangle",
         "expand",
@@ -17842,7 +18329,38 @@
       ]
     },
     "carets-to-axis-horizontal": {
+      "en": {
+        "description": "A horizontal line with two triangles pointing toward it from above and below, usually meaning align to axis or collapse.",
+        "synonyms": [
+          "alignment",
+          "axis",
+          "collapse",
+          "fold",
+          "reflect",
+          "mirror",
+          "flip",
+          "center",
+          "divide",
+          "middle"
+        ]
+      },
       "fingerprint": "6ae63fe0a38d",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Изображена горизонтальная линия с треугольниками сверху и снизу, указывающими к ней; обозначает выравнивание по оси или свёртывание.",
+        "synonyms": [
+          "выравнивание",
+          "ось",
+          "отражение",
+          "сжать",
+          "свернуть",
+          "зеркало",
+          "перевернуть",
+          "разделить",
+          "центр",
+          "середина"
+        ]
+      },
       "tags": [
         "triangle",
         "collapse",
@@ -17854,7 +18372,36 @@
       ]
     },
     "carets-to-axis-vertical": {
+      "en": {
+        "description": "Two opposing triangular arrows face a vertical axis line, representing mirroring, flipping, or alignment around a central axis.",
+        "synonyms": [
+          "mirror",
+          "flip",
+          "reflect",
+          "symmetry",
+          "align",
+          "axis",
+          "fold",
+          "collapse",
+          "horizontal flip"
+        ]
+      },
       "fingerprint": "6413e9997946",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Две направленные в разные стороны треугольные стрелки по бокам вертикальной линии обозначают отражение, зеркалирование или выравнивание по оси.",
+        "synonyms": [
+          "отразить",
+          "зеркало",
+          "перевернуть",
+          "отражение",
+          "выравнивание",
+          "ось",
+          "симметрия",
+          "свернуть",
+          "разложить"
+        ]
+      },
       "tags": [
         "triangle",
         "collapse",
@@ -20889,7 +21436,36 @@
       ]
     },
     "chevrons-from-axis-dashed-horizontal": {
+      "en": {
+        "description": "Shows a dashed horizontal line with chevrons pointing up and down, meaning expand or unfold from an axis.",
+        "synonyms": [
+          "dashed",
+          "dashed line",
+          "dotted line",
+          "expand",
+          "unfold",
+          "arrows up down",
+          "divider",
+          "broken line",
+          "split"
+        ]
+      },
       "fingerprint": "ac1780a030e7",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Изображена пунктирная горизонтальная линия с двумя шевронами вверх и вниз, обозначающими раскрытие или распределение от оси.",
+        "synonyms": [
+          "пунктир",
+          "пунктирная линия",
+          "развернуть",
+          "раскрыть",
+          "стрелки вверх вниз",
+          "разделитель",
+          "разворот",
+          "точечная линия",
+          "растянуть"
+        ]
+      },
       "tags": [
         "dashed",
         "dotted",
@@ -20899,7 +21475,38 @@
       ]
     },
     "chevrons-from-axis-dashed-vertical": {
+      "en": {
+        "description": "The icon shows left and right angle brackets around a vertical dashed line, usually meaning code, splitting, or expanding along an axis.",
+        "synonyms": [
+          "code",
+          "brackets",
+          "divider",
+          "dashed line",
+          "split",
+          "expand",
+          "unfold",
+          "vertical line",
+          "separator",
+          "broken line"
+        ]
+      },
       "fingerprint": "534d2ff2ea78",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Иконка показывает левую и правую угловые скобки вокруг вертикальной прерывистой линии, что означает код, разделение или раскрытие по оси.",
+        "synonyms": [
+          "код",
+          "скобки",
+          "разделитель",
+          "пунктир",
+          "прерывистая линия",
+          "раскрыть",
+          "развернуть",
+          "вертикальная линия",
+          "разделить",
+          "разрыв"
+        ]
+      },
       "tags": [
         "dashed",
         "dotted",
@@ -20909,14 +21516,75 @@
       ]
     },
     "chevrons-from-axis-horizontal": {
+      "en": {
+        "description": "A horizontal line with upward and downward chevrons, usually meaning expand or unfold content vertically.",
+        "synonyms": [
+          "expand",
+          "unfold",
+          "collapse",
+          "split",
+          "arrows up down",
+          "align",
+          "resize",
+          "divide",
+          "spread",
+          "vertical"
+        ]
+      },
       "fingerprint": "d8638daa8351",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Изображена горизонтальная линия с шевронами вверх и вниз, что обозначает разворачивание или раскрытие содержимого по вертикали.",
+        "synonyms": [
+          "развернуть",
+          "раскрыть",
+          "свернуть",
+          "развертка",
+          "стрелки вверх вниз",
+          "сортировка",
+          "выровнять",
+          "разделить",
+          "расширить"
+        ]
+      },
       "tags": [
         "expand",
         "unfold"
       ]
     },
     "chevrons-from-axis-vertical": {
+      "en": {
+        "description": "A vertical line flanked by two chevrons pointing outward, usually meaning expand, unfold or split apart.",
+        "synonyms": [
+          "expand",
+          "unfold",
+          "split",
+          "spread",
+          "arrows outward",
+          "vertical line",
+          "divide",
+          "open",
+          "stretch",
+          "separate"
+        ]
+      },
       "fingerprint": "0a1387757dc2",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Изображена вертикальная линия с двумя стрелками-уголками по бокам, указывающими наружу; обозначает разворачивание или раздвижение содержимого.",
+        "synonyms": [
+          "развернуть",
+          "раскрыть",
+          "разделить",
+          "расширить",
+          "стрелки в стороны",
+          "вертикальная линия",
+          "разворот",
+          "раздвинуть",
+          "растянуть",
+          "распахнуть"
+        ]
+      },
       "tags": [
         "expand",
         "unfold"
@@ -21192,7 +21860,36 @@
       ]
     },
     "chevrons-to-axis-dashed-horizontal": {
+      "en": {
+        "description": "Draws a dashed horizontal line with downward chevron above and upward chevron below, meaning collapse or align to a central axis.",
+        "synonyms": [
+          "dashed line",
+          "dotted line",
+          "broken line",
+          "collapse",
+          "fold",
+          "align center",
+          "compress",
+          "divider",
+          "merge"
+        ]
+      },
       "fingerprint": "896562101f8f",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Изображает пунктирную горизонтальную линию с шевронами вниз сверху и вверх снизу, что означает сведение или выравнивание по центральной оси.",
+        "synonyms": [
+          "пунктир",
+          "пунктирная линия",
+          "сворачивать",
+          "свернуть",
+          "схлопнуть",
+          "сжать",
+          "центрировать",
+          "выравнивание",
+          "разделитель"
+        ]
+      },
       "tags": [
         "dashed",
         "dotted",
@@ -21202,7 +21899,34 @@
       ]
     },
     "chevrons-to-axis-dashed-vertical": {
+      "en": {
+        "description": "Two chevrons point toward a central vertical dashed line, indicating collapse or folding content toward the middle.",
+        "synonyms": [
+          "collapse",
+          "fold",
+          "dashed line",
+          "dotted line",
+          "broken line",
+          "compress",
+          "shrink",
+          "arrows to center"
+        ]
+      },
       "fingerprint": "9b0acda11f5b",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Изображены два шеврона, направленных к вертикальной пунктирной линии по центру, что обозначает сворачивание или схлопывание содержимого.",
+        "synonyms": [
+          "свернуть",
+          "схлопнуть",
+          "сжать",
+          "пунктир",
+          "прерывистая линия",
+          "сложить",
+          "стрелки к центру",
+          "уменьшить"
+        ]
+      },
       "tags": [
         "dashed",
         "dotted",
@@ -21212,14 +21936,74 @@
       ]
     },
     "chevrons-to-axis-horizontal": {
+      "en": {
+        "description": "Draws a horizontal line with chevrons pointing toward it from above and below, usually meaning collapse or fold content to the center.",
+        "synonyms": [
+          "collapse",
+          "fold",
+          "squash",
+          "compress",
+          "center align",
+          "arrows inward",
+          "shrink",
+          "minimize",
+          "merge"
+        ]
+      },
       "fingerprint": "749a315746e6",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Изображена горизонтальная линия с шевронами сверху и снизу, стрелками указывающими к ней; означает свернуть или сжать содержимое к центру.",
+        "synonyms": [
+          "свернуть",
+          "сжать",
+          "схлопнуть",
+          "выровнять по центру",
+          "стрелки к центру",
+          "скрыть",
+          "уменьшить",
+          "разделить",
+          "сложить"
+        ]
+      },
       "tags": [
         "collapse",
         "fold"
       ]
     },
     "chevrons-to-axis-vertical": {
+      "en": {
+        "description": "A vertical line with two chevrons pointing inward toward it; usually means collapse, fold, or condense content.",
+        "synonyms": [
+          "collapse",
+          "fold",
+          "condense",
+          "shrink",
+          "compress",
+          "merge center",
+          "arrows inward",
+          "minimize",
+          "squeeze",
+          "align center"
+        ]
+      },
       "fingerprint": "08b87acff5ec",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Вертикальная линия с двумя шевронами, направленными к ней от краёв; обозначает сжатие, свёртывание или схлопывание содержимого.",
+        "synonyms": [
+          "свернуть",
+          "схлопнуть",
+          "сжать",
+          "свести к центру",
+          "стрелки к центру",
+          "уменьшить",
+          "сложить",
+          "сворачивание",
+          "центрировать",
+          "выровнять"
+        ]
+      },
       "tags": [
         "collapse",
         "fold"
@@ -21473,7 +22257,38 @@
       ]
     },
     "cinema": {
+      "en": {
+        "description": "Draws a screen with a play button above two seat shapes, representing a cinema or movie viewing.",
+        "synonyms": [
+          "movie",
+          "theater",
+          "screen",
+          "film",
+          "play",
+          "seats",
+          "video",
+          "showtimes",
+          "auditorium",
+          "entertainment"
+        ]
+      },
       "fingerprint": "bd7829a8afc5",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Рисует прямоугольный экран с кнопкой воспроизведения и два ряда кресел внизу; обозначает кинотеатр или просмотр фильмов.",
+        "synonyms": [
+          "кинотеатр",
+          "кино",
+          "экран",
+          "фильм",
+          "просмотр",
+          "кресла",
+          "видео",
+          "воспроизведение",
+          "сеанс",
+          "развлечения"
+        ]
+      },
       "tags": [
         "movie",
         "theater",
@@ -21945,7 +22760,38 @@
       ]
     },
     "circle-bounce": {
+      "en": {
+        "description": "Draws a bouncing arc ending in a circle, representing a ball rebounding or a bounce motion.",
+        "synonyms": [
+          "bounce",
+          "ball",
+          "trajectory",
+          "rebound",
+          "physics",
+          "animation",
+          "easing",
+          "collision",
+          "arc",
+          "impact"
+        ]
+      },
       "fingerprint": "a351cf9da7cd",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Рисует стрелку-траекторию с кружком в конце, которая обозначает отскок мяча или движение с отскоком.",
+        "synonyms": [
+          "отскок",
+          "мяч",
+          "траектория",
+          "анимация",
+          "физика",
+          "удар",
+          "дуга",
+          "движение",
+          "столкновение",
+          "эффект отскока"
+        ]
+      },
       "tags": [
         "ball",
         "trajectory",
@@ -24905,7 +25751,34 @@
       ]
     },
     "circle-person-arms-spread": {
+      "en": {
+        "description": "A stick figure with arms spread inside a circle, usually signaling accessibility or universal access features.",
+        "synonyms": [
+          "accessibility",
+          "universal access",
+          "inclusive",
+          "disability",
+          "disabled",
+          "person",
+          "human",
+          "assistive"
+        ]
+      },
       "fingerprint": "1cbcf24ee85b",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Значок показывает фигуру человека с расставленными руками внутри круга, обозначая доступность и универсальный доступ.",
+        "synonyms": [
+          "доступность",
+          "инклюзивность",
+          "универсальный доступ",
+          "инвалидность",
+          "человек",
+          "люди",
+          "специальные возможности",
+          "доступная среда"
+        ]
+      },
       "tags": [
         "universal access",
         "accessibility",
@@ -33754,7 +34627,38 @@
       ]
     },
     "doghouse": {
+      "en": {
+        "description": "Outline of a house with an arched doorway and a curved arc above it, representing a dog shelter or pet house.",
+        "synonyms": [
+          "kennel",
+          "pet house",
+          "shelter",
+          "animal shelter",
+          "puppy",
+          "canine",
+          "pet",
+          "backyard",
+          "dog kennel",
+          "hut"
+        ]
+      },
       "fingerprint": "d04c5479b496",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Контур домика с арочным входом и дугой над ним, это будка для собаки или приют для питомцев.",
+        "synonyms": [
+          "будка",
+          "конура",
+          "домик для собаки",
+          "приют",
+          "питомник",
+          "домик",
+          "питомец",
+          "щенок",
+          "собака",
+          "дворик"
+        ]
+      },
       "tags": [
         "kennel",
         "pet",
@@ -46980,7 +47884,38 @@
       ]
     },
     "hand-truck": {
+      "en": {
+        "description": "Shows a hand truck with a box and a wheel, meaning moving, transporting or delivering cargo.",
+        "synonyms": [
+          "dolly",
+          "trolley",
+          "hand cart",
+          "delivery",
+          "moving",
+          "transport",
+          "freight",
+          "cargo",
+          "warehouse",
+          "logistics"
+        ]
+      },
       "fingerprint": "8be9cb0b7d74",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Изображена ручная тележка с коробками и одним колесом; значит перевозку, доставку грузов или перемещение товаров.",
+        "synonyms": [
+          "тележка",
+          "тачка",
+          "грузовая тележка",
+          "доставка",
+          "перевозка",
+          "переезд",
+          "коробки",
+          "груз",
+          "склад",
+          "логистика"
+        ]
+      },
       "tags": [
         "dolly",
         "trolley",
@@ -49099,7 +50034,38 @@
       ]
     },
     "house-arrow-left": {
+      "en": {
+        "description": "An outlined house with a leftward arrow at its entrance, usually meaning entering home, arrival or check-in.",
+        "synonyms": [
+          "home",
+          "house",
+          "entry",
+          "arrow left",
+          "check in",
+          "arrival",
+          "smart home",
+          "enter home",
+          "homepage",
+          "sign in"
+        ]
+      },
       "fingerprint": "91aee8555dfd",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Контур дома с горизонтальной стрелкой влево у входа; обозначает вход, прибытие или возврат домой.",
+        "synonyms": [
+          "домик",
+          "дом",
+          "вход",
+          "стрелка влево",
+          "возврат домой",
+          "приход домой",
+          "прибытие",
+          "умный дом",
+          "заход домой",
+          "главная"
+        ]
+      },
       "tags": [
         "home",
         "living",
@@ -49135,7 +50101,38 @@
       ]
     },
     "house-arrow-right": {
+      "en": {
+        "description": "Outline of a house with a right arrow leaving from its door, usually meaning exit, checkout, or moving out.",
+        "synonyms": [
+          "house",
+          "home",
+          "exit",
+          "leave",
+          "logout",
+          "check out",
+          "move out",
+          "departure",
+          "arrow right",
+          "sign out"
+        ]
+      },
       "fingerprint": "f6f9a30e5836",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Контурный домик с стрелкой, направленной вправо от двери; обозначает выход из дома, отъезд или выселение.",
+        "synonyms": [
+          "домик",
+          "дом",
+          "выход",
+          "выйти",
+          "выезд",
+          "уехать",
+          "стрелка вправо",
+          "съезд с квартиры",
+          "выписка",
+          "выселение"
+        ]
+      },
       "tags": [
         "home",
         "living",
@@ -56466,7 +57463,38 @@
       ]
     },
     "loader-pinwheel": {
+      "en": {
+        "description": "A black circle containing four curved pinwheel blades, usually indicating loading, waiting, or busy progress.",
+        "synonyms": [
+          "loading",
+          "spinner",
+          "wait",
+          "busy",
+          "throbber",
+          "pinwheel",
+          "progress",
+          "beach ball",
+          "freeze",
+          "processing"
+        ]
+      },
       "fingerprint": "b31c204ee2f6",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Черный круг с четырьмя изогнутыми лопастями, напоминающими вертушку; обычно означает загрузку или ожидание.",
+        "synonyms": [
+          "загрузка",
+          "ожидание",
+          "крутилка",
+          "спиннер",
+          "вертушка",
+          "прогресс",
+          "подождите",
+          "зависание",
+          "лоадер",
+          "занят"
+        ]
+      },
       "tags": [
         "loading",
         "wait",
@@ -65351,7 +66379,38 @@
       ]
     },
     "nigerian-naira": {
+      "en": {
+        "description": "Drawing of the Nigerian naira currency sign, a letter N crossed by two horizontal bars, meaning Nigerian money.",
+        "synonyms": [
+          "currency",
+          "money",
+          "naira",
+          "nigeria",
+          "cash",
+          "finance",
+          "price",
+          "payment",
+          "exchange rate",
+          "currency sign"
+        ]
+      },
       "fingerprint": "d01d484ef790",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Рисунок знака нигерийской найры: буква N с двумя горизонтальными чертами через неё, означает валюту Нигерии.",
+        "synonyms": [
+          "валюта",
+          "деньги",
+          "найра",
+          "нигерия",
+          "наличные",
+          "финансы",
+          "цена",
+          "платёж",
+          "курс обмена",
+          "знак валюты"
+        ]
+      },
       "tags": [
         "currency",
         "money",
@@ -85797,7 +86856,36 @@
       ]
     },
     "square-axis-dashed-horizontal": {
+      "en": {
+        "description": "Shows an open rectangle with a horizontal dashed line through its middle, usually meaning a horizontal axis, centerline, or mirror flip.",
+        "synonyms": [
+          "dashed line",
+          "dotted line",
+          "broken line",
+          "horizontal axis",
+          "mirror",
+          "flip horizontal",
+          "reflect",
+          "centerline",
+          "alignment"
+        ]
+      },
       "fingerprint": "a23eabbdfe5c",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Изображена рамка с открытыми верхней и нижней сторонами и горизонтальной пунктирной линией посередине; обозначает ось симметрии или выравнивание по центру.",
+        "synonyms": [
+          "пунктир",
+          "пунктирная линия",
+          "ось симметрии",
+          "отражение",
+          "зеркало",
+          "отразить",
+          "выравнивание",
+          "центральная линия",
+          "разделитель"
+        ]
+      },
       "tags": [
         "dashed",
         "dotted",
@@ -85810,7 +86898,38 @@
       ]
     },
     "square-axis-dashed-vertical": {
+      "en": {
+        "description": "Shows two square brackets enclosing a vertical dashed centerline, usually meaning an axis, divider, or mirror reflection.",
+        "synonyms": [
+          "axis",
+          "dashed line",
+          "dotted line",
+          "divider",
+          "centerline",
+          "mirror",
+          "reflect",
+          "flip",
+          "alignment",
+          "brackets"
+        ]
+      },
       "fingerprint": "196e837f0675",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Изображены две квадратные скобки по бокам и три пунктирных вертикальных отрезка по центру, обозначающие ось или разделитель.",
+        "synonyms": [
+          "ось",
+          "пунктир",
+          "пунктирная линия",
+          "разделитель",
+          "центральная линия",
+          "зеркало",
+          "отразить",
+          "выравнивание",
+          "скобки",
+          "прерывистая линия"
+        ]
+      },
       "tags": [
         "dashed",
         "dotted",
@@ -85823,7 +86942,38 @@
       ]
     },
     "square-axis-horizontal": {
+      "en": {
+        "description": "Draws a rounded square split by a horizontal line through the middle, representing horizontal flip or centerline alignment.",
+        "synonyms": [
+          "reflect",
+          "flip",
+          "mirror",
+          "alignment",
+          "centerline",
+          "horizontal axis",
+          "split",
+          "middle",
+          "symmetry",
+          "center"
+        ]
+      },
       "fingerprint": "b1f7bf816d4e",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Изображена квадратная рамка, разделённая горизонтальной линией посередине; обозначает зеркальное отражение или выравнивание по центральной горизонтальной оси.",
+        "synonyms": [
+          "отразить",
+          "зеркало",
+          "перевернуть",
+          "отражение",
+          "выравнивание",
+          "центр",
+          "средняя линия",
+          "по горизонтали",
+          "разделить",
+          "ось"
+        ]
+      },
       "tags": [
         "reflect",
         "flip",
@@ -85833,7 +86983,38 @@
       ]
     },
     "square-axis-vertical": {
+      "en": {
+        "description": "Draws a vertical center line between two brackets, representing reflection, mirroring, or alignment along an axis.",
+        "synonyms": [
+          "reflect",
+          "flip",
+          "mirror",
+          "axis",
+          "alignment",
+          "center line",
+          "divider",
+          "symmetry",
+          "horizontal flip",
+          "split"
+        ]
+      },
       "fingerprint": "d58ec02259da",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Рисует вертикальную линию по центру между двумя скобками, что обозначает отражение, зеркальное отображение или выравнивание по оси.",
+        "synonyms": [
+          "отразить",
+          "отражение",
+          "зеркало",
+          "перевернуть",
+          "отзеркалить",
+          "выравнивание",
+          "ось",
+          "центр линии",
+          "разделитель",
+          "по центру"
+        ]
+      },
       "tags": [
         "reflect",
         "flip",
@@ -92821,7 +94002,34 @@
       ]
     },
     "stroke-width": {
+      "en": {
+        "description": "Shows three horizontal strokes of increasing thickness, a thin line above two rounded rectangles, indicating stroke width or line weight.",
+        "synonyms": [
+          "line thickness",
+          "stroke weight",
+          "line weight",
+          "brush size",
+          "pen size",
+          "outline width",
+          "stroke size",
+          "line width"
+        ]
+      },
       "fingerprint": "9277af9f2b31",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Рисунок показывает три линии разной толщины, сверху вниз: тонкая полоска, средняя и толстая рамка; значок обозначает толщину обводки.",
+        "synonyms": [
+          "толщина линии",
+          "толщина обводки",
+          "жирность линии",
+          "вес линии",
+          "размер кисти",
+          "размер пера",
+          "толщина пера",
+          "обводка"
+        ]
+      },
       "tags": [
         "stroke",
         "path",
@@ -103254,7 +104462,38 @@
       ]
     },
     "warehouse-waves": {
+      "en": {
+        "description": "A building with a pitched roof above two wavy water lines, representing a warehouse or a data lake storage.",
+        "synonyms": [
+          "warehouse",
+          "storage",
+          "storehouse",
+          "depot",
+          "data lake",
+          "lakehouse",
+          "logistics",
+          "stockroom",
+          "water",
+          "waves"
+        ]
+      },
       "fingerprint": "eb63d089e3fb",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Изображен домик с крышей и проёмом над двумя волнистыми линиями воды; обозначает склад или хранилище данных у воды.",
+        "synonyms": [
+          "склад",
+          "хранилище",
+          "амбар",
+          "ангар",
+          "депо",
+          "озеро данных",
+          "водоем",
+          "логистика",
+          "вода",
+          "волны"
+        ]
+      },
       "tags": [
         "storage",
         "storehouse",
