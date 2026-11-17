@@ -5,6 +5,7 @@ import {
   EMBEDDER,
   INDEX_SETTINGS,
   SEARCH_MODEL,
+  SEMANTIC_DISTRIBUTION,
   STORE_KEYS,
   vectorHash,
 } from "@iconavo-ui/search";
@@ -281,6 +282,33 @@ describe("searchIndex: изменения", () => {
     );
   });
 
+  it("новая калибровка шкалы смысла — без --reembed, документы заново с векторами из бакета", async () => {
+    const { meili, embed, run } = setup();
+    await run();
+    const calls = embed.calls.length;
+    meili.settings = {
+      ...meili.settings,
+      embedders: {
+        [EMBEDDER]: { source: "userProvided", dimensions: SEARCH_MODEL.dims },
+      },
+    };
+    const r = await run();
+    expect(r.stop).toEqual([]);
+    expect(r.settingsChanged).toEqual(["embedders"]);
+    expect(r.documents).toMatchObject({ update: 4, same: 0 });
+    // Подделка, как Meilisearch, стирает векторы при смене настроек эмбеддера — документы их вернули.
+    expect(meili.docs.get("lucide_house")?._vectors?.[EMBEDDER]).toHaveLength(
+      SEARCH_MODEL.dims,
+    );
+    expect(
+      (meili.settings.embedders as Record<string, { distribution?: unknown }>)[
+        EMBEDDER
+      ]?.distribution,
+    ).toEqual(SEMANTIC_DISTRIBUTION);
+    // Векторы — из бакета: Polza не звали.
+    expect(embed.calls.length).toBe(calls);
+  });
+
   it("оценка выше лимита — «СТОП» до любой записи", async () => {
     const { meili, storage, embed, run } = setup();
     const r = await run({ maxRub: 0 });
@@ -347,7 +375,35 @@ describe("settingsDiff", () => {
       },
       faceting: { maxValuesPerFacet: 100 },
     };
-    expect(settingsDiff(current)).toEqual({ keys: [], embedderChanged: false });
+    expect(settingsDiff(current)).toEqual({
+      keys: [],
+      embedderChanged: false,
+      distributionChanged: false,
+    });
+    // Калибровку Meilisearch хранит в f32 — отдаёт с хвостом, это не отличие.
+    const f32 = structuredClone(INDEX_SETTINGS) as Record<string, unknown>;
+    const gemini = (f32.embedders as Record<string, Record<string, unknown>>)[
+      EMBEDDER
+    ] as Record<string, unknown>;
+    gemini.distribution = {
+      mean: Math.fround(SEMANTIC_DISTRIBUTION.mean),
+      sigma: Math.fround(SEMANTIC_DISTRIBUTION.sigma),
+    };
+    expect(settingsDiff(f32).keys).toEqual([]);
+  });
+
+  it("другая калибровка шкалы смысла — обычная настройка, не смена эмбеддера (ADR-0053)", () => {
+    const old = {
+      ...structuredClone(INDEX_SETTINGS),
+      embedders: {
+        [EMBEDDER]: { source: "userProvided", dimensions: SEARCH_MODEL.dims },
+      },
+    };
+    expect(settingsDiff(old)).toEqual({
+      keys: ["embedders"],
+      embedderChanged: false,
+      distributionChanged: true,
+    });
   });
 
   it("пустой индекс — эмбеддер добавляется, а не меняется", () => {

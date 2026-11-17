@@ -370,6 +370,8 @@ const USAGE = `Использование:
                                       нужны ${SEARCH_ENV.url} и ${SEARCH_ENV.readKey}
       --service-only                  только сервис и «Текст», без моделей прототипа (шаг 8 фазы 4);
                                       и места 11–30 сервиса у худших запросов рабочей части
+      --explore                       с --service или --service-only: опыт этапа 2 — слияние слов и
+                                      смысла (ADR-0053), только рабочая часть
   pnpm eval                           замер поиска по эталону: Hit@5, MRR@10, P@5 по моделям,
                                       языкам и частям; страница .cache/reports/eval/index.html,
                                       с сервисом — и худшие запросы рабочей части eval/worst.html
@@ -379,6 +381,7 @@ const USAGE = `Использование:
                                       и сравнение с гибридом Gemini прототипа
       --service-only                  только сервис и «Текст»: векторы иконок не нужны (для CI);
                                       неразмеченные пары — заметка, а не «СТОП»
+      --explore                       с --service или --service-only: опыт этапа 2 (ADR-0053)
   pnpm search-page                    страница поиска для ручной проверки на 127.0.0.1;
                                       там же отчёты из .cache/reports
       --port=N                        порт (по умолчанию ${PAGE_PORT})
@@ -578,6 +581,17 @@ function usageError(message: string): never {
  * Поисковый сервис для замера (ADR-0049): клиент Meilisearch из окружения — ключа только для чтения
  * хватает, админский тоже подойдёт.
  */
+/** --explore — только вместе с сервисом: опыт идёт на его списках (ADR-0053). */
+function requireServiceForExplore(): void {
+  if (
+    flags.includes("--explore") &&
+    !flags.includes("--service") &&
+    !flags.includes("--service-only")
+  ) {
+    usageError("--explore работает только с --service или --service-only.");
+  }
+}
+
 function readService(): { client: MeiliClient } {
   const url = process.env[SEARCH_ENV.url]?.trim() ?? "";
   const key =
@@ -695,7 +709,7 @@ for (const flag of flags) {
   if (command === "eval" && flag === "--baseline") continue;
   if (
     (command === "eval" || command === "judge") &&
-    (flag === "--service" || flag === "--service-only")
+    (flag === "--service" || flag === "--service-only" || flag === "--explore")
   ) {
     continue;
   }
@@ -1255,6 +1269,7 @@ try {
     process.exit(nearestStop(report) ? 1 : 0);
   } else if (command === "judge") {
     if (args.length > 0) usageError("pnpm judge принимает только флаги.");
+    requireServiceForExplore();
     const dryRun = flags.includes("--dry-run");
     // Ключ — только из окружения (pnpm judge подхватывает .env); в вывод он не попадает.
     const key = process.env.POLZA_API_KEY;
@@ -1279,6 +1294,7 @@ try {
             service: {
               ...readService(),
               only: flags.includes("--service-only"),
+              explore: flags.includes("--explore"),
             },
           }
         : {}),
@@ -1297,6 +1313,7 @@ try {
     process.exit(judgeStop(report) ? 1 : 0);
   } else if (command === "eval") {
     if (args.length > 0) usageError("pnpm eval принимает только флаги.");
+    requireServiceForExplore();
     // Ключ нужен только для векторов новых запросов: с полным кэшем замер идёт без сети.
     const key = process.env.POLZA_API_KEY;
     const report = await evaluate(configs, dataDir, {
@@ -1312,6 +1329,7 @@ try {
             service: {
               ...readService(),
               only: flags.includes("--service-only"),
+              explore: flags.includes("--explore"),
             },
           }
         : {}),

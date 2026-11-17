@@ -639,6 +639,10 @@
           "fingerprint": "cb7b58e0800b",
           "verdict": "fits"
         },
+        "tabler:tag-code": {
+          "fingerprint": "e52fb9a28a32",
+          "verdict": "partial"
+        },
         "tabler:tag-minus": {
           "fingerprint": "0a9f375ae666",
           "verdict": "partial"
@@ -649,6 +653,10 @@
         },
         "tabler:tag-plus": {
           "fingerprint": "845b7cbcb1f1",
+          "verdict": "partial"
+        },
+        "tabler:tag-question": {
+          "fingerprint": "d856c6de1882",
           "verdict": "partial"
         },
         "tabler:tag-search": {
@@ -665,6 +673,10 @@
         },
         "tabler:tags-chevron-down": {
           "fingerprint": "219ce707949b",
+          "verdict": "no"
+        },
+        "tabler:tags-chevron-right": {
+          "fingerprint": "fad205570e6c",
           "verdict": "no"
         },
         "tabler:tags-chevron-up": {
@@ -2589,6 +2601,10 @@
           "fingerprint": "96349af088f6",
           "verdict": "fits"
         },
+        "material-symbols:share-location": {
+          "fingerprint": "49831c3061e4",
+          "verdict": "fits"
+        },
         "material-symbols:universal-local": {
           "fingerprint": "840b60f3cf05",
           "verdict": "fits"
@@ -2642,6 +2658,11 @@
           "fingerprint": "acd1327f5a34",
           "verdict": "no"
         },
+        "tabler:cash-banknote-pin": {
+          "fingerprint": "1526920e5dc0",
+          "repeat": "partial",
+          "verdict": "partial"
+        },
         "tabler:clock-pin": {
           "fingerprint": "82edd844124a",
           "verdict": "no"
@@ -2665,6 +2686,11 @@
         "tabler:devices-pin": {
           "fingerprint": "18117486ff11",
           "verdict": "no"
+        },
+        "tabler:link-pin": {
+          "fingerprint": "a89b64d121d6",
+          "repeat": "partial",
+          "verdict": "partial"
         },
         "tabler:location-pin": {
           "fingerprint": "a4d41ab93a43",
@@ -2706,6 +2732,10 @@
           "fingerprint": "4f40a7ef1a80",
           "verdict": "partial"
         },
+        "tabler:map-pin-up": {
+          "fingerprint": "8afdeef6bb51",
+          "verdict": "partial"
+        },
         "tabler:map-pinned": {
           "fingerprint": "994d37b11187",
           "verdict": "fits"
@@ -2736,6 +2766,10 @@
         },
         "tabler:pointer-pin": {
           "fingerprint": "250c3e167517",
+          "verdict": "partial"
+        },
+        "tabler:shield-pin": {
+          "fingerprint": "c8bae55eaed7",
           "verdict": "partial"
         },
         "tabler:user-pin": {
@@ -2972,6 +3006,10 @@
         },
         "tabler:zoom-pan": {
           "fingerprint": "4e0d20d80c90",
+          "verdict": "no"
+        },
+        "tabler:zoom-question": {
+          "fingerprint": "d0ee423cb6cd",
           "verdict": "no"
         },
         "tabler:zoom-reset": {
@@ -4779,6 +4817,10 @@
           "fingerprint": "3c50d0efd887",
           "verdict": "no"
         },
+        "material-symbols:cable": {
+          "fingerprint": "e0d8f0984f8d",
+          "verdict": "no"
+        },
         "material-symbols:diversity-2": {
           "fingerprint": "a324c2518b77",
           "verdict": "no"
@@ -4935,6 +4977,10 @@
         },
         "lucide:message-circle-warning": {
           "fingerprint": "b19fc38b3cc7",
+          "verdict": "partial"
+        },
+        "lucide:message-square-exclamation-point": {
+          "fingerprint": "d0ca068b0ccc",
           "verdict": "partial"
         },
         "lucide:octagon-exclamation-point": {
@@ -5459,12 +5505,24 @@
           "fingerprint": "d620d6143a12",
           "verdict": "partial"
         },
+        "lucide:chart-bar-big": {
+          "fingerprint": "d135697ef7f9",
+          "verdict": "partial"
+        },
         "lucide:chart-candlestick": {
           "fingerprint": "c0ed1c6a1823",
           "verdict": "no"
         },
         "lucide:chart-column": {
           "fingerprint": "6cf37b138675",
+          "verdict": "partial"
+        },
+        "lucide:chart-column-big": {
+          "fingerprint": "4a0c2573da93",
+          "verdict": "partial"
+        },
+        "lucide:chart-column-stacked": {
+          "fingerprint": "015ee99b0bb5",
           "verdict": "partial"
         },
         "lucide:chart-gantt": {
@@ -5483,6 +5541,10 @@
         "lucide:chart-pie": {
           "fingerprint": "c7ffe9cccf65",
           "verdict": "no"
+        },
+        "lucide:chart-radar": {
+          "fingerprint": "d023fb7528a2",
+          "verdict": "partial"
         },
         "lucide:file-chart-line": {
           "fingerprint": "adfec844ded3",
@@ -5653,6 +5715,10 @@
           "fingerprint": "a732486b30aa",
           "verdict": "fits"
         },
+        "lucide:file-key": {
+          "fingerprint": "ad63a6411f8d",
+          "verdict": "partial"
+        },
         "lucide:globe-lock": {
           "fingerprint": "bf942c364ec8",
           "verdict": "partial"
@@ -5695,6 +5761,11 @@
         },
         "lucide:shield-lock": {
           "fingerprint": "f99b32f1e7ef",
+          "verdict": "partial"
+        },
+        "lucide:shield-x": {
+          "fingerprint": "e6ad7b2b06eb",
+          "repeat": "partial",
           "verdict": "partial"
         },
         "lucide:user-lock": {
@@ -8836,6 +8907,10 @@
           "fingerprint": "359ed60a3f85",
           "verdict": "partial"
         },
+        "lucide:search-slash": {
+          "fingerprint": "346e9bef2e8e",
+          "verdict": "partial"
+        },
         "lucide:text-cursor-input": {
           "fingerprint": "96b95faca3bf",
           "verdict": "partial"
@@ -8988,6 +9063,10 @@
         },
         "fluent-emoji-flat:radio-button": {
           "fingerprint": "e663febd0602",
+          "verdict": "partial"
+        },
+        "fluent-emoji-flat:white-circle": {
+          "fingerprint": "866c446a07c9",
           "verdict": "partial"
         },
         "lucide:circle": {
@@ -9242,9 +9321,17 @@
           "fingerprint": "0a41d7e8ae94",
           "verdict": "fits"
         },
+        "lucide:square-chevrons-down": {
+          "fingerprint": "3e624877184f",
+          "verdict": "no"
+        },
         "lucide:square-chevrons-right": {
           "fingerprint": "6d14e0404454",
           "verdict": "fits"
+        },
+        "lucide:square-chevrons-up": {
+          "fingerprint": "3ea5c824e1ad",
+          "verdict": "no"
         },
         "lucide:step-forward": {
           "fingerprint": "1799d767b6a4",
@@ -9374,6 +9461,10 @@
         },
         "lucide:mail-dot": {
           "fingerprint": "c4d7c78c0d65",
+          "verdict": "partial"
+        },
+        "lucide:message-square-dot": {
+          "fingerprint": "75cac432c001",
           "verdict": "partial"
         },
         "lucide:monitor-dot": {
@@ -11386,6 +11477,10 @@
           "fingerprint": "86cd64b8b0e4",
           "verdict": "partial"
         },
+        "material-symbols:rule": {
+          "fingerprint": "5d1c81018cc1",
+          "verdict": "partial"
+        },
         "material-symbols:select-check-box": {
           "fingerprint": "d30b61fda3a4",
           "verdict": "fits"
@@ -11731,6 +11826,10 @@
           "fingerprint": "b00c0e226f34",
           "verdict": "partial"
         },
+        "tabler:home-hand": {
+          "fingerprint": "b970ee5ee6ed",
+          "verdict": "fits"
+        },
         "tabler:home-link": {
           "fingerprint": "cc1f0d54c9b1",
           "verdict": "no"
@@ -12053,6 +12152,10 @@
           "fingerprint": "0bd239511420",
           "verdict": "partial"
         },
+        "ph:cloud": {
+          "fingerprint": "4886c3f8aaa4",
+          "verdict": "partial"
+        },
         "ph:cloud-arrow-down": {
           "fingerprint": "07daa724f1e7",
           "verdict": "fits"
@@ -12302,6 +12405,10 @@
           "fingerprint": "ed12f2753663",
           "verdict": "no"
         },
+        "material-symbols:home-storage-gear": {
+          "fingerprint": "170199ca0ff3",
+          "verdict": "partial"
+        },
         "material-symbols:manufacturing": {
           "fingerprint": "686e7c058aee",
           "verdict": "fits"
@@ -12384,6 +12491,10 @@
         },
         "tabler:settings-cog": {
           "fingerprint": "1ac7348e5f3a",
+          "verdict": "partial"
+        },
+        "tabler:settings-share": {
+          "fingerprint": "e2a322c9c557",
           "verdict": "partial"
         },
         "tabler:shield-cog": {
@@ -12717,6 +12828,26 @@
         },
         "tabler:bookmark-heart": {
           "fingerprint": "63dfdeea3fe1",
+          "verdict": "partial"
+        },
+        "tabler:bookmark-pause": {
+          "fingerprint": "8eec355b0b2f",
+          "verdict": "partial"
+        },
+        "tabler:bookmark-pin": {
+          "fingerprint": "23f187f98593",
+          "verdict": "partial"
+        },
+        "tabler:bookmark-search": {
+          "fingerprint": "2b8db7551486",
+          "verdict": "partial"
+        },
+        "tabler:bookmark-star": {
+          "fingerprint": "027258370765",
+          "verdict": "partial"
+        },
+        "tabler:bookmark-up": {
+          "fingerprint": "e8bcee58f4f9",
           "verdict": "partial"
         },
         "tabler:home-ribbon": {
@@ -14384,6 +14515,10 @@
           "fingerprint": "51e229a291a5",
           "verdict": "partial"
         },
+        "tabler:bell-code": {
+          "fingerprint": "8903e2c4cff8",
+          "verdict": "partial"
+        },
         "tabler:bell-exclamation": {
           "fingerprint": "e00c2e177bfe",
           "verdict": "partial"
@@ -14808,6 +14943,10 @@
         "material-symbols:trip": {
           "fingerprint": "3e67f5b719c6",
           "verdict": "partial"
+        },
+        "ph:bag-simple": {
+          "fingerprint": "7ae9b167273a",
+          "verdict": "no"
         },
         "ph:suitcase-rolling": {
           "fingerprint": "ec1d1b791de7",
@@ -16608,6 +16747,10 @@
           "fingerprint": "1fe553e13230",
           "verdict": "fits"
         },
+        "material-symbols:add-to-queue": {
+          "fingerprint": "b6f406f8e488",
+          "verdict": "no"
+        },
         "material-symbols:bookmark-add": {
           "fingerprint": "6d0d188c091c",
           "repeat": "fits",
@@ -16633,6 +16776,10 @@
         "material-symbols:heart-plus": {
           "fingerprint": "1cd248a6a690",
           "verdict": "fits"
+        },
+        "material-symbols:library-add": {
+          "fingerprint": "90972a03604d",
+          "verdict": "partial"
         },
         "material-symbols:loupe": {
           "fingerprint": "032a9700e68b",
@@ -17678,6 +17825,10 @@
         },
         "tabler:file-download": {
           "fingerprint": "db8943f1f8f3",
+          "verdict": "fits"
+        },
+        "tabler:file-text-down": {
+          "fingerprint": "b73786965a8a",
           "verdict": "fits"
         },
         "tabler:pdf": {
@@ -24081,6 +24232,10 @@
           "repeat": "partial",
           "verdict": "partial"
         },
+        "material-symbols:battery-4-bar": {
+          "fingerprint": "e7a382d8a7d5",
+          "verdict": "no"
+        },
         "material-symbols:clock-loader-10": {
           "fingerprint": "677343368cda",
           "verdict": "partial"
@@ -27207,6 +27362,10 @@
           "fingerprint": "dcfc28338f56",
           "verdict": "partial"
         },
+        "tabler:lock-key": {
+          "fingerprint": "55865a84c6c1",
+          "verdict": "fits"
+        },
         "tabler:lock-pin": {
           "fingerprint": "1fe25ab87429",
           "verdict": "partial"
@@ -27217,6 +27376,10 @@
         },
         "tabler:lock-search": {
           "fingerprint": "dcc6b91334cc",
+          "verdict": "partial"
+        },
+        "tabler:lock-spark": {
+          "fingerprint": "791e8cde6517",
           "verdict": "partial"
         },
         "tabler:lock-square": {
@@ -29010,8 +29173,8 @@
     }
   },
   "spent": {
-    "images": 7130,
-    "requests": 1034,
-    "rub": 288.89942694000035
+    "images": 7173,
+    "requests": 1058,
+    "rub": 292.46306506000036
   }
 }

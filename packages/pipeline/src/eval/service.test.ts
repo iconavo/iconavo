@@ -12,7 +12,14 @@ import { readQueries } from "./golden.js";
 import { judgeEval } from "./judge.js";
 import { formatEvalReport, renderEvalPage, renderWorstPage } from "./report.js";
 import { evaluate } from "./run.js";
-import { firstFit, serviceKey, serviceLists, withExact } from "./service.js";
+import {
+  FAMILIES,
+  familyKey,
+  firstFit,
+  serviceKey,
+  serviceLists,
+  withExact,
+} from "./service.js";
 import { SERVICE_KEY, SERVICE_TEXT_KEY } from "./systems.js";
 
 let env: Env;
@@ -174,6 +181,75 @@ describe("serviceLists", () => {
       embedClient: fakeEmbeddingClient().client,
     });
     expect(s.error).toMatch(/Meilisearch: 503/);
+  });
+});
+
+describe("опыт этапа 2 — слияние слов и смысла (ADR-0053)", () => {
+  it("копия слияния повторяет выдачу; семейства — на всей сетке, точное имя впереди", async () => {
+    const { meili, catalog } = await seededMeili();
+    const queries = await readQueries(env.options.queriesPath);
+    const plain = await serviceLists({
+      client: meili.client,
+      catalog,
+      queries,
+      queryDir: env.options.queryDir,
+      embedClient: fakeEmbeddingClient().client,
+    });
+    expect(plain.explore).toBeUndefined();
+    expect(plain.lists.has(familyKey("m", 0.5))).toBe(false);
+    const s = await serviceLists({
+      client: meili.client,
+      catalog,
+      queries,
+      queryDir: env.options.queryDir,
+      embedClient: fakeEmbeddingClient().client,
+      explore: true,
+    });
+    expect(s.explore?.checked).toBe(queries.length * ALPHA_GRID.length);
+    expect(s.explore?.mismatches).toEqual([]);
+    expect(s.explore?.distribution.sigma).toBeGreaterThan(0);
+    for (const family of FAMILIES) {
+      for (const x of ALPHA_GRID) {
+        expect(s.lists.get(familyKey(family, x))).toHaveLength(queries.length);
+      }
+    }
+    const house = queries.findIndex((q) => q.id === "en-002");
+    expect(s.lists.get(familyKey("c-abs", 0.5))?.[house]?.[0]).toBe(
+      "demo:house",
+    );
+  });
+
+  it("судья и замер с explore: кривые устройств, выбор и что он чинит и ломает", async () => {
+    const { meili } = await seededMeili();
+    await judgeEval([config], env.dataDir, {
+      ...env.options,
+      storeDir: "нет-такой-папки",
+      client: fakeJudgeClient({ verdict: rule }).client,
+      service: { client: meili.client, only: true, explore: true },
+    });
+    const r = await evaluate([config], env.dataDir, {
+      queriesPath: env.options.queriesPath,
+      judgmentsPath: env.options.judgmentsPath,
+      overridesPath: env.options.overridesPath,
+      storeDir: "нет-такой-папки",
+      queryDir: env.options.queryDir,
+      embedClient: fakeEmbeddingClient().client,
+      service: { client: meili.client, only: true, explore: true },
+    });
+    expect(r.stop).toEqual([]);
+    expect(r.unlabeled).toBe(0);
+    expect(r.explore?.curves.map((c) => c.device)).toEqual([
+      "now",
+      "m",
+      "c-abs",
+      "c-rel",
+    ]);
+    expect(r.explore?.curves.every((c) => c.tuned !== undefined)).toBe(true);
+    // Подделка ищет только словами: всем устройствам доступно одно и то же — остаётся «как сейчас».
+    expect(r.explore?.choice?.device).toBe("now");
+    expect(r.explore?.broken).toEqual([]);
+    expect(formatEvalReport(r)).toMatch(/Опыт этапа 2 \(ADR-0053\)/);
+    expect(renderEvalPage(r)).toContain("Опыт этапа 2: слияние слов и смысла");
   });
 });
 

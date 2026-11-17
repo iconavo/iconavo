@@ -141,13 +141,24 @@ const sortedStrings = (v: unknown): string[] | undefined =>
         .sort()
     : undefined;
 
+/** Калибровка шкалы смысла та же: числа f32 у Meilisearch сравниваются с допуском. */
+function sameDistribution(current: unknown, want: unknown): boolean {
+  if (!isObject(want)) return current === undefined || current === null;
+  if (!isObject(current)) return false;
+  const close = (a: unknown, b: unknown) =>
+    typeof a === "number" && typeof b === "number" && Math.abs(a - b) < 1e-6;
+  return close(current.mean, want.mean) && close(current.sigma, want.sigma);
+}
+
 /**
  * Какие настройки индекса отличаются от INDEX_SETTINGS. Сравнивается только то, что ставит робот:
- * остальное Meilisearch хранит по умолчанию. embedderChanged — эмбеддер уже есть, но другой.
+ * остальное Meilisearch хранит по умолчанию. embedderChanged — эмбеддер уже есть, но другой;
+ * distributionChanged — эмбеддер тот же, другая только калибровка шкалы смысла (ADR-0053).
  */
 export function settingsDiff(current: Record<string, unknown>): {
   keys: string[];
   embedderChanged: boolean;
+  distributionChanged: boolean;
 } {
   const keys: string[] = [];
   const want = INDEX_SETTINGS;
@@ -181,11 +192,17 @@ export function settingsDiff(current: Record<string, unknown>): {
     isObject(ours) &&
     ours.source === wantEmbedder?.source &&
     ours.dimensions === wantEmbedder?.dimensions;
+  const distributionChanged =
+    sameEmbedder &&
+    !sameDistribution(ours.distribution, wantEmbedder?.distribution);
   const others = Object.keys(embedders).filter((k) => k !== EMBEDDER);
-  if (!sameEmbedder || others.length > 0) keys.push("embedders");
+  if (!sameEmbedder || distributionChanged || others.length > 0) {
+    keys.push("embedders");
+  }
   return {
     keys,
     embedderChanged: Object.keys(embedders).length > 0 && !sameEmbedder,
+    distributionChanged,
   };
 }
 
@@ -440,6 +457,15 @@ export async function searchIndex(
           return finish();
         }
         all = true;
+      }
+      // Калибровка шкалы смысла — обычная настройка, но документы отправляются заново с векторами из
+      // бакета (0 ₽): индекс не останется без векторов, даже если Meilisearch сотрёт их при смене
+      // настроек эмбеддера (ADR-0053).
+      if (diff.distributionChanged) {
+        all = true;
+        log(
+          "Калибровка шкалы смысла изменилась — документы отправляются заново, векторы из бакета",
+        );
       }
       for (const d of await meili.documents(INDEX_UID, ["id", "hash"])) {
         current.set(String(d.id), String(d.hash));
