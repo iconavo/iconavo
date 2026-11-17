@@ -5,14 +5,15 @@ import { Logo, LogoMark } from "./Logo";
 import { PlanLogo } from "./Logos";
 import { MenuClose } from "./Menu";
 import { SidebarNav } from "./SidebarNav";
-import { SidebarSets } from "./SidebarSets";
+import { SidebarTabs } from "./SidebarTabs";
 import { SidebarToggle } from "./SidebarToggle";
 import { Soon } from "./Soon";
 
 /**
  * Боковая панель по макету (Figma «Iconavo — Макеты», компонент Sidebar): логотип и «свернуть», разделы,
- * вкладки, фильтр и наборы по группам, внизу — тариф. На телефоне это шторка меню (Menu.tsx). Вкладки,
- * кроме Sets, тариф и Manage — «Soon»: в продукте их пока нет.
+ * вкладки, фильтр и наборы по группам, внизу — тариф. На телефоне это шторка меню (Menu.tsx). Вкладки
+ * (SidebarTabs): на странице поиска Sets, Style и License — фильтры выдачи, на остальных — только Sets;
+ * прочие вкладки, тариф и Manage — «Soon»: в продукте их пока нет.
  */
 export function Sidebar({
   lang,
@@ -35,24 +36,7 @@ export function Sidebar({
       </div>
       <SidebarNav lang={lang} />
       <div className="sidebar-body">
-        <div className="sidebar-tabs">
-          <span className="sidebar-tab" aria-current="true">
-            {t.sidebarTabSets}
-          </span>
-          <Soon lang={lang} className="sidebar-tab">
-            {t.sidebarTabStyle}
-          </Soon>
-          <Soon lang={lang} className="sidebar-tab">
-            {t.sidebarTabCategory}
-          </Soon>
-          <Soon lang={lang} className="sidebar-tab">
-            {t.sidebarTabThemes}
-          </Soon>
-          <Soon lang={lang} className="sidebar-tab">
-            {t.sidebarTabLicense}
-          </Soon>
-        </div>
-        <SidebarSets lang={lang} groups={groups} />
+        <SidebarTabs lang={lang} groups={groups} />
       </div>
       <div className="sidebar-plan">
         <Soon lang={lang} className="sidebar-plan-button" above>

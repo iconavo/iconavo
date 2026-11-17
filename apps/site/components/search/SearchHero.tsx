@@ -15,8 +15,11 @@ import { usePagePath } from "../../lib/page-path";
 import { QUERY_MAX_LENGTH, TYPING_PAUSE_MS } from "../../lib/search";
 import { takeHandoff } from "../../lib/search-handoff";
 import { useUrlQuery, withParams } from "../../lib/url-query";
+import { Crumbs } from "../Crumbs";
+import { AiSearch, GridSettings, ViewSwitch } from "../catalog/GridToolbar";
+import { PageLink } from "../PageLink";
 import { SEARCH_INPUT_ID } from "../shell/HotKey";
-import { Soon } from "../shell/Soon";
+import { FilterButton } from "./FilterSheet";
 
 /**
  * Большое поле поиска главной и страницы поиска (шаг 3 фазы 4, ADR-0040). Оно в общей раскладке
@@ -28,6 +31,8 @@ import { Soon } from "../shell/Soon";
  *   запрос, а не каждую букву. Enter, уход из поля и переход по ссылке начинают новый набор.
  * - Пока идёт ввод иероглифов или диакритики (IME), запрос не уходит.
  * - Текст из поля шапки (lib/search-handoff) подхватывается вместе с фокусом.
+ * - На /search вокруг поля — шапка и строка инструментов по макету «Сценарий поиска иконок» (редизайн,
+ *   17 ноября 2026): как у страницы набора, на телефоне — ещё кнопка фильтра (FilterSheet).
  */
 export function SearchHero({
   lang,
@@ -155,61 +160,100 @@ export function SearchHero({
     if (latest.current.onSearch) typing.current = false;
   };
 
+  // Поле — один и тот же элемент на главной и в поиске: цепочка обёрток (div > div > search > form > div >
+  // input) одинаковая, меняются только классы, а «AI Search» на главной — в форме, в поиске — в строке.
+  // Иначе React пересоздал бы поле при переходе, и фокус с набранными буквами пропали бы.
+  const field = (
+    <div className={onSearch ? "hero-field grid-field" : "hero-field"}>
+      <Icon icon="material-symbols:search" className="hero-field-icon" />
+      <label htmlFor={SEARCH_INPUT_ID} className="sr-only">
+        {t.searchLabel}
+      </label>
+      <input
+        ref={input}
+        id={SEARCH_INPUT_ID}
+        type="search"
+        name="q"
+        className="hero-input"
+        value={value}
+        maxLength={QUERY_MAX_LENGTH}
+        placeholder={t.searchPlaceholder}
+        autoComplete="off"
+        aria-keyshortcuts="Control+K Meta+K"
+        onChange={(e) => {
+          setValue(e.target.value);
+          schedule(e.target.value);
+        }}
+        onCompositionStart={() => {
+          composing.current = true;
+        }}
+        onCompositionEnd={(e) => {
+          composing.current = false;
+          schedule(e.currentTarget.value);
+        }}
+        onFocus={() => router.prefetch(searchPath)}
+        onBlur={() => {
+          typing.current = false;
+        }}
+      />
+      <span className="hero-keys" aria-hidden="true">
+        <kbd>Ctrl</kbd>
+        <kbd>K</kbd>
+      </span>
+    </div>
+  );
+
   return (
     <>
-      {onSearch ? <h1 className="search-title">{t.searchTitle}</h1> : intro}
-      <search className="hero-search">
-        <form
-          action={searchPath}
-          className="hero-search-form"
-          onSubmit={submit}
-        >
-          <div className="hero-field">
-            <Icon icon="material-symbols:search" className="hero-field-icon" />
-            <label htmlFor={SEARCH_INPUT_ID} className="sr-only">
-              {t.searchLabel}
-            </label>
-            <input
-              ref={input}
-              id={SEARCH_INPUT_ID}
-              type="search"
-              name="q"
-              className="hero-input"
-              value={value}
-              maxLength={QUERY_MAX_LENGTH}
-              placeholder={t.searchPlaceholder}
-              autoComplete="off"
-              aria-keyshortcuts="Control+K Meta+K"
-              onChange={(e) => {
-                setValue(e.target.value);
-                schedule(e.target.value);
-              }}
-              onCompositionStart={() => {
-                composing.current = true;
-              }}
-              onCompositionEnd={(e) => {
-                composing.current = false;
-                schedule(e.currentTarget.value);
-              }}
-              onFocus={() => router.prefetch(searchPath)}
-              onBlur={() => {
-                typing.current = false;
-              }}
+      {onSearch ? (
+        // Шапка страницы поиска по макету «Сценарий поиска иконок»: крошки «Icon Sets / Search» и
+        // «Search Results», на телефоне — «‹ Icon Sets»; оформление — как у страницы набора.
+        <header className="set-head search-head">
+          <div className="set-head-title">
+            <Crumbs
+              lang={lang}
+              items={[{ path: "/", label: t.navIconSets }]}
+              current={t.searchTitle}
             />
-            <span className="hero-keys" aria-hidden="true">
-              <kbd>Ctrl</kbd>
-              <kbd>K</kbd>
-            </span>
+            <PageLink lang={lang} path="/" className="set-back">
+              <Icon
+                icon="material-symbols:keyboard-arrow-left"
+                className="pill-chevron"
+              />
+              {t.navIconSets}
+            </PageLink>
+            <h1 className="set-title">{t.searchResultsTitle}</h1>
           </div>
-          <Soon lang={lang} className="ai-search">
-            <span className="ai-toggle">
-              <span className="ai-knob" />
-            </span>
-            <span>{t.aiSearch}</span>
-            <Icon icon="material-symbols:help" className="pill-icon ai-help" />
-          </Soon>
-        </form>
-      </search>
+        </header>
+      ) : (
+        intro
+      )}
+      <div
+        className={
+          onSearch ? "grid-toolbar-box search-toolbar-box" : "hero-search-box"
+        }
+      >
+        <div className={onSearch ? "grid-toolbar" : "hero-search-row"}>
+          <search className={onSearch ? "grid-search" : "hero-search"}>
+            <form
+              action={searchPath}
+              className={onSearch ? "search-form" : "hero-search-form"}
+              onSubmit={submit}
+            >
+              {field}
+              {onSearch ? null : <AiSearch lang={lang} className="ai-search" />}
+            </form>
+          </search>
+          {onSearch ? (
+            <>
+              <AiSearch lang={lang} className="ai-search ai-search-md" />
+              <FilterButton lang={lang} />
+              <ViewSwitch lang={lang} />
+              <GridSettings lang={lang} />
+            </>
+          ) : null}
+        </div>
+      </div>
     </>
   );
 }

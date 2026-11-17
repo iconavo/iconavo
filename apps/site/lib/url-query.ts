@@ -30,9 +30,12 @@ export function panelMarker(): string | undefined {
     : undefined;
 }
 
-/** Строка параметров; двоеточие имени иконки остаётся как есть: ?icon=lucide:house. */
+/**
+ * Строка параметров; двоеточие имени иконки и запятые списков остаются как есть: ?icon=lucide:house,
+ * ?set=lucide,ph (страница поиска). В адресе оба знака допустимы без кодирования (RFC 3986).
+ */
 export const queryText = (next: URLSearchParams): string =>
-  next.toString().replaceAll("%3A", ":");
+  next.toString().replaceAll("%3A", ":").replaceAll("%2C", ",");
 
 export interface NavigateOptions {
   /** Заменить запись истории, а не добавить (набор текста, смена иконки в панели). */

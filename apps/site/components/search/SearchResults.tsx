@@ -3,10 +3,15 @@
 import { type ReactNode, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { API } from "../../lib/api";
-import { DICTIONARIES, type Lang, STYLE_KEYS } from "../../lib/i18n";
+import { pageSizeFor } from "../../lib/catalog";
+import type { SidebarGroup } from "../../lib/catalog-view";
+import { filterSheetStore } from "../../lib/filter-sheet";
+import { useGridColumns } from "../../lib/grid-columns";
+import { DICTIONARIES, type Lang } from "../../lib/i18n";
 import { PAGE_PANEL_ID } from "../../lib/panel-layout";
 import {
-  allCommercial,
+  activeFilters,
+  filtersOf,
   hasFilters,
   knownPages,
   pageWindow,
@@ -14,20 +19,21 @@ import {
   REPEAT_DELAYS_MS,
   readSearchState,
   retryAfterSeconds,
+  SEARCH_PAGE_SIZE,
   type SearchAnswer,
-  type SearchState,
-  STYLES,
   searchApiUrl,
+  withFilters,
 } from "../../lib/search";
-import { useUrlQuery, withParams } from "../../lib/url-query";
-import { type Chip, Chips, plainClick } from "../catalog/Chips";
+import { queryText, useUrlQuery, withParams } from "../../lib/url-query";
+import { plainClick } from "../catalog/Chips";
+import { GridBar } from "../catalog/GridBar";
 import { Pagination } from "../catalog/Pagination";
 import { SelectionBar, useSelection } from "../catalog/Selection";
 import { IconPanel } from "../icon/IconPanel";
 import { usePanel } from "../icon/usePanel";
-import { PageLink } from "../PageLink";
 import { PanelLayout } from "../panel/PanelLayout";
 import { Button } from "../ui/button";
+import { FilterSheet } from "./FilterSheet";
 import { ResultGrid } from "./ResultGrid";
 
 /** Полные ответы этой вкладки: «назад» и смена страниц — без новых запросов и без лимита. */
@@ -43,8 +49,8 @@ function remember(key: string, answer: SearchAnswer) {
   }
 }
 
-/** Карточек в блоке «без фильтров», когда с фильтрами пусто. */
-const UNFILTERED_LIMIT = 24;
+/** Рядов в блоке «без фильтров», когда с фильтрами пусто. */
+const UNFILTERED_ROWS = 3;
 
 type Phase =
   | { kind: "idle" }
@@ -64,8 +70,11 @@ export interface SearchSet {
 }
 
 /**
- * Выдача поиска (шаг 3 фазы 4, ADR-0040): запрос, фильтры и страница — в адресе, их пишет поле поиска
- * (SearchHero) и чипсы. Ищет браузер: адрес edge API /search, отмена устаревшего запроса.
+ * Выдача поиска (шаг 3 фазы 4, ADR-0040; редизайн по макету «Сценарий поиска иконок», 17 ноября 2026):
+ * запрос, фильтры и страница — в адресе, их пишут поле поиска (SearchHero), вкладки левой панели
+ * (SidebarTabs) и шторка фильтра на телефоне (FilterSheet). Ищет браузер: адрес edge API /search, отмена
+ * устаревшего запроса. Страница — целые ряды сетки, как у набора (pageSizeFor): пока браузер не посчитал
+ * колонки, запроса нет — на месте выдачи скелетоны; над сеткой и под ней — строки номеров страниц.
  * - Выдача по словам (pending) видна сразу, полная встаёт в те же клетки (решение владельца): повторы
  *   через 1,2, 1,5 и 2,5 с, пока страница добита скелетонами.
  * - 429 — сообщение и отсчёт по Retry-After, затем поиск повторяется сам.
@@ -77,6 +86,7 @@ export function SearchResults({
   lang,
   sets,
   licenses,
+  groups,
   examples,
 }: {
   lang: Lang;
@@ -84,6 +94,8 @@ export function SearchResults({
   sets: SearchSet[];
   /** SPDX лицензий каталога. */
   licenses: string[];
+  /** Наборы по группам с числом иконок — для шторки фильтра. */
+  groups: SidebarGroup[];
   /** Примеры запросов до ввода. */
   examples: string[];
 }) {
@@ -102,7 +114,17 @@ export function SearchResults({
     [sets, licenses],
   );
   const state = readSearchState(query, known);
-  const key = state.q === "" ? "" : searchApiUrl(API, state);
+  // Страница — целые ряды: колонки — только от ширины окна (lib/grid-columns.ts), как у набора.
+  const columns = useGridColumns();
+  const size = columns === undefined ? undefined : pageSizeFor(columns);
+  const key =
+    state.q === "" || size === undefined ? "" : searchApiUrl(API, state, size);
+  // Счётчик на кнопке фильтра (телефон) — по фильтрам этой выдачи.
+  const selected = activeFilters(state);
+  useEffect(() => {
+    filterSheetStore.setCount(selected);
+  }, [selected]);
+  useEffect(() => () => filterSheetStore.setCount(0), []);
   const [view, setView] = useState<{ key: string; phase: Phase }>({
     key: "",
     phase: { kind: "idle" },
@@ -200,11 +222,12 @@ export function SearchResults({
     };
   }, [key, ready, attempt]);
 
+  // Без запроса — примеры; запрос есть, а колонки ещё не посчитаны или ответа нет — загрузка.
   const phase: Phase =
-    view.key === key
-      ? view.phase
-      : key === ""
-        ? { kind: "idle" }
+    state.q === ""
+      ? { kind: "idle" }
+      : view.key === key && key !== ""
+        ? view.phase
         : { kind: "loading" };
 
   // Отсчёт после 429 — раз в секунду, пока ждём.
@@ -214,7 +237,7 @@ export function SearchResults({
     return () => clearInterval(id);
   }, [phase.kind]);
 
-  // С фильтрами пусто — то же без фильтров, одной небольшой страницей.
+  // С фильтрами пусто — то же без фильтров, несколькими рядами.
   const empty =
     phase.kind === "answer" &&
     !phase.repeating &&
@@ -222,9 +245,15 @@ export function SearchResults({
     phase.answer.cards.length === 0 &&
     state.page === 1 &&
     hasFilters(state);
-  const unfilteredKey = empty
-    ? searchApiUrl(API, { q: state.q, page: 1 }, UNFILTERED_LIMIT)
-    : "";
+  const unfilteredKey =
+    empty && columns !== undefined
+      ? searchApiUrl(
+          API,
+          { q: state.q, sets: [], licenses: [], page: 1 },
+          size,
+          columns * UNFILTERED_ROWS,
+        )
+      : "";
   const [unfiltered, setUnfiltered] = useState<{
     key: string;
     answer: SearchAnswer;
@@ -249,30 +278,14 @@ export function SearchResults({
     return () => controller.abort();
   }, [unfilteredKey]);
 
-  const slot = pageWindow(state.page);
+  const slot = pageWindow(state.page, size ?? SEARCH_PAGE_SIZE);
   const setTitles = Object.fromEntries(sets.map((s) => [s.id, s.title]));
-  const change = (changes: Record<string, string | undefined>) =>
-    withParams(query, { ...changes, page: undefined });
-  const chip = (
-    key: string,
-    label: string,
-    param: "style" | "set" | "license" | "commercial",
-    value: string | undefined,
-    current: boolean,
-  ): Chip => ({
-    key,
-    label,
-    href: hrefOf(change({ [param]: value })),
-    current,
-    onSelect: () => navigate(change({ [param]: value })),
-  });
   const goPage = (page: number) => {
     navigate(
       withParams(query, { page: page === 1 ? undefined : String(page) }),
     );
     top.current?.scrollIntoView({ block: "start" });
   };
-  const reset: SearchState = { q: state.q, page: 1 };
   const resetHref = hrefOf(
     withParams(new URLSearchParams(), {
       q: state.q || undefined,
@@ -444,7 +457,7 @@ export function SearchResults({
                   e.preventDefault();
                   navigate(
                     withParams(new URLSearchParams(), {
-                      q: reset.q || undefined,
+                      q: state.q || undefined,
                       icon: panel.icon,
                     }),
                   );
@@ -481,9 +494,34 @@ export function SearchResults({
     }
   }
 
-  const commercial = allCommercial(licenses);
   const final =
     phase.kind === "answer" && !phase.repeating ? phase.answer : undefined;
+  const pages =
+    final !== undefined &&
+    size !== undefined &&
+    (state.page > 1 || final.hasNext)
+      ? knownPages(state.page, final.hasNext, size)
+      : 0;
+  // Строки номеров страниц — над сеткой и под ней, как у набора; номера — когда выдача полная.
+  const bar = (above: boolean) =>
+    state.q === "" ? null : (
+      <GridBar lang={lang} top={above} perPage={size}>
+        {pages > 1 ? (
+          <Pagination
+            lang={lang}
+            page={state.page}
+            pages={pages}
+            hrefOf={(p) =>
+              hrefOf(
+                withParams(query, { page: p === 1 ? undefined : String(p) }),
+              )
+            }
+            onSelect={goPage}
+            {...(above ? { label: t.pagesTop } : {})}
+          />
+        ) : null}
+      </GridBar>
+    );
   const panelNode =
     panel.icon === undefined ? null : (
       <IconPanel
@@ -508,7 +546,7 @@ export function SearchResults({
           data-search={phaseName(phase)}
           // Адрес, по которому нарисована выдача: адрес страницы меняется сразу, а выдача — со следующей
           // отрисовкой; проверка сайта сверяет оба и не принимает прежнюю выдачу за новую.
-          data-query={query.toString()}
+          data-query={queryText(query)}
           data-semantic={
             phase.kind === "answer" ? phase.answer.semantic : undefined
           }
@@ -516,74 +554,9 @@ export function SearchResults({
           <h2 id="search-results-title" className="sr-only">
             {t.searchResults}
           </h2>
-          <div className="filters">
-            <Chips
-              label={t.searchStyle}
-              chips={[
-                chip(
-                  "",
-                  t.styleAny,
-                  "style",
-                  undefined,
-                  state.style === undefined,
-                ),
-                ...STYLES.map((s) =>
-                  chip(s, t[STYLE_KEYS[s]], "style", s, state.style === s),
-                ),
-              ]}
-            />
-            <Chips
-              label={t.filterSet}
-              chips={[
-                chip(
-                  "",
-                  t.filterAll,
-                  "set",
-                  undefined,
-                  state.set === undefined,
-                ),
-                ...sets.map((s) =>
-                  chip(s.id, s.title, "set", s.id, state.set === s.id),
-                ),
-              ]}
-            />
-            <Chips
-              label={t.filterLicense}
-              chips={[
-                chip(
-                  "",
-                  t.filterAll,
-                  "license",
-                  undefined,
-                  state.license === undefined,
-                ),
-                ...licenses.map((l) =>
-                  chip(l, l, "license", l, state.license === l),
-                ),
-              ]}
-            />
-          </div>
-          {commercial ? (
-            <p className="search-commercial">
-              {t.searchCommercial}{" "}
-              <PageLink lang={lang} path="/licenses">
-                {t.searchCommercialLink}
-              </PageLink>
-            </p>
-          ) : (
-            <Chips
-              label={t.searchCommercialLabel}
-              chips={[
-                chip(
-                  "commercial",
-                  t.searchCommercialOnly,
-                  "commercial",
-                  state.commercial ? undefined : "1",
-                  state.commercial === true,
-                ),
-              ]}
-            />
-          )}
+          {bar(true)}
+          {/* Строка статуса — в зазоре между строкой номеров и сеткой: место под неё есть всегда, и
+              сообщение не сдвигает выдачу (ADR-0040). */}
           <p className="search-status" role="status">
             {status}
             {query.get("timing") === "1" && timing !== undefined ? (
@@ -597,25 +570,20 @@ export function SearchResults({
           <div ref={selection.anchor} className="search-body">
             {body}
           </div>
-          {final !== undefined && (state.page > 1 || final.hasNext) ? (
-            <Pagination
-              lang={lang}
-              page={state.page}
-              pages={knownPages(state.page, final.hasNext)}
-              hrefOf={(p) =>
-                hrefOf(
-                  withParams(query, { page: p === 1 ? undefined : String(p) }),
-                )
-              }
-              onSelect={goPage}
-            />
-          ) : null}
+          {bar(false)}
         </section>
         {panelSlot === null ? panelNode : null}
       </PanelLayout>
       {panelSlot !== null && panelNode !== null
         ? createPortal(panelNode, panelSlot)
         : null}
+      <FilterSheet
+        lang={lang}
+        groups={groups}
+        licenses={licenses}
+        value={filtersOf(state)}
+        onApply={(filters) => navigate(withFilters(query, filters))}
+      />
     </>
   );
 }

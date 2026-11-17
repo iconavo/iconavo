@@ -89,34 +89,61 @@ export function GridToolbar({
             </span>
           </form>
         </search>
-        <Soon lang={lang} className="ai-search ai-search-md">
-          <span className="ai-toggle">
-            <span className="ai-knob" />
-          </span>
-          <span>{t.aiSearch}</span>
-          <Icon icon="material-symbols:help" className="pill-icon ai-help" />
-        </Soon>
-        <fieldset className="view-switch">
-          <legend className="sr-only">{t.viewLabel}</legend>
-          <span className="view-item" aria-current="true">
-            <Icon icon="material-symbols:grid-on" />
-            <span className="sr-only">{t.viewGrid}</span>
-          </span>
-          <Soon lang={lang} className="view-item" label={t.viewLarge}>
-            <Icon icon="material-symbols:grid-view" />
-          </Soon>
-          <Soon lang={lang} className="view-item" label={t.viewList}>
-            <Icon icon="material-symbols:list" />
-          </Soon>
-        </fieldset>
-        <Soon lang={lang} className="grid-settings">
-          <Icon
-            icon="material-symbols:settings"
-            className="grid-settings-icon"
-          />
-          <span className="grid-settings-label">{t.gridSettings}</span>
-        </Soon>
+        <AiSearch lang={lang} className="ai-search ai-search-md" />
+        <ViewSwitch lang={lang} />
+        <GridSettings lang={lang} />
       </div>
     </div>
+  );
+}
+
+/** «AI Search» — «Soon»: смыслового переключателя в продукте пока нет. Общий у главной, набора и поиска. */
+export function AiSearch({
+  lang,
+  className,
+}: {
+  lang: Lang;
+  className: string;
+}) {
+  const t = DICTIONARIES[lang];
+  return (
+    <Soon lang={lang} className={className}>
+      <span className="ai-toggle">
+        <span className="ai-knob" />
+      </span>
+      <span>{t.aiSearch}</span>
+      <Icon icon="material-symbols:help" className="pill-icon ai-help" />
+    </Soon>
+  );
+}
+
+/** Вид сетки: обычная — сейчас, крупная и список — «Soon». */
+export function ViewSwitch({ lang }: { lang: Lang }) {
+  const t = DICTIONARIES[lang];
+  return (
+    <fieldset className="view-switch">
+      <legend className="sr-only">{t.viewLabel}</legend>
+      <span className="view-item" aria-current="true">
+        <Icon icon="material-symbols:grid-on" />
+        <span className="sr-only">{t.viewGrid}</span>
+      </span>
+      <Soon lang={lang} className="view-item" label={t.viewLarge}>
+        <Icon icon="material-symbols:grid-view" />
+      </Soon>
+      <Soon lang={lang} className="view-item" label={t.viewList}>
+        <Icon icon="material-symbols:list" />
+      </Soon>
+    </fieldset>
+  );
+}
+
+/** Settings сетки — «Soon»; в узкой строке и на телефоне — квадратная кнопка со значком. */
+export function GridSettings({ lang }: { lang: Lang }) {
+  const t = DICTIONARIES[lang];
+  return (
+    <Soon lang={lang} className="grid-settings">
+      <Icon icon="material-symbols:settings" className="grid-settings-icon" />
+      <span className="grid-settings-label">{t.gridSettings}</span>
+    </Soon>
   );
 }
