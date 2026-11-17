@@ -6,8 +6,8 @@
 // состояние. Несколько компонентов страницы (поле поиска и выдача) узнают о переходе друг друга по
 // событию URL_EVENT.
 
-import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
+import { usePagePath } from "./page-path";
 
 /** Событие окна после перехода через navigate: его слушают все useUrlQuery страницы. */
 export const URL_EVENT = "iconavo:url";
@@ -57,7 +57,7 @@ export function useUrlQuery(): {
   /** Переход; replace — заменить запись истории, а не добавить (набор текста в поле поиска). */
   navigate: (next: URLSearchParams, options?: NavigateOptions) => void;
 } {
-  const pathname = usePathname();
+  const pathname = usePagePath();
   const [read, setRead] = useState<{ path?: string; query: URLSearchParams }>(
     () => ({ query: EMPTY }),
   );

@@ -1,9 +1,10 @@
 "use client";
 
 import { Icon } from "@iconavo-ui/react";
-import { usePathname, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { useEffect, useRef } from "react";
 import { DICTIONARIES, href, type Lang } from "../lib/i18n";
+import { usePagePath } from "../lib/page-path";
 import { QUERY_MAX_LENGTH, TYPING_PAUSE_MS } from "../lib/search";
 import { handOff } from "../lib/search-handoff";
 import { Button } from "./ui/button";
@@ -17,7 +18,7 @@ import { Input } from "./ui/input";
 export function SearchField({ lang }: { lang: Lang }) {
   const t = DICTIONARIES[lang];
   const router = useRouter();
-  const pathname = usePathname();
+  const pathname = usePagePath();
   const searchPath = href(lang, "/search");
   const timer = useRef<ReturnType<typeof setTimeout>>(undefined);
   const composing = useRef(false);

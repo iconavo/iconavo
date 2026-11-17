@@ -4,15 +4,17 @@
 // заголовком X-Iconavo-Content. Другой отпечаток — набор «устарел»: workflow «Сайт» сбросит метки
 // set-{набор} и catalog (vercel cache invalidate — ключ только у задачи окружения site). Страницы набора
 // нет (404) — набор новый: нужна пересборка сайта. С --wait команда ждёт, пока страницы сброшенных наборов
-// и страница иконки из витрины каждого покажут свежий отпечаток и время сборки не раньше сброса. Только
-// открытые адреса, ключи не нужны.
+// и страницы их иконок — первая иконка витрины и выборка обхода, на обоих языках, — покажут свежий
+// отпечаток и время сборки не раньше сброса. Только открытые адреса, ключи не нужны.
 
 import { catalogIndexKey, catalogIndexSchema } from "../cdn/catalog.js";
 import { manifestSchema } from "../cdn/files.js";
 import {
   CATALOG_TAG,
   CONTENT_META,
+  CRAWL_ICON_NAMES,
   INVALIDATE_TAGS,
+  iconPath,
   LIVE_CDN,
   REFRESH_POLL_MS,
   REFRESH_SKEW_MS,
@@ -45,6 +47,24 @@ export interface RefreshRow {
 
 /** Страницы набора, по которым видна свежесть: страница набора на обоих языках. */
 export const setPaths = (id: string) => [`/${id}`, `/ru/${id}`];
+
+/**
+ * Страницы иконок набора, которых ждёт --wait: первая иконка витрины и иконки выборки обхода
+ * (CRAWL_ICONS) на обоих языках — их отпечаток потом смотрит pnpm site --live. Первый запрос после сброса
+ * Vercel отдаёт прежнюю страницу и собирает новую в фоне, поэтому ждать нужно каждую: иначе --live
+ * первым запросом увидит старую (17 ноября 2026).
+ */
+export function iconPaths(id: string, sample?: string): string[] {
+  const names = [
+    ...(sample === undefined ? [] : [`${id}:${sample}`]),
+    ...CRAWL_ICON_NAMES.filter((name) => name.startsWith(`${id}:`)),
+  ];
+  return [
+    ...new Set(
+      names.flatMap((name) => [iconPath(name), `/ru${iconPath(name)}`]),
+    ),
+  ];
+}
 
 /**
  * Состояние набора по его страницам: какой-то нет (404) — новый набор, нужна пересборка; отпечаток не
@@ -190,10 +210,9 @@ export interface WaitResult {
 }
 
 /**
- * Ожидание после сброса: страницы наборов на обоих языках и страница первой иконки витрины каждого
- * отвечают отпечатком из оглавления, а с rendered — ещё и собраны не раньше since. Первый запрос после
- * сброса Vercel отдаёт прежнюю страницу и собирает новую в фоне (stale-while-revalidate), поэтому опрос
- * повторяется.
+ * Ожидание после сброса: страницы наборов и их иконок (iconPaths) на обоих языках отвечают отпечатком
+ * из оглавления, а с rendered — ещё и собраны не раньше since. Первый запрос после сброса Vercel отдаёт
+ * прежнюю страницу и собирает новую в фоне (stale-while-revalidate), поэтому опрос повторяется.
  */
 export async function waitRefreshed(o: {
   base: string;
@@ -207,13 +226,12 @@ export async function waitRefreshed(o: {
   log?: (line: string) => void;
 }): Promise<WaitResult> {
   const started = Date.now();
-  const paths = o.ids.flatMap((id) => {
-    const sample = o.sets[id]?.sample;
-    return [
-      ...setPaths(id).map((path) => ({ id, path })),
-      ...(sample === undefined ? [] : [{ id, path: `/${id}/${sample}` }]),
-    ];
-  });
+  const paths = o.ids.flatMap((id) =>
+    [...setPaths(id), ...iconPaths(id, o.sets[id]?.sample)].map((path) => ({
+      id,
+      path,
+    })),
+  );
   let pending: LivePage[] = [];
   for (;;) {
     pending = [];
