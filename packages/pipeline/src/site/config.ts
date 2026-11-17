@@ -55,10 +55,8 @@ export const CRAWL_ICON_NAMES = [
   "fluent-emoji-flat:waving-hand",
   "lucide:circle-parking",
 ];
-/** Скрытая иконка выборки: её страница — с пометкой «Устарела» (ADR-0037). */
+/** Скрытая иконка выборки: её страница — с пометкой «Removed» / «Удалена», как в макете (ADR-0037, редизайн). */
 export const HIDDEN_ICON = "lucide:circle-parking";
-/** Мест в мокапах страницы иконки — восемь, утверждены владельцем 2 ноября 2026 (ADR-0041). */
-export const MOCKUPS = 8;
 export const CRAWL_ICONS = CRAWL_ICON_NAMES.flatMap((name) => [
   iconPath(name),
   `/ru${iconPath(name)}`,

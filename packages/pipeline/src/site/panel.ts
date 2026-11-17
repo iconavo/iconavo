@@ -19,7 +19,6 @@ import {
   CATALOG_SET,
   CRAWL_ICON_NAMES,
   DESKTOP,
-  MOCKUPS,
   PANEL_WAIT_MS,
   PHONE,
   STYLES_SET,
@@ -428,33 +427,11 @@ export async function checkPanel(
     : fail(problems.slice(0, 4).join("; "));
 }
 
-/** Мокапы на странице иконки: сколько мест и панелей тем, что нарисовано, фон тем, цвет и высота иконки. */
-function mockupFacts() {
-  const panes = [...document.querySelectorAll(".mockup-pane")];
-  const svgs = panes.flatMap((pane) => [...pane.querySelectorAll("svg")]);
-  const bg = (selector: string) => {
-    const pane = document.querySelector(selector);
-    return pane ? getComputedStyle(pane).backgroundColor : "";
-  };
-  const main = panes.map((pane) => pane.querySelector("svg[color]"));
-  return {
-    mockups: document.querySelectorAll(".mockup[data-mockup]").length,
-    panes: panes.length,
-    svgs: svgs.length,
-    drawn: svgs.filter(
-      (svg) => svg.hasAttribute("viewBox") && svg.childNodes.length > 0,
-    ).length,
-    light: bg(".mockup-light"),
-    dark: bg(".mockup-dark"),
-    colors: [...new Set(main.map((svg) => svg?.getAttribute("color") ?? ""))],
-    firstHeight: main[0]?.getAttribute("height") ?? "",
-    hidden: panes.every((pane) => pane.getAttribute("aria-hidden") === "true"),
-  };
-}
-
 /**
- * Страница иконки: серверный HTML со сведениями, иконкой, мокапами и меткой версии; скрытая — «Устарела» и
- * noindex; в браузере — настройки из адреса в превью и мокапах, переход из панели с настройками.
+ * Страница иконки (редизайн): серверный HTML страниц выборки (iconPagesProblems); в браузере — размер, цвет
+ * и толщина линии из адреса в превью и обратно в адресе; во вкладке «Код» — указание авторства набора (у
+ * Lucide — с Feather); из панели — ссылка на страницу с настройками панели в адресе (ADR-0041). Поворота и
+ * отражения в редизайне нет: в макете их нет ни в панели, ни на странице.
  */
 export async function iconPageProblems(
   page: Page,
@@ -466,112 +443,84 @@ export async function iconPageProblems(
   };
   // Серверный HTML страниц выборки — тот же разбор, что у pnpm site --live.
   problems.push(...iconPagesProblems(o.pages));
-  // Строка «по мотивам Feather» — только у иконок из Feather, а текст указания авторства — на весь набор:
-  // у любой иконки Lucide в нём есть Feather (решение владельца 3 ноября 2026).
-  const house = o.pages.find((p) => p.path === "/lucide/house")?.html ?? "";
-  no(
-    !house.includes('class="icon-credit"'),
-    "/lucide/house: строка «по мотивам Feather» у иконки не из Feather",
-  );
-  no(
-    house.includes("Includes icons from Feather"),
-    "/lucide/house: в указании авторства набора нет Feather",
-  );
 
-  // Настройки из адреса.
-  await page.goto(
-    `${o.base}/lucide/house?size=64&color=e11d48&stroke=1.5&rotate=90&flip=horizontal`,
-  );
+  // Настройки из адреса: в превью — цвет и толщина линии; после гидратации адрес держит те же настройки.
+  await page.goto(`${o.base}/lucide/house?size=64&color=e11d48&stroke=1.5`);
   await hydrated(page);
   await page
     .waitForFunction(
       () =>
-        document.querySelector(".icon-preview svg")?.getAttribute("color") ===
+        document.querySelector(".ip-tile-icon")?.getAttribute("color") ===
         "#e11d48",
       null,
       { timeout: PANEL_WAIT_MS },
     )
     .catch(() => {});
-  const preview = await page.evaluate(() => {
-    const svg = document.querySelector(".icon-preview svg");
+  const tile = await page.evaluate(() => {
+    const svg = document.querySelector(".ip-tile-icon");
     return {
       color: svg?.getAttribute("color") ?? "",
-      height: svg?.getAttribute("height") ?? "",
-      size: document.querySelector(".icon-preview-size")?.textContent ?? "",
       stroke: svg?.innerHTML.includes('stroke-width="1.5"') === true,
     };
   });
+  no(tile.color === "#e11d48", `цвет из адреса не применён: «${tile.color}»`);
+  no(tile.stroke, "толщина линии из адреса не применена");
+  const query = new URL(page.url()).searchParams;
   no(
-    preview.color === "#e11d48",
-    `цвет из адреса не применён: «${preview.color}»`,
+    query.get("size") === "64" &&
+      query.get("color") === "e11d48" &&
+      query.get("stroke") === "1.5",
+    `настройки не вернулись в адрес: «${new URL(page.url()).search}»`,
   );
-  // Превью всегда крупное, размер копии и кода — подписью под ним (решение владельца 3 ноября 2026).
-  no(
-    preview.height === "96",
-    `превью не крупное: высота «${preview.height}», а ждали 96`,
-  );
-  no(
-    preview.size === "64 × 64 px",
-    `размер из адреса не применён: под превью «${preview.size}»`,
-  );
-  no(preview.stroke, "толщина линии из адреса не применена");
 
-  // Мокапы: восемь мест в двух темах, всё нарисовано; у иконки — цвет из адреса и размер места, не превью.
+  // Вкладка «Код»: последний раздел — автор, лицензия и указание авторства набора; у Lucide — с Feather.
+  await page.getByRole("tab", { name: "Code", exact: true }).click();
   await page
     .waitForFunction(
-      () => {
-        const svgs = [...document.querySelectorAll(".mockup-pane svg")];
-        return (
-          svgs.length > 0 &&
-          svgs.every(
-            (s) => s.hasAttribute("viewBox") && s.childNodes.length > 0,
-          )
-        );
-      },
+      () =>
+        document.querySelector("#ip-tabpanel")?.getAttribute("data-tab") ===
+          "code" &&
+        document
+          .querySelector("#ip-tabpanel")
+          ?.textContent?.includes("Feather") === true,
       null,
       { timeout: PANEL_WAIT_MS },
     )
     .catch(() => {});
-  const m = await page.evaluate(mockupFacts);
-  no(
-    m.mockups === MOCKUPS && m.panes === MOCKUPS * 2,
-    `мокапов ${m.mockups}, панелей тем ${m.panes}, а ждали ${MOCKUPS} и ${MOCKUPS * 2}`,
-  );
-  no(m.drawn === m.svgs, `в мокапах нарисовано ${m.drawn} иконок из ${m.svgs}`);
-  no(
-    m.light !== "" && m.light !== m.dark,
-    `у светлой и тёмной темы мокапа один фон: ${m.light}`,
+  const code = await page.evaluate(
+    () => document.querySelector("#ip-tabpanel")?.textContent ?? "",
   );
   no(
-    m.colors.length === 1 && m.colors[0] === "#e11d48",
-    `цвет иконки в мокапах — ${m.colors.join(", ")}, а ждали #e11d48`,
+    code.includes("Feather"),
+    "во вкладке «Код» у Lucide нет указания авторства с Feather",
   );
-  no(
-    m.firstHeight === "20",
-    `иконка в кнопке — ${m.firstHeight} px, а ждали 20: размер из настроек меняет только превью`,
-  );
-  no(m.hidden, "мокапы не скрыты от экранных дикторов");
 
-  // Из панели — на страницу с настройками.
+  // Из панели — на страницу с настройками панели в адресе: новая вкладка хранилища этой не видит.
   await page.goto(`${o.base}/${CATALOG_SET}`);
   await hydrated(page);
   const first = (await cardName(page, 0)) ?? "";
   await page.locator("a.icon-card-link").nth(0).click();
   await shown(page, first);
-  await page.getByRole("button", { name: "90°" }).click();
+  await page.locator(".icon-panel input.color-hex").fill("E11D48");
+  const link = page.getByRole("link", {
+    name: /Open icon page|Открыть страницу иконки/,
+  });
   await page
-    .getByRole("link", { name: /Open icon page|Открыть страницу иконки/ })
-    .click();
-  await page
-    .waitForURL((url) => url.pathname === `/${first.replace(":", "/")}`, {
-      timeout: PANEL_WAIT_MS,
-    })
+    .waitForFunction(
+      () =>
+        document
+          .querySelector('.icon-panel a[target="_blank"]')
+          ?.getAttribute("href")
+          ?.includes("color=e11d48") === true,
+      null,
+      { timeout: PANEL_WAIT_MS },
+    )
     .catch(() => {});
-  const url = new URL(page.url());
+  const url = new URL((await link.getAttribute("href")) ?? "", o.base);
   no(
     url.pathname === `/${first.replace(":", "/")}` &&
-      url.searchParams.get("rotate") === "90",
-    `«Открыть страницу иконки» привела на ${url.pathname}${url.search}`,
+      url.searchParams.get("color") === "e11d48",
+    `«Открыть страницу иконки» ведёт на ${url.pathname}${url.search}`,
   );
   return problems;
 }
@@ -594,7 +543,7 @@ export async function checkIconPage(
   await context.close();
   return problems.length === 0
     ? pass(
-        `${CRAWL_ICON_NAMES.length * 2} страниц: серверный HTML со сведениями и иконкой, метка версии; «Устарела»; настройки из адреса; переход из панели с настройками`,
+        `${CRAWL_ICON_NAMES.length * 2} страниц: серверный HTML — заголовок, иконка, метки, вкладки; «Removed»; размер, цвет и толщина из адреса; Feather во вкладке «Код»; из панели — с настройками в адресе`,
       )
     : fail(problems.slice(0, 4).join("; "));
 }

@@ -5,7 +5,11 @@ import { Icon } from "@iconavo-ui/react";
 import { useEffect, useRef, useState } from "react";
 import { DICTIONARIES, href, type Lang } from "../../lib/i18n";
 import { bareName, type IconSetSummary, iconPagePath } from "../../lib/icon";
-import { iconProps, useIconSettings } from "../../lib/icon-settings";
+import {
+  iconProps,
+  settingsParams,
+  useIconSettings,
+} from "../../lib/icon-settings";
 import { panelSettings } from "../../lib/panel-code";
 import { fitPanel } from "../../lib/panel-fit";
 import { PanelActions } from "../panel/actions";
@@ -65,6 +69,9 @@ export function IconPanel({
   const t = DICTIONARIES[lang];
   const prefix = icon.slice(0, icon.indexOf(":"));
   const s = useIconSettings();
+  // Настройки переходят на страницу иконки через адрес (решение владельца 2 ноября 2026, ADR-0041): новая
+  // вкладка не видит хранилища настроек этой.
+  const pageQuery = settingsParams(panelSettings(s)).toString();
   const data = useIconData(icon, true);
   const info = useSetInfo(prefix);
   const { details, state } = useIconDetails(icon);
@@ -171,7 +178,7 @@ export function IconPanel({
             <div className="panel-head-actions">
               {missing ? null : (
                 <a
-                  href={href(lang, iconPagePath(icon))}
+                  href={`${href(lang, iconPagePath(icon))}${pageQuery === "" ? "" : `?${pageQuery}`}`}
                   className="panel-head-button"
                   aria-label={t.panelOpenPage}
                   target="_blank"

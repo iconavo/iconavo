@@ -9,7 +9,6 @@ import {
   CRAWL_ICON_NAMES,
   HIDDEN_ICON,
   iconPath,
-  MOCKUPS,
   ROBOTS,
   UNTRANSLATED,
   VERSION_META,
@@ -431,9 +430,16 @@ export function metaOf(html: string, name: string): string | undefined {
 export const versionMetaOf = (html: string): string | undefined =>
   metaOf(html, VERSION_META);
 
+/** Вкладки страницы иконки (редизайн): id кнопок вкладок по порядку. */
+export const iconTabsOf = (html: string): string[] =>
+  [
+    ...html.matchAll(/<button\b[^>]*\bid="ip-tab-([a-z]+)"[^>]*\brole="tab"/g),
+  ].map((m) => m[1] ?? "");
+
 /**
- * Страницы иконок выборки обхода (шаг 4 фазы 4): серверный HTML — заголовок, нарисованное превью, метки
- * версии и содержимого набора, мокапы (их рисунки догружает браузер); у скрытой — «Устарела».
+ * Страницы иконок выборки обхода (шаг 4 фазы 4, редизайн): серверный HTML — заголовок, нарисованная иконка
+ * в превью, метки версии и содержимого набора, вкладки «Похожие», «Код» и «В контексте» (их содержимое,
+ * кроме похожих, рисует браузер); у скрытой — пометка «Removed» / «Удалена», как в макете, и одна вкладка.
  */
 export function iconPagesProblems(pages: CrawledPage[]): string[] {
   const byPath = new Map(pages.map((p) => [p.path, p]));
@@ -450,26 +456,32 @@ export function iconPagesProblems(pages: CrawledPage[]): string[] {
       }
       const bare = name.slice(name.indexOf(":") + 1);
       const miss = (what: string) => problems.push(`${path}: нет ${what}`);
-      if (!page.html.includes(`<h1>${bare}</h1>`)) miss(`заголовка ${bare}`);
-      if (
-        !/class="icon-preview[^"]*"[^>]*>\s*<svg[^>]*viewBox/.test(page.html)
-      ) {
-        miss("нарисованного превью");
+      if (!new RegExp(`<h1\\b[^>]*>${bare}</h1>`).test(page.html)) {
+        miss(`заголовка ${bare}`);
+      }
+      // Иконка превью: открывающий тег с viewBox и сразу рисунок внутри.
+      const tile = /<svg\b[^>]*\bip-tile-icon\b[^>]*>(\s*<[a-z])?/.exec(
+        page.html,
+      );
+      if (!tile?.[0].includes("viewBox=") || tile[1] === undefined) {
+        miss("нарисованной иконки в превью");
       }
       if (versionMetaOf(page.html) === undefined) miss("метки версии");
       if (metaOf(page.html, CONTENT_META) === undefined)
         miss("метки содержимого");
-      if ((page.html.match(/data-mockup="/g) ?? []).length !== MOCKUPS) {
-        miss(`${MOCKUPS} мокапов`);
+      const tabs = iconTabsOf(page.html).join(",");
+      const want = name === HIDDEN_ICON ? "similar" : "similar,code,context";
+      if (tabs !== want) {
+        problems.push(`${path}: вкладки «${tabs}», а ждали «${want}»`);
       }
     }
   }
   const hidden = iconPath(HIDDEN_ICON);
-  if (!byPath.get(hidden)?.html.includes("Deprecated")) {
-    problems.push(`${hidden}: нет «Deprecated»`);
+  if (!byPath.get(hidden)?.html.includes("Removed")) {
+    problems.push(`${hidden}: нет «Removed»`);
   }
-  if (!byPath.get(`/ru${hidden}`)?.html.includes("Устарела")) {
-    problems.push(`/ru${hidden}: нет «Устарела»`);
+  if (!byPath.get(`/ru${hidden}`)?.html.includes("Удалена")) {
+    problems.push(`/ru${hidden}: нет «Удалена»`);
   }
   return problems;
 }
