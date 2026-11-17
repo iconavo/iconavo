@@ -245,8 +245,8 @@ describe("языки страниц", () => {
     page(path, `<html lang="en"><body>${body}</body></html>`);
   const ru = (path: string, body: string) =>
     page(path, `<html lang="ru"><body>${body}</body></html>`);
-  const search = (action: string) =>
-    `<search class="header-search"><form action="${action}" class="f"></form></search>`;
+  const search = (href: string) =>
+    `<header class="topbar"><div class="topbar-group"><a class="pill topbar-wide" href="${href}">Search</a></div></header>`;
 
   it("lang у <html> — по адресу", () => {
     expect(htmlLang('<html lang="ru" class="x">')).toBe("ru");
@@ -284,7 +284,7 @@ describe("языки страниц", () => {
     expect(broken.note).toContain("/search: нет ссылки на /ru/search");
   });
 
-  it("поиск в шапке ведёт на поиск своего языка", () => {
+  it("«Поиск» в верхней полосе ведёт на поиск своего языка", () => {
     const pages = [
       en("/", search("/search")),
       ru("/ru", search("/ru/search")),
@@ -296,12 +296,15 @@ describe("языки страниц", () => {
       ...pages,
       ru("/ru/x", search("/search")),
       en("/docs", "<p>без поиска</p>"),
+      // Ссылка на поиск вне верхней полосы не в счёт.
+      en("/sets", '<main><a href="/search">Search</a></main>'),
     ]);
     expect(broken.ok).toBe(false);
     expect(broken.note).toContain(
-      "/ru/x: форма поиска — /search, а ждали /ru/search",
+      "/ru/x: «Поиск» в верхней полосе — /search, а ждали /ru/search",
     );
-    expect(broken.note).toContain("/docs: форма поиска — нет");
+    expect(broken.note).toContain("/docs: «Поиск» в верхней полосе — нет");
+    expect(broken.note).toContain("/sets: «Поиск» в верхней полосе — нет");
   });
 });
 

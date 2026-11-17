@@ -99,7 +99,7 @@ export const CHECKS = [
   ],
   ["lang", "Язык страницы: <html lang> по адресу — en или ru"],
   ["switch", "Переключатель языка ведёт на ту же страницу на другом языке"],
-  ["search", "Поиск в шапке ведёт на страницу поиска своего языка"],
+  ["search", "«Поиск» в верхней полосе ведёт на страницу поиска своего языка"],
   ["sections", "Каждый раздел README — ровно на одной странице"],
   ["links", "Ссылки и якоря ведут на существующие страницы и заголовки"],
   [
@@ -342,20 +342,31 @@ export function httpVerdicts(
 }
 
 /**
- * Иконки страницы: нарисованы ли и не стали ли блоками. В строке текста — только иконки, чей родитель
- * не flex и не grid: их элементы браузер и так делает блоками, так устроен CSS. Выполняется в браузере.
+ * Иконки страницы: нарисованы ли и не стали ли блоками. В строке текста — видимая иконка рядом с текстом
+ * (у родителя есть свой текст), чей родитель не flex и не grid — их элементы браузер и так делает
+ * блоками, так устроен CSS, — и сама она не вынута из потока (absolute, fixed, float). Иконки-кнопки без
+ * текста редизайн ставит блоками нарочно. Выполняется в браузере.
  */
 function iconFacts() {
-  // Похожие иконки других наборов и рисунки мокапов на странице иконки догружает браузер (шаг 4 фазы 4):
-  // выпуск чужого набора не должен сбрасывать её кэш, а страница в кэше — легче. В серверном HTML вместо
-  // них заглушки.
+  // Похожие иконки других наборов на странице иконки догружает браузер (шаг 4 фазы 4, редизайн): выпуск
+  // чужого набора не должен сбрасывать её кэш, а страница в кэше — легче. В серверном HTML вместо них
+  // заглушки.
   const svgs = [...document.querySelectorAll("body svg")].filter(
-    (svg) => !svg.closest(".icon-similar, .mockups"),
+    (svg) => !svg.closest(".ip-similar"),
   );
-  const inText = (svg: Element) =>
-    !/flex|grid/.test(
-      svg.parentElement ? getComputedStyle(svg.parentElement).display : "",
+  const inText = (svg: Element) => {
+    const parent = svg.parentElement;
+    if (parent === null || svg.getClientRects().length === 0) return false;
+    if (/flex|grid/.test(getComputedStyle(parent).display)) return false;
+    const own = getComputedStyle(svg);
+    if (/absolute|fixed/.test(own.position) || own.float !== "none") {
+      return false;
+    }
+    return [...parent.childNodes].some(
+      (n) =>
+        n.nodeType === Node.TEXT_NODE && (n.textContent ?? "").trim() !== "",
     );
+  };
   return {
     total: svgs.length,
     drawn: svgs.filter(

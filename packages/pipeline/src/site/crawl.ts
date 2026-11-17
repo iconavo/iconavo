@@ -248,11 +248,18 @@ export function switchVerdict(pages: CrawledPage[]): Verdict {
     : fail(problems.slice(0, 5).join("; "));
 }
 
-/** Адрес формы поиска в шапке: <search><form action>. */
-export const searchActionOf = (html: string) =>
-  /<search\b[^>]*>\s*<form\b[^>]*\baction="([^"]*)"/i.exec(html)?.[1];
+/**
+ * Адрес ссылки «Поиск» в верхней полосе (редизайн): <header class="topbar"> … <a href="/search">. Раньше
+ * в шапке было поле — форма <search><form action>.
+ */
+export function searchActionOf(html: string): string | undefined {
+  const header =
+    /<header\b[^>]*\bclass="topbar"[^>]*>([\s\S]*?)<\/header>/i.exec(html)?.[1];
+  if (header === undefined) return undefined;
+  return /<a\b[^>]*\bhref="(\/(?:ru\/)?search)"/i.exec(header)?.[1];
+}
 
-/** Поле поиска в шапке каждой страницы ведёт на страницу поиска своего языка, и та отвечает 200. */
+/** «Поиск» в верхней полосе каждой страницы ведёт на страницу поиска своего языка, и та отвечает 200. */
 export function searchFormVerdict(pages: CrawledPage[]): Verdict {
   const byPath = new Map(pages.map((p) => [p.path, p]));
   const problems: string[] = [];
@@ -261,7 +268,7 @@ export function searchFormVerdict(pages: CrawledPage[]): Verdict {
     const action = searchActionOf(page.html);
     if (action !== expected) {
       problems.push(
-        `${page.path}: форма поиска — ${action ?? "нет"}, а ждали ${expected}`,
+        `${page.path}: «Поиск» в верхней полосе — ${action ?? "нет"}, а ждали ${expected}`,
       );
     } else if (byPath.get(expected)?.status !== 200) {
       problems.push(

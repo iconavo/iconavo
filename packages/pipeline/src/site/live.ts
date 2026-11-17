@@ -191,7 +191,10 @@ export async function checkLiveSite(o: {
   });
   rows.push({ what: "Язык страниц", verdict: langVerdict(pages) });
   rows.push({ what: "Переключатель языка", verdict: switchVerdict(pages) });
-  rows.push({ what: "Поиск в шапке", verdict: searchFormVerdict(pages) });
+  rows.push({
+    what: "Поиск в верхней полосе",
+    verdict: searchFormVerdict(pages),
+  });
   rows.push({
     what: "Разделы README",
     verdict: sectionsVerdict(pages, o.sections),
