@@ -1516,6 +1516,191 @@
     }
   }
 
+  /*
+   * Страница поиска по макету «Сценарий поиска иконок» (редизайн, 17 ноября 2026): шапка — как у набора,
+   * крошки «Icon Sets / Search» и «Search Results», под ней строка инструментов набора — поле с запросом,
+   * AI Search, вид и Settings; на телефоне — ещё кнопка фильтра. Поле то же, что на главной (SearchHero):
+   * меняются только обёртки вокруг него. Зазоры — как у страницы набора: 24 px до строки инструментов,
+   * 28 px до строки номеров, строка статуса — в зазоре 28 px над сеткой.
+   */
+  .hero:has(> .search-head) {
+    gap: 0;
+    padding: 0;
+    border-bottom: 0;
+  }
+  .set-head.search-head {
+    grid-template-areas: "title";
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .search-toolbar-box {
+    padding: 1.5rem var(--page-x-end) 0 var(--page-x);
+  }
+  .hero:has(> .search-head) + .find-body {
+    padding-top: 1.75rem;
+  }
+  .search-form {
+    display: flex;
+    flex: 1;
+    min-width: 0;
+  }
+  /* Кнопка фильтра — Icon Button, вариант Secondary, 46 × 46: только на телефоне, счётчик — как у Bag. */
+  .search-filter-button {
+    position: relative;
+    display: none;
+    flex: none;
+    align-items: center;
+    justify-content: center;
+    width: 2.875rem;
+    height: 2.875rem;
+    padding: 0;
+    border: 0;
+    border-radius: 0.625rem;
+    background: var(--color-bg-surface-strong);
+    color: var(--color-text-primary);
+    cursor: pointer;
+  }
+  .search-filter-icon {
+    font-size: 1.25rem;
+  }
+  .search-filter-count {
+    position: absolute;
+    top: -0.25rem;
+    right: -0.25rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 1rem;
+    height: 1rem;
+    padding-inline: 0.1875rem;
+    border-radius: 9999px;
+    background: var(--color-accent-lemon);
+    color: var(--color-text-on-accent);
+    font-size: var(--text-body-xs);
+    font-variant-numeric: tabular-nums;
+    line-height: var(--text-body-xs--line-height);
+  }
+  /* Телефон (кадр «Search Results / Mobile»): «‹ Icon Sets», поле и Settings, ниже AI Search, фильтр и
+     вид; строки номеров над сеткой нет, и статус места не держит. */
+  @media (max-width: 63.98rem) {
+    .search-toolbar-box {
+      padding: 0 var(--page-x-end) 0 var(--page-x);
+    }
+    .hero:has(> .search-head) + .find-body {
+      padding-top: 1rem;
+    }
+    .search-filter-button {
+      display: inline-flex;
+      order: 2;
+      margin-inline-start: auto;
+    }
+    .search-filter-button + .view-switch {
+      margin-inline-start: 0;
+    }
+    /* Специфичнее общего правила строки статуса ниже: на телефоне места под статус нет. */
+    .page.find-page .search-status {
+      min-height: 0;
+    }
+  }
+
+  /*
+   * Фильтры выдачи (решение владельца 17 ноября 2026): в левой панели — строки по макету (Icon Set с
+   * чекбоксом: 36 px, значок 20 px в поле 24 px), в шторке на телефоне — строки 40 px с числом иконок.
+   */
+  fieldset.sidebar-tabs {
+    min-width: 0;
+    margin: 0 0 -2.25rem;
+    padding: 0 0 2.25rem;
+    border: 0;
+  }
+  .sidebar-tab[aria-pressed] {
+    cursor: pointer;
+  }
+  .sidebar-tab[aria-pressed="true"] {
+    border-bottom-color: var(--color-text-primary);
+    color: var(--color-text-primary);
+    font-weight: 500;
+    opacity: 1;
+  }
+  /* Невыбранная рабочая вкладка — text/secondary без полупрозрачности: это кнопка, и её подписи нужен
+     контраст AA (axe); полупрозрачными остаются только «Soon». */
+  .sidebar-tab[aria-pressed="false"] {
+    opacity: 1;
+  }
+  .sidebar-tab[aria-pressed="false"]:hover {
+    color: var(--color-text-primary);
+  }
+  .filter-groups {
+    display: grid;
+    gap: 1rem;
+  }
+  .filter-group,
+  .filter-section {
+    display: grid;
+    gap: 0.375rem;
+    min-width: 0;
+    margin: 0;
+    padding: 0;
+    border: 0;
+  }
+  .filter-group-title {
+    margin-bottom: 0.375rem;
+    padding: 0 0.5rem;
+    color: var(--color-text-secondary);
+    font-size: var(--text-body-xs);
+    line-height: var(--text-body-xs--line-height);
+  }
+  .filter-list {
+    display: grid;
+    gap: 0.25rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .filter-option {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.375rem 0.5rem;
+    border-radius: var(--radius-xs);
+    color: var(--color-text-primary);
+    cursor: pointer;
+  }
+  .filter-option:hover {
+    background: var(--color-bg-hover);
+  }
+  .filter-option-box {
+    flex: none;
+    margin: 0.125rem;
+    color: var(--color-bg-inverse);
+    font-size: 1.25rem;
+  }
+  .filter-option-label {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .filter-option-count {
+    flex: none;
+    color: var(--color-text-secondary);
+    font-size: var(--text-body-sm);
+    font-variant-numeric: tabular-nums;
+    line-height: var(--text-body-sm--line-height);
+  }
+  .filter-note {
+    margin: 0.5rem 0 0;
+    padding: 0 0.5rem;
+    color: var(--color-text-secondary);
+    font-size: var(--text-body-xs);
+    line-height: var(--text-body-xs--line-height);
+  }
+  .filter-empty {
+    margin: 0;
+    padding-inline: 0.5rem;
+    color: var(--color-text-secondary);
+  }
+
   /* Выдача поиска: клетки одного размера и места под строки статуса — замена выдачи не двигает
      вёрстку (ADR-0040). Скелетон первые 150 мс не виден, как у заглушек пакета (ADR-0031). */
   /* Выдача занимает хотя бы экран: открыли ссылку с запросом — сначала из серверного HTML видны
@@ -1523,15 +1708,19 @@
   .search-results {
     min-height: 100vh;
   }
-  .search-commercial {
-    color: var(--color-text-secondary);
-    font-size: 0.875rem;
-  }
   .page .search-status {
-    min-height: 1.5rem;
-    margin-block: 0.5rem;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+    min-height: 1.75rem;
+    margin: 0;
     color: var(--color-text-secondary);
-    font-size: 0.875rem;
+    font-size: var(--text-body-base);
+    line-height: var(--text-body-base--line-height);
+  }
+  .search-results > .grid-bar:last-child {
+    margin-top: 1.75rem;
   }
   .search-timing {
     margin-inline-start: 0.75rem;
@@ -1542,53 +1731,23 @@
     font-weight: 600;
     margin-top: 1.5rem;
   }
-  .result-grid {
-    display: grid;
-    gap: 0.5rem;
-    grid-template-columns: repeat(auto-fill, minmax(7.5rem, 1fr));
-    list-style: none;
-    padding: 0;
-    margin-block: 1rem;
-  }
   .result-grid[aria-busy="true"] {
     opacity: 0.5;
   }
-  .result-cell {
+  .result-skeleton {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 0.375rem;
-    block-size: 8.5rem;
-    border-radius: var(--radius-md);
-    text-align: center;
-    overflow: hidden;
+    justify-content: center;
+    border-radius: var(--radius-lg);
+    background: var(--color-bg-icon-card);
+    /* Фон карточки — тоже через 150 мс, как фигуры внутри: быстрый ответ не мигает пустыми клетками. */
+    animation: search-bg 0.15s step-end;
   }
-  .result-skeleton {
-    padding: 0.75rem 0.25rem;
-  }
-  .result-cell-svg {
-    flex: none;
-    font-size: 2rem;
-  }
-  .result-cell-name {
-    display: -webkit-box;
-    -webkit-box-orient: vertical;
-    -webkit-line-clamp: 2;
-    overflow: hidden;
-    font-size: 0.75rem;
-    line-height: 1.3;
-    overflow-wrap: anywhere;
-  }
-  .result-cell-set,
-  .result-exact {
-    color: var(--color-text-secondary);
-    font-size: 0.75rem;
-    line-height: 1.2;
-  }
-  .result-exact {
-    padding: 0 0.375rem;
-    border: 1px solid var(--color-border-primary);
-    border-radius: 999px;
+  .result-skeleton-text {
+    display: grid;
+    justify-items: center;
+    gap: 0.5rem;
   }
   .result-skeleton-icon,
   .result-skeleton-line {
@@ -1600,12 +1759,21 @@
       search-p 1s 0.15s infinite alternate;
   }
   .result-skeleton-icon {
-    width: 2rem;
-    height: 2rem;
+    width: 1.5rem;
+    height: 1.5rem;
   }
   .result-skeleton-line {
-    width: 4rem;
-    height: 0.75rem;
+    width: 4.5rem;
+    height: 1.0625rem;
+  }
+  .result-skeleton-line + .result-skeleton-line {
+    width: 3rem;
+    height: 1rem;
+  }
+  @keyframes search-bg {
+    from {
+      background-color: transparent;
+    }
   }
   @keyframes search-h {
     from {
@@ -2246,6 +2414,11 @@
     flex: 1;
     border-top: 1px dashed var(--color-border-secondary-20);
   }
+  /* Пункт — flex, а не строка текста: иначе под кнопкой 28 px остаётся место строки (4 px), строка номеров
+     становится 32 px вместо 28 макета, и в поиске сетка сдвигалась, когда номера появлялись. */
+  .pagination-list > li {
+    display: flex;
+  }
   .pagination-list {
     display: flex;
     flex-wrap: wrap;
@@ -2308,10 +2481,10 @@
    * кадре макета «Контекст: свёрнутый сайдбар»: при свёрнутой панели карточек в ряду столько же, они
    * шире. Колонок — сколько карточек встало бы в колонку страницы при развёрнутой боковой панели: окно
    * − 19rem (панель 14rem и поля страницы по 2,5rem; полоса прокрутки — внутри правого поля). Карточка
-   * набора — не уже 8,75rem с зазором 0,75rem: n колонок — с окна 9,5n + 18,25rem; выдачи поиска —
-   * 7,5rem с зазором 0,5rem: с окна 8n + 18,5rem. До 64rem у сетки набора — 3 колонки, у выдачи —
-   * сколько влезет. Таблица стилей задаёт колонки сразу, ещё до скриптов страницы; число на странице
-   * считает браузер по --icon-cols (lib/grid-columns.ts). Пороги сверяет lib/grid-columns.test.ts.
+   * набора и выдачи поиска — не уже 8,75rem с зазором 0,75rem: n колонок — с окна 9,5n + 18,25rem; до
+   * 64rem — 3 колонки (редизайн страницы поиска: у выдачи та же сетка, что у набора, 17 ноября 2026).
+   * Таблица стилей задаёт колонки сразу, ещё до скриптов страницы; число на странице считает браузер по
+   * --icon-cols (lib/grid-columns.ts). Пороги сверяет lib/grid-columns.test.ts.
    */
   :root {
     --icon-cols: 3;
@@ -2319,10 +2492,6 @@
   @media (min-width: 64rem) {
     :root {
       --icon-cols: 4;
-      --result-cols: 5;
-    }
-    .result-grid {
-      grid-template-columns: repeat(var(--result-cols), minmax(0, 1fr));
     }
   }
   @media (min-width: 65.75rem) {
@@ -2330,24 +2499,9 @@
       --icon-cols: 5;
     }
   }
-  @media (min-width: 66.5rem) {
-    :root {
-      --result-cols: 6;
-    }
-  }
-  @media (min-width: 74.5rem) {
-    :root {
-      --result-cols: 7;
-    }
-  }
   @media (min-width: 75.25rem) {
     :root {
       --icon-cols: 6;
-    }
-  }
-  @media (min-width: 82.5rem) {
-    :root {
-      --result-cols: 8;
     }
   }
   @media (min-width: 84.75rem) {
@@ -2355,19 +2509,9 @@
       --icon-cols: 7;
     }
   }
-  @media (min-width: 90.5rem) {
-    :root {
-      --result-cols: 9;
-    }
-  }
   @media (min-width: 94.25rem) {
     :root {
       --icon-cols: 8;
-    }
-  }
-  @media (min-width: 98.5rem) {
-    :root {
-      --result-cols: 10;
     }
   }
   @media (min-width: 103.75rem) {
@@ -2375,24 +2519,9 @@
       --icon-cols: 9;
     }
   }
-  @media (min-width: 106.5rem) {
-    :root {
-      --result-cols: 11;
-    }
-  }
   @media (min-width: 113.25rem) {
     :root {
       --icon-cols: 10;
-    }
-  }
-  @media (min-width: 114.5rem) {
-    :root {
-      --result-cols: 12;
-    }
-  }
-  @media (min-width: 122.5rem) {
-    :root {
-      --result-cols: 13;
     }
   }
   @media (min-width: 122.75rem) {
@@ -2400,19 +2529,9 @@
       --icon-cols: 11;
     }
   }
-  @media (min-width: 130.5rem) {
-    :root {
-      --result-cols: 14;
-    }
-  }
   @media (min-width: 132.25rem) {
     :root {
       --icon-cols: 12;
-    }
-  }
-  @media (min-width: 138.5rem) {
-    :root {
-      --result-cols: 15;
     }
   }
   @media (min-width: 141.75rem) {
@@ -2420,19 +2539,9 @@
       --icon-cols: 13;
     }
   }
-  @media (min-width: 146.5rem) {
-    :root {
-      --result-cols: 16;
-    }
-  }
   @media (min-width: 151.25rem) {
     :root {
       --icon-cols: 14;
-    }
-  }
-  @media (min-width: 154.5rem) {
-    :root {
-      --result-cols: 17;
     }
   }
   @media (min-width: 160.75rem) {
@@ -2440,24 +2549,9 @@
       --icon-cols: 15;
     }
   }
-  @media (min-width: 162.5rem) {
-    :root {
-      --result-cols: 18;
-    }
-  }
   @media (min-width: 170.25rem) {
     :root {
       --icon-cols: 16;
-    }
-  }
-  @media (min-width: 170.5rem) {
-    :root {
-      --result-cols: 19;
-    }
-  }
-  @media (min-width: 178.5rem) {
-    :root {
-      --result-cols: 20;
     }
   }
   @media (min-width: 179.75rem) {
@@ -2465,19 +2559,9 @@
       --icon-cols: 17;
     }
   }
-  @media (min-width: 186.5rem) {
-    :root {
-      --result-cols: 21;
-    }
-  }
   @media (min-width: 189.25rem) {
     :root {
       --icon-cols: 18;
-    }
-  }
-  @media (min-width: 194.5rem) {
-    :root {
-      --result-cols: 22;
     }
   }
   @media (min-width: 198.75rem) {
@@ -2485,19 +2569,9 @@
       --icon-cols: 19;
     }
   }
-  @media (min-width: 202.5rem) {
-    :root {
-      --result-cols: 23;
-    }
-  }
   @media (min-width: 208.25rem) {
     :root {
       --icon-cols: 20;
-    }
-  }
-  @media (min-width: 210.5rem) {
-    :root {
-      --result-cols: 24;
     }
   }
   @media (min-width: 217.75rem) {
@@ -2505,34 +2579,14 @@
       --icon-cols: 21;
     }
   }
-  @media (min-width: 218.5rem) {
-    :root {
-      --result-cols: 25;
-    }
-  }
-  @media (min-width: 226.5rem) {
-    :root {
-      --result-cols: 26;
-    }
-  }
   @media (min-width: 227.25rem) {
     :root {
       --icon-cols: 22;
     }
   }
-  @media (min-width: 234.5rem) {
-    :root {
-      --result-cols: 27;
-    }
-  }
   @media (min-width: 236.75rem) {
     :root {
       --icon-cols: 23;
-    }
-  }
-  @media (min-width: 242.5rem) {
-    :root {
-      --result-cols: 28;
     }
   }
   @media (min-width: 246.25rem) {
@@ -2747,6 +2801,37 @@
   .icon-card-link[aria-current="true"] {
     background: var(--color-bg-card-hover);
   }
+  /*
+   * Карточка выдачи по макету «Сценарий поиска иконок» (Icon Card, Show set): та же, что у набора, под
+   * именем — набор. Высота у всех клеток и у скелетона одна — 113 px: замена выдачи по словам полной не
+   * двигает сетку (ADR-0040). Точное имя — рамкой карточки и подписью для экранного диктора: в макете метки
+   * нет, а карточка с точным именем всегда первая.
+   */
+  .result-cell > .icon-card-link,
+  .result-skeleton {
+    gap: 1rem;
+    min-block-size: 7.0625rem;
+    padding: 1rem 0.5rem;
+  }
+  .result-cell-text {
+    display: grid;
+    justify-items: center;
+    gap: 0.5rem;
+    min-width: 0;
+    max-width: 100%;
+  }
+  .result-cell-set {
+    max-width: 100%;
+    overflow: hidden;
+    color: var(--color-text-secondary);
+    font-size: var(--text-body-xs);
+    line-height: var(--text-body-xs--line-height);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .result-cell[data-exact] > .icon-card-link {
+    box-shadow: inset 0 0 0 1px var(--color-border-primary);
+  }
 
   /*
    * Панель иконки по макету «Icon Panel» (Figma «Iconavo — Макеты»): 355 px, скругление 16, bg/surface.
@@ -2760,7 +2845,7 @@
       gap: 1.75rem;
       align-items: start;
     }
-    /* Колонок с открытой панелью столько же, сколько без неё (--icon-cols, --result-cols — от ширины
+    /* Колонок с открытой панелью столько же, сколько без неё (--icon-cols — от ширины
        окна; решение владельца 13 ноября 2026, вместо кадра «Selected Icon + Opened Panel» с 6 колонками
        по 116 px): карточки сужаются и сдвигаются, но не перескакивают в другие ряды. */
   }
@@ -5122,5 +5207,164 @@
     .ctx-grid {
       gap: 0.75rem;
     }
+  }
+
+  /*
+   * Шторка фильтра по макету (кадр «Search Results / Mobile — Filter»): снизу, 680 px, а в окне ниже —
+   * до 44 px от верха, как рюкзак; bg/surface, скругление 16; ручка, «Filters» 16/600 и «N selected»,
+   * разделы прокручиваются, Reset (Outline) и Show results (Primary, лимонная) — 42 px, закреплены внизу.
+   */
+  .filter-sheet {
+    position: fixed;
+    inset: auto 0 0;
+    z-index: 60;
+    width: 100%;
+    max-width: 100%;
+    height: min(42.5rem, calc(100dvh - 2.75rem));
+    max-height: none;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    border: 0;
+    border-radius: 1rem 1rem 0 0;
+    background: var(--color-bg-surface);
+    color: var(--color-text-primary);
+    font-size: var(--text-body-base);
+    line-height: var(--text-body-base--line-height);
+  }
+  .filter-sheet::backdrop {
+    background: var(--color-bg-overlay);
+  }
+  .filter-sheet-body {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+  }
+  .filter-sheet .bag-grabber {
+    display: flex;
+    flex: none;
+    justify-content: center;
+    width: 100%;
+    padding: 0.5rem 0 0.25rem;
+    border: 0;
+    background: none;
+    cursor: grab;
+    touch-action: none;
+  }
+  .filter-sheet .bag-grabber-bar {
+    width: 2.25rem;
+    height: 0.25rem;
+    border-radius: 9999px;
+    background: var(--color-border-primary);
+  }
+  .filter-sheet-head {
+    display: flex;
+    flex: none;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    padding: 0.25rem 0.5rem 0.5rem 1.25rem;
+  }
+  .filter-sheet-heading {
+    display: grid;
+    gap: 0.125rem;
+  }
+  .filter-sheet-title {
+    margin: 0;
+    font-size: var(--text-heading-md);
+    font-weight: 600;
+    line-height: var(--text-heading-md--line-height);
+    outline: none;
+  }
+  .filter-sheet-count {
+    margin: 0;
+    color: var(--color-text-secondary);
+    font-size: var(--text-body-sm);
+    line-height: var(--text-body-sm--line-height);
+  }
+  .filter-sheet .bag-panel-close {
+    width: 2.5rem;
+    height: 2.5rem;
+  }
+  .filter-sheet-list {
+    display: grid;
+    flex: 1;
+    align-content: start;
+    gap: 1.5rem;
+    min-height: 0;
+    overflow-y: auto;
+    padding: 0.25rem 0.75rem 1rem;
+  }
+  .filter-sheet-list > fieldset > legend {
+    margin-bottom: 0.5rem;
+    padding: 0 0.5rem;
+    color: var(--color-text-primary);
+    font-size: var(--text-body-base);
+    font-weight: 500;
+    line-height: var(--text-body-base--line-height);
+  }
+  .filter-sheet .sidebar-filter {
+    margin: 0 0.5rem 0.25rem;
+    background: var(--color-bg-surface-strong);
+  }
+  .filter-sheet .filter-group-title {
+    margin-top: 0.5rem;
+  }
+  .filter-sheet .filter-list {
+    gap: 0;
+  }
+  .filter-sheet .filter-option {
+    gap: 0.5rem;
+    min-height: 2.5rem;
+    padding: 0.5rem;
+  }
+  .filter-sheet .filter-option-box {
+    margin: 0;
+    font-size: 1.5rem;
+  }
+  .filter-sheet-foot {
+    display: flex;
+    flex: none;
+    gap: 0.5rem;
+    padding: 0.75rem 1rem 1.5rem;
+    border-top: 1px solid var(--color-border-secondary-20);
+  }
+  .filter-sheet-reset,
+  .filter-sheet-show {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 2.625rem;
+    padding: 0.75rem 1rem;
+    border-radius: var(--radius-md);
+    font: inherit;
+    font-size: var(--text-body-base);
+    font-weight: 500;
+    line-height: var(--text-body-base--line-height);
+    cursor: pointer;
+  }
+  .filter-sheet-reset {
+    border: 1px solid var(--color-border-secondary-20);
+    background: none;
+    color: var(--color-text-primary);
+  }
+  .filter-sheet-show {
+    flex: 1;
+    border: 0;
+    background: var(--color-accent-lemon);
+    color: var(--color-text-on-accent);
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .filter-sheet[open] {
+      animation: ip-sheet-in var(--motion-sheet-in) var(--motion-ease-out);
+    }
+    .filter-sheet[open]::backdrop {
+      animation: fade-in var(--motion-fade);
+    }
+  }
+  /* Фокус с клавиатуры на чекбоксе фильтра — рамкой вокруг значка, в панели и в шторке. */
+  .filter-option input:focus-visible + .filter-option-box {
+    border-radius: var(--radius-xs);
+    outline: 2px solid var(--color-selection-bg);
   }
 }

@@ -18,7 +18,14 @@
 // | pnpm site --refresh [--all] [--base=…] | pnpm site --refresh --wait=N --since=… --sets=… [--base=…]
 // | pnpm release bump [версия] | pnpm release prepare [--first] | pnpm release verify --plan=… [--wait=N]
 import { randomInt } from "node:crypto";
-import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
+import {
+  mkdir,
+  mkdtemp,
+  readdir,
+  readFile,
+  rm,
+  writeFile,
+} from "node:fs/promises";
 import type { AddressInfo } from "node:net";
 import { tmpdir } from "node:os";
 import { basename, join, relative } from "node:path";
@@ -1923,7 +1930,7 @@ try {
       // Сборка — с чистого листа: кэш Turbopack от сборки с другим окружением (pnpm site --prod, vercel
       // build) ронял next build внутренней ошибкой.
       console.log("Собираю сайт: next build…");
-      await rm(join(dir, ".next"), { recursive: true, force: true });
+      await cleanNextDir(dir);
       await buildNext({ dir, env });
       const manifest = JSON.parse(
         await readFile(join(dir, ".next", "prerender-manifest.json"), "utf8"),
@@ -2624,4 +2631,31 @@ try {
 } catch (e) {
   console.error(`Ошибка: ${(e as Error).message}`);
   process.exit(1);
+}
+
+/**
+ * Папка .next — с чистого листа, кроме квитанций повтора напоминания Next.js об обновлении. Под
+ * ИИ-ассистентом next build с известной уязвимостью в версии останавливается и просит повторить команду;
+ * повтор в течение 5 минут проходит по квитанции в .next/cache/next-agentic-upgrade-retries (Next.js 16.4).
+ * Без переноса чистка её удаляла, и проверка сайта не проходила никогда. В CI ассистента нет — квитанций
+ * тоже.
+ */
+async function cleanNextDir(dir: string): Promise<void> {
+  const retries = join(dir, ".next", "cache", "next-agentic-upgrade-retries");
+  const kept = await readdir(retries).then(
+    (names) =>
+      Promise.all(
+        names
+          .filter((name) => name.endsWith(".json"))
+          .map(async (name) => ({
+            name,
+            data: await readFile(join(retries, name)),
+          })),
+      ),
+    () => [],
+  );
+  await rm(join(dir, ".next"), { recursive: true, force: true });
+  if (kept.length === 0) return;
+  await mkdir(retries, { recursive: true });
+  for (const { name, data } of kept) await writeFile(join(retries, name), data);
 }

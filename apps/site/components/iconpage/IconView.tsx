@@ -33,6 +33,7 @@ import {
 import { mockupLabel } from "../../lib/mockups";
 import { panelSettings } from "../../lib/panel-code";
 import { queryText, useUrlQuery } from "../../lib/url-query";
+import { Crumbs } from "../Crumbs";
 import { type DetailsState, useIconDetails } from "../icon/useIconDetails";
 import { PageLink } from "../PageLink";
 import {
@@ -250,21 +251,15 @@ export function IconView({ lang, page }: { lang: Lang; page: IconPageData }) {
 
   return (
     <>
-      <nav aria-label={t.crumbsLabel} className="crumbs ip-crumbs">
-        <ol>
-          <li>
-            <PageLink lang={lang} path="/">
-              {t.navIconSets}
-            </PageLink>
-          </li>
-          <li>
-            <PageLink lang={lang} path={`/${prefix}`}>
-              {setName}
-            </PageLink>
-          </li>
-          <li aria-current="page">{bare}</li>
-        </ol>
-      </nav>
+      <Crumbs
+        lang={lang}
+        items={[
+          { path: "/", label: t.navIconSets },
+          { path: `/${prefix}`, label: setName },
+        ]}
+        current={bare}
+        className="ip-crumbs"
+      />
       <PageLink lang={lang} path={`/${prefix}`} className="set-back ip-back">
         <Icon
           icon="material-symbols:keyboard-arrow-left"

@@ -43,11 +43,13 @@ export const GROUP_TEXTS: Record<
   },
 };
 
-/** Строка набора в боковой панели: число — без слова, как в макете. */
+/** Строка набора в боковой панели: число — без слова, как в макете; лицензия — для фильтра поиска. */
 export interface SidebarSet {
   id: string;
   name: string;
   count: string;
+  /** SPDX лицензии набора: вкладка License левой панели на странице поиска. */
+  license: string;
 }
 
 export interface SidebarGroup {
@@ -69,7 +71,14 @@ export function sidebarGroups(
       const info = sets[id];
       return info === undefined
         ? []
-        : [{ id, name: info.name, count: formatNumber(lang, info.total) }];
+        : [
+            {
+              id,
+              name: info.name,
+              count: formatNumber(lang, info.total),
+              license: info.license.spdx,
+            },
+          ];
     }),
   }));
 }
@@ -179,3 +188,31 @@ export function releaseSummary(lang: Lang, view: ReleaseView): string {
   if (view.first || view.lists.length === 0) return t.newsFirst;
   return view.lists.map((l) => `${l.label}: ${l.count}`).join(" · ");
 }
+
+/**
+ * «Filter by name» левой панели и шторки фильтра: строки, у которых в названии или префиксе есть эти буквы;
+ * пустые группы пропадают. Без запросов — прямо по данным панели.
+ */
+export function filterGroups(
+  groups: readonly SidebarGroup[],
+  text: string,
+): SidebarGroup[] {
+  const needle = text.trim().toLowerCase();
+  return groups
+    .map((g) => ({
+      ...g,
+      sets: g.sets.filter(
+        (s) =>
+          needle === "" ||
+          s.name.toLowerCase().includes(needle) ||
+          s.id.includes(needle),
+      ),
+    }))
+    .filter((g) => g.sets.length > 0);
+}
+
+/** Лицензии наборов панели — без повторов, по алфавиту: вкладка License на странице поиска. */
+export const groupLicenses = (groups: readonly SidebarGroup[]): string[] =>
+  [...new Set(groups.flatMap((g) => g.sets.map((s) => s.license)))].sort(
+    (a, b) => a.localeCompare(b, "en"),
+  );

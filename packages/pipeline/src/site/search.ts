@@ -167,6 +167,17 @@ async function homeProblems(
     );
   }
   if (!facts.exactFirst) problems.push("с главной: первая — не точное имя");
+  // Шапка по макету «Сценарий поиска иконок»: крошки «Icon Sets / Search» и «Search Results».
+  const head = await page.evaluate(() => ({
+    title: document.querySelector("main h1")?.textContent?.trim() ?? "",
+    crumb:
+      document
+        .querySelector(".search-head .crumbs li[aria-current]")
+        ?.textContent?.trim() ?? "",
+  }));
+  if (head.title !== "Search Results" || head.crumb !== "Search") {
+    problems.push(`шапка: заголовок «${head.title}», крошка «${head.crumb}»`);
+  }
   const api = await matchesApi("с главной", facts, requests, (p) =>
     p.get("query") === SEARCH_QUERY ? undefined : "не тот текст",
   );
@@ -239,18 +250,29 @@ async function headerProblems(
   return problems;
 }
 
-/** Чипсы стиля и набора — в адресе и в запросе; «назад» — из памяти вкладки, без нового запроса. */
+/**
+ * Фильтры левой панели (редизайн, 17 ноября 2026): вкладка Style — «Filled», вкладка Sets — Phosphor; в
+ * адресе и в запросе (наборы — prefixes); «назад» — из памяти вкладки, без нового запроса.
+ */
 async function filterProblems(
   page: Page,
   requests: string[],
 ): Promise<string[]> {
+  const sidebar = page.locator("#sidebar");
   const step = async (
     name: string,
-    click: string,
+    tab: string,
+    option: string,
     search: string,
     want: (p: URLSearchParams) => string | undefined,
   ) => {
-    await page.locator(click).first().click();
+    await sidebar
+      .locator("button.sidebar-tab[aria-pressed]", { hasText: tab })
+      .click();
+    await sidebar
+      .locator(".filter-option", { hasText: option })
+      .first()
+      .click();
     const { facts, ok } = await waitFor(page, final(search));
     if (!ok) {
       return `${name}: адрес «${facts.search}», выдача «${facts.state}»`;
@@ -259,16 +281,18 @@ async function filterProblems(
   };
   const filled = await step(
     "стиль «Заливка»",
-    'section.search-results a.chip[href*="style=filled"]',
+    "Style",
+    "Filled",
     `?q=${SEARCH_QUERY}&style=filled`,
     (p) => (p.get("style") === "filled" ? undefined : "нет style=filled"),
   );
   if (filled) return [filled];
   const set = await step(
     "набор ph",
-    'section.search-results a.chip[href*="set=ph"]',
+    "Sets",
+    "Phosphor",
     `?q=${SEARCH_QUERY}&style=filled&set=ph`,
-    (p) => (p.get("prefix") === "ph" ? undefined : "нет prefix=ph"),
+    (p) => (p.get("prefixes") === "ph" ? undefined : "нет prefixes=ph"),
   );
   if (set) return [set];
   const before = requests.length;
@@ -284,7 +308,10 @@ async function filterProblems(
   return [];
 }
 
-/** Вторая страница: start и limit в запросе, выдача — как у API. */
+/**
+ * Вторая страница: start и limit в запросе — размер страницы целыми рядами, как у набора (колонок —
+ * --icon-cols от ширины окна, ближе всего к 96 — pageSizeFor сайта); выдача — как у API.
+ */
 async function pageProblems(
   page: Page,
   o: SearchCheckContext,
@@ -302,10 +329,19 @@ async function pageProblems(
   );
   if (!ok)
     return [`страница 2: адрес «${facts.search}», выдача «${facts.state}»`];
+  const size = await page.evaluate(() => {
+    const cols = Number.parseInt(
+      getComputedStyle(document.documentElement).getPropertyValue(
+        "--icon-cols",
+      ),
+      10,
+    );
+    return cols * Math.round(96 / cols);
+  });
   const api = await matchesApi("страница 2", facts, requests, (p) =>
-    p.get("start") === "96" && p.get("limit") === "96"
+    p.get("start") === String(size) && p.get("limit") === String(size)
       ? undefined
-      : "ждали start=96 и limit=96",
+      : `ждали start=${size} и limit=${size}`,
   );
   return api ? [api] : [];
 }
@@ -557,6 +593,106 @@ async function emptyProblems(
   return problems;
 }
 
+/**
+ * Шторка фильтра на телефоне (кадр «Search Results / Mobile — Filter»): кнопка в строке инструментов,
+ * выбор — черновик до Show results (адрес не меняется), «N selected», затем выдача с фильтрами как у API,
+ * шторка закрыта, фокус — на кнопке, на ней счётчик; Reset чистит черновик, Esc закрывает без применения.
+ * Там же axe открытой шторки.
+ */
+async function sheetProblems(
+  browser: Browser,
+  o: SearchCheckContext,
+  shots: { title: string; png: string }[],
+): Promise<string[]> {
+  const context = await browser.newContext({ viewport: PHONE });
+  const page = await context.newPage();
+  const seen = watch(page);
+  await recordViolations(page);
+  const requests = searchRequests(page, o.api);
+  await page.goto(`${o.base}/search?q=${SEARCH_QUERY}`, { waitUntil: "load" });
+  const first = await waitFor(page, final(`?q=${SEARCH_QUERY}`));
+  if (!first.ok) {
+    await context.close();
+    return [`шторка: выдача «${first.facts.state}»`];
+  }
+  const problems: string[] = [];
+  const button = page.locator(".search-filter-button");
+  const sheet = page.locator("dialog.filter-sheet[open]");
+  const count = async () =>
+    (await sheet.locator(".filter-sheet-count").textContent())?.trim() ?? "";
+  await button.click();
+  const opened = await sheet
+    .waitFor({ timeout: SEARCH_WAIT_MS })
+    .then(() => true)
+    .catch(() => false);
+  if (!opened) {
+    await context.close();
+    return ["шторка фильтра не открылась"];
+  }
+  await sheet.locator(".filter-option", { hasText: "Phosphor" }).click();
+  await sheet.locator(".filter-option", { hasText: "Filled" }).click();
+  await page.waitForTimeout(300);
+  if ((await page.evaluate(() => location.search)) !== `?q=${SEARCH_QUERY}`) {
+    problems.push("шторка: адрес сменился до Show results");
+  }
+  const picked = await count();
+  if (picked !== "2 selected") {
+    problems.push(`шторка: «${picked}» вместо «2 selected»`);
+  }
+  shots.push({
+    title: "/search — шторка фильтра (375 px)",
+    png: await shot(page, seen),
+  });
+  const axePages: { path: string; violations: AxeViolation[] }[] = [];
+  await runAxe(page, await axe(), "/search — шторка фильтра", axePages);
+  const access = axeVerdict(axePages);
+  if (access.ok === false) problems.push(`шторка, axe: ${access.note}`);
+  await sheet.locator(".filter-sheet-show").click();
+  const target = `?q=${SEARCH_QUERY}&style=filled&set=ph`;
+  const { facts, ok } = await waitFor(page, final(target));
+  if (!ok) {
+    problems.push(`шторка: адрес «${facts.search}», выдача «${facts.state}»`);
+  } else {
+    const api = await matchesApi("шторка", facts, requests, (p) =>
+      p.get("prefixes") === "ph" && p.get("style") === "filled"
+        ? undefined
+        : "фильтры не дошли",
+    );
+    if (api) problems.push(api);
+  }
+  if ((await page.locator("dialog.filter-sheet[open]").count()) > 0) {
+    problems.push("шторка не закрылась после Show results");
+  }
+  const focus = await page.evaluate(
+    () => document.activeElement?.className ?? "",
+  );
+  if (!focus.includes("search-filter-button")) {
+    problems.push(`шторка: фокус на «${focus}», а не на кнопке фильтра`);
+  }
+  const badge =
+    (await page.locator(".search-filter-count").textContent())?.trim() ?? "";
+  if (badge !== "2") problems.push(`шторка: на кнопке «${badge}» вместо 2`);
+  await button.click();
+  await sheet.waitFor({ timeout: SEARCH_WAIT_MS }).catch(() => {});
+  await sheet.locator(".filter-sheet-reset").click();
+  const reset = await count();
+  if (reset !== "0 selected") problems.push(`шторка: после Reset «${reset}»`);
+  await page.keyboard.press("Escape");
+  await page.waitForTimeout(300);
+  if ((await page.locator("dialog.filter-sheet[open]").count()) > 0) {
+    problems.push("шторка не закрылась по Esc");
+  }
+  if ((await page.evaluate(() => location.search)) !== target) {
+    problems.push("шторка: Esc применил черновик");
+  }
+  problems.push(
+    ...(await violations(page)).map((x) => `шторка, CSP: ${x}`),
+    ...[...new Set(seen.errors)].map((x) => `шторка, ошибка: ${x}`),
+  );
+  await context.close();
+  return problems;
+}
+
 /** Гидратация закончилась — у main есть данные React. */
 async function waitForHydration(page: Page) {
   await page
@@ -575,9 +711,10 @@ async function waitForHydration(page: Page) {
 }
 
 /**
- * Сценарий «Поиск»: набор с главной, Ctrl K и «Поиск» верхней полосы, фильтры и «назад», вторая страница, ссылка с
- * фильтрами в чистом окне, неполная выдача без сдвигов, пустые ответы и 429; axe и ширина телефона на
- * выдаче; ошибки страницы и нарушения CSP — тоже проблемы.
+ * Сценарий «Поиск»: набор с главной и шапка по макету, Ctrl K и «Поиск» верхней полосы, фильтры левой
+ * панели и «назад», вторая страница, ссылка с фильтрами в чистом окне, шторка фильтра на телефоне,
+ * неполная выдача без сдвигов, пустые ответы и 429; axe и ширина телефона на выдаче; ошибки страницы и
+ * нарушения CSP — тоже проблемы.
  */
 export async function checkSearchPage(
   browser: Browser,
@@ -632,7 +769,7 @@ export async function checkSearchPage(
       link.facts,
       freshRequests,
       (p) =>
-        p.get("style") === "filled" && p.get("prefix") === "ph"
+        p.get("style") === "filled" && p.get("prefixes") === "ph"
           ? undefined
           : "фильтры не дошли",
     );
@@ -649,11 +786,12 @@ export async function checkSearchPage(
   if (width > PHONE.width) problems.push(`телефон: ширина ${width} px`);
   await fresh.close();
 
+  problems.push(...(await sheetProblems(browser, o, shots)));
   problems.push(...(await pendingProblems(browser, o)));
   problems.push(...(await emptyProblems(browser, o)));
   return problems.length === 0
     ? pass(
-        "набор с главной, Ctrl K и «Поиск» в верхней полосе — без перезагрузки, фокус в поле; стиль, набор, «назад» из памяти, страница 2, ссылка с фильтрами — как у API; по словам → полная без сдвигов; «ничего», «по смыслу», «с фильтрами пусто», 429; axe и 375 px",
+        "набор с главной, Ctrl K и «Поиск» в верхней полосе — без перезагрузки, фокус в поле; шапка «Search Results»; стиль и набор в левой панели, «назад» из памяти, страница 2 целыми рядами, ссылка с фильтрами — как у API; шторка фильтра на телефоне; по словам → полная без сдвигов; «ничего», «по смыслу», «с фильтрами пусто», 429; axe и 375 px",
       )
     : fail(problems.slice(0, 4).join("; "));
 }

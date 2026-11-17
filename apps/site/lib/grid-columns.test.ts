@@ -2,8 +2,8 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 
-// Колонки сеток — от ширины окна (app/globals.css, решения владельца 13 ноября 2026): сетка набора,
-// выдача поиска и карточки наборов на главной и в списке. n колонок — с окна n·(карточка + зазор) − зазор
+// Колонки сеток — от ширины окна (app/globals.css, решения владельца 13 ноября 2026): сетка набора (у
+// выдачи поиска — она же, редизайн 17 ноября 2026) и карточки наборов на главной и в списке. n колонок — с окна n·(карточка + зазор) − зазор
 // + (боковая панель + поля страницы). Тест сверяет пороги в стилях с этой формулой и с размерами
 // раскладки из тех же стилей: поменяли ширину панели, поля или зазор — пороги надо пересчитать.
 
@@ -32,7 +32,7 @@ function minCardAfter(marker: string): number {
   return Number(match?.[1]);
 }
 
-type Cols = "icon" | "result" | "set" | "sets";
+type Cols = "icon" | "set" | "sets";
 
 /** Значения --{name}-cols по порогам ширины окна: [окно в rem, колонок], по возрастанию. */
 function steps(name: Cols): [number, number][] {
@@ -57,7 +57,6 @@ describe("колонки сеток — от ширины окна", () => {
 
   const grids: { name: Cols; card: number; gap: number; max?: number }[] = [
     { name: "icon", card: 8.75, gap: remAfter("  .icon-grid {", "gap") },
-    { name: "result", card: 7.5, gap: remAfter("  .result-grid {", "gap") },
     {
       name: "set",
       card: minCardAfter("  .set-grid {"),
@@ -74,7 +73,7 @@ describe("колонки сеток — от ширины окна", () => {
 
   it("колонка страницы — окно − 19rem, карточка набора — 15rem", () => {
     expect(frame).toBe(19);
-    expect(grids[2].card).toBe(15);
+    expect(grids[1].card).toBe(15);
   });
 
   for (const { name, card, gap, max } of grids) {
@@ -108,9 +107,8 @@ describe("колонки сеток — от ширины окна", () => {
     expect(css).toMatch(
       /\.icon-grid \{[^}]*grid-template-columns: repeat\(var\(--icon-cols\), minmax\(0, 1fr\)\);/,
     );
-    expect(css).toMatch(
-      /\.result-grid \{\s*grid-template-columns: repeat\(var\(--result-cols\), minmax\(0, 1fr\)\);/,
-    );
+    // Выдача поиска — та же сетка: класс icon-grid у списка выдачи, своей лестницы колонок нет.
+    expect(css).not.toMatch(/--result-cols/);
     expect(css).toMatch(
       /\.set-grid \{\s*grid-template-columns: repeat\(var\(--set-cols\), minmax\(0, 1fr\)\);/,
     );

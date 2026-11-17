@@ -49,10 +49,13 @@ export const SITE_ICONS = [
   "material-symbols:menu",
   "material-symbols:moon-stars",
   "material-symbols:open-in-new",
+  "material-symbols:radio-button-checked",
+  "material-symbols:radio-button-unchecked",
   "material-symbols:report",
   "material-symbols:search",
   "material-symbols:settings",
   "material-symbols:toc",
+  "material-symbols:tune",
   "material-symbols:wb-sunny",
 ] as const;
 

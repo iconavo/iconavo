@@ -11,8 +11,9 @@ import { CardTools, type Selection } from "../catalog/Selection";
 import { CARD_LINK } from "../icon/usePanel";
 
 /**
- * Сетка выдачи поиска (шаг 3 фазы 4, ADR-0040). Клетки одного размера, имя — до двух строк: замена
- * выдачи по словам полной не двигает вёрстку. Ключ клетки — карточка, поэтому та же иконка остаётся в
+ * Сетка выдачи поиска (шаг 3 фазы 4, ADR-0040; редизайн — макет «Сценарий поиска иконок»): та же сетка и
+ * карточка, что у набора (колонки --icon-cols — от ширины окна), под именем — набор. Клетки одного размера,
+ * имя — одной строкой: замена выдачи по словам полной не двигает вёрстку. Ключ клетки — карточка, поэтому та же иконка остаётся в
  * своей клетке. Скелетоны добивают страницу до полной, пока смысл досчитывается; первые 150 мс их не
  * видно (CSS), как у заглушек пакета (ADR-0031). Карточка — ссылка на страницу иконки: обычный щелчок
  * открывает боковую панель (onOpen), с Ctrl — страницу в новой вкладке (шаг 4 фазы 4). При наведении у
@@ -45,21 +46,26 @@ export function ResultGrid({
   const t = DICTIONARIES[lang];
   const content = (card: SearchCard): ReactNode => (
     <>
-      <Icon icon={card.icon} className="result-cell-svg" />
-      <span className="result-cell-name">{card.name}</span>
-      <span className="result-cell-set">{setTitles[card.set] ?? card.set}</span>
+      <Icon icon={card.icon} className="icon-cell-svg" />
+      <span className="result-cell-text">
+        <span className="icon-cell-name">{card.name}</span>
+        <span className="result-cell-set">
+          {setTitles[card.set] ?? card.set}
+        </span>
+      </span>
       {card.exact ? (
-        <span className="result-exact">{t.searchExact}</span>
+        <span className="result-exact sr-only">{t.searchExact}</span>
       ) : null}
     </>
   );
   return (
-    <ul className="result-grid" aria-busy={busy ? "true" : undefined}>
+    <ul className="icon-grid result-grid" aria-busy={busy ? "true" : undefined}>
       {cards.map((card) => (
         <li
           key={card.card}
-          className="result-cell"
+          className="icon-cell result-cell"
           data-icon={card.icon}
+          data-exact={card.exact ? "" : undefined}
           data-picked={selection?.picked.includes(card.icon) ? "" : undefined}
         >
           <a
@@ -91,11 +97,14 @@ export function ResultGrid({
         (id) => (
           <li
             key={id}
-            className="result-cell result-skeleton"
+            className="icon-cell result-cell result-skeleton"
             aria-hidden="true"
           >
             <span className="result-skeleton-icon" />
-            <span className="result-skeleton-line" />
+            <span className="result-skeleton-text">
+              <span className="result-skeleton-line" />
+              <span className="result-skeleton-line" />
+            </span>
           </li>
         ),
       )}

@@ -20,6 +20,7 @@ import {
 import { DICTIONARIES, type Lang } from "../../lib/i18n";
 import { loadPageIcons } from "../../lib/icons";
 import { PAGE_PANEL_ID } from "../../lib/panel-layout";
+import { Crumbs } from "../Crumbs";
 import { IconGrid } from "../catalog/IconGrid";
 import { PageLink } from "../PageLink";
 import { Soon } from "../shell/Soon";
@@ -55,16 +56,11 @@ export async function SetPage({
     <main id="content" className="page set-page">
       <header className="set-head">
         <div className="set-head-title">
-          <nav aria-label={t.crumbsLabel} className="crumbs">
-            <ol>
-              <li>
-                <PageLink lang={lang} path="/">
-                  {t.navIconSets}
-                </PageLink>
-              </li>
-              <li aria-current="page">{info.name}</li>
-            </ol>
-          </nav>
+          <Crumbs
+            lang={lang}
+            items={[{ path: "/", label: t.navIconSets }]}
+            current={info.name}
+          />
           <PageLink lang={lang} path="/" className="set-back">
             <Icon
               icon="material-symbols:keyboard-arrow-left"

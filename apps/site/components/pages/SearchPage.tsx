@@ -1,11 +1,12 @@
 import { getSets, orderSets } from "../../lib/catalog";
+import { sidebarGroups } from "../../lib/catalog-view";
 import { DICTIONARIES, type Lang } from "../../lib/i18n";
 import { SEARCH_EXAMPLES } from "../../lib/search";
 import { SearchResults } from "../search/SearchResults";
 
 /**
  * Страница поиска /search (шаг 3 фазы 4, ADR-0040): поле — в общей раскладке с главной (SearchHero),
- * здесь — фильтры и выдача. Наборы и лицензии для фильтров — из каталога при сборке, сам поиск — в
+ * фильтры — во вкладках левой панели (SidebarTabs) и в шторке на телефоне, здесь — выдача. Наборы и лицензии для фильтров — из каталога при сборке, сам поиск — в
  * браузере: страница статическая и не индексируется никогда (ADR-0039).
  */
 export async function SearchPage({ lang }: { lang: Lang }) {
@@ -28,6 +29,7 @@ export async function SearchPage({ lang }: { lang: Lang }) {
         lang={lang}
         sets={options}
         licenses={licenses}
+        groups={sidebarGroups(lang, sets)}
         examples={SEARCH_EXAMPLES[lang]}
       />
     </>

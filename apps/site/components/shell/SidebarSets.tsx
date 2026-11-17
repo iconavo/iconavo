@@ -2,7 +2,7 @@
 
 import { Icon } from "@iconavo-ui/react";
 import { useState } from "react";
-import type { SidebarGroup } from "../../lib/catalog-view";
+import { filterGroups, type SidebarGroup } from "../../lib/catalog-view";
 import { DICTIONARIES, href, type Lang } from "../../lib/i18n";
 import { usePagePath } from "../../lib/page-path";
 import { PageLink } from "../PageLink";
@@ -21,35 +21,14 @@ export function SidebarSets({
   const t = DICTIONARIES[lang];
   const pathname = usePagePath();
   const [filter, setFilter] = useState("");
-  const needle = filter.trim().toLowerCase();
-  const shown = groups
-    .map((g) => ({
-      ...g,
-      sets: g.sets.filter(
-        (s) =>
-          needle === "" ||
-          s.name.toLowerCase().includes(needle) ||
-          s.id.includes(needle),
-      ),
-    }))
-    .filter((g) => g.sets.length > 0);
+  const shown = filterGroups(groups, filter);
   const current = (id: string) => {
     const base = href(lang, `/${id}`);
     return pathname === base || pathname.startsWith(`${base}/`);
   };
   return (
     <>
-      <div className="sidebar-filter">
-        <Icon icon="material-symbols:search" className="sidebar-filter-icon" />
-        <input
-          type="search"
-          value={filter}
-          onChange={(e) => setFilter(e.target.value)}
-          placeholder={t.sidebarFilter}
-          aria-label={t.sidebarFilter}
-          autoComplete="off"
-        />
-      </div>
+      <NameFilter lang={lang} value={filter} onChange={setFilter} />
       <nav aria-label={t.sidebarLabel} className="sidebar-sets">
         {shown.map((g) => (
           <div key={g.id} className="sidebar-group">
@@ -78,5 +57,31 @@ export function SidebarSets({
         ) : null}
       </nav>
     </>
+  );
+}
+
+/** Поле «Filter by name»: прячет строки наборов на месте, без запросов (левая панель и шторка фильтра). */
+export function NameFilter({
+  lang,
+  value,
+  onChange,
+}: {
+  lang: Lang;
+  value: string;
+  onChange: (value: string) => void;
+}) {
+  const t = DICTIONARIES[lang];
+  return (
+    <div className="sidebar-filter">
+      <Icon icon="material-symbols:search" className="sidebar-filter-icon" />
+      <input
+        type="search"
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder={t.sidebarFilter}
+        aria-label={t.sidebarFilter}
+        autoComplete="off"
+      />
+    </div>
   );
 }

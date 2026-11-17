@@ -1,8 +1,11 @@
 import { describe, expect, it } from "vitest";
 import {
+  activeFilters,
   allCommercial,
+  filtersOf,
   hasFilters,
   knownPages,
+  maxPage,
   pageWindow,
   parseSearchAnswer,
   readSearchState,
@@ -10,7 +13,9 @@ import {
   SEARCH_MAX_PAGE,
   searchApiUrl,
   stateParams,
+  withFilters,
 } from "./search";
+import { queryText } from "./url-query";
 
 const KNOWN = { sets: ["lucide", "ph"], licenses: ["ISC", "MIT"] };
 const read = (query: string) =>
@@ -21,16 +26,26 @@ describe("состояние страницы поиска в адресе", () 
     expect(read("q=%20дом%20&style=filled&set=ph&license=MIT&page=2")).toEqual({
       q: "дом",
       style: "filled",
-      set: "ph",
-      license: "MIT",
+      sets: ["ph"],
+      licenses: ["MIT"],
       page: 2,
     });
     expect(read("q=a&style=bold&set=mdi&license=GPL-3.0&page=99")).toEqual({
       q: "a",
+      sets: [],
+      licenses: [],
       page: 1,
     });
     expect(read("page=0").page).toBe(1);
     expect(read("page=1.5").page).toBe(1);
+    expect(read("page=12").page).toBe(12);
+    expect(read("page=13").page).toBe(1);
+  });
+
+  it("наборов и лицензий несколько: повторы параметра и списки через запятую, порядок — каталога", () => {
+    expect(read("set=ph&set=lucide&set=ph").sets).toEqual(["lucide", "ph"]);
+    expect(read("set=ph,lucide,mdi").sets).toEqual(["lucide", "ph"]);
+    expect(read("license=MIT&license=ISC").licenses).toEqual(["ISC", "MIT"]);
   });
 
   it("параметры — в постоянном порядке, пустые и страница 1 не пишутся", () => {
@@ -38,11 +53,14 @@ describe("состояние страницы поиска в адресе", () 
       stateParams({
         q: "дом",
         page: 1,
-        set: "ph",
+        sets: ["lucide", "ph"],
+        licenses: [],
         style: "outline",
       }).toString(),
-    ).toBe("q=%D0%B4%D0%BE%D0%BC&style=outline&set=ph");
-    expect(stateParams({ q: "", page: 3 }).toString()).toBe("page=3");
+    ).toBe("q=%D0%B4%D0%BE%D0%BC&style=outline&set=lucide%2Cph");
+    expect(
+      stateParams({ q: "", sets: [], licenses: ["MIT"], page: 3 }).toString(),
+    ).toBe("license=MIT&page=3");
   });
 
   it("«можно в коммерческих» — только если в каталоге есть набор с ограничениями", () => {
@@ -58,46 +76,76 @@ describe("состояние страницы поиска в адресе", () 
     expect(allCommercial(["MIT", "ISC", "Apache-2.0"])).toBe(true);
     expect(allCommercial(["MIT", "CC-BY-NC-4.0"])).toBe(false);
     expect(
-      searchApiUrl("https://api.test", { q: "a", page: 1, commercial: true }),
+      searchApiUrl("https://api.test", {
+        q: "a",
+        sets: [],
+        licenses: [],
+        page: 1,
+        commercial: true,
+      }),
     ).toContain("license=Apache-2.0%2CISC%2CMIT");
   });
 
-  it("фильтры есть или нет", () => {
-    expect(hasFilters({ q: "a", page: 2 })).toBe(false);
-    expect(hasFilters({ q: "a", page: 1, style: "color" })).toBe(true);
+  it("фильтры есть или нет и сколько выбрано", () => {
+    const none = { q: "a", sets: [], licenses: [], page: 2 };
+    expect(hasFilters(none)).toBe(false);
+    expect(activeFilters(none)).toBe(0);
+    expect(hasFilters({ ...none, style: "color" })).toBe(true);
+    expect(
+      activeFilters({
+        ...none,
+        style: "color",
+        sets: ["lucide", "ph"],
+        licenses: ["MIT"],
+      }),
+    ).toBe(4);
   });
 });
 
 describe("адрес edge API и страницы", () => {
-  it("набор — prefix, стиль и лицензия — как есть; начало — только со второй страницы", () => {
+  const base = { sets: [], licenses: [] };
+  it("наборы — prefixes списком, стиль и лицензии — как есть; начало — только со второй страницы", () => {
     expect(
       searchApiUrl("https://api.test", {
         q: "дом",
         page: 1,
-        set: "ph",
+        sets: ["lucide", "ph"],
+        licenses: ["ISC", "MIT"],
         style: "filled",
       }),
     ).toBe(
-      "https://api.test/search?query=%D0%B4%D0%BE%D0%BC&limit=96&prefix=ph&style=filled",
+      "https://api.test/search?query=%D0%B4%D0%BE%D0%BC&limit=96&prefixes=lucide%2Cph&style=filled&license=ISC%2CMIT",
     );
-    expect(searchApiUrl("https://api.test", { q: "a", page: 2 })).toBe(
+    expect(searchApiUrl("https://api.test", { ...base, q: "a", page: 2 })).toBe(
       "https://api.test/search?query=a&limit=96&start=96",
     );
-    expect(searchApiUrl("https://api.test", { q: "a", page: 3 }, 24)).toBe(
-      "https://api.test/search?query=a&limit=24",
-    );
+    expect(
+      searchApiUrl("https://api.test", { ...base, q: "a", page: 3 }, 98, 24),
+    ).toBe("https://api.test/search?query=a&limit=24");
   });
 
-  it("страниц не больше 11, у последней — 40 карточек: не дальше 1000-й", () => {
-    expect(SEARCH_MAX_PAGE).toBe(11);
+  it("окно — от размера страницы целыми рядами: 98 карточек — вторая с 98-й", () => {
+    expect(
+      searchApiUrl("https://api.test", { ...base, q: "a", page: 2 }, 98),
+    ).toBe("https://api.test/search?query=a&limit=98&start=98");
+  });
+
+  it("у последней страницы — остаток: не дальше 1000-й", () => {
+    expect(maxPage()).toBe(11);
+    expect(maxPage(98)).toBe(11);
+    expect(maxPage(84)).toBe(12);
+    expect(SEARCH_MAX_PAGE).toBe(12);
     expect(pageWindow(1)).toEqual({ start: 0, limit: 96 });
     expect(pageWindow(11)).toEqual({ start: 960, limit: 40 });
+    expect(pageWindow(11, 98)).toEqual({ start: 980, limit: 20 });
+    expect(pageWindow(12, 98)).toEqual({ start: 1078, limit: 0 });
   });
 
   it("номеров — до следующей, пока страница полная", () => {
     expect(knownPages(1, true)).toBe(2);
     expect(knownPages(3, false)).toBe(3);
     expect(knownPages(11, true)).toBe(11);
+    expect(knownPages(11, true, 84)).toBe(12);
   });
 });
 
@@ -167,5 +215,33 @@ describe("ожидание после 429", () => {
     expect(retryAfterSeconds(null)).toBe(60);
     expect(retryAfterSeconds("soon")).toBe(60);
     expect(retryAfterSeconds("100000")).toBe(600);
+  });
+});
+
+describe("фильтры левой панели и шторки", () => {
+  it("адрес с фильтрами: запрос и иконка остаются, страница — первая, списки — через запятую", () => {
+    const query = new URLSearchParams(
+      "q=home&icon=lucide:house&set=ph&page=3&timing=1",
+    );
+    const next = withFilters(query, {
+      sets: ["lucide", "ph"],
+      licenses: ["MIT"],
+      style: "filled",
+    });
+    expect(queryText(next)).toBe(
+      "q=home&icon=lucide:house&timing=1&style=filled&set=lucide,ph&license=MIT",
+    );
+    expect(read(queryText(next)).sets).toEqual(["lucide", "ph"]);
+    expect(queryText(withFilters(next, { sets: [], licenses: [] }))).toBe(
+      "q=home&icon=lucide:house&timing=1",
+    );
+  });
+
+  it("фильтры из состояния — без пустых полей", () => {
+    expect(filtersOf(read("q=a&set=ph&style=color"))).toEqual({
+      sets: ["ph"],
+      licenses: [],
+      style: "color",
+    });
   });
 });
