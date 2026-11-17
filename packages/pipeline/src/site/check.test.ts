@@ -32,24 +32,28 @@ describe("ожидания сценария «Каталог»", () => {
 
 describe("метки кэша страниц (шаг 4 фазы 4, ADR-0039)", () => {
   const good = {
-    "/": ["_N_T_/layout", "_N_T_/", "catalog"],
-    "/sets": ["catalog"],
-    "/ru/licenses": ["catalog"],
-    "/lucide": ["_N_T_/lucide", "set-lucide"],
-    "/ru/lucide": ["set-lucide"],
-    "/lucide/house": ["_N_T_/lucide/house", "set-lucide"],
-    "/ru/ph/house-bold": ["set-ph"],
+    "/": ["_N_T_/layout", "_N_T_/", "catalog", "shell"],
+    "/sets": ["shell", "catalog"],
+    "/ru/licenses": ["catalog", "shell"],
+    "/lucide": ["_N_T_/lucide", "shell", "set-lucide"],
+    "/ru/lucide": ["set-lucide", "shell"],
+    "/lucide/house": ["_N_T_/lucide/house", "set-lucide", "shell"],
+    "/ru/ph/house-bold": ["shell", "set-ph"],
   };
 
-  it("общие — ровно catalog, набора и его иконок — ровно set-{набор}", () => {
+  it("у каждой — shell; общие — ещё catalog, набора и его иконок — set-{набор}", () => {
     expect(tagsVerdict(good).ok).toBe(true);
   });
 
-  it("лишняя метка, чужой набор или нет файла кэша — нет", () => {
+  it("лишняя метка, чужой набор, нет shell или нет файла кэша — нет", () => {
     const icon = tagsVerdict({
       ...good,
-      "/lucide/house": ["set-lucide", "catalog"],
+      "/lucide/house": ["set-lucide", "catalog", "shell"],
     });
+    // Метка общей раскладки потерялась — левая панель снова под catalog или без метки.
+    expect(tagsVerdict({ ...good, "/ru/lucide": ["set-lucide"] }).ok).toBe(
+      false,
+    );
     expect(icon.ok).toBe(false);
     expect(icon.note).toContain("/lucide/house");
     expect(tagsVerdict({ ...good, "/": ["catalog", "set-lucide"] }).ok).toBe(

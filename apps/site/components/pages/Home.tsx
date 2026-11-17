@@ -1,5 +1,6 @@
 import { IconavoProvider } from "@iconavo-ui/react";
 import {
+  CATALOG_TAG,
   getNames,
   getSets,
   groupSets,
@@ -32,7 +33,8 @@ export async function Home({ lang }: { lang: Lang }) {
           return info === undefined ? [] : [{ id, info }];
         })
         .map(async ({ id, info }): Promise<[string, SetSummary]> => {
-          const names = await getNames(id);
+          // Общая страница — метка catalog, как у getSetStyles (ADR-0039): её сбрасывает выпуск любого набора.
+          const names = await getNames(id, CATALOG_TAG);
           return [
             id,
             {

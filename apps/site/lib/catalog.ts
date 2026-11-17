@@ -26,6 +26,13 @@ export const CATALOG_TAG = "catalog";
 /** Метка страницы набора и страниц его иконок (ADR-0039). */
 export const setTag = (prefix: string) => `set-${prefix}`;
 
+/**
+ * Метка запросов общей раскладки — левой панели с наборами и числами иконок (редизайн, ADR-0039). Её
+ * носит каждая страница, поэтому сброс по наборам её не трогает: иначе выпуск любого набора сбрасывал бы
+ * все страницы иконок. Числа в панели обновляет выкладка сайта (решение владельца 17 ноября 2026).
+ */
+export const SHELL_TAG = "shell";
+
 /** Лицензия в сведениях о наборе — как у Iconify. */
 export interface SetLicense {
   title: string;
@@ -287,11 +294,17 @@ export async function getSet(
   };
 }
 
-/** Имена набора без сведений — их догружает браузер для сетки (≈ 75 КБ у Material Symbols в br). */
-export async function getNames(prefix: string): Promise<Collection> {
+/**
+ * Имена набора без сведений — их догружает браузер для сетки (≈ 75 КБ у Material Symbols в br). Метка —
+ * по странице, как у getSet: общие страницы (главная) передают CATALOG_TAG.
+ */
+export async function getNames(
+  prefix: string,
+  tag: string = setTag(prefix),
+): Promise<Collection> {
   const got = await getJson(
     `/collection?prefix=${encodeURIComponent(prefix)}`,
-    setTag(prefix),
+    tag,
   );
   if (got === undefined) stop(`набора «${prefix}» нет`);
   return parseCollection(got.data);

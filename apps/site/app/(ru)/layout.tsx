@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import { Shell } from "../../components/Shell";
 import { ThemeScript } from "../../components/ThemeScript";
-import { getSets } from "../../lib/catalog";
+import { getSets, SHELL_TAG } from "../../lib/catalog";
 import { sidebarGroups } from "../../lib/catalog-view";
 import { interTight } from "../../lib/fonts";
 import { loadSiteIcons } from "../../lib/icons";
@@ -17,7 +17,10 @@ export default async function RootLayout({
 }: {
   children: ReactNode;
 }) {
-  const [icons, sets] = await Promise.all([loadSiteIcons(), getSets()]);
+  const [icons, sets] = await Promise.all([
+    loadSiteIcons(),
+    getSets(SHELL_TAG),
+  ]);
   return (
     // Атрибут data-theme ставит скрипт темы до гидратации — расхождение с сервером ожидаемо.
     <html lang="ru" className={interTight.variable} suppressHydrationWarning>

@@ -14,7 +14,7 @@
 // | pnpm visual [id…] [--browser=…]
 // | pnpm starters <пример> [--browser=…] | pnpm starters [пример…] --check [--browser=…] [--npm]
 // | pnpm starters [пример…] --lock
-// | pnpm site [--port=N] [--prod] | pnpm site --check [--browser=…] | pnpm site --live [--expect-build=…] [--base=…]
+// | pnpm site [--port=N] [--prod] | pnpm site --check [--browser=…] [--only=…] | pnpm site --live [--expect-build=…] [--base=…]
 // | pnpm site --refresh [--all] [--base=…] | pnpm site --refresh --wait=N --since=… --sets=… [--base=…]
 // | pnpm release bump [версия] | pnpm release prepare [--first] | pnpm release verify --plan=… [--wait=N]
 import { randomInt } from "node:crypto";
@@ -240,7 +240,13 @@ import { MODEL_SEARCH, PAGE_PORT } from "./search/config.js";
 import { startSearchServer } from "./search/server.js";
 import { buildTextIndex } from "./search/text.js";
 import { loadModelVectors, type ModelVectors } from "./search/vectors.js";
-import { checkSite, readCacheTags, siteCheckFailed } from "./site/check.js";
+import {
+  checkSite,
+  readCacheTags,
+  SITE_STEPS,
+  type SiteStep,
+  siteCheckFailed,
+} from "./site/check.js";
 import {
   formatSiteCheck,
   markdownSiteCheck,
@@ -473,6 +479,8 @@ const USAGE = `Использование:
                                       обход страниц, заголовки, ссылки, разделы README; Chrome,
                                       Firefox и WebKit; отчёт .cache/reports/site/check.html
       --browser=…                     с --check: только chrome, firefox или webkit
+      --only=шаг,…                    с --check: только эти шаги браузерной части — ${SITE_STEPS.join(", ")};
+                                      строки остальных — «не проверялось» (для отладки)
       --live                          живой ${LIVE_SITE}: страницы, заголовки, noindex, переходы
       --expect-build=…                с --live: ждать до 3 минут сборку с этой меткой
       --base=…                        с --live и --refresh: другой адрес, https://…
@@ -645,6 +653,7 @@ let refreshAll = false;
 let refreshWait: number | undefined;
 let refreshSince: number | undefined;
 let refreshSets: string[] | undefined;
+let siteOnly: string[] | undefined;
 const modelKeys = new Set<string>();
 for (const flag of flags) {
   const eq = flag.indexOf("=");
@@ -769,6 +778,10 @@ for (const flag of flags) {
     }
     if (name === "--base" && /^https:\/\/[a-z0-9.-]+$/.test(value ?? "")) {
       siteBase = value;
+      continue;
+    }
+    if (name === "--only" && /^[a-z]+(,[a-z]+)*$/.test(value ?? "")) {
+      siteOnly = (value ?? "").split(",");
       continue;
     }
   }
@@ -1650,6 +1663,17 @@ try {
     if (browserName && !checkBrowsers) {
       usageError("--browser — только вместе с --check.");
     }
+    if (siteOnly !== undefined) {
+      if (!checkBrowsers) usageError("--only — только вместе с --check.");
+      const unknown = siteOnly.filter(
+        (step) => !(SITE_STEPS as readonly string[]).includes(step),
+      );
+      if (unknown.length > 0) {
+        usageError(
+          `--only: нет шагов ${unknown.join(", ")}; шаги — ${SITE_STEPS.join(", ")}.`,
+        );
+      }
+    }
     if (expectBuild && !siteLive) {
       usageError("--expect-build — только вместе с --live.");
     }
@@ -1905,6 +1929,7 @@ try {
           sections,
           root,
           browsers,
+          ...(siteOnly === undefined ? {} : { only: siteOnly as SiteStep[] }),
           log: (line) => console.log(`  ${line}`),
         });
       } finally {

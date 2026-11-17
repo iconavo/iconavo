@@ -418,10 +418,25 @@
     padding: 0.5rem 0.75rem 1rem;
   }
   /* Вкладки не помещаются, как в макете: обрезаны справа, а подсказки «Soon» под ними видны. */
+  /* Вкладок больше, чем помещается: ряд прокручивается без полосы. С overflow-x: clip кнопки за краем лежали
+     под содержимым страницы — axe считал цели рядом закрытыми (target-size, 17 ноября 2026), а фокус с
+     клавиатуры уходил на невидимую кнопку; прокрутка при фокусе показывает вкладку. Прокрутка режет и по
+     вертикали, поэтому под рядом — место для подсказки «Скоро» (padding), отрицательный margin возвращает
+     раскладку, а щелчки по этому месту проходят к полю ниже (pointer-events). */
   .sidebar-tabs {
     display: flex;
     flex: none;
-    overflow-x: clip;
+    overflow-x: auto;
+    scrollbar-width: none;
+    padding-bottom: 2.25rem;
+    margin-bottom: -2.25rem;
+    pointer-events: none;
+  }
+  .sidebar-tabs::-webkit-scrollbar {
+    display: none;
+  }
+  .sidebar-tabs > * {
+    pointer-events: auto;
   }
   .sidebar-tab {
     flex: none;
@@ -831,6 +846,9 @@
     opacity: 0;
     pointer-events: none;
     translate: -50% 0;
+    /* Скрытый пузырь не занимает места: длинная подсказка у правого края телефона давала прокрутку вбок
+       (/ru/material-symbols — 408 px при 375, 17 ноября 2026). Показ — display и прозрачность ниже. */
+    display: none;
   }
   .soon-above::after {
     top: auto;
@@ -843,12 +861,23 @@
   .soon:focus-visible::after,
   .tip:hover::after,
   .tip:focus-visible::after {
+    display: block;
     opacity: 1;
   }
   @media (prefers-reduced-motion: no-preference) {
     .soon::after,
     .tip::after {
-      transition: opacity 0.12s;
+      transition:
+        opacity 0.12s,
+        display 0.12s allow-discrete;
+    }
+    .soon:hover::after,
+    .soon:focus-visible::after,
+    .tip:hover::after,
+    .tip:focus-visible::after {
+      @starting-style {
+        opacity: 0;
+      }
     }
   }
 
