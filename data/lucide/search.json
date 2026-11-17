@@ -501,6 +501,9 @@
         "ticked",
         "task",
         "todo",
+        "selected",
+        "okay",
+        "ok",
         "reminder",
         "wake-up"
       ]
@@ -2468,6 +2471,9 @@
         "times",
         "ex",
         "×",
+        "deny",
+        "decline",
+        "refuse",
         "junk"
       ]
     },
@@ -3531,6 +3537,8 @@
         "export",
         "save",
         "pull",
+        "install",
+        "installation",
         "final",
         "ending",
         "end",
@@ -4989,7 +4997,54 @@
         "code",
         "glob pattern",
         "wildcard",
-        "*"
+        "*",
+        "required",
+        "mandatory"
+      ]
+    },
+    "asterism": {
+      "en": {
+        "description": "Three asterisk shapes arranged in a triangle, usually meaning a constellation, favorites, or a decorative divider.",
+        "synonyms": [
+          "asterisks",
+          "constellation",
+          "three stars",
+          "star",
+          "divider",
+          "ornament",
+          "footnote mark",
+          "decoration"
+        ]
+      },
+      "fingerprint": "d2f3dc2e357f",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Три звёздочки-асфлека в треугольнике, обычно означают созвездие, избранное или декоративный разделитель.",
+        "synonyms": [
+          "звёздочки",
+          "созвездие",
+          "три звезды",
+          "звезда",
+          "астеризм",
+          "разделитель",
+          "украшение",
+          "знак сноски"
+        ]
+      },
+      "tags": [
+        "asterisk",
+        "fediverse",
+        "activitypub",
+        "symbol",
+        "typography",
+        "social",
+        "decentralized",
+        "federation",
+        "stars",
+        "three",
+        "ornament",
+        "punctuation",
+        "divider"
       ]
     },
     "astroid": {
@@ -5345,6 +5400,9 @@
         "times",
         "ex",
         "×",
+        "deny",
+        "decline",
+        "refuse",
         "mute",
         "silence",
         "disabled",
@@ -5514,7 +5572,10 @@
         "badge",
         "rosette",
         "prize",
-        "winner"
+        "winner",
+        "skill",
+        "skills",
+        "expertise"
       ]
     },
     "axe": {
@@ -5981,7 +6042,16 @@
         "valid",
         "ticked",
         "task",
-        "todo"
+        "todo",
+        "selected",
+        "okay",
+        "ok",
+        "premium",
+        "vip",
+        "exclusive",
+        "pro",
+        "guarantee",
+        "warranty"
       ]
     },
     "badge-dollar-sign": {
@@ -6163,6 +6233,11 @@
         "exclamation mark",
         "exclamation point",
         "!",
+        "critical",
+        "urgent",
+        "severity",
+        "punctuation",
+        "symbol",
         "security",
         "safety",
         "issue"
@@ -6471,7 +6546,11 @@
         "%",
         "marketing",
         "reduced",
-        "price tag"
+        "price tag",
+        "sell",
+        "selling",
+        "promotion",
+        "promo"
       ]
     },
     "badge-plus": {
@@ -6589,35 +6668,35 @@
     },
     "badge-question-mark": {
       "en": {
-        "description": "Scalloped badge outline containing a question mark, usually indicating help, FAQ, or unknown information.",
+        "description": "A question mark inside a scalloped badge or seal, usually signaling help, a question, or unknown status.",
         "synonyms": [
-          "question",
+          "question mark",
           "help",
           "faq",
-          "support",
-          "info",
           "unknown",
-          "tooltip",
-          "query",
           "hint",
-          "inquiry"
+          "support",
+          "seal badge",
+          "quiz",
+          "inquiry",
+          "uncertain"
         ]
       },
-      "fingerprint": "daeeb2c6f573",
+      "fingerprint": "b1b15cdda1f7",
       "promptVersion": 1,
       "ru": {
-        "description": "Контурная фигура с волнистым краем и знаком вопроса внутри, обозначает помощь, справку или неизвестное.",
+        "description": "Изображение показывает question mark внутри волнистой печати или розетки; обозначает помощь, вопрос или неизвестный статус.",
         "synonyms": [
-          "вопрос",
-          "справка",
-          "помощь",
-          "подсказка",
           "знак вопроса",
-          "фаq",
+          "помощь",
+          "вопрос",
+          "подсказка",
+          "faq",
           "неизвестно",
-          "инфо",
+          "значок",
+          "печать",
           "поддержка",
-          "значок"
+          "инструкция"
         ]
       },
       "tags": [
@@ -6637,20 +6716,33 @@
         "scalloped",
         "shape",
         "help",
+        "assistance",
+        "support",
         "guide",
         "tutorial",
         "manual",
+        "faq",
+        "hint",
+        "query",
         "unknown",
         "unidentified",
         "unspecified",
         "uncertain",
+        "unsure",
+        "doubt",
         "undetermined",
         "missing",
         "to be determined",
         "mystery",
         "question",
         "question mark",
-        "?"
+        "?",
+        "quiz",
+        "inquiry",
+        "enquiry",
+        "ask",
+        "punctuation",
+        "symbol"
       ]
     },
     "badge-russian-ruble": {
@@ -6866,6 +6958,9 @@
         "times",
         "ex",
         "×",
+        "deny",
+        "decline",
+        "refuse",
         "lost"
       ]
     },
@@ -7145,7 +7240,8 @@
         "emergency",
         "aid",
         "safety",
-        "patch"
+        "patch",
+        "patient"
       ]
     },
     "bangladeshi-taka": {
@@ -7255,7 +7351,8 @@
         "cash",
         "funds",
         "transaction",
-        "finance"
+        "finance",
+        "salary"
       ]
     },
     "banknote-arrow-down": {
@@ -7300,6 +7397,7 @@
         "funds",
         "transaction",
         "finance",
+        "salary",
         "direction",
         "movement",
         "vertical",
@@ -7356,6 +7454,7 @@
         "funds",
         "transaction",
         "finance",
+        "salary",
         "direction",
         "movement",
         "vertical",
@@ -7416,6 +7515,7 @@
         "funds",
         "transaction",
         "finance",
+        "salary",
         "checkmark",
         "done",
         "completed",
@@ -7431,6 +7531,9 @@
         "ticked",
         "task",
         "todo",
+        "selected",
+        "okay",
+        "ok",
         "banknote",
         "document",
         "verification",
@@ -7480,6 +7583,7 @@
         "funds",
         "transaction",
         "finance",
+        "salary",
         "x",
         "remove",
         "delete",
@@ -7498,6 +7602,9 @@
         "times",
         "ex",
         "×",
+        "deny",
+        "decline",
+        "refuse",
         "error",
         "failed",
         "rejected",
@@ -7763,31 +7870,35 @@
     },
     "battery-exclamation-point": {
       "en": {
-        "description": "Battery outline with an exclamation mark inside and a terminal on the right; signals low charge or a power problem.",
+        "description": "A battery outline with an exclamation mark inside, indicating a low charge or a power-related warning.",
         "synonyms": [
           "battery",
-          "accumulator",
+          "battery alert",
           "low battery",
-          "battery low",
           "charge",
-          "energy",
-          "power alert",
-          "exclamation mark"
+          "power warning",
+          "energy issue",
+          "accumulator",
+          "caution",
+          "battery error",
+          "power problem"
         ]
       },
-      "fingerprint": "1f3f215d92a7",
+      "fingerprint": "cbbd70f43f10",
       "promptVersion": 1,
       "ru": {
-        "description": "Контур батареи с восклицательным знаком внутри и полюсом справа; обозначает низкий заряд или проблему с питанием.",
+        "description": "Контур батарейки с восклицательным знаком внутри, обозначает предупреждение о низком заряде или проблеме с питанием.",
         "synonyms": [
           "батарея",
-          "аккумулятор",
+          "батарейка",
+          "заряд",
+          "разряд",
           "низкий заряд",
-          "разряд батареи",
-          "зарядка",
-          "энергия",
           "предупреждение",
-          "восклицательный знак"
+          "ошибка питания",
+          "аккумулятор",
+          "внимание",
+          "опасность"
         ]
       },
       "tags": [
@@ -7807,7 +7918,12 @@
         "hazard",
         "exclamation mark",
         "exclamation point",
-        "!"
+        "!",
+        "critical",
+        "urgent",
+        "severity",
+        "punctuation",
+        "symbol"
       ]
     },
     "battery-full": {
@@ -8622,7 +8738,10 @@
         "valid",
         "ticked",
         "task",
-        "todo"
+        "todo",
+        "selected",
+        "okay",
+        "ok"
       ]
     },
     "bell-dot": {
@@ -10515,6 +10634,9 @@
         "ticked",
         "task",
         "todo",
+        "selected",
+        "okay",
+        "ok",
         "read",
         "authored",
         "published",
@@ -10684,6 +10806,9 @@
         "homework",
         "research",
         "documentation",
+        "dashed",
+        "dotted",
+        "broken line",
         "code",
         "coding",
         "version control",
@@ -10847,7 +10972,12 @@
         "hazard",
         "exclamation mark",
         "exclamation point",
-        "!"
+        "!",
+        "critical",
+        "urgent",
+        "severity",
+        "punctuation",
+        "symbol"
       ]
     },
     "book-headphones": {
@@ -11518,6 +11648,9 @@
         "ticked",
         "task",
         "todo",
+        "selected",
+        "okay",
+        "ok",
         "read",
         "authored",
         "published",
@@ -11608,7 +11741,10 @@
         "screenplay",
         "revealed",
         "blank",
-        "plain"
+        "plain",
+        "docs",
+        "wiki",
+        "knowledge base"
       ]
     },
     "book-plus": {
@@ -11784,7 +11920,8 @@
         "lens",
         "zoom",
         "inspection",
-        "visual search"
+        "visual search",
+        "loupe"
       ]
     },
     "book-text": {
@@ -11849,7 +11986,10 @@
         "learning",
         "homework",
         "research",
-        "documentation"
+        "documentation",
+        "docs",
+        "wiki",
+        "knowledge base"
       ]
     },
     "book-type": {
@@ -12155,6 +12295,8 @@
         "client",
         "participant",
         "guest",
+        "customer",
+        "username",
         "family",
         "friends",
         "acquaintances",
@@ -12247,6 +12389,9 @@
         "times",
         "ex",
         "×",
+        "deny",
+        "decline",
+        "refuse",
         "code",
         "coding",
         "version control",
@@ -12375,7 +12520,10 @@
         "valid",
         "ticked",
         "task",
-        "todo"
+        "todo",
+        "selected",
+        "okay",
+        "ok"
       ]
     },
     "bookmark-minus": {
@@ -12634,7 +12782,10 @@
         "cross",
         "times",
         "ex",
-        "×"
+        "×",
+        "deny",
+        "decline",
+        "refuse"
       ]
     },
     "boom-box": {
@@ -13193,7 +13344,10 @@
         "smart",
         "deep learning",
         "machine learning",
-        "computing"
+        "computing",
+        "skill",
+        "skills",
+        "expertise"
       ]
     },
     "brain-circuit": {
@@ -13244,7 +13398,10 @@
         "smart",
         "deep learning",
         "machine learning",
-        "computing"
+        "computing",
+        "skill",
+        "skills",
+        "expertise"
       ]
     },
     "brain-cog": {
@@ -13297,6 +13454,9 @@
         "deep learning",
         "machine learning",
         "computing",
+        "skill",
+        "skills",
+        "expertise",
         "cog",
         "cogwheel",
         "gear",
@@ -13364,6 +13524,9 @@
         "deep learning",
         "machine learning",
         "computing",
+        "skill",
+        "skills",
+        "expertise",
         "off",
         "disable",
         "hide",
@@ -13675,7 +13838,12 @@
         "work",
         "bag",
         "baggage",
-        "folder"
+        "folder",
+        "job",
+        "career",
+        "employment",
+        "hiring",
+        "experience"
       ]
     },
     "briefcase-business": {
@@ -13716,6 +13884,11 @@
         "bag",
         "baggage",
         "folder",
+        "job",
+        "career",
+        "employment",
+        "hiring",
+        "experience",
         "portfolio"
       ]
     },
@@ -13836,6 +14009,11 @@
         "bag",
         "baggage",
         "folder",
+        "job",
+        "career",
+        "employment",
+        "hiring",
+        "experience",
         "plus",
         "add",
         "new",
@@ -13850,8 +14028,6 @@
         "briefcase",
         "portfolio",
         "business",
-        "career",
-        "employment",
         "professional"
       ]
     },
@@ -14871,7 +15047,8 @@
       },
       "tags": [
         "count",
-        "calculating machine"
+        "calculating machine",
+        "budget"
       ]
     },
     "calendar": {
@@ -14967,7 +15144,8 @@
         "singular",
         "once",
         "1",
-        "first"
+        "first",
+        "today"
       ]
     },
     "calendar-arrow-down": {
@@ -15294,8 +15472,12 @@
         "ticked",
         "task",
         "todo",
+        "selected",
+        "okay",
+        "ok",
         "subscribe",
-        "schedule"
+        "schedule",
+        "today"
       ]
     },
     "calendar-check-2": {
@@ -15355,8 +15537,12 @@
         "ticked",
         "task",
         "todo",
+        "selected",
+        "okay",
+        "ok",
         "subscribe",
-        "schedule"
+        "schedule",
+        "today"
       ]
     },
     "calendar-chevrons-left": {
@@ -15641,7 +15827,9 @@
         "timestamp",
         "event",
         "birthday",
-        "birthdate"
+        "birthdate",
+        "week",
+        "weekly"
       ]
     },
     "calendar-fold": {
@@ -16074,7 +16262,9 @@
         "birthday",
         "birthdate",
         "range",
-        "period"
+        "period",
+        "week",
+        "weekly"
       ]
     },
     "calendar-search": {
@@ -16140,6 +16330,7 @@
         "zoom",
         "inspection",
         "visual search",
+        "loupe",
         "events"
       ]
     },
@@ -16265,6 +16456,9 @@
         "times",
         "ex",
         "×",
+        "deny",
+        "decline",
+        "refuse",
         "busy"
       ]
     },
@@ -16328,6 +16522,9 @@
         "times",
         "ex",
         "×",
+        "deny",
+        "decline",
+        "refuse",
         "busy"
       ]
     },
@@ -16814,6 +17011,60 @@
         "strikethrough",
         "crossed out",
         "diagonal line"
+      ]
+    },
+    "cap": {
+      "en": {
+        "description": "A baseball cap with a rounded crown and curved brim; the icon represents headwear, apparel, or fashion accessories.",
+        "synonyms": [
+          "baseball cap",
+          "hat",
+          "headwear",
+          "visor",
+          "peak",
+          "snapback",
+          "clothing",
+          "apparel",
+          "merchandise"
+        ]
+      },
+      "fingerprint": "7f26ec6b31e5",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Изображена бейсболка с округлой тульёй и козырьком; значок обозначает головной убор, одежду или магазин одежды.",
+        "synonyms": [
+          "кепка",
+          "бейсболка",
+          "головной убор",
+          "козырёк",
+          "шапка",
+          "одежда",
+          "аксессуар",
+          "мерч",
+          "спорт"
+        ]
+      },
+      "tags": [
+        "hat",
+        "baseball",
+        "baseball cap",
+        "snapback",
+        "trucker hat",
+        "visor",
+        "peak",
+        "brim",
+        "headwear",
+        "headgear",
+        "sports",
+        "merchandise",
+        "apparel",
+        "fashion",
+        "accessory",
+        "casual",
+        "shopping",
+        "store",
+        "clothing",
+        "clothes"
       ]
     },
     "captions": {
@@ -17852,7 +18103,11 @@
         "presentation",
         "reporting",
         "data visualisation",
-        "visualisation"
+        "visualisation",
+        "analyze",
+        "kpi",
+        "metrics",
+        "insights"
       ]
     },
     "chart-bar": {
@@ -17900,6 +18155,10 @@
         "reporting",
         "data visualisation",
         "visualisation",
+        "analyze",
+        "kpi",
+        "metrics",
+        "insights",
         "categorical",
         "comparison"
       ]
@@ -17945,6 +18204,10 @@
         "reporting",
         "data visualisation",
         "visualisation",
+        "analyze",
+        "kpi",
+        "metrics",
+        "insights",
         "categorical",
         "comparison"
       ]
@@ -17992,6 +18255,10 @@
         "reporting",
         "data visualisation",
         "visualisation",
+        "analyze",
+        "kpi",
+        "metrics",
+        "insights",
         "categorical",
         "comparison",
         "trending down"
@@ -18042,6 +18309,10 @@
         "reporting",
         "data visualisation",
         "visualisation",
+        "analyze",
+        "kpi",
+        "metrics",
+        "insights",
         "categorical",
         "comparison",
         "trending up"
@@ -18090,6 +18361,10 @@
         "reporting",
         "data visualisation",
         "visualisation",
+        "analyze",
+        "kpi",
+        "metrics",
+        "insights",
         "categorical",
         "comparison",
         "multivariate"
@@ -18140,6 +18415,10 @@
         "reporting",
         "data visualisation",
         "visualisation",
+        "analyze",
+        "kpi",
+        "metrics",
+        "insights",
         "distribution",
         "normal distribution",
         "gaussian",
@@ -18193,6 +18472,10 @@
         "reporting",
         "data visualisation",
         "visualisation",
+        "analyze",
+        "kpi",
+        "metrics",
+        "insights",
         "trading",
         "trader",
         "financial",
@@ -18254,6 +18537,10 @@
         "reporting",
         "data visualisation",
         "visualisation",
+        "analyze",
+        "kpi",
+        "metrics",
+        "insights",
         "categorical",
         "comparison"
       ]
@@ -18299,6 +18586,10 @@
         "reporting",
         "data visualisation",
         "visualisation",
+        "analyze",
+        "kpi",
+        "metrics",
+        "insights",
         "categorical",
         "comparison"
       ]
@@ -18348,6 +18639,10 @@
         "reporting",
         "data visualisation",
         "visualisation",
+        "analyze",
+        "kpi",
+        "metrics",
+        "insights",
         "categorical",
         "comparison",
         "trending down"
@@ -18398,6 +18693,10 @@
         "reporting",
         "data visualisation",
         "visualisation",
+        "analyze",
+        "kpi",
+        "metrics",
+        "insights",
         "categorical",
         "comparison",
         "trending up"
@@ -18446,6 +18745,10 @@
         "reporting",
         "data visualisation",
         "visualisation",
+        "analyze",
+        "kpi",
+        "metrics",
+        "insights",
         "categorical",
         "comparison",
         "multivariate"
@@ -18494,6 +18797,10 @@
         "reporting",
         "data visualisation",
         "visualisation",
+        "analyze",
+        "kpi",
+        "metrics",
+        "insights",
         "timeline",
         "planning",
         "projects",
@@ -18555,7 +18862,11 @@
         "presentation",
         "reporting",
         "data visualisation",
-        "visualisation"
+        "visualisation",
+        "analyze",
+        "kpi",
+        "metrics",
+        "insights"
       ]
     },
     "chart-network": {
@@ -18601,6 +18912,10 @@
         "reporting",
         "data visualisation",
         "visualisation",
+        "analyze",
+        "kpi",
+        "metrics",
+        "insights",
         "network",
         "nodes",
         "edges",
@@ -18657,6 +18972,10 @@
         "reporting",
         "data visualisation",
         "visualisation",
+        "analyze",
+        "kpi",
+        "metrics",
+        "insights",
         "categorical",
         "comparison"
       ]
@@ -18706,6 +19025,10 @@
         "reporting",
         "data visualisation",
         "visualisation",
+        "analyze",
+        "kpi",
+        "metrics",
+        "insights",
         "categorical",
         "comparison",
         "trending down"
@@ -18756,6 +19079,10 @@
         "reporting",
         "data visualisation",
         "visualisation",
+        "analyze",
+        "kpi",
+        "metrics",
+        "insights",
         "categorical",
         "comparison",
         "trending up"
@@ -18804,6 +19131,10 @@
         "reporting",
         "data visualisation",
         "visualisation",
+        "analyze",
+        "kpi",
+        "metrics",
+        "insights",
         "trending up"
       ]
     },
@@ -18850,6 +19181,10 @@
         "reporting",
         "data visualisation",
         "visualisation",
+        "analyze",
+        "kpi",
+        "metrics",
+        "insights",
         "timeline",
         "planning",
         "projects",
@@ -18914,7 +19249,11 @@
         "presentation",
         "reporting",
         "data visualisation",
-        "visualisation"
+        "visualisation",
+        "analyze",
+        "kpi",
+        "metrics",
+        "insights"
       ]
     },
     "chart-quadrant": {
@@ -18962,6 +19301,10 @@
         "reporting",
         "data visualisation",
         "visualisation",
+        "analyze",
+        "kpi",
+        "metrics",
+        "insights",
         "quadrant",
         "chart",
         "chart-scatter",
@@ -19021,6 +19364,10 @@
         "reporting",
         "data visualisation",
         "visualisation",
+        "analyze",
+        "kpi",
+        "metrics",
+        "insights",
         "radar",
         "chart",
         "shape",
@@ -19028,7 +19375,6 @@
         "mineral",
         "pentagon",
         "multidimensional",
-        "metrics",
         "performance",
         "comparison",
         "profile",
@@ -19079,7 +19425,11 @@
         "presentation",
         "reporting",
         "data visualisation",
-        "visualisation"
+        "visualisation",
+        "analyze",
+        "kpi",
+        "metrics",
+        "insights"
       ]
     },
     "chart-spline": {
@@ -19127,6 +19477,10 @@
         "reporting",
         "data visualisation",
         "visualisation",
+        "analyze",
+        "kpi",
+        "metrics",
+        "insights",
         "curve",
         "continuous",
         "smooth",
@@ -19184,7 +19538,10 @@
         "valid",
         "ticked",
         "task",
-        "todo"
+        "todo",
+        "selected",
+        "okay",
+        "ok"
       ]
     },
     "check-check": {
@@ -19232,6 +19589,9 @@
         "ticked",
         "task",
         "todo",
+        "selected",
+        "okay",
+        "ok",
         "received",
         "double"
       ]
@@ -19284,7 +19644,71 @@
         "valid",
         "ticked",
         "task",
-        "todo"
+        "todo",
+        "selected",
+        "okay",
+        "ok"
+      ]
+    },
+    "cheese": {
+      "en": {
+        "description": "A wedge of cheese with holes and a cut edge, usually representing cheese or dairy food.",
+        "synonyms": [
+          "swiss cheese",
+          "cheese slice",
+          "dairy",
+          "food",
+          "snack",
+          "dish",
+          "meal",
+          "lunch",
+          "fondue",
+          "holes"
+        ]
+      },
+      "fingerprint": "545ddd44d93f",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Изображена половина ломтика сыра с дырками и срезом сверху; значок обозначает сыр или молочную продукцию.",
+        "synonyms": [
+          "сыр",
+          "ломтик сыра",
+          "сырная нарезка",
+          "молочка",
+          "продукты",
+          "еда",
+          "закуска",
+          "блюдо",
+          "фондю",
+          "бутерброд"
+        ]
+      },
+      "tags": [
+        "swiss",
+        "holes",
+        "fondue",
+        "emmental",
+        "gouda",
+        "edam",
+        "cheddar",
+        "brie",
+        "mozzarella",
+        "feta",
+        "halloumi",
+        "gorgonzola",
+        "roquefort",
+        "camembert",
+        "dairy",
+        "snack",
+        "dish",
+        "restaurant",
+        "lunch",
+        "meal",
+        "savory",
+        "savoury",
+        "cookery",
+        "cooking",
+        "grilled"
       ]
     },
     "chef-hat": {
@@ -20635,6 +21059,108 @@
         "button"
       ]
     },
+    "circle-arrow-down-left-exit": {
+      "en": {
+        "description": "Shows a broken circle with a diagonal arrow pointing down and left, usually meaning outward movement or south-west direction.",
+        "synonyms": [
+          "arrow down left",
+          "diagonal arrow",
+          "south-west",
+          "direction",
+          "outward",
+          "exit",
+          "move out",
+          "navigate",
+          "bottom left",
+          "circle arrow"
+        ]
+      },
+      "fingerprint": "5b995ca923f9",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Изображена почти замкнутая окружность с диагональной стрелкой, указывающей вниз и влево; обозначает вынос или сворачивание к юго-западу.",
+        "synonyms": [
+          "стрелка вниз влево",
+          "диагональная стрелка",
+          "юго-запад",
+          "направление",
+          "вынести",
+          "наружу",
+          "выход",
+          "назад",
+          "поворот",
+          "стрелка круг"
+        ]
+      },
+      "tags": [
+        "direction",
+        "movement",
+        "diagonal",
+        "southwest",
+        "south-west",
+        "south west",
+        "out",
+        "outside",
+        "outwards",
+        "output",
+        "outgoing",
+        "export",
+        "leave",
+        "egress",
+        "exit"
+      ]
+    },
+    "circle-arrow-down-right-exit": {
+      "en": {
+        "description": "A circular arc with a diagonal arrow pointing down and right, meaning move outward or export toward south-east.",
+        "synonyms": [
+          "arrow",
+          "diagonal",
+          "south-east",
+          "down right",
+          "direction",
+          "outward",
+          "export",
+          "expand",
+          "exit",
+          "navigate"
+        ]
+      },
+      "fingerprint": "2d61014da55d",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Круглая стрелка, указывающая по диагонали вниз и вправо от центра, обозначает выход или переход в направлении юго-востока.",
+        "synonyms": [
+          "стрелка",
+          "диагональ",
+          "юго-восток",
+          "вниз вправо",
+          "направление",
+          "наружу",
+          "переход",
+          "вынести",
+          "экспорт",
+          "выход"
+        ]
+      },
+      "tags": [
+        "direction",
+        "movement",
+        "diagonal",
+        "southeast",
+        "south-east",
+        "south east",
+        "out",
+        "outside",
+        "outwards",
+        "output",
+        "outgoing",
+        "export",
+        "leave",
+        "egress",
+        "exit"
+      ]
+    },
     "circle-arrow-left": {
       "en": {
         "description": "A left-pointing arrow inside a circular outline, usually meaning back, previous, or moving left.",
@@ -20683,178 +21209,6 @@
         "turn",
         "button",
         "<-"
-      ]
-    },
-    "circle-arrow-out-down-left": {
-      "en": {
-        "description": "Shows a broken circle with a diagonal arrow pointing down and left, usually meaning outward movement or south-west direction.",
-        "synonyms": [
-          "arrow down left",
-          "diagonal arrow",
-          "south-west",
-          "direction",
-          "outward",
-          "exit",
-          "move out",
-          "navigate",
-          "bottom left",
-          "circle arrow"
-        ]
-      },
-      "fingerprint": "5b995ca923f9",
-      "promptVersion": 1,
-      "ru": {
-        "description": "Изображена почти замкнутая окружность с диагональной стрелкой, указывающей вниз и влево; обозначает вынос или сворачивание к юго-западу.",
-        "synonyms": [
-          "стрелка вниз влево",
-          "диагональная стрелка",
-          "юго-запад",
-          "направление",
-          "вынести",
-          "наружу",
-          "выход",
-          "назад",
-          "поворот",
-          "стрелка круг"
-        ]
-      },
-      "tags": [
-        "direction",
-        "movement",
-        "diagonal",
-        "southwest",
-        "south-west",
-        "south west",
-        "outwards"
-      ]
-    },
-    "circle-arrow-out-down-right": {
-      "en": {
-        "description": "A circular arc with a diagonal arrow pointing down and right, meaning move outward or export toward south-east.",
-        "synonyms": [
-          "arrow",
-          "diagonal",
-          "south-east",
-          "down right",
-          "direction",
-          "outward",
-          "export",
-          "expand",
-          "exit",
-          "navigate"
-        ]
-      },
-      "fingerprint": "2d61014da55d",
-      "promptVersion": 1,
-      "ru": {
-        "description": "Круглая стрелка, указывающая по диагонали вниз и вправо от центра, обозначает выход или переход в направлении юго-востока.",
-        "synonyms": [
-          "стрелка",
-          "диагональ",
-          "юго-восток",
-          "вниз вправо",
-          "направление",
-          "наружу",
-          "переход",
-          "вынести",
-          "экспорт",
-          "выход"
-        ]
-      },
-      "tags": [
-        "direction",
-        "movement",
-        "diagonal",
-        "southeast",
-        "south-east",
-        "south east",
-        "outwards"
-      ]
-    },
-    "circle-arrow-out-up-left": {
-      "en": {
-        "description": "A circular outline with a diagonal arrow pointing up-left; usually means exit, go back, or move outward.",
-        "synonyms": [
-          "arrow up left",
-          "diagonal arrow",
-          "north-west",
-          "escape",
-          "exit",
-          "back",
-          "outward",
-          "return",
-          "circle arrow"
-        ]
-      },
-      "fingerprint": "ec5e60f5961d",
-      "promptVersion": 1,
-      "ru": {
-        "description": "Круговая стрелка, указывающая по диагонали вверх и влево; обычно означает выход, возврат или переход назад.",
-        "synonyms": [
-          "стрелка влево вверх",
-          "диагональная стрелка",
-          "назад",
-          "выход",
-          "северо-запад",
-          "круг стрелка",
-          "вернуться",
-          "отменить"
-        ]
-      },
-      "tags": [
-        "direction",
-        "movement",
-        "diagonal",
-        "northwest",
-        "north-west",
-        "north west",
-        "outwards",
-        "keyboard",
-        "button",
-        "escape"
-      ]
-    },
-    "circle-arrow-out-up-right": {
-      "en": {
-        "description": "A broken circle with an arrow pointing diagonally up and right; usually means opening externally or expanding outward.",
-        "synonyms": [
-          "external link",
-          "open",
-          "outward",
-          "diagonal arrow",
-          "north east",
-          "expand",
-          "launch",
-          "redirect",
-          "direction",
-          "share"
-        ]
-      },
-      "fingerprint": "c6441acf7347",
-      "promptVersion": 1,
-      "ru": {
-        "description": "Круг с незамкнутой окружностью и стрелкой, направленной вверх и вправо; обозначает переход наружу или открытие во внешнем окне.",
-        "synonyms": [
-          "открыть",
-          "наружу",
-          "внешняя ссылка",
-          "стрелка вверх вправо",
-          "диагональ",
-          "направление",
-          "северо-восток",
-          "перейти",
-          "развернуть",
-          "вынести"
-        ]
-      },
-      "tags": [
-        "direction",
-        "movement",
-        "diagonal",
-        "northeast",
-        "north-east",
-        "north east",
-        "outwards"
       ]
     },
     "circle-arrow-right": {
@@ -20964,6 +21318,108 @@
         "button"
       ]
     },
+    "circle-arrow-up-left-exit": {
+      "en": {
+        "description": "A circular outline with a diagonal arrow pointing up-left; usually means exit, go back, or move outward.",
+        "synonyms": [
+          "arrow up left",
+          "diagonal arrow",
+          "north-west",
+          "escape",
+          "exit",
+          "back",
+          "outward",
+          "return",
+          "circle arrow"
+        ]
+      },
+      "fingerprint": "ec5e60f5961d",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Круговая стрелка, указывающая по диагонали вверх и влево; обычно означает выход, возврат или переход назад.",
+        "synonyms": [
+          "стрелка влево вверх",
+          "диагональная стрелка",
+          "назад",
+          "выход",
+          "северо-запад",
+          "круг стрелка",
+          "вернуться",
+          "отменить"
+        ]
+      },
+      "tags": [
+        "direction",
+        "movement",
+        "diagonal",
+        "northwest",
+        "north-west",
+        "north west",
+        "out",
+        "outside",
+        "outwards",
+        "output",
+        "outgoing",
+        "export",
+        "leave",
+        "egress",
+        "exit",
+        "keyboard",
+        "button",
+        "escape"
+      ]
+    },
+    "circle-arrow-up-right-exit": {
+      "en": {
+        "description": "A broken circle with an arrow pointing diagonally up and right; usually means opening externally or expanding outward.",
+        "synonyms": [
+          "external link",
+          "open",
+          "outward",
+          "diagonal arrow",
+          "north east",
+          "expand",
+          "launch",
+          "redirect",
+          "direction",
+          "share"
+        ]
+      },
+      "fingerprint": "c6441acf7347",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Круг с незамкнутой окружностью и стрелкой, направленной вверх и вправо; обозначает переход наружу или открытие во внешнем окне.",
+        "synonyms": [
+          "открыть",
+          "наружу",
+          "внешняя ссылка",
+          "стрелка вверх вправо",
+          "диагональ",
+          "направление",
+          "северо-восток",
+          "перейти",
+          "развернуть",
+          "вынести"
+        ]
+      },
+      "tags": [
+        "direction",
+        "movement",
+        "diagonal",
+        "northeast",
+        "north-east",
+        "north east",
+        "out",
+        "outside",
+        "outwards",
+        "output",
+        "outgoing",
+        "export",
+        "leave",
+        "egress",
+        "exit"
+      ]
+    },
     "circle-check": {
       "en": {
         "description": "A checkmark inside a circle, usually meaning success, confirmation, or a completed task.",
@@ -21010,7 +21466,10 @@
         "valid",
         "ticked",
         "task",
-        "todo"
+        "todo",
+        "selected",
+        "okay",
+        "ok"
       ]
     },
     "circle-check-big": {
@@ -21061,7 +21520,10 @@
         "valid",
         "ticked",
         "task",
-        "todo"
+        "todo",
+        "selected",
+        "okay",
+        "ok"
       ]
     },
     "circle-chevron-down": {
@@ -21567,6 +22029,9 @@
         ]
       },
       "tags": [
+        "dashed",
+        "dotted",
+        "broken line",
         "pending",
         "dot",
         "progress",
@@ -21609,6 +22074,9 @@
         ]
       },
       "tags": [
+        "dashed",
+        "dotted",
+        "broken line",
         "pending",
         "dot",
         "progress",
@@ -21632,6 +22100,9 @@
         "ticked",
         "task",
         "todo",
+        "selected",
+        "okay",
+        "ok",
         "changes",
         "revision",
         "reapproval",
@@ -21839,6 +22310,9 @@
         ]
       },
       "tags": [
+        "dashed",
+        "dotted",
+        "broken line",
         "pending",
         "progress",
         "issue",
@@ -22050,7 +22524,12 @@
         "hazard",
         "exclamation mark",
         "exclamation point",
-        "!"
+        "!",
+        "critical",
+        "urgent",
+        "severity",
+        "punctuation",
+        "symbol"
       ]
     },
     "circle-fading-arrow-up": {
@@ -22103,7 +22582,36 @@
       ]
     },
     "circle-fading-check": {
+      "en": {
+        "description": "A checkmark inside a partially dashed circle, indicating a completed, confirmed, or in-progress task.",
+        "synonyms": [
+          "checkmark",
+          "done",
+          "completed",
+          "confirmed",
+          "approved",
+          "verified",
+          "success",
+          "pending",
+          "processing"
+        ]
+      },
       "fingerprint": "16cf53c8f5dd",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Изображена галочка внутри частично прерывистого круга, что означает успешно выполненное действие или подтверждение.",
+        "synonyms": [
+          "галочка",
+          "выполнено",
+          "готово",
+          "подтверждено",
+          "принято",
+          "проверено",
+          "завершено",
+          "в процессе",
+          "загрузка"
+        ]
+      },
       "tags": [
         "checkmark",
         "done",
@@ -22120,6 +22628,9 @@
         "ticked",
         "task",
         "todo",
+        "selected",
+        "okay",
+        "ok",
         "pending",
         "progress",
         "processing",
@@ -24127,51 +24638,66 @@
     },
     "circle-question-mark": {
       "en": {
-        "description": "A circle containing a question mark, usually indicating help, support, or frequently asked information.",
+        "description": "A black circle enclosing a question mark, usually indicating help, support, or a frequently asked questions section.",
         "synonyms": [
-          "question",
           "help",
           "support",
           "faq",
+          "question",
+          "hint",
           "info",
+          "assistance",
           "unknown",
-          "query",
-          "tooltip",
-          "ask"
+          "tutorial",
+          "guide"
         ]
       },
-      "fingerprint": "c28035aff737",
+      "fingerprint": "7e063719b23a",
       "promptVersion": 1,
       "ru": {
-        "description": "Круг с вопросительным знаком внутри; обозначает справку, помощь или неизвестное.",
+        "description": "Черный круг с вопросительным знаком внутри; обозначает помощь, справку или вопрос.",
         "synonyms": [
-          "вопрос",
           "помощь",
           "справка",
+          "вопрос",
           "фак",
           "подсказка",
-          "знак вопроса",
-          "инфо",
+          "инструкция",
+          "поддержка",
           "неизвестно",
-          "поддержка"
+          "вопросик",
+          "спросить"
         ]
       },
       "tags": [
         "help",
+        "assistance",
+        "support",
         "guide",
         "tutorial",
         "manual",
+        "faq",
+        "hint",
+        "query",
         "unknown",
         "unidentified",
         "unspecified",
         "uncertain",
+        "unsure",
+        "doubt",
         "undetermined",
         "missing",
         "to be determined",
         "mystery",
         "question",
         "question mark",
-        "?"
+        "?",
+        "quiz",
+        "inquiry",
+        "enquiry",
+        "ask",
+        "punctuation",
+        "symbol"
       ]
     },
     "circle-slash": {
@@ -24499,7 +25025,9 @@
         "member",
         "client",
         "participant",
-        "guest"
+        "guest",
+        "customer",
+        "username"
       ]
     },
     "circle-user-round": {
@@ -24548,7 +25076,9 @@
         "member",
         "client",
         "participant",
-        "guest"
+        "guest",
+        "customer",
+        "username"
       ]
     },
     "circle-x": {
@@ -24601,6 +25131,9 @@
         "times",
         "ex",
         "×",
+        "deny",
+        "decline",
+        "refuse",
         "error",
         "incorrect",
         "wrong",
@@ -24964,8 +25497,13 @@
         "ticked",
         "task",
         "todo",
+        "selected",
+        "okay",
+        "ok",
         "copied",
-        "pasted"
+        "pasted",
+        "result",
+        "checklist"
       ]
     },
     "clipboard-clock": {
@@ -25099,7 +25637,8 @@
       "tags": [
         "copy",
         "paste",
-        "tasks"
+        "tasks",
+        "checklist"
       ]
     },
     "clipboard-minus": {
@@ -25458,7 +25997,10 @@
         "cross",
         "times",
         "ex",
-        "×"
+        "×",
+        "deny",
+        "decline",
+        "refuse"
       ]
     },
     "clock": {
@@ -26456,7 +26998,10 @@
         "valid",
         "ticked",
         "task",
-        "todo"
+        "todo",
+        "selected",
+        "okay",
+        "ok"
       ]
     },
     "clock-exclamation-point": {
@@ -26518,6 +27063,11 @@
         "exclamation mark",
         "exclamation point",
         "!",
+        "critical",
+        "urgent",
+        "severity",
+        "punctuation",
+        "symbol",
         "wrong"
       ]
     },
@@ -26819,6 +27369,9 @@
         "ticked",
         "task",
         "todo",
+        "selected",
+        "okay",
+        "ok",
         "sync",
         "network",
         "saved",
@@ -26906,7 +27459,9 @@
         ]
       },
       "tags": [
-        "import"
+        "import",
+        "install",
+        "installation"
       ]
     },
     "cloud-drizzle": {
@@ -26990,6 +27545,11 @@
         "exclamation mark",
         "exclamation point",
         "!",
+        "critical",
+        "urgent",
+        "severity",
+        "punctuation",
+        "symbol",
         "sync",
         "network"
       ]
@@ -27101,7 +27661,10 @@
       },
       "tags": [
         "weather",
-        "bolt"
+        "bolt",
+        "thunder",
+        "thunderstorm",
+        "thunderbolt"
       ]
     },
     "cloud-moon": {
@@ -27504,7 +28067,9 @@
         ]
       },
       "tags": [
-        "file"
+        "file",
+        "deploy",
+        "deployment"
       ]
     },
     "cloudy": {
@@ -27659,6 +28224,8 @@
         "coding",
         "programming",
         "development",
+        "developer",
+        "dev",
         "source",
         "html",
         "xml"
@@ -27701,6 +28268,8 @@
         "coding",
         "programming",
         "development",
+        "developer",
+        "dev",
         "source",
         "html",
         "xml"
@@ -28776,7 +29345,10 @@
         "valid",
         "ticked",
         "task",
-        "todo"
+        "todo",
+        "selected",
+        "okay",
+        "ok"
       ]
     },
     "copy-minus": {
@@ -28993,6 +29565,9 @@
         "times",
         "ex",
         "×",
+        "deny",
+        "decline",
+        "refuse",
         "multiply",
         "multiplication"
       ]
@@ -29598,7 +30173,9 @@
         "bank",
         "purchase",
         "payment",
-        "cc"
+        "cc",
+        "cashier",
+        "merchant"
       ]
     },
     "credit-card-check": {
@@ -29635,6 +30212,8 @@
         "purchase",
         "payment",
         "cc",
+        "cashier",
+        "merchant",
         "checkmark",
         "done",
         "completed",
@@ -29650,6 +30229,9 @@
         "ticked",
         "task",
         "todo",
+        "selected",
+        "okay",
+        "ok",
         "debit",
         "banking",
         "finance",
@@ -29700,6 +30282,8 @@
         "purchase",
         "payment",
         "cc",
+        "cashier",
+        "merchant",
         "minus",
         "remove",
         "delete",
@@ -29758,6 +30342,8 @@
         "purchase",
         "payment",
         "cc",
+        "cashier",
+        "merchant",
         "plus",
         "add",
         "new",
@@ -29820,6 +30406,8 @@
         "purchase",
         "payment",
         "cc",
+        "cashier",
+        "merchant",
         "atm",
         "terminal",
         "checkout",
@@ -29870,6 +30458,8 @@
         "purchase",
         "payment",
         "cc",
+        "cashier",
+        "merchant",
         "x",
         "remove",
         "delete",
@@ -29888,6 +30478,9 @@
         "times",
         "ex",
         "×",
+        "deny",
+        "decline",
+        "refuse",
         "debit",
         "banking",
         "finance",
@@ -30096,7 +30689,11 @@
         "ruler",
         "winner",
         "favorite",
-        "favourite"
+        "favourite",
+        "premium",
+        "vip",
+        "exclusive",
+        "pro"
       ]
     },
     "cuboid": {
@@ -30730,7 +31327,10 @@
         "valid",
         "ticked",
         "task",
-        "todo"
+        "todo",
+        "selected",
+        "okay",
+        "ok"
       ]
     },
     "database-cog": {
@@ -31028,7 +31628,8 @@
         "lens",
         "zoom",
         "inspection",
-        "visual search"
+        "visual search",
+        "loupe"
       ]
     },
     "database-x": {
@@ -31116,6 +31717,9 @@
         "times",
         "ex",
         "×",
+        "deny",
+        "decline",
+        "refuse",
         "error",
         "failed",
         "invalid",
@@ -31198,6 +31802,8 @@
         "energy",
         "power",
         "quick",
+        "thunder",
+        "thunderbolt",
         "cache busting",
         "crash"
       ]
@@ -32976,7 +33582,8 @@
         "egress",
         "gate",
         "gateway",
-        "emergency exit"
+        "emergency exit",
+        "quit"
       ]
     },
     "door-stairwell": {
@@ -33116,7 +33723,9 @@
         "import",
         "export",
         "save",
-        "pull"
+        "pull",
+        "install",
+        "installation"
       ]
     },
     "drafting-compass": {
@@ -33826,7 +34435,11 @@
         "browser",
         "language",
         "translate",
-        "globe"
+        "globe",
+        "www",
+        "http",
+        "https",
+        "website"
       ]
     },
     "earth-lock": {
@@ -33868,6 +34481,10 @@
         "language",
         "translate",
         "globe",
+        "www",
+        "http",
+        "https",
+        "website",
         "lock",
         "padlock",
         "private",
@@ -34333,7 +34950,10 @@
         "overflow",
         "dots",
         "…",
-        "..."
+        "...",
+        "meatball menu",
+        "three dots",
+        "3 dots"
       ]
     },
     "ellipsis-vertical": {
@@ -34375,7 +34995,11 @@
         "overflow",
         "dots",
         "…",
-        "..."
+        "...",
+        "kebab",
+        "kebab menu",
+        "three dots",
+        "3 dots"
       ]
     },
     "emirati-dirham": {
@@ -34893,6 +35517,63 @@
         "charge"
       ]
     },
+    "exclamation-mark": {
+      "en": {
+        "description": "A vertical bar above a dot, the exclamation mark, usually signals a warning, alert, or important notice.",
+        "synonyms": [
+          "exclamation point",
+          "warning",
+          "alert",
+          "caution",
+          "danger",
+          "error",
+          "notice",
+          "attention",
+          "bang"
+        ]
+      },
+      "fingerprint": "0641e770486e",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Изображена вертикальная черта с точкой под ней, это восклицательный знак, обозначающий предупреждение, важность или ошибку.",
+        "synonyms": [
+          "восклицательный знак",
+          "внимание",
+          "предупреждение",
+          "ошибка",
+          "опасность",
+          "важно",
+          "осторожно",
+          "тревога",
+          "восклицание"
+        ]
+      },
+      "tags": [
+        "alert",
+        "warning",
+        "danger",
+        "caution",
+        "notice",
+        "error",
+        "risk",
+        "concern",
+        "hazard",
+        "exclamation mark",
+        "exclamation point",
+        "!",
+        "critical",
+        "urgent",
+        "severity",
+        "punctuation",
+        "symbol",
+        "bang",
+        "surprise",
+        "emphasis",
+        "interjection",
+        "factorial",
+        "negation"
+      ]
+    },
     "expand": {
       "en": {
         "description": "Four arrows pointing outward toward the corners, usually meaning expand, enlarge, or switch to fullscreen.",
@@ -34964,7 +35645,8 @@
       "tags": [
         "outbound",
         "open",
-        "share"
+        "share",
+        "redirect"
       ]
     },
     "eye": {
@@ -35009,7 +35691,8 @@
         "visibility",
         "vision",
         "preview",
-        "read"
+        "read",
+        "eyes"
       ]
     },
     "eye-closed": {
@@ -35058,6 +35741,7 @@
         "vision",
         "preview",
         "read",
+        "eyes",
         "hide",
         "conceal",
         "mask",
@@ -35109,6 +35793,10 @@
         "vision",
         "preview",
         "read",
+        "eyes",
+        "dashed",
+        "dotted",
+        "broken line",
         "hide",
         "conceal",
         "mask",
@@ -35160,6 +35848,7 @@
         "vision",
         "preview",
         "read",
+        "eyes",
         "off",
         "disable",
         "hide",
@@ -35222,14 +35911,18 @@
         ]
       },
       "tags": [
+        "emoji",
+        "emotion",
+        "mood",
+        "feeling",
+        "expression",
+        "reaction",
         "anger",
         "rage",
         "fury",
         "resentment",
         "irritation",
-        "disgust",
-        "emoji",
-        "emotion"
+        "disgust"
       ]
     },
     "face-expressionless": {
@@ -35266,12 +35959,16 @@
         ]
       },
       "tags": [
+        "emoji",
+        "emotion",
+        "mood",
+        "feeling",
+        "expression",
+        "reaction",
         "nuisance",
         "annoyed",
         "annoyance",
-        "frustration",
-        "emoji",
-        "emotion"
+        "frustration"
       ]
     },
     "face-grinning": {
@@ -35308,6 +36005,12 @@
         ]
       },
       "tags": [
+        "emoji",
+        "emotion",
+        "mood",
+        "feeling",
+        "expression",
+        "reaction",
         "happy",
         "happiness",
         "good",
@@ -35316,9 +36019,7 @@
         "pleasure",
         "good cheer",
         "humour",
-        "funny",
-        "emoji",
-        "emotion"
+        "funny"
       ]
     },
     "face-neutral": {
@@ -35354,8 +36055,12 @@
       },
       "tags": [
         "emoji",
-        "neutral",
         "emotion",
+        "mood",
+        "feeling",
+        "expression",
+        "reaction",
+        "neutral",
         "meh",
         "blank stare",
         "social masking",
@@ -35399,9 +36104,13 @@
       },
       "tags": [
         "emoji",
+        "emotion",
+        "mood",
+        "feeling",
+        "expression",
+        "reaction",
         "bad",
         "sadness",
-        "emotion",
         "concern",
         "disappointment"
       ]
@@ -35438,6 +36147,12 @@
         ]
       },
       "tags": [
+        "emoji",
+        "emotion",
+        "mood",
+        "feeling",
+        "expression",
+        "reaction",
         "smile",
         "happy",
         "happiness",
@@ -35446,9 +36161,7 @@
         "friendly",
         "patronizing",
         "passive aggressive",
-        "ironic",
-        "emoji",
-        "emotion"
+        "ironic"
       ]
     },
     "face-slightly-smiling-plus": {
@@ -35483,6 +36196,12 @@
         ]
       },
       "tags": [
+        "emoji",
+        "emotion",
+        "mood",
+        "feeling",
+        "expression",
+        "reaction",
         "smile",
         "happy",
         "happiness",
@@ -35492,8 +36211,6 @@
         "patronizing",
         "passive aggressive",
         "ironic",
-        "emoji",
-        "emotion",
         "cubes",
         "packages",
         "parts",
@@ -35513,8 +36230,7 @@
         "insert",
         "addition",
         "added",
-        "react",
-        "reaction"
+        "react"
       ]
     },
     "factory": {
@@ -36169,6 +36885,10 @@
         "reporting",
         "data visualisation",
         "visualisation",
+        "analyze",
+        "kpi",
+        "metrics",
+        "insights",
         "categorical",
         "comparison"
       ]
@@ -36219,6 +36939,10 @@
         "reporting",
         "data visualisation",
         "visualisation",
+        "analyze",
+        "kpi",
+        "metrics",
+        "insights",
         "categorical",
         "comparison",
         "trending up"
@@ -36269,7 +36993,11 @@
         "presentation",
         "reporting",
         "data visualisation",
-        "visualisation"
+        "visualisation",
+        "analyze",
+        "kpi",
+        "metrics",
+        "insights"
       ]
     },
     "file-chart-pie": {
@@ -36317,7 +37045,11 @@
         "presentation",
         "reporting",
         "data visualisation",
-        "visualisation"
+        "visualisation",
+        "analyze",
+        "kpi",
+        "metrics",
+        "insights"
       ]
     },
     "file-check": {
@@ -36369,7 +37101,10 @@
         "valid",
         "ticked",
         "task",
-        "todo"
+        "todo",
+        "selected",
+        "okay",
+        "ok"
       ]
     },
     "file-check-corner": {
@@ -36420,7 +37155,10 @@
         "valid",
         "ticked",
         "task",
-        "todo"
+        "todo",
+        "selected",
+        "okay",
+        "ok"
       ]
     },
     "file-clock": {
@@ -36513,6 +37251,8 @@
         "coding",
         "programming",
         "development",
+        "developer",
+        "dev",
         "script",
         "gist",
         "html",
@@ -36559,6 +37299,8 @@
         "coding",
         "programming",
         "development",
+        "developer",
+        "dev",
         "script",
         "gist",
         "html",
@@ -36802,6 +37544,8 @@
         "export",
         "save",
         "pull",
+        "install",
+        "installation",
         "direction",
         "movement",
         "vertical",
@@ -36858,6 +37602,11 @@
         "exclamation mark",
         "exclamation point",
         "!",
+        "critical",
+        "urgent",
+        "severity",
+        "punctuation",
+        "symbol",
         "hidden",
         "protected"
       ]
@@ -37580,47 +38329,54 @@
     },
     "file-question-mark": {
       "en": {
-        "description": "Document outline with a folded top-right corner and a large question mark, meaning help, FAQ or unknown file content.",
+        "description": "Icon shows a document page with a question mark inside, meaning help, unknown file, or unclear content.",
         "synonyms": [
           "document",
           "file",
-          "question",
           "help",
+          "question",
+          "question mark",
           "faq",
+          "unknown file",
           "support",
           "manual",
-          "unknown file",
-          "info page",
-          "readme"
+          "guide"
         ]
       },
-      "fingerprint": "9b9fa30cd98e",
+      "fingerprint": "d6f2bc51f467",
       "promptVersion": 1,
       "ru": {
-        "description": "Document icon with a cut top-right corner and a large question mark, meaning help, unknown content or a FAQ page.",
+        "description": "Иконка изображает документ с отметкой вопроса внутри, обозначая справку, неизвестный или неопределённый файл.",
         "synonyms": [
           "документ",
           "файл",
-          "вопрос",
           "справка",
           "помощь",
+          "вопрос",
           "знак вопроса",
-          "инструкция",
-          "readme",
           "faq",
-          "непонятно"
+          "неизвестно",
+          "инструкция",
+          "поддержка"
         ]
       },
       "tags": [
         "document",
         "help",
+        "assistance",
+        "support",
         "guide",
         "tutorial",
         "manual",
+        "faq",
+        "hint",
+        "query",
         "unknown",
         "unidentified",
         "unspecified",
         "uncertain",
+        "unsure",
+        "doubt",
         "undetermined",
         "missing",
         "to be determined",
@@ -37628,7 +38384,16 @@
         "question",
         "question mark",
         "?",
-        "readme"
+        "quiz",
+        "inquiry",
+        "enquiry",
+        "ask",
+        "punctuation",
+        "symbol",
+        "readme",
+        "404",
+        "not found",
+        "page not found"
       ]
     },
     "file-scan": {
@@ -37744,6 +38509,7 @@
         "zoom",
         "inspection",
         "visual search",
+        "loupe",
         "lost",
         "browser"
       ]
@@ -37804,6 +38570,7 @@
         "zoom",
         "inspection",
         "visual search",
+        "loupe",
         "lost",
         "browser"
       ]
@@ -37931,7 +38698,11 @@
         "document",
         "spreadsheet",
         "sheet",
-        "table"
+        "table",
+        "csv",
+        "xls",
+        "xlsx",
+        "excel"
       ]
     },
     "file-stack": {
@@ -38091,7 +38862,11 @@
         "document",
         "data",
         "txt",
-        "pdf"
+        "pdf",
+        "doc",
+        "docx",
+        "word",
+        "docs"
       ]
     },
     "file-type": {
@@ -38263,6 +39038,8 @@
         "client",
         "participant",
         "guest",
+        "customer",
+        "username",
         "personal information",
         "listing",
         "networking",
@@ -38406,7 +39183,13 @@
         "times",
         "ex",
         "×",
-        "lost"
+        "deny",
+        "decline",
+        "refuse",
+        "lost",
+        "404",
+        "not found",
+        "page not found"
       ]
     },
     "file-x-corner": {
@@ -38462,7 +39245,13 @@
         "times",
         "ex",
         "×",
-        "lost"
+        "deny",
+        "decline",
+        "refuse",
+        "lost",
+        "404",
+        "not found",
+        "page not found"
       ]
     },
     "files": {
@@ -39814,7 +40603,10 @@
         "valid",
         "ticked",
         "task",
-        "todo"
+        "todo",
+        "selected",
+        "okay",
+        "ok"
       ]
     },
     "folder-clock": {
@@ -39943,6 +40735,8 @@
         "coding",
         "programming",
         "development",
+        "developer",
+        "dev",
         "develop",
         "software"
       ]
@@ -40803,6 +41597,7 @@
         "zoom",
         "inspection",
         "visual search",
+        "loupe",
         "lost",
         "browser"
       ]
@@ -40863,6 +41658,7 @@
         "zoom",
         "inspection",
         "visual search",
+        "loupe",
         "lost",
         "browser"
       ]
@@ -41088,6 +41884,8 @@
         "client",
         "participant",
         "guest",
+        "customer",
+        "username",
         "document",
         "home folder",
         "shared",
@@ -41138,6 +41936,8 @@
         "client",
         "participant",
         "guest",
+        "customer",
+        "username",
         "shared",
         "document",
         "group",
@@ -41200,7 +42000,10 @@
         "cross",
         "times",
         "ex",
-        "×"
+        "×",
+        "deny",
+        "decline",
+        "refuse"
       ]
     },
     "folders": {
@@ -41410,7 +42213,8 @@
       "tags": [
         "send",
         "share",
-        "email"
+        "email",
+        "redirect"
       ]
     },
     "frame": {
@@ -41669,7 +42473,10 @@
         "cross",
         "times",
         "ex",
-        "×"
+        "×",
+        "deny",
+        "decline",
+        "refuse"
       ]
     },
     "galaxy": {
@@ -42306,7 +43113,11 @@
         "wedding",
         "proposal",
         "marriage",
-        "rubygems"
+        "rubygems",
+        "premium",
+        "vip",
+        "exclusive",
+        "pro"
       ]
     },
     "georgian-lari": {
@@ -43034,7 +43845,9 @@
       },
       "tags": [
         "code",
-        "version control"
+        "version control",
+        "ci/cd",
+        "cicd"
       ]
     },
     "git-merge-conflict": {
@@ -43073,6 +43886,8 @@
       "tags": [
         "code",
         "version control",
+        "ci/cd",
+        "cicd",
         "commits",
         "diff",
         "error",
@@ -43462,7 +44277,11 @@
         "globe",
         "internet",
         "planet",
-        "network"
+        "network",
+        "www",
+        "http",
+        "https",
+        "website"
       ]
     },
     "globe-ban": {
@@ -43514,6 +44333,10 @@
         "internet",
         "planet",
         "network",
+        "www",
+        "http",
+        "https",
+        "website",
         "off",
         "disable",
         "hide",
@@ -43539,7 +44362,6 @@
         "crossed out",
         "diagonal line",
         "web",
-        "website",
         "banned",
         "geo blocking",
         "offline",
@@ -43601,6 +44423,10 @@
         "internet",
         "planet",
         "network",
+        "www",
+        "http",
+        "https",
+        "website",
         "checkmark",
         "done",
         "completed",
@@ -43616,6 +44442,9 @@
         "ticked",
         "task",
         "todo",
+        "selected",
+        "okay",
+        "ok",
         "web",
         "available",
         "online",
@@ -43670,10 +44499,15 @@
         "internet",
         "planet",
         "network",
+        "www",
+        "http",
+        "https",
+        "website",
         "coding",
         "programming",
         "development",
-        "website",
+        "developer",
+        "dev",
         "digital",
         "access",
         "link"
@@ -43726,6 +44560,10 @@
         "internet",
         "planet",
         "network",
+        "www",
+        "http",
+        "https",
+        "website",
         "lock",
         "padlock",
         "private",
@@ -43795,6 +44633,10 @@
         "internet",
         "planet",
         "network",
+        "www",
+        "http",
+        "https",
+        "website",
         "off",
         "disable",
         "hide",
@@ -43875,6 +44717,10 @@
         "internet",
         "planet",
         "network",
+        "www",
+        "http",
+        "https",
+        "website",
         "plus",
         "add",
         "new",
@@ -43935,6 +44781,10 @@
         "internet",
         "planet",
         "network",
+        "www",
+        "http",
+        "https",
+        "website",
         "x",
         "remove",
         "delete",
@@ -43953,6 +44803,9 @@
         "times",
         "ex",
         "×",
+        "deny",
+        "decline",
+        "refuse",
         "offline",
         "disconnected",
         "no connection",
@@ -43995,7 +44848,11 @@
       },
       "tags": [
         "flag",
-        "bullseye"
+        "bullseye",
+        "result",
+        "outcome",
+        "objective",
+        "okr"
       ]
     },
     "gpu": {
@@ -44091,7 +44948,10 @@
         "diploma",
         "bachelor's",
         "master's",
-        "doctorate"
+        "doctorate",
+        "skill",
+        "skills",
+        "expertise"
       ]
     },
     "grape": {
@@ -44185,6 +45045,63 @@
         "backend",
         "fan-out",
         "orchestration"
+      ]
+    },
+    "graph-ring": {
+      "en": {
+        "description": "Three circular nodes connected by arcs form a ring; the icon represents a network, connections, or ring topology.",
+        "synonyms": [
+          "network",
+          "nodes",
+          "links",
+          "connections",
+          "ring",
+          "topology",
+          "mesh",
+          "peer-to-peer",
+          "cluster",
+          "distributed"
+        ]
+      },
+      "fingerprint": "2240e3ea1d69",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Изображение показывает три круглых узла, соединённых дугами в кольцо; значок обозначает сеть, связи или кольцевую топологию.",
+        "synonyms": [
+          "сеть",
+          "узлы",
+          "связи",
+          "соединения",
+          "кольцо",
+          "топология",
+          "распределённая сеть",
+          "одноранговая сеть",
+          "кластер",
+          "связанные узлы"
+        ]
+      },
+      "tags": [
+        "network",
+        "nodes",
+        "edges",
+        "links",
+        "connections",
+        "relationships",
+        "structure",
+        "topology",
+        "cycle",
+        "loop",
+        "replication",
+        "consensus",
+        "cluster",
+        "peer-to-peer",
+        "p2p",
+        "mesh",
+        "distributed",
+        "decentralized",
+        "decentralization",
+        "ring topology",
+        "circular network"
       ]
     },
     "graph-star": {
@@ -44357,6 +45274,9 @@
         "ticked",
         "task",
         "todo",
+        "selected",
+        "okay",
+        "ok",
         "data"
       ]
     },
@@ -44488,6 +45408,9 @@
         "times",
         "ex",
         "×",
+        "deny",
+        "decline",
+        "refuse",
         "data"
       ]
     },
@@ -44583,7 +45506,34 @@
       ]
     },
     "grid-3x3-off": {
+      "en": {
+        "description": "A 3×3 grid drawn in a square with a diagonal strike line; it means hiding or turning off the grid.",
+        "synonyms": [
+          "hide grid",
+          "grid off",
+          "table",
+          "disable grid",
+          "crossed out grid",
+          "cells",
+          "turn off grid",
+          "spreadsheet"
+        ]
+      },
       "fingerprint": "897fabc71e87",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Квадрат с сеткой 3×3, перечёркнутый диагональной линией; означает скрытие или отключение сетки.",
+        "synonyms": [
+          "сетка выключена",
+          "скрыть сетку",
+          "таблица",
+          "выключить сетку",
+          "отключить сетку",
+          "перечёркнутая сетка",
+          "ячейки",
+          "запрещено"
+        ]
+      },
       "tags": [
         "table",
         "rows",
@@ -45164,7 +46114,13 @@
         "wave",
         "move",
         "mouse",
-        "grab"
+        "grab",
+        "welcome",
+        "hello",
+        "hi",
+        "greeting",
+        "goodbye",
+        "bye"
       ]
     },
     "hand-coins": {
@@ -45212,7 +46168,12 @@
         "allowance",
         "pocket money",
         "handout",
-        "pennies"
+        "pennies",
+        "loan",
+        "lending",
+        "borrow",
+        "debt",
+        "salary"
       ]
     },
     "hand-fist": {
@@ -45710,7 +46671,9 @@
         "import",
         "export",
         "save",
-        "pull"
+        "pull",
+        "install",
+        "installation"
       ]
     },
     "hard-drive-upload": {
@@ -46508,7 +47471,10 @@
         "phone",
         "telephone",
         "voip",
-        "video"
+        "video",
+        "customer service",
+        "customer support",
+        "helpdesk"
       ]
     },
     "heart": {
@@ -46635,7 +47601,8 @@
         "terms",
         "emotion",
         "together",
-        "handshake"
+        "handshake",
+        "insurance"
       ]
     },
     "heart-minus": {
@@ -46893,6 +47860,9 @@
         "times",
         "ex",
         "×",
+        "deny",
+        "decline",
+        "refuse",
         "unlike",
         "unfavorite"
       ]
@@ -47301,7 +48271,9 @@
         "ward",
         "building",
         "medical",
-        "vet"
+        "vet",
+        "sick",
+        "patient"
       ]
     },
     "hot-air-balloon": {
@@ -47542,7 +48514,8 @@
         "living",
         "building",
         "residence",
-        "architecture"
+        "architecture",
+        "homepage"
       ]
     },
     "house-cog": {
@@ -47584,6 +48557,7 @@
         "building",
         "residence",
         "architecture",
+        "homepage",
         "cog",
         "cogwheel",
         "gear",
@@ -47641,6 +48615,7 @@
         "building",
         "residence",
         "architecture",
+        "homepage",
         "favorite",
         "favourite",
         "like",
@@ -47692,6 +48667,7 @@
         "building",
         "residence",
         "architecture",
+        "homepage",
         "autarky",
         "energy"
       ]
@@ -47735,6 +48711,7 @@
         "building",
         "residence",
         "architecture",
+        "homepage",
         "plus",
         "add",
         "new",
@@ -47788,6 +48765,7 @@
         "building",
         "residence",
         "architecture",
+        "homepage",
         "connection",
         "signal",
         "wireless",
@@ -48003,7 +48981,12 @@
         "id-card",
         "id-card-lanyard",
         "employee",
-        "gate-pass"
+        "gate-pass",
+        "job",
+        "career",
+        "employment",
+        "hiring",
+        "experience"
       ]
     },
     "image": {
@@ -48585,7 +49568,11 @@
         "unlimited",
         "forever",
         "loop",
-        "math"
+        "math",
+        "ci/cd",
+        "cicd",
+        "devops",
+        "pipeline"
       ]
     },
     "info": {
@@ -49867,7 +50854,9 @@
         "library",
         "temple",
         "ancient",
-        "structure"
+        "structure",
+        "loan",
+        "lending"
       ]
     },
     "languages": {
@@ -50034,7 +51023,10 @@
         "valid",
         "ticked",
         "task",
-        "todo"
+        "todo",
+        "selected",
+        "okay",
+        "ok"
       ]
     },
     "laser": {
@@ -50829,7 +51821,22 @@
       "tags": [
         "app",
         "home",
-        "start"
+        "start",
+        "apps",
+        "menu",
+        "block",
+        "applications",
+        "collection",
+        "dashboard",
+        "overview",
+        "tiles",
+        "grid",
+        "matrix",
+        "launcher",
+        "widgets",
+        "ui",
+        "circles",
+        "shortcuts"
       ]
     },
     "layout-grid-circles": {
@@ -50865,21 +51872,97 @@
         "app",
         "home",
         "start",
-        "dot matrix",
-        "dots",
+        "apps",
         "menu",
-        "dashboard",
+        "block",
+        "applications",
         "collection",
+        "dashboard",
         "overview",
         "tiles",
         "grid",
         "matrix",
         "launcher",
-        "apps",
         "widgets",
         "ui",
         "circles",
-        "shortcuts"
+        "shortcuts",
+        "dot matrix",
+        "dots"
+      ]
+    },
+    "layout-grid-plus": {
+      "en": {
+        "description": "Shows three squares and a plus sign arranged as a grid; it usually means adding a new app, tile, or widget.",
+        "synonyms": [
+          "add",
+          "plus",
+          "new widget",
+          "grid",
+          "tiles",
+          "apps",
+          "create",
+          "dashboard",
+          "menu",
+          "add tile"
+        ]
+      },
+      "fingerprint": "6061f4c5ff71",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Изображены три квадрата с плюсом в четвёртой ячейке сетки; значок обозначает добавление нового элемента или виджета на экран.",
+        "synonyms": [
+          "добавить",
+          "плюс",
+          "новый виджет",
+          "сетка",
+          "плитка",
+          "приложения",
+          "создать",
+          "меню",
+          "панель",
+          "добавить плитку"
+        ]
+      },
+      "tags": [
+        "app",
+        "home",
+        "start",
+        "apps",
+        "menu",
+        "block",
+        "applications",
+        "collection",
+        "dashboard",
+        "overview",
+        "tiles",
+        "grid",
+        "matrix",
+        "launcher",
+        "widgets",
+        "ui",
+        "circles",
+        "shortcuts",
+        "plus",
+        "add",
+        "new",
+        "create",
+        "+",
+        "increase",
+        "increment",
+        "extra",
+        "insert",
+        "addition",
+        "added",
+        "structure",
+        "rows",
+        "columns",
+        "expand",
+        "interface",
+        "design",
+        "section",
+        "widget",
+        "tile"
       ]
     },
     "layout-list": {
@@ -52732,7 +53815,9 @@
         "records",
         "albums",
         "music",
-        "package"
+        "package",
+        "wiki",
+        "knowledge base"
       ]
     },
     "library-big": {
@@ -52789,7 +53874,9 @@
         "records",
         "albums",
         "music",
-        "package"
+        "package",
+        "wiki",
+        "knowledge base"
       ]
     },
     "life-buoy": {
@@ -52836,7 +53923,10 @@
         "raft",
         "inflatable",
         "wheel",
-        "donut"
+        "donut",
+        "customer service",
+        "customer support",
+        "helpdesk"
       ]
     },
     "ligature": {
@@ -52911,7 +54001,9 @@
       "tags": [
         "idea",
         "bright",
-        "lights"
+        "lights",
+        "suggest",
+        "suggestion"
       ]
     },
     "lightbulb-off": {
@@ -52949,6 +54041,8 @@
         "idea",
         "bright",
         "lights",
+        "suggest",
+        "suggestion",
         "off",
         "disable",
         "hide",
@@ -53310,12 +54404,17 @@
         ]
       },
       "tags": [
-        "line",
+        "stroke",
+        "path",
+        "segment",
+        "vector",
+        "graphics",
+        "design",
+        "shape",
+        "curve",
         "snakes",
         "annotate",
-        "curve",
         "doodle",
-        "stroke",
         "pen",
         "tool",
         "gesture",
@@ -53356,8 +54455,14 @@
         ]
       },
       "tags": [
-        "line",
         "stroke",
+        "path",
+        "segment",
+        "vector",
+        "graphics",
+        "design",
+        "shape",
+        "curve",
         "style",
         "dashed",
         "border"
@@ -53398,7 +54503,11 @@
       },
       "tags": [
         "chain",
-        "url"
+        "url",
+        "www",
+        "http",
+        "https",
+        "website"
       ]
     },
     "link-2": {
@@ -53436,7 +54545,11 @@
       },
       "tags": [
         "chain",
-        "url"
+        "url",
+        "www",
+        "http",
+        "https",
+        "website"
       ]
     },
     "link-2-off": {
@@ -53475,6 +54588,10 @@
       "tags": [
         "chain",
         "url",
+        "www",
+        "http",
+        "https",
+        "website",
         "off",
         "disable",
         "hide",
@@ -53581,8 +54698,12 @@
         "ticked",
         "task",
         "todo",
+        "selected",
+        "okay",
+        "ok",
         "list",
-        "bom"
+        "bom",
+        "checklist"
       ]
     },
     "list-checks": {
@@ -53632,8 +54753,12 @@
         "ticked",
         "task",
         "todo",
+        "selected",
+        "okay",
+        "ok",
         "items",
-        "pending"
+        "pending",
+        "checklist"
       ]
     },
     "list-chevrons-down-up": {
@@ -54459,7 +55584,8 @@
         "complete",
         "tasks",
         "items",
-        "pending"
+        "pending",
+        "checklist"
       ]
     },
     "list-tree": {
@@ -54589,6 +55715,9 @@
         "times",
         "ex",
         "×",
+        "deny",
+        "decline",
+        "refuse",
         "playlist",
         "subtract",
         "unqueue"
@@ -55148,7 +56277,8 @@
         "sign out",
         "arrow",
         "exit",
-        "auth"
+        "auth",
+        "quit"
       ]
     },
     "logs": {
@@ -55452,6 +56582,9 @@
         "ticked",
         "task",
         "todo",
+        "selected",
+        "okay",
+        "ok",
         "subscribe",
         "delivered",
         "read"
@@ -55622,6 +56755,11 @@
         "exclamation mark",
         "exclamation point",
         "!",
+        "critical",
+        "urgent",
+        "severity",
+        "punctuation",
+        "symbol",
         "delivery error"
       ]
     },
@@ -55822,29 +56960,31 @@
         "insert",
         "addition",
         "added",
-        "compose"
+        "compose",
+        "invite",
+        "invitation"
       ]
     },
     "mail-question-mark": {
       "en": {
-        "description": "An outlined envelope with a question mark at its lower right, indicating an unknown, unread, or undelivered email.",
+        "description": "An outlined envelope with a question mark at its lower right, usually meaning an unknown email or a mail-related question.",
         "synonyms": [
           "letter",
           "envelope",
           "mail",
-          "email",
           "message",
           "question",
-          "undelivered",
-          "unread",
+          "question mark",
           "help",
-          "inbox issue"
+          "unknown mail",
+          "inquiry",
+          "support"
         ]
       },
-      "fingerprint": "8a331bb565f7",
+      "fingerprint": "2992d3098934",
       "promptVersion": 1,
       "ru": {
-        "description": "Контур конверта с вопросительным знаком справа внизу; обозначает неизвестное, непрочитанное или недоставленное письмо.",
+        "description": "Контур конверта с вопросительным знаком справа снизу; обозначает непрочитанное или неизвестное письмо, вопрос по почте.",
         "synonyms": [
           "письмо",
           "конверт",
@@ -55852,10 +56992,10 @@
           "email",
           "сообщение",
           "вопрос",
-          "недоставлено",
-          "непрочитанное",
           "вопросительный знак",
-          "письмо с вопросом"
+          "помощь",
+          "неизвестно",
+          "faq"
         ]
       },
       "tags": [
@@ -55864,13 +57004,20 @@
         "letter",
         "unread",
         "help",
+        "assistance",
+        "support",
         "guide",
         "tutorial",
         "manual",
+        "faq",
+        "hint",
+        "query",
         "unknown",
         "unidentified",
         "unspecified",
         "uncertain",
+        "unsure",
+        "doubt",
         "undetermined",
         "missing",
         "to be determined",
@@ -55878,6 +57025,12 @@
         "question",
         "question mark",
         "?",
+        "quiz",
+        "inquiry",
+        "enquiry",
+        "ask",
+        "punctuation",
+        "symbol",
         "delivery",
         "undelivered"
       ]
@@ -55938,7 +57091,8 @@
         "lens",
         "zoom",
         "inspection",
-        "visual search"
+        "visual search",
+        "loupe"
       ]
     },
     "mail-x": {
@@ -55996,7 +57150,10 @@
         "cross",
         "times",
         "ex",
-        "×"
+        "×",
+        "deny",
+        "decline",
+        "refuse"
       ]
     },
     "mailbox": {
@@ -56081,7 +57238,38 @@
       ]
     },
     "mango": {
+      "en": {
+        "description": "Outline drawing of a mango with a stem on top, representing the fruit or fresh produce.",
+        "synonyms": [
+          "fruit",
+          "tropical fruit",
+          "food",
+          "produce",
+          "exotic",
+          "juice",
+          "smoothie",
+          "snack",
+          "summer",
+          "healthy"
+        ]
+      },
       "fingerprint": "ad6b830aa9d1",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Контурное изображение манго с черенком сверху; обозначает фрукт, продукты или тропическую еду.",
+        "synonyms": [
+          "манго",
+          "фрукт",
+          "фрукты",
+          "тропический фрукт",
+          "еда",
+          "продукты",
+          "экзотика",
+          "сок",
+          "смузи",
+          "перекус"
+        ]
+      },
       "tags": [
         "fruit",
         "food",
@@ -56275,6 +57463,9 @@
         "ticked",
         "task",
         "todo",
+        "selected",
+        "okay",
+        "ok",
         "added"
       ]
     },
@@ -56329,6 +57520,9 @@
         "ticked",
         "task",
         "todo",
+        "selected",
+        "okay",
+        "ok",
         "added"
       ]
     },
@@ -56770,6 +57964,7 @@
         "zoom",
         "inspection",
         "visual search",
+        "loupe",
         "navigation",
         "travel"
       ]
@@ -56829,7 +58024,10 @@
         "cross",
         "times",
         "ex",
-        "×"
+        "×",
+        "deny",
+        "decline",
+        "refuse"
       ]
     },
     "map-pin-x-inside": {
@@ -56887,7 +58085,10 @@
         "cross",
         "times",
         "ex",
-        "×"
+        "×",
+        "deny",
+        "decline",
+        "refuse"
       ]
     },
     "map-pinned": {
@@ -57961,6 +59162,9 @@
         "ticked",
         "task",
         "todo",
+        "selected",
+        "okay",
+        "ok",
         "moderate"
       ]
     },
@@ -58006,6 +59210,8 @@
         "coding",
         "programming",
         "development",
+        "developer",
+        "dev",
         "code review"
       ]
     },
@@ -58047,6 +59253,9 @@
         "dialog",
         "feedback",
         "speech bubble",
+        "dashed",
+        "dotted",
+        "broken line",
         "draft"
       ]
     },
@@ -58090,6 +59299,9 @@
         "dialog",
         "feedback",
         "speech bubble",
+        "dashed",
+        "dotted",
+        "broken line",
         "draft",
         "checkmark",
         "done",
@@ -58106,6 +59318,9 @@
         "ticked",
         "task",
         "todo",
+        "selected",
+        "okay",
+        "ok",
         "pending",
         "provisional",
         "verification",
@@ -58166,6 +59381,11 @@
         "exclamation mark",
         "exclamation point",
         "!",
+        "critical",
+        "urgent",
+        "severity",
+        "punctuation",
+        "symbol",
         "report",
         "abuse",
         "offense",
@@ -58329,6 +59549,9 @@
         "times",
         "ex",
         "×",
+        "deny",
+        "decline",
+        "refuse",
         "off",
         "disable",
         "hide",
@@ -58409,33 +59632,35 @@
     },
     "message-circle-question-mark": {
       "en": {
-        "description": "Outline of a round speech bubble with a question mark inside, usually meaning help, questions, or feedback.",
+        "description": "A speech bubble containing a question mark, usually meaning help, support, or a question in a chat.",
         "synonyms": [
           "question",
           "help",
           "chat",
-          "message",
-          "feedback",
           "support",
           "faq",
-          "comment",
-          "dialog"
+          "question mark",
+          "dialog",
+          "inquiry",
+          "feedback",
+          "hint"
         ]
       },
-      "fingerprint": "5df9c3d797b2",
+      "fingerprint": "3a63b7ac541e",
       "promptVersion": 1,
       "ru": {
-        "description": "Контур круглого облачка речи с вопросительным знаком внутри; обозначает помощь, вопрос или обратную связь.",
+        "description": "Изображена речевая кнопка-облачко с вопросительным знаком внутри, обозначающая вопрос, помощь или поддержку в чате.",
         "synonyms": [
           "вопрос",
           "помощь",
           "чат",
-          "сообщение",
-          "обратная связь",
-          "диалог",
-          "поддержка",
           "справка",
-          "комментарий"
+          "поддержка",
+          "faq",
+          "вопросительный знак",
+          "диалог",
+          "обратная связь",
+          "подсказка"
         ]
       },
       "tags": [
@@ -58446,20 +59671,33 @@
         "feedback",
         "speech bubble",
         "help",
+        "assistance",
+        "support",
         "guide",
         "tutorial",
         "manual",
+        "faq",
+        "hint",
+        "query",
         "unknown",
         "unidentified",
         "unspecified",
         "uncertain",
+        "unsure",
+        "doubt",
         "undetermined",
         "missing",
         "to be determined",
         "mystery",
         "question",
         "question mark",
-        "?"
+        "?",
+        "quiz",
+        "inquiry",
+        "enquiry",
+        "ask",
+        "punctuation",
+        "symbol"
       ]
     },
     "message-circle-reply": {
@@ -58618,6 +59856,9 @@
         "times",
         "ex",
         "×",
+        "deny",
+        "decline",
+        "refuse",
         "silence",
         "mute",
         "moderate"
@@ -58718,6 +59959,9 @@
         "ticked",
         "task",
         "todo",
+        "selected",
+        "okay",
+        "ok",
         "moderate"
       ]
     },
@@ -58762,6 +60006,8 @@
         "coding",
         "programming",
         "development",
+        "developer",
+        "dev",
         "code review"
       ]
     },
@@ -58802,6 +60048,9 @@
         "dialog",
         "feedback",
         "speech bubble",
+        "dashed",
+        "dotted",
+        "broken line",
         "draft"
       ]
     },
@@ -58963,6 +60212,11 @@
         "exclamation mark",
         "exclamation point",
         "!",
+        "critical",
+        "urgent",
+        "severity",
+        "punctuation",
+        "symbol",
         "report",
         "abuse",
         "offense",
@@ -59188,6 +60442,9 @@
         "times",
         "ex",
         "×",
+        "deny",
+        "decline",
+        "refuse",
         "off",
         "disable",
         "hide",
@@ -59265,7 +60522,9 @@
         "extra",
         "insert",
         "addition",
-        "added"
+        "added",
+        "suggest",
+        "suggestion"
       ]
     },
     "message-square-quote": {
@@ -59493,6 +60752,9 @@
         "times",
         "ex",
         "×",
+        "deny",
+        "decline",
+        "refuse",
         "silence",
         "mute",
         "moderate"
@@ -60665,6 +61927,9 @@
         "ticked",
         "task",
         "todo",
+        "selected",
+        "okay",
+        "ok",
         "connected",
         "running",
         "active"
@@ -61422,6 +62687,9 @@
         "times",
         "ex",
         "×",
+        "deny",
+        "decline",
+        "refuse",
         "error",
         "failed",
         "disconnected",
@@ -61626,7 +62894,37 @@
       ]
     },
     "moped": {
+      "en": {
+        "description": "Shows a moped or scooter with two wheels, handlebars and a seat, representing personal transport or delivery.",
+        "synonyms": [
+          "scooter",
+          "motorbike",
+          "two wheeler",
+          "vehicle",
+          "transport",
+          "delivery",
+          "courier",
+          "commute",
+          "ride"
+        ]
+      },
       "fingerprint": "3c2b0fdf79f9",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Изображена мопед или скутер с двумя колёсами, рулём и сиденьем; обозначает транспорт, поездку или доставку.",
+        "synonyms": [
+          "мопед",
+          "скутер",
+          "мотоцикл",
+          "мотороллер",
+          "мотоцикл для города",
+          "доставка",
+          "транспорт",
+          "байк",
+          "курьер",
+          "поездка"
+        ]
+      },
       "tags": [
         "scooter",
         "two-wheeler",
@@ -61755,6 +63053,70 @@
         "racing",
         "journey",
         "delivery"
+      ]
+    },
+    "mound-shovel": {
+      "en": {
+        "description": "Shows a mound of dirt or sand with a shovel stuck into it, usually meaning digging, excavation, or earthwork.",
+        "synonyms": [
+          "shovel",
+          "spade",
+          "dirt pile",
+          "sand",
+          "soil",
+          "digging",
+          "excavation",
+          "construction",
+          "gravel",
+          "mining"
+        ]
+      },
+      "fingerprint": "494738a035b0",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Изображена куча земли или песка с воткнутой лопатой; значок обозначает раскопки, земляные работы или сыпучие материалы.",
+        "synonyms": [
+          "лопата",
+          "куча земли",
+          "песок",
+          "грунт",
+          "земляные работы",
+          "раскопки",
+          "стройка",
+          "копать",
+          "карьер",
+          "гравий"
+        ]
+      },
+      "tags": [
+        "dig",
+        "spade",
+        "treasure",
+        "sand",
+        "pile",
+        "grain",
+        "desert",
+        "nature",
+        "dirt pile",
+        "sand pile",
+        "dirt",
+        "soil",
+        "earth",
+        "gravel",
+        "heap",
+        "stockpile",
+        "aggregate",
+        "excavation",
+        "earthworks",
+        "mine",
+        "mining",
+        "quarry",
+        "sand mine",
+        "frac sand",
+        "construction",
+        "construction site",
+        "landscaping",
+        "beach"
       ]
     },
     "mountain": {
@@ -63730,7 +65092,10 @@
         "paper",
         "write",
         "lines",
-        "opened"
+        "opened",
+        "docs",
+        "wiki",
+        "knowledge base"
       ]
     },
     "notepad-text": {
@@ -63853,6 +65218,9 @@
         "research",
         "lines",
         "opened",
+        "dashed",
+        "dotted",
+        "broken line",
         "draft",
         "template"
       ]
@@ -64086,7 +65454,12 @@
         "hazard",
         "exclamation mark",
         "exclamation point",
-        "!"
+        "!",
+        "critical",
+        "urgent",
+        "severity",
+        "punctuation",
+        "symbol"
       ]
     },
     "octagon-minus": {
@@ -64238,6 +65611,9 @@
         "times",
         "ex",
         "×",
+        "deny",
+        "decline",
+        "refuse",
         "stop",
         "alert",
         "warning",
@@ -64296,7 +65672,37 @@
       ]
     },
     "opacity": {
+      "en": {
+        "description": "A set of dots fading across an L-shaped corner, usually representing opacity or transparency adjustment in an interface.",
+        "synonyms": [
+          "transparency",
+          "translucency",
+          "fade",
+          "visibility",
+          "gradient",
+          "blend",
+          "alpha",
+          "dots",
+          "mask",
+          "dissolve"
+        ]
+      },
       "fingerprint": "9749d476f161",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Рисунок показывает группу точек в углу уголка, символ означает прозрачность или степень непрозрачности элемента.",
+        "synonyms": [
+          "прозрачность",
+          "непрозрачность",
+          "видимость",
+          "затухание",
+          "размытие",
+          "фильтр",
+          "градиент",
+          "маска",
+          "полупрозрачность"
+        ]
+      },
       "tags": [
         "opacity",
         "opaque",
@@ -64598,6 +66004,9 @@
         "ticked",
         "task",
         "todo",
+        "selected",
+        "okay",
+        "ok",
         "delivered"
       ]
     },
@@ -64706,7 +66115,36 @@
       ]
     },
     "package-pen": {
+      "en": {
+        "description": "A closed package box with a pencil overlaid, meaning edit or modify a package, product, or order.",
+        "synonyms": [
+          "edit package",
+          "modify order",
+          "box",
+          "parcel",
+          "pencil",
+          "edit product",
+          "update shipment",
+          "inventory edit",
+          "packaging"
+        ]
+      },
       "fingerprint": "704e742beaad",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Изображена коробка-посылка с карандашом в углу; означает редактирование или изменение товара, заказа или содержимого упаковки.",
+        "synonyms": [
+          "редактировать посылку",
+          "изменить заказ",
+          "коробка",
+          "упаковка",
+          "карандаш",
+          "правка",
+          "изменить товар",
+          "редактирование",
+          "обновить заказ"
+        ]
+      },
       "tags": [
         "box",
         "container",
@@ -64810,11 +66248,44 @@
         "extra",
         "insert",
         "addition",
-        "added"
+        "added",
+        "install",
+        "installation"
       ]
     },
     "package-question-mark": {
-      "fingerprint": "b9bc40e2b0fe",
+      "en": {
+        "description": "A closed box with a question mark beside it, usually meaning an unknown, undelivered, or unidentified package.",
+        "synonyms": [
+          "box",
+          "package",
+          "parcel",
+          "shipping",
+          "delivery",
+          "unknown",
+          "question mark",
+          "lost order",
+          "undelivered",
+          "inventory"
+        ]
+      },
+      "fingerprint": "c4f912c05b51",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Изображена коробка с крышкой и знаком вопроса сбоку; обычно означает неизвестную, недоставленную или неопределённую посылку.",
+        "synonyms": [
+          "коробка",
+          "посылка",
+          "упаковка",
+          "доставка",
+          "неизвестно",
+          "вопрос",
+          "знак вопроса",
+          "потерянный заказ",
+          "неопределённо",
+          "помощь"
+        ]
+      },
       "tags": [
         "box",
         "container",
@@ -64835,13 +66306,20 @@
         "order",
         "product",
         "help",
+        "assistance",
+        "support",
         "guide",
         "tutorial",
         "manual",
+        "faq",
+        "hint",
+        "query",
         "unknown",
         "unidentified",
         "unspecified",
         "uncertain",
+        "unsure",
+        "doubt",
         "undetermined",
         "missing",
         "to be determined",
@@ -64849,6 +66327,12 @@
         "question",
         "question mark",
         "?",
+        "quiz",
+        "inquiry",
+        "enquiry",
+        "ask",
+        "punctuation",
+        "symbol",
         "unresolved",
         "placeholder",
         "pending",
@@ -64929,6 +66413,7 @@
         "zoom",
         "inspection",
         "visual search",
+        "loupe",
         "product process"
       ]
     },
@@ -65001,7 +66486,10 @@
         "cross",
         "times",
         "ex",
-        "×"
+        "×",
+        "deny",
+        "decline",
+        "refuse"
       ]
     },
     "paint-bucket": {
@@ -65406,6 +66894,9 @@
         "y-axis",
         "drawer",
         "dock",
+        "dashed",
+        "dotted",
+        "broken line",
         "show",
         "reveal",
         "padding",
@@ -65622,6 +67113,9 @@
         "x-axis",
         "primary",
         "drawer",
+        "dashed",
+        "dotted",
+        "broken line",
         "sidebar",
         "show",
         "reveal",
@@ -65736,6 +67230,9 @@
         "right edge",
         "rightmost",
         "right side",
+        "dashed",
+        "dotted",
+        "broken line",
         "sidebar",
         "show",
         "reveal",
@@ -65898,6 +67395,9 @@
         "sidebar",
         "secondary",
         "drawer",
+        "dashed",
+        "dotted",
+        "broken line",
         "show",
         "reveal",
         "padding",
@@ -66065,6 +67565,9 @@
         "lower edge",
         "lower",
         "below",
+        "dashed",
+        "dotted",
+        "broken line",
         "sidebar",
         "primary",
         "show",
@@ -66184,6 +67687,9 @@
         "drawer",
         "browser",
         "webpage",
+        "dashed",
+        "dotted",
+        "broken line",
         "menu bar",
         "show",
         "reveal",
@@ -66736,7 +68242,8 @@
         "excitement",
         "exciting",
         "excites",
-        "confetti"
+        "confetti",
+        "welcome"
       ]
     },
     "pause": {
@@ -68347,7 +69854,8 @@
       },
       "tags": [
         "money",
-        "savings"
+        "savings",
+        "budget"
       ]
     },
     "pilcrow": {
@@ -68531,7 +70039,9 @@
         "drug",
         "prescription",
         "tablet",
-        "pharmacy"
+        "pharmacy",
+        "sick",
+        "illness"
       ]
     },
     "pill-bottle": {
@@ -68572,6 +70082,8 @@
         "prescription",
         "tablet",
         "pharmacy",
+        "sick",
+        "illness",
         "supplement",
         "vitamin",
         "capsule",
@@ -69366,6 +70878,8 @@
         "camera",
         "lightning",
         "quick",
+        "thunder",
+        "thunderbolt",
         "charge",
         "charging",
         "battery",
@@ -69812,7 +71326,8 @@
         "restart",
         "button",
         "keyboard",
-        "troubleshoot"
+        "troubleshoot",
+        "quit"
       ]
     },
     "power-off": {
@@ -69860,6 +71375,7 @@
         "button",
         "keyboard",
         "troubleshoot",
+        "quit",
         "disable",
         "hide",
         "restricted",
@@ -69932,7 +71448,11 @@
         "office",
         "meeting",
         "project",
-        "planning"
+        "planning",
+        "ppt",
+        "pptx",
+        "powerpoint",
+        "slides"
       ]
     },
     "printer": {
@@ -70078,6 +71598,9 @@
         "ticked",
         "task",
         "todo",
+        "selected",
+        "okay",
+        "ok",
         "printed"
       ]
     },
@@ -70136,6 +71659,9 @@
         "times",
         "ex",
         "×",
+        "deny",
+        "decline",
+        "refuse",
         "error"
       ]
     },
@@ -70360,6 +71886,70 @@
         "url",
         "information",
         "digital"
+      ]
+    },
+    "question-mark": {
+      "en": {
+        "description": "Draws a question mark, a curved stroke above a dot. It usually signals help, FAQ, or an unknown value.",
+        "synonyms": [
+          "question",
+          "help",
+          "faq",
+          "hint",
+          "support",
+          "unknown",
+          "doubt",
+          "query",
+          "quiz",
+          "inquiry"
+        ]
+      },
+      "fingerprint": "8999e99547e2",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Изображён знак вопроса: изогнутая линия над точкой. Обозначает помощь, справку или неизвестное.",
+        "synonyms": [
+          "вопрос",
+          "справка",
+          "помощь",
+          "подсказка",
+          "фака",
+          "неизвестно",
+          "сомнение",
+          "знак вопроса",
+          "инструкция",
+          "поддержка"
+        ]
+      },
+      "tags": [
+        "help",
+        "assistance",
+        "support",
+        "guide",
+        "tutorial",
+        "manual",
+        "faq",
+        "hint",
+        "query",
+        "unknown",
+        "unidentified",
+        "unspecified",
+        "uncertain",
+        "unsure",
+        "doubt",
+        "undetermined",
+        "missing",
+        "to be determined",
+        "mystery",
+        "question",
+        "question mark",
+        "?",
+        "quiz",
+        "inquiry",
+        "enquiry",
+        "ask",
+        "punctuation",
+        "symbol"
       ]
     },
     "quote": {
@@ -70972,7 +72562,8 @@
         "currency",
         "dollar",
         "usd",
-        "$"
+        "$",
+        "cashier"
       ]
     },
     "receipt-cent": {
@@ -71018,6 +72609,7 @@
         "dollar",
         "usd",
         "$",
+        "cashier",
         "cents",
         "¢"
       ]
@@ -71065,6 +72657,7 @@
         "dollar",
         "usd",
         "$",
+        "cashier",
         "€"
       ]
     },
@@ -71111,6 +72704,7 @@
         "dollar",
         "usd",
         "$",
+        "cashier",
         "inr",
         "₹"
       ]
@@ -71158,6 +72752,7 @@
         "dollar",
         "usd",
         "$",
+        "cashier",
         "jpy",
         "¥"
       ]
@@ -71205,6 +72800,7 @@
         "dollar",
         "usd",
         "$",
+        "cashier",
         "money",
         "cash",
         "banknote",
@@ -71278,6 +72874,7 @@
         "dollar",
         "usd",
         "$",
+        "cashier",
         "rub",
         "₽"
       ]
@@ -71325,6 +72922,7 @@
         "dollar",
         "usd",
         "$",
+        "cashier",
         "chf",
         "₣"
       ]
@@ -71370,6 +72968,7 @@
         "dollar",
         "usd",
         "$",
+        "cashier",
         "details",
         "small print",
         "terms",
@@ -71420,6 +73019,7 @@
         "dollar",
         "usd",
         "$",
+        "cashier",
         "try",
         "₺"
       ]
@@ -72712,7 +74312,9 @@
         "boost",
         "launch",
         "space",
-        "version"
+        "version",
+        "deploy",
+        "deployment"
       ]
     },
     "rocking-chair": {
@@ -73001,7 +74603,9 @@
         "timeline",
         "version",
         "time machine",
-        "ccw"
+        "ccw",
+        "changelog",
+        "release notes"
       ]
     },
     "rotate-ccw-key": {
@@ -73355,32 +74959,34 @@
     },
     "route": {
       "en": {
-        "description": "Draws a winding line connecting two circular endpoints, representing a route or path between stops.",
+        "description": "A winding line connecting two circular points at its ends, representing a route or path between locations.",
         "synonyms": [
           "path",
-          "directions",
           "navigation",
+          "directions",
           "journey",
+          "waypoints",
           "stops",
-          "stations",
+          "map",
           "trip",
-          "planner"
+          "gps"
         ]
       },
-      "fingerprint": "de9ac573f2a4",
+      "fingerprint": "d95c13619976",
       "promptVersion": 1,
       "ru": {
-        "description": "Изображает извилистую линию с кружками на концах, обозначающую маршрут между двумя точками.",
+        "description": "Изображена извилистая линия с двумя кружками на концах, обозначающая маршрут между двумя точками.",
         "synonyms": [
           "маршрут",
           "путь",
-          "дорога",
           "навигация",
-          "карта маршрута",
-          "остановки",
-          "станции",
+          "карта",
+          "дорога",
           "путешествие",
-          "планировщик"
+          "остановки",
+          "направление",
+          "план маршрута",
+          "геолокация"
         ]
       },
       "tags": [
@@ -73389,7 +74995,82 @@
         "planner",
         "points",
         "stops",
-        "stations"
+        "stations",
+        "direction",
+        "right",
+        "flow",
+        "reroute",
+        "detour",
+        "navigate",
+        "forward",
+        "auto",
+        "map",
+        "waypoint",
+        "gps",
+        "turn",
+        "location",
+        "directional"
+      ]
+    },
+    "route-arrow-right": {
+      "en": {
+        "description": "A winding line starts at a circle point and ends in a right-pointing arrow, representing a route or path with turns.",
+        "synonyms": [
+          "route",
+          "path",
+          "navigation",
+          "journey",
+          "directions",
+          "waypoint",
+          "detour",
+          "trip",
+          "forward arrow"
+        ]
+      },
+      "fingerprint": "19e2dd1199b6",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Изображена извилистая линия от кружка-точки к стрелке вправо, обозначающая маршрут или путь с поворотами.",
+        "synonyms": [
+          "маршрут",
+          "путь",
+          "навигация",
+          "дорога",
+          "стрелка вправо",
+          "поворот",
+          "путешествие",
+          "карта",
+          "направление"
+        ]
+      },
+      "tags": [
+        "path",
+        "journey",
+        "planner",
+        "points",
+        "stops",
+        "stations",
+        "direction",
+        "right",
+        "flow",
+        "reroute",
+        "detour",
+        "navigate",
+        "forward",
+        "auto",
+        "map",
+        "waypoint",
+        "gps",
+        "turn",
+        "location",
+        "directional",
+        "movement",
+        "horizontal",
+        "rightward",
+        "rightwards",
+        "east",
+        "one-way",
+        "arrow"
       ]
     },
     "route-off": {
@@ -73431,6 +75112,20 @@
         "points",
         "stops",
         "stations",
+        "direction",
+        "right",
+        "flow",
+        "reroute",
+        "detour",
+        "navigate",
+        "forward",
+        "auto",
+        "map",
+        "waypoint",
+        "gps",
+        "turn",
+        "location",
+        "directional",
         "off",
         "disable",
         "hide",
@@ -74309,6 +76004,9 @@
         "ticked",
         "task",
         "todo",
+        "selected",
+        "okay",
+        "ok",
         "save",
         "save-check",
         "floppy-disk",
@@ -75171,6 +76869,7 @@
         "zoom",
         "inspection",
         "visual search",
+        "loupe",
         "preview",
         "expand",
         "fullscreen",
@@ -75435,6 +77134,9 @@
         "chop",
         "stationery",
         "crafts",
+        "dashed",
+        "dotted",
+        "broken line",
         "cut here",
         "along",
         "instructions",
@@ -75765,7 +77467,9 @@
         "script",
         "story",
         "code",
-        "coding"
+        "coding",
+        "changelog",
+        "release notes"
       ]
     },
     "search": {
@@ -75821,6 +77525,7 @@
         "zoom",
         "inspection",
         "visual search",
+        "loupe",
         "enlarge"
       ]
     },
@@ -75877,6 +77582,7 @@
         "zoom",
         "inspection",
         "visual search",
+        "loupe",
         "enlarge",
         "checkmark",
         "done",
@@ -75893,6 +77599,9 @@
         "ticked",
         "task",
         "todo",
+        "selected",
+        "okay",
+        "ok",
         "found"
       ]
     },
@@ -75950,10 +77659,13 @@
         "zoom",
         "inspection",
         "visual search",
+        "loupe",
         "enlarge",
         "coding",
         "programming",
         "development",
+        "developer",
+        "dev",
         "grep",
         "chevrons",
         "<>"
@@ -76012,6 +77724,7 @@
         "zoom",
         "inspection",
         "visual search",
+        "loupe",
         "enlarge",
         "alert",
         "warning",
@@ -76025,6 +77738,11 @@
         "exclamation mark",
         "exclamation point",
         "!",
+        "critical",
+        "urgent",
+        "severity",
+        "punctuation",
+        "symbol",
         "stop",
         "anomaly"
       ]
@@ -76080,6 +77798,7 @@
         "zoom",
         "inspection",
         "visual search",
+        "loupe",
         "enlarge",
         "stop",
         "clear",
@@ -76143,6 +77862,7 @@
         "zoom",
         "inspection",
         "visual search",
+        "loupe",
         "enlarge",
         "x",
         "remove",
@@ -76162,7 +77882,13 @@
         "times",
         "ex",
         "×",
-        "stop"
+        "deny",
+        "decline",
+        "refuse",
+        "stop",
+        "404",
+        "not found",
+        "page not found"
       ]
     },
     "section": {
@@ -76246,7 +77972,9 @@
         "mail",
         "paper airplane",
         "paper aeroplane",
-        "submit"
+        "submit",
+        "invite",
+        "invitation"
       ]
     },
     "send-horizontal": {
@@ -76286,7 +78014,9 @@
         "mail",
         "paper airplane",
         "paper aeroplane",
-        "submit"
+        "submit",
+        "invite",
+        "invitation"
       ]
     },
     "send-to-back": {
@@ -76951,7 +78681,10 @@
       "tags": [
         "spreadsheets",
         "table",
-        "excel"
+        "excel",
+        "csv",
+        "xls",
+        "xlsx"
       ]
     },
     "shell": {
@@ -77393,6 +79126,9 @@
         "ticked",
         "task",
         "todo",
+        "selected",
+        "okay",
+        "ok",
         "secured",
         "guarded",
         "defended",
@@ -77413,7 +79149,10 @@
         "cleaned",
         "disinfected",
         "uninfected",
-        "checked"
+        "checked",
+        "insurance",
+        "guarantee",
+        "warranty"
       ]
     },
     "shield-cog": {
@@ -77806,6 +79545,11 @@
         "exclamation mark",
         "exclamation point",
         "!",
+        "critical",
+        "urgent",
+        "severity",
+        "punctuation",
+        "symbol",
         "unshielded",
         "insecure",
         "unsecured",
@@ -77840,7 +79584,6 @@
         "uncertified",
         "emergency",
         "attention",
-        "urgent",
         "alarm",
         "attacked",
         "damaged",
@@ -78574,35 +80317,35 @@
     },
     "shield-question-mark": {
       "en": {
-        "description": "A shield containing a question mark, indicating unknown, unverified, or potentially unsafe protection status.",
+        "description": "Outlined shield with a question mark inside, usually meaning unknown security status or help and information.",
         "synonyms": [
           "shield",
           "security",
           "protection",
-          "unknown",
-          "vulnerability",
-          "unverified",
-          "threat",
-          "risk",
+          "privacy",
+          "question",
           "help",
-          "safety check"
+          "safety",
+          "unverified",
+          "vulnerability",
+          "support"
         ]
       },
-      "fingerprint": "2835e93eb064",
+      "fingerprint": "f54cfad887b5",
       "promptVersion": 1,
       "ru": {
-        "description": "Щит с знаком вопроса внутри, обозначает неизвестную, непроверенную или потенциально небезопасную защиту.",
+        "description": "Изображён контур щита с знаком вопроса внутри; обозначает неизвестную или неподтверждённую защиту, справку.",
         "synonyms": [
           "щит",
-          "вопрос",
           "безопасность",
           "защита",
-          "уязвимость",
-          "неизвестно",
-          "проверка",
+          "вопрос",
+          "справка",
+          "помощь",
+          "защищённость",
+          "приватность",
           "угроза",
-          "риск",
-          "знак вопроса"
+          "проверка"
         ]
       },
       "tags": [
@@ -78655,13 +80398,20 @@
         "cadet",
         "scout",
         "help",
+        "assistance",
+        "support",
         "guide",
         "tutorial",
         "manual",
+        "faq",
+        "hint",
+        "query",
         "unknown",
         "unidentified",
         "unspecified",
         "uncertain",
+        "unsure",
+        "doubt",
         "undetermined",
         "missing",
         "to be determined",
@@ -78669,6 +80419,12 @@
         "question",
         "question mark",
         "?",
+        "quiz",
+        "inquiry",
+        "enquiry",
+        "ask",
+        "punctuation",
+        "symbol",
         "unshielded",
         "insecure",
         "unsecured",
@@ -78787,7 +80543,9 @@
         "member",
         "client",
         "participant",
-        "guest"
+        "guest",
+        "customer",
+        "username"
       ]
     },
     "shield-x": {
@@ -78890,6 +80648,9 @@
         "times",
         "ex",
         "×",
+        "deny",
+        "decline",
+        "refuse",
         "unshielded",
         "insecure",
         "unsecured",
@@ -80782,6 +82543,8 @@
         "client",
         "participant",
         "guest",
+        "customer",
+        "username",
         "avatar",
         "owner",
         "authentication"
@@ -81372,6 +83135,9 @@
         "ticked",
         "task",
         "todo",
+        "selected",
+        "okay",
+        "ok",
         "spelling",
         "error",
         "mistake",
@@ -81435,6 +83201,9 @@
         "ticked",
         "task",
         "todo",
+        "selected",
+        "okay",
+        "ok",
         "spelling",
         "error",
         "mistake",
@@ -81480,11 +83249,16 @@
         ]
       },
       "tags": [
+        "stroke",
         "path",
-        "pen",
-        "tool",
+        "segment",
+        "vector",
+        "graphics",
+        "design",
         "shape",
         "curve",
+        "pen",
+        "tool",
         "draw"
       ]
     },
@@ -81520,17 +83294,21 @@
         ]
       },
       "tags": [
+        "stroke",
         "path",
-        "pen",
-        "tool",
+        "segment",
+        "vector",
+        "graphics",
+        "design",
         "shape",
         "curve",
+        "pen",
+        "tool",
         "draw",
         "node",
         "click",
         "pointer",
-        "target",
-        "vector"
+        "target"
       ]
     },
     "split": {
@@ -81960,6 +83738,133 @@
         "button"
       ]
     },
+    "square-arrow-down-enter": {
+      "en": {
+        "description": "A rounded square open at the top with a downward arrow pointing inside, meaning import, download, or insert.",
+        "synonyms": [
+          "download",
+          "import",
+          "insert",
+          "incoming",
+          "save",
+          "inbox",
+          "arrow down",
+          "enter",
+          "input",
+          "receive"
+        ]
+      },
+      "fingerprint": "10ecc793380e",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Квадратная рамка с открытым верхом и стрелкой, направленной вниз внутрь; обозначает загрузку, импорт или ввод данных.",
+        "synonyms": [
+          "скачать",
+          "загрузка",
+          "импорт",
+          "вставить",
+          "вход",
+          "стрелка вниз",
+          "внутрь",
+          "ввод",
+          "входящие",
+          "сохранить"
+        ]
+      },
+      "tags": [
+        "direction",
+        "movement",
+        "vertical",
+        "downward",
+        "downwards",
+        "south",
+        "descend",
+        "page down",
+        "in",
+        "inside",
+        "inwards",
+        "input",
+        "incoming",
+        "import",
+        "insert",
+        "entry",
+        "entrance",
+        "ingress",
+        "pane",
+        "grid",
+        "resize",
+        "window",
+        "merge",
+        "resizing",
+        "download",
+        "press",
+        "cell",
+        "split"
+      ]
+    },
+    "square-arrow-down-exit": {
+      "en": {
+        "description": "A rounded open square with a downward arrow inside, usually meaning export, exit, or move down.",
+        "synonyms": [
+          "export",
+          "download",
+          "save out",
+          "arrow down",
+          "output",
+          "leave",
+          "outbound",
+          "descend",
+          "eject",
+          "logout"
+        ]
+      },
+      "fingerprint": "ac550befa250",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Квадрат с незамкнутым контуром и стрелкой вниз внутри, обозначает экспорт, выход или перемещение вниз.",
+        "synonyms": [
+          "экспорт",
+          "выход",
+          "вниз",
+          "стрелка вниз",
+          "выгрузить",
+          "скачать",
+          "наружу",
+          "вынести",
+          "покинуть",
+          "сохранить"
+        ]
+      },
+      "tags": [
+        "direction",
+        "movement",
+        "vertical",
+        "downward",
+        "downwards",
+        "south",
+        "descend",
+        "page down",
+        "out",
+        "outside",
+        "outwards",
+        "output",
+        "outgoing",
+        "export",
+        "leave",
+        "egress",
+        "exit",
+        "pane",
+        "grid",
+        "resize",
+        "window",
+        "merge",
+        "resizing",
+        "pour",
+        "empty",
+        "cell",
+        "expand"
+      ]
+    },
     "square-arrow-down-left": {
       "en": {
         "description": "A rounded square frame containing a diagonal arrow pointing down-left, usually meaning south-west direction or collapse.",
@@ -82004,6 +83909,116 @@
         "turn"
       ]
     },
+    "square-arrow-down-left-enter": {
+      "en": {
+        "description": "A rounded square with a diagonal arrow pointing inward toward the bottom-left corner, usually meaning import, enter, or collapse inward.",
+        "synonyms": [
+          "arrow down left",
+          "import",
+          "enter",
+          "inward",
+          "incoming",
+          "insert",
+          "collapse",
+          "southwest arrow"
+        ]
+      },
+      "fingerprint": "bb9f4c66713a",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Квадрат со скруглёнными углами и стрелкой, направленной внутрь к левому нижнему углу; означает вход, импорт или сворачивание внутрь.",
+        "synonyms": [
+          "стрелка вниз влево",
+          "вход",
+          "импорт",
+          "внутрь",
+          "вставить",
+          "сворачивание",
+          "диагональная стрелка",
+          "направление юго-запад"
+        ]
+      },
+      "tags": [
+        "direction",
+        "movement",
+        "diagonal",
+        "southwest",
+        "south-west",
+        "south west",
+        "in",
+        "inside",
+        "inwards",
+        "input",
+        "incoming",
+        "import",
+        "insert",
+        "entry",
+        "entrance",
+        "ingress",
+        "pane",
+        "grid",
+        "resize",
+        "window",
+        "merge",
+        "resizing",
+        "collapse",
+        "exit",
+        "close",
+        "return",
+        "dock"
+      ]
+    },
+    "square-arrow-down-left-exit": {
+      "en": {
+        "description": "A rounded square with a gap at the bottom left and a diagonal arrow pointing outward southwest; usually means expanding, exiting, or moving outward.",
+        "synonyms": [
+          "arrow",
+          "down left",
+          "diagonal",
+          "outward",
+          "exit",
+          "expand",
+          "south west",
+          "direction",
+          "open",
+          "navigation"
+        ]
+      },
+      "fingerprint": "9855e42199d1",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Квадрат с разрывом в нижнем левом углу и стрелкой, указывающей наружу на юго-запад; обычно означает выход, развертывание или перемещение вниз-влево.",
+        "synonyms": [
+          "стрелка",
+          "вниз влево",
+          "диагональ",
+          "наружу",
+          "выход",
+          "развернуть",
+          "юго-запад",
+          "направление",
+          "открыть",
+          "навигация"
+        ]
+      },
+      "tags": [
+        "direction",
+        "movement",
+        "diagonal",
+        "southwest",
+        "south-west",
+        "south west",
+        "out",
+        "outside",
+        "outwards",
+        "output",
+        "outgoing",
+        "export",
+        "leave",
+        "egress",
+        "exit"
+      ]
+    },
     "square-arrow-down-right": {
       "en": {
         "description": "A rounded square button containing a diagonal arrow pointing down and to the right, usually meaning south-east direction or expand.",
@@ -82044,6 +84059,113 @@
         "keyboard",
         "button",
         "turn"
+      ]
+    },
+    "square-arrow-down-right-enter": {
+      "en": {
+        "description": "A rounded square with an open corner and a diagonal arrow pointing down-right inward, meaning enter, import, or move inside.",
+        "synonyms": [
+          "arrow down right",
+          "diagonal arrow",
+          "enter",
+          "import",
+          "inwards",
+          "insert",
+          "incoming",
+          "entry",
+          "move inside",
+          "southeast"
+        ]
+      },
+      "fingerprint": "9bd3d0685a29",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Квадрат с открытым углом и стрелкой, направленной внутрь по диагонали вниз-вправо; обозначает вход, импорт или перемещение внутрь.",
+        "synonyms": [
+          "стрелка вниз вправо",
+          "диагональ",
+          "вход",
+          "внутрь",
+          "импорт",
+          "войти",
+          "вставить",
+          "сжать окно",
+          "перемещение внутрь",
+          "вставка"
+        ]
+      },
+      "tags": [
+        "direction",
+        "movement",
+        "diagonal",
+        "southeast",
+        "south-east",
+        "south east",
+        "in",
+        "inside",
+        "inwards",
+        "input",
+        "incoming",
+        "import",
+        "insert",
+        "entry",
+        "entrance",
+        "ingress",
+        "pane",
+        "grid",
+        "resize",
+        "window",
+        "merge",
+        "resizing"
+      ]
+    },
+    "square-arrow-down-right-exit": {
+      "en": {
+        "description": "A rounded square with a diagonal arrow pointing from its center to the bottom-right corner, usually meaning expand, open externally, or fullscreen.",
+        "synonyms": [
+          "expand",
+          "fullscreen",
+          "open external",
+          "arrow down right",
+          "diagonal",
+          "outward",
+          "south east",
+          "maximize",
+          "square arrow"
+        ]
+      },
+      "fingerprint": "4c43dd3e6b31",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Квадрат с диагональной стрелкой, направленной из центра в правый нижний угол; обычно означает развернуть, открыть во весь экран или вынести наружу.",
+        "synonyms": [
+          "развернуть",
+          "во весь экран",
+          "открыть",
+          "стрелка вниз вправо",
+          "диагональ",
+          "наружу",
+          "юго-восток",
+          "увеличить",
+          "квадрат со стрелкой"
+        ]
+      },
+      "tags": [
+        "direction",
+        "movement",
+        "diagonal",
+        "southeast",
+        "south-east",
+        "south east",
+        "out",
+        "outside",
+        "outwards",
+        "output",
+        "outgoing",
+        "export",
+        "leave",
+        "egress",
+        "exit"
       ]
     },
     "square-arrow-left": {
@@ -82098,174 +84220,130 @@
         "<-"
       ]
     },
-    "square-arrow-out-down-left": {
+    "square-arrow-left-enter": {
       "en": {
-        "description": "A rounded square with a gap at the bottom left and a diagonal arrow pointing outward southwest; usually means expanding, exiting, or moving outward.",
+        "description": "A rounded square with an open right side and a left-pointing arrow inside, usually meaning enter, input or import.",
         "synonyms": [
-          "arrow",
-          "down left",
-          "diagonal",
-          "outward",
+          "enter",
+          "login",
+          "sign in",
+          "input",
+          "import",
+          "arrow left",
+          "incoming",
+          "entrance",
+          "inward",
+          "back"
+        ]
+      },
+      "fingerprint": "0735bd58df84",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Рисунок показывает квадрат с незамкнутым правым краем и стрелку влево внутри, что означает вход или ввод внутрь.",
+        "synonyms": [
+          "вход",
+          "войти",
+          "ввод",
+          "импорт",
+          "стрелка влево",
+          "назад",
+          "внутрь",
+          "поместить",
+          "влево",
+          "входящий"
+        ]
+      },
+      "tags": [
+        "direction",
+        "movement",
+        "horizontal",
+        "leftward",
+        "leftwards",
+        "west",
+        "in",
+        "inside",
+        "inwards",
+        "input",
+        "incoming",
+        "import",
+        "insert",
+        "entry",
+        "entrance",
+        "ingress",
+        "pane",
+        "grid",
+        "resize",
+        "window",
+        "merge",
+        "resizing",
+        "reverse",
+        "back",
+        "<-",
+        "cell",
+        "expand",
+        "collapse",
+        "split"
+      ]
+    },
+    "square-arrow-left-exit": {
+      "en": {
+        "description": "Draws a rounded square with an open left side and a leftward arrow, commonly meaning exit, logout, or export.",
+        "synonyms": [
           "exit",
-          "expand",
-          "south west",
-          "direction",
-          "open",
-          "navigation"
+          "logout",
+          "sign out",
+          "export",
+          "leave",
+          "log out",
+          "leftward arrow",
+          "back",
+          "egress",
+          "output"
         ]
       },
-      "fingerprint": "9855e42199d1",
+      "fingerprint": "50b97cdd7083",
       "promptVersion": 1,
       "ru": {
-        "description": "Квадрат с разрывом в нижнем левом углу и стрелкой, указывающей наружу на юго-запад; обычно означает выход, развертывание или перемещение вниз-влево.",
+        "description": "Рисует квадрат с открытой левой стороной и стрелку, направленную влево от него; обозначает выход, выгрузку или возврат назад.",
         "synonyms": [
-          "стрелка",
-          "вниз влево",
-          "диагональ",
-          "наружу",
           "выход",
-          "развернуть",
-          "юго-запад",
-          "направление",
-          "открыть",
-          "навигация"
-        ]
-      },
-      "tags": [
-        "direction",
-        "movement",
-        "diagonal",
-        "southwest",
-        "south-west",
-        "south west",
-        "outwards"
-      ]
-    },
-    "square-arrow-out-down-right": {
-      "en": {
-        "description": "A rounded square with a diagonal arrow pointing from its center to the bottom-right corner, usually meaning expand, open externally, or fullscreen.",
-        "synonyms": [
-          "expand",
-          "fullscreen",
-          "open external",
-          "arrow down right",
-          "diagonal",
-          "outward",
-          "south east",
-          "maximize",
-          "square arrow"
-        ]
-      },
-      "fingerprint": "4c43dd3e6b31",
-      "promptVersion": 1,
-      "ru": {
-        "description": "Квадрат с диагональной стрелкой, направленной из центра в правый нижний угол; обычно означает развернуть, открыть во весь экран или вынести наружу.",
-        "synonyms": [
-          "развернуть",
-          "во весь экран",
-          "открыть",
-          "стрелка вниз вправо",
-          "диагональ",
-          "наружу",
-          "юго-восток",
-          "увеличить",
-          "квадрат со стрелкой"
-        ]
-      },
-      "tags": [
-        "direction",
-        "movement",
-        "diagonal",
-        "southeast",
-        "south-east",
-        "south east",
-        "outwards"
-      ]
-    },
-    "square-arrow-out-up-left": {
-      "en": {
-        "description": "A rounded square with a gap at the top-left corner and an arrow pointing diagonally up-left; usually means expand or open outward.",
-        "synonyms": [
-          "diagonal arrow",
-          "north-west arrow",
-          "expand",
-          "fullscreen",
-          "outward",
-          "open external",
-          "arrow up left",
-          "maximize",
-          "pop out"
-        ]
-      },
-      "fingerprint": "2392afcd96fb",
-      "promptVersion": 1,
-      "ru": {
-        "description": "Квадрат с незамкнутым контуром и стрелкой, направленной из угла вверх-влево; обычно означает открыть во весь экран или развернуть наружу.",
-        "synonyms": [
-          "стрелка влево вверх",
-          "диагональная стрелка",
-          "развернуть",
-          "во весь экран",
-          "наружу",
-          "квадрат со стрелкой",
-          "северо-запад",
           "выйти",
-          "открыть в окне"
+          "выгрузка",
+          "экспорт",
+          "назад",
+          "влево",
+          "стрелка влево",
+          "покинуть",
+          "закрыть панель",
+          "отправить наружу"
         ]
       },
       "tags": [
         "direction",
         "movement",
-        "diagonal",
-        "northwest",
-        "north-west",
-        "north west",
-        "outwards"
-      ]
-    },
-    "square-arrow-out-up-right": {
-      "en": {
-        "description": "A rounded square with a gap in its outline and a diagonal arrow pointing up-right, usually meaning open externally or in a new window.",
-        "synonyms": [
-          "external link",
-          "open in new window",
-          "launch",
-          "open link",
-          "share",
-          "diagonal arrow",
-          "go out",
-          "navigate outside",
-          "redirect"
-        ]
-      },
-      "fingerprint": "f9a5baf162fd",
-      "promptVersion": 1,
-      "ru": {
-        "description": "Квадрат с незамкнутым контуром и стрелка, указывающая вверх и вправо; обозначает открытие во внешнем окне или внешнюю ссылку.",
-        "synonyms": [
-          "открыть",
-          "внешняя ссылка",
-          "переход",
-          "открыть в новом окне",
-          "стрелка вверх вправо",
-          "наружу",
-          "поделиться",
-          "диагональная стрелка",
-          "ссылка"
-        ]
-      },
-      "tags": [
-        "direction",
-        "movement",
-        "diagonal",
-        "northeast",
-        "north-east",
-        "north east",
+        "horizontal",
+        "leftward",
+        "leftwards",
+        "west",
+        "out",
+        "outside",
         "outwards",
-        "share",
-        "open",
-        "external",
-        "link"
+        "output",
+        "outgoing",
+        "export",
+        "leave",
+        "egress",
+        "exit",
+        "pane",
+        "grid",
+        "resize",
+        "window",
+        "merge",
+        "resizing",
+        "back",
+        "reverse",
+        "<-",
+        "collapse"
       ]
     },
     "square-arrow-right": {
@@ -82322,33 +84400,35 @@
     },
     "square-arrow-right-enter": {
       "en": {
-        "description": "A rounded square with an opening on the left and a right-pointing arrow entering it, meaning enter, import, or move inside.",
+        "description": "A rounded square with an open left side and a right-pointing arrow entering it, meaning sign in, import or entry.",
         "synonyms": [
-          "enter",
-          "login",
           "sign in",
+          "log in",
+          "login",
+          "enter",
           "import",
-          "insert",
-          "input",
+          "entrance",
           "arrow right",
-          "move inside",
-          "log in"
+          "incoming",
+          "auth",
+          "join"
         ]
       },
-      "fingerprint": "5688d345c0d7",
+      "fingerprint": "2f935fbd290b",
       "promptVersion": 1,
       "ru": {
-        "description": "Квадрат с незамкнутым левым краем и стрелкой, направленной вправо внутрь; обозначает вход, импорт или перемещение внутрь.",
+        "description": "Квадрат с открытой левой стороной и стрелкой, направленной вправо внутрь; обозначает вход, импорт или авторизацию.",
         "synonyms": [
           "вход",
           "войти",
-          "импорт",
-          "вставить",
-          "внутрь",
-          "стрелка вправо",
           "логин",
-          "ввод",
-          "открыть"
+          "авторизация",
+          "импорт",
+          "стрелка вправо",
+          "зайти",
+          "впустить",
+          "аутентификация",
+          "выход из системы"
         ]
       },
       "tags": [
@@ -82358,46 +84438,68 @@
         "rightward",
         "rightwards",
         "east",
-        "left",
         "in",
         "inside",
+        "inwards",
         "input",
-        "insert",
-        "source",
+        "incoming",
         "import",
+        "insert",
+        "entry",
+        "entrance",
+        "ingress",
+        "pane",
+        "grid",
+        "resize",
+        "window",
+        "merge",
+        "resizing",
+        "left",
+        "source",
         "place",
-        "->"
+        "->",
+        "sign in",
+        "log in",
+        "login",
+        "join",
+        "auth",
+        "data flow",
+        "node editor",
+        "panel",
+        "expand"
       ]
     },
     "square-arrow-right-exit": {
       "en": {
-        "description": "A square with an open right side and a right-pointing arrow, usually meaning exit, logout or export.",
+        "description": "A rounded square with an open right side and a right-pointing arrow, usually meaning exit, sign out, or export.",
         "synonyms": [
           "exit",
-          "logout",
           "sign out",
+          "logout",
+          "log out",
           "export",
           "leave",
-          "output",
-          "log out",
           "arrow right",
+          "output",
+          "egress",
           "door"
         ]
       },
-      "fingerprint": "8c43a9f64776",
+      "fingerprint": "f44b2b881ec8",
       "promptVersion": 1,
       "ru": {
-        "description": "Квадрат с открытой правой стороной и стрелкой, направленной вправо; обычно означает выход или экспорт.",
+        "description": "Квадрат с незамкнутой правой стороной и стрелкой, направленной вправо наружу; обозначает выход, экспорт или отправку.",
         "synonyms": [
           "выход",
           "выйти",
           "выход из системы",
           "экспорт",
-          "вынести",
-          "логаут",
-          "открыть наружу",
+          "покинуть",
           "стрелка вправо",
-          "дверь"
+          "уйти",
+          "вынести",
+          "разлогиниться",
+          "отправить"
         ]
       },
       "tags": [
@@ -82409,9 +84511,30 @@
         "east",
         "out",
         "outside",
+        "outwards",
         "output",
+        "outgoing",
         "export",
-        "->"
+        "leave",
+        "egress",
+        "exit",
+        "pane",
+        "grid",
+        "resize",
+        "window",
+        "merge",
+        "resizing",
+        "->",
+        "sign out",
+        "log out",
+        "logout",
+        "auth",
+        "data flow",
+        "node editor",
+        "expand",
+        "panel",
+        "cell",
+        "outbound"
       ]
     },
     "square-arrow-up": {
@@ -82466,6 +84589,123 @@
         "button"
       ]
     },
+    "square-arrow-up-enter": {
+      "en": {
+        "description": "A square with an open bottom edge and an upward arrow inside, usually meaning import, input, or move up.",
+        "synonyms": [
+          "arrow up",
+          "upload",
+          "import",
+          "input",
+          "enter",
+          "up",
+          "square",
+          "ascend"
+        ]
+      },
+      "fingerprint": "92eb01c829b2",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Квадрат с разрывом внизу и стрелкой вверх внутри, означает ввод, импорт или подъём.",
+        "synonyms": [
+          "стрелка вверх",
+          "вверх",
+          "импорт",
+          "ввод",
+          "вход",
+          "загрузка",
+          "квадрат",
+          "подъём"
+        ]
+      },
+      "tags": [
+        "direction",
+        "movement",
+        "vertical",
+        "upward",
+        "upwards",
+        "north",
+        "ascend",
+        "page up",
+        "in",
+        "inside",
+        "inwards",
+        "input",
+        "incoming",
+        "import",
+        "insert",
+        "entry",
+        "entrance",
+        "ingress",
+        "pane",
+        "grid",
+        "resize",
+        "window",
+        "merge",
+        "resizing",
+        "project",
+        "cast",
+        "screen",
+        "projection",
+        "presentation",
+        "expand",
+        "cell"
+      ]
+    },
+    "square-arrow-up-exit": {
+      "en": {
+        "description": "An open square with an upward arrow inside, usually meaning export, upload, share, or exit outward.",
+        "synonyms": [
+          "export",
+          "upload",
+          "share",
+          "exit",
+          "outgoing",
+          "open outside",
+          "eject",
+          "external link"
+        ]
+      },
+      "fingerprint": "36953196ddba",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Открытый квадрат с направленной вверх стрелкой внутри, означает выгрузку, экспорт или вынос наружу.",
+        "synonyms": [
+          "экспорт",
+          "выгрузить",
+          "загрузить наверх",
+          "поделиться",
+          "выход",
+          "стрелка вверх",
+          "вынести",
+          "отправить"
+        ]
+      },
+      "tags": [
+        "direction",
+        "movement",
+        "vertical",
+        "upward",
+        "upwards",
+        "north",
+        "ascend",
+        "page up",
+        "out",
+        "outside",
+        "outwards",
+        "output",
+        "outgoing",
+        "export",
+        "leave",
+        "egress",
+        "exit",
+        "upload",
+        "share",
+        "external link",
+        "pop out",
+        "open in new window"
+      ]
+    },
     "square-arrow-up-left": {
       "en": {
         "description": "A rounded square frame containing an arrow pointing up and left, meaning northwest direction or moving back.",
@@ -82506,6 +84746,114 @@
         "sign",
         "keyboard",
         "button"
+      ]
+    },
+    "square-arrow-up-left-enter": {
+      "en": {
+        "description": "A rounded square with an arrow pointing diagonally up-left into it, usually meaning enter, import or move inward.",
+        "synonyms": [
+          "arrow up left",
+          "diagonal",
+          "enter",
+          "inward",
+          "import",
+          "insert",
+          "incoming",
+          "northwest",
+          "entrance",
+          "resize"
+        ]
+      },
+      "fingerprint": "ea383437884a",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Квадрат со скруглёнными углами и стрелкой, направленной внутрь к левому верхнему углу; обозначает вход, ввод или перемещение внутрь.",
+        "synonyms": [
+          "стрелка влево вверх",
+          "диагональ",
+          "вход",
+          "внутрь",
+          "импорт",
+          "вставить",
+          "входящий",
+          "направление северо-запад",
+          "развернуть",
+          "окно"
+        ]
+      },
+      "tags": [
+        "direction",
+        "movement",
+        "diagonal",
+        "northwest",
+        "north-west",
+        "north west",
+        "in",
+        "inside",
+        "inwards",
+        "input",
+        "incoming",
+        "import",
+        "insert",
+        "entry",
+        "entrance",
+        "ingress",
+        "pane",
+        "grid",
+        "resize",
+        "window",
+        "merge",
+        "resizing",
+        "merging"
+      ]
+    },
+    "square-arrow-up-left-exit": {
+      "en": {
+        "description": "A rounded square with a gap at the top-left corner and an arrow pointing diagonally up-left; usually means expand or open outward.",
+        "synonyms": [
+          "diagonal arrow",
+          "north-west arrow",
+          "expand",
+          "fullscreen",
+          "outward",
+          "open external",
+          "arrow up left",
+          "maximize",
+          "pop out"
+        ]
+      },
+      "fingerprint": "2392afcd96fb",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Квадрат с незамкнутым контуром и стрелкой, направленной из угла вверх-влево; обычно означает открыть во весь экран или развернуть наружу.",
+        "synonyms": [
+          "стрелка влево вверх",
+          "диагональная стрелка",
+          "развернуть",
+          "во весь экран",
+          "наружу",
+          "квадрат со стрелкой",
+          "северо-запад",
+          "выйти",
+          "открыть в окне"
+        ]
+      },
+      "tags": [
+        "direction",
+        "movement",
+        "diagonal",
+        "northwest",
+        "north-west",
+        "north west",
+        "out",
+        "outside",
+        "outwards",
+        "output",
+        "outgoing",
+        "export",
+        "leave",
+        "egress",
+        "exit"
       ]
     },
     "square-arrow-up-right": {
@@ -82550,6 +84898,120 @@
         "share"
       ]
     },
+    "square-arrow-up-right-enter": {
+      "en": {
+        "description": "A rounded square with a diagonal arrow pointing up and right; usually means entering, importing, or moving inward.",
+        "synonyms": [
+          "entrance",
+          "import",
+          "incoming",
+          "inward",
+          "diagonal",
+          "northeast",
+          "input",
+          "expand",
+          "window",
+          "insert"
+        ]
+      },
+      "fingerprint": "d160bbd43735",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Скруглённый квадрат с диагональной стрелкой, направленной вверх и вправо; обычно означает вход, импорт или перемещение внутрь.",
+        "synonyms": [
+          "вход",
+          "импорт",
+          "входящий",
+          "внутрь",
+          "диагональ",
+          "северо-восток",
+          "стрелка вверх вправо",
+          "развернуть",
+          "окно",
+          "ввод"
+        ]
+      },
+      "tags": [
+        "direction",
+        "movement",
+        "diagonal",
+        "northeast",
+        "north-east",
+        "north east",
+        "in",
+        "inside",
+        "inwards",
+        "input",
+        "incoming",
+        "import",
+        "insert",
+        "entry",
+        "entrance",
+        "ingress",
+        "pane",
+        "grid",
+        "resize",
+        "window",
+        "merge",
+        "resizing",
+        "expand",
+        "contract"
+      ]
+    },
+    "square-arrow-up-right-exit": {
+      "en": {
+        "description": "A rounded square with a gap in its outline and a diagonal arrow pointing up-right, usually meaning open externally or in a new window.",
+        "synonyms": [
+          "external link",
+          "open in new window",
+          "launch",
+          "open link",
+          "share",
+          "diagonal arrow",
+          "go out",
+          "navigate outside",
+          "redirect"
+        ]
+      },
+      "fingerprint": "f9a5baf162fd",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Квадрат с незамкнутым контуром и стрелка, указывающая вверх и вправо; обозначает открытие во внешнем окне или внешнюю ссылку.",
+        "synonyms": [
+          "открыть",
+          "внешняя ссылка",
+          "переход",
+          "открыть в новом окне",
+          "стрелка вверх вправо",
+          "наружу",
+          "поделиться",
+          "диагональная стрелка",
+          "ссылка"
+        ]
+      },
+      "tags": [
+        "direction",
+        "movement",
+        "diagonal",
+        "northeast",
+        "north-east",
+        "north east",
+        "out",
+        "outside",
+        "outwards",
+        "output",
+        "outgoing",
+        "export",
+        "leave",
+        "egress",
+        "exit",
+        "share",
+        "open",
+        "external",
+        "link",
+        "redirect"
+      ]
+    },
     "square-asterisk": {
       "en": {
         "description": "An asterisk inside a rounded square, usually meaning a password, a required field, or a wildcard.",
@@ -82592,7 +85054,9 @@
         "multiplication",
         "glob pattern",
         "wildcard",
-        "*"
+        "*",
+        "required",
+        "mandatory"
       ]
     },
     "square-bookmark": {
@@ -82665,6 +85129,9 @@
         ]
       },
       "tags": [
+        "dashed",
+        "dotted",
+        "broken line",
         "cut",
         "snippet",
         "chop",
@@ -82705,10 +85172,12 @@
         ]
       },
       "tags": [
+        "dashed",
+        "dotted",
+        "broken line",
         "reflect",
         "mirror",
-        "alignment",
-        "dashed"
+        "alignment"
       ]
     },
     "square-centerline-dashed-vertical": {
@@ -82745,10 +85214,12 @@
         ]
       },
       "tags": [
+        "dashed",
+        "dotted",
+        "broken line",
         "reflect",
         "mirror",
-        "alignment",
-        "dashed"
+        "alignment"
       ]
     },
     "square-chart-gantt": {
@@ -82794,6 +85265,10 @@
         "reporting",
         "data visualisation",
         "visualisation",
+        "analyze",
+        "kpi",
+        "metrics",
+        "insights",
         "timeline",
         "planning",
         "projects",
@@ -82864,7 +85339,10 @@
         "valid",
         "ticked",
         "task",
-        "todo"
+        "todo",
+        "selected",
+        "okay",
+        "ok"
       ]
     },
     "square-check-big": {
@@ -82915,7 +85393,10 @@
         "valid",
         "ticked",
         "task",
-        "todo"
+        "todo",
+        "selected",
+        "okay",
+        "ok"
       ]
     },
     "square-chevron-down": {
@@ -83432,6 +85913,8 @@
         "coding",
         "programming",
         "development",
+        "developer",
+        "dev",
         "gist",
         "source",
         "html",
@@ -83470,12 +85953,14 @@
         ]
       },
       "tags": [
+        "dashed",
+        "dotted",
+        "broken line",
         "selection",
         "square",
         "rectangular",
         "marquee",
         "tool",
-        "dashed",
         "box",
         "region",
         "area",
@@ -83514,6 +85999,9 @@
         ]
       },
       "tags": [
+        "dashed",
+        "dotted",
+        "broken line",
         "rectangle",
         "aspect ratio",
         "1:1",
@@ -83556,6 +86044,9 @@
         ]
       },
       "tags": [
+        "dashed",
+        "dotted",
+        "broken line",
         "rectangle",
         "aspect ratio",
         "1:1",
@@ -83564,7 +86055,9 @@
         "code",
         "coding",
         "programming",
-        "development"
+        "development",
+        "developer",
+        "dev"
       ]
     },
     "square-dashed-kanban": {
@@ -83601,6 +86094,9 @@
         ]
       },
       "tags": [
+        "dashed",
+        "dotted",
+        "broken line",
         "projects",
         "manage",
         "overview",
@@ -83654,6 +86150,9 @@
         ]
       },
       "tags": [
+        "dashed",
+        "dotted",
+        "broken line",
         "inspector",
         "element",
         "mouse",
@@ -83701,12 +86200,14 @@
         ]
       },
       "tags": [
+        "dashed",
+        "dotted",
+        "broken line",
         "selection",
         "square",
         "rectangular",
         "marquee",
         "tool",
-        "dashed",
         "box",
         "region",
         "area",
@@ -83729,14 +86230,47 @@
       ]
     },
     "square-dashed-search": {
+      "en": {
+        "description": "A dashed square selection frame with a magnifying glass in the corner, meaning search within a selected area.",
+        "synonyms": [
+          "search",
+          "magnifier",
+          "selection",
+          "region search",
+          "scan",
+          "find",
+          "visual search",
+          "dashed box",
+          "marquee",
+          "zoom"
+        ]
+      },
       "fingerprint": "210de110ef24",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Пунктирная квадратная рамка с лупой в углу; обозначает поиск или выделение области для поиска.",
+        "synonyms": [
+          "поиск",
+          "лупа",
+          "выделение",
+          "область поиска",
+          "сканирование",
+          "найти",
+          "поиск по изображению",
+          "пунктир",
+          "рамка",
+          "просмотр"
+        ]
+      },
       "tags": [
+        "dashed",
+        "dotted",
+        "broken line",
         "selection",
         "square",
         "rectangular",
         "marquee",
         "tool",
-        "dashed",
         "box",
         "region",
         "area",
@@ -83761,7 +86295,8 @@
         "lens",
         "zoom",
         "inspection",
-        "visual search"
+        "visual search",
+        "loupe"
       ]
     },
     "square-dashed-text": {
@@ -83796,10 +86331,12 @@
         ]
       },
       "tags": [
+        "dashed",
+        "dotted",
+        "broken line",
         "find",
         "search",
-        "selection",
-        "dashed"
+        "selection"
       ]
     },
     "square-dashed-top-solid": {
@@ -83834,12 +86371,14 @@
         ]
       },
       "tags": [
+        "dashed",
+        "dotted",
+        "broken line",
         "selection",
         "square",
         "rectangular",
         "marquee",
         "tool",
-        "dashed",
         "box",
         "region",
         "area",
@@ -83888,12 +86427,14 @@
         ]
       },
       "tags": [
+        "dashed",
+        "dotted",
+        "broken line",
         "selection",
         "square",
         "rectangular",
         "marquee",
         "tool",
-        "dashed",
         "box",
         "region",
         "area",
@@ -83916,6 +86457,9 @@
         "times",
         "ex",
         "×",
+        "deny",
+        "decline",
+        "refuse",
         "deselect",
         "unselect",
         "select",
@@ -83963,12 +86507,14 @@
         ]
       },
       "tags": [
+        "dashed",
+        "dotted",
+        "broken line",
         "selection",
         "square",
         "rectangular",
         "marquee",
         "tool",
-        "dashed",
         "box",
         "region",
         "area",
@@ -83991,6 +86537,9 @@
         "times",
         "ex",
         "×",
+        "deny",
+        "decline",
+        "refuse",
         "deselect",
         "unselect",
         "select",
@@ -84207,6 +86756,11 @@
         "exclamation mark",
         "exclamation point",
         "!",
+        "critical",
+        "urgent",
+        "severity",
+        "punctuation",
+        "symbol",
         "rectangle",
         "square",
         "notification",
@@ -87416,6 +89970,11 @@
         ]
       },
       "tags": [
+        "coding",
+        "programming",
+        "development",
+        "developer",
+        "dev",
         "code",
         "command line",
         "prompt",
@@ -87523,7 +90082,9 @@
         "member",
         "client",
         "participant",
-        "guest"
+        "guest",
+        "customer",
+        "username"
       ]
     },
     "square-user-round": {
@@ -87571,7 +90132,9 @@
         "member",
         "client",
         "participant",
-        "guest"
+        "guest",
+        "customer",
+        "username"
       ]
     },
     "square-x": {
@@ -87623,6 +90186,9 @@
         "times",
         "ex",
         "×",
+        "deny",
+        "decline",
+        "refuse",
         "math",
         "multiply",
         "multiplication"
@@ -87866,6 +90432,9 @@
       },
       "tags": [
         "shape",
+        "dashed",
+        "dotted",
+        "broken line",
         "pending",
         "progress",
         "issue",
@@ -88072,7 +90641,10 @@
         "valid",
         "ticked",
         "task",
-        "todo"
+        "todo",
+        "selected",
+        "okay",
+        "ok"
       ]
     },
     "star-half": {
@@ -88403,6 +90975,9 @@
         "times",
         "ex",
         "×",
+        "deny",
+        "decline",
+        "refuse",
         "mark",
         "symbol",
         "shape",
@@ -88528,7 +91103,8 @@
         "medical",
         "heart",
         "lungs",
-        "sound"
+        "sound",
+        "patient"
       ]
     },
     "sticker": {
@@ -88683,7 +91259,10 @@
         "accepted",
         "correct",
         "valid",
-        "ticked"
+        "ticked",
+        "selected",
+        "okay",
+        "ok"
       ]
     },
     "sticky-note-minus": {
@@ -88951,7 +91530,10 @@
         "cross",
         "times",
         "ex",
-        "×"
+        "×",
+        "deny",
+        "decline",
+        "refuse"
       ]
     },
     "sticky-notes": {
@@ -89090,7 +91672,10 @@
         "supermarket",
         "stand",
         "boutique",
-        "building"
+        "building",
+        "sell",
+        "selling",
+        "merchant"
       ]
     },
     "stretch-horizontal": {
@@ -89216,6 +91801,297 @@
         "-",
         "cross out",
         "format"
+      ]
+    },
+    "stroke-line-cap-butt": {
+      "en": {
+        "description": "A bracket-like outline with a dashed line inside, representing a flat, butt-style stroke end in drawing tools.",
+        "synonyms": [
+          "stroke",
+          "line cap",
+          "dashed line",
+          "outline",
+          "endpoint",
+          "flat end",
+          "border",
+          "path",
+          "segment",
+          "vector"
+        ]
+      },
+      "fingerprint": "a6f72145e3bf",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Изображена прямоугольная скобка с пунктирной линией внутри; обозначает плоское окончание линии или обводки без выступа.",
+        "synonyms": [
+          "обводка",
+          "линия",
+          "штрих",
+          "пунктир",
+          "контур",
+          "концы линии",
+          "скругление",
+          "форма",
+          "вектор",
+          "граница"
+        ]
+      },
+      "tags": [
+        "stroke",
+        "path",
+        "segment",
+        "vector",
+        "graphics",
+        "design",
+        "shape",
+        "curve",
+        "endpoint",
+        "flat",
+        "flush"
+      ]
+    },
+    "stroke-line-cap-round": {
+      "en": {
+        "description": "Drawing shows a rounded D-shaped stroke with dashed segments and a dot, representing round line cap styling in graphics tools.",
+        "synonyms": [
+          "stroke",
+          "outline",
+          "line cap",
+          "rounded line",
+          "arc",
+          "dashed line",
+          "path",
+          "curve",
+          "endpoint",
+          "vector line"
+        ]
+      },
+      "fingerprint": "101baea31029",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Изображение показывает D-образную линию с точками и пунктиром внутри, символизируя закруглённые концы обводки контура.",
+        "synonyms": [
+          "обводка",
+          "контур",
+          "линия",
+          "скругление",
+          "дуга",
+          "штрих",
+          "пунктир",
+          "концы линии",
+          "векторная линия",
+          "кривая"
+        ]
+      },
+      "tags": [
+        "stroke",
+        "path",
+        "segment",
+        "vector",
+        "graphics",
+        "design",
+        "shape",
+        "curve",
+        "endpoint",
+        "arc",
+        "circular",
+        "smooth"
+      ]
+    },
+    "stroke-line-cap-square": {
+      "en": {
+        "description": "Shows a bracket shape with three dashes of decreasing length, illustrating a square line cap style for strokes.",
+        "synonyms": [
+          "stroke",
+          "line cap",
+          "line ends",
+          "outline style",
+          "dash",
+          "border style",
+          "path endpoint",
+          "square cap",
+          "stroke settings",
+          "line style"
+        ]
+      },
+      "fingerprint": "f4a6ff819f14",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Изображена скобка с тремя штрихами разной длины, показывающая стиль концов линии; обозначает настройку формы обводки.",
+        "synonyms": [
+          "обводка",
+          "концы линии",
+          "скругление",
+          "линия",
+          "штрих",
+          "контур",
+          "форма линии",
+          "стиль линии",
+          "квадратные концы",
+          "редактор обводки"
+        ]
+      },
+      "tags": [
+        "stroke",
+        "path",
+        "segment",
+        "vector",
+        "graphics",
+        "design",
+        "shape",
+        "curve",
+        "endpoint",
+        "projecting",
+        "extended",
+        "flat"
+      ]
+    },
+    "stroke-line-join-bevel": {
+      "en": {
+        "description": "The icon shows a stroked path with a diagonal bevel cutting across a corner, representing a flat line join style.",
+        "synonyms": [
+          "bevel",
+          "chamfer",
+          "corner",
+          "diagonal",
+          "stroke",
+          "line join",
+          "angle",
+          "edge",
+          "path",
+          "vector line"
+        ]
+      },
+      "fingerprint": "b519a72bce6b",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Изображение показывает путь с плоским срезом угла в виде диагональной линии между двумя сегментами, обозначая скос соединения линий.",
+        "synonyms": [
+          "скос",
+          "срез угла",
+          "соединение линий",
+          "диагональ",
+          "фаска",
+          "контур",
+          "обводка",
+          "угол",
+          "путь",
+          "векторная линия"
+        ]
+      },
+      "tags": [
+        "stroke",
+        "path",
+        "segment",
+        "vector",
+        "graphics",
+        "design",
+        "shape",
+        "curve",
+        "edge",
+        "intersection",
+        "angle",
+        "chamfer",
+        "trim",
+        "flat",
+        "diagonal"
+      ]
+    },
+    "stroke-line-join-miter": {
+      "en": {
+        "description": "Draws a corner outline with broken line segments, illustrating a sharp miter line join used in stroke settings.",
+        "synonyms": [
+          "stroke",
+          "line join",
+          "miter",
+          "sharp corner",
+          "corner",
+          "outline",
+          "path",
+          "segment",
+          "edge"
+        ]
+      },
+      "fingerprint": "ec995e5f6f34",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Рисует угол контура с фрагментами линий, показывая стиль соединения линий острым углом; обычно используется для настройки обводки.",
+        "synonyms": [
+          "обводка",
+          "соединение линий",
+          "острый угол",
+          "угол",
+          "контур",
+          "линия",
+          "стиль обводки",
+          "векторный путь",
+          "граница"
+        ]
+      },
+      "tags": [
+        "stroke",
+        "path",
+        "segment",
+        "vector",
+        "graphics",
+        "design",
+        "shape",
+        "curve",
+        "edge",
+        "intersection",
+        "angle",
+        "sharp",
+        "rect"
+      ]
+    },
+    "stroke-line-join-round": {
+      "en": {
+        "description": "Draws strokes meeting at a rounded corner, showing a smooth line join style used for editing path outlines.",
+        "synonyms": [
+          "round join",
+          "rounded corner",
+          "stroke join",
+          "line join",
+          "corner",
+          "arc",
+          "curve",
+          "outline",
+          "smooth edge",
+          "path style"
+        ]
+      },
+      "fingerprint": "1bd857263beb",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Рисует линии с закруглённым изгибом в углу, показывая скругление соединения контура; значок обозначает настройку типа стыка линий.",
+        "synonyms": [
+          "закругление",
+          "скругление линии",
+          "угол",
+          "дуга",
+          "обводка",
+          "контур",
+          "кривая",
+          "соединение линий",
+          "стык",
+          "сглаживание"
+        ]
+      },
+      "tags": [
+        "stroke",
+        "path",
+        "segment",
+        "vector",
+        "graphics",
+        "design",
+        "shape",
+        "curve",
+        "edge",
+        "intersection",
+        "angle",
+        "arc",
+        "circular",
+        "smooth"
       ]
     },
     "subscript": {
@@ -89960,7 +92836,11 @@
       },
       "tags": [
         "spreadsheet",
-        "grid"
+        "grid",
+        "csv",
+        "xls",
+        "xlsx",
+        "excel"
       ]
     },
     "table-2": {
@@ -89996,7 +92876,11 @@
       },
       "tags": [
         "spreadsheet",
-        "grid"
+        "grid",
+        "csv",
+        "xls",
+        "xlsx",
+        "excel"
       ]
     },
     "table-cells-merge": {
@@ -90033,6 +92917,10 @@
       "tags": [
         "spreadsheet",
         "grid",
+        "csv",
+        "xls",
+        "xlsx",
+        "excel",
         "row"
       ]
     },
@@ -90068,6 +92956,10 @@
       "tags": [
         "spreadsheet",
         "grid",
+        "csv",
+        "xls",
+        "xlsx",
+        "excel",
         "row"
       ]
     },
@@ -90107,6 +92999,10 @@
       "tags": [
         "spreadsheet",
         "grid",
+        "csv",
+        "xls",
+        "xlsx",
+        "excel",
         "cut",
         "break",
         "divide",
@@ -90197,6 +93093,10 @@
       "tags": [
         "spreadsheet",
         "grid",
+        "csv",
+        "xls",
+        "xlsx",
+        "excel",
         "property list",
         "plist",
         "dictionary",
@@ -90240,6 +93140,10 @@
       "tags": [
         "spreadsheet",
         "grid",
+        "csv",
+        "xls",
+        "xlsx",
+        "excel",
         "cut",
         "break",
         "divide",
@@ -90406,7 +93310,11 @@
         "label",
         "badge",
         "ticket",
-        "mark"
+        "mark",
+        "sell",
+        "selling",
+        "promotion",
+        "promo"
       ]
     },
     "tag-plus": {
@@ -90447,6 +93355,10 @@
         "badge",
         "ticket",
         "mark",
+        "sell",
+        "selling",
+        "promotion",
+        "promo",
         "plus",
         "add",
         "new",
@@ -90498,6 +93410,10 @@
         "badge",
         "ticket",
         "mark",
+        "sell",
+        "selling",
+        "promotion",
+        "promo",
         "x",
         "remove",
         "delete",
@@ -90515,7 +93431,10 @@
         "cross",
         "times",
         "ex",
-        "×"
+        "×",
+        "deny",
+        "decline",
+        "refuse"
       ]
     },
     "tags": {
@@ -90874,7 +93793,11 @@
         "projects",
         "overview",
         "work",
-        "productivity"
+        "productivity",
+        "result",
+        "outcome",
+        "objective",
+        "okr"
       ]
     },
     "telescope": {
@@ -91056,6 +93979,11 @@
         ]
       },
       "tags": [
+        "coding",
+        "programming",
+        "development",
+        "developer",
+        "dev",
         "code",
         "command line",
         "prompt",
@@ -91624,6 +94552,69 @@
         "font size"
       ]
     },
+    "text-pen": {
+      "en": {
+        "description": "Three text lines ending in a pencil, indicating editing or writing text, such as drafting or composing content.",
+        "synonyms": [
+          "edit text",
+          "write",
+          "draft",
+          "compose",
+          "pencil",
+          "revise",
+          "annotate",
+          "note",
+          "modify",
+          "writing"
+        ]
+      },
+      "fingerprint": "1a3a85e4b97d",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Три строки текста, последняя укорочена и переходит в карандаш; обозначает редактирование или написание текста.",
+        "synonyms": [
+          "редактировать",
+          "написать текст",
+          "правка",
+          "черновик",
+          "карандаш",
+          "писать",
+          "изменить",
+          "заметка",
+          "комментарий",
+          "составить текст"
+        ]
+      },
+      "tags": [
+        "edit",
+        "modify",
+        "update",
+        "revise",
+        "amend",
+        "create",
+        "change",
+        "write",
+        "writer",
+        "writing",
+        "pencil",
+        "compose",
+        "draft",
+        "author",
+        "annotate",
+        "comment",
+        "note",
+        "draw",
+        "sketch",
+        "doodle",
+        "rename",
+        "customize",
+        "quick",
+        "autosave",
+        "prompt",
+        "scratch",
+        "authoring"
+      ]
+    },
     "text-quote": {
       "en": {
         "description": "Shows horizontal text lines with a vertical bar on the left and indented lines; it means a blockquote or quoted text.",
@@ -91715,6 +94706,7 @@
         "zoom",
         "inspection",
         "visual search",
+        "loupe",
         "data",
         "copy",
         "txt",
@@ -91988,7 +94980,9 @@
       "tags": [
         "like",
         "good",
-        "emotion"
+        "emotion",
+        "recommend",
+        "recommendation"
       ]
     },
     "tic-tac-toe": {
@@ -92073,7 +95067,9 @@
         "concert",
         "show",
         "perforated",
-        "dashed"
+        "dashed",
+        "invite",
+        "invitation"
       ]
     },
     "ticket-check": {
@@ -92118,6 +95114,8 @@
         "show",
         "perforated",
         "dashed",
+        "invite",
+        "invitation",
         "checkmark",
         "done",
         "completed",
@@ -92133,6 +95131,9 @@
         "ticked",
         "task",
         "todo",
+        "selected",
+        "okay",
+        "ok",
         "booked",
         "purchased",
         "receipt",
@@ -92184,6 +95185,8 @@
         "show",
         "perforated",
         "dashed",
+        "invite",
+        "invitation",
         "minus",
         "remove",
         "delete",
@@ -92240,6 +95243,8 @@
         "show",
         "perforated",
         "dashed",
+        "invite",
+        "invitation",
         "discount",
         "sale",
         "offer",
@@ -92304,6 +95309,8 @@
         "show",
         "perforated",
         "dashed",
+        "invite",
+        "invitation",
         "plus",
         "add",
         "new",
@@ -92361,6 +95368,8 @@
         "show",
         "perforated",
         "dashed",
+        "invite",
+        "invitation",
         "minus",
         "remove",
         "delete",
@@ -92453,6 +95462,8 @@
         "show",
         "perforated",
         "dashed",
+        "invite",
+        "invitation",
         "x",
         "remove",
         "delete",
@@ -92471,6 +95482,9 @@
         "times",
         "ex",
         "×",
+        "deny",
+        "decline",
+        "refuse",
         "refunded",
         "used",
         "void",
@@ -94170,6 +97184,10 @@
         "reporting",
         "data visualisation",
         "visualisation",
+        "analyze",
+        "kpi",
+        "metrics",
+        "insights",
         "direction",
         "movement",
         "vertical",
@@ -94225,6 +97243,10 @@
         "reporting",
         "data visualisation",
         "visualisation",
+        "analyze",
+        "kpi",
+        "metrics",
+        "insights",
         "direction",
         "movement",
         "vertical",
@@ -94280,6 +97302,10 @@
         "reporting",
         "data visualisation",
         "visualisation",
+        "analyze",
+        "kpi",
+        "metrics",
+        "insights",
         "direction",
         "movement",
         "vertical",
@@ -94382,7 +97408,9 @@
         "shape",
         "pyramid",
         "hierarchy",
-        "dashed"
+        "dashed",
+        "dotted",
+        "broken line"
       ]
     },
     "triangle-exclamation-point": {
@@ -94427,6 +97455,11 @@
         "exclamation mark",
         "exclamation point",
         "!",
+        "critical",
+        "urgent",
+        "severity",
+        "punctuation",
+        "symbol",
         "linter"
       ]
     },
@@ -94514,10 +97547,12 @@
         ]
       },
       "tags": [
+        "dashed",
+        "dotted",
+        "broken line",
         "reflect",
         "mirror",
-        "alignment",
-        "dashed"
+        "alignment"
       ]
     },
     "triangles-centerline-dashed-vertical": {
@@ -94552,10 +97587,12 @@
         ]
       },
       "tags": [
+        "dashed",
+        "dotted",
+        "broken line",
         "reflect",
         "mirror",
-        "alignment",
-        "dashed"
+        "alignment"
       ]
     },
     "trophy": {
@@ -94608,7 +97645,8 @@
         "reward",
         "cup",
         "first",
-        "gold"
+        "gold",
+        "result"
       ]
     },
     "truck": {
@@ -95228,7 +98266,9 @@
       },
       "tags": [
         "rain",
-        "weather"
+        "weather",
+        "insurance",
+        "coverage"
       ]
     },
     "umbrella-off": {
@@ -95267,6 +98307,8 @@
       "tags": [
         "rain",
         "weather",
+        "insurance",
+        "coverage",
         "off",
         "disable",
         "hide",
@@ -95889,7 +98931,9 @@
         "member",
         "client",
         "participant",
-        "guest"
+        "guest",
+        "customer",
+        "username"
       ]
     },
     "user-check": {
@@ -95939,6 +98983,8 @@
         "client",
         "participant",
         "guest",
+        "customer",
+        "username",
         "checkmark",
         "done",
         "completed",
@@ -95954,6 +99000,9 @@
         "ticked",
         "task",
         "todo",
+        "selected",
+        "okay",
+        "ok",
         "followed",
         "subscribed"
       ]
@@ -96003,6 +99052,8 @@
         "client",
         "participant",
         "guest",
+        "customer",
+        "username",
         "cog",
         "cogwheel",
         "gear",
@@ -96020,7 +99071,36 @@
       ]
     },
     "user-exclamation-point": {
+      "en": {
+        "description": "A user silhouette with an exclamation mark at its right side, indicating a user account warning or issue.",
+        "synonyms": [
+          "user warning",
+          "alert",
+          "caution",
+          "exclamation point",
+          "account issue",
+          "suspicious user",
+          "flagged user",
+          "error",
+          "notice"
+        ]
+      },
       "fingerprint": "df299aa32618",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Изображена фигура пользователя с восклицательным знаком справа, что обозначает предупреждение о проблеме с пользователем или аккаунтом.",
+        "synonyms": [
+          "пользователь с ошибкой",
+          "предупреждение",
+          "внимание",
+          "восклицательный знак",
+          "аккаунт проблема",
+          "ошибка аккаунта",
+          "жалоба",
+          "подозрительный пользователь",
+          "опасность"
+        ]
+      },
       "tags": [
         "user",
         "people",
@@ -96035,6 +99115,8 @@
         "client",
         "participant",
         "guest",
+        "customer",
+        "username",
         "alert",
         "warning",
         "danger",
@@ -96047,6 +99129,11 @@
         "exclamation mark",
         "exclamation point",
         "!",
+        "critical",
+        "urgent",
+        "severity",
+        "punctuation",
+        "symbol",
         "flagged",
         "suspicious",
         "reported",
@@ -96103,6 +99190,8 @@
         "client",
         "participant",
         "guest",
+        "customer",
+        "username",
         "group",
         "team",
         "community",
@@ -96163,6 +99252,8 @@
         "client",
         "participant",
         "guest",
+        "customer",
+        "username",
         "key",
         "password",
         "security",
@@ -96235,6 +99326,8 @@
         "client",
         "participant",
         "guest",
+        "customer",
+        "username",
         "lock",
         "padlock",
         "private",
@@ -96298,6 +99391,8 @@
         "client",
         "participant",
         "guest",
+        "customer",
+        "username",
         "minus",
         "remove",
         "delete",
@@ -96355,6 +99450,8 @@
         "client",
         "participant",
         "guest",
+        "customer",
+        "username",
         "edit",
         "modify",
         "update",
@@ -96422,6 +99519,8 @@
         "client",
         "participant",
         "guest",
+        "customer",
+        "username",
         "plus",
         "add",
         "new",
@@ -96434,7 +99533,9 @@
         "addition",
         "added",
         "follow",
-        "subscribe"
+        "subscribe",
+        "invite",
+        "invitation"
       ]
     },
     "user-round": {
@@ -96483,7 +99584,9 @@
         "member",
         "client",
         "participant",
-        "guest"
+        "guest",
+        "customer",
+        "username"
       ]
     },
     "user-round-arrow-left": {
@@ -96529,6 +99632,8 @@
         "client",
         "participant",
         "guest",
+        "customer",
+        "username",
         "direction",
         "movement",
         "horizontal",
@@ -96594,6 +99699,8 @@
         "client",
         "participant",
         "guest",
+        "customer",
+        "username",
         "checkmark",
         "done",
         "completed",
@@ -96609,6 +99716,9 @@
         "ticked",
         "task",
         "todo",
+        "selected",
+        "okay",
+        "ok",
         "followed",
         "subscribed"
       ]
@@ -96658,6 +99768,8 @@
         "client",
         "participant",
         "guest",
+        "customer",
+        "username",
         "cog",
         "cogwheel",
         "gear",
@@ -96675,7 +99787,36 @@
       ]
     },
     "user-round-exclamation-point": {
+      "en": {
+        "description": "Draws a user silhouette with an exclamation mark at its right side, indicating a user account with a warning or issue.",
+        "synonyms": [
+          "user warning",
+          "account alert",
+          "flagged user",
+          "suspicious user",
+          "user error",
+          "person alert",
+          "account issue",
+          "user notice",
+          "reported user"
+        ]
+      },
       "fingerprint": "4821054877ad",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Изображён силуэт пользователя в круглой голове и плече с восклицательным знаком справа; обозначает пользователя с предупреждением или проблемой.",
+        "synonyms": [
+          "пользователь с ошибкой",
+          "предупреждение о пользователе",
+          "профиль внимание",
+          "аккаунт проблема",
+          "человек восклицательный знак",
+          "нарушитель",
+          "подозрительный пользователь",
+          "ошибка аккаунта",
+          "жалоба на пользователя"
+        ]
+      },
       "tags": [
         "user",
         "people",
@@ -96690,6 +99831,8 @@
         "client",
         "participant",
         "guest",
+        "customer",
+        "username",
         "alert",
         "warning",
         "danger",
@@ -96702,6 +99845,11 @@
         "exclamation mark",
         "exclamation point",
         "!",
+        "critical",
+        "urgent",
+        "severity",
+        "punctuation",
+        "symbol",
         "flagged",
         "suspicious",
         "reported",
@@ -96758,6 +99906,8 @@
         "client",
         "participant",
         "guest",
+        "customer",
+        "username",
         "group",
         "team",
         "community",
@@ -96820,6 +99970,8 @@
         "client",
         "participant",
         "guest",
+        "customer",
+        "username",
         "key",
         "password",
         "security",
@@ -96894,6 +100046,8 @@
         "client",
         "participant",
         "guest",
+        "customer",
+        "username",
         "minus",
         "remove",
         "delete",
@@ -96953,6 +100107,8 @@
         "client",
         "participant",
         "guest",
+        "customer",
+        "username",
         "edit",
         "modify",
         "update",
@@ -97024,6 +100180,8 @@
         "client",
         "participant",
         "guest",
+        "customer",
+        "username",
         "plus",
         "add",
         "new",
@@ -97036,7 +100194,9 @@
         "addition",
         "added",
         "follow",
-        "subscribe"
+        "subscribe",
+        "invite",
+        "invitation"
       ]
     },
     "user-round-search": {
@@ -97086,6 +100246,8 @@
         "client",
         "participant",
         "guest",
+        "customer",
+        "username",
         "search",
         "magnifier",
         "scan",
@@ -97106,7 +100268,8 @@
         "lens",
         "zoom",
         "inspection",
-        "visual search"
+        "visual search",
+        "loupe"
       ]
     },
     "user-round-shield": {
@@ -97203,6 +100366,8 @@
         "client",
         "participant",
         "guest",
+        "customer",
+        "username",
         "starred",
         "featured",
         "favorite",
@@ -97274,6 +100439,8 @@
         "client",
         "participant",
         "guest",
+        "customer",
+        "username",
         "x",
         "remove",
         "delete",
@@ -97292,6 +100459,9 @@
         "times",
         "ex",
         "×",
+        "deny",
+        "decline",
+        "refuse",
         "unfollow",
         "unsubscribe",
         "unavailable"
@@ -97340,6 +100510,8 @@
         "client",
         "participant",
         "guest",
+        "customer",
+        "username",
         "search",
         "magnifier",
         "scan",
@@ -97360,7 +100532,8 @@
         "lens",
         "zoom",
         "inspection",
-        "visual search"
+        "visual search",
+        "loupe"
       ]
     },
     "user-shield": {
@@ -97410,6 +100583,8 @@
         "client",
         "participant",
         "guest",
+        "customer",
+        "username",
         "shield",
         "privacy",
         "safeguard",
@@ -97474,6 +100649,8 @@
         "client",
         "participant",
         "guest",
+        "customer",
+        "username",
         "starred",
         "featured",
         "favorite",
@@ -97542,6 +100719,8 @@
         "client",
         "participant",
         "guest",
+        "customer",
+        "username",
         "x",
         "remove",
         "delete",
@@ -97560,6 +100739,9 @@
         "times",
         "ex",
         "×",
+        "deny",
+        "decline",
+        "refuse",
         "unfollow",
         "unsubscribe",
         "unavailable"
@@ -97610,6 +100792,8 @@
         "client",
         "participant",
         "guest",
+        "customer",
+        "username",
         "group"
       ]
     },
@@ -97660,6 +100844,8 @@
         "client",
         "participant",
         "guest",
+        "customer",
+        "username",
         "group",
         "collaboration",
         "team",
@@ -97720,6 +100906,8 @@
         "client",
         "participant",
         "guest",
+        "customer",
+        "username",
         "group"
       ]
     },
@@ -97769,6 +100957,8 @@
         "client",
         "participant",
         "guest",
+        "customer",
+        "username",
         "group",
         "collaboration",
         "team",
@@ -99155,7 +102345,8 @@
       "tags": [
         "money",
         "finance",
-        "pocket"
+        "pocket",
+        "budget"
       ]
     },
     "wallet-cards": {
@@ -99195,6 +102386,7 @@
         "money",
         "finance",
         "pocket",
+        "budget",
         "wallet",
         "cards",
         "banking",
@@ -99244,7 +102436,8 @@
       "tags": [
         "money",
         "finance",
-        "pocket"
+        "pocket",
+        "budget"
       ]
     },
     "wallpaper": {
@@ -101066,7 +104259,11 @@
         "automation",
         "devops",
         "node",
-        "connection"
+        "connection",
+        "ci/cd",
+        "cicd",
+        "pipeline",
+        "deploy"
       ]
     },
     "worm": {
@@ -101280,6 +104477,9 @@
         "times",
         "ex",
         "×",
+        "deny",
+        "decline",
+        "refuse",
         "math",
         "multiply",
         "multiplication"
@@ -101340,6 +104540,9 @@
         "times",
         "ex",
         "×",
+        "deny",
+        "decline",
+        "refuse",
         "math",
         "multiply",
         "multiplication",
@@ -101396,7 +104599,9 @@
         "electricity",
         "energy",
         "power",
-        "quick"
+        "quick",
+        "thunder",
+        "thunderbolt"
       ]
     },
     "zap-off": {
@@ -101436,6 +104641,8 @@
         "energy",
         "power",
         "quick",
+        "thunder",
+        "thunderbolt",
         "off",
         "disable",
         "hide",

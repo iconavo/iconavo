@@ -1,10 +1,10 @@
 "use client";
 
 import { Icon } from "@iconavo-ui/react";
-import { usePathname } from "next/navigation";
 import { useState } from "react";
 import type { SidebarGroup } from "../../lib/catalog-view";
 import { DICTIONARIES, href, type Lang } from "../../lib/i18n";
+import { usePagePath } from "../../lib/page-path";
 import { PageLink } from "../PageLink";
 
 /**
@@ -19,7 +19,7 @@ export function SidebarSets({
   groups: SidebarGroup[];
 }) {
   const t = DICTIONARIES[lang];
-  const pathname = usePathname();
+  const pathname = usePagePath();
   const [filter, setFilter] = useState("");
   const needle = filter.trim().toLowerCase();
   const shown = groups

@@ -1,10 +1,13 @@
 // Проверка сведений об иконке /icon на живом api.iconavo.dev (шаг 4 фазы 4, ADR-0041). Как и поиск —
-// отдельно от раздачи: pnpm cdn check её не запускает. Запускает pnpm api check — в «Edge API» после
-// выкладки. Что проверяется:
+// отдельно от раздачи: pnpm cdn check без --with-search её не запускает. Запускают pnpm api check — в
+// «Edge API» после выкладки — и pnpm cdn check --with-search — в ежедневной «Сверке хостов». Что
+// проверяется:
 // - lucide:house: 200, JSON, CORS и защита, версия набора, индекса и отпечаток содержимого, карточка
 //   и стиль, толщина линии, описания ru/en, теги, похожие; повтор — из кэша, браузеру 5 минут;
-// - старое имя lucide:alert-circle → circle-alert, у неё — авторство Feather (ADR-0017), у набора — тоже
-//   (указание авторства на весь набор);
+// - старое имя lucide:alert-circle → основное имя Lucide, у него — авторство Feather (ADR-0017), у набора —
+//   тоже (указание авторства на весь набор). Какое имя основное, не закреплено: Lucide переименовывает
+//   иконки, а старое имя остаётся алиасом (ADR-0018) — в 1.69.0 circle-alert стала
+//   circle-exclamation-point;
 // - варианты ph:house-bold — по стилям шкалы в порядке таблицы набора, без толщины линии;
 // - оттенки кожи Fluent и цветной набор; скрытая иконка — пометка hidden;
 // - ответы 400 и 404 с кодами.
@@ -281,8 +284,18 @@ export async function checkIcon(
     "Старое имя и Feather",
     "icon?icon=lucide:alert-circle",
     (body, t) => {
-      if (body.icon !== "lucide:circle-alert") {
-        issue(t, `icon: ${String(body.icon)} — алиас не привёл к circle-alert`);
+      if (
+        typeof body.icon !== "string" ||
+        !NAME.test(body.icon) ||
+        !body.icon.startsWith("lucide:") ||
+        body.icon === "lucide:alert-circle"
+      ) {
+        issue(
+          t,
+          `icon: ${String(body.icon)} — алиас не привёл к основному имени Lucide`,
+        );
+      } else {
+        t.notes.push(`основное имя: ${body.icon}`);
       }
       if (body.alias !== "lucide:alert-circle") {
         issue(t, `alias: ${String(body.alias)}`);

@@ -6,6 +6,7 @@ import {
 } from "../sources/tar-builder.testing.js";
 import {
   integrityHex,
+  isTarballNotServed,
   type NpmVersionDoc,
   parsePackument,
   parseProvenance,
@@ -229,6 +230,25 @@ describe("registryClient", () => {
         integrity: integrityOf(Buffer.from("x")),
       }),
     ).rejects.toThrow("целостность архива 1.0.0 не совпала");
+  });
+
+  it("архив ещё не раздаётся (404) — своя ошибка, по ней проверка ждёт", async () => {
+    const url = `${REGISTRY}/${NAME}/-/icons-demo-1.0.0.tgz`;
+    const { fetch, calls } = fakeFetch({});
+    const registry = registryClient({ fetch, sleep: noSleep });
+    const error = await registry
+      .files({ version: "1.0.0", tarball: url, integrity: "sha512-AA==" })
+      .then(
+        () => undefined,
+        (e: unknown) => e,
+      );
+    expect(isTarballNotServed(error)).toBe(true);
+    expect((error as Error).message).toContain(
+      "архив 1.0.0 реестр ещё не раздаёт (HTTP 404)",
+    );
+    // 404 не повторяется внутри запроса: ждёт сама проверка, со своим сроком.
+    expect(calls).toEqual([url]);
+    expect(isTarballNotServed(new Error("другая ошибка"))).toBe(false);
   });
 
   it("архив не из реестра — ошибка, запроса нет", async () => {

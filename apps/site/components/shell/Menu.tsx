@@ -1,10 +1,10 @@
 "use client";
 
 import { Icon } from "@iconavo-ui/react";
-import { usePathname } from "next/navigation";
 import { useEffect, useSyncExternalStore } from "react";
 import { DICTIONARIES, type Lang } from "../../lib/i18n";
 import { MENU_BUTTON_ID, MENU_CLOSE_ID, menuStore } from "../../lib/menu";
+import { usePagePath } from "../../lib/page-path";
 
 const useOpen = () =>
   useSyncExternalStore(menuStore.subscribe, menuStore.get, () => false);
@@ -53,7 +53,7 @@ export function MenuClose({ lang }: { lang: Lang }) {
  */
 export function MenuController() {
   const open = useOpen();
-  const pathname = usePathname();
+  const pathname = usePagePath();
 
   useEffect(() => {
     if (pathname !== undefined) menuStore.set(false);

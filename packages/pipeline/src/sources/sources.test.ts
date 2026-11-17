@@ -85,6 +85,7 @@ describe("конфиг набора", () => {
     ["id не по правилу", { ...baseConfig, id: "Demo_1" }],
     ["id — служебное слово сайта", { ...baseConfig, id: "changelog" }],
     ["id — русская версия сайта", { ...baseConfig, id: "ru" }],
+    ["id — внутреннее имя главной", { ...baseConfig, id: "index" }],
     ["нет папок", { ...baseConfig, svgFolders: [] }],
     ["пустой путь папки", { ...baseConfig, svgFolders: [{ path: "" }] }],
     ["путь папки с ..", { ...baseConfig, svgFolders: [{ path: "../icons" }] }],

@@ -6,7 +6,7 @@
 // | pnpm eval [--model=…] [--baseline] [--service | --service-only]
 // | pnpm search-page [--port=N] [--model=…] | pnpm search-index [--dry-run] [--max-rub=N] [--reembed]
 // | pnpm cdn build | pnpm cdn upload [--dry-run]
-// | pnpm cdn verify | pnpm cdn check | pnpm packages prepare [id…] [--new] [--force]
+// | pnpm cdn verify | pnpm cdn check [--with-search] | pnpm packages prepare [id…] [--new] [--force]
 // | pnpm packages verify [id…] [--wait=N] [--plan=…] | pnpm api build | pnpm api preview [--port=N]
 // | pnpm api check [--expect-build=…] | pnpm api bench [--batches] [--base=…] [--seed=N] | pnpm icon build
 // | pnpm sandbox [--port=N] [--browser=chrome|firefox|webkit | --check]
@@ -405,6 +405,9 @@ const USAGE = `Использование:
                                       тип, кэш браузера и CDN, CORS, защита, сжатие br и gzip,
                                       содержимое; затем — что манифесты хостов совпадают; и edge API
                                       (pnpm api check); ключи не нужны
+      --with-search                   ещё поиск /search и сведения об иконке /icon, как pnpm api check:
+                                      так их каждый день проверяет «Сверка хостов»; «Выкладка» —
+                                      без флага: индекс обновляется после неё
   pnpm api build                      собрать функцию edge API (ADR-0024) в ${API_OUT_DIR}/: ${WORKER_FILE} — один
                                       модуль для Cloudflare Workers, metadata.json — тело запроса
                                       загрузки, build.json — метка сборки; без изменений ничего не пишет
@@ -413,7 +416,8 @@ const USAGE = `Использование:
       --port=N                        порт (по умолчанию ${PREVIEW_PORT})
   pnpm api check                      проверить живой https://${API_HOST}: ответы сходятся со
                                       статикой той же версии, повтор — из кэша, заголовки, сжатие;
-                                      затем поиск /search (ADR-0049) — отдельно от pnpm cdn check
+                                      затем поиск /search (ADR-0049) и сведения об иконке /icon —
+                                      в pnpm cdn check только с --with-search
       --expect-build=…                ждать и проверять эту сборку (после выкладки в CI)
   pnpm api bench                      скорость поиска: 100 запросов контрольной части эталона к
                                       /search, холодный проход и повтор, не чаще 46 в минуту;
@@ -583,6 +587,28 @@ function printApiCheck(report: ApiCheckReport) {
   for (const line of formatApiCheckSummary(report)) console.log(line);
 }
 
+/**
+ * Поиск /search (ADR-0049) и сведения об иконке /icon (ADR-0041) на живом edge API — оба через индекс
+ * поиска, поэтому отдельно от раздачи. Их запускают pnpm api check («Edge API») и pnpm cdn check
+ * --with-search («Сверка хостов»); «Выкладка» — нет: индекс обновляется после неё. Итог — есть ли
+ * проблемы.
+ */
+async function checkSearchAndIcon(): Promise<boolean> {
+  console.log(`\nПроверяю поиск https://${API_HOST}/search…`);
+  const search = await checkSearch({
+    log: (line) => console.log(`  ${line}`),
+  });
+  console.log("");
+  for (const line of formatSearchCheck(search)) console.log(line);
+  console.log(`\nПроверяю сведения об иконке https://${API_HOST}/icon…`);
+  const icon = await checkIcon({
+    log: (line) => console.log(`  ${line}`),
+  });
+  console.log("");
+  for (const line of formatIconCheck(icon)) console.log(line);
+  return searchCheckFailed(search) || iconCheckFailed(icon);
+}
+
 // У каждой команды свои флаги; ссылки pnpm pr — в виде --флаг=https://…
 const links: PrLinks = {};
 let limit: number | undefined;
@@ -668,7 +694,9 @@ for (const flag of flags) {
       continue;
     }
   }
-  if (command === "cdn" && flag === "--dry-run") continue;
+  if (command === "cdn" && (flag === "--dry-run" || flag === "--with-search")) {
+    continue;
+  }
   if (command === "release") {
     if (flag === "--first") continue;
     if (name === "--plan" && value !== undefined && value !== "") {
@@ -2079,16 +2107,18 @@ try {
   } else if (command === "cdn") {
     const [sub, ...rest] = args;
     const dryRun = flags.includes("--dry-run");
+    const withSearch = flags.includes("--with-search");
     if (
       (sub !== "build" &&
         sub !== "upload" &&
         sub !== "verify" &&
         sub !== "check") ||
       rest.length > 0 ||
-      (sub !== "upload" && dryRun)
+      (sub !== "upload" && dryRun) ||
+      (sub !== "check" && withSearch)
     ) {
       usageError(
-        "pnpm cdn: нужна подкоманда build, upload [--dry-run], verify или check без имён наборов — манифест описывает все наборы сразу.",
+        "pnpm cdn: нужна подкоманда build, upload [--dry-run], verify или check [--with-search] без имён наборов — манифест описывает все наборы сразу.",
       );
     }
     if (sub === "check") {
@@ -2120,8 +2150,14 @@ try {
         log: (line) => console.log(`  ${line}`),
       });
       printApiCheck(api);
+      // С --with-search — ещё поиск и сведения об иконке: так «Сверка хостов» каждый день видит и сбой
+      // поискового сервиса (9–13 ноября 2026 он прошёл без писем). «Выкладка» флага не ставит.
+      const searchFailed = withSearch ? await checkSearchAndIcon() : false;
       process.exit(
-        reports.some(checkFailed) || cross.length > 0 || apiCheckFailed(api)
+        reports.some(checkFailed) ||
+          cross.length > 0 ||
+          apiCheckFailed(api) ||
+          searchFailed
           ? 1
           : 0,
       );
@@ -2406,27 +2442,8 @@ try {
         log: (line) => console.log(`  ${line}`),
       });
       printApiCheck(report);
-      // Поиск — отдельно от раздачи (ADR-0049): pnpm cdn check его не запускает.
-      console.log(`\nПроверяю поиск https://${API_HOST}/search…`);
-      const search = await checkSearch({
-        log: (line) => console.log(`  ${line}`),
-      });
-      console.log("");
-      for (const line of formatSearchCheck(search)) console.log(line);
-      // Сведения об иконке (шаг 4 фазы 4) — тоже через индекс поиска, тоже отдельно от раздачи.
-      console.log(`\nПроверяю сведения об иконке https://${API_HOST}/icon…`);
-      const icon = await checkIcon({
-        log: (line) => console.log(`  ${line}`),
-      });
-      console.log("");
-      for (const line of formatIconCheck(icon)) console.log(line);
-      process.exit(
-        apiCheckFailed(report) ||
-          searchCheckFailed(search) ||
-          iconCheckFailed(icon)
-          ? 1
-          : 0,
-      );
+      const searchFailed = await checkSearchAndIcon();
+      process.exit(apiCheckFailed(report) || searchFailed ? 1 : 0);
     }
     if (sub === "bench" && benchBatchesMode) {
       // Без первой тысячи имён каждого набора: их показывает страница «5000 иконок» песочницы.

@@ -1,8 +1,8 @@
 "use client";
 
 import { Icon } from "@iconavo-ui/react";
-import { usePathname } from "next/navigation";
 import { DICTIONARIES, href, type Lang } from "../../lib/i18n";
+import { usePagePath } from "../../lib/page-path";
 import { PageLink } from "../PageLink";
 import { Soon } from "./Soon";
 
@@ -16,7 +16,7 @@ const OTHER_SECTIONS = ["/docs", "/changelog", "/licenses"];
  */
 export function SidebarNav({ lang }: { lang: Lang }) {
   const t = DICTIONARIES[lang];
-  const pathname = usePathname();
+  const pathname = usePagePath();
   const inSection = (path: string) => {
     const base = href(lang, path);
     return pathname === base || pathname.startsWith(`${base}/`);
