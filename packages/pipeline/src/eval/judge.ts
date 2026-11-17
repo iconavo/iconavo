@@ -175,8 +175,11 @@ export interface JudgeOptions {
   /** Только посчитать пары и оценить стоимость. */
   dryRun?: boolean;
   concurrency?: number;
-  /** Поисковый сервис — клиент Meilisearch только для чтения. */
-  service?: { client: MeiliClient };
+  /**
+   * Поисковый сервис — клиент Meilisearch только для чтения; only — без моделей прототипа, как у
+   * pnpm eval --service-only (шаг 8 фазы 4): размечаются только сервис и «Текст».
+   */
+  service?: { client: MeiliClient; only?: boolean };
   log?: (line: string) => void;
 }
 
@@ -239,7 +242,7 @@ export async function judgeEval(
   options: JudgeOptions,
 ): Promise<JudgeReport> {
   const log = options.log ?? (() => {});
-  const models = options.models ?? MODELS;
+  const models = options.service?.only ? [] : (options.models ?? MODELS);
   const { catalog, errors } = await loadCatalog(configs, dataDir);
   const all = await readQueries(options.queriesPath);
   const queries =

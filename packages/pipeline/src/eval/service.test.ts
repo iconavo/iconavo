@@ -6,13 +6,13 @@ import { searchDocuments } from "../meili/docs.js";
 import { fakeMeili } from "../meili/fake.testing.js";
 import { loadCatalog } from "../search/catalog.js";
 import { fakeJudgeClient } from "./client.testing.js";
-import { ALPHA_GRID } from "./config.js";
+import { ALPHA_GRID, CEILING_DEPTH, DEPTH, SCORED_DEPTH } from "./config.js";
 import { config, type Env, rule, setupEnv } from "./env.testing.js";
 import { readQueries } from "./golden.js";
 import { judgeEval } from "./judge.js";
-import { formatEvalReport, renderEvalPage } from "./report.js";
+import { formatEvalReport, renderEvalPage, renderWorstPage } from "./report.js";
 import { evaluate } from "./run.js";
-import { serviceKey, serviceLists } from "./service.js";
+import { firstFit, serviceKey, serviceLists, withExact } from "./service.js";
 import { SERVICE_KEY, SERVICE_TEXT_KEY } from "./systems.js";
 
 let env: Env;
@@ -59,9 +59,73 @@ describe("serviceLists", () => {
     expect(at(serviceKey(0.5), "ru-001")).toEqual(
       expect.arrayContaining(["demo:trash", "demo:shopping-cart"]),
     );
-    // Пять запросов — один multi-search.
-    expect(meili.calls.filter((c) => c === "multiSearch")).toHaveLength(1);
+    // Пять запросов — два multi-search: выдача и списки с оценками.
+    expect(meili.calls.filter((c) => c === "multiSearch")).toHaveLength(2);
     expect(s.fetched).toBe(queries.length);
+    // Списки с оценками — по запросу эталона; точное имя — отдельно, в списках его нет.
+    const i = queries.findIndex((q) => q.id === "en-002");
+    expect(s.scored.exact[i]).toEqual(["demo:house"]);
+    expect(s.scored.words[i]?.map((h) => h.icon)).not.toContain("demo:house");
+    const words = s.scored.words[queries.findIndex((q) => q.id === "ru-001")];
+    expect(words?.map((h) => h.icon)).toEqual(
+      expect.arrayContaining(["demo:trash", "demo:shopping-cart"]),
+    );
+    expect(words?.every((h) => h.score > 0 && h.score <= 1)).toBe(true);
+    expect(s.scored.meaning).toHaveLength(queries.length);
+  });
+
+  it("при доле смысла из настроек список глубже — до 30-го места; списки с оценками — до 200", async () => {
+    const { meili, catalog } = await seededMeili();
+    const queries = await readQueries(env.options.queriesPath);
+    const bodies: Record<string, unknown>[][] = [];
+    await serviceLists({
+      client: {
+        ...meili.client,
+        multiSearch: (body) => {
+          bodies.push(body as Record<string, unknown>[]);
+          return meili.client.multiSearch(body);
+        },
+      },
+      catalog,
+      queries,
+      queryDir: env.options.queryDir,
+      embedClient: fakeEmbeddingClient().client,
+    });
+    const [main, scored] = bodies;
+    const hybrid = (main ?? []).filter((q) => q.hybrid !== undefined);
+    const ratioOf = (q: Record<string, unknown>) =>
+      (q.hybrid as { semanticRatio: number }).semanticRatio;
+    expect(
+      hybrid.filter((q) => ratioOf(q) === SEMANTIC_RATIO).map((q) => q.limit),
+    ).toEqual(queries.map(() => CEILING_DEPTH));
+    expect(
+      new Set(
+        hybrid.filter((q) => ratioOf(q) !== SEMANTIC_RATIO).map((q) => q.limit),
+      ),
+    ).toEqual(new Set([DEPTH]));
+    expect(scored).toHaveLength(2 * queries.length);
+    expect(
+      (scored ?? []).every(
+        (q) => q.showRankingScore === true && q.limit === SCORED_DEPTH,
+      ),
+    ).toBe(true);
+    // Пары: только слова, затем только смысл (доля 1).
+    expect(scored?.[0]?.hybrid).toBeUndefined();
+    expect(ratioOf(scored?.[1] as Record<string, unknown>)).toBe(1);
+  });
+
+  it("место первой подходящей и список с точным именем впереди", () => {
+    expect(firstFit(["a:x", "a:y"], new Set(["a:y"]))).toBe(2);
+    expect(firstFit(["a:x"], new Set(["a:z"]))).toBeUndefined();
+    expect(
+      withExact(
+        ["a:house"],
+        [
+          { icon: "a:house", score: 0.9 },
+          { icon: "a:home", score: 0.8 },
+        ],
+      ),
+    ).toEqual(["a:house", "a:home"]);
   });
 
   it("карточка не из data/ — заметка, в списках её нет", async () => {
@@ -147,10 +211,8 @@ describe("сервис в замере", () => {
       SERVICE_KEY,
       SERVICE_TEXT_KEY,
     ]);
-    // Подобрана по рабочей части, если её хватило; иначе — из настроек.
-    expect(partial.service?.ratio).toBe(
-      partial.service?.tuned?.alpha ?? SEMANTIC_RATIO,
-    );
+    // «Сервис» — всегда выдача функции, при доле из настроек; правило только советует (ADR-0053).
+    expect(partial.service?.ratio).toBe(SEMANTIC_RATIO);
     // Без моделей прототипа — ни пустых строк долей и длин, ни разделов без данных.
     expect(formatEvalReport(partial)).not.toMatch(
       /Доля смысловой части:|Длина вектора/,
@@ -158,6 +220,49 @@ describe("сервис в замере", () => {
     const page = renderEvalPage(partial);
     expect(page).not.toContain("<h2>Длина вектора</h2>");
     expect(page).not.toContain("<h2>Промахи");
+  });
+
+  it("судья только для сервиса: без моделей прототипа; худшие запросы, оракул и наборы в пятёрке", async () => {
+    const { meili } = await seededMeili();
+    const judge = fakeJudgeClient({ verdict: rule });
+    const j = await judgeEval([config], env.dataDir, {
+      ...env.options,
+      // Векторов иконок нет — без моделей прототипа они и не нужны.
+      storeDir: "нет-такой-папки",
+      client: judge.client,
+      service: { client: meili.client, only: true },
+    });
+    expect(j.stop).toEqual([]);
+    expect(j.pending).toBe(0);
+    const r = await evaluate([config], env.dataDir, {
+      queriesPath: env.options.queriesPath,
+      judgmentsPath: env.options.judgmentsPath,
+      overridesPath: env.options.overridesPath,
+      storeDir: "нет-такой-папки",
+      queryDir: env.options.queryDir,
+      embedClient: fakeEmbeddingClient().client,
+      service: { client: meili.client, only: true },
+    });
+    expect(r.stop).toEqual([]);
+    expect(r.unlabeled).toBe(0);
+    // Рабочая часть: ru-001 и en-001 — попадания, en-003 «единорог» — потолок, он худший.
+    expect(r.worst[0]?.query.id).toBe("en-003");
+    expect(r.worst.map((e) => e.query.id).sort()).toEqual([
+      "en-001",
+      "en-003",
+      "ru-001",
+    ]);
+    expect(r.worst[0]?.diagnosis).toBe("ceiling");
+    expect(r.worst.filter((e) => e.diagnosis === "weak")).toHaveLength(2);
+    expect(r.worst.every((e) => e.query.split === "work")).toBe(true);
+    expect(r.oracle).toEqual({ ru: { hits: 1, n: 1 }, en: { hits: 1, n: 2 } });
+    expect(r.serviceShares?.sets.map((s) => s.set)).toEqual(["demo"]);
+    expect(formatEvalReport(r)).toMatch(/Оракул на рабочей части.*ru 1 из 1/);
+    expect(renderEvalPage(r)).toContain("Сервис — строго по языкам");
+    const worst = renderWorstPage(r);
+    expect(worst).toContain("Потолок: подходящей иконки не видел никто");
+    expect(worst).toContain("en-003");
+    expect(worst).not.toContain("ru-002");
   });
 
   it("с разметкой судьи доля смысла подбирается по рабочей части", async () => {

@@ -26,6 +26,8 @@ export interface MultiSearchQuery {
   attributesToRetrieve: string[];
   vector?: number[];
   hybrid?: { embedder: string; semanticRatio: number };
+  /** Оценка карточки в ответе (`_rankingScore`): списки замера и их разбор (шаг 8 фазы 4). */
+  showRankingScore?: boolean;
 }
 
 const LICENSE = /^[A-Za-z0-9][A-Za-z0-9.+-]*$/;
@@ -107,13 +109,26 @@ export interface MainQueryOptions {
   semanticRatio?: number;
 }
 
+/** Условия основной выдачи: фильтры и, если есть, исключение карточек точного имени. */
+function mainFilter(filters: SearchFilters, exclude?: string): string[] {
+  const filter = filterConditions(filters);
+  if (exclude !== undefined) {
+    filter.push(`NOT names = "${checkedName(exclude)}"`);
+  }
+  return filter;
+}
+
+/**
+ * Вектор запроса в теле: семь знаков после запятой. Косинус сдвигается меньше чем на 0,000002, а тело
+ * запроса вдвое короче, чем с полной записью числа.
+ */
+const bodyVector = (vector: ArrayLike<number>) =>
+  Array.from(vector, (v) => Math.round(v * 1e7) / 1e7);
+
 /** Основная выдача: слова или гибрид слов и смысла. */
 export function mainQuery(options: MainQueryOptions): MultiSearchQuery {
   const window = mainWindow(options.start, options.limit);
-  const filter = filterConditions(options.filters);
-  if (options.exclude !== undefined) {
-    filter.push(`NOT names = "${checkedName(options.exclude)}"`);
-  }
+  const filter = mainFilter(options.filters, options.exclude);
   const query: MultiSearchQuery = {
     indexUid: INDEX_UID,
     q: options.q,
@@ -123,15 +138,56 @@ export function mainQuery(options: MainQueryOptions): MultiSearchQuery {
   };
   if (filter.length > 0) query.filter = filter;
   if (options.vector !== undefined) {
-    // Семь знаков после запятой: косинус сдвигается меньше чем на 0,000002, а тело запроса вдвое
-    // короче, чем с полной записью числа.
-    query.vector = Array.from(options.vector, (v) => Math.round(v * 1e7) / 1e7);
+    query.vector = bodyVector(options.vector);
     query.hybrid = {
       embedder: EMBEDDER,
       semanticRatio: options.semanticRatio ?? SEMANTIC_RATIO,
     };
   }
   return query;
+}
+
+export interface ScoredQueryOptions {
+  /** Нормализованный текст запроса без префикса набора. */
+  q: string;
+  filters: SearchFilters;
+  /** Точное имя запроса: его карточки идут отдельно и из списка исключаются. */
+  exclude?: string;
+  /** Первых карточек списка. */
+  limit: number;
+  /** Поля карточки; по умолчанию — только имя. */
+  fields?: readonly string[];
+}
+
+/**
+ * Только слова — с оценкой Meilisearch (`_rankingScore`, 0…1: доля от лучшей возможной по правилам
+ * ранжирования). Списки для замера (шаг 8 фазы 4): по ним видно, нашлась ли иконка словами.
+ */
+export function keywordQuery(options: ScoredQueryOptions): MultiSearchQuery {
+  const query: MultiSearchQuery = {
+    indexUid: INDEX_UID,
+    q: options.q,
+    limit: options.limit,
+    attributesToRetrieve: [...(options.fields ?? ["icon"])],
+    showRankingScore: true,
+  };
+  const filter = mainFilter(options.filters, options.exclude);
+  if (filter.length > 0) query.filter = filter;
+  return query;
+}
+
+/**
+ * Только смысл — доля смысла 1, с оценкой близости вектора запроса к карточке. Текст запроса тоже
+ * идёт: гибрид без текста Meilisearch считает «поиском без запроса» и векторы не сравнивает.
+ */
+export function semanticQuery(
+  options: ScoredQueryOptions & { vector: ArrayLike<number> },
+): MultiSearchQuery {
+  return {
+    ...keywordQuery(options),
+    vector: bodyVector(options.vector),
+    hybrid: { embedder: EMBEDDER, semanticRatio: 1 },
+  };
 }
 
 /**

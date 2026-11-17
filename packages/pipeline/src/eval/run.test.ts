@@ -4,7 +4,7 @@ import { fakeJudgeClient } from "./client.testing.js";
 import { config, type Env, rule, setupEnv } from "./env.testing.js";
 import { judgeEval } from "./judge.js";
 import { baselineJson, formatEvalReport, renderEvalPage } from "./report.js";
-import { evaluate } from "./run.js";
+import { diagnose, evaluate, type WorstEntry, worstOrder } from "./run.js";
 
 let env: Env;
 beforeEach(async () => {
@@ -30,6 +30,54 @@ async function judgeAll() {
     client: fakeJudgeClient({ verdict: rule }).client,
   });
 }
+
+describe("диагноз худших запросов (ADR-0053)", () => {
+  it.each([
+    [0, {}, "ceiling"],
+    [0, { service: 1 }, "ceiling"],
+    [2, { service: 3 }, "weak"],
+    [2, { service: 5, words: 1 }, "weak"],
+    [2, { service: 12, words: 4 }, "words"],
+    [2, { words: 10 }, "words"],
+    [2, { service: 12 }, "near"],
+    [2, { meaning: 18 }, "near"],
+    [2, { words: 20 }, "near"],
+    [2, { service: 25, words: 40, meaning: 21 }, "missing"],
+    [2, {}, "missing"],
+  ] as const)("подходящих %i, места %j → %s", (fits, at, expected) => {
+    expect(diagnose(fits, at)).toBe(expected);
+  });
+
+  it("порядок: подходящей нет в 30 местах — первыми, затем по месту, затем по id", () => {
+    const entry = (id: string, service?: number): WorstEntry => ({
+      query: {
+        id,
+        query: id,
+        lang: "ru",
+        type: "object",
+        description: "",
+        split: "work",
+      },
+      fits: ["a:x"],
+      ranked: [],
+      at: service === undefined ? {} : { service },
+      partials: 0,
+      diagnosis: diagnose(1, service === undefined ? {} : { service }),
+    });
+    const sorted = [
+      entry("ru-003", 2),
+      entry("ru-002"),
+      entry("ru-004", 9),
+      entry("ru-001"),
+    ].sort(worstOrder);
+    expect(sorted.map((e) => e.query.id)).toEqual([
+      "ru-001",
+      "ru-002",
+      "ru-004",
+      "ru-003",
+    ]);
+  });
+});
 
 describe("pnpm eval", () => {
   it("без разметки — цифр нет, подсказка pnpm judge", async () => {

@@ -133,6 +133,7 @@ import {
   formatJudgeReport,
   renderEvalPage,
   renderJudgePage,
+  renderWorstPage,
 } from "./eval/report.js";
 import { evalStop, evaluate } from "./eval/run.js";
 import {
@@ -367,8 +368,11 @@ const USAGE = `Использование:
       --dry-run                       только посчитать пары и оценить стоимость
       --service                       и поисковый сервис (ADR-0049): его десятки из Meilisearch;
                                       нужны ${SEARCH_ENV.url} и ${SEARCH_ENV.readKey}
+      --service-only                  только сервис и «Текст», без моделей прототипа (шаг 8 фазы 4);
+                                      и места 11–30 сервиса у худших запросов рабочей части
   pnpm eval                           замер поиска по эталону: Hit@5, MRR@10, P@5 по моделям,
-                                      языкам и частям; страница .cache/reports/eval/index.html
+                                      языкам и частям; страница .cache/reports/eval/index.html,
+                                      с сервисом — и худшие запросы рабочей части eval/worst.html
       --model=…                       только эта модель (флаг можно повторить)
       --baseline                      записать docs/eval/baseline.json — итог для фазы 2
       --service                       и поисковый сервис (ADR-0049): доля смысла по рабочей части
@@ -690,9 +694,8 @@ for (const flag of flags) {
   }
   if (command === "eval" && flag === "--baseline") continue;
   if (
-    (command === "eval" &&
-      (flag === "--service" || flag === "--service-only")) ||
-    (command === "judge" && flag === "--service")
+    (command === "eval" || command === "judge") &&
+    (flag === "--service" || flag === "--service-only")
   ) {
     continue;
   }
@@ -1271,7 +1274,14 @@ try {
       ...(limit === undefined ? {} : { limit }),
       maxRub: judgeMaxRub,
       dryRun,
-      ...(flags.includes("--service") ? { service: readService() } : {}),
+      ...(flags.includes("--service") || flags.includes("--service-only")
+        ? {
+            service: {
+              ...readService(),
+              only: flags.includes("--service-only"),
+            },
+          }
+        : {}),
       log: (line) => console.log(line),
     });
     console.log(`\n${formatJudgeReport(report)}`);
@@ -1312,6 +1322,11 @@ try {
     await mkdir(reportDir, { recursive: true });
     const htmlPath = join(reportDir, "index.html");
     await writeFile(htmlPath, renderEvalPage(report), "utf8");
+    if (report.worst.length > 0) {
+      const worstPath = join(reportDir, "worst.html");
+      await writeFile(worstPath, renderWorstPage(report), "utf8");
+      console.log(`Худшие запросы рабочей части: ${worstPath}`);
+    }
     if (!evalStop(report)) {
       const json = canonicalJson(baselineJson(report));
       await writeFile(join(reportDir, "eval.json"), json, "utf8");

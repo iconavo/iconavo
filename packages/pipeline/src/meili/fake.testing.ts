@@ -100,11 +100,16 @@ export function fakeMeili(options: FakeMeiliOptions = {}) {
           const found = matchDocs(docs.values(), String(q.q ?? ""), filter);
           const offset = Number(q.offset ?? 0);
           const limit = Number(q.limit ?? 20);
+          // Оценка (showRankingScore) — убывает с местом, от 0 до 1, как у Meilisearch.
+          const scored = q.showRankingScore === true;
           return {
-            hits: found.slice(offset, offset + limit).map((d) => ({
+            hits: found.slice(offset, offset + limit).map((d, k) => ({
               icon: d.icon,
               variants: d.variants,
               tones: d.tones,
+              ...(scored
+                ? { _rankingScore: 1 - (offset + k) / (found.length + 1) }
+                : {}),
             })),
           };
         }),

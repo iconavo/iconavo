@@ -4,7 +4,7 @@
 // по наборам для выбранной модели. Поисковый сервис (ADR-0049) — «Сервис» и «Сервис, только слова»
 // плюс сетка доли смысла; их списки приходят из Meilisearch готовыми (eval/service.ts).
 
-import { SEARCH_MODEL } from "@iconavo-ui/search";
+import { SEARCH_MODEL, SEMANTIC_RATIO } from "@iconavo-ui/search";
 import type { EmbeddingModel } from "../embed/config.js";
 import type { Catalog } from "../search/catalog.js";
 import { MODEL_SEARCH } from "../search/config.js";
@@ -17,11 +17,19 @@ import {
 } from "../search/hybrid.js";
 import { searchText, type TextIndex, type TextResult } from "../search/text.js";
 import { cosines, loadModelVectors } from "../search/vectors.js";
-import { ALPHA_GRID, DEPTH, LENGTHS, SET_DEPTH } from "./config.js";
-import { fitsOf, type GoldenQuery, type Labels } from "./golden.js";
-import { type CurvePoint, pickAlpha, summarize } from "./metrics.js";
+import {
+  ALPHA_GRID,
+  CEILING_DEPTH,
+  DEPTH,
+  LENGTHS,
+  MISS_DEPTH,
+  SET_DEPTH,
+} from "./config.js";
+import { fitsOf, type GoldenQuery, type Labels, type Split } from "./golden.js";
+import { type CurvePoint, hitAt, pickAlpha, summarize } from "./metrics.js";
 
-export type Role = "main" | "alpha" | "length" | "set" | "ratio";
+/** deep — места 11–30 сервиса у худших запросов рабочей части: только для разметки и диагноза. */
+export type Role = "main" | "alpha" | "length" | "set" | "ratio" | "deep";
 
 export interface System {
   key: string;
@@ -38,11 +46,20 @@ export interface System {
   role: Role;
   /** Списки варианта приходят готовыми — от поискового сервиса, а не из прототипа. */
   remote?: true;
+  /** Размечаются только запросы этой части эталона. */
+  split?: Split;
+  /**
+   * Размечаются только запросы, у которых своя десятка размечена целиком и: miss — подходящая иконка
+   * есть, но не в пятёрке; ceiling — подходящей иконки не нашёл никто.
+   */
+  when?: "miss" | "ceiling";
 }
 
 /** Ключи вариантов поискового сервиса. */
 export const SERVICE_KEY = "service:gemini";
 export const SERVICE_TEXT_KEY = "service-text:gemini";
+export const SERVICE_MISS_KEY = "service-miss:gemini";
+export const SERVICE_CEILING_KEY = "service-ceiling:gemini";
 export const ratioKey = (ratio: number) => `ratio:gemini@${ratio}`;
 
 export interface Choice {
@@ -192,6 +209,34 @@ export function systems(
         remote: true,
       });
     }
+    // Диагноз худших запросов (шаг 8 фазы 4, ADR-0053): выдача функции edge API — при доле смысла из
+    // настроек, а не при подобранной.
+    out.push(
+      {
+        key: SERVICE_MISS_KEY,
+        title: "Сервис, места 11–20 у промахов рабочей части",
+        mode: "hybrid",
+        alpha: SEMANTIC_RATIO,
+        length: SEARCH_MODEL.dims,
+        depth: MISS_DEPTH,
+        role: "deep",
+        remote: true,
+        split: "work",
+        when: "miss",
+      },
+      {
+        key: SERVICE_CEILING_KEY,
+        title: "Сервис, места 11–30 у потолка рабочей части",
+        mode: "hybrid",
+        alpha: SEMANTIC_RATIO,
+        length: SEARCH_MODEL.dims,
+        depth: CEILING_DEPTH,
+        role: "deep",
+        remote: true,
+        split: "work",
+        when: "ceiling",
+      },
+    );
   }
   return out;
 }
@@ -305,6 +350,17 @@ export function unlabeled(
     const list = rankings.lists.get(def.key) ?? [];
     queries.forEach((q, i) => {
       const known = labels.byQuery.get(q.id);
+      if (def.split !== undefined && q.split !== def.split) return;
+      if (def.when !== undefined) {
+        // Глубже десятки — только когда десятка размечена: иначе «промах» мог бы оказаться попаданием.
+        const top = (list[i] ?? []).slice(0, DEPTH);
+        if (top.some((id) => !known?.has(id))) return;
+        const fits = fitsOf(labels, q.id);
+        if (def.when === "ceiling" && fits.size > 0) return;
+        if (def.when === "miss" && (fits.size === 0 || hitAt(top, fits))) {
+          return;
+        }
+      }
       for (const id of (list[i] ?? []).slice(0, def.depth)) {
         if (known?.has(id)) continue;
         const set = out.get(q.id) ?? new Set<string>();
@@ -344,7 +400,8 @@ function workCurve(
     if (!list) return undefined;
     const rows = [];
     for (const { q, i } of work) {
-      const ranked = list[i] ?? [];
+      // Метрики — по десятке; у доли из настроек список глубже (места 11–30 для диагноза).
+      const ranked = (list[i] ?? []).slice(0, DEPTH);
       const known = labels.byQuery.get(q.id);
       if (
         (ranked.length === 0 && !allowEmpty) ||
