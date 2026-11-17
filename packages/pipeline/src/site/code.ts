@@ -424,6 +424,25 @@ export async function codeProblems(
   await choose(page, "pill", "HTML");
   const plain = `${readmeImport(readme)}\n\n<iconavo-icon icon="${CODE_ICON}" width="24"></iconavo-icon>`;
   same("код тега в панели", await codeBlock(page, "Usage", plain), plain);
+  // SVG в панели — побайтно ответ edge API с размером 24 px. Страница иконки получает рисунок в серверном
+  // HTML, а панели его грузит браузер пачкой edge API (иконки нет на первой странице сетки): подменённую
+  // пачку видит только эта сверка — контрольный запуск.
+  const panelSvg = await (
+    await fetch(`${o.api}${iconPath(CODE_ICON)}.svg?width=24`)
+  ).text();
+  await choose(page, "pill", "SVG");
+  for (const option of await page
+    .locator(CODE_ROOT)
+    .first()
+    .locator(".panel-option")
+    .all()) {
+    if (await option.locator("input").isChecked()) await option.click();
+  }
+  same(
+    "код SVG в панели — ответ API",
+    await codeBlock(page, "SVG", panelSvg),
+    panelSvg,
+  );
   return problems;
 }
 
