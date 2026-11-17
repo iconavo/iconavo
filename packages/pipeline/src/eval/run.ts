@@ -18,15 +18,20 @@ import { buildTextIndex } from "../search/text.js";
 import { catalogBytes } from "../search/vectors.js";
 import type { SourceConfig } from "../sources/config.js";
 import {
+  DEPTH,
+  HIT_K,
   JUDGE_MODEL,
   LENGTH_TOLERANCE,
+  MISS_DEPTH,
   PROMPT_VERSION,
   SIGNIFICANCE,
+  WORST,
 } from "./config.js";
 import {
   currentLabels,
   fitsOf,
   type GoldenQuery,
+  LANGS,
   type Labels,
   type Lang,
   type QueryType,
@@ -44,7 +49,12 @@ import {
   type Summary,
   summarize,
 } from "./metrics.js";
-import { serviceLists } from "./service.js";
+import {
+  firstFit,
+  type ScoredLists,
+  serviceLists,
+  withExact,
+} from "./service.js";
 import {
   type Choice,
   configChoice,
@@ -95,6 +105,68 @@ export interface Recommendation {
   closeAll: string[];
 }
 
+/**
+ * Наборы в первой пятёрке варианта на рабочей части — по имеющейся разметке, без новых пар: доля
+ * карточек каталога, доля подходящих иконок, доля мест в пятёрке и сколько из этих мест подходят.
+ */
+export interface SetShares {
+  /** Подпись варианта: модель гибрида прототипа или «Сервис». */
+  model: string;
+  sets: {
+    set: string;
+    docs: number;
+    fits: number;
+    slots: number;
+    slotFits: number;
+  }[];
+}
+
+/**
+ * Диагноз худшего запроса (ADR-0053): ceiling — подходящей иконки не видел никто; weak — попадание,
+ * но не на первых местах; words — слова нашли её в десятке, а в выдаче она ниже пятёрки; near —
+ * рядом, до 20-го места; missing — иконка есть, но ни слова, ни смысл её не находят.
+ */
+export type Diagnosis = "ceiling" | "weak" | "words" | "near" | "missing";
+
+/** Места первой подходящей (с 1): в выдаче сервиса, только по словам, только по смыслу. */
+export interface FitPlaces {
+  service?: number;
+  words?: number;
+  meaning?: number;
+}
+
+export function diagnose(fits: number, at: FitPlaces): Diagnosis {
+  if (fits === 0) return "ceiling";
+  if (at.service !== undefined && at.service <= HIT_K) return "weak";
+  if (at.words !== undefined && at.words <= DEPTH) return "words";
+  const near = (place?: number) => place !== undefined && place <= MISS_DEPTH;
+  if (near(at.service) || near(at.words) || near(at.meaning)) return "near";
+  return "missing";
+}
+
+export interface WorstEntry {
+  query: GoldenQuery;
+  /** Подходящие по разметке. */
+  fits: string[];
+  /** Выдача сервиса при доле смысла из настроек — до 30-го места. */
+  ranked: string[];
+  at: FitPlaces;
+  /** «Частично» в пятёрке сервиса: если таких много, судья, возможно, строг. */
+  partials: number;
+  diagnosis: Diagnosis;
+}
+
+/** Порядок худших: дальше всего — подходящей нет и в 30 местах, затем по месту, затем по id. */
+export function worstOrder(a: WorstEntry, b: WorstEntry): number {
+  const place = (e: WorstEntry) => e.at.service ?? Number.POSITIVE_INFINITY;
+  const severity: Diagnosis[] = ["missing", "ceiling", "words", "near", "weak"];
+  return (
+    place(b) - place(a) ||
+    severity.indexOf(a.diagnosis) - severity.indexOf(b.diagnosis) ||
+    (a.query.id < b.query.id ? -1 : a.query.id > b.query.id ? 1 : 0)
+  );
+}
+
 export interface EvalReport {
   catalog: Catalog;
   queries: GoldenQuery[];
@@ -110,30 +182,29 @@ export interface EvalReport {
   /** Попарно на контрольной части и на всех запросах: ключи вариантов и счёты. */
   pairs: { a: string; b: string; holdout: Paired; all: Paired }[];
   recommendation?: Recommendation;
+  /** Наборы в первой пятёрке лидера прототипа — на рабочей части. */
+  setShares?: SetShares;
   /**
-   * Наборы в первой пятёрке лидера — по имеющейся разметке, без новых пар: доля карточек каталога,
-   * доля подходящих иконок, доля мест в пятёрке и сколько из этих мест подходят.
-   */
-  setShares?: {
-    model: string;
-    sets: {
-      set: string;
-      docs: number;
-      fits: number;
-      slots: number;
-      slotFits: number;
-    }[];
-  };
-  /**
-   * Поисковый сервис (ADR-0049): доля смысла — подобранная по рабочей части или из настроек; сравнение
-   * с гибридом Gemini прототипа на контрольной части. notWorse — сервис не хуже в пределах
-   * случайности: Hit@5 не ниже или p ≥ 0,05.
+   * Поисковый сервис (ADR-0049, ADR-0053): «Сервис» — выдача функции edge API, при доле смысла из
+   * настроек (SEMANTIC_RATIO); tuned — какую долю выбрало бы правило на рабочей части. Сравнение с
+   * гибридом Gemini прототипа на контрольной части: notWorse — Hit@5 не ниже или p ≥ 0,05.
    */
   service?: {
     ratio: number;
     tuned?: Tuned;
     versus?: { key: string; holdout: Paired; notWorse: boolean };
   };
+  /** Списки сервиса с оценками — для диагноза худших запросов. */
+  scored?: ScoredLists;
+  /** Худшие запросы рабочей части у сервиса — с диагнозом (шаг 8 фазы 4, ADR-0053). */
+  worst: WorstEntry[];
+  /**
+   * Оракул рабочей части по языкам: запрос засчитан, если хоть один вариант замера нашёл подходящую
+   * иконку в пятёрке; n — все запросы языка, и с «потолком». Это потолок любой перестановки выдачи.
+   */
+  oracle?: Record<Lang, { hits: number; n: number }>;
+  /** Наборы в первой пятёрке сервиса — на рабочей части. */
+  serviceShares?: SetShares;
   /** Промахи лучшего гибрида — только по рабочей части. */
   misses: { query: GoldenQuery; fits: string[]; ranked: string[] }[];
   rankings?: Rankings;
@@ -224,6 +295,7 @@ export async function evaluate(
     lengths: [],
     pairs: [],
     misses: [],
+    worst: [],
     versions: await setVersions(configs, dataDir),
     unlabeled: 0,
     notes: reset ? [reset] : [],
@@ -273,6 +345,7 @@ export async function evaluate(
       return report;
     }
     remote = s.lists;
+    report.scored = s.scored;
     report.service = { ratio: SEMANTIC_RATIO };
   }
   const input = {
@@ -290,15 +363,14 @@ export async function evaluate(
     report.service ? { ratio: report.service.ratio } : undefined;
   let defs = systems(models, report.choice, sets, service());
   let rankings = await rankAll(input, defs);
+  // «Сервис» — всегда выдача функции, при доле из настроек; правило на рабочей части только советует
+  // (ADR-0053): долю меняет правка SEMANTIC_RATIO, а не замер.
   if (report.service) {
     const tunedRatio = tuneRatio(rankings, queries, labels);
-    if (tunedRatio) {
-      report.service = { ratio: tunedRatio.alpha, tuned: tunedRatio };
-      defs = systems(models, report.choice, sets, service());
-      rankings = await rankAll(input, defs);
-    } else {
+    if (tunedRatio) report.service.tuned = tunedRatio;
+    else {
       report.notes.push(
-        "доля смысла сервиса не подобрана: первые десятки сетки на рабочей части размечены не целиком — взята из настроек (SEMANTIC_RATIO)",
+        "доля смысла сервиса по правилу не подобрана: первые десятки сетки на рабочей части размечены не целиком",
       );
     }
   }
@@ -495,34 +567,12 @@ export async function evaluate(
       closeAll: close("all"),
     };
     const list = listOf(leader.system.key);
-    const shares = sets.map((set) => ({
-      set,
-      docs: catalog.docs.filter((d) => d.set === set).length,
-      fits: 0,
-      slots: 0,
-      slotFits: 0,
-    }));
-    const shareOf = (id: string) =>
-      shares.find((s) => id.startsWith(`${s.set}:`));
-    for (const q of queries) {
-      const known = labels.byQuery.get(q.id);
-      for (const [id, v] of known ?? []) {
-        if (v === "fits") {
-          const s = shareOf(id);
-          if (s) s.fits++;
-        }
-      }
-      for (const id of (list[index.get(q.id) as number] ?? []).slice(0, 5)) {
-        const s = shareOf(id);
-        if (!s) continue;
-        s.slots++;
-        if (known?.get(id) === "fits") s.slotFits++;
-      }
-    }
-    report.setShares = {
-      model: leader.system.model as string,
-      sets: shares,
-    };
+    report.setShares = setSharesOf(
+      leader.system.model as string,
+      list,
+      queries.filter((q) => q.split === "work"),
+      { index, labels, catalog, sets },
+    );
     for (const q of report.included.filter((x) => x.split === "work")) {
       const fits = fitsOf(labels, q.id);
       const top = list[index.get(q.id) as number] ?? [];
@@ -535,5 +585,106 @@ export async function evaluate(
       }
     }
   }
+
+  // Сервис (шаг 8 фазы 4, ADR-0053): наборы в пятёрке, оракул и худшие запросы — только рабочая часть.
+  if (report.service) {
+    const work = queries.filter((q) => q.split === "work");
+    const serviceList = listOf(SERVICE_KEY);
+    report.serviceShares = setSharesOf("Сервис", serviceList, work, {
+      index,
+      labels,
+      catalog,
+      sets,
+    });
+    const keys = [...rankings.lists.keys()];
+    const oracle = {} as Record<Lang, { hits: number; n: number }>;
+    for (const lang of LANGS) {
+      const own = work.filter((q) => q.lang === lang);
+      oracle[lang] = {
+        n: own.length,
+        hits: own.filter((q) => {
+          const fits = fitsOf(labels, q.id);
+          const i = index.get(q.id) as number;
+          return keys.some((k) => hitAt(listOf(k)[i] ?? [], fits));
+        }).length,
+      };
+    }
+    report.oracle = oracle;
+    const scored = report.scored;
+    report.worst = work
+      .map((q): WorstEntry => {
+        const i = index.get(q.id) as number;
+        const fits = fitsOf(labels, q.id);
+        const ranked = serviceList[i] ?? [];
+        const at: FitPlaces = {};
+        const own = firstFit(ranked, fits);
+        if (own !== undefined) at.service = own;
+        if (scored) {
+          const exact = scored.exact[i] ?? [];
+          const words = firstFit(withExact(exact, scored.words[i] ?? []), fits);
+          if (words !== undefined) at.words = words;
+          const meaning = firstFit(
+            withExact(exact, scored.meaning[i] ?? []),
+            fits,
+          );
+          if (meaning !== undefined) at.meaning = meaning;
+        }
+        const known = labels.byQuery.get(q.id);
+        return {
+          query: q,
+          fits: [...fits].sort(),
+          ranked,
+          at,
+          partials: ranked
+            .slice(0, HIT_K)
+            .filter((id) => known?.get(id) === "partial").length,
+          diagnosis: diagnose(fits.size, at),
+        };
+      })
+      .sort(worstOrder)
+      .slice(0, WORST);
+  }
   return report;
+}
+
+/** Наборы в первой пятёрке варианта — по запросам queries и имеющейся разметке. */
+function setSharesOf(
+  model: string,
+  list: readonly string[][],
+  queries: readonly GoldenQuery[],
+  ctx: {
+    index: ReadonlyMap<string, number>;
+    labels: Labels;
+    catalog: Catalog;
+    sets: readonly string[];
+  },
+): SetShares {
+  const shares = ctx.sets.map((set) => ({
+    set,
+    docs: ctx.catalog.docs.filter((d) => d.set === set).length,
+    fits: 0,
+    slots: 0,
+    slotFits: 0,
+  }));
+  const shareOf = (id: string) =>
+    shares.find((s) => id.startsWith(`${s.set}:`));
+  for (const q of queries) {
+    const known = ctx.labels.byQuery.get(q.id);
+    for (const [id, v] of known ?? []) {
+      if (v === "fits") {
+        const s = shareOf(id);
+        if (s) s.fits++;
+      }
+    }
+    for (const id of (list[ctx.index.get(q.id) as number] ?? []).slice(
+      0,
+      HIT_K,
+    )) {
+      const s = shareOf(id);
+      if (!s) continue;
+      s.slots++;
+      if (known?.get(id) === "fits") s.slotFits++;
+    }
+  }
+  return { model, sets: shares };
 }

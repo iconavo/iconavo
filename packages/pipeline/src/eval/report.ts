@@ -19,7 +19,13 @@ import {
 import { type GoldenQuery, TYPES, type Verdict } from "./golden.js";
 import { type JudgeReport, shuffle, verdictCounts } from "./judge.js";
 import type { Summary } from "./metrics.js";
-import type { EvalReport, SystemResult } from "./run.js";
+import type {
+  Diagnosis,
+  EvalReport,
+  SetShares,
+  SystemResult,
+  WorstEntry,
+} from "./run.js";
 
 const rub = (n: number) => `${n.toFixed(2).replace(".", ",")} ₽`;
 const pct = (x: number) => `${Math.round(x * 100)}%`;
@@ -34,6 +40,8 @@ const TYPE_NAMES: Record<string, string> = {
   ui: "интерфейс",
   casual: "разговорные",
 };
+
+const LANG_ORDER = ["ru", "en"] as const;
 
 /** Плитка иконки по «набор:имя» с рамкой вердикта. */
 function tile(catalog: Catalog, id: string, verdict?: Verdict, note?: string) {
@@ -98,7 +106,8 @@ export function formatJudgeReport(r: JudgeReport): string {
       `Согласие судьи с собой: ${r.agreement.same} из ${r.agreement.pairs} пар (${percent(r.agreement.same, r.agreement.pairs)}), по «подходит или нет» — ${percent(r.agreement.sameFits, r.agreement.pairs)}`,
     );
   }
-  if (r.tuned) {
+  // Без моделей прототипа (--service-only) долей нет — и строки нет.
+  if (r.tuned && r.tuned.size > 0) {
     lines.push(
       `Доля смысловой части по рабочей части: ${[...r.tuned].map(([k, t]) => `${k} ${fixed(t.alpha, 1)}`).join(", ")}`,
     );
@@ -207,31 +216,38 @@ export function formatEvalReport(r: EvalReport): string {
     lines.push(
       `В замере ${r.included.length} запросов из ${r.queries.length}; без подходящей иконки в каталоге — ${r.ceiling.length}.`,
       "",
-      "Hit@5 — доля запросов с подходящей иконкой в первой пятёрке:",
+      "Hit@5 — доля запросов с подходящей иконкой в первой пятёрке; строго — по всем 200, «потолок» — промах:",
       textTable(
         [
           "Вариант",
+          "строго ru",
+          "строго en",
+          "строго, все 200",
+          "MRR@10 строго ru",
+          "MRR@10 строго en",
           "контр. ru",
           "контр. en",
           "контр. всего",
-          "все",
-          "строго, все 200",
-          "MRR@10 контр.",
-          "P@5 контр.",
         ],
         r.main.map((m) => [
           m.system.title,
+          plainCell(m.strict.all.ru),
+          plainCell(m.strict.all.en),
+          plainCell(m.strict.all.all),
+          fixed(m.strict.all.ru.mrr),
+          fixed(m.strict.all.en.mrr),
           plainCell(m.groups.holdout.ru),
           plainCell(m.groups.holdout.en),
           plainCell(m.groups.holdout.all),
-          plainCell(m.groups.all.all),
-          plainCell(m.strict.all.all),
-          fixed(m.groups.holdout.all.mrr),
-          fixed(m.groups.holdout.all.p5),
         ]),
       ),
       "",
     );
+    if (r.oracle) {
+      lines.push(
+        `Оракул на рабочей части — лучший из вариантов замера для каждого запроса: ${LANG_ORDER.map((l) => `${l} ${r.oracle?.[l].hits} из ${r.oracle?.[l].n}`).join(", ")}.`,
+      );
+    }
     // Замер только сервиса (CI) идёт без моделей прототипа: их долей и длин нет.
     if (r.choice.alpha.size > 0) {
       lines.push(
@@ -277,11 +293,17 @@ function mainTable(
     .join("")}</tbody></table>`;
 }
 
-/** Итог поискового сервиса (ADR-0049): доля смысла и сравнение с гибридом Gemini прототипа. */
+/** Итог поискового сервиса (ADR-0049, ADR-0053): доля смысла и сравнение с гибридом Gemini прототипа. */
 export function serviceText(r: EvalReport): string {
   const s = r.service;
   if (!s) return "";
-  const ratio = `Сервис: доля смысла ${fixed(s.ratio, 1)} ${s.tuned ? "(подобрана на рабочей части)" : "(из настроек)"}`;
+  const rule =
+    s.tuned === undefined
+      ? ""
+      : s.tuned.alpha === s.ratio
+        ? ", её же выбирает правило на рабочей части"
+        : `; правило на рабочей части выбрало бы ${fixed(s.tuned.alpha, 1)}`;
+  const ratio = `Сервис: доля смысла ${fixed(s.ratio, 1)}, как в функции edge API${rule}`;
   if (!s.versus) return `${ratio}.`;
   const h = s.versus.holdout;
   return `${ratio}; против гибрида Gemini прототипа на контрольной части нашёл только сервис ${h.onlyA}, только прототип ${h.onlyB}, p = ${fixed(h.p, 3)} — ${s.versus.notWorse ? "не хуже в пределах случайности" : "хуже прототипа сверх случайности: нужен запасной способ (ADR-0049)"}.`;
@@ -295,15 +317,40 @@ function serviceSection(r: EvalReport): string {
     ? `<table><thead><tr><th>Доля смысла</th><th>Hit@5</th><th>MRR@10</th></tr></thead><tbody>${s.tuned.curve
         .map(
           (p) =>
-            `<tr${p.alpha === s.ratio ? ` class="best"` : ""}><td class="num">${fixed(p.alpha, 1)}</td><td class="num">${pct(p.hit)}</td><td class="num">${fixed(p.mrr)}</td></tr>`,
+            `<tr${p.alpha === s.tuned?.alpha ? ` class="best"` : ""}><td class="num">${fixed(p.alpha, 1)}${p.alpha === s.ratio ? " · в функции" : ""}</td><td class="num">${pct(p.hit)}</td><td class="num">${fixed(p.mrr)}</td></tr>`,
         )
         .join("")}</tbody></table>
-<p class="muted">Рабочая часть. Жирным — выбранная доля: середина лучшего плато, при равенстве — по MRR@10, как α прототипа (ADR-0048, ADR-0049). 0 — только слова, 1 — только смысл.</p>`
-    : `<p class="muted">Доля смысла не подобрана: разметка рабочей части неполная — взята из настроек (SEMANTIC_RATIO).</p>`;
+<p class="muted">Рабочая часть. Жирным — доля, которую выбирает правило: середина лучшего плато, при равенстве — по MRR@10, как α прототипа (ADR-0048, ADR-0049). «В функции» — доля, с которой сейчас ищет edge API (SEMANTIC_RATIO): строка «Сервис» в таблицах — это она. 0 — только слова, 1 — только смысл.</p>`
+    : `<p class="muted">Правило долю не выбрало: разметка рабочей части неполная.</p>`;
   return `<h2>Поисковый сервис</h2>
 <p><b>${esc(serviceText(r))}</b></p>
-<p class="muted">«Сервис» — гибрид Meilisearch теми же запросами, что у функции edge API; «Сервис, только слова» — выдача, которая приходит первой, пока смысл не посчитан. Приёмка шага 8: сервис не хуже гибрида Gemini прототипа в пределах случайности (решение владельца 26 октября 2026).</p>
+<p class="muted">«Сервис» — гибрид Meilisearch теми же запросами, что у функции edge API, при её доле смысла; «Сервис, только слова» — выдача, которая приходит первой, пока смысл не посчитан. Цель шага 8 фазы 4 (ADR-0021, ADR-0053): строго не ниже 90% и на русском, и на английском; Hit@5 контрольной части не ниже, чем до правок.</p>
+${serviceStrictTable(r)}
 ${curve}`;
+}
+
+/** Сервис строго по языкам, контрольная и рабочая части и оракул рабочей части. */
+function serviceStrictTable(r: EvalReport): string {
+  const m = r.main.find((x) => x.system.key === "service:gemini");
+  if (!m) return "";
+  const hits = (s: Summary) =>
+    `${pct(s.hit)} <span class="muted">${s.hits} из ${s.n}</span>`;
+  const rows = [...LANG_ORDER, "all" as const]
+    .map((l) => {
+      const oracle =
+        l === "all"
+          ? r.oracle
+            ? `${r.oracle.ru.hits + r.oracle.en.hits} из ${r.oracle.ru.n + r.oracle.en.n}`
+            : "—"
+          : r.oracle
+            ? `${r.oracle[l].hits} из ${r.oracle[l].n}`
+            : "—";
+      return `<tr><td>${l === "all" ? "всего" : l}</td><td class="num">${hits(m.strict.all[l])}</td><td class="num">${fixed(m.strict.all[l].mrr)}</td><td class="num">${hits(m.strict.holdout[l])}</td><td class="num">${hits(m.strict.work[l])}</td><td class="num">${oracle}</td></tr>`;
+    })
+    .join("");
+  return `<h3>Сервис — строго по языкам</h3>
+<table><thead><tr><th>Язык</th><th>Hit@5 строго, все запросы</th><th>MRR@10 строго</th><th>Контрольная, строго</th><th>Рабочая, строго</th><th>Оракул рабочей</th></tr></thead><tbody>${rows}</tbody></table>
+<p class="muted">Строго — «потолок» считается промахом (ADR-0021). Оракул — лучший из вариантов замера для каждого запроса рабочей части: это потолок любой перестановки выдачи, выше — только новыми словами у иконок или новыми иконками. Худшие запросы рабочей части — на странице <a href="worst.html">worst.html</a>.</p>`;
 }
 
 function recommendationText(r: EvalReport): string {
@@ -318,9 +365,11 @@ function recommendationText(r: EvalReport): string {
   return `<p><b>Лидер — гибрид ${esc(rec.leader)}: Hit@5 ${hit} на контрольной части.</b> ${esc(close)}</p>`;
 }
 
-/** Наборы в первой пятёрке лидера: не проседает ли набор без тегов автора (Material Symbols). */
-function setSharesSection(r: EvalReport): string {
-  const s = r.setShares;
+/**
+ * Наборы в первой пятёрке варианта на рабочей части: не проседает ли набор без тегов автора и не
+ * попадает ли он в пятёрку лишний раз (Material Symbols).
+ */
+function setSharesSection(s: SetShares | undefined, heading: string): string {
   if (!s) return "";
   const docs = s.sets.reduce((n, x) => n + x.docs, 0);
   const fits = s.sets.reduce((n, x) => n + x.fits, 0);
@@ -332,9 +381,9 @@ function setSharesSection(r: EvalReport): string {
         `<tr><td>${esc(x.set)}</td><td class="num">${share(x.docs, docs)}</td><td class="num">${share(x.fits, fits)}</td><td class="num">${share(x.slots, slots)}</td><td class="num">${share(x.slotFits, x.slots)}</td></tr>`,
     )
     .join("");
-  return `<h2>Наборы в первой пятёрке — гибрид ${esc(s.model)}</h2>
+  return `<h2>Наборы в первой пятёрке — ${esc(heading)}</h2>
 <table><thead><tr><th>Набор</th><th>Карточек каталога</th><th>Подходящих по разметке</th><th>Мест в пятёрке</th><th>Из них подходят</th></tr></thead><tbody>${rows}</tbody></table>
-<p class="muted">По имеющейся разметке, без новых пар. Если доля мест в пятёрке заметно меньше доли подходящих, набор проседает; если больше, а подходят немногие, — набор попадает в пятёрку лишний раз. Замер поиска с фильтром по набору — вместе с фильтром на сайте (фаза 4).</p>`;
+<p class="muted">Рабочая часть, по имеющейся разметке, без новых пар. Если доля мест в пятёрке заметно меньше доли подходящих, набор проседает; если больше, а подходят немногие, — набор попадает в пятёрку лишний раз.</p>`;
 }
 
 /** Страница index.html замера. */
@@ -466,7 +515,8 @@ ${r.lengths.length > 0 ? `<h2>Длина вектора</h2>\n${lengthTable}` : 
 <h2>По типам запросов</h2>
 ${typeTable}
 ${perSet}
-${setSharesSection(r)}
+${setSharesSection(r.serviceShares, "сервис")}
+${setSharesSection(r.setShares, `гибрид ${r.setShares?.model ?? ""}`)}
 <h2>Потолок: подходящей иконки не нашлось</h2>
 ${ceiling ? `<ul>${ceiling}</ul>` : `<p class="muted">Таких запросов нет.</p>`}
 ${
@@ -477,6 +527,82 @@ ${
 ${misses || `<p class="muted">Промахов нет.</p>`}`
 }
 ${notes ? `<h2>Заметки</h2><ul>${notes}</ul>` : ""}`,
+  );
+}
+
+// ——— Худшие запросы (шаг 8 фазы 4, ADR-0053) ———
+
+/** Что значит диагноз и что предлагаю — словами для владельца. */
+export const DIAGNOSES: Record<Diagnosis, { title: string; fix: string }> = {
+  missing: {
+    title: "Иконка есть, но её не находят ни слова, ни смысл",
+    fix: "Новые слова у иконок — абстрактные понятия, роль в интерфейсе, разговорные слова (этап 3, обогащение).",
+  },
+  ceiling: {
+    title: "Потолок: подходящей иконки не видел никто",
+    fix: "Места 11–30 доразмечены; если подходящей нет и там — скорее всего, её нет в каталоге: новые наборы (фаза 5).",
+  },
+  words: {
+    title: "Слова нашли, смысл перебил",
+    fix: "По словам подходящая иконка в десятке, а в выдаче — ниже пятёрки: чинит слияние слов и смысла (этап 2).",
+  },
+  near: {
+    title: "Рядом: до 20-го места",
+    fix: "Слияние слов и смысла (этап 2); если не поможет — новые слова у иконок (этап 3).",
+  },
+  weak: {
+    title: "Попадание, но не на первых местах",
+    fix: "Слияние слов и смысла (этап 2) может поднять подходящую выше.",
+  },
+};
+
+const placeText = (place?: number) =>
+  place === undefined ? "нет в списке" : `${place}-е`;
+
+function worstEntry(r: EvalReport, e: WorstEntry): string {
+  const known = r.labels.byQuery.get(e.query.id);
+  const top = e.ranked
+    .slice(0, 10)
+    .map((id, i) => tile(r.catalog, id, known?.get(id), `${i + 1}`))
+    .join("");
+  const fits = e.fits
+    .slice(0, 8)
+    .map((id) => tile(r.catalog, id, "fits"))
+    .join("");
+  const d = DIAGNOSES[e.diagnosis];
+  const judge =
+    e.partials >= 3
+      ? `<p>В пятёрке ${e.partials} «частично» — посмотрите, не строг ли судья. Правка разметки — только по вашему слову и в обе стороны: «подходит» и «не подходит» (ADR-0053).</p>`
+      : "";
+  return `<div class="q"><h4>${esc(e.query.id)} · «${esc(e.query.query)}» <span class="muted">${e.query.lang}, ${TYPE_NAMES[e.query.type] ?? e.query.type}</span></h4>
+<p><b>${esc(d.title)}.</b> ${esc(d.fix)}</p>
+<p>Ожидание: ${esc(e.query.description)}</p>
+<p class="muted">Первая подходящая: в выдаче — ${placeText(e.at.service)}, только по словам — ${placeText(e.at.words)}, только по смыслу — ${placeText(e.at.meaning)}.</p>
+${judge}<p class="muted">Десятка сервиса — зелёная рамка: подходит, жёлтая: частично, бледная: нет; без рамки — не размечено:</p><div class="tiles">${top}</div>
+<p class="muted">Подходящие по разметке (${e.fits.length}):</p>${fits ? `<div class="tiles">${fits}</div>` : `<p class="muted">Нет.</p>`}</div>`;
+}
+
+/** Страница worst.html: худшие запросы рабочей части у сервиса — выдача, места и диагноз. */
+export function renderWorstPage(r: EvalReport): string {
+  const counts = new Map<Diagnosis, number>();
+  for (const e of r.worst) {
+    counts.set(e.diagnosis, (counts.get(e.diagnosis) ?? 0) + 1);
+  }
+  const summary = (Object.keys(DIAGNOSES) as Diagnosis[])
+    .filter((d) => counts.has(d))
+    .map(
+      (d) =>
+        `<tr><td>${esc(DIAGNOSES[d].title)}</td><td class="num">${counts.get(d)}</td><td>${esc(DIAGNOSES[d].fix)}</td></tr>`,
+    )
+    .join("");
+  const ratio = r.service ? fixed(r.service.ratio, 1) : "?";
+  return htmlPage(
+    "Худшие запросы — сервис",
+    EVAL_STYLE,
+    `<h1>Худшие запросы рабочей части — сервис</h1>
+<p class="muted">Шаг 8 фазы 4, ADR-0053. Выдача функции edge API при доле смысла ${ratio}; первыми — запросы, где подходящей иконки нет и в 30 местах, затем по месту первой подходящей. Только рабочая часть: контрольную не разглядываем, чтобы не подгонять поиск под неё. Место — первой из размеченных подходящих: глубже десятки размечено не всё, поэтому иконка может стоять и выше. «Только по словам» и «только по смыслу» — две части поиска по отдельности, точное имя — впереди. Сводка цифр — на <a href="index.html">странице замера</a>.</p>
+<table><thead><tr><th>Диагноз</th><th>Запросов</th><th>Что предлагаю</th></tr></thead><tbody>${summary}</tbody></table>
+${r.worst.map((e) => worstEntry(r, e)).join("")}`,
   );
 }
 
@@ -505,7 +631,10 @@ export function baselineJson(r: EvalReport): Json {
   r.queries.forEach((q, i) => {
     const lists: Record<string, Json> = {};
     for (const m of r.main) {
-      lists[m.system.key] = r.rankings?.lists.get(m.system.key)?.[i] ?? [];
+      // Десятка: у сервиса список глубже — места 11–30 нужны только диагнозу.
+      lists[m.system.key] = (
+        r.rankings?.lists.get(m.system.key)?.[i] ?? []
+      ).slice(0, m.system.depth);
     }
     queries[q.id] = lists;
   });

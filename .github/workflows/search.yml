@@ -104,6 +104,7 @@ jobs:
           mkdir -p "$pages"
           cp .cache/reports/search/index.html "$pages/search-index.html" 2> /dev/null || true
           cp .cache/reports/eval/index.html "$pages/eval.html" 2> /dev/null || true
+          cp .cache/reports/eval/worst.html "$pages/eval-worst.html" 2> /dev/null || true
           echo "pages=$pages" >> "$GITHUB_OUTPUT"
       - name: Отчёт — индекс
         if: always()
@@ -119,5 +120,14 @@ jobs:
         with:
           name: eval.html
           path: ${{ steps.pages.outputs.pages }}/eval.html
+          archive: false
+          if-no-files-found: ignore
+      # Худшие запросы рабочей части с выдачей и диагнозом (шаг 8 фазы 4, ADR-0053).
+      - name: Отчёт — худшие запросы
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: eval-worst.html
+          path: ${{ steps.pages.outputs.pages }}/eval-worst.html
           archive: false
           if-no-files-found: ignore

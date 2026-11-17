@@ -95,8 +95,49 @@ export function parseHits(result: unknown): SearchHit[] {
   });
 }
 
+/** Карточка списка с оценкой Meilisearch (`showRankingScore`): только имя и оценка 0…1. */
+export interface ScoredHit {
+  icon: string;
+  score: number;
+}
+
+/** Карточки списка с оценкой; нет оценки или она не от 0 до 1 — исключение. */
+export function parseScoredHits(result: unknown): ScoredHit[] {
+  if (!isObject(result) || !Array.isArray(result.hits)) {
+    throw new Error("ответ Meilisearch без hits");
+  }
+  return result.hits.map((hit) => {
+    if (!isObject(hit) || typeof hit.icon !== "string") {
+      throw new Error("карточка без icon");
+    }
+    if (!isValidIconName(hit.icon)) {
+      throw new Error(`неверное имя карточки: ${hit.icon}`);
+    }
+    const score = hit._rankingScore;
+    if (
+      typeof score !== "number" ||
+      !Number.isFinite(score) ||
+      score < 0 ||
+      score > 1
+    ) {
+      throw new Error(`${hit.icon}: оценка не число от 0 до 1`);
+    }
+    return { icon: hit.icon, score };
+  });
+}
+
 /** Ответ POST /multi-search без federation: по списку карточек на запрос. */
-export function parseMultiSearch(json: unknown, count: number): SearchHit[][] {
+export function parseMultiSearch(json: unknown, count: number): SearchHit[][];
+export function parseMultiSearch<T>(
+  json: unknown,
+  count: number,
+  parse: (result: unknown) => T[],
+): T[][];
+export function parseMultiSearch(
+  json: unknown,
+  count: number,
+  parse: (result: unknown) => unknown[] = parseHits,
+): unknown[][] {
   if (!isObject(json) || !Array.isArray(json.results)) {
     throw new Error("ответ Meilisearch без results");
   }
@@ -105,7 +146,7 @@ export function parseMultiSearch(json: unknown, count: number): SearchHit[][] {
       `ответов Meilisearch ${json.results.length}, запросов ${count}`,
     );
   }
-  return json.results.map(parseHits);
+  return json.results.map((result) => parse(result));
 }
 
 /**

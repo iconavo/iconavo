@@ -57,18 +57,23 @@ export {
 export {
   exactQuery,
   filterConditions,
+  keywordQuery,
   type MainQueryOptions,
   type MultiSearchQuery,
   mainQuery,
   mainWindow,
   probeQuery,
+  type ScoredQueryOptions,
   type SearchFilters,
+  semanticQuery,
 } from "./request.js";
 export {
   pageResults,
   parseHits,
   parseMultiSearch,
+  parseScoredHits,
   type ResponseExtra,
+  type ScoredHit,
   type SearchHit,
   type SearchResponse,
   type SearchResult,

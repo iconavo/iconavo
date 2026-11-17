@@ -3,9 +3,11 @@ import { EXACT_LIMIT, SEMANTIC_RATIO } from "./config.js";
 import {
   exactQuery,
   filterConditions,
+  keywordQuery,
   mainQuery,
   mainWindow,
   probeQuery,
+  semanticQuery,
 } from "./request.js";
 
 describe("filterConditions", () => {
@@ -119,6 +121,64 @@ describe("mainQuery", () => {
         semanticRatio: 0.3,
       }).hybrid?.semanticRatio,
     ).toBe(0.3);
+  });
+});
+
+describe("keywordQuery и semanticQuery", () => {
+  it("только слова — с оценкой, только имя, с фильтрами и исключением точного имени", () => {
+    expect(
+      keywordQuery({
+        q: "house",
+        filters: { sets: ["lucide"] },
+        exclude: "house",
+        limit: 200,
+      }),
+    ).toEqual({
+      indexUid: "icons",
+      q: "house",
+      limit: 200,
+      attributesToRetrieve: ["icon"],
+      showRankingScore: true,
+      filter: ['set IN ["lucide"]', 'NOT names = "house"'],
+    });
+    expect(
+      keywordQuery({
+        q: "дом",
+        filters: {},
+        limit: 5,
+        fields: ["icon", "set"],
+      }),
+    ).toEqual({
+      indexUid: "icons",
+      q: "дом",
+      limit: 5,
+      attributesToRetrieve: ["icon", "set"],
+      showRankingScore: true,
+    });
+  });
+
+  it("только смысл — доля 1, вектор с семью знаками и текст запроса", () => {
+    const q = semanticQuery({
+      q: "дом",
+      filters: {},
+      limit: 200,
+      vector: Float32Array.from([0.012345678, 0.5]),
+    });
+    expect(q).toEqual({
+      indexUid: "icons",
+      q: "дом",
+      limit: 200,
+      attributesToRetrieve: ["icon"],
+      showRankingScore: true,
+      vector: [0.0123457, 0.5],
+      hybrid: { embedder: "gemini", semanticRatio: 1 },
+    });
+  });
+
+  it("неверное имя в исключении — ошибка", () => {
+    expect(() =>
+      keywordQuery({ q: "x", filters: {}, exclude: 'x" OR 1', limit: 1 }),
+    ).toThrow(/неверное имя/);
   });
 });
 

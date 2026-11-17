@@ -4,6 +4,7 @@ import { mainWindow } from "./request.js";
 import {
   pageResults,
   parseMultiSearch,
+  parseScoredHits,
   type SearchHit,
   searchResponse,
 } from "./response.js";
@@ -13,6 +14,42 @@ const hit = (icon: string): SearchHit => ({
   variants: [],
   tones: [],
   styles: {},
+});
+
+describe("parseScoredHits", () => {
+  it("имя и оценка; разбор списков multi-search своим разборщиком", () => {
+    const json = {
+      results: [
+        {
+          hits: [
+            { icon: "lucide:house", _rankingScore: 0.91 },
+            { icon: "tabler:home", _rankingScore: 0 },
+          ],
+        },
+      ],
+    };
+    expect(parseMultiSearch(json, 1, parseScoredHits)).toEqual([
+      [
+        { icon: "lucide:house", score: 0.91 },
+        { icon: "tabler:home", score: 0 },
+      ],
+    ]);
+  });
+
+  it.each([
+    [{ icon: "lucide:house" }],
+    [{ icon: "lucide:house", _rankingScore: 1.5 }],
+    [{ icon: "lucide:house", _rankingScore: Number.NaN }],
+    [{ icon: "lucide:house", _rankingScore: "0.5" }],
+  ])("нет оценки или она не от 0 до 1 — ошибка: %j", (bad) => {
+    expect(() => parseScoredHits({ hits: [bad] })).toThrow(/оценка/);
+  });
+
+  it("имя не по правилу — ошибка", () => {
+    expect(() =>
+      parseScoredHits({ hits: [{ icon: "House", _rankingScore: 0.5 }] }),
+    ).toThrow(/неверное имя/);
+  });
 });
 
 describe("parseMultiSearch", () => {
