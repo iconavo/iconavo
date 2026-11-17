@@ -53,9 +53,13 @@ export const ICON_RATE = { limit: 300, period: 60 } as const;
 /** Длина запроса в символах; длиннее — ошибка 400. */
 export const QUERY_MAX_LENGTH = 100;
 
-/** Результатов на страницу: по умолчанию как у Iconify, не больше 96 (ADR-0040). */
+/**
+ * Результатов на страницу: по умолчанию как у Iconify, не больше 120. Сайт показывает целые ряды сетки,
+ * ближе всего к 96 (`pageSizeFor`): до 100 карточек на обычных экранах и 108 — на очень широких
+ * (ADR-0040, редизайн страницы поиска). До 17 ноября 2026 предел был 96.
+ */
 export const LIMIT_DEFAULT = 64;
-export const LIMIT_MAX = 96;
+export const LIMIT_MAX = 120;
 
 /** Дальше этой позиции Meilisearch не отдаёт (настройка pagination.maxTotalHits). */
 export const MAX_TOTAL_HITS = 1000;
