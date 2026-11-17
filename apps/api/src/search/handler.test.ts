@@ -404,7 +404,7 @@ describe("/search: ошибки и лимит", () => {
     ["/search?query=a&query=b", "duplicate_parameter"],
     [`/search?query=${"x".repeat(101)}`, "invalid_parameter"],
     ["/search?query=house&limit=0", "invalid_limit"],
-    ["/search?query=house&limit=97", "invalid_limit"],
+    ["/search?query=house&limit=121", "invalid_limit"],
     ["/search?query=house&limit=x", "invalid_parameter"],
     ["/search?query=house&start=990&limit=20", "invalid_start"],
     ["/search?query=house&prefix=nope", "invalid_prefix"],

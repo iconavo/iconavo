@@ -108,7 +108,7 @@ GET https://api.iconavo.dev/search?query=trash%20can&limit=4
 | Parameter | Values |
 | --- | --- |
 | `query` | Required, up to 100 characters, in any language. |
-| `limit` | 1–96 results, 64 by default. |
+| `limit` | 1–120 results, 64 by default. |
 | `start` | Index of the first result; `start` + `limit` is at most 1000. |
 | `prefix`, `prefixes` | One icon set, or several separated by commas. |
 | `palette` | `1` — multicolor sets only, `0` — monochrome sets only. |
