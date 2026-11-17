@@ -16,6 +16,12 @@ export const LIVE_SITE = "https://iconavo.dev";
 /** Метка noindex до запуска 1 июня 2027 (apps/site/lib/headers.ts). */
 export const ROBOTS = "noindex, nofollow";
 
+/**
+ * Открыт ли сайт ИИ-обходчикам — как AI_CRAWLERS в apps/site/lib/headers.ts (ADR-0039). До запуска —
+ * нет; в фазе 7 обе константы переключаются вместе (чек-лист запуска в docs/roadmap.md).
+ */
+export const AI_CRAWLERS_OPEN = false;
+
 /** Хосты иконок по умолчанию — в connect-src живого сайта ровно они. */
 export const DEFAULT_ICON_HOSTS = [
   "https://api.iconavo.dev",

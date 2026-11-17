@@ -1,9 +1,62 @@
 // Заголовки ответов сайта (ADR-0050). До запуска сайт скрыт от поисковиков (решение владельца
 // 29 октября 2026): метка noindex и в HTML, и в заголовке, от одной константы — её переключает чек-лист
-// фазы 7. robots.txt обход не запрещает: иначе поисковик не прочитал бы и саму метку.
+// фазы 7. robots.txt обход поисковикам не запрещает: иначе поисковик не прочитал бы и саму метку.
+// ИИ-обходчикам до запуска обход закрыт (AI_CRAWLERS, ADR-0039).
 
 /** Показывать ли сайт поисковикам. До запуска 1 июня 2027 — нет. */
 export const INDEXING = false;
+
+/**
+ * Пускать ли ИИ-обходчиков — обучение моделей и ИИ-поиск (ADR-0039, уточнение от 6 ноября 2026). До
+ * запуска — нет: GPTBot за ночь открыл 33,6 тысячи страниц иконок, каждая при первой сборке делает
+ * около пяти запросов к edge API, и бесплатный суточный лимит Workers кончился. Сверху — правило AI Bots
+ * в Firewall Vercel. Решение владельца: обходчики понадобятся, чтобы сайт попадал в ответы ИИ, — открыть
+ * в фазе 7 по чек-листу запуска (docs/roadmap.md), вместе с INDEXING.
+ */
+export const AI_CRAWLERS = false;
+
+/**
+ * ИИ-обходчики, которым robots.txt закрывает сайт, пока AI_CRAWLERS = false: обучение моделей, ИИ-поиск
+ * и запросы ассистентов от имени человека. Полный и свежий список ведёт правило AI Bots Vercel.
+ */
+export const AI_CRAWLER_AGENTS = [
+  "GPTBot",
+  "OAI-SearchBot",
+  "ChatGPT-User",
+  "ClaudeBot",
+  "Claude-SearchBot",
+  "Claude-User",
+  "anthropic-ai",
+  "Google-Extended",
+  "Applebot-Extended",
+  "PerplexityBot",
+  "Perplexity-User",
+  "CCBot",
+  "Bytespider",
+  "Amazonbot",
+  "meta-externalagent",
+  "meta-externalfetcher",
+  "cohere-ai",
+  "cohere-training-data-crawler",
+  "MistralAI-User",
+  "DuckAssistBot",
+  "AI2Bot",
+  "Diffbot",
+];
+
+export interface RobotsRule {
+  userAgent: string | string[];
+  allow?: string;
+  disallow?: string;
+}
+
+/** Правила robots.txt: поисковикам обход открыт всегда, ИИ-обходчикам — только при AI_CRAWLERS. */
+export function robotsRules(aiCrawlers = AI_CRAWLERS): RobotsRule[] {
+  const everyone: RobotsRule = { userAgent: "*", allow: "/" };
+  return aiCrawlers
+    ? [everyone]
+    : [{ userAgent: [...AI_CRAWLER_AGENTS], disallow: "/" }, everyone];
+}
 
 export const ROBOTS = "noindex, nofollow";
 

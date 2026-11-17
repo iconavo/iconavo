@@ -25,7 +25,9 @@ import {
   linksVerdict,
   parseCsp,
   readmeSections,
+  robotsBlocksAll,
   robotsMetaVerdict,
+  robotsTxtVerdict,
   searchFormVerdict,
   sectionsVerdict,
   statusVerdict,
@@ -411,5 +413,49 @@ describe("страницы иконок и отпечатки содержимо
     const verdict = contentVerdict(stale, sets);
     expect(verdict.ok).toBe(false);
     expect(verdict.note).toContain("/ru/ph: old, а в каталоге c-ph");
+  });
+});
+
+describe("robots.txt живого сайта (ADR-0039)", () => {
+  // Так Next.js пишет правила apps/site/app/robots.ts до запуска (сокращённый список ботов).
+  const beforeLaunch = [
+    "User-Agent: GPTBot",
+    "User-Agent: ClaudeBot",
+    "User-Agent: CCBot",
+    "Disallow: /",
+    "",
+    "User-Agent: *",
+    "Allow: /",
+    "",
+  ].join("\n");
+  const openToAll = "User-Agent: *\nAllow: /\n";
+
+  it("до запуска: поисковикам открыт, ИИ-обходчикам закрыт", () => {
+    expect(robotsBlocksAll(beforeLaunch, "Googlebot")).toBe(false);
+    expect(robotsBlocksAll(beforeLaunch, "GPTBot")).toBe(true);
+    expect(robotsBlocksAll(beforeLaunch, "gptbot")).toBe(true);
+    expect(robotsTxtVerdict(beforeLaunch, false)).toEqual({
+      ok: true,
+      note: "поисковикам обход открыт — увидят noindex; ИИ-обходчикам закрыт до запуска",
+    });
+    // Фаза 7: AI_CRAWLERS_OPEN = true, а файл всё ещё закрыт — заметно.
+    expect(robotsTxtVerdict(beforeLaunch, true).ok).toBe(false);
+  });
+
+  it("всем открыт: до запуска — проблема, после — норма", () => {
+    expect(robotsTxtVerdict(openToAll, false)).toEqual({
+      ok: false,
+      note: "ИИ-обходчикам обход открыт до запуска: у GPTBot нет Disallow: / (ADR-0039)",
+    });
+    expect(robotsTxtVerdict(openToAll, true).ok).toBe(true);
+  });
+
+  it("закрыт всем — поисковик не увидит noindex", () => {
+    const closed = "user-agent: * # все\ndisallow: /\n";
+    expect(robotsBlocksAll(closed, "Googlebot")).toBe(true);
+    expect(robotsTxtVerdict(closed, false)).toEqual({
+      ok: false,
+      note: "обход закрыт поисковикам — они не увидят noindex",
+    });
   });
 });
