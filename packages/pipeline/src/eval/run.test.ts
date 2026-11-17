@@ -197,6 +197,38 @@ describe("pnpm eval", () => {
     expect(Object.keys(base.systems)).toEqual(["text", "vector:a", "hybrid:a"]);
     expect(base.queries["en-001"]?.text?.[0]).toBe("demo:trash");
     expect(renderEvalPage(r)).toContain("Контрольная часть");
+    // Замер без прототипа переносит его варианты из прежнего файла без изменений (ADR-0053).
+    const previous = {
+      judge: "j",
+      sets: { demo: "old" },
+      included: 4,
+      systems: {
+        text: { strict: 1 },
+        "hybrid:old": { strict: 0.9 },
+      },
+      queries: { "en-001": { text: ["x"], "hybrid:old": ["demo:house"] } },
+    };
+    const carried = baselineJson(r, previous) as {
+      prototype?: {
+        sets: unknown;
+        systems: Record<string, unknown>;
+        queries: Record<string, Record<string, string[]>>;
+      };
+    };
+    expect(carried.prototype?.sets).toEqual({ demo: "old" });
+    expect(Object.keys(carried.prototype?.systems ?? {})).toEqual([
+      "hybrid:old",
+    ]);
+    expect(carried.prototype?.queries["en-001"]).toEqual({
+      "hybrid:old": ["demo:house"],
+    });
+    // Уже перенесённая запись переносится как есть; без прежнего файла — без неё.
+    expect(
+      (baselineJson(r, carried) as { prototype?: unknown }).prototype,
+    ).toEqual(carried.prototype);
+    expect(
+      (baselineJson(r) as { prototype?: unknown }).prototype,
+    ).toBeUndefined();
   });
 
   it("правки контрольной части не меняют подбор α", async () => {

@@ -678,7 +678,7 @@ ${r.worst.map((e) => worstEntry(r, e)).join("")}`,
 }
 
 /** baseline.json — первый замер для фазы 2: цифры главных вариантов и десятки по каждому запросу. */
-export function baselineJson(r: EvalReport): Json {
+export function baselineJson(r: EvalReport, previous?: unknown): Json {
   const summary = (s: Summary): Json => ({
     n: s.n,
     hit: Number(s.hit.toFixed(4)),
@@ -691,6 +691,9 @@ export function baselineJson(r: EvalReport): Json {
       holdout: summary(m.groups.holdout.all),
       all: summary(m.groups.all.all),
       strict: summary(m.strict.all.all),
+      // Цель к запуску — строго по каждому языку (ADR-0021, ADR-0053).
+      strictRu: summary(m.strict.all.ru),
+      strictEn: summary(m.strict.all.en),
     };
     if (m.system.mode === "hybrid") {
       entry.alpha = m.system.alpha;
@@ -709,11 +712,53 @@ export function baselineJson(r: EvalReport): Json {
     }
     queries[q.id] = lists;
   });
+  const prototype = carriedPrototype(
+    previous,
+    r.main.map((m) => m.system.key),
+  );
   return {
     judge: JUDGE_MODEL,
     sets: r.versions,
     included: r.included.length,
     systems,
     queries,
+    ...(prototype === undefined ? {} : { prototype }),
+  };
+}
+
+const isRecord = (v: unknown): v is Record<string, Json> =>
+  typeof v === "object" && v !== null && !Array.isArray(v);
+
+/**
+ * Запись прототипа из прежнего baseline.json (ADR-0053): замер только сервиса прототип не считает, и
+ * варианты, которых в этом замере нет, переносятся без изменений — со своими версиями наборов. Уже
+ * перенесённая запись (поле prototype) переносится как есть.
+ */
+export function carriedPrototype(
+  previous: unknown,
+  current: readonly string[],
+): Json | undefined {
+  if (!isRecord(previous)) return undefined;
+  if (isRecord(previous.prototype)) return previous.prototype;
+  const systems = isRecord(previous.systems) ? previous.systems : {};
+  const keys = Object.keys(systems).filter((k) => !current.includes(k));
+  if (keys.length === 0) return undefined;
+  const queries = isRecord(previous.queries) ? previous.queries : {};
+  return {
+    note: "Прототип — замер 26 октября 2026 (ADR-0048, ADR-0049): строки переносятся без изменений, замер только сервиса их не считает (ADR-0053).",
+    judge: previous.judge ?? null,
+    sets: previous.sets ?? null,
+    included: previous.included ?? null,
+    systems: Object.fromEntries(keys.map((k) => [k, systems[k] as Json])),
+    queries: Object.fromEntries(
+      Object.entries(queries).map(([id, lists]) => [
+        id,
+        isRecord(lists)
+          ? Object.fromEntries(
+              keys.filter((k) => k in lists).map((k) => [k, lists[k] as Json]),
+            )
+          : {},
+      ]),
+    ),
   };
 }

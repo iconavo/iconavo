@@ -1346,11 +1346,17 @@ try {
       console.log(`Худшие запросы рабочей части: ${worstPath}`);
     }
     if (!evalStop(report)) {
-      const json = canonicalJson(baselineJson(report));
+      // Прежний baseline.json: варианты прототипа, которых в этом замере нет, переносятся (ADR-0053).
+      const baselinePath = join(evalDir, "baseline.json");
+      const previous: unknown = await readFile(baselinePath, "utf8").then(
+        (text) => JSON.parse(text),
+        () => undefined,
+      );
+      const json = canonicalJson(baselineJson(report, previous));
       await writeFile(join(reportDir, "eval.json"), json, "utf8");
       if (flags.includes("--baseline")) {
-        await writeFile(join(evalDir, "baseline.json"), json, "utf8");
-        console.log(`Итог для фазы 2: ${join(evalDir, "baseline.json")}`);
+        await writeFile(baselinePath, json, "utf8");
+        console.log(`Итог замера: ${baselinePath}`);
       }
     }
     console.log(`Отчёт: ${htmlPath}`);

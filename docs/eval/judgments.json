@@ -8849,6 +8849,10 @@
           "fingerprint": "c4288400af0d",
           "verdict": "no"
         },
+        "tabler:scan-traces": {
+          "fingerprint": "e33f1a659d05",
+          "verdict": "no"
+        },
         "tabler:sitemap": {
           "fingerprint": "760037a318bf",
           "verdict": "partial"
@@ -9675,6 +9679,23 @@
         "fluent-emoji-flat:accordion": {
           "fingerprint": "5a141eb42500",
           "verdict": "no"
+        },
+        "lucide:arrows-from-axis-horizontal": {
+          "fingerprint": "75df0603d8a7",
+          "verdict": "partial"
+        },
+        "lucide:arrows-from-axis-vertical": {
+          "fingerprint": "5b4f5f5544a0",
+          "verdict": "no"
+        },
+        "lucide:chevrons-from-axis-horizontal": {
+          "fingerprint": "d8638daa8351",
+          "verdict": "partial"
+        },
+        "lucide:chevrons-from-axis-vertical": {
+          "fingerprint": "0a1387757dc2",
+          "repeat": "no",
+          "verdict": "partial"
         },
         "lucide:chevrons-up-down": {
           "fingerprint": "292645773bf2",
@@ -19534,6 +19555,10 @@
           "fingerprint": "cc5abfba80ba",
           "verdict": "fits"
         },
+        "lucide:circle-person-arms-spread": {
+          "fingerprint": "1cbcf24ee85b",
+          "verdict": "fits"
+        },
         "material-symbols:accessibility": {
           "fingerprint": "516af80a3a61",
           "verdict": "fits"
@@ -24224,7 +24249,7 @@
           "verdict": "partial"
         },
         "lucide:loader-pinwheel": {
-          "fingerprint": "f06e41a532c8",
+          "fingerprint": "b31c204ee2f6",
           "verdict": "partial"
         },
         "material-symbols:arrow-upload-progress": {
@@ -25328,6 +25353,10 @@
         "lucide:chevrons-down-up": {
           "fingerprint": "eebdbea520e2",
           "verdict": "partial"
+        },
+        "lucide:chevrons-to-axis-vertical": {
+          "fingerprint": "08b87acff5ec",
+          "verdict": "no"
         },
         "lucide:list-chevrons-down-up": {
           "fingerprint": "021fe7a2118f",
@@ -28439,6 +28468,10 @@
           "fingerprint": "113800c3717b",
           "verdict": "no"
         },
+        "lucide:doghouse": {
+          "fingerprint": "d04c5479b496",
+          "verdict": "partial"
+        },
         "lucide:house": {
           "fingerprint": "296b91dac484",
           "verdict": "fits"
@@ -29173,8 +29206,8 @@
     }
   },
   "spent": {
-    "images": 7173,
-    "requests": 1058,
-    "rub": 292.46306506000036
+    "images": 7183,
+    "requests": 1066,
+    "rub": 293.30960862000035
   }
 }
