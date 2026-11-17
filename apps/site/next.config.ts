@@ -23,6 +23,9 @@ const config: NextConfig = {
   env: { ICONAVO_INSTALL: JSON.stringify(install) },
   // `next dev` would otherwise write an AGENTS.md for AI coding agents into the app.
   agentRules: false,
+  // Значок Next.js в углу при next dev закрывал тариф внизу боковой панели — владелец смотрит сайт
+  // глазами локально (редизайн по макету, 12 ноября 2026).
+  devIndicators: false,
   generateBuildId: async () =>
     process.env.SITE_BUILD ? `site-${process.env.SITE_BUILD}` : null,
   // Две корневые раскладки — по языку (ADR-0037), общей нет: несуществующие адреса отдаёт

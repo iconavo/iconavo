@@ -4,12 +4,17 @@ import {
   categoriesOf,
   categoryCards,
   categorySlug,
+  FIRST_PAGE_MAX,
+  filterCards,
+  groupSets,
+  nameQuery,
   orderSets,
   PAGE_SIZE,
   pageCount,
   pageItems,
   pageOf,
   pageParam,
+  pageSizeFor,
   parseCollection,
   parseReleases,
   parseSets,
@@ -17,6 +22,7 @@ import {
   revisionLabel,
   setCards,
   setStyles,
+  showcase,
   shownName,
   visibleNames,
 } from "./catalog";
@@ -111,6 +117,17 @@ describe("имена, категории и страницы", () => {
     ).toEqual(["a-b", "a-b-1"]);
   });
 
+  it("страница — целые ряды, ближе всего к 96 (решение владельца 13 ноября 2026)", () => {
+    expect([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 14].map(pageSizeFor)).toEqual([
+      96, 96, 96, 96, 95, 96, 98, 96, 99, 100, 98,
+    ]);
+    for (let columns = 1; columns <= 32; columns++) {
+      expect(pageSizeFor(columns) % columns).toBe(0);
+      expect(pageSizeFor(columns)).toBeLessThanOrEqual(FIRST_PAGE_MAX);
+    }
+    expect(FIRST_PAGE_MAX).toBe(108);
+  });
+
   it("страницы по 96, номера — первая, соседние и последняя", () => {
     const names = Array.from({ length: 200 }, (_, i) => `n${i}`);
     expect(PAGE_SIZE).toBe(96);
@@ -126,6 +143,8 @@ describe("имена, категории и страницы", () => {
       "n198",
       "n199",
     ]);
+    expect(pageCount(2029, 98)).toBe(21);
+    expect(pageOf(names, 2, 98)).toEqual(names.slice(98, 196));
     expect(pageItems(1, 1)).toEqual([1]);
     expect(pageItems(1, 3)).toEqual([1, 2, 3]);
     expect(pageItems(10, 165)).toEqual([1, "gap", 9, 10, 11, "gap", 165]);
@@ -213,6 +232,43 @@ describe("строки на языке страницы", () => {
   });
 });
 
+describe("группы наборов и витрина карточки (редизайн по макету Figma)", () => {
+  it("наборы по группам макета, новый — по признаку цветного", () => {
+    const sets = {
+      lucide: { palette: false },
+      "material-symbols": { palette: false },
+      "fluent-emoji-flat": { palette: true },
+      noto: { palette: true },
+      zzz: { palette: false },
+    };
+    expect(groupSets(sets)).toEqual([
+      { id: "material", ids: ["material-symbols"] },
+      { id: "ui-24", ids: ["lucide", "zzz"] },
+      { id: "emoji", ids: ["fluent-emoji-flat", "noto"] },
+    ]);
+  });
+
+  it("витрина — 9 иконок: свои шесть, затем знакомые имена набора", () => {
+    const c = parseCollection({
+      prefix: "x",
+      title: "X",
+      total: 12,
+      uncategorized: ["a", "b", "c", "d", "e", "f", "star", "heart", "g", "h"],
+    });
+    expect(showcase(["a", "b", "zz"], c)).toEqual([
+      "a",
+      "b",
+      "star",
+      "heart",
+      "c",
+      "d",
+      "e",
+      "f",
+      "g",
+    ]);
+  });
+});
+
 describe("карточки набора (шаг 3 фазы 4, ADR-0052)", () => {
   // Как /collection у Phosphor: суффиксы и стили — без дефиса, алиас-переименование.
   const ph = parseCollection({
@@ -227,6 +283,22 @@ describe("карточки набора (шаг 3 фазы 4, ADR-0052)", () => 
     aliases: { home: "house" },
     suffixes: { "": "Regular", bold: "Bold", fill: "Fill" },
     styles: { outline: ["", "bold"], filled: ["fill"] },
+  });
+
+  it("поиск по набору — по имени базы и вариантов, пробелы и дефисы — одно", () => {
+    const { cards } = setCards(ph);
+    expect(filterCards(cards, "").map((c) => c.base)).toEqual([
+      "acorn",
+      "heart",
+      "house",
+    ]);
+    expect(filterCards(cards, "  HOU ").map((c) => c.base)).toEqual(["house"]);
+    expect(filterCards(cards, "house fill").map((c) => c.base)).toEqual([
+      "house",
+    ]);
+    expect(filterCards(cards, "bold").map((c) => c.base)).toEqual(["house"]);
+    expect(filterCards(cards, "zebra")).toEqual([]);
+    expect(nameQuery(" Arrow  Up_Right- ")).toBe("arrow-up-right");
   });
 
   it("варианты сворачиваются в карточку, у карточки — главное имя стиля", () => {

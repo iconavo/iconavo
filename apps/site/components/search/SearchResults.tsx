@@ -1,8 +1,10 @@
 "use client";
 
 import { type ReactNode, useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { API } from "../../lib/api";
 import { DICTIONARIES, type Lang, STYLE_KEYS } from "../../lib/i18n";
+import { PAGE_PANEL_ID } from "../../lib/panel-layout";
 import {
   allCommercial,
   hasFilters,
@@ -20,10 +22,11 @@ import {
 import { useUrlQuery, withParams } from "../../lib/url-query";
 import { type Chip, Chips, plainClick } from "../catalog/Chips";
 import { Pagination } from "../catalog/Pagination";
-import { SelectToggle, useSelect } from "../catalog/SelectToggle";
+import { SelectionBar, useSelection } from "../catalog/Selection";
 import { IconPanel } from "../icon/IconPanel";
 import { usePanel } from "../icon/usePanel";
 import { PageLink } from "../PageLink";
+import { PanelLayout } from "../panel/PanelLayout";
 import { Button } from "../ui/button";
 import { ResultGrid } from "./ResultGrid";
 
@@ -88,7 +91,12 @@ export function SearchResults({
   const { query, ready, hrefOf, navigate } = useUrlQuery();
   // Боковая панель иконки (шаг 4 фазы 4): открыта, пока в адресе есть icon.
   const panel = usePanel(query, navigate);
-  const select = useSelect();
+  // Панель — во всю высоту страницы (lib/panel-layout.ts): её место справа от всей страницы поиска.
+  const [panelSlot, setPanelSlot] = useState<HTMLElement | null>(null);
+  useEffect(() => {
+    setPanelSlot(document.getElementById(PAGE_PANEL_ID));
+  }, []);
+  const selection = useSelection();
   const known = useMemo(
     () => ({ sets: sets.map((s) => s.id), licenses }),
     [sets, licenses],
@@ -322,7 +330,7 @@ export function SearchResults({
             setTitles={setTitles}
             current={panel.icon}
             onOpen={panel.onCardClick}
-            select={select}
+            selection={selection}
           />
         ) : (
           <ResultGrid
@@ -331,7 +339,7 @@ export function SearchResults({
             setTitles={setTitles}
             current={panel.icon}
             onOpen={panel.onCardClick}
-            select={select}
+            selection={selection}
             busy
           />
         );
@@ -354,7 +362,7 @@ export function SearchResults({
             setTitles={setTitles}
             current={panel.icon}
             onOpen={panel.onCardClick}
-            select={select}
+            selection={selection}
           />
         );
       break;
@@ -373,7 +381,7 @@ export function SearchResults({
             setTitles={setTitles}
             current={panel.icon}
             onOpen={panel.onCardClick}
-            select={select}
+            selection={selection}
           />
         );
       break;
@@ -403,7 +411,7 @@ export function SearchResults({
             setTitles={setTitles}
             current={panel.icon}
             onOpen={panel.onCardClick}
-            select={select}
+            selection={selection}
           />
         );
       } else if (state.page > 1) {
@@ -456,7 +464,7 @@ export function SearchResults({
                   setTitles={setTitles}
                   current={panel.icon}
                   onOpen={panel.onCardClick}
-                  select={select}
+                  selection={selection}
                 />
               </section>
             ) : null}
@@ -476,118 +484,138 @@ export function SearchResults({
   const commercial = allCommercial(licenses);
   const final =
     phase.kind === "answer" && !phase.repeating ? phase.answer : undefined;
+  const panelNode =
+    panel.icon === undefined ? null : (
+      <IconPanel
+        lang={lang}
+        icon={panel.icon}
+        focus={panel.focus}
+        onClose={panel.close}
+        onPick={(name) => panel.open(name)}
+      />
+    );
   return (
-    <div
-      className="with-panel"
-      data-panel={panel.icon === undefined ? undefined : ""}
-    >
-      <section
-        ref={top}
-        className="search-results"
-        aria-labelledby="search-results-title"
-        data-search={phaseName(phase)}
-        data-semantic={
-          phase.kind === "answer" ? phase.answer.semantic : undefined
-        }
+    <>
+      <PanelLayout
+        open={panel.icon !== undefined}
+        slot={panelSlot}
+        icon={panel.icon}
       >
-        <h2 id="search-results-title" className="sr-only">
-          {t.searchResults}
-        </h2>
-        <div className="filters">
-          <Chips
-            label={t.searchStyle}
-            chips={[
-              chip(
-                "",
-                t.styleAny,
-                "style",
-                undefined,
-                state.style === undefined,
-              ),
-              ...STYLES.map((s) =>
-                chip(s, t[STYLE_KEYS[s]], "style", s, state.style === s),
-              ),
-            ]}
-          />
-          <Chips
-            label={t.filterSet}
-            chips={[
-              chip("", t.filterAll, "set", undefined, state.set === undefined),
-              ...sets.map((s) =>
-                chip(s.id, s.title, "set", s.id, state.set === s.id),
-              ),
-            ]}
-          />
-          <Chips
-            label={t.filterLicense}
-            chips={[
-              chip(
-                "",
-                t.filterAll,
-                "license",
-                undefined,
-                state.license === undefined,
-              ),
-              ...licenses.map((l) =>
-                chip(l, l, "license", l, state.license === l),
-              ),
-            ]}
-          />
-        </div>
-        {commercial ? (
-          <p className="search-commercial">
-            {t.searchCommercial}{" "}
-            <PageLink lang={lang} path="/licenses">
-              {t.searchCommercialLink}
-            </PageLink>
+        <section
+          ref={top}
+          className="search-results"
+          aria-labelledby="search-results-title"
+          data-search={phaseName(phase)}
+          // Адрес, по которому нарисована выдача: адрес страницы меняется сразу, а выдача — со следующей
+          // отрисовкой; проверка сайта сверяет оба и не принимает прежнюю выдачу за новую.
+          data-query={query.toString()}
+          data-semantic={
+            phase.kind === "answer" ? phase.answer.semantic : undefined
+          }
+        >
+          <h2 id="search-results-title" className="sr-only">
+            {t.searchResults}
+          </h2>
+          <div className="filters">
+            <Chips
+              label={t.searchStyle}
+              chips={[
+                chip(
+                  "",
+                  t.styleAny,
+                  "style",
+                  undefined,
+                  state.style === undefined,
+                ),
+                ...STYLES.map((s) =>
+                  chip(s, t[STYLE_KEYS[s]], "style", s, state.style === s),
+                ),
+              ]}
+            />
+            <Chips
+              label={t.filterSet}
+              chips={[
+                chip(
+                  "",
+                  t.filterAll,
+                  "set",
+                  undefined,
+                  state.set === undefined,
+                ),
+                ...sets.map((s) =>
+                  chip(s.id, s.title, "set", s.id, state.set === s.id),
+                ),
+              ]}
+            />
+            <Chips
+              label={t.filterLicense}
+              chips={[
+                chip(
+                  "",
+                  t.filterAll,
+                  "license",
+                  undefined,
+                  state.license === undefined,
+                ),
+                ...licenses.map((l) =>
+                  chip(l, l, "license", l, state.license === l),
+                ),
+              ]}
+            />
+          </div>
+          {commercial ? (
+            <p className="search-commercial">
+              {t.searchCommercial}{" "}
+              <PageLink lang={lang} path="/licenses">
+                {t.searchCommercialLink}
+              </PageLink>
+            </p>
+          ) : (
+            <Chips
+              label={t.searchCommercialLabel}
+              chips={[
+                chip(
+                  "commercial",
+                  t.searchCommercialOnly,
+                  "commercial",
+                  state.commercial ? undefined : "1",
+                  state.commercial === true,
+                ),
+              ]}
+            />
+          )}
+          <p className="search-status" role="status">
+            {status}
+            {query.get("timing") === "1" && timing !== undefined ? (
+              <span className="search-timing">
+                {t.searchTiming.replace("{ms}", String(Math.round(timing)))}
+              </span>
+            ) : null}
           </p>
-        ) : (
-          <Chips
-            label={t.searchCommercialLabel}
-            chips={[
-              chip(
-                "commercial",
-                t.searchCommercialOnly,
-                "commercial",
-                state.commercial ? undefined : "1",
-                state.commercial === true,
-              ),
-            ]}
-          />
-        )}
-        <p className="search-status" role="status">
-          {status}
-          {query.get("timing") === "1" && timing !== undefined ? (
-            <span className="search-timing">
-              {t.searchTiming.replace("{ms}", String(Math.round(timing)))}
-            </span>
+          <SelectionBar lang={lang} selection={selection} />
+          {/* search-body — место выдачи: по нему её находит проверка сайта (pnpm site --check). */}
+          <div ref={selection.anchor} className="search-body">
+            {body}
+          </div>
+          {final !== undefined && (state.page > 1 || final.hasNext) ? (
+            <Pagination
+              lang={lang}
+              page={state.page}
+              pages={knownPages(state.page, final.hasNext)}
+              hrefOf={(p) =>
+                hrefOf(
+                  withParams(query, { page: p === 1 ? undefined : String(p) }),
+                )
+              }
+              onSelect={goPage}
+            />
           ) : null}
-        </p>
-        <SelectToggle lang={lang} select={select} />
-        {body}
-        {final !== undefined && (state.page > 1 || final.hasNext) ? (
-          <Pagination
-            lang={lang}
-            page={state.page}
-            pages={knownPages(state.page, final.hasNext)}
-            hrefOf={(p) =>
-              hrefOf(
-                withParams(query, { page: p === 1 ? undefined : String(p) }),
-              )
-            }
-            onSelect={goPage}
-          />
-        ) : null}
-      </section>
-      {panel.icon === undefined ? null : (
-        <IconPanel
-          lang={lang}
-          icon={panel.icon}
-          focus={panel.focus}
-          onClose={panel.close}
-          onPick={(name) => panel.open(name)}
-        />
-      )}
-    </div>
+        </section>
+        {panelSlot === null ? panelNode : null}
+      </PanelLayout>
+      {panelSlot !== null && panelNode !== null
+        ? createPortal(panelNode, panelSlot)
+        : null}
+    </>
   );
 }

@@ -9,7 +9,6 @@ import {
   CRAWL_ICON_NAMES,
   HIDDEN_ICON,
   iconPath,
-  MOCKUPS,
   ROBOTS,
   UNTRANSLATED,
   VERSION_META,
@@ -248,11 +247,18 @@ export function switchVerdict(pages: CrawledPage[]): Verdict {
     : fail(problems.slice(0, 5).join("; "));
 }
 
-/** Адрес формы поиска в шапке: <search><form action>. */
-export const searchActionOf = (html: string) =>
-  /<search\b[^>]*>\s*<form\b[^>]*\baction="([^"]*)"/i.exec(html)?.[1];
+/**
+ * Адрес ссылки «Поиск» в верхней полосе (редизайн): <header class="topbar"> … <a href="/search">. Раньше
+ * в шапке было поле — форма <search><form action>.
+ */
+export function searchActionOf(html: string): string | undefined {
+  const header =
+    /<header\b[^>]*\bclass="topbar"[^>]*>([\s\S]*?)<\/header>/i.exec(html)?.[1];
+  if (header === undefined) return undefined;
+  return /<a\b[^>]*\bhref="(\/(?:ru\/)?search)"/i.exec(header)?.[1];
+}
 
-/** Поле поиска в шапке каждой страницы ведёт на страницу поиска своего языка, и та отвечает 200. */
+/** «Поиск» в верхней полосе каждой страницы ведёт на страницу поиска своего языка, и та отвечает 200. */
 export function searchFormVerdict(pages: CrawledPage[]): Verdict {
   const byPath = new Map(pages.map((p) => [p.path, p]));
   const problems: string[] = [];
@@ -261,7 +267,7 @@ export function searchFormVerdict(pages: CrawledPage[]): Verdict {
     const action = searchActionOf(page.html);
     if (action !== expected) {
       problems.push(
-        `${page.path}: форма поиска — ${action ?? "нет"}, а ждали ${expected}`,
+        `${page.path}: «Поиск» в верхней полосе — ${action ?? "нет"}, а ждали ${expected}`,
       );
     } else if (byPath.get(expected)?.status !== 200) {
       problems.push(
@@ -424,9 +430,16 @@ export function metaOf(html: string, name: string): string | undefined {
 export const versionMetaOf = (html: string): string | undefined =>
   metaOf(html, VERSION_META);
 
+/** Вкладки страницы иконки (редизайн): id кнопок вкладок по порядку. */
+export const iconTabsOf = (html: string): string[] =>
+  [
+    ...html.matchAll(/<button\b[^>]*\bid="ip-tab-([a-z]+)"[^>]*\brole="tab"/g),
+  ].map((m) => m[1] ?? "");
+
 /**
- * Страницы иконок выборки обхода (шаг 4 фазы 4): серверный HTML — заголовок, нарисованное превью, метки
- * версии и содержимого набора, мокапы (их рисунки догружает браузер); у скрытой — «Устарела».
+ * Страницы иконок выборки обхода (шаг 4 фазы 4, редизайн): серверный HTML — заголовок, нарисованная иконка
+ * в превью, метки версии и содержимого набора, вкладки «Похожие», «Код» и «В контексте» (их содержимое,
+ * кроме похожих, рисует браузер); у скрытой — пометка «Removed» / «Удалена», как в макете, и одна вкладка.
  */
 export function iconPagesProblems(pages: CrawledPage[]): string[] {
   const byPath = new Map(pages.map((p) => [p.path, p]));
@@ -443,26 +456,32 @@ export function iconPagesProblems(pages: CrawledPage[]): string[] {
       }
       const bare = name.slice(name.indexOf(":") + 1);
       const miss = (what: string) => problems.push(`${path}: нет ${what}`);
-      if (!page.html.includes(`<h1>${bare}</h1>`)) miss(`заголовка ${bare}`);
-      if (
-        !/class="icon-preview[^"]*"[^>]*>\s*<svg[^>]*viewBox/.test(page.html)
-      ) {
-        miss("нарисованного превью");
+      if (!new RegExp(`<h1\\b[^>]*>${bare}</h1>`).test(page.html)) {
+        miss(`заголовка ${bare}`);
+      }
+      // Иконка превью: открывающий тег с viewBox и сразу рисунок внутри.
+      const tile = /<svg\b[^>]*\bip-tile-icon\b[^>]*>(\s*<[a-z])?/.exec(
+        page.html,
+      );
+      if (!tile?.[0].includes("viewBox=") || tile[1] === undefined) {
+        miss("нарисованной иконки в превью");
       }
       if (versionMetaOf(page.html) === undefined) miss("метки версии");
       if (metaOf(page.html, CONTENT_META) === undefined)
         miss("метки содержимого");
-      if ((page.html.match(/data-mockup="/g) ?? []).length !== MOCKUPS) {
-        miss(`${MOCKUPS} мокапов`);
+      const tabs = iconTabsOf(page.html).join(",");
+      const want = name === HIDDEN_ICON ? "similar" : "similar,code,context";
+      if (tabs !== want) {
+        problems.push(`${path}: вкладки «${tabs}», а ждали «${want}»`);
       }
     }
   }
   const hidden = iconPath(HIDDEN_ICON);
-  if (!byPath.get(hidden)?.html.includes("Deprecated")) {
-    problems.push(`${hidden}: нет «Deprecated»`);
+  if (!byPath.get(hidden)?.html.includes("Removed")) {
+    problems.push(`${hidden}: нет «Removed»`);
   }
-  if (!byPath.get(`/ru${hidden}`)?.html.includes("Устарела")) {
-    problems.push(`/ru${hidden}: нет «Устарела»`);
+  if (!byPath.get(`/ru${hidden}`)?.html.includes("Удалена")) {
+    problems.push(`/ru${hidden}: нет «Удалена»`);
   }
   return problems;
 }
@@ -489,45 +508,13 @@ export const readmeImport = (readme: string): string =>
     .find((line) => line.startsWith('import "@iconavo-ui/icon";')) ?? "";
 
 /** Текст в HTML, как его пишет React: & < > " '. */
-const htmlText = (text: string) =>
+const _htmlText = (text: string) =>
   text
     .replaceAll("&", "&amp;")
     .replaceAll("<", "&lt;")
     .replaceAll(">", "&gt;")
     .replaceAll('"', "&quot;")
     .replaceAll("'", "&#x27;");
-
-/**
- * Генератор кода в серверном HTML страниц иконок выборки (шаг 5 фазы 4, ADR-0042): код тега по умолчанию
- * и строка скрипта из README тега. Строки README вшивает сборка (next.config.ts) — по ним видно, что они
- * есть и в страницах, которые Vercel собирает по первому запросу.
- */
-export function codeHtmlProblems(
-  pages: CrawledPage[],
-  readme: string,
-): string[] {
-  const byPath = new Map(pages.map((p) => [p.path, p]));
-  const script = htmlText(readmeScript(readme).split("\n")[0] ?? "");
-  const problems: string[] = [];
-  for (const name of CRAWL_ICON_NAMES) {
-    for (const lang of ["", "/ru"]) {
-      const path = `${lang}${iconPath(name)}`;
-      const html = byPath.get(path)?.html;
-      if (html === undefined) continue;
-      if (
-        !html.includes(
-          htmlText(`<iconavo-icon icon="${name}" width="24"></iconavo-icon>`),
-        )
-      ) {
-        problems.push(`${path}: нет кода тега по умолчанию`);
-      }
-      if (!html.includes(script)) {
-        problems.push(`${path}: нет строки скрипта из README тега`);
-      }
-    }
-  }
-  return problems;
-}
 
 /**
  * Отпечатки содержимого (шаг 4 фазы 4, ADR-0039): страница каждого набора на обоих языках и страницы его

@@ -1,8 +1,8 @@
 // Проверка сайта (фаза 3, шаг 10; ADR-0050): продакшен-сборка на этом компьютере, хосты иконок — превью
 // API. Сначала обход по HTTP — коды, заголовки, языки, ссылки, разделы README, — затем каждая страница в
 // Chrome, Firefox и WebKit по очереди: иконки в серверном HTML, консоль и нарушения CSP, заголовки
-// страницы, ссылка «к содержимому», axe-core в светлой и тёмной теме, ширина телефона, меню темы
-// (фаза 4, шаг 1), сетка набора и фильтр наборов (фаза 4, шаг 2), поиск (фаза 4, шаг 3, site/search.ts),
+// страницы, ссылка «к содержимому», axe-core в светлой и тёмной теме, ширина телефона, кнопка темы
+// (фаза 4, шаг 1; редизайн), сетка набора и фильтр наборов (фаза 4, шаг 2), поиск (фаза 4, шаг 3, site/search.ts),
 // панель и страница иконки, метки кэша для сброса по наборам (фаза 4, шаг 4, site/panel.ts), генератор
 // кода и скачивание (фаза 4, шаг 5, site/code.ts). Контрольный запуск подкладывает поломки — каждую
 // проверка обязана заметить.
@@ -48,9 +48,10 @@ import {
   REDIRECT_CODES,
   REDIRECT_STATUS,
   REDIRECTS,
+  SHELL_TAG,
   SKIP_TEXT,
   STYLES_SET,
-  THEME_LABEL,
+  THEME_TOGGLE_LABEL,
 } from "./config.js";
 import {
   type CrawledPage,
@@ -67,8 +68,10 @@ import {
 } from "./crawl.js";
 import {
   checkIconPage,
+  checkLayout,
   checkPanel,
   checkSheet,
+  layoutProblems,
   panelProblems,
 } from "./panel.js";
 import { checkSearchPage, searchCanaryCaught } from "./search.js";
@@ -96,7 +99,7 @@ export const CHECKS = [
   ],
   ["lang", "Язык страницы: <html lang> по адресу — en или ru"],
   ["switch", "Переключатель языка ведёт на ту же страницу на другом языке"],
-  ["search", "Поиск в шапке ведёт на страницу поиска своего языка"],
+  ["search", "«Поиск» в верхней полосе ведёт на страницу поиска своего языка"],
   ["sections", "Каждый раздел README — ровно на одной странице"],
   ["links", "Ссылки и якоря ведут на существующие страницы и заголовки"],
   [
@@ -120,32 +123,36 @@ export const CHECKS = [
   ["phone", "Ширина 375 px: без горизонтальной прокрутки"],
   [
     "theme",
-    "Меню темы с клавиатуры: светлая, тёмная, как в системе; тема — до отрисовки, без <style> и нарушений CSP, axe с открытым меню",
+    "Кнопка темы с клавиатуры: до нажатия — как в системе, нажатие — другая тема, второе — тема системы; тема — до отрисовки, без <style> и нарушений CSP",
   ],
   ["copy", "Кнопка Copy копирует код"],
   [
     "panel",
-    "Панель иконки мышью и с клавиатуры: адрес, фокус, Esc, ✕, «назад»; фильтр при открытой панели; варианты, похожие, толщина и цвет; axe",
+    "Панель иконки мышью и с клавиатуры: адрес, фокус, Esc, ✕, «назад» и «вперёд»; сетка не прыгает при открытии и закрытии; вторая страница сетки и поиск с панелью; толщина и цвет; axe",
+  ],
+  [
+    "layout",
+    "Панель во всю высоту: справа от страницы на ширине 1040–2560 px и со свёрнутым сайдбаром, колонки сетки те же, в окне и прилипает, подвал, короткая страница, окно уже 1024 px и обратно",
   ],
   [
     "iconpage",
-    "Страница иконки: серверный HTML со сведениями, «Устарела», настройки из адреса, переход из панели",
+    "Страница иконки: серверный HTML — заголовок, иконка, метки, вкладки, «Removed»; размер, цвет и толщина из адреса; авторство во вкладке «Код»; из панели — с настройками в адресе",
   ],
   [
     "sheet",
-    "Панель на телефоне: шторка снизу, выдача над ней щёлкается, «развернуть», «назад»",
+    "Панель на телефоне: шторка снизу во всю ширину, ручка раскрывает и сворачивает, затемнение и «назад» закрывают",
   ],
   [
     "code",
-    "Код: тег, React, SVG (как у edge API), CSS и ссылка с настройками; npm, pnpm и yarn; имя — набор/иконка и список форматов; выбор после перезагрузки; строки README; код тега рисует иконку; «Скопировать иконку» — SVG как у edge API",
+    "Код: HTML и «Script» из README, React, SVG (как у edge API), CSS и ссылка с настройками; npm, pnpm и yarn; Name с форматами; выбор после перезагрузки; цветной набор и заливка; панель; код тега рисует иконку",
   ],
   [
     "files",
-    "Скачивание: SVG с комментарием об авторе и лицензии, PNG 16 и 512 px, «Копировать PNG»; метки аналитики",
+    "Скачивание: «Download ▾» — SVG с комментарием об авторе и лицензии, PNG 1× и 4×; «Copy SVG» и картинка PNG; метки аналитики",
   ],
   [
     "bag",
-    "Сумка: «Выбрать несколько» в сетке и поиске, «В сумку» в панели, число в шапке после перезагрузки; меню с клавиатуры, «Убрать», Esc; ZIP с текстами лицензий и README; спрайт; axe, телефон",
+    "Рюкзак: выделение — «Download N icons» и «Cancel Selection»; «в рюкзак» на карточке, в панели и в поиске, число на «Bag» после перезагрузки; с клавиатуры, «Clear» и «Undo», «Remove», общий цвет; ZIP с текстами лицензий и README; спрайт; Esc; axe, телефон",
   ],
   [
     "catalog",
@@ -153,7 +160,7 @@ export const CHECKS = [
   ],
   [
     "results",
-    "Поиск: набор с главной и из шапки, фильтры и «назад», страницы, ссылка с фильтрами; по словам → полная без сдвигов; пустые ответы и 429",
+    "Поиск: набор с главной, Ctrl K и «Поиск» в верхней полосе, фильтры и «назад», страницы, ссылка с фильтрами; по словам → полная без сдвигов; пустые ответы и 429",
   ],
   ["canary", "Контрольный запуск: каждая подложенная поломка замечена"],
 ] as const;
@@ -190,6 +197,8 @@ export interface SiteCheckOptions {
   /** Корень репозитория: README тега и скрипт тега этой ветки — для строки «Код». */
   root: string;
   browsers: readonly BrowserName[];
+  /** Только эти шаги браузерной части (--only=): строки других — «не проверялось». */
+  only?: readonly SiteStep[];
   log?: (line: string) => void;
 }
 
@@ -237,18 +246,25 @@ export function tagsVerdict(
       continue;
     }
     const ours = [
-      ...new Set(list.filter((t) => t === CATALOG_TAG || t.startsWith("set-"))),
+      ...new Set(
+        list.filter(
+          (t) => t === CATALOG_TAG || t === SHELL_TAG || t.startsWith("set-"),
+        ),
+      ),
     ].sort();
-    const want = set === undefined ? CATALOG_TAG : `set-${set}`;
-    if (ours.join(",") !== want) {
+    const want = [
+      SHELL_TAG,
+      set === undefined ? CATALOG_TAG : `set-${set}`,
+    ].sort();
+    if (ours.join(",") !== want.join(",")) {
       problems.push(
-        `${path}: ${ours.join(", ") || "без меток"}, а ждали ${want}`,
+        `${path}: ${ours.join(", ") || "без меток"}, а ждали ${want.join(", ")}`,
       );
     }
   }
   return problems.length === 0
     ? pass(
-        `${CACHE_TAG_PAGES.length} страниц: общие — ${CATALOG_TAG}, набора и его иконок — set-{набор}`,
+        `${CACHE_TAG_PAGES.length} страниц: у каждой — ${SHELL_TAG}; общие — ${CATALOG_TAG}, набора и его иконок — set-{набор}`,
       )
     : fail(problems.join("; "));
 }
@@ -326,20 +342,31 @@ export function httpVerdicts(
 }
 
 /**
- * Иконки страницы: нарисованы ли и не стали ли блоками. В строке текста — только иконки, чей родитель
- * не flex и не grid: их элементы браузер и так делает блоками, так устроен CSS. Выполняется в браузере.
+ * Иконки страницы: нарисованы ли и не стали ли блоками. В строке текста — видимая иконка рядом с текстом
+ * (у родителя есть свой текст), чей родитель не flex и не grid — их элементы браузер и так делает
+ * блоками, так устроен CSS, — и сама она не вынута из потока (absolute, fixed, float). Иконки-кнопки без
+ * текста редизайн ставит блоками нарочно. Выполняется в браузере.
  */
 function iconFacts() {
-  // Похожие иконки других наборов и рисунки мокапов на странице иконки догружает браузер (шаг 4 фазы 4):
-  // выпуск чужого набора не должен сбрасывать её кэш, а страница в кэше — легче. В серверном HTML вместо
-  // них заглушки.
+  // Похожие иконки других наборов на странице иконки догружает браузер (шаг 4 фазы 4, редизайн): выпуск
+  // чужого набора не должен сбрасывать её кэш, а страница в кэше — легче. В серверном HTML вместо них
+  // заглушки.
   const svgs = [...document.querySelectorAll("body svg")].filter(
-    (svg) => !svg.closest(".icon-similar, .mockups"),
+    (svg) => !svg.closest(".ip-similar"),
   );
-  const inText = (svg: Element) =>
-    !/flex|grid/.test(
-      svg.parentElement ? getComputedStyle(svg.parentElement).display : "",
+  const inText = (svg: Element) => {
+    const parent = svg.parentElement;
+    if (parent === null || svg.getClientRects().length === 0) return false;
+    if (/flex|grid/.test(getComputedStyle(parent).display)) return false;
+    const own = getComputedStyle(svg);
+    if (/absolute|fixed/.test(own.position) || own.float !== "none") {
+      return false;
+    }
+    return [...parent.childNodes].some(
+      (n) =>
+        n.nodeType === Node.TEXT_NODE && (n.textContent ?? "").trim() !== "",
     );
+  };
   return {
     total: svgs.length,
     drawn: svgs.filter(
@@ -930,9 +957,12 @@ const background = (page: Page) =>
   page.evaluate(() => getComputedStyle(document.body).backgroundColor);
 
 /**
- * Меню темы на главной, только с клавиатуры: в светлой системе — тёмная, в тёмной — светлая, затем «как
- * в системе». Свой контекст на каждую тему системы: выбор живёт в localStorage и не должен попасть в
- * проверки axe страниц. Открытое меню не добавляет элементов <style> (их запрещает CSP) и проходит axe.
+ * Кнопка темы на главной, только с клавиатуры (редизайн, решение владельца 12 ноября 2026: одна кнопка,
+ * до первого нажатия — как в системе). В светлой системе Enter даёт тёмную, в тёмной — светлую; фокус
+ * остаётся на кнопке, aria-pressed — у тёмной. После перезагрузки выбранная тема стоит уже при появлении
+ * <body>, без мигания; второе нажатие возвращает тему системы. Свой контекст на каждую тему системы: выбор
+ * живёт в localStorage и не должен попасть в проверки axe страниц. Смена темы не добавляет элементов
+ * <style> (их запрещает CSP).
  */
 async function checkTheme(
   browser: Browser,
@@ -940,13 +970,9 @@ async function checkTheme(
   result: SiteResult,
 ) {
   const problems: string[] = [];
-  const axePages: { path: string; violations: AxeViolation[] }[] = [];
-  const source = await axe();
-  // Пункты меню по порядку: как в системе, светлая, тёмная — открытое с клавиатуры меню ставит фокус
-  // на первый, и до нужного — столько нажатий ↓.
-  for (const [scheme, title, steps, chosen] of [
-    ["light", "светлая", 2, "dark"],
-    ["dark", "тёмная", 1, "light"],
+  for (const [scheme, title, chosen] of [
+    ["light", "светлая", "dark"],
+    ["dark", "тёмная", "light"],
   ] as const) {
     const context = await browser.newContext({
       viewport: DESKTOP,
@@ -959,92 +985,79 @@ async function checkTheme(
     await page.goto(`${o.base}/`, { waitUntil: "load" });
     await waitForHydration(page);
     const system = await background(page);
+    if ((await themeAttr(page)) !== "нет") {
+      problems.push(`система ${title}: до нажатия уже выбрана тема`);
+    }
     const styles = () =>
       page.evaluate(() => document.querySelectorAll("style").length);
     const before = await styles();
-    const trigger = page.getByRole("button", {
-      name: THEME_LABEL.en,
+    const toggle = page.getByRole("button", {
+      name: THEME_TOGGLE_LABEL.en,
       exact: true,
     });
-    const menu = page.getByRole("menu");
-    // Открытое меню Radix ставит фокус на первый пункт, а иногда — на само меню: так бывает в WebKit на
-    // Windows, и первое ↓ тогда только переводит фокус на первый пункт. Home ведёт на первый пункт в обоих
-    // случаях, и счёт нажатий ↓ ниже не зависит от браузера.
-    const open = async () => {
-      await trigger.focus();
-      await page.keyboard.press("Enter");
-      await menu.waitFor();
-      await page.keyboard.press("Home");
-      await page.waitForFunction(
-        () =>
-          document.activeElement?.getAttribute("role") === "menuitemradio" &&
-          document.activeElement.parentElement?.firstElementChild ===
-            document.activeElement,
-        null,
-        { timeout: 5000 },
-      );
+    // aria-pressed после гидратации: серверный HTML — «не нажата», настоящее значение React ставит
+    // следующей отрисовкой, а WebKit делает её позже первого чтения — ждём до 2 с.
+    const pressed = async (want: boolean) => {
+      for (let i = 0; i < 20; i++) {
+        const value = await toggle.getAttribute("aria-pressed");
+        if (value === String(want)) return value;
+        await page.waitForTimeout(100);
+      }
+      return toggle.getAttribute("aria-pressed");
     };
-    // Фокус на кнопку Radix возвращает на следующем такте после закрытия меню — ждём до 2 с.
-    const triggerFocused = async () =>
+    const focused = async () =>
       page
         .waitForFunction(
           (el) => el === document.activeElement,
-          await trigger.elementHandle(),
+          await toggle.elementHandle(),
           { timeout: 2000 },
         )
         .then(
           () => true,
           () => false,
         );
-
-    await open();
-    if ((await styles()) > before) {
-      problems.push(`система ${title}: открытое меню добавило <style>`);
-    }
-    await runAxe(page, source, `/ — меню темы, система ${title}`, axePages);
-    if (scheme === "light") {
-      result.shots.push({
-        title: "/ — меню темы открыто",
-        png: await shot(page, seen),
-      });
-    }
-    // После каждого ↓ — ждать, пока фокус дойдёт до следующего пункта: WebKit двигает его не сразу, и
-    // следующее нажатие раньше времени приходилось на прежний пункт (опыт 2 ноября 2026, Windows).
-    for (let i = 1; i <= steps; i++) {
-      await page.keyboard.press("ArrowDown");
-      await page
+    // Смена темы идёт через View Transition: ждём, пока атрибут встанет.
+    const settled = (theme: string) =>
+      page
         .waitForFunction(
-          (n) => {
-            const el = document.activeElement;
-            return (
-              el?.getAttribute("role") === "menuitemradio" &&
-              [...(el.parentElement?.children ?? [])].indexOf(el) === n
-            );
-          },
-          i,
-          { timeout: 2000 },
+          (want) => document.documentElement.dataset.theme === want,
+          theme,
+          { timeout: 5000 },
         )
         .catch(() => {});
+    const initial = await pressed(scheme === "dark");
+    if (initial !== String(scheme === "dark")) {
+      problems.push(
+        `система ${title}: aria-pressed — ${initial}, а тема на экране — ${title}`,
+      );
     }
+    await toggle.focus();
     await page.keyboard.press("Enter");
-    await menu.waitFor({ state: "hidden" });
+    await settled(chosen);
     const picked = await themeAttr(page);
     if (picked !== chosen) {
       problems.push(
-        `система ${title}: выбрана тема «${picked}», а ждали «${chosen}»`,
+        `система ${title}: после нажатия тема «${picked}», а ждали «${chosen}»`,
       );
     }
     if ((await background(page)) === system) {
       problems.push(`система ${title} → ${chosen}: фон не изменился`);
     }
-    if (!(await triggerFocused())) {
-      problems.push(`система ${title}: после выбора фокус не на кнопке темы`);
+    const after = await pressed(chosen === "dark");
+    if (after !== String(chosen === "dark")) {
+      problems.push(`система ${title} → ${chosen}: aria-pressed — ${after}`);
     }
-    await open();
-    await page.keyboard.press("Escape");
-    await menu.waitFor({ state: "hidden" });
-    if (!(await triggerFocused())) {
-      problems.push(`система ${title}: Esc не вернул фокус на кнопку темы`);
+    if (!(await focused())) {
+      problems.push(`система ${title}: после нажатия фокус не на кнопке темы`);
+    }
+    if ((await styles()) > before) {
+      problems.push(`система ${title}: смена темы добавила <style>`);
+    }
+    if (scheme === "light") {
+      result.shots.push({
+        title: "/ — тёмная тема кнопкой",
+        png: await shot(page, seen),
+      });
     }
 
     await page.reload({ waitUntil: "load" });
@@ -1055,14 +1068,16 @@ async function checkTheme(
       );
     }
     await waitForHydration(page);
-    await open();
+    await toggle.focus();
     await page.keyboard.press("Enter");
-    await menu.waitFor({ state: "hidden" });
-    if ((await themeAttr(page)) !== "нет") {
-      problems.push(`система ${title}: «как в системе» не сняло data-theme`);
+    await settled(scheme);
+    if ((await themeAttr(page)) !== scheme) {
+      problems.push(
+        `система ${title}: второе нажатие — тема «${await themeAttr(page)}», а ждали «${scheme}»`,
+      );
     }
     if ((await background(page)) !== system) {
-      problems.push(`система ${title}: «как в системе» — фон не вернулся`);
+      problems.push(`система ${title}: второе нажатие — фон не вернулся`);
     }
     problems.push(
       ...(await violations(page)).map((x) => `CSP: ${x}`),
@@ -1071,13 +1086,10 @@ async function checkTheme(
     );
     await context.close();
   }
-  const menuAxe = axeVerdict(axePages);
-  if (menuAxe.ok === false)
-    problems.push(`axe с открытым меню: ${menuAxe.note}`);
   result.verdicts.theme =
     problems.length === 0
       ? pass(
-          "с клавиатуры: тёмная, светлая и как в системе; тема стоит до <body>; Esc и выбор возвращают фокус; без <style>, нарушений CSP и замечаний axe",
+          "с клавиатуры: до нажатия — как в системе, нажатие — другая тема, фокус на кнопке; тема стоит до <body>; второе нажатие — тема системы; без <style> и нарушений CSP",
         )
       : fail(problems.slice(0, 5).join("; "));
 }
@@ -1268,14 +1280,27 @@ async function checkCanary(
       },
     ],
     [
-      "смена фильтра закрывает панель",
+      "другая страница сетки закрывает панель",
       () => {
         const push = history.pushState.bind(history);
         history.pushState = (state, unused, url) => {
           const next = new URL(String(url ?? location.href), location.href);
-          if (next.searchParams.has("style")) next.searchParams.delete("icon");
+          if (next.searchParams.has("page")) next.searchParams.delete("icon");
           push(state, unused, next);
         };
+      },
+    ],
+    [
+      // Панель во всю высоту: сайт не держит карточку, пока колонки переходят (lib/panel-anchor.ts), —
+      // сетка прыгает на высоту разницы шапки и строки поиска.
+      "сетка прыгает при открытии и закрытии панели",
+      () => {
+        const by = window.scrollBy.bind(window);
+        window.scrollBy = ((...args: Parameters<typeof window.scrollBy>) => {
+          if (document.documentElement.hasAttribute("data-panel-anchor"))
+            return;
+          (by as (...a: unknown[]) => void)(...args);
+        }) as typeof window.scrollBy;
       },
     ],
   ];
@@ -1286,6 +1311,28 @@ async function checkCanary(
     const caught = await panelProblems(p, o.base).catch(() => ["остановился"]);
     if (caught.length === 0) missed.push(title);
     await ctx.close();
+  }
+  // Панель во всю высоту: у страницы нет колонки под панель — строка «Раскладка» обязана заметить.
+  const layoutBreaks: [string, () => void][] = [
+    [
+      "панель без своей колонки",
+      () => {
+        document.addEventListener("DOMContentLoaded", () => {
+          const sheet = new CSSStyleSheet();
+          sheet.replaceSync(
+            ".set-page, .set-page:has(> .page-panel > .icon-panel) { grid-template-columns: minmax(0, 1fr) 0px !important }",
+          );
+          document.adoptedStyleSheets = [...document.adoptedStyleSheets, sheet];
+        });
+      },
+    ],
+  ];
+  for (const [title, init] of layoutBreaks) {
+    const caught = await layoutProblems(browser, o.base, {
+      widths: [1440],
+      init,
+    }).catch(() => ["остановился"]);
+    if (caught.length === 0) missed.push(title);
   }
   // Код и скачивание (шаг 5 фазы 4): поломки — скриптом до страницы или подменой ответа API; строки «Код»
   // и «Скачивание» обязаны заметить.
@@ -1413,10 +1460,45 @@ async function checkCanary(
   result.verdicts.canary =
     missed.length === 0
       ? pass(
-          "замечены все двадцать три: кнопка без подписи, style, ширина, иконка-блок, robots, битая ссылка, гидратация, чужой lang, нет ссылки на другой язык, переход не туда, нет скрипта темы, сетка без списка имён, поиск без полной выдачи, Esc не закрывает панель, фокус не возвращается, фильтр закрывает панель, старое имя без перехода, метка catalog у страницы иконки, менеджер пакетов не запоминается, SVG-код не как у адреса, пустой PNG, сумка не переживает перезагрузку, ZIP без лицензий",
+          "замечены все двадцать пять: кнопка без подписи, style, ширина, иконка-блок, robots, битая ссылка, гидратация, чужой lang, нет ссылки на другой язык, переход не туда, нет скрипта темы, сетка без списка имён, поиск без полной выдачи, Esc не закрывает панель, фокус не возвращается, другая страница сетки закрывает панель, сетка прыгает при открытии и закрытии панели, панель без своей колонки, старое имя без перехода, метка catalog у страницы иконки, менеджер пакетов не запоминается, SVG-код не как у адреса, пустой PNG, сумка не переживает перезагрузку, ZIP без лицензий",
         )
       : fail(`проверка слепая: не замечено — ${missed.join(", ")}`);
 }
+
+/** Шаги браузерной части проверки, по порядку; --only= выбирает часть — для отладки на стенде. */
+export const SITE_STEPS = [
+  "html",
+  "pages",
+  "theme",
+  "catalog",
+  "panel",
+  "layout",
+  "iconpage",
+  "sheet",
+  "code",
+  "files",
+  "bag",
+  "results",
+  "canary",
+] as const;
+export type SiteStep = (typeof SITE_STEPS)[number];
+
+/** Строки шага: остановился шаг — «нет» у его строк, а следующие шаги идут дальше. */
+const STEP_ROWS: Record<SiteStep, readonly CheckId[]> = {
+  html: ["html"],
+  pages: ["inline", "outline", "console", "axe", "phone", "skip", "copy"],
+  theme: ["theme"],
+  catalog: ["catalog"],
+  panel: ["panel"],
+  layout: ["layout"],
+  iconpage: ["iconpage"],
+  sheet: ["sheet"],
+  code: ["code"],
+  files: ["files"],
+  bag: ["bag"],
+  results: ["results"],
+  canary: ["canary"],
+};
 
 export async function checkSite(o: SiteCheckOptions): Promise<SiteResult[]> {
   const shared = httpVerdicts(o);
@@ -1427,31 +1509,79 @@ export async function checkSite(o: SiteCheckOptions): Promise<SiteResult[]> {
       verdicts: { ...shared },
       shots: [],
     };
+    const v = result.verdicts;
     let browser: Browser | undefined;
     try {
       const expected = await catalogExpect(o.api);
-      browser = await launchBrowser(name, true);
-      o.log?.(`${BROWSER_TITLES[name]}: серверный HTML…`);
-      await checkServerHtml(browser, o, result);
-      o.log?.(`${BROWSER_TITLES[name]}: страницы, axe, телефон…`);
-      await checkPages(browser, name, o, result);
-      o.log?.(`${BROWSER_TITLES[name]}: меню темы…`);
-      await checkTheme(browser, o, result);
-      o.log?.(`${BROWSER_TITLES[name]}: каталог…`);
-      await checkCatalog(browser, o, expected, result);
-      o.log?.(`${BROWSER_TITLES[name]}: панель и страница иконки…`);
-      result.verdicts.panel = await checkPanel(browser, o, result.shots);
-      result.verdicts.iconpage = await checkIconPage(browser, o, result.shots);
-      result.verdicts.sheet = await checkSheet(browser, o, result.shots);
-      o.log?.(`${BROWSER_TITLES[name]}: код и скачивание…`);
-      result.verdicts.code = await checkCode(browser, name, o, result.shots);
-      result.verdicts.files = await checkFiles(browser, name, o, result.shots);
-      o.log?.(`${BROWSER_TITLES[name]}: сумка…`);
-      result.verdicts.bag = await checkBag(browser, o, result.shots);
-      o.log?.(`${BROWSER_TITLES[name]}: поиск…`);
-      result.verdicts.results = await checkSearchPage(browser, o, result.shots);
-      o.log?.(`${BROWSER_TITLES[name]}: контрольный запуск…`);
-      await checkCanary(browser, o, expected, result);
+      const b = await launchBrowser(name, true);
+      browser = b;
+      const steps: [SiteStep, string, () => Promise<unknown>][] = [
+        ["html", "серверный HTML", () => checkServerHtml(b, o, result)],
+        [
+          "pages",
+          "страницы, axe, телефон",
+          () => checkPages(b, name, o, result),
+        ],
+        ["theme", "кнопка темы", () => checkTheme(b, o, result)],
+        ["catalog", "каталог", () => checkCatalog(b, o, expected, result)],
+        [
+          "panel",
+          "панель",
+          async () => (v.panel = await checkPanel(b, o, result.shots)),
+        ],
+        [
+          "layout",
+          "раскладка с панелью",
+          async () => (v.layout = await checkLayout(b, o, result.shots)),
+        ],
+        [
+          "iconpage",
+          "страница иконки",
+          async () => (v.iconpage = await checkIconPage(b, o, result.shots)),
+        ],
+        [
+          "sheet",
+          "шторка",
+          async () => (v.sheet = await checkSheet(b, o, result.shots)),
+        ],
+        [
+          "code",
+          "код",
+          async () => (v.code = await checkCode(b, name, o, result.shots)),
+        ],
+        [
+          "files",
+          "скачивание",
+          async () => (v.files = await checkFiles(b, name, o, result.shots)),
+        ],
+        [
+          "bag",
+          "рюкзак",
+          async () => (v.bag = await checkBag(b, o, result.shots)),
+        ],
+        [
+          "results",
+          "поиск",
+          async () => (v.results = await checkSearchPage(b, o, result.shots)),
+        ],
+        [
+          "canary",
+          "контрольный запуск",
+          () => checkCanary(b, o, expected, result),
+        ],
+      ];
+      for (const [step, title, run] of steps) {
+        if (o.only !== undefined && !o.only.includes(step)) continue;
+        o.log?.(`${BROWSER_TITLES[name]}: ${title}…`);
+        // Шаг остановился — «нет» у его строк, у каких ещё нет итога; следующие шаги идут дальше, и CI
+        // показывает все находки за один прогон, а не первую.
+        await run().catch((e: unknown) => {
+          const message = (e as Error).message.split("\n")[0];
+          for (const id of STEP_ROWS[step]) {
+            v[id] ??= fail(`шаг остановился: ${message}`);
+          }
+        });
+      }
     } catch (e) {
       result.failure = (e as Error).message.split("\n")[0];
     } finally {

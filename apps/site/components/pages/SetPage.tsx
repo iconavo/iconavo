@@ -3,9 +3,9 @@ import { notFound } from "next/navigation";
 import {
   categoriesOf,
   categoryCards,
+  FIRST_PAGE_MAX,
   getReleases,
   getSet,
-  pageOf,
   setCards,
   setStyles,
   setTag,
@@ -19,14 +19,18 @@ import {
 } from "../../lib/format";
 import { DICTIONARIES, type Lang } from "../../lib/i18n";
 import { loadPageIcons } from "../../lib/icons";
+import { PAGE_PANEL_ID } from "../../lib/panel-layout";
 import { IconGrid } from "../catalog/IconGrid";
 import { PageLink } from "../PageLink";
+import { Soon } from "../shell/Soon";
+import { Tip } from "../shell/Tip";
 
 /**
- * Страница набора /{префикс} (ADR-0037): автор, лицензия, версия и последний выпуск, витрина из шести
- * иконок (ADR-0017), сетка по 96 карточек со стилями (ADR-0052) и категориями автора. Число иконок в
- * заголовке — все варианты, как у Iconify; в сетке — карточки. Скрытых иконок нет: в /collection они
- * отдельно (ADR-0018).
+ * Страница набора /{префикс} (ADR-0037) по макету «Icon Set Page» (Figma «Iconavo — Макеты»): крошки,
+ * название, «Subscribe to updates» (подписок пока нет — «Soon»), строка сведений — число иконок, лицензия,
+ * автор, последний выпуск; ниже сетка по 96 карточек с поиском по набору, стилями (ADR-0052) и
+ * категориями автора. Число иконок в шапке — все варианты, как у Iconify; в сетке — карточки. Скрытых
+ * иконок нет: в /collection они отдельно (ADR-0018).
  */
 export async function SetPage({
   lang,
@@ -45,109 +49,110 @@ export async function SetPage({
   );
   const names = visibleNames(set);
   const grouped = setCards(set);
-  const first = pageOf(grouped.cards, 1).map((card) => card.base);
-  const samples = info.samples ?? [];
-  const icons = await loadPageIcons(
-    [...samples, ...first].map((name) => `${prefix}:${name}`),
-  );
-  const height = Array.isArray(info.height)
-    ? info.height.join(", ")
-    : String(info.height);
+  const first = grouped.cards.slice(0, FIRST_PAGE_MAX).map((card) => card.base);
+  const icons = await loadPageIcons(first.map((name) => `${prefix}:${name}`));
   return (
-    <main id="content" className="container page">
-      <p className="crumbs">
-        <PageLink lang={lang} path="/sets">
-          {t.setsTitle}
-        </PageLink>
-      </p>
-      <h1>{info.name}</h1>
-      <p className="lead">
-        {countOf(lang, names.length, ICON_FORMS[lang])} ·{" "}
-        {info.palette ? t.setMulticolor : t.setMonochrome}
-      </p>
-      <dl className="set-facts">
-        <div>
-          <dt>{t.setAuthor}</dt>
-          <dd>
-            {info.author.url === undefined ? (
-              info.author.name
-            ) : (
-              <a href={info.author.url}>{info.author.name}</a>
-            )}
-          </dd>
+    <main id="content" className="page set-page">
+      <header className="set-head">
+        <div className="set-head-title">
+          <nav aria-label={t.crumbsLabel} className="crumbs">
+            <ol>
+              <li>
+                <PageLink lang={lang} path="/">
+                  {t.navIconSets}
+                </PageLink>
+              </li>
+              <li aria-current="page">{info.name}</li>
+            </ol>
+          </nav>
+          <PageLink lang={lang} path="/" className="set-back">
+            <Icon
+              icon="material-symbols:keyboard-arrow-left"
+              className="pill-chevron"
+            />
+            {t.navIconSets}
+          </PageLink>
+          <h1 className="set-title">{info.name}</h1>
         </div>
-        <div>
-          <dt>{t.setLicense}</dt>
-          <dd>
+        <Soon lang={lang} className="subscribe">
+          <Icon icon="site:add-alert-light" className="pill-icon" />
+          <span>{t.setSubscribe}</span>
+        </Soon>
+        <ul className="set-meta">
+          <li>
+            <Icon icon="site:set-count" className="set-meta-icon" />
+            <span>{countOf(lang, names.length, ICON_FORMS[lang])}</span>
+          </li>
+          <li>
+            <span className="set-meta-label">{t.setLicense}:</span>
             <PageLink lang={lang} path={`/licenses#${prefix}`}>
               {info.license.title}
             </PageLink>
-          </dd>
-        </div>
-        <div>
-          <dt>{t.setVersion}</dt>
-          <dd>{info.version}</dd>
-        </div>
-        <div>
-          <dt>{t.setGrid}</dt>
-          <dd>{height}</dd>
-        </div>
-        {latest === undefined ? null : (
-          <div>
-            <dt>{t.setLatest}</dt>
-            <dd>
-              <time dateTime={latest.date}>
-                {formatDate(lang, latest.date)}
-              </time>{" "}
-              ·{" "}
-              <PageLink lang={lang} path={`/changelog?set=${prefix}`}>
-                {t.setNews}
-              </PageLink>
-            </dd>
-          </div>
-        )}
-        <div>
-          <dt>{t.setNpm}</dt>
-          <dd>
-            <a
-              href={`https://www.npmjs.com/package/@iconavo-ui/icons-${prefix}`}
-            >
-              @iconavo-ui/icons-{prefix}
-            </a>
-          </dd>
-        </div>
-      </dl>
-      <IconavoProvider icons={icons}>
-        <p className="set-samples" aria-hidden="true">
-          {samples.map((name) => (
-            <Icon
-              key={name}
-              icon={`${prefix}:${name}`}
-              className="inline-block"
-            />
-          ))}
-        </p>
-        <IconGrid
-          lang={lang}
-          prefix={prefix}
-          first={first}
-          total={grouped.cards.length}
-          allCount={formatNumber(lang, grouped.cards.length)}
-          categories={categoriesOf(set).map((c) => {
-            const size = categoryCards(c.names, grouped).length;
-            return {
-              slug: c.slug,
-              title: c.title,
-              size,
-              count: formatNumber(lang, size),
-            };
-          })}
-          styles={setStyles(set).map((style) => {
-            const size = grouped.cards.filter((c) => c.styles[style]).length;
-            return { style, size, count: formatNumber(lang, size) };
-          })}
-        />
-      </IconavoProvider>
+            <Tip text={t.setCommercialHint}>
+              <Icon icon="material-symbols:help" className="pill-icon" />
+            </Tip>
+          </li>
+          <li>
+            <span className="set-meta-label">{t.setAuthor}:</span>
+            {info.author.url === undefined ? (
+              <span>{info.author.name}</span>
+            ) : (
+              <a href={info.author.url}>{info.author.name}</a>
+            )}
+          </li>
+          {latest === undefined ? null : (
+            <>
+              <li>
+                <span className="set-meta-label">{t.setLatest}:</span>
+                <time dateTime={latest.date}>
+                  {formatDate(lang, latest.date)}
+                </time>
+                <PageLink
+                  lang={lang}
+                  path={`/changelog?set=${prefix}`}
+                  className="set-meta-news-long"
+                >
+                  {t.setNews}
+                </PageLink>
+              </li>
+              {/* Телефон (кадр «Icon Set Page / Mobile»): короткая ссылка отдельной группой с разделителем.
+                  На компьютере её нет (display: none) — ссылка не повторяется. */}
+              <li className="set-meta-news">
+                <PageLink lang={lang} path={`/changelog?set=${prefix}`}>
+                  {t.setNewsShort}
+                </PageLink>
+              </li>
+            </>
+          )}
+        </ul>
+      </header>
+      <div className="set-body">
+        <IconavoProvider icons={icons}>
+          <IconGrid
+            lang={lang}
+            prefix={prefix}
+            setName={info.name}
+            first={first}
+            total={grouped.cards.length}
+            allCount={formatNumber(lang, grouped.cards.length)}
+            categories={categoriesOf(set).map((c) => {
+              const size = categoryCards(c.names, grouped).length;
+              return {
+                slug: c.slug,
+                title: c.title,
+                size,
+                count: formatNumber(lang, size),
+              };
+            })}
+            styles={setStyles(set).map((style) => {
+              const size = grouped.cards.filter((c) => c.styles[style]).length;
+              return { style, size, count: formatNumber(lang, size) };
+            })}
+          />
+        </IconavoProvider>
+      </div>
+      {/* Место панели иконки во всю высоту страницы (lib/panel-layout.ts). */}
+      <div id={PAGE_PANEL_ID} className="page-panel" />
     </main>
   );
 }

@@ -16,6 +16,8 @@ const install = installFromReadme(
 
 const config: StorybookConfig = {
   stories: ["../components/**/*.stories.tsx"],
+  // Файлы сайта из public/ — логотипы менеджеров пакетов в панели иконки.
+  staticDirs: ["../public"],
   addons: ["@storybook/addon-a11y", "@storybook/addon-themes"],
   framework: { name: "@storybook/nextjs-vite", options: {} },
   core: { disableTelemetry: true },

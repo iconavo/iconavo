@@ -55,10 +55,8 @@ export const CRAWL_ICON_NAMES = [
   "fluent-emoji-flat:waving-hand",
   "lucide:circle-parking",
 ];
-/** Скрытая иконка выборки: её страница — с пометкой «Устарела» (ADR-0037). */
+/** Скрытая иконка выборки: её страница — с пометкой «Removed» / «Удалена», как в макете (ADR-0037, редизайн). */
 export const HIDDEN_ICON = "lucide:circle-parking";
-/** Мест в мокапах страницы иконки — восемь, утверждены владельцем 2 ноября 2026 (ADR-0041). */
-export const MOCKUPS = 8;
 export const CRAWL_ICONS = CRAWL_ICON_NAMES.flatMap((name) => [
   iconPath(name),
   `/ru${iconPath(name)}`,
@@ -142,7 +140,11 @@ export const SKIP_TEXT = {
   en: "Skip to content",
   ru: "Перейти к содержимому",
 } as const;
-export const THEME_LABEL = { en: "Theme", ru: "Тема" } as const;
+/** Подпись кнопки темы (редизайн): одна кнопка, aria-pressed — у тёмной (apps/site/lib/i18n.ts themeToggle). */
+export const THEME_TOGGLE_LABEL = {
+  en: "Dark theme",
+  ru: "Тёмная тема",
+} as const;
 
 /** Набор для сценария «Каталог» (шаг 2 фазы 4): с категориями автора и больше чем тремя страницами сетки. */
 export const CATALOG_SET = "lucide";
@@ -176,8 +178,14 @@ export const INVALIDATE_TAGS = 16;
 /** Метка общих страниц сайта (apps/site/lib/catalog.ts): сбрасывается с выпуском любого набора. */
 export const CATALOG_TAG = "catalog";
 /**
- * Метки кэша, которые проверка сайта ждёт у страниц (строка «Метки кэша», ADR-0039): у общих — только
- * catalog, у страницы набора и страниц его иконок — только set-{набор}. Иначе выпуск любого набора
+ * Метка общей раскладки (apps/site/lib/catalog.ts SHELL_TAG): левая панель с наборами и числами иконок
+ * на каждой странице. Сброс по наборам её не трогает — числа обновляет выкладка сайта (решение владельца
+ * 17 ноября 2026, ADR-0039).
+ */
+export const SHELL_TAG = "shell";
+/**
+ * Метки кэша, которые проверка сайта ждёт у страниц (строка «Метки кэша», ADR-0039): у каждой — shell, и
+ * ещё у общих — catalog, у страницы набора и страниц его иконок — set-{набор}. Иначе выпуск любого набора
  * сбрасывал бы все страницы иконок, а у главной копились бы метки всех наборов (не больше 128 на ответ).
  */
 export const CACHE_TAG_PAGES: { path: string; set?: string }[] = [
@@ -218,16 +226,17 @@ export const STYLES_SET = "ph";
  * повторяет код сайта, а сверяет его с README тега и ответом превью edge API.
  */
 export const CODE_ICON = "lucide:house";
-export const CODE_SETTINGS =
-  "size=64&color=e11d48&stroke=1.5&rotate=90&flip=horizontal";
+export const CODE_SETTINGS = "size=64&color=e11d48&stroke=1.5";
+/**
+ * Код генератора (редизайн) для CODE_SETTINGS: поворота и отражения в редизайне нет — в макете их нет ни в
+ * панели, ни на странице иконки.
+ */
 export const CODE_EXPECT = {
-  tag: '<iconavo-icon icon="lucide:house" width="64" color="#e11d48" stroke-width="1.5" rotate="90deg" flip="horizontal"></iconavo-icon>',
+  tag: '<iconavo-icon icon="lucide:house" width="64" color="#e11d48" stroke-width="1.5"></iconavo-icon>',
   react:
-    'import { Icon } from "@iconavo-ui/react";\n\n<Icon icon="lucide:house" width={64} color="#e11d48" strokeWidth={1.5} rotate="90deg" flip="horizontal" />',
+    'import { Icon } from "@iconavo-ui/react";\n\n<Icon icon="lucide:house" width={64} color="#e11d48" strokeWidth={1.5} />',
   /** Параметры адреса SVG edge API для тех же настроек. */
-  query: "width=64&color=e11d48&stroke-width=1.5&rotate=90deg&flip=horizontal",
-  css: (api: string) =>
-    `<link rel="stylesheet" href="${api}/lucide.css?icons=house&color=e11d48&stroke-width=1.5">\n<span class="icon--lucide icon--lucide--house" style="font-size: 64px; transform: rotate(90deg) scaleX(-1)"></span>`,
+  query: "width=64&color=e11d48&stroke-width=1.5",
   /** Цвет из адреса — у PNG. */
   rgb: [225, 29, 72] as const,
 };
@@ -240,5 +249,7 @@ export const CODE_FILLED = {
   path: "/ph/house-bold?color=e11d48&stroke=1.5",
   tag: '<iconavo-icon icon="ph:house-bold" width="24" color="#e11d48"></iconavo-icon>',
 };
-/** Размеры PNG, которые скачивает проверка: самый маленький и самый большой (ADR-0042). */
-export const PNG_CHECK_SIZES = [16, 512] as const;
+/** Размер из CODE_SETTINGS. */
+export const CODE_SIZE = 64;
+/** PNG, которые скачивает проверка: 1× и 4× размера из настроек (меню «Download ▾», редизайн). */
+export const PNG_CHECK_SCALES = [1, 4] as const;

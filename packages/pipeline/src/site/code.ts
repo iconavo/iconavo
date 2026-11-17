@@ -27,17 +27,13 @@ import {
   CODE_ICON,
   CODE_PALETTE,
   CODE_SETTINGS,
+  CODE_SIZE,
   DESKTOP,
   iconPath,
   PANEL_WAIT_MS,
-  PNG_CHECK_SIZES,
+  PNG_CHECK_SCALES,
 } from "./config.js";
-import {
-  type CrawledPage,
-  codeHtmlProblems,
-  readmeImport,
-  readmeScript,
-} from "./crawl.js";
+import { type CrawledPage, readmeImport, readmeScript } from "./crawl.js";
 import { hydrated } from "./panel.js";
 
 export interface CodeCheckOptions {
@@ -74,43 +70,70 @@ const tracked = (page: Page): Promise<Tracked[]> =>
     () => (window as unknown as { tracked?: Tracked[] }).tracked ?? [],
   );
 
-/** Текст блока генератора: панель, если открыта, иначе страница; ждёт ожидаемый текст, если он задан. */
-async function snippet(
+/** Текст из буфера: на Windows Chrome пишет переводы строк как \r\n — приводим к \n. */
+const clipText = (page: Page) =>
+  page
+    .evaluate(() => navigator.clipboard.readText())
+    .then((text) => text.replaceAll("\r\n", "\n"));
+
+/** Блоки генератора кода (редизайн): панель, если открыта, иначе вкладка «Код» страницы иконки. */
+const CODE_ROOT = "aside.icon-panel .panel-code, #ip-tabpanel .panel-code";
+
+/** Текст блока кода по подписи; ждёт ожидаемый текст, если он задан. */
+async function codeBlock(
   page: Page,
-  name: string,
+  label: string,
   expect?: string,
 ): Promise<string> {
-  const read = ([n, e]: readonly [string, string | null]) => {
-    const root =
-      document.querySelector("aside.icon-panel .icon-code") ??
-      document.querySelector("main .icon-code");
-    const text =
-      root?.querySelector(`figure.code[data-snippet="${n}"] pre`)
-        ?.textContent ?? null;
-    return e === null ? text !== null && text !== "" : text === e;
-  };
+  const read = ([root, l]: readonly [string, string]) =>
+    [
+      ...(document.querySelector(root)?.querySelectorAll("figure.code-block") ??
+        []),
+    ]
+      .find((f) => f.querySelector(".code-block-label")?.textContent === l)
+      ?.querySelector(".code-block-code")?.textContent ?? "";
   await page
-    .waitForFunction(read, [name, expect ?? null] as const, {
-      timeout: PANEL_WAIT_MS,
-    })
+    .waitForFunction(
+      ([root, l, e]) => {
+        const text =
+          [
+            ...(document
+              .querySelector(root)
+              ?.querySelectorAll("figure.code-block") ?? []),
+          ]
+            .find(
+              (f) => f.querySelector(".code-block-label")?.textContent === l,
+            )
+            ?.querySelector(".code-block-code")?.textContent ?? "";
+        return e === null ? text !== "" : text === e;
+      },
+      [CODE_ROOT, label, expect ?? null] as const,
+      { timeout: PANEL_WAIT_MS },
+    )
     .catch(() => {});
-  return page.evaluate((n) => {
-    const root =
-      document.querySelector("aside.icon-panel .icon-code") ??
-      document.querySelector("main .icon-code");
-    return (
-      root?.querySelector(`figure.code[data-snippet="${n}"] pre`)
-        ?.textContent ?? ""
-    );
-  }, name);
+  return page.evaluate(read, [CODE_ROOT, label] as const);
 }
 
-/** Имя под превью в выбранном формате; ждёт ожидаемое. */
+/** «Пилюля» генератора (вид кода, менеджер пакетов) или его подвкладка — по тексту, кроме «Soon». */
+const choose = (page: Page, kind: "pill" | "tab", name: string) =>
+  page
+    .locator(CODE_ROOT)
+    .first()
+    .locator(
+      kind === "pill" ? ".pill-option:not(.soon)" : ".panel-tab:not(.soon)",
+      {
+        hasText: new RegExp(`^${name}$`),
+      },
+    )
+    .first()
+    .click();
+
+/** Имя в поле Name генератора; ждёт ожидаемое. */
 async function nameShown(page: Page, expect: string): Promise<string> {
   await page
     .waitForFunction(
       (e) =>
-        (document.querySelector(".icon-name-row .name-format-text")
+        (document.querySelector("button.panel-name .panel-control-text")
           ?.textContent ?? "") === e,
       expect,
       { timeout: PANEL_WAIT_MS },
@@ -118,23 +141,27 @@ async function nameShown(page: Page, expect: string): Promise<string> {
     .catch(() => {});
   return page.evaluate(
     () =>
-      document.querySelector(".icon-name-row .name-format-text")?.textContent ??
-      "",
+      document.querySelector("button.panel-name .panel-control-text")
+        ?.textContent ?? "",
   );
 }
 
-/** Кнопка генератора: вид кода, менеджер пакетов, размер PNG. */
-const press = (page: Page, scope: string, name: string) =>
-  page
-    .locator(scope)
-    .first()
-    .getByRole("button", { name, exact: true })
-    .click();
-
-/** Страница иконки с настройками из адреса: ждём, пока настройки дойдут до кода тега. */
-async function openWithSettings(page: Page, base: string) {
-  await page.goto(`${base}${iconPath(CODE_ICON)}?${CODE_SETTINGS}`);
+/** Страница иконки с настройками из адреса, вкладка «Код». */
+async function openWithSettings(page: Page, base: string, path?: string) {
+  await page.goto(
+    `${base}${path ?? `${iconPath(CODE_ICON)}?${CODE_SETTINGS}`}`,
+  );
   await hydrated(page);
+  await page.getByRole("tab", { name: "Code", exact: true }).click();
+  await page
+    .waitForFunction(
+      () =>
+        document.querySelector("#ip-tabpanel")?.getAttribute("data-tab") ===
+        "code",
+      null,
+      { timeout: PANEL_WAIT_MS },
+    )
+    .catch(() => {});
 }
 
 /** Скрипт тега этой ветки — один раз на прогон. */
@@ -146,7 +173,7 @@ const tagScript = (root: string) => {
 
 /**
  * Код тега в чистой странице без сайта: скрипт тега этой ветки, хосты — превью API. Иконка нарисована с
- * размером, цветом, толщиной и поворотом из кода, без предупреждений о неверных атрибутах.
+ * размером, цветом и толщиной из кода, без предупреждений о неверных атрибутах.
  */
 async function tagRenders(
   browser: Browser,
@@ -214,9 +241,6 @@ async function tagRenders(
     if (!drawn.body.includes('stroke-width="1.5"')) {
       problems.push("код тега: толщина линии не применена");
     }
-    if (!drawn.body.includes("rotate(90")) {
-      problems.push("код тега: поворот не применён");
-    }
   }
   const warned = seen.warnings.filter((w) => w.includes("Iconavo"));
   if (warned.length > 0) problems.push(`код тега: ${warned[0]}`);
@@ -225,8 +249,10 @@ async function tagRenders(
 }
 
 /**
- * Генератор кода на странице иконки с настройками из адреса и в панели: тег, React, SVG, CSS и ссылка;
- * установка npm, pnpm и yarn; выбор после перезагрузки; строки README; копирование (Chrome); метки.
+ * Генератор кода (редизайн) на вкладке «Код» страницы иконки с настройками из адреса и в панели: HTML —
+ * установка npm, pnpm и yarn и подключение из README, «Script» — строки скрипта из README; React; SVG без
+ * украшений — как ответ edge API; CSS; CSS · URL — адрес SVG edge API; поле Name с форматами; выбор вида,
+ * менеджера пакетов и формата имени после перезагрузки; копирование (Chrome) и метки аналитики.
  */
 export async function codeProblems(
   page: Page,
@@ -246,130 +272,135 @@ export async function codeProblems(
     join(o.root, "packages", "icon", "README.md"),
     "utf8",
   );
-  problems.push(...codeHtmlProblems(o.pages, readme));
-  const api = await fetch(
-    `${o.api}${iconPath(CODE_ICON)}.svg?${CODE_EXPECT.query}`,
-  );
+  const link = `${o.api}${iconPath(CODE_ICON)}.svg?${CODE_EXPECT.query}`;
+  const api = await fetch(link);
   const apiSvg = await api.text();
   no(api.status === 200, `превью API: SVG с настройками — ${api.status}`);
 
   await openWithSettings(page, o.base);
-  same(
-    "код тега",
-    await snippet(page, "code", CODE_EXPECT.tag),
-    CODE_EXPECT.tag,
-  );
+  // HTML (веб-компонент): установка и подключение из README; менеджер пакетов — npm по умолчанию.
+  await choose(page, "pill", "HTML");
   same(
     "установка тега",
-    await snippet(page, "install"),
+    await codeBlock(page, "Install", "npm install @iconavo-ui/icon"),
     "npm install @iconavo-ui/icon",
   );
-  same("подключение тега", await snippet(page, "import"), readmeImport(readme));
-  same("без сборщика", await snippet(page, "script"), readmeScript(readme));
-  await press(page, ".icon-code", "pnpm");
+  const tagUsage = `${readmeImport(readme)}\n\n${CODE_EXPECT.tag}`;
+  same("код тега", await codeBlock(page, "Usage", tagUsage), tagUsage);
+  await choose(page, "pill", "pnpm");
   same(
     "установка через pnpm",
-    await snippet(page, "install", "pnpm add @iconavo-ui/icon"),
+    await codeBlock(page, "Install", "pnpm add @iconavo-ui/icon"),
     "pnpm add @iconavo-ui/icon",
   );
-  await press(page, ".icon-code", "yarn");
-  await press(page, ".icon-code", "React");
+  await choose(page, "tab", "Script");
+  const scriptCode = `${readmeScript(readme)}\n\n${CODE_EXPECT.tag}`;
+  same("без сборщика", await codeBlock(page, "HTML", scriptCode), scriptCode);
+  // React: установка через yarn и код.
+  await choose(page, "pill", "React");
+  await choose(page, "pill", "yarn");
   same(
     "установка React через yarn",
-    await snippet(page, "install", "yarn add @iconavo-ui/react"),
+    await codeBlock(page, "Install", "yarn add @iconavo-ui/react"),
     "yarn add @iconavo-ui/react",
   );
   same(
     "код React",
-    await snippet(page, "code", CODE_EXPECT.react),
+    await codeBlock(page, "Usage", CODE_EXPECT.react),
     CODE_EXPECT.react,
   );
-  await press(page, ".icon-code", "SVG");
-  same("код SVG — ответ API", await snippet(page, "code", apiSvg), apiSvg);
-  await press(page, ".icon-code", "CSS");
-  const css = CODE_EXPECT.css(o.api);
-  same("код CSS", await snippet(page, "code", css), css);
-  const href = /href="([^"]+)"/.exec(css)?.[1] ?? "";
-  const sheet = await fetch(href);
-  const sheetText = await sheet.text();
-  no(
-    sheet.status === 200 &&
-      sheetText.includes(".icon--lucide--house") &&
-      sheetText.includes("stroke-width='1.5'"),
-    `CSS по ссылке из кода: ${sheet.status}, без класса иконки или толщины`,
-  );
-  await press(page, ".icon-code", "URL");
-  const link = `${o.api}${iconPath(CODE_ICON)}.svg?${CODE_EXPECT.query}`;
-  same("ссылка", await snippet(page, "code", link), link);
-
   // Копирование — только Chrome: доступ к буферу. Метка — до перезагрузки: события живут до неё.
   if (clipboard) {
-    await page.locator(".icon-code figure.code button.copy").first().click();
+    await page
+      .locator(CODE_ROOT)
+      .first()
+      .locator("figure.code-block", { hasText: "Usage" })
+      .locator("button")
+      .last()
+      .click();
     await page.waitForTimeout(300);
-    const copied = await page.evaluate(() => navigator.clipboard.readText());
-    same("скопировано", copied, link);
+    same("скопированный код React", await clipText(page), CODE_EXPECT.react);
     no(
-      (await tracked(page)).some((e) => e.name === "copy" && e.what === "link"),
-      "нет метки аналитики copy",
+      (await tracked(page)).some(
+        (e) => e.name === "copy" && e.what === "react",
+      ),
+      "нет метки аналитики copy у кода React",
     );
   }
+  // SVG без украшений (Prettify, пустой прямоугольник, комментарий) — побайтно ответ edge API.
+  await choose(page, "pill", "SVG");
+  for (const option of await page
+    .locator(CODE_ROOT)
+    .first()
+    .locator(".panel-option")
+    .all()) {
+    if (await option.locator("input").isChecked()) await option.click();
+  }
+  same("код SVG — ответ API", await codeBlock(page, "SVG", apiSvg), apiSvg);
+  // CSS: класс иконки с размером, цветом и толщиной в рисунке.
+  await choose(page, "pill", "CSS");
+  const css = await codeBlock(page, "CSS");
+  no(
+    css.includes(".lucide--house {") &&
+      css.includes("width: 64px;") &&
+      css.includes("background-color: #e11d48;") &&
+      css.includes("stroke-width='1.5'"),
+    `код CSS без класса, размера, цвета или толщины: «${css.slice(0, 160)}»`,
+  );
+  same(
+    "HTML к CSS",
+    await codeBlock(page, "HTML", '<span class="lucide--house"></span>'),
+    '<span class="lucide--house"></span>',
+  );
+  // CSS · URL: адрес SVG edge API с настройками — и он отвечает.
+  await choose(page, "tab", "URL");
+  same("ссылка", await codeBlock(page, "SVG URL", link), link);
+  if (clipboard) {
+    await page
+      .locator(CODE_ROOT)
+      .first()
+      .locator("figure.code-block", { hasText: "SVG URL" })
+      .locator("button")
+      .last()
+      .click();
+    await page.waitForTimeout(300);
+    same("скопированная ссылка", await clipText(page), link);
+  }
 
-  // Имя (решения владельца 3 ноября 2026): по умолчанию — набор/иконка, формат — из списка, как у
-  // Iconify; «Скопировать иконку» кладёт в буфер SVG с настройками — как ответ edge API.
+  // Name: по умолчанию — набор/иконка, формат — из списка, как у Iconify (решения владельца 3 ноября 2026).
   same(
     "имя по умолчанию",
     await nameShown(page, "lucide/house"),
     "lucide/house",
   );
-  await page.locator(".name-format").click();
-  await page.getByRole("menuitemradio", { name: /^lucide:house/ }).click();
+  await page.locator("button.panel-name").click();
+  await page
+    .getByRole("menuitemradio")
+    .filter({ has: page.locator("code", { hasText: /^lucide:house$/ }) })
+    .click();
   same("имя в формате Iconavo", await nameShown(page, CODE_ICON), CODE_ICON);
   if (clipboard) {
-    await page.getByRole("button", { name: "Copy name", exact: true }).click();
+    await page
+      .locator(".panel-name-row button")
+      .filter({ hasNot: page.locator(".panel-control-text") })
+      .last()
+      .click();
     await page.waitForTimeout(300);
-    same(
-      "скопированное имя",
-      await page.evaluate(() => navigator.clipboard.readText()),
-      CODE_ICON,
-    );
-    await page.getByRole("button", { name: "Copy icon", exact: true }).click();
-    await page.waitForTimeout(500);
-    same(
-      "скопированная иконка — SVG как у edge API",
-      await page.evaluate(() => navigator.clipboard.readText()),
-      apiSvg,
-    );
-    no(
-      (await tracked(page)).some((e) => e.name === "copy" && e.what === "icon"),
-      "нет метки аналитики copy у «Скопировать иконку»",
-    );
+    same("скопированное имя", await clipText(page), CODE_ICON);
   }
 
-  // Выбор после перезагрузки: вид кода — «Ссылка», менеджер пакетов — yarn, формат имени — lucide:house.
-  // Из хранилища выбор приходит после гидратации.
-  await page.reload();
-  await hydrated(page);
-  await page
-    .waitForFunction(
-      () =>
-        document.querySelector(".icon-code")?.getAttribute("data-code") ===
-        "link",
-      null,
-      { timeout: PANEL_WAIT_MS },
-    )
-    .catch(() => {});
+  // Выбор после перезагрузки: вид — CSS · URL, менеджер пакетов — yarn, формат имени — lucide:house.
+  await openWithSettings(page, o.base);
   same(
     "вид кода после перезагрузки",
-    await page.evaluate(
-      () =>
-        document.querySelector(".icon-code")?.getAttribute("data-code") ?? "",
-    ),
-    "link",
+    await codeBlock(page, "SVG URL", link),
+    link,
   );
-  await press(page, ".icon-code", "Tag");
+  await choose(page, "pill", "HTML");
+  await choose(page, "tab", "Package");
   same(
     "менеджер пакетов после перезагрузки",
-    await snippet(page, "install", "yarn add @iconavo-ui/icon"),
+    await codeBlock(page, "Install", "yarn add @iconavo-ui/icon"),
     "yarn add @iconavo-ui/icon",
   );
   same(
@@ -380,17 +411,38 @@ export async function codeProblems(
 
   // Цветной набор — без цвета и толщины; заливка — без толщины.
   for (const { path, tag } of [CODE_PALETTE, CODE_FILLED]) {
-    await page.goto(`${o.base}${path}`);
-    await hydrated(page);
-    same(`код тега ${path}`, await snippet(page, "code", tag), tag);
+    await openWithSettings(page, o.base, path);
+    await choose(page, "pill", "HTML");
+    const usage = `${readmeImport(readme)}\n\n${tag}`;
+    same(`код тега ${path}`, await codeBlock(page, "Usage", usage), usage);
   }
 
-  // Панель: тот же генератор, настройки вкладки — по умолчанию.
+  // Панель: тот же генератор; настройки новой страницы — по умолчанию, размер 24 px (решение владельца 3
+  // ноября 2026).
   await page.goto(`${o.base}/${CATALOG_SET}?icon=${CODE_ICON}`);
   await hydrated(page);
-  // Размер — всегда в пикселях, по умолчанию 24 (решение владельца 3 ноября 2026).
-  const plain = `<iconavo-icon icon="${CODE_ICON}" width="24"></iconavo-icon>`;
-  same("код тега в панели", await snippet(page, "code", plain), plain);
+  await choose(page, "pill", "HTML");
+  const plain = `${readmeImport(readme)}\n\n<iconavo-icon icon="${CODE_ICON}" width="24"></iconavo-icon>`;
+  same("код тега в панели", await codeBlock(page, "Usage", plain), plain);
+  // SVG в панели — побайтно ответ edge API с размером 24 px. Страница иконки получает рисунок в серверном
+  // HTML, а панели его грузит браузер пачкой edge API (иконки нет на первой странице сетки): подменённую
+  // пачку видит только эта сверка — контрольный запуск.
+  const panelSvg = await (
+    await fetch(`${o.api}${iconPath(CODE_ICON)}.svg?width=24`)
+  ).text();
+  await choose(page, "pill", "SVG");
+  for (const option of await page
+    .locator(CODE_ROOT)
+    .first()
+    .locator(".panel-option")
+    .all()) {
+    if (await option.locator("input").isChecked()) await option.click();
+  }
+  same(
+    "код SVG в панели — ответ API",
+    await codeBlock(page, "SVG", panelSvg),
+    panelSvg,
+  );
   return problems;
 }
 
@@ -421,7 +473,7 @@ export async function checkCode(
   await context.close();
   return problems.length === 0
     ? pass(
-        `тег, React, SVG (как у edge API), CSS и ссылка с настройками; npm, pnpm и yarn; выбор после перезагрузки; строки README; код тега рисует иконку${name === "chrome" ? "; копирование" : ""}`,
+        `HTML и «Script» из README, React, SVG (как у edge API), CSS и ссылка с настройками; npm, pnpm и yarn; Name с форматами; выбор после перезагрузки; цветной набор и заливка; панель; код тега рисует иконку${name === "chrome" ? "; копирование" : ""}`,
       )
     : fail(problems.slice(0, 4).join("; "));
 }
@@ -462,7 +514,11 @@ export function pngFacts(body: Uint8Array) {
   };
 }
 
-/** Скачивание одной иконки: SVG с комментарием, PNG 16 и 512 px, «Копировать PNG» (Chrome); метки. */
+/**
+ * Скачивание и копирование одной иконки (редизайн): «Download ▾» — файл SVG с комментарием об авторе и
+ * лицензии и PNG 1× и 4× размера из настроек; «Copy SVG ▾» (Chrome) — SVG как ответ edge API и картинка
+ * PNG в буфере; метки аналитики.
+ */
 export async function filesProblems(
   page: Page,
   o: CodeCheckOptions,
@@ -475,16 +531,15 @@ export async function filesProblems(
   const apiSvg = await (
     await fetch(`${o.api}${iconPath(CODE_ICON)}.svg?${CODE_EXPECT.query}`)
   ).text();
-  await openWithSettings(page, o.base);
-  await snippet(page, "code", CODE_EXPECT.tag);
-  await page
-    .getByRole("button", { name: "Download SVG", exact: true })
-    .waitFor({ timeout: PANEL_WAIT_MS })
-    .catch(() => {});
+  await page.goto(`${o.base}${iconPath(CODE_ICON)}?${CODE_SETTINGS}`);
+  await hydrated(page);
+  // Пункт меню «Download ▾»: Radix ставит пункты после открытия.
+  const fromMenu = (item: RegExp) => async () => {
+    await page.locator("button.ip-download").click();
+    await page.getByRole("menuitem", { name: item }).click();
+  };
 
-  const svg = await downloaded(page, () =>
-    page.getByRole("button", { name: "Download SVG", exact: true }).click(),
-  );
+  const svg = await downloaded(page, fromMenu(/^SVG file/));
   if (svg === undefined) {
     problems.push("SVG не скачался");
   } else {
@@ -499,13 +554,14 @@ export async function filesProblems(
     no(drawing === apiSvg, "рисунок SVG-файла — не как ответ edge API");
   }
 
-  for (const px of PNG_CHECK_SIZES) {
-    await press(page, ".icon-export", String(px));
-    const png = await downloaded(page, () =>
-      page.getByRole("button", { name: "Download PNG", exact: true }).click(),
+  for (const scale of PNG_CHECK_SCALES) {
+    const px = CODE_SIZE * scale;
+    const png = await downloaded(
+      page,
+      fromMenu(new RegExp(`^PNG ${scale}× · ${px} px`)),
     );
     if (png === undefined) {
-      problems.push(`PNG ${px} не скачался`);
+      problems.push(`PNG ${scale}× не скачался`);
       continue;
     }
     no(png.name === `lucide-house-${px}.png`, `имя файла PNG — ${png.name}`);
@@ -525,28 +581,35 @@ export async function filesProblems(
     );
   }
 
-  // «Копировать PNG» — картинка последнего размера в буфере (только Chrome: доступ к буферу).
+  // Буфер — только Chrome. «Copy SVG» — SVG с настройками, как ответ edge API (в Figma — вектором); затем
+  // «PNG image» — картинка размера из настроек.
   if (clipboard) {
-    await page.getByRole("button", { name: "Copy PNG", exact: true }).click();
-    // Картинку рисует canvas: в буфере она — когда кнопка сказала «Copied».
-    await page
-      .locator(".icon-export")
-      .getByRole("button", { name: "Copied", exact: true })
-      .waitFor({ timeout: PANEL_WAIT_MS })
-      .catch(() => {});
-    const copied = await page
-      .evaluate(async () => {
-        const [item] = await navigator.clipboard.read();
-        if (!item?.types.includes("image/png")) return undefined;
-        const bytes = new Uint8Array(
-          await (await item.getType("image/png")).arrayBuffer(),
-        );
-        let text = "";
-        for (const byte of bytes) text += String.fromCharCode(byte);
-        return btoa(text);
-      })
-      .catch(() => undefined);
-    const last = PNG_CHECK_SIZES.at(-1);
+    await page.locator("button.ip-split-main").click();
+    await page.waitForTimeout(300);
+    no(
+      (await clipText(page)) === apiSvg,
+      "«Copy SVG»: в буфере не SVG как у edge API",
+    );
+    await page.locator("button.ip-split-arrow").click();
+    await page.getByRole("menuitem", { name: /^PNG image/ }).click();
+    // Картинку рисует canvas, и в буфер она попадает не сразу: «Copied» на кнопке ещё может быть от
+    // «Copy SVG» — ждём саму картинку в буфере.
+    let copied: string | undefined;
+    for (let t = 0; t < PANEL_WAIT_MS && copied === undefined; t += 250) {
+      copied = await page
+        .evaluate(async () => {
+          const [item] = await navigator.clipboard.read();
+          if (!item?.types.includes("image/png")) return undefined;
+          const bytes = new Uint8Array(
+            await (await item.getType("image/png")).arrayBuffer(),
+          );
+          let text = "";
+          for (const byte of bytes) text += String.fromCharCode(byte);
+          return btoa(text);
+        })
+        .catch(() => undefined);
+      if (copied === undefined) await page.waitForTimeout(250);
+    }
     let size = "";
     try {
       const f =
@@ -554,13 +617,13 @@ export async function filesProblems(
           ? pngFacts(Buffer.from(copied, "base64"))
           : undefined;
       size = f === undefined ? "" : `${f.width}×${f.height}`;
-      no(f !== undefined && f.painted > 0, "«Копировать PNG»: в буфере пусто");
+      no(f !== undefined && f.painted > 0, "«PNG image»: в буфере пусто");
     } catch (e) {
-      problems.push(`«Копировать PNG»: ${(e as Error).message}`);
+      problems.push(`«PNG image»: ${(e as Error).message}`);
     }
     no(
-      size === `${last}×${last}`,
-      `«Копировать PNG»: в буфере ${size || "нет картинки"}`,
+      size === `${CODE_SIZE}×${CODE_SIZE}`,
+      `«PNG image»: в буфере ${size || "нет картинки"}`,
     );
   }
 
@@ -573,6 +636,12 @@ export async function filesProblems(
     events.some((e) => e.name === "download" && e.format === "png"),
     "нет метки аналитики download для PNG",
   );
+  if (clipboard) {
+    no(
+      events.some((e) => e.name === "copy" && e.icon === CODE_ICON),
+      "нет метки аналитики copy у «Copy SVG»",
+    );
+  }
   return problems;
 }
 
@@ -605,7 +674,7 @@ export async function checkFiles(
   await context.close();
   return problems.length === 0
     ? pass(
-        `SVG с комментарием об авторе и лицензии — рисунок как у edge API; PNG 16 и 512 px нужного цвета${name === "chrome" ? "; «Копировать PNG»" : ""}; метки аналитики`,
+        `«Download ▾»: SVG с комментарием об авторе и лицензии — рисунок как у edge API; PNG 1× и 4× нужного размера и цвета${name === "chrome" ? "; «Copy SVG» как у edge API и картинка PNG в буфере" : ""}; метки аналитики`,
       )
     : fail(problems.slice(0, 4).join("; "));
 }

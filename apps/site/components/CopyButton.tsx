@@ -56,7 +56,9 @@ export function CopyButton({
     >
       {icon ? (
         <Icon
-          icon={copied ? "lucide:check" : "lucide:copy"}
+          icon={
+            copied ? "material-symbols:check" : "material-symbols:content-copy"
+          }
           className="inline-block"
         />
       ) : null}

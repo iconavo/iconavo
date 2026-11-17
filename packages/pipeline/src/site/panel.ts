@@ -1,8 +1,8 @@
-// Сценарии боковой панели и страницы иконки проверки сайта (шаг 4 фазы 4, ADR-0041): панель мышью и с
-// клавиатуры, каталог при открытой панели, переход на страницу иконки, страница иконки и шторка на
-// телефоне. Сведения панель берёт у превью API: /icon отвечает по локальному Meilisearch (meili/local.ts),
-// похожие — соседи по общим словам. Ошибки сценария — список «не так»; контрольный запуск подкладывает
-// поломки скриптом до страницы и ждёт, что список не пуст.
+// Сценарии боковой панели и страницы иконки проверки сайта (шаг 4 фазы 4, ADR-0041; редизайн — панель во
+// всю высоту страницы): панель мышью и с клавиатуры, сетка не прыгает при открытии и закрытии, каталог и
+// поиск при открытой панели, раскладка на разной ширине окна, страница иконки и шторка на телефоне. Ошибки
+// сценария — список «не так»; контрольный запуск подкладывает поломки скриптом до страницы и ждёт, что
+// список не пуст.
 
 import type { Browser, Page } from "playwright";
 import { type AxeViolation, axe, axeVerdict, runAxe } from "../sandbox/axe.js";
@@ -19,7 +19,6 @@ import {
   CATALOG_SET,
   CRAWL_ICON_NAMES,
   DESKTOP,
-  MOCKUPS,
   PANEL_WAIT_MS,
   PHONE,
   STYLES_SET,
@@ -31,52 +30,44 @@ export interface PanelCheckOptions {
   pages: CrawledPage[];
 }
 
+/** Панель в своём месте справа от страницы (#page-panel); уходящая копия — не она. */
+const PANEL = "#page-panel > aside.icon-panel";
+
 /** Что видно в панели и вокруг неё. Выполняется в браузере. */
 function panelFacts() {
-  const panel = document.querySelector("aside.icon-panel");
+  const panel = document.querySelector("#page-panel > aside.icon-panel");
   const active = document.activeElement as HTMLElement | null;
   const box = panel?.getBoundingClientRect();
-  const icons = (selector: string) =>
-    [...(panel?.querySelectorAll(selector) ?? [])].map(
-      (e) => e.getAttribute("data-icon") ?? "",
-    );
+  const state = history.state as { iconavoPanel?: unknown } | null;
+  const root = document.documentElement;
   return {
     open: panel !== null,
     icon: panel?.getAttribute("data-panel-icon") ?? "",
-    details:
-      panel?.querySelector(".icon-details")?.getAttribute("data-details") ?? "",
     focusInPanel: panel?.contains(active) === true,
+    focusTitle: active?.id === "icon-panel-title",
     focusIcon: active?.getAttribute("data-icon") ?? "",
-    search: location.search,
+    search: decodeURIComponent(location.search),
     history: history.length,
-    variants: icons(".icon-variants .icon-variant"),
-    similar: icons(".icon-similar .icon-variant"),
-    stroke: (panel?.querySelectorAll('input[type="range"]').length ?? 0) > 1,
-    color: panel?.querySelector('input[type="color"]') !== null,
-    preview:
-      (panel?.querySelector(".icon-preview svg")?.childNodes.length ?? 0) > 0,
-    /** Фон превью на светлом и тёмном фоне — у каждой панели свой color-scheme. */
-    backgrounds: [...(panel?.querySelectorAll(".icon-preview") ?? [])].map(
-      (e) => getComputedStyle(e).backgroundColor,
-    ),
-    /** Заголовки разделов панели: описания, тегов и синонимов в ней нет (решение владельца 3 ноября 2026). */
-    sections: [...(panel?.querySelectorAll(".icon-section-title") ?? [])].map(
-      (e) => e.textContent?.trim() ?? "",
-    ),
-    /** Указание авторства: свёрнуто под стрелкой, текст — на весь набор и по-английски. */
-    attribution: (() => {
-      const block = panel?.querySelector("details.icon-attribution");
-      return {
-        present: block !== null && block !== undefined,
-        open: block?.hasAttribute("open") === true,
-        text: block?.querySelector(".icon-attribution-text")?.textContent ?? "",
-      };
-    })(),
+    marker: typeof state?.iconavoPanel === "string",
+    /** Сколько превью нарисовано (светлое и тёмное). */
+    drawn: [...(panel?.querySelectorAll(".panel-preview svg") ?? [])].filter(
+      (svg) => svg.childNodes.length > 0,
+    ).length,
+    color: panel?.querySelector('input[type="color"]') != null,
+    stroke: panel?.querySelector('input[type="range"]') != null,
     position: panel ? getComputedStyle(panel).position : "",
+    left: box?.left ?? 0,
     top: box?.top ?? 0,
-    height: box?.height ?? 0,
-    viewport: innerHeight,
-    wide: document.documentElement.scrollWidth > innerWidth,
+    right: box?.right ?? 0,
+    bottom: box?.bottom ?? 0,
+    width: innerWidth,
+    /** Правый край затемнения шторки: оно, как и шторка, закреплено во весь экран — по нему её ширина. */
+    backdrop:
+      document
+        .querySelector("#page-panel > .panel-backdrop")
+        ?.getBoundingClientRect().right ?? 0,
+    height: root.clientHeight,
+    wide: root.scrollWidth > root.clientWidth,
   };
 }
 
@@ -98,31 +89,73 @@ export async function hydrated(page: Page) {
   );
 }
 
-/** Панель открыта с этой иконкой и сведения пришли. */
+/**
+ * Страница успокоилась: прошло несколько кадров (высоту панели по прокрутке пересчитывает кадр после события
+ * прокрутки, lib/panel-fit.ts) и закончились движения — переход колонок, появление и уход панели
+ * (бесконечные анимации не в счёт).
+ */
+async function settled(page: Page) {
+  await page.evaluate(
+    () =>
+      new Promise<void>((done) => {
+        let left = 3;
+        const tick = () => {
+          left -= 1;
+          if (left === 0) done();
+          else requestAnimationFrame(tick);
+        };
+        requestAnimationFrame(tick);
+      }),
+  );
+  await page
+    .waitForFunction(
+      () =>
+        document
+          .getAnimations()
+          .every(
+            (a) =>
+              a.playState !== "running" ||
+              !Number.isFinite(Number(a.effect?.getComputedTiming().endTime)),
+          ),
+      null,
+      { timeout: 5_000 },
+    )
+    .catch(() => {});
+}
+
+/** Панель открыта с этой иконкой, оба превью нарисованы, движения закончились. */
 async function shown(page: Page, icon: string): Promise<Facts> {
   await page
     .waitForFunction(
-      (name) => {
-        const panel = document.querySelector("aside.icon-panel");
+      ([selector, name]) => {
+        const panel = document.querySelector(selector as string);
         return (
-          panel?.getAttribute("data-panel-icon") === name &&
-          panel.querySelector(".icon-details")?.getAttribute("data-details") ===
-            "ready"
+          panel !== null &&
+          panel.getAttribute("data-panel-icon") === name &&
+          [...panel.querySelectorAll(".panel-preview svg")].filter(
+            (svg) => svg.childNodes.length > 0,
+          ).length === 2
         );
       },
-      icon,
+      [PANEL, icon],
       { timeout: PANEL_WAIT_MS },
     )
     .catch(() => {});
+  await settled(page);
   return facts(page);
 }
 
 async function closed(page: Page): Promise<Facts> {
   await page
-    .waitForFunction(() => !document.querySelector("aside.icon-panel"), null, {
-      timeout: PANEL_WAIT_MS,
-    })
+    .waitForFunction(
+      () =>
+        !document.querySelector("#page-panel > aside.icon-panel") &&
+        !document.querySelector(".panel-leaving"),
+      null,
+      { timeout: PANEL_WAIT_MS },
+    )
     .catch(() => {});
+  await settled(page);
   return facts(page);
 }
 
@@ -130,10 +163,28 @@ async function closed(page: Page): Promise<Facts> {
 const cardName = (page: Page, n: number) =>
   page.locator("a.icon-card-link").nth(n).getAttribute("data-icon");
 
+/** Верх карточки этой иконки в окне. */
+const cardTop = (page: Page, name: string) =>
+  page.evaluate((icon) => {
+    for (const a of document.querySelectorAll<HTMLElement>(
+      "a.icon-card-link",
+    )) {
+      if (a.dataset.icon === icon)
+        return Math.round(a.getBoundingClientRect().top);
+    }
+    return Number.NaN;
+  }, name);
+
+/**
+ * Ширина, на которой с открытой панелью левая колонка узкая: шапка набора и строка поиска в ней выше —
+ * на ней видно, что сетка не прыгает (план редизайна, шаг 5). В WebKit 1024 px — уже телефон.
+ */
+const NARROW = { width: 1040, height: 900 };
+
 /**
  * Панель на странице набора мышью и с клавиатуры: адрес, фокус, смена иконки без новой записи истории,
- * Esc, ✕ и «назад»; смена фильтра при открытой панели и ✕ после неё; варианты по таблице стилей,
- * похожие, толщина и цвет — где положено; ссылка с ?icon=.
+ * Esc, ✕, «назад» и «вперёд», ссылка с ?icon=; сетка не прыгает при открытии и закрытии; другая страница
+ * сетки при открытой панели; панель в поиске; цвет и толщина линии — где положено.
  */
 export async function panelProblems(
   page: Page,
@@ -143,6 +194,7 @@ export async function panelProblems(
   const no = (ok: boolean, message: string) => {
     if (!ok) problems.push(message);
   };
+  await page.setViewportSize(DESKTOP);
   await page.goto(`${base}/${CATALOG_SET}`);
   await hydrated(page);
   const first = (await cardName(page, 0)) ?? "";
@@ -157,60 +209,38 @@ export async function panelProblems(
     f.search === `?icon=${first}`,
     `адрес после открытия — «${f.search}», а ждали ?icon=${first}`,
   );
-  no(f.focusInPanel, "фокус после открытия — не в панели");
-  no(f.preview, "превью в панели не нарисовано");
-  no(
-    f.backgrounds.length === 2 && f.backgrounds[0] !== f.backgrounds[1],
-    `у превью на светлом и тёмном фоне один фон: ${f.backgrounds.join(", ")}`,
-  );
+  no(f.focusTitle, "фокус после открытия — не на заголовке панели");
+  no(f.drawn === 2, "превью в панели не нарисованы");
   no(f.history === start.history + 1, "открытие не добавило запись истории");
+  no(f.marker, "у записи открытия нет пометки панели");
+  no(f.color, `у ${first} (Lucide) нет выбора цвета`);
   no(f.stroke, `у ${first} (Lucide) нет толщины линии`);
-  no(f.color, `у ${first} нет выбора цвета`);
-  no(
-    f.variants.length === 0,
-    `у ${first} один вариант, а блок вариантов показан: ${f.variants.join(", ")}`,
-  );
-  no(
-    !f.sections.some((s) => /^(Description|Tags|Synonyms)$/.test(s)),
-    `в панели — описание, теги или синонимы: ${f.sections.join(", ")}`,
-  );
-  no(
-    f.attribution.present && !f.attribution.open,
-    "указание авторства не свёрнуто под стрелкой",
-  );
-  await page
-    .locator("aside.icon-panel details.icon-attribution summary")
-    .click();
-  const attribution = (await facts(page)).attribution;
-  no(
-    attribution.open &&
-      attribution.text.startsWith("Icons: Lucide by ") &&
-      attribution.text.includes("Includes icons from Feather"),
-    `указание авторства — «${attribution.text.slice(0, 80)}», а ждали текст на весь набор Lucide с Feather`,
-  );
   const opened = f.history;
   await page.locator("a.icon-card-link").nth(1).click();
   f = await shown(page, second);
   no(f.icon === second, "щелчок по второй карточке не сменил иконку панели");
   no(f.history === opened, "смена иконки добавила запись истории");
-  no(f.focusIcon === second, "после смены иконки фокус ушёл с карточки");
+  no(!f.focusInPanel, "смена иконки щелчком увела фокус в панель");
   await page.keyboard.press("Escape");
   f = await closed(page);
   no(!f.open, "Esc не закрыл панель");
   no(f.search === "", `после Esc в адресе осталось «${f.search}»`);
   no(f.focusIcon === second, "после закрытия фокус не вернулся к карточке");
 
-  // С клавиатуры: Enter на карточке, ✕.
+  // С клавиатуры: Enter на карточке, Tab — в панели, ✕.
   await page.locator("a.icon-card-link").nth(0).focus();
   await page.keyboard.press("Enter");
   f = await shown(page, first);
-  no(f.open && f.focusInPanel, "Enter на карточке не открыл панель с фокусом");
+  no(f.open && f.focusTitle, "Enter на карточке не открыл панель с фокусом");
+  await page.keyboard.press("Tab");
+  f = await facts(page);
+  no(f.focusInPanel, "Tab с заголовка панели увёл фокус из панели");
   await page.getByRole("button", { name: /^(Close|Закрыть)$/ }).click();
   f = await closed(page);
   no(!f.open, "✕ не закрыл панель");
   no(f.focusIcon === first, "после ✕ фокус не вернулся к карточке");
 
-  // «Назад» закрывает панель целиком, даже после смены иконки.
+  // «Назад» закрывает панель целиком, даже после смены иконки; «вперёд» открывает последнюю.
   await page.locator("a.icon-card-link").nth(0).click();
   await shown(page, first);
   await page.locator("a.icon-card-link").nth(1).click();
@@ -218,70 +248,140 @@ export async function panelProblems(
   await page.goBack();
   f = await closed(page);
   no(!f.open, "«назад» не закрыл панель");
+  await page.goForward();
+  f = await shown(page, second);
+  no(
+    f.open && f.icon === second,
+    "«вперёд» не открыл панель с последней иконкой",
+  );
+  await page.goBack();
+  await closed(page);
 
-  // Ссылка с панелью открывает ту же иконку.
+  // Ссылка с панелью открывает ту же иконку; ✕ убирает icon из адреса, не уходя со страницы.
   await page.goto(`${base}/${CATALOG_SET}?icon=${first}`);
   await hydrated(page);
   f = await shown(page, first);
   no(f.open && f.icon === first, "ссылка с ?icon= не открыла панель");
+  const linked = f.history;
   await page.keyboard.press("Escape");
   f = await closed(page);
   no(f.search === "", "закрытие панели из ссылки не убрало icon из адреса");
+  no(f.history === linked, "закрытие панели из ссылки добавило запись истории");
 
-  // Набор со стилями: варианты по таблице, фильтр при открытой панели, похожие, нет толщины линии.
-  await page.goto(`${base}/${STYLES_SET}`);
-  await hydrated(page);
-  const card = (await cardName(page, 0)) ?? "";
+  // Другая страница сетки при открытой панели: панель остаётся, ✕ — без «назад».
   await page.locator("a.icon-card-link").nth(0).click();
-  f = await shown(page, card);
-  const base0 = card.slice(card.indexOf(":") + 1);
-  const outline = ["-thin", "-light", "", "-bold"].map(
-    (s) => `${STYLES_SET}:${base0}${s}`,
-  );
+  await shown(page, first);
+  await page.locator(".pagination a", { hasText: /^2$/ }).first().click();
+  await page.waitForFunction(() => location.search.includes("page=2"));
+  f = await shown(page, first);
   no(
-    outline.every((n, i) => f.variants[i] === n),
-    `варианты ${card} — ${f.variants.slice(0, 4).join(", ")}, а ждали ${outline.join(", ")}`,
+    f.open && f.icon === first,
+    "переход на вторую страницу сетки закрыл панель",
   );
-  no(!f.stroke, `у ${card} (Phosphor) есть толщина линии`);
-  no(f.similar.length > 0, `у ${card} нет похожих`);
-  const fill = `${STYLES_SET}:${base0}-fill`;
-  await page
-    .locator(`aside.icon-panel .icon-variant[data-icon="${fill}"]`)
-    .click();
-  f = await shown(page, fill);
-  no(f.icon === fill, `вариант ${fill} не открылся в панели`);
-  const similar = f.similar[0];
-  if (similar !== undefined) {
-    await page
-      .locator(
-        `aside.icon-panel .icon-similar .icon-variant[data-icon="${similar}"]`,
-      )
-      .click();
-    f = await shown(page, similar);
-    no(f.icon === similar, `похожая ${similar} не открылась в панели`);
+  // ✕ — только если панель открыта: иначе ожидание кнопки вместо понятной ошибки.
+  if (f.open) {
+    await page.getByRole("button", { name: /^(Close|Закрыть)$/ }).click();
+    f = await closed(page);
+    no(
+      f.search === "?page=2",
+      `после ✕ адрес — «${f.search}», а ждали ?page=2: «назад» отменил страницу или icon остался`,
+    );
   }
-  await page
-    .getByRole("link", { name: /^(Filled|Заливка)\b/ })
-    .first()
-    .click();
-  await page.waitForFunction(() => location.search.includes("style=filled"));
-  f = await facts(page);
-  no(f.open, "смена фильтра закрыла панель");
-  await page.getByRole("button", { name: /^(Close|Закрыть)$/ }).click();
-  f = await closed(page);
-  no(!f.open, "✕ после смены фильтра не закрыл панель");
-  no(
-    f.search.includes("style=filled") && !f.search.includes("icon="),
-    `после ✕ адрес — «${f.search}»: «назад» отменил фильтр или icon остался`,
-  );
 
-  // Цветной набор: выбора цвета нет.
-  await page.goto(
-    `${base}/fluent-emoji-flat?icon=fluent-emoji-flat:waving-hand`,
-  );
+  // Сетка не прыгает (план редизайна, шаг 5): с панелью шапка набора и строка поиска в узкой колонке выше,
+  // и карточки уезжали на высоту разницы — браузеры держали прокрутку по-разному, теперь её держит сайт
+  // (apps/site/lib/panel-anchor.ts). И через Esc, и через «назад» браузера.
+  await page.setViewportSize(NARROW);
+  await page.goto(`${base}/${CATALOG_SET}`);
   await hydrated(page);
-  f = await shown(page, "fluent-emoji-flat:waving-hand");
-  no(!f.color, "у цветной иконки есть выбор цвета");
+  const columns = await page.evaluate(
+    () =>
+      getComputedStyle(
+        document.querySelector(".icon-grid") as Element,
+      ).gridTemplateColumns.split(" ").length,
+  );
+  const n = columns * 4 + 1;
+  const card = (await cardName(page, n)) ?? "";
+  await page.evaluate((icon) => {
+    for (const a of document.querySelectorAll<HTMLElement>(
+      "a.icon-card-link",
+    )) {
+      if (a.dataset.icon === icon)
+        scrollBy(0, a.getBoundingClientRect().top - 450);
+    }
+  }, card);
+  await settled(page);
+  for (const how of ["Esc", "«назад»"] as const) {
+    const before = await cardTop(page, card);
+    await page.locator("a.icon-card-link").nth(n).click();
+    await shown(page, card);
+    const open = await cardTop(page, card);
+    no(
+      Math.abs(open - before) <= 2,
+      `открытие панели сдвинуло карточку ${card}: ${before} → ${open} px`,
+    );
+    if (how === "Esc") await page.keyboard.press("Escape");
+    else await page.goBack();
+    await closed(page);
+    const after = await cardTop(page, card);
+    no(
+      Math.abs(after - before) <= 2,
+      `закрытие панели (${how}) сдвинуло карточку ${card}: ${before} → ${after} px`,
+    );
+  }
+  await page.setViewportSize(DESKTOP);
+
+  // Поиск: та же панель во всю высоту — справа от поля и выдачи.
+  await page.goto(`${base}/search?q=house&icon=${CRAWL_ICON_NAMES[0]}`);
+  await hydrated(page);
+  f = await shown(page, CRAWL_ICON_NAMES[0] as string);
+  const hero = await page.evaluate(() => {
+    const box = document.querySelector(".hero")?.getBoundingClientRect();
+    return { right: box?.right ?? 0, top: box?.top ?? 0 };
+  });
+  no(f.open, "ссылка с ?icon= на странице поиска не открыла панель");
+  no(
+    f.left >= hero.right - 1,
+    `панель в поиске заходит на поле поиска: панель с ${Math.round(f.left)} px, поле до ${Math.round(hero.right)} px`,
+  );
+  await page.keyboard.press("Escape");
+  f = await closed(page);
+  no(!f.open && f.search === "?q=house", `Esc в поиске: адрес «${f.search}»`);
+
+  // Набор со стилями без линий и цветной набор: лишних настроек нет.
+  await page.goto(`${base}/${STYLES_SET}?icon=${CRAWL_ICON_NAMES[1]}`);
+  await hydrated(page);
+  f = await shown(page, CRAWL_ICON_NAMES[1] as string);
+  no(f.drawn === 2, `${CRAWL_ICON_NAMES[1]} в панели не нарисована`);
+  no(!f.stroke, `у ${CRAWL_ICON_NAMES[1]} (Phosphor) есть толщина линии`);
+  no(f.color, `у ${CRAWL_ICON_NAMES[1]} нет выбора цвета`);
+  await page.goto(`${base}/fluent-emoji-flat?icon=${CRAWL_ICON_NAMES[4]}`);
+  await hydrated(page);
+  f = await shown(page, CRAWL_ICON_NAMES[4] as string);
+  no(f.drawn === 2, `${CRAWL_ICON_NAMES[4]} в панели не нарисована`);
+  no(!f.color && !f.stroke, "у цветной иконки есть выбор цвета или толщины");
+
+  // Ссылка на несуществующую иконку: строка «нет» вместо превью, настроек и кода (решение владельца
+  // 13 ноября 2026). Своя вкладка: ядро пишет в консоль о каждой ненайденной иконке, а сторож консоли
+  // сценария этого не ждёт.
+  const other = await page.context().newPage();
+  await other.goto(`${base}/${CATALOG_SET}?icon=${CATALOG_SET}:no-such-icon`);
+  await hydrated(other);
+  await other
+    .waitForSelector(`${PANEL} .panel-missing`, { timeout: PANEL_WAIT_MS })
+    .catch(() => {});
+  const missing = await other.evaluate(() => {
+    const panel = document.querySelector("#page-panel > aside.icon-panel");
+    return {
+      text: panel?.querySelector(".panel-missing")?.textContent ?? "",
+      previews: panel?.querySelectorAll(".panel-preview").length ?? 0,
+    };
+  });
+  no(
+    missing.text !== "" && missing.previews === 0,
+    `ссылка на несуществующую иконку: строки «такой иконки нет» не видно${missing.previews > 0 ? ", а превью есть" : ""}`,
+  );
+  await other.close();
   return problems;
 }
 
@@ -322,38 +422,16 @@ export async function checkPanel(
   await context.close();
   return problems.length === 0
     ? pass(
-        "мышью и с клавиатуры: адрес, фокус, Esc, ✕, «назад», ссылка с ?icon=; фильтр при открытой панели; варианты, похожие, толщина и цвет; axe в обеих темах",
+        "мышью и с клавиатуры: адрес, фокус, Esc, ✕, «назад» и «вперёд», ссылка с ?icon=; сетка не прыгает при открытии и закрытии (1040 px); вторая страница сетки и поиск с панелью; цвет и толщина — где положено; несуществующая иконка — «нет»; axe в обеих темах",
       )
     : fail(problems.slice(0, 4).join("; "));
 }
 
-/** Мокапы на странице иконки: сколько мест и панелей тем, что нарисовано, фон тем, цвет и высота иконки. */
-function mockupFacts() {
-  const panes = [...document.querySelectorAll(".mockup-pane")];
-  const svgs = panes.flatMap((pane) => [...pane.querySelectorAll("svg")]);
-  const bg = (selector: string) => {
-    const pane = document.querySelector(selector);
-    return pane ? getComputedStyle(pane).backgroundColor : "";
-  };
-  const main = panes.map((pane) => pane.querySelector("svg[color]"));
-  return {
-    mockups: document.querySelectorAll(".mockup[data-mockup]").length,
-    panes: panes.length,
-    svgs: svgs.length,
-    drawn: svgs.filter(
-      (svg) => svg.hasAttribute("viewBox") && svg.childNodes.length > 0,
-    ).length,
-    light: bg(".mockup-light"),
-    dark: bg(".mockup-dark"),
-    colors: [...new Set(main.map((svg) => svg?.getAttribute("color") ?? ""))],
-    firstHeight: main[0]?.getAttribute("height") ?? "",
-    hidden: panes.every((pane) => pane.getAttribute("aria-hidden") === "true"),
-  };
-}
-
 /**
- * Страница иконки: серверный HTML со сведениями, иконкой, мокапами и меткой версии; скрытая — «Устарела» и
- * noindex; в браузере — настройки из адреса в превью и мокапах, переход из панели с настройками.
+ * Страница иконки (редизайн): серверный HTML страниц выборки (iconPagesProblems); в браузере — размер, цвет
+ * и толщина линии из адреса в превью и обратно в адресе; во вкладке «Код» — указание авторства набора (у
+ * Lucide — с Feather); из панели — ссылка на страницу с настройками панели в адресе (ADR-0041). Поворота и
+ * отражения в редизайне нет: в макете их нет ни в панели, ни на странице.
  */
 export async function iconPageProblems(
   page: Page,
@@ -365,112 +443,84 @@ export async function iconPageProblems(
   };
   // Серверный HTML страниц выборки — тот же разбор, что у pnpm site --live.
   problems.push(...iconPagesProblems(o.pages));
-  // Строка «по мотивам Feather» — только у иконок из Feather, а текст указания авторства — на весь набор:
-  // у любой иконки Lucide в нём есть Feather (решение владельца 3 ноября 2026).
-  const house = o.pages.find((p) => p.path === "/lucide/house")?.html ?? "";
-  no(
-    !house.includes('class="icon-credit"'),
-    "/lucide/house: строка «по мотивам Feather» у иконки не из Feather",
-  );
-  no(
-    house.includes("Includes icons from Feather"),
-    "/lucide/house: в указании авторства набора нет Feather",
-  );
 
-  // Настройки из адреса.
-  await page.goto(
-    `${o.base}/lucide/house?size=64&color=e11d48&stroke=1.5&rotate=90&flip=horizontal`,
-  );
+  // Настройки из адреса: в превью — цвет и толщина линии; после гидратации адрес держит те же настройки.
+  await page.goto(`${o.base}/lucide/house?size=64&color=e11d48&stroke=1.5`);
   await hydrated(page);
   await page
     .waitForFunction(
       () =>
-        document.querySelector(".icon-preview svg")?.getAttribute("color") ===
+        document.querySelector(".ip-tile-icon")?.getAttribute("color") ===
         "#e11d48",
       null,
       { timeout: PANEL_WAIT_MS },
     )
     .catch(() => {});
-  const preview = await page.evaluate(() => {
-    const svg = document.querySelector(".icon-preview svg");
+  const tile = await page.evaluate(() => {
+    const svg = document.querySelector(".ip-tile-icon");
     return {
       color: svg?.getAttribute("color") ?? "",
-      height: svg?.getAttribute("height") ?? "",
-      size: document.querySelector(".icon-preview-size")?.textContent ?? "",
       stroke: svg?.innerHTML.includes('stroke-width="1.5"') === true,
     };
   });
+  no(tile.color === "#e11d48", `цвет из адреса не применён: «${tile.color}»`);
+  no(tile.stroke, "толщина линии из адреса не применена");
+  const query = new URL(page.url()).searchParams;
   no(
-    preview.color === "#e11d48",
-    `цвет из адреса не применён: «${preview.color}»`,
+    query.get("size") === "64" &&
+      query.get("color") === "e11d48" &&
+      query.get("stroke") === "1.5",
+    `настройки не вернулись в адрес: «${new URL(page.url()).search}»`,
   );
-  // Превью всегда крупное, размер копии и кода — подписью под ним (решение владельца 3 ноября 2026).
-  no(
-    preview.height === "96",
-    `превью не крупное: высота «${preview.height}», а ждали 96`,
-  );
-  no(
-    preview.size === "64 × 64 px",
-    `размер из адреса не применён: под превью «${preview.size}»`,
-  );
-  no(preview.stroke, "толщина линии из адреса не применена");
 
-  // Мокапы: восемь мест в двух темах, всё нарисовано; у иконки — цвет из адреса и размер места, не превью.
+  // Вкладка «Код»: последний раздел — автор, лицензия и указание авторства набора; у Lucide — с Feather.
+  await page.getByRole("tab", { name: "Code", exact: true }).click();
   await page
     .waitForFunction(
-      () => {
-        const svgs = [...document.querySelectorAll(".mockup-pane svg")];
-        return (
-          svgs.length > 0 &&
-          svgs.every(
-            (s) => s.hasAttribute("viewBox") && s.childNodes.length > 0,
-          )
-        );
-      },
+      () =>
+        document.querySelector("#ip-tabpanel")?.getAttribute("data-tab") ===
+          "code" &&
+        document
+          .querySelector("#ip-tabpanel")
+          ?.textContent?.includes("Feather") === true,
       null,
       { timeout: PANEL_WAIT_MS },
     )
     .catch(() => {});
-  const m = await page.evaluate(mockupFacts);
-  no(
-    m.mockups === MOCKUPS && m.panes === MOCKUPS * 2,
-    `мокапов ${m.mockups}, панелей тем ${m.panes}, а ждали ${MOCKUPS} и ${MOCKUPS * 2}`,
-  );
-  no(m.drawn === m.svgs, `в мокапах нарисовано ${m.drawn} иконок из ${m.svgs}`);
-  no(
-    m.light !== "" && m.light !== m.dark,
-    `у светлой и тёмной темы мокапа один фон: ${m.light}`,
+  const code = await page.evaluate(
+    () => document.querySelector("#ip-tabpanel")?.textContent ?? "",
   );
   no(
-    m.colors.length === 1 && m.colors[0] === "#e11d48",
-    `цвет иконки в мокапах — ${m.colors.join(", ")}, а ждали #e11d48`,
+    code.includes("Feather"),
+    "во вкладке «Код» у Lucide нет указания авторства с Feather",
   );
-  no(
-    m.firstHeight === "20",
-    `иконка в кнопке — ${m.firstHeight} px, а ждали 20: размер из настроек меняет только превью`,
-  );
-  no(m.hidden, "мокапы не скрыты от экранных дикторов");
 
-  // Из панели — на страницу с настройками.
+  // Из панели — на страницу с настройками панели в адресе: новая вкладка хранилища этой не видит.
   await page.goto(`${o.base}/${CATALOG_SET}`);
   await hydrated(page);
   const first = (await cardName(page, 0)) ?? "";
   await page.locator("a.icon-card-link").nth(0).click();
   await shown(page, first);
-  await page.getByRole("button", { name: "90°" }).click();
+  await page.locator(".icon-panel input.color-hex").fill("E11D48");
+  const link = page.getByRole("link", {
+    name: /Open icon page|Открыть страницу иконки/,
+  });
   await page
-    .getByRole("link", { name: /Open icon page|Открыть страницу иконки/ })
-    .click();
-  await page
-    .waitForURL((url) => url.pathname === `/${first.replace(":", "/")}`, {
-      timeout: PANEL_WAIT_MS,
-    })
+    .waitForFunction(
+      () =>
+        document
+          .querySelector('.icon-panel a[target="_blank"]')
+          ?.getAttribute("href")
+          ?.includes("color=e11d48") === true,
+      null,
+      { timeout: PANEL_WAIT_MS },
+    )
     .catch(() => {});
-  const url = new URL(page.url());
+  const url = new URL((await link.getAttribute("href")) ?? "", o.base);
   no(
     url.pathname === `/${first.replace(":", "/")}` &&
-      url.searchParams.get("rotate") === "90",
-    `«Открыть страницу иконки» привела на ${url.pathname}${url.search}`,
+      url.searchParams.get("color") === "e11d48",
+    `«Открыть страницу иконки» ведёт на ${url.pathname}${url.search}`,
   );
   return problems;
 }
@@ -493,12 +543,253 @@ export async function checkIconPage(
   await context.close();
   return problems.length === 0
     ? pass(
-        `${CRAWL_ICON_NAMES.length * 2} страниц: серверный HTML со сведениями и иконкой, метка версии; «Устарела»; настройки из адреса; переход из панели с настройками`,
+        `${CRAWL_ICON_NAMES.length * 2} страниц: серверный HTML — заголовок, иконка, метки, вкладки; «Removed»; размер, цвет и толщина из адреса; Feather во вкладке «Код»; из панели — с настройками в адресе`,
       )
     : fail(problems.slice(0, 4).join("; "));
 }
 
-/** Шторка на телефоне: снизу, выдача над ней видна и щёлкается, «развернуть», «назад», без прокрутки вбок. */
+/** Раскладка вокруг панели. Выполняется в браузере. */
+function layoutFacts() {
+  const box = (selector: string) => {
+    const r = document.querySelector(selector)?.getBoundingClientRect();
+    return r === undefined
+      ? undefined
+      : { left: r.left, top: r.top, right: r.right, bottom: r.bottom };
+  };
+  const grid = document.querySelector(".icon-grid");
+  const toolbar = document.querySelector(".grid-toolbar");
+  const bar = toolbar?.getBoundingClientRect();
+  const panel = document.querySelector("#page-panel > aside.icon-panel");
+  const root = document.documentElement;
+  return {
+    panel: box("#page-panel > aside.icon-panel"),
+    position: panel ? getComputedStyle(panel).position : "",
+    crumbs: box(".crumbs"),
+    grid: box(".icon-grid"),
+    footer: box(".site-footer"),
+    main: box("main"),
+    columns: grid
+      ? getComputedStyle(grid).gridTemplateColumns.split(" ").length
+      : 0,
+    card: grid?.firstElementChild?.getBoundingClientRect().width ?? 0,
+    /** Части строки поиска, вылезающие за неё. */
+    toolbarOut:
+      toolbar && bar
+        ? [...toolbar.querySelectorAll("*")].filter((e) => {
+            const r = e.getBoundingClientRect();
+            return (
+              r.width > 1 &&
+              r.height > 1 &&
+              (r.right > bar.right + 1 || r.left < bar.left - 1)
+            );
+          }).length
+        : 0,
+    width: innerWidth,
+    height: root.clientHeight,
+    wide: root.scrollWidth > root.clientWidth,
+  };
+}
+
+type Layout = ReturnType<typeof layoutFacts>;
+
+/** Ширины окна для строки «Раскладка»: от узкой колонки до широкого экрана. */
+const WIDTHS = [1040, 1280, 1440, 1920, 2560] as const;
+
+export interface LayoutOptions {
+  /** Только эти ширины и без сценариев прокрутки (контрольный запуск). */
+  widths?: readonly number[];
+  /** Скрипт до страницы — поломка контрольного запуска. */
+  init?: () => void;
+}
+
+/**
+ * Панель во всю высоту страницы (план редизайна): справа от страницы с отступом края, с уровня хлебных
+ * крошек, помещается в окно; колонки сетки — те же, что без панели (зависят только от ширины окна);
+ * строка поиска не вылезает; без прокрутки вбок. На 1440 px — ещё свёрнутый сайдбар, прилипание во всю
+ * высоту окна, подвал, короткая страница и смена ширины окна через 1024 px.
+ */
+export async function layoutProblems(
+  browser: Browser,
+  base: string,
+  o: LayoutOptions = {},
+): Promise<string[]> {
+  const problems: string[] = [];
+  const no = (ok: boolean, message: string) => {
+    if (!ok) problems.push(message);
+  };
+  const r = Math.round;
+  /** Панель на месте: справа с отступом края, правее сетки, в окне. */
+  const placed = (at: string, l: Layout) => {
+    const p = l.panel;
+    if (p === undefined) {
+      no(false, `${at}: панели нет`);
+      return;
+    }
+    const gutter = l.width - p.right;
+    no(
+      gutter >= 24 && gutter <= 48,
+      `${at}: от панели до края окна ${r(gutter)} px, а ждали отступ страницы`,
+    );
+    no(
+      l.grid === undefined || l.grid.right <= p.left - 16,
+      `${at}: сетка заходит под панель (сетка до ${r(l.grid?.right ?? 0)}, панель с ${r(p.left)} px)`,
+    );
+    no(
+      p.bottom <= l.height - 16 + 1,
+      `${at}: низ панели ${r(p.bottom)} px — за окном ${l.height} px`,
+    );
+    no(!l.wide, `${at}: страница шире окна`);
+    no(l.toolbarOut === 0, `${at}: строка поиска вылезает за свою колонку`);
+  };
+  for (const width of o.widths ?? WIDTHS) {
+    const context = await browser.newContext({
+      viewport: { width, height: 900 },
+    });
+    if (o.init) await context.addInitScript(o.init);
+    const page = await context.newPage();
+    await page.goto(`${base}/${CATALOG_SET}`);
+    await hydrated(page);
+    await settled(page);
+    const without = await page.evaluate(layoutFacts);
+    const first = (await cardName(page, 0)) ?? "";
+    await page.locator("a.icon-card-link").nth(0).click();
+    await shown(page, first);
+    const l = await page.evaluate(layoutFacts);
+    const at = `${width} px`;
+    placed(at, l);
+    no(
+      l.panel === undefined ||
+        l.crumbs === undefined ||
+        Math.abs(l.panel.top - l.crumbs.top) <= 4,
+      `${at}: панель начинается на ${r(l.panel?.top ?? 0)} px, а хлебные крошки — на ${r(l.crumbs?.top ?? 0)} px`,
+    );
+    no(
+      l.columns === without.columns,
+      `${at}: колонок сетки с панелью ${l.columns}, без панели ${without.columns}`,
+    );
+    no(
+      l.card < without.card,
+      `${at}: карточки с панелью не уже (${r(l.card)} и ${r(without.card)} px)`,
+    );
+    if (width === 1440 && o.widths === undefined) {
+      // Свёрнутый сайдбар: панель на месте, колонки те же.
+      await page.locator(".sidebar-toggle").first().click();
+      await settled(page);
+      await page.waitForTimeout(300);
+      const folded = await page.evaluate(layoutFacts);
+      placed(`${at}, сайдбар свёрнут`, folded);
+      no(
+        folded.columns === without.columns,
+        `${at}, сайдбар свёрнут: колонок ${folded.columns}, а ждали ${without.columns}`,
+      );
+      await page.locator(".sidebar-toggle").first().click();
+      await settled(page);
+      await page.waitForTimeout(300);
+
+      // Прокрутка: панель прилипает во всю высоту окна; внизу не заходит на подвал.
+      await page.evaluate(() => {
+        const main = document.querySelector("main")?.getBoundingClientRect();
+        scrollTo(
+          0,
+          Math.max(200, (main?.bottom ?? 0) + scrollY - innerHeight - 300),
+        );
+      });
+      await settled(page);
+      const middle = await page.evaluate(layoutFacts);
+      no(
+        middle.panel !== undefined &&
+          Math.abs(middle.panel.top - 16) <= 1 &&
+          Math.abs(middle.panel.bottom - (middle.height - 16)) <= 1,
+        `${at}, прокрутка: панель ${r(middle.panel?.top ?? 0)}–${r(middle.panel?.bottom ?? 0)} px, а ждали 16–${middle.height - 16}`,
+      );
+      await page.evaluate(() =>
+        scrollTo(0, document.documentElement.scrollHeight),
+      );
+      await settled(page);
+      const end = await page.evaluate(layoutFacts);
+      no(
+        end.panel !== undefined &&
+          end.footer !== undefined &&
+          end.panel.bottom <= end.footer.top + 1,
+        `${at}, конец страницы: панель (до ${r(end.panel?.bottom ?? 0)} px) заходит на подвал (с ${r(end.footer?.top ?? 0)} px)`,
+      );
+      // Внизу панель становится ниже, а не уезжает вверх: заголовок и ✕ видны.
+      no(
+        end.panel !== undefined && end.panel.top >= 15,
+        `${at}, конец страницы: панель уехала вверх — начинается на ${r(end.panel?.top ?? 0)} px`,
+      );
+
+      // Короткая страница — поиск по набору: страница не короче панели, подвал под ней.
+      await page.goto(
+        `${base}/${CATALOG_SET}?q=house&icon=${CRAWL_ICON_NAMES[0]}`,
+      );
+      await hydrated(page);
+      await shown(page, CRAWL_ICON_NAMES[0] as string);
+      const short = await page.evaluate(layoutFacts);
+      placed(`${at}, поиск по набору`, short);
+      no(
+        short.panel !== undefined &&
+          short.footer !== undefined &&
+          short.panel.bottom <= short.footer.top + 1,
+        `${at}, поиск по набору: панель заходит на подвал`,
+      );
+
+      // Окно уже 1024 px — шторка; снова шире — колонка справа.
+      await page.setViewportSize({ width: 900, height: 900 });
+      await settled(page);
+      const phone = await page.evaluate(layoutFacts);
+      no(
+        phone.position === "fixed" &&
+          phone.panel !== undefined &&
+          Math.abs(phone.panel.bottom - phone.height) <= 1,
+        `окно 900 px: панель — ${phone.position}, низ ${r(phone.panel?.bottom ?? 0)} px, а ждали шторку снизу`,
+      );
+      no(!phone.wide, "окно 900 px: страница шире окна");
+      await page.setViewportSize({ width: 1440, height: 900 });
+      await settled(page);
+      const back = await page.evaluate(layoutFacts);
+      placed(`${at} после 900 px`, back);
+      no(
+        back.position === "sticky",
+        `${at} после 900 px: панель — ${back.position}, а ждали колонку справа`,
+      );
+    }
+    await context.close();
+  }
+  return problems;
+}
+
+/** Строка «Раскладка»: сценарий, CSP и консоль. */
+export async function checkLayout(
+  browser: Browser,
+  o: PanelCheckOptions,
+  shots: { title: string; png: string }[],
+): Promise<Verdict> {
+  const problems = await layoutProblems(browser, o.base);
+  const context = await browser.newContext({ viewport: DESKTOP });
+  const page = await context.newPage();
+  const seen = watch(page);
+  await recordViolations(page);
+  await page.goto(`${o.base}/${CATALOG_SET}?icon=${CRAWL_ICON_NAMES[0]}`);
+  await hydrated(page);
+  await shown(page, CRAWL_ICON_NAMES[0] as string);
+  shots.push({
+    title: `Панель во всю высоту — ${DESKTOP.width} px`,
+    png: await shot(page, seen),
+  });
+  problems.push(
+    ...(await violations(page)).map((x) => `CSP: ${x}`),
+    ...[...new Set(seen.errors)].map((x) => `ошибка: ${x}`),
+  );
+  await context.close();
+  return problems.length === 0
+    ? pass(
+        `${WIDTHS.join(", ")} px: справа с отступом края, с уровня крошек, в окне, колонки сетки те же, строка поиска не вылезает; свёрнутый сайдбар, прилипание, подвал, короткая страница, окно 900 px и обратно`,
+      )
+    : fail(problems.slice(0, 4).join("; "));
+}
+
+/** Шторка на телефоне: снизу, затемнение закрывает, ручка раскрывает и сворачивает, «назад», без прокрутки вбок. */
 export async function sheetProblems(
   page: Page,
   base: string,
@@ -510,22 +801,45 @@ export async function sheetProblems(
   await page.goto(`${base}/${CATALOG_SET}`);
   await hydrated(page);
   const first = (await cardName(page, 0)) ?? "";
-  const second = (await cardName(page, 1)) ?? "";
   await page.locator("a.icon-card-link").nth(0).click();
   let f = await shown(page, first);
   no(f.position === "fixed", `шторка — position: ${f.position}, а ждали fixed`);
   no(
-    f.height <= f.viewport * 0.62 && f.top > 0,
-    `шторка занимает ${Math.round(f.height)} из ${f.viewport} px — больше 60%`,
+    Math.abs(f.bottom - f.height) <= 1 &&
+      f.left <= 0 &&
+      f.right >= f.backdrop - 1,
+    `шторка не во всю ширину снизу: ${Math.round(f.left)}–${Math.round(f.right)} × ${Math.round(f.top)}–${Math.round(f.bottom)} px`,
+  );
+  no(
+    f.top >= f.height * 0.2 && f.top <= f.height * 0.5,
+    `шторка начинается на ${Math.round(f.top)} из ${f.height} px`,
   );
   no(!f.wide, "с открытой шторкой страница шире экрана");
-  await page.locator("a.icon-card-link").nth(1).click();
-  f = await shown(page, second);
-  no(f.icon === second, "карточка над шторкой не сменила иконку");
-  await page.getByRole("button", { name: /^(Expand|Развернуть)$/ }).click();
+  const low = f.top;
+  const handle = page.locator(`${PANEL} .panel-handle`);
+  await handle.click();
+  await settled(page);
   f = await facts(page);
-  no(f.top <= 1, `развёрнутая шторка начинается на ${Math.round(f.top)} px`);
-  await page.getByRole("button", { name: /^(Collapse|Свернуть)$/ }).click();
+  no(
+    (await handle.getAttribute("aria-expanded")) === "true" && f.top < low - 50,
+    `ручка не раскрыла шторку: верх ${Math.round(low)} → ${Math.round(f.top)} px`,
+  );
+  await handle.click();
+  await settled(page);
+  f = await facts(page);
+  no(
+    (await handle.getAttribute("aria-expanded")) === "false" &&
+      Math.abs(f.top - low) <= 2,
+    `ручка не свернула шторку: верх ${Math.round(f.top)}, а ждали ${Math.round(low)} px`,
+  );
+  await page
+    .locator("#page-panel > .panel-backdrop")
+    .click({ position: { x: 20, y: 120 } });
+  f = await closed(page);
+  no(!f.open, "затемнение над шторкой не закрыло её");
+  no(f.search === "", `после затемнения в адресе осталось «${f.search}»`);
+  await page.locator("a.icon-card-link").nth(0).click();
+  await shown(page, first);
   await page.goBack();
   f = await closed(page);
   no(!f.open, "«назад» не закрыл шторку");
@@ -553,7 +867,7 @@ export async function checkSheet(
   await context.close();
   return problems.length === 0
     ? pass(
-        "375 px: шторка снизу до 60% экрана, выдача над ней щёлкается, «развернуть» — во весь экран, «назад» закрывает",
+        "375 px: шторка снизу во всю ширину, ручка раскрывает и сворачивает, затемнение и «назад» закрывают",
       )
     : fail(problems.slice(0, 4).join("; "));
 }

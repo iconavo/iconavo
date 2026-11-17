@@ -13,18 +13,63 @@
   --inset-shadow-*: initial;
   --drop-shadow-*: initial;
   --text-shadow-*: initial;
-  --color-bg: light-dark(#ffffff, #0f0f12);
-  --color-fg: light-dark(#18181b, #ececf1);
-  --color-muted: light-dark(#52525b, #a1a1aa);
-  --color-line: light-dark(#e4e4e7, #2e2e35);
-  --color-control: light-dark(#71717a, #8b8b94);
-  --color-surface: light-dark(#f4f4f5, #1b1b20);
-  --color-accent: light-dark(#4338ca, #a5b4fc);
-  --color-focus: light-dark(#2563eb, #93c5fd);
+  --color-bg-page: light-dark(#ffffff, #0f131a);
+  --color-bg-surface: light-dark(#f5f7fb, #161c25);
+  --color-bg-surface-muted: light-dark(#f2f5fa, #1e2633);
+  --color-bg-surface-strong: light-dark(#e0e4eb, #2b3444);
+  --color-bg-overlay: light-dark(#00000040, #02050ab2);
+  --color-bg-hover: light-dark(#e0e4eb, #232d3b);
+  --color-bg-card-hover: light-dark(#e1f3ff, #203246);
+  --color-bg-inverse: light-dark(#000000, #f5f7fb);
+  --color-bg-inverse-hover: light-dark(#00000080, #f5f7fbcc);
+  --color-bg-icon-card: light-dark(#f5f7fb, #161c2559);
+  --color-border-primary: light-dark(#b4c0d0, #3a4658);
+  --color-border-secondary: light-dark(#e0e4eb, #3a4658);
+  --color-border-secondary-20: light-dark(#e0e4eb, #1e2633);
+  --color-text-primary: light-dark(#000000, #f5f7fb);
+  /* Тёмная — 52%, а не 50% макета: на bg/surface-strong контраст 4,66:1 вместо 4,42:1 (WCAG AA; решение
+     владельца 13 ноября 2026). */
+  --color-text-secondary: light-dark(#00000099, #ffffff85);
+  --color-text-muted: light-dark(#b3b3b3, #94a1b3);
+  --color-text-hover-muted: light-dark(#778490, #b4c0d0);
+  --color-text-primary-hover: light-dark(#00000080, #ffffff80);
+  --color-text-inverse: light-dark(#ffffff, #11161d);
+  --color-text-on-accent: light-dark(#000000, #000000);
+  --color-text-success: light-dark(#15803d, #12ff12);
+  --color-text-danger: light-dark(#b91c1c, #ff6666);
+  --color-text-on-danger: light-dark(#ffffff, #000000);
+  --color-link-unicode: light-dark(#5555ff, #8d91ff);
+  --color-selection-bg: light-dark(#000000, #cbfd05);
+  --color-selection-text: light-dark(#ffffff, #000000);
+  --color-accent-highlight: light-dark(#cbfd05, #cbfd05);
+  --color-accent-highlight-subtle: light-dark(#faffdd, #cbfd051a);
+  --color-accent-cyan: light-dark(#9dfaff, #9dfaff);
+  --color-accent-mint: light-dark(#98ff98, #98ff98);
+  --color-accent-lemon: light-dark(#f8ff79, #f8ff79);
+  --color-status-danger: light-dark(#dd1e2c, #ff6666);
+  --color-status-badge: light-dark(#fc4708, #fc4708);
+  --color-status-success: light-dark(#12ff12, #12ff12);
   --shadow-md: 0 4px 12px light-dark(rgb(0 0 0 / 0.12), rgb(0 0 0 / 0.5));
-  --font-sans: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-sans:
+    var(--font-inter-tight, system-ui), -apple-system, "Segoe UI", Roboto,
+    sans-serif;
   --font-mono: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+  --radius-xs: 0.25rem;
+  --radius-sm: 0.375rem;
   --radius-md: 0.5rem;
+  --radius-lg: 0.75rem;
+  --text-display: 2rem;
+  --text-display--line-height: 2.25rem;
+  --text-heading-lg: 1.25rem;
+  --text-heading-lg--line-height: 1.75rem;
+  --text-heading-md: 1rem;
+  --text-heading-md--line-height: 1.25rem;
+  --text-body-base: 0.875rem;
+  --text-body-base--line-height: 1.125rem;
+  --text-body-sm: 0.8125rem;
+  --text-body-sm--line-height: 1.0625rem;
+  --text-body-xs: 0.75rem;
+  --text-body-xs--line-height: 1rem;
 }
 
 /*
@@ -44,28 +89,156 @@
   --width-text: 46rem;
   --width-nav: 14rem;
   --width-toc: 13rem;
-  /* Боковая панель иконки (шаг 4 фазы 4) и высота шторки на телефоне. */
-  --width-panel: 24rem;
-  --height-sheet: 60vh;
+  /* Боковая панель каркаса по макету: 224 px, свёрнутая — 64 px. */
+  --width-sidebar: 14rem;
+  --width-sidebar-collapsed: 4rem;
+  /* Панель иконки по макету «Icon Panel»: 355 px. На телефоне — шторка: над ней, как в кадре 390 × 844,
+     остаются верхние 284 px страницы (шторка 560 px), но не меньше половины экрана. */
+  --width-panel: 22.1875rem;
+  --height-sheet: max(50dvh, 100dvh - 17.75rem);
+  /*
+   * Микроанимация панели иконки (решение владельца 12 ноября 2026): длительности и кривые. Переход
+   * карточек и строк над сеткой (components/panel/PanelLayout.tsx) берёт --motion-panel-in отсюда, его
+   * кривая — та же, что --motion-ease-out (ease-out quart в lib/flip.ts).
+   */
+  --motion-panel-in: 240ms;
+  /* Панель появляется чуть позже, чем начинают двигаться карточки: место под ней уже свободно, и
+     сквозь полупрозрачную панель не видно проезжающих номеров страниц. */
+  --motion-panel-delay: 60ms;
+  --motion-panel-out: 180ms;
+  --motion-sheet-in: 280ms;
+  --motion-sheet-out: 220ms;
+  --motion-fade: 200ms;
+  --motion-ease-out: cubic-bezier(0.25, 1, 0.5, 1);
+  --motion-ease-in: cubic-bezier(0.5, 0, 0.75, 0);
+  /* Сворачивание боковой панели (lib/sidebar-motion.ts): ширина, значки, шапка и переезд карточек
+     страницы — --motion-sidebar; подписи и список наборов гаснут и проявляются за --motion-sidebar-fade. */
+  --motion-sidebar: 260ms;
+  --motion-sidebar-fade: 120ms;
+  /* Смена темы кнопкой в шапке (lib/theme.ts): старый вид страницы перетекает в новый. */
+  --motion-theme: 300ms;
+  /*
+   * Полосы прокрутки: --scrollbar-lane — ширина дорожки. У мыши и тачпада в Chrome, Edge и Safari —
+   * 12 px (бегунок 4 px посередине), в Firefox и на сенсорных экранах полосы поверх содержимого — 0.
+   * Правое поле у края страницы, панели, блоков кода, списка наборов и под строкой чипсов — за вычетом
+   * дорожки: полоса стоит в поле, как в блоке кода макета, и раскладка не отличается от кадров Figma.
+   */
+  --scrollbar-lane: 0px;
+  /* Поля страницы у краёв колонки каркаса: 40 px, справа — минус дорожка; до 64rem — 16 px, дорожка
+     рядом с полем: в узком поле подсказкам «Soon» у правого края не хватило бы места. */
+  --page-x: 1rem;
+  --page-x-end: var(--page-x);
+}
+@media (min-width: 64rem) {
+  :root {
+    --page-x: 2.5rem;
+    --page-x-end: calc(var(--page-x) - var(--scrollbar-lane));
+  }
+}
+@media (hover: hover) and (pointer: fine) {
+  @supports selector(::-webkit-scrollbar) {
+    :root {
+      --scrollbar-lane: 0.75rem;
+    }
+  }
+}
+/* Цвет бегунка — зарегистрированное свойство: так он гаснет анимацией (полосы сами переходы не умеют). */
+@property --scrollbar-thumb {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: transparent;
 }
 
 @layer base {
   html {
     color-scheme: light dark;
+    /* Место под полосу страницы занято всегда — и когда меню на телефоне прячет прокрутку. */
+    scrollbar-gutter: stable;
+  }
+
+  /*
+   * Полосы прокрутки по макету (слой Scrollbar блока кода «Icon Panel/Code»): бегунок 4 px со
+   * скруглением 2 и отступом 4 px от края, без дорожки и стрелок. Виден только при прокрутке (решение
+   * владельца 12 ноября 2026): lib/scrollbars.ts ставит прокручиваемому элементу data-scrolling — «on»
+   * зажигает бегунок цветом border/primary, «off» через 0,8 с после прокрутки гасит его за 0,3 с. При
+   * наведении и перетаскивании — text/hover-muted, и без прокрутки. Место под полосу занято всегда
+   * (overflow scroll или scrollbar-gutter), поэтому вёрстка не двигается.
+   * Firefox рисует полосы сам — поверх содержимого и только при прокрутке, как в системе; наш у него
+   * только цвет.
+   */
+  @supports not selector(::-webkit-scrollbar) {
+    * {
+      scrollbar-width: thin;
+      scrollbar-color: var(--color-border-primary) transparent;
+    }
+  }
+  @media (hover: hover) and (pointer: fine) {
+    html {
+      overflow-y: scroll;
+    }
+    ::-webkit-scrollbar {
+      width: 0.75rem;
+      height: 0.75rem;
+      background: transparent;
+    }
+    ::-webkit-scrollbar-track,
+    ::-webkit-scrollbar-corner {
+      background: transparent;
+    }
+    /* Отступ 4 px дорожки и рамка 4 px бегунка: бегунок начинается в 8 px от края, как в макете. */
+    ::-webkit-scrollbar-track {
+      margin: 0.25rem;
+    }
+    /* У каждого элемента свой цвет бегунка: прокрутка страницы не зажигает полосы внутри неё. Кроме
+       <body>: полосу страницы Chrome и Safari красят его стилями, а пометку прокрутки страницы получает
+       <html> — <body> берёт цвет у него. */
+    *:not(body) {
+      --scrollbar-thumb: transparent;
+    }
+    [data-scrolling] {
+      --scrollbar-thumb: var(--color-border-primary);
+    }
+    ::-webkit-scrollbar-thumb {
+      border: 0.25rem solid transparent;
+      border-radius: 0.375rem;
+      background: var(--scrollbar-thumb) padding-box;
+    }
+    ::-webkit-scrollbar-thumb:hover,
+    ::-webkit-scrollbar-thumb:active {
+      background-color: var(--color-text-hover-muted);
+    }
+    ::-webkit-scrollbar-button {
+      display: none;
+    }
+  }
+  @media (hover: hover) and (pointer: fine) and (
+      prefers-reduced-motion: no-preference
+    ) {
+    [data-scrolling="off"] {
+      animation: scrollbar-fade 0.3s linear forwards;
+    }
+  }
+  @keyframes scrollbar-fade {
+    from {
+      --scrollbar-thumb: var(--color-border-primary);
+    }
+    to {
+      --scrollbar-thumb: transparent;
+    }
   }
   body {
-    background: var(--color-bg);
-    color: var(--color-fg);
+    background: var(--color-bg-page);
+    color: var(--color-text-primary);
     font-family: var(--font-sans);
     line-height: 1.6;
   }
   a {
-    color: var(--color-accent);
+    color: var(--color-link-unicode);
     text-decoration: underline;
     text-underline-offset: 2px;
   }
   :focus-visible {
-    outline: 2px solid var(--color-focus);
+    outline: 2px solid var(--color-selection-bg);
     outline-offset: 2px;
   }
   code,
@@ -86,8 +259,8 @@
     left: 1rem;
     top: -3rem;
     padding: 0.5rem 1rem;
-    background: var(--color-bg);
-    border: 1px solid var(--color-line);
+    background: var(--color-bg-page);
+    border: 1px solid var(--color-border-secondary);
     border-radius: var(--radius-md);
     z-index: 10;
   }
@@ -96,91 +269,785 @@
   }
 
   /*
-   * Шапка: на телефоне — три строки (имя и переключатели, поиск во всю ширину, ссылки), с 64rem —
-   * одна строка.
+   * Каркас по макету (Figma «Iconavo — Макеты»): боковая панель 224 px и колонка — верхняя полоса,
+   * страница, подвал. До 64rem панель — шторка меню поверх страницы (lib/menu.ts, data-menu у <html>).
    */
-  .site-header {
-    border-bottom: 1px solid var(--color-line);
-  }
-  .header-row {
+  .app {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) auto;
-    grid-template-areas:
-      "brand tools"
-      "search search"
-      "nav nav";
-    align-items: center;
-    gap: 0.5rem 1rem;
-    padding-block: 0.5rem;
+    /* Ширина первой колонки — у самой панели (.sidebar): так она плавно меняется при сворачивании. */
+    grid-template-columns: auto minmax(0, 1fr);
+    min-height: 100vh;
   }
-  .brand {
-    grid-area: brand;
-    justify-self: start;
-    color: var(--color-fg);
-    font-weight: 700;
-    font-size: 1.125rem;
-    text-decoration: none;
-  }
-  .header-search {
-    grid-area: search;
+  .app-column {
+    display: flex;
+    flex-direction: column;
     min-width: 0;
   }
-  .header-search-form {
+  .app-column > main {
+    flex: 1;
+  }
+  .app-backdrop {
+    display: none;
+  }
+
+  /* Боковая панель (компонент Sidebar). */
+  /* Низкий экран: панель прокручивается целиком, список наборов не сжимается до нуля. */
+  .sidebar {
+    position: sticky;
+    top: 0;
     display: flex;
+    flex-direction: column;
+    width: var(--width-sidebar);
+    height: 100vh;
+    overflow-x: hidden;
+    overflow-y: auto;
+    background: var(--color-bg-page);
+    border-right: 1px solid var(--color-border-secondary-20);
+    font-size: var(--text-body-base);
+    line-height: var(--text-body-base--line-height);
+  }
+  .sidebar-head {
+    display: flex;
+    flex: none;
     align-items: center;
+    justify-content: space-between;
+    gap: 0.375rem;
+    height: 3.125rem;
+    padding-inline: 1.25rem;
+  }
+  .sidebar-brand,
+  .topbar-brand {
+    display: inline-flex;
+    color: var(--color-text-primary);
+  }
+  /* Логотип — в рамке 77 × 20 с полем 4 px снизу (кадр «Sidebar Header»): на 2 px выше середины полосы.
+     Знак 18 × 18 свёрнутой панели лежит в той же рамке; при сворачивании рамка сужается до 18 px, а
+     логотип и знак сменяют друг друга. */
+  .sidebar-brand {
+    position: relative;
+    flex: none;
+    width: 4.8125rem;
+    height: 1.25rem;
+  }
+  .sidebar-logo,
+  .sidebar-mark {
+    position: absolute;
+    top: 0;
+    left: 0;
+  }
+  .sidebar-mark {
+    top: 0.0625rem;
+    opacity: 0;
+    visibility: hidden;
+  }
+  .sidebar-toggle,
+  .sidebar-close,
+  .topbar-menu {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--color-text-primary);
+    cursor: pointer;
+  }
+  .sidebar-toggle,
+  .sidebar-close {
+    font-size: 1rem;
+    opacity: 0.5;
+  }
+  .sidebar-toggle:hover,
+  .sidebar-close:hover {
+    opacity: 1;
+  }
+  .sidebar-close {
+    display: none;
+  }
+  .sidebar-nav {
+    flex: none;
+    padding: 0.75rem;
+    background: var(--color-bg-surface);
+  }
+  .sidebar-nav ul,
+  .sidebar-group ul {
+    display: grid;
     gap: 0.25rem;
   }
-  .header-nav {
-    grid-area: nav;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.25rem 1.25rem;
-  }
-  .header-nav a,
-  .lang-switch {
-    color: var(--color-fg);
-    text-decoration: none;
-  }
-  .header-nav a:hover,
-  .lang-switch:hover {
-    text-decoration: underline;
-  }
-  .header-tools {
-    grid-area: tools;
+  .sidebar-item,
+  .sidebar-set {
     display: flex;
     align-items: center;
-    gap: 0.75rem;
+    gap: 0.5rem;
+    width: 100%;
+    padding: 0.375rem 0.5rem;
+    border: 0;
+    border-radius: var(--radius-xs);
+    background: none;
+    color: var(--color-text-primary);
+    font: inherit;
+    text-align: start;
+    text-decoration: none;
   }
+  .sidebar-item:hover,
+  .sidebar-set:hover {
+    background: var(--color-bg-hover);
+  }
+  .sidebar-item[aria-current="page"],
+  .sidebar-set[aria-current="page"] {
+    background: var(--color-bg-surface-strong);
+  }
+  .sidebar-item-icon {
+    flex: none;
+    font-size: 1rem;
+    opacity: 0.5;
+  }
+  /* Подпись не переносится: в узкой панели она уходит под край, а не ломает высоту пункта. */
+  .sidebar-label {
+    white-space: nowrap;
+  }
+  .sidebar-item[aria-current="page"] .sidebar-item-icon {
+    opacity: 1;
+  }
+  .sidebar-body {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    gap: 1rem;
+    min-height: 12rem;
+    padding: 0.5rem 0.75rem 1rem;
+  }
+  /* Вкладки не помещаются, как в макете: обрезаны справа, а подсказки «Soon» под ними видны. */
+  /* Вкладок больше, чем помещается: ряд прокручивается без полосы. С overflow-x: clip кнопки за краем лежали
+     под содержимым страницы — axe считал цели рядом закрытыми (target-size, 17 ноября 2026), а фокус с
+     клавиатуры уходил на невидимую кнопку; прокрутка при фокусе показывает вкладку. Прокрутка режет и по
+     вертикали, поэтому под рядом — место для подсказки «Скоро» (padding), отрицательный margin возвращает
+     раскладку, а щелчки по этому месту проходят к полю ниже (pointer-events). */
+  .sidebar-tabs {
+    display: flex;
+    flex: none;
+    overflow-x: auto;
+    scrollbar-width: none;
+    padding-bottom: 2.25rem;
+    margin-bottom: -2.25rem;
+    pointer-events: none;
+  }
+  .sidebar-tabs::-webkit-scrollbar {
+    display: none;
+  }
+  .sidebar-tabs > * {
+    pointer-events: auto;
+  }
+  .sidebar-tab {
+    flex: none;
+    padding: 0.5rem;
+    border: 0;
+    border-bottom: 1px solid transparent;
+    background: none;
+    color: var(--color-text-secondary);
+    font: inherit;
+    opacity: 0.5;
+    white-space: nowrap;
+  }
+  .sidebar-tab[aria-current="true"] {
+    border-bottom-color: var(--color-text-primary);
+    color: var(--color-text-primary);
+    font-weight: 500;
+    opacity: 1;
+  }
+  .sidebar-filter {
+    display: flex;
+    flex: none;
+    align-items: center;
+    gap: 0.375rem;
+    padding: 0.5rem 0.75rem;
+    border-radius: var(--radius-sm);
+    background: var(--color-bg-surface);
+  }
+  .sidebar-filter:focus-within {
+    outline: 2px solid var(--color-selection-bg);
+  }
+  .sidebar-filter input {
+    flex: 1;
+    min-width: 0;
+    border: 0;
+    outline: none;
+    background: none;
+    color: var(--color-text-primary);
+    font: inherit;
+  }
+  .sidebar-filter input::placeholder {
+    color: var(--color-text-primary);
+  }
+  .sidebar-filter-icon {
+    flex: none;
+    font-size: 1rem;
+    opacity: 0.5;
+  }
+  .sidebar-sets {
+    display: grid;
+    flex: 1;
+    align-content: start;
+    gap: 1rem;
+    min-height: 0;
+    margin-right: calc(-1 * var(--scrollbar-lane));
+    overflow-y: scroll;
+  }
+  .sidebar-group {
+    display: grid;
+    gap: 0.375rem;
+  }
+  .sidebar-group-title,
+  .sidebar-set-count,
+  .sidebar-plan-label {
+    color: var(--color-text-secondary);
+    font-size: var(--text-body-xs);
+    line-height: var(--text-body-xs--line-height);
+  }
+  .sidebar-group-title {
+    padding-inline: 0.5rem;
+  }
+  .sidebar-set {
+    justify-content: space-between;
+  }
+  .sidebar-set-name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .sidebar-set-count {
+    flex: none;
+  }
+  .sidebar-empty {
+    padding-inline: 0.5rem;
+    color: var(--color-text-secondary);
+  }
+  .sidebar-plan {
+    flex: none;
+    padding: 1rem 1.25rem 1.25rem;
+    border-top: 1px solid var(--color-border-secondary-20);
+  }
+  .sidebar-plan-button {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    width: 100%;
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--color-text-primary);
+    font: inherit;
+    text-align: start;
+  }
+  .sidebar-plan-info {
+    display: grid;
+    gap: 0.5rem;
+  }
+  .sidebar-plan-label {
+    display: block;
+    height: 1rem;
+    overflow: hidden;
+    white-space: nowrap;
+    opacity: 0.5;
+  }
+  .sidebar-plan-tier {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 500;
+  }
+  .sidebar-plan-icon {
+    font-size: 1.5rem;
+    color: var(--color-link-unicode);
+  }
+  /* Manage — поверх строки, а не в ней (замечание владельца 13 ноября 2026): высоту блока задают только
+     «Your Plan» и тариф. Иначе при сворачивании и разворачивании панели гаснущая Manage держала высоту
+     строки, ромб с тарифом поднимался к её середине, а в конце блок разом опускался. */
+  .sidebar-plan-manage {
+    position: absolute;
+    top: 50%;
+    right: 0;
+    translate: 0 -50%;
+    padding: 0.5rem 0.75rem;
+    border-radius: var(--radius-md);
+    background: var(--color-bg-surface-strong);
+    white-space: nowrap;
+  }
+
+  /* Свёрнутая панель (макет «Icon Sets / Sidebar Collapsed»): 64 px, вверху знак 18 × 18 и стрелка через
+     6 px, пункты 40 × 36 через 8 px со значками 24 px; значки пунктов и ромб тарифа — там же, где у
+     развёрнутой (x = 20). Скрытое гаснет прозрачностью и уходит под край панели — так сворачивание
+     плавное (lib/sidebar-motion.ts), а подписи пунктов остаются названиями для экранного диктора. После
+     перехода список наборов и Manage убираются совсем. */
   @media (min-width: 64rem) {
-    .header-row {
-      grid-template-columns: auto minmax(0, 28rem) minmax(0, 1fr) auto;
-      grid-template-areas: "brand search nav tools";
-      min-height: 3.5rem;
+    :root[data-sidebar="collapsed"] .sidebar {
+      width: var(--width-sidebar-collapsed);
     }
-    .header-nav {
-      justify-content: flex-end;
+    :root[data-sidebar="collapsed"] .sidebar-head {
+      padding-inline: 0.75rem;
+    }
+    :root[data-sidebar="collapsed"] .sidebar-brand {
+      width: 1.125rem;
+    }
+    :root[data-sidebar="collapsed"] .sidebar-logo,
+    :root[data-sidebar="collapsed"] .sidebar-label,
+    :root[data-sidebar="collapsed"] .sidebar-body,
+    :root[data-sidebar="collapsed"] .sidebar-plan-label,
+    :root[data-sidebar="collapsed"] .sidebar-plan-manage {
+      opacity: 0;
+    }
+    :root[data-sidebar="collapsed"] .sidebar-logo,
+    :root[data-sidebar="collapsed"] .sidebar-body,
+    :root[data-sidebar="collapsed"] .sidebar-plan-manage {
+      visibility: hidden;
+    }
+    :root[data-sidebar="collapsed"]:not([data-sidebar-motion]) .sidebar-body,
+    :root[data-sidebar="collapsed"]:not([data-sidebar-motion])
+      .sidebar-plan-manage {
+      display: none;
+    }
+    :root[data-sidebar="collapsed"] .sidebar-mark {
+      opacity: 1;
+      visibility: visible;
+    }
+    :root[data-sidebar="collapsed"] .sidebar-nav {
+      background-color: transparent;
+    }
+    :root[data-sidebar="collapsed"] .sidebar-nav ul {
+      gap: 0.5rem;
+    }
+    :root[data-sidebar="collapsed"] .sidebar-item-icon {
+      font-size: 1.5rem;
+    }
+    :root[data-sidebar="collapsed"] .sidebar-plan {
+      margin-top: auto;
+    }
+    :root[data-sidebar="collapsed"] .sidebar-plan-info {
+      gap: 0;
+    }
+    :root[data-sidebar="collapsed"] .sidebar-plan-label {
+      height: 0;
+    }
+    /* Во время перехода список и строка тарифа держат ширину развёрнутой панели: не перестраиваются, а
+       уходят под край — Manage гаснет на месте и не наезжает на тариф. */
+    :root[data-sidebar-motion] .sidebar-body {
+      min-width: calc(var(--width-sidebar) - 1px);
+    }
+    :root[data-sidebar-motion] .sidebar-plan-button {
+      min-width: calc(var(--width-sidebar) - 1px - 2.5rem);
+    }
+    /* Сетки во время перехода уже конечной ширины (lib/sidebar-motion.ts) и при сворачивании шире
+       колонки: лишнее срезается, полоса прокрутки снизу не появляется. */
+    :root[data-sidebar-motion] .app-column {
+      overflow-x: clip;
+    }
+    /* Высота сетки во время перехода плавно меняется: строки не растягиваются под неё. */
+    :root[data-sidebar-motion] :is(.icon-grid, .result-grid, .set-grid) {
+      align-content: start;
     }
   }
 
-  /* Иконка на кнопке темы — по выбранной теме, без JavaScript (lib/theme.ts). */
+  /* Переходы сворачивания — только пока идёт анимация (атрибут data-sidebar-motion у <html>). Ширина,
+     значки, шапка и строка «Your Plan» — --motion-sidebar. Подписи, список, Manage и логотип при
+     сворачивании гаснут за --motion-sidebar-fade сразу, а при разворачивании проявляются в конце, когда
+     место уже есть; знак — наоборот. */
+  @media (min-width: 64rem) and (prefers-reduced-motion: no-preference) {
+    :root[data-sidebar-motion] .sidebar,
+    :root[data-sidebar-motion] .sidebar-brand {
+      transition: width var(--motion-sidebar) var(--motion-ease-out);
+    }
+    :root[data-sidebar-motion] .sidebar-head {
+      transition: padding var(--motion-sidebar) var(--motion-ease-out);
+    }
+    :root[data-sidebar-motion] .sidebar-nav {
+      transition: background-color var(--motion-sidebar) var(--motion-ease-out);
+    }
+    :root[data-sidebar-motion] .sidebar-nav ul,
+    :root[data-sidebar-motion] .sidebar-plan-info {
+      transition: gap var(--motion-sidebar) var(--motion-ease-out);
+    }
+    :root[data-sidebar-motion] .sidebar-item-icon {
+      transition: font-size var(--motion-sidebar) var(--motion-ease-out);
+    }
+    :root[data-sidebar-motion="collapse"]
+      :is(.sidebar-label, .sidebar-logo, .sidebar-body, .sidebar-plan-manage),
+    :root[data-sidebar-motion="expand"] .sidebar-mark {
+      transition:
+        opacity var(--motion-sidebar-fade) var(--motion-ease-in),
+        visibility 0s linear var(--motion-sidebar-fade);
+    }
+    :root[data-sidebar-motion="expand"]
+      :is(.sidebar-label, .sidebar-logo, .sidebar-body, .sidebar-plan-manage),
+    :root[data-sidebar-motion="collapse"] .sidebar-mark {
+      transition:
+        opacity var(--motion-sidebar-fade) var(--motion-ease-out)
+        calc(var(--motion-sidebar) - var(--motion-sidebar-fade)),
+        visibility 0s;
+    }
+    :root[data-sidebar-motion="collapse"] .sidebar-plan-label {
+      transition:
+        opacity var(--motion-sidebar-fade) var(--motion-ease-in),
+        height var(--motion-sidebar) var(--motion-ease-out);
+    }
+    :root[data-sidebar-motion="expand"] .sidebar-plan-label {
+      transition:
+        opacity var(--motion-sidebar-fade) var(--motion-ease-out)
+        calc(var(--motion-sidebar) - var(--motion-sidebar-fade)),
+        height var(--motion-sidebar) var(--motion-ease-out);
+    }
+  }
+
+  /*
+   * Смена темы (решение владельца 13 ноября 2026, lib/theme.ts): View Transitions — снимок страницы в
+   * старой теме плавно сменяется снимком в новой, разом фон, текст, иконки и картинки. Кривая — как у
+   * браузера по умолчанию (ease): ровное перетекание, без резкого старта.
+   */
+  ::view-transition-group(root) {
+    animation-duration: var(--motion-theme);
+  }
+
+  /* Верхняя полоса (кадр Header): плашки, разделители, круглые кнопки. */
+  .topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.625rem;
+    min-height: 3.125rem;
+    padding: 0.625rem var(--page-x-end) 0.625rem var(--page-x);
+    font-size: var(--text-body-sm);
+    line-height: var(--text-body-sm--line-height);
+  }
+  .topbar-group {
+    display: flex;
+    align-items: center;
+    gap: 0.625rem;
+    min-width: 0;
+  }
+  .pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.375rem 0.5rem;
+    border: 0;
+    border-radius: var(--radius-md);
+    background: var(--color-bg-surface-muted);
+    color: var(--color-text-primary);
+    font: inherit;
+    text-decoration: none;
+    white-space: nowrap;
+    cursor: pointer;
+  }
+  a.pill:hover,
+  button.pill:not([aria-disabled="true"]):hover {
+    background: var(--color-bg-hover);
+  }
+  .pill-icon {
+    flex: none;
+    font-size: 1rem;
+  }
+  .pill-chevron {
+    flex: none;
+    font-size: 1rem;
+    opacity: 0.5;
+  }
+  .topbar-divider {
+    flex: none;
+    width: 1px;
+    height: 1rem;
+    background: var(--color-border-secondary-20);
+  }
+  .top-circle {
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    justify-content: center;
+    width: 1.75rem;
+    height: 1.75rem;
+    border: 0;
+    border-radius: 9999px;
+    background: var(--color-bg-surface-strong);
+    color: var(--color-text-primary);
+    /* Значки в кругах (тема, аккаунт) — 16 px, как в макете; флаг языка — картинка 16 px. */
+    font-size: 1rem;
+    font-weight: 500;
+    text-decoration: none;
+    cursor: pointer;
+  }
+  .topbar-account {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.625rem;
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--color-text-primary);
+    font: inherit;
+  }
+  .topbar-menu {
+    font-size: 1.25rem;
+  }
+  .bag-square {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.75rem;
+    height: 1.75rem;
+    border: 0;
+    border-radius: 9999px;
+    background: var(--color-bg-surface-strong);
+    color: var(--color-text-primary);
+    cursor: pointer;
+  }
+
+  /* Кнопка темы: значок — по теме на экране, без JavaScript (lib/theme.ts). */
   .theme-icon {
     display: none;
   }
-  :root:not([data-theme]) .theme-icon-system,
-  :root[data-theme="light"] .theme-icon-light,
-  :root[data-theme="dark"] .theme-icon-dark {
+  :root[data-theme="dark"] .theme-icon-dark,
+  :root[data-theme="light"] .theme-icon-light {
     display: inline-block;
   }
-
-  .site-footer {
-    border-top: 1px solid var(--color-line);
-    color: var(--color-muted);
-    font-size: 0.875rem;
-    margin-top: 4rem;
-    padding-block: 1.5rem;
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme]) .theme-icon-dark {
+      display: inline-block;
+    }
   }
-  .site-footer a {
-    color: var(--color-muted);
+  @media (prefers-color-scheme: light) {
+    :root:not([data-theme]) .theme-icon-light {
+      display: inline-block;
+    }
+  }
+
+  /*
+   * «Soon» (решение владельца 12 ноября 2026): элемент из макета без функции. Подсказка — из data-soon,
+   * на наведении и фокусе с клавиатуры; под элементом, в подвале — над ним (soon-above).
+   */
+  .soon,
+  .tip {
+    position: relative;
+    cursor: default;
+  }
+  .soon::after,
+  .tip::after {
+    content: attr(data-soon);
+    position: absolute;
+    top: calc(100% + 0.375rem);
+    left: 50%;
+    z-index: 50;
+    padding: 0.25rem 0.5rem;
+    border-radius: var(--radius-sm);
+    background: var(--color-bg-inverse);
+    color: var(--color-text-inverse);
+    font-size: var(--text-body-xs);
+    font-weight: 400;
+    line-height: var(--text-body-xs--line-height);
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    translate: -50% 0;
+    /* Скрытый пузырь не занимает места: длинная подсказка у правого края телефона давала прокрутку вбок
+       (/ru/material-symbols — 408 px при 375, 17 ноября 2026). Показ — display и прозрачность ниже. */
+    display: none;
+  }
+  .soon-above::after {
+    top: auto;
+    bottom: calc(100% + 0.375rem);
+  }
+  .tip::after {
+    content: attr(data-tip);
+  }
+  .soon:hover::after,
+  .soon:focus-visible::after,
+  .tip:hover::after,
+  .tip:focus-visible::after {
+    display: block;
+    opacity: 1;
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .soon::after,
+    .tip::after {
+      transition:
+        opacity 0.12s,
+        display 0.12s allow-discrete;
+    }
+    .soon:hover::after,
+    .soon:focus-visible::after,
+    .tip:hover::after,
+    .tip:focus-visible::after {
+      @starting-style {
+        opacity: 0;
+      }
+    }
+  }
+
+  /* Подвал по макету. */
+  .site-footer {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem 1.5rem;
+    /* Подвал по кадру макета: 85 px, содержимое по центру — вровень с блоком тарифа в боковом меню. */
+    min-height: 5.3125rem;
+    padding: 1.5rem var(--page-x-end) 1.5rem var(--page-x);
+    font-size: var(--text-body-sm);
+    line-height: var(--text-body-sm--line-height);
+  }
+  .footer-group {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.75rem 1rem;
+  }
+  .footer-group:last-child {
+    column-gap: 0.625rem;
+  }
+  .footer-divider {
+    margin-inline: -0.375rem;
+  }
+  /* Подвал на телефоне (кадр «Icon Sets / Mobile»): линия сверху, строки через 16 px, поле снизу 32 px;
+     «For AI agents» — своей строкой, без разделителя. */
+  @media (max-width: 63.98rem) {
+    .site-footer {
+      padding-bottom: 2rem;
+      border-top: 1px solid var(--color-border-secondary-20);
+    }
+    .footer-group {
+      row-gap: 1rem;
+    }
+    .footer-divider {
+      display: none;
+    }
+  }
+  .footer-link,
+  .footer-text,
+  .hero-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    padding: 0;
+    border: 0;
+    background: none;
+    font: inherit;
+    text-decoration: none;
+  }
+  .footer-link,
+  .hero-link {
+    color: var(--color-text-primary);
+  }
+  .footer-text {
+    color: var(--color-text-secondary);
+  }
+  a.footer-link:hover,
+  a.footer-text:hover,
+  a.hero-link:hover {
+    color: var(--color-text-primary);
+    text-decoration: underline;
+  }
+
+  /* Страницы в колонке каркаса: поля — как у верхней полосы. */
+  .app-column .container {
+    padding-inline: var(--page-x) var(--page-x-end);
+  }
+  @media (min-width: 64rem) {
+    .app-column .container {
+      max-width: none;
+    }
+  }
+
+  /* Телефон и планшет: шторка меню вместо боковой панели, полоса — меню, логотип, тема, сумка, аккаунт. */
+  @media (max-width: 63.98rem) {
+    .app {
+      grid-template-columns: minmax(0, 1fr);
+    }
+    .sidebar {
+      position: fixed;
+      inset: 0 auto 0 0;
+      z-index: 40;
+      width: min(18.75rem, 85vw);
+      visibility: hidden;
+      translate: -100% 0;
+    }
+    :root[data-menu="open"] .sidebar {
+      visibility: visible;
+      translate: 0 0;
+    }
+    :root[data-menu="open"] .app-backdrop {
+      position: fixed;
+      inset: 0;
+      z-index: 30;
+      display: block;
+      background: var(--color-bg-overlay);
+      touch-action: none;
+    }
+    :root[data-menu="open"] {
+      overflow: hidden;
+    }
+    .sidebar-toggle {
+      display: none;
+    }
+    .sidebar-close {
+      display: inline-flex;
+    }
+    .topbar-wide,
+    .topbar .pill-label {
+      display: none;
+    }
+    /* Шапка телефона (кадр «Mobile App Bar»): 56 px, слева меню 40 × 40 и через 4 px логотип, справа
+       сумка 40 × 40 и через 8 px аватар; значки — 20 px. Переключатель темы — после логотипа: в макете
+       телефона его нет, а без него тему на телефоне не сменить. */
+    .topbar {
+      min-height: 3.5rem;
+      padding: 0.5rem 0.75rem 0.5rem 0.5rem;
+    }
+    .topbar-group:first-child {
+      gap: 0.25rem;
+    }
+    .topbar-group:last-child {
+      gap: 0.5rem;
+    }
+    .topbar-group:first-child .theme-toggle {
+      margin-inline-start: 0.375rem;
+    }
+    /* Логотип — на 2,5 px выше середины, как в кадре «Mobile App Bar». */
+    .topbar-brand {
+      padding-bottom: 0.3125rem;
+    }
+    .topbar-menu,
+    .topbar .bag-button {
+      justify-content: center;
+      width: 2.5rem;
+      height: 2.5rem;
+      padding: 0;
+      border-radius: 0.625rem;
+      font-size: 1.25rem;
+    }
+    .topbar .bag-button {
+      background: var(--color-bg-surface-strong);
+    }
+    .topbar .bag-button .pill-chevron {
+      font-size: 1.25rem;
+      opacity: 1;
+    }
+    .topbar .bag-count {
+      position: absolute;
+      top: -0.25rem;
+      right: -0.25rem;
+    }
+  }
+  @media (max-width: 63.98rem) and (prefers-reduced-motion: no-preference) {
+    .sidebar {
+      transition:
+        translate 0.2s,
+        visibility 0.2s;
+    }
+  }
+  @media (min-width: 64rem) {
+    .topbar-menu,
+    .topbar-brand {
+      display: none;
+    }
   }
 
   .home {
@@ -205,8 +1072,8 @@
     gap: 0.5rem;
     padding: 0.6rem 1.1rem;
     border-radius: var(--radius-md);
-    background: var(--color-accent);
-    color: var(--color-bg);
+    background: var(--color-link-unicode);
+    color: var(--color-bg-page);
     font-weight: 600;
     text-decoration: none;
   }
@@ -231,23 +1098,23 @@
   .docs-menu a,
   .toc a {
     display: block;
-    color: var(--color-muted);
+    color: var(--color-text-secondary);
     padding-block: 0.25rem;
     text-decoration: none;
   }
   .docs-nav a[aria-current="page"],
   .docs-menu a[aria-current="page"] {
-    color: var(--color-fg);
+    color: var(--color-text-primary);
     font-weight: 600;
   }
   .docs-nav a:hover,
   .docs-menu a:hover,
   .toc a:hover {
-    color: var(--color-fg);
+    color: var(--color-text-primary);
     text-decoration: underline;
   }
   .docs-menu {
-    border: 1px solid var(--color-line);
+    border: 1px solid var(--color-border-secondary);
     border-radius: var(--radius-md);
     padding: 0.5rem 1rem;
   }
@@ -313,7 +1180,7 @@
     margin-top: 2.5rem;
     margin-bottom: 0.75rem;
     padding-bottom: 0.25rem;
-    border-bottom: 1px solid var(--color-line);
+    border-bottom: 1px solid var(--color-border-secondary);
     scroll-margin-top: 1rem;
   }
   .prose h3 {
@@ -344,15 +1211,15 @@
     margin-block: 0.25rem;
   }
   .prose :not(pre) > code {
-    background: var(--color-surface);
+    background: var(--color-bg-surface);
     border-radius: 0.25rem;
     font-size: 0.9em;
     padding: 0.1em 0.3em;
     overflow-wrap: anywhere;
   }
   .prose blockquote {
-    border-left: 3px solid var(--color-line);
-    color: var(--color-muted);
+    border-left: 3px solid var(--color-border-secondary);
+    color: var(--color-text-secondary);
     padding-left: 1rem;
   }
   .table-wrap {
@@ -366,7 +1233,7 @@
   }
   .prose th,
   .prose td {
-    border-bottom: 1px solid var(--color-line);
+    border-bottom: 1px solid var(--color-border-secondary);
     padding: 0.4rem 0.75rem;
     text-align: left;
     vertical-align: top;
@@ -382,7 +1249,7 @@
   }
 
   .code {
-    background: var(--color-surface);
+    background: var(--color-bg-surface);
     border-radius: var(--radius-md);
     margin-block: 1rem;
   }
@@ -390,8 +1257,8 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    border-bottom: 1px solid var(--color-line);
-    color: var(--color-muted);
+    border-bottom: 1px solid var(--color-border-secondary);
+    color: var(--color-text-secondary);
     font-size: 0.8rem;
     padding: 0.25rem 0.5rem 0.25rem 1rem;
   }
@@ -409,11 +1276,11 @@
     min-width: 2rem;
     padding: 0.25rem 0.5rem;
     border-radius: 0.25rem;
-    color: var(--color-muted);
+    color: var(--color-text-secondary);
     cursor: pointer;
   }
   .copy:hover {
-    color: var(--color-fg);
+    color: var(--color-text-primary);
   }
   /* Узкий блок кода — панель иконки (шаг 5 фазы 4): строки переносятся, длинный SVG прокручивается внутри. */
   .code-wrap pre {
@@ -427,7 +1294,7 @@
     flex-wrap: wrap;
     justify-content: space-between;
     gap: 1rem;
-    border-top: 1px solid var(--color-line);
+    border-top: 1px solid var(--color-border-secondary);
     margin-top: 3rem;
     padding-top: 1.5rem;
   }
@@ -436,7 +1303,7 @@
     margin-top: 1.5rem;
   }
   .edit a {
-    color: var(--color-muted);
+    color: var(--color-text-secondary);
   }
 
   .footer-links {
@@ -474,19 +1341,179 @@
     line-height: 1.3;
     margin-bottom: 0.75rem;
   }
-  .crumbs {
-    font-size: 0.875rem;
-    margin-bottom: 0.25rem;
+  /*
+   * Начало главной и поле поиска по макету (кадр Header главной): заголовок 32/36, поле 54 px со
+   * значком и подсказкой Ctrl K, рядом «AI Search». Поле одно у главной и /search (шаг 3 фазы 4).
+   */
+  .find-page {
+    padding-block: 0;
   }
-  /* Поле поиска главной и страницы поиска — одно, в общей раскладке (шаг 3 фазы 4). */
+  .hero {
+    display: grid;
+    gap: 1.5rem;
+    padding: 2rem var(--page-x-end) 1.5rem var(--page-x);
+    border-bottom: 1px solid var(--color-border-secondary-20);
+  }
+  .find-body {
+    padding: 1.5rem var(--page-x-end) 2.5rem var(--page-x);
+  }
+  .hero-intro {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem 1.5rem;
+  }
+  .hero-text {
+    display: grid;
+    gap: 1rem;
+  }
+  .page .hero-title,
+  .page .search-title {
+    margin: 0;
+    font-size: var(--text-display);
+    font-weight: 500;
+    line-height: var(--text-display--line-height);
+  }
+  .page .hero-subtitle {
+    margin: 0;
+    color: var(--color-text-secondary);
+    font-size: var(--text-body-base);
+    line-height: var(--text-body-base--line-height);
+  }
+  .hero-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    font-size: var(--text-body-sm);
+    line-height: var(--text-body-sm--line-height);
+  }
   .hero-search {
-    margin-block: 1.5rem;
-    max-width: var(--width-text);
+    margin: 0;
   }
   .hero-search-form {
     display: flex;
+    align-items: stretch;
+    gap: 0.75rem;
+  }
+  .hero-field {
+    display: flex;
+    flex: 1;
     align-items: center;
     gap: 0.5rem;
+    min-width: 0;
+    min-height: 3.375rem;
+    padding: calc(0.75rem - 1px) calc(1rem - 1px);
+    border: 1px solid transparent;
+    border-radius: var(--radius-lg);
+    background: var(--color-bg-surface);
+    font-size: var(--text-body-base);
+    line-height: var(--text-body-base--line-height);
+  }
+  .hero-field:focus-within {
+    border-color: var(--color-selection-bg);
+  }
+  .hero-field-icon {
+    flex: none;
+    font-size: 1.25rem;
+    opacity: 0.5;
+  }
+  .hero-input {
+    flex: 1;
+    min-width: 0;
+    border: 0;
+    outline: none;
+    background: none;
+    color: var(--color-text-primary);
+    font: inherit;
+  }
+  /* Подсказка в поле — text/primary, как в макете (Search Input, Placeholder) и в поле «Filter by name». */
+  .hero-input::placeholder {
+    color: var(--color-text-primary);
+  }
+  .hero-keys {
+    display: flex;
+    flex: none;
+    gap: 0.25rem;
+  }
+  .hero-keys kbd {
+    padding: 0.375rem 0.5rem;
+    border-radius: var(--radius-md);
+    background: var(--color-bg-surface-strong);
+    font: inherit;
+  }
+  .ai-search {
+    display: flex;
+    flex: none;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem;
+    border: 0;
+    border-radius: var(--radius-lg);
+    background: var(--color-bg-surface);
+    color: var(--color-text-primary);
+    font: inherit;
+    font-size: var(--text-body-base);
+    line-height: var(--text-body-base--line-height);
+    white-space: nowrap;
+  }
+  .ai-toggle {
+    display: inline-flex;
+    width: 2.875rem;
+    height: 1.75rem;
+    padding: 0.25rem;
+    border-radius: 9999px;
+    background: var(--color-bg-surface-strong);
+  }
+  .ai-help {
+    margin-inline-start: -0.25rem;
+  }
+  .ai-knob {
+    width: 1.25rem;
+    height: 1.25rem;
+    border-radius: 9999px;
+    background: var(--color-accent-lemon);
+  }
+  @media (max-width: 63.98rem) {
+    .hero {
+      gap: 1rem;
+      padding-block: 1.5rem;
+    }
+    .find-body {
+      padding-block: 1rem 2rem;
+    }
+    .page .hero-title {
+      font-size: 1.75rem;
+      line-height: 2rem;
+    }
+    .hero-links,
+    .hero-keys {
+      display: none;
+    }
+    .hero-search-form {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+    .hero-search-form {
+      gap: 1rem;
+    }
+    /* AI Search на телефоне — средний, 150 × 46, как на странице набора. */
+    .hero-search-form .ai-search {
+      padding: 0.6875rem 0.5rem;
+    }
+    .hero-search-form .ai-toggle {
+      width: 2.5rem;
+      height: 1.5rem;
+    }
+    .hero-search-form .ai-knob {
+      width: 1rem;
+      height: 1rem;
+    }
+    .hero-field {
+      width: 100%;
+      min-height: 2.875rem;
+      padding: calc(0.5rem - 1px) calc(1rem - 1px);
+    }
   }
 
   /* Выдача поиска: клетки одного размера и места под строки статуса — замена выдачи не двигает
@@ -497,13 +1524,13 @@
     min-height: 100vh;
   }
   .search-commercial {
-    color: var(--color-muted);
+    color: var(--color-text-secondary);
     font-size: 0.875rem;
   }
   .page .search-status {
     min-height: 1.5rem;
     margin-block: 0.5rem;
-    color: var(--color-muted);
+    color: var(--color-text-secondary);
     font-size: 0.875rem;
   }
   .search-timing {
@@ -554,13 +1581,13 @@
   }
   .result-cell-set,
   .result-exact {
-    color: var(--color-muted);
+    color: var(--color-text-secondary);
     font-size: 0.75rem;
     line-height: 1.2;
   }
   .result-exact {
     padding: 0 0.375rem;
-    border: 1px solid var(--color-control);
+    border: 1px solid var(--color-border-primary);
     border-radius: 999px;
   }
   .result-skeleton-icon,
@@ -597,33 +1624,259 @@
     }
   }
 
-  /* Карточки наборов. */
+  /*
+   * Группы наборов главной и карточки по макету (Icon Set Card): 4 в ряд на компьютере, слева название,
+   * лицензия и число иконок, справа витрина 3 × 3. На телефоне — чипсы групп и ряд с прокруткой.
+   */
+  .home-groups {
+    display: grid;
+    /* Одна колонка не шире страницы: сетка внутри, конечной ширины во время сворачивания панели
+       (lib/sidebar-motion.ts), не раздвигает соседей. */
+    grid-template-columns: minmax(0, 1fr);
+    gap: 2.25rem;
+  }
+  .group-chips,
+  .group-see-all {
+    display: none;
+  }
+  .home-groups[data-filter="material"] .set-group:not([data-group="material"]),
+  .home-groups[data-filter="ui-24"] .set-group:not([data-group="ui-24"]),
+  .home-groups[data-filter="emoji"] .set-group:not([data-group="emoji"]) {
+    display: none;
+  }
+  .set-group {
+    display: grid;
+    /* Одна колонка не шире страницы: сетка внутри, конечной ширины во время сворачивания панели
+       (lib/sidebar-motion.ts), не раздвигает соседей. */
+    grid-template-columns: minmax(0, 1fr);
+    gap: 1.25rem;
+  }
+  .set-group-head {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: baseline;
+    gap: 0.5rem;
+  }
+  .page .set-group-title {
+    margin: 0;
+    font-size: var(--text-heading-md);
+    font-weight: 600;
+    line-height: var(--text-heading-md--line-height);
+  }
+  .set-group-count {
+    color: var(--color-text-secondary);
+    font-size: var(--text-body-base);
+    font-weight: 400;
+    line-height: var(--text-body-base--line-height);
+  }
+  .page .set-group-text {
+    grid-column: 1 / -1;
+    margin: 0;
+    color: var(--color-text-secondary);
+    font-size: var(--text-body-base);
+    line-height: var(--text-body-base--line-height);
+  }
   .set-grid {
     display: grid;
     gap: 1rem;
-    grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr));
-    margin-block: 1rem;
+    grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr));
+  }
+  /*
+   * Колонки карточек наборов — тоже только от ширины окна (решение владельца 13 ноября 2026, как в кадре
+   * макета «Контекст: свёрнутый сайдбар»): при свёрнутой боковой панели карточек в ряду столько же, они
+   * шире. Колонок — сколько карточек не уже 15rem с зазором 1rem встало бы при развёрнутой панели: на
+   * главной колонка страницы — окно − 19rem, n колонок — с окна 16n + 18rem. Список наборов лежит в
+   * .container, который не шире 96rem (контейнер Tailwind), — там не больше 5 колонок (--sets-cols).
+   * До 64rem — как было: на главной карусель, в списке — сколько влезет. Пороги сверяет
+   * lib/grid-columns.test.ts.
+   */
+  @media (min-width: 64rem) {
+    :root {
+      --set-cols: 2;
+      --sets-cols: 2;
+    }
+    .set-grid {
+      grid-template-columns: repeat(var(--set-cols), minmax(0, 1fr));
+    }
+    .container .set-grid {
+      grid-template-columns: repeat(var(--sets-cols), minmax(0, 1fr));
+    }
+  }
+  @media (min-width: 66rem) {
+    :root {
+      --set-cols: 3;
+      --sets-cols: 3;
+    }
+  }
+  @media (min-width: 82rem) {
+    :root {
+      --set-cols: 4;
+      --sets-cols: 4;
+    }
+  }
+  @media (min-width: 98rem) {
+    :root {
+      --set-cols: 5;
+      --sets-cols: 5;
+    }
+  }
+  @media (min-width: 114rem) {
+    :root {
+      --set-cols: 6;
+    }
+  }
+  @media (min-width: 130rem) {
+    :root {
+      --set-cols: 7;
+    }
+  }
+  @media (min-width: 146rem) {
+    :root {
+      --set-cols: 8;
+    }
+  }
+  @media (min-width: 162rem) {
+    :root {
+      --set-cols: 9;
+    }
+  }
+  @media (min-width: 178rem) {
+    :root {
+      --set-cols: 10;
+    }
+  }
+  @media (min-width: 194rem) {
+    :root {
+      --set-cols: 11;
+    }
+  }
+  @media (min-width: 210rem) {
+    :root {
+      --set-cols: 12;
+    }
+  }
+  @media (min-width: 226rem) {
+    :root {
+      --set-cols: 13;
+    }
+  }
+  @media (min-width: 242rem) {
+    :root {
+      --set-cols: 14;
+    }
   }
   .set-card {
-    border: 1px solid var(--color-line);
-    border-radius: var(--radius-md);
-    padding: 1rem;
-  }
-  .set-card-title {
-    font-size: 1.125rem;
-    font-weight: 600;
-  }
-  .page .set-card-samples {
     display: flex;
-    flex-wrap: wrap;
-    gap: 0.75rem;
-    font-size: 1.75rem;
-    margin-block: 0.75rem;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    min-height: 7rem;
+    padding: 1.25rem;
+    border-radius: var(--radius-md);
+    background: var(--color-bg-surface);
+    color: var(--color-text-primary);
+    text-decoration: none;
+  }
+  .set-card:hover {
+    background: var(--color-bg-card-hover);
+  }
+  .set-card-info {
+    display: grid;
+    gap: 0.25rem;
+    min-width: 0;
+  }
+  .page .set-card-title {
+    margin: 0 0 0.25rem;
+    font-size: var(--text-body-base);
+    font-weight: 400;
+    line-height: var(--text-body-base--line-height);
   }
   .page .set-card-meta {
-    color: var(--color-muted);
-    font-size: 0.875rem;
-    margin-block: 0.25rem;
+    margin: 0;
+    color: var(--color-text-secondary);
+    font-size: var(--text-body-sm);
+    line-height: var(--text-body-sm--line-height);
+  }
+  .set-card-samples {
+    display: grid;
+    flex: none;
+    grid-template-columns: repeat(3, 1rem);
+    gap: 0.75rem;
+  }
+  .set-card-icon {
+    font-size: 1rem;
+  }
+  @media (max-width: 63.98rem) {
+    /* Чипсы — 24 px до первой группы (группы между собой — через 32 px). */
+    .group-chips {
+      display: flex;
+      gap: 0.5rem;
+      min-width: 0;
+      margin: 0 0 -0.5rem;
+      padding: 0;
+      border: 0;
+      overflow-x: auto;
+    }
+    .group-chip {
+      flex: none;
+      padding: calc(0.375rem - 1px) calc(0.5rem - 1px);
+      border: 1px solid var(--color-border-secondary);
+      border-radius: var(--radius-md);
+      background: none;
+      color: var(--color-text-primary);
+      font: inherit;
+      font-size: var(--text-body-base);
+      line-height: var(--text-body-base--line-height);
+      cursor: pointer;
+    }
+    .group-chip[aria-pressed="true"] {
+      border-color: transparent;
+      background: var(--color-accent-mint);
+      color: var(--color-text-on-accent);
+    }
+    .group-see-all {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.25rem;
+      padding: 0;
+      border: 0;
+      background: none;
+      color: var(--color-text-primary);
+      font: inherit;
+      font-size: var(--text-body-sm);
+      line-height: var(--text-body-sm--line-height);
+      cursor: pointer;
+    }
+    /* Группы: через 32 px, внутри — 12 px, заголовок и описание — через 6 px, описание 13/17. */
+    .home-groups {
+      gap: 2rem;
+    }
+    .set-group {
+      gap: 0.75rem;
+    }
+    .set-group-head {
+      gap: 0.375rem 0.5rem;
+    }
+    .page .set-group-text {
+      font-size: var(--text-body-sm);
+      line-height: var(--text-body-sm--line-height);
+    }
+    .home-groups .set-grid {
+      gap: 0.75rem;
+      grid-auto-columns: min(17rem, 80vw);
+      grid-auto-flow: column;
+      grid-template-columns: none;
+      overflow-x: auto;
+      scroll-snap-type: x mandatory;
+    }
+    .home-groups .set-grid[data-expanded] {
+      grid-auto-flow: row;
+      grid-template-columns: minmax(0, 1fr);
+      overflow: visible;
+    }
+    .home-groups .set-card {
+      scroll-snap-align: start;
+    }
   }
 
   /* Фильтры «чипсами»: ссылки с параметрами адреса. */
@@ -636,104 +1889,371 @@
     display: flex;
     flex-wrap: wrap;
     align-items: center;
-    gap: 0.5rem;
-    margin-block: 0.75rem;
+    gap: 0.5rem 0.75rem;
   }
   .chips-label {
-    color: var(--color-muted);
-    font-size: 0.875rem;
+    color: var(--color-text-secondary);
+    font-size: var(--text-body-sm);
+    line-height: var(--text-body-sm--line-height);
   }
   .chips {
     display: flex;
     flex-wrap: wrap;
     gap: 0.375rem;
-    list-style: none;
+    margin: 0;
     padding: 0;
+    list-style: none;
   }
+  /* Чипсы по макету (группы главной на телефоне): рамка, выбранный — мятный. */
   .chip {
     display: inline-flex;
     align-items: center;
     gap: 0.375rem;
-    min-height: 2rem;
-    padding: 0.25rem 0.75rem;
-    border: 1px solid var(--color-control);
-    border-radius: 999px;
-    color: var(--color-fg);
-    font-size: 0.875rem;
+    padding: 0.25rem 0.625rem;
+    border: 1px solid var(--color-border-secondary);
+    border-radius: var(--radius-md);
+    color: var(--color-text-primary);
+    font-size: var(--text-body-sm);
+    line-height: var(--text-body-sm--line-height);
     text-decoration: none;
   }
   .chip:hover {
-    background: var(--color-surface);
+    background: var(--color-bg-hover);
   }
   .chip[aria-current="true"] {
-    background: var(--color-accent);
-    border-color: var(--color-accent);
-    color: var(--color-bg);
+    border-color: transparent;
+    background: var(--color-accent-mint);
+    color: var(--color-text-on-accent);
   }
   .chip-count {
-    color: var(--color-muted);
+    color: var(--color-text-secondary);
     font-variant-numeric: tabular-nums;
   }
   .chip[aria-current="true"] .chip-count {
     color: inherit;
+    opacity: 0.6;
   }
 
-  /* Страница набора: сведения, витрина, сетка и номера страниц. */
-  .set-facts {
+  /*
+   * Страница набора по макету (Icon Set Page): шапка — крошки, название, «Subscribe», строка сведений;
+   * под разделителем — панель поиска, фильтры, строки номеров страниц и сетка карточек 152 × 101.
+   */
+  .set-page {
+    padding-block: 0;
+  }
+  .set-head {
     display: grid;
-    grid-template-columns: max-content minmax(0, 1fr);
-    gap: 0.25rem 1.5rem;
-    margin-block: 1rem;
+    grid-template-areas:
+      "title subscribe"
+      "meta meta";
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 1.5rem;
+    padding: 2rem var(--page-x-end) 1.5rem var(--page-x);
+    border-bottom: 1px solid var(--color-border-secondary-20);
   }
-  .set-facts > div {
-    display: contents;
+  .set-head-title {
+    display: grid;
+    grid-area: title;
+    gap: 1rem;
   }
-  .set-facts dt {
-    color: var(--color-muted);
+  .page .set-title {
+    margin: 0;
+    font-size: var(--text-display);
+    font-weight: 500;
+    line-height: var(--text-display--line-height);
   }
-  .set-facts dd {
-    overflow-wrap: anywhere;
-  }
-  .page .set-samples {
+  .crumbs ol {
     display: flex;
     flex-wrap: wrap;
-    gap: 1rem;
-    font-size: 2.5rem;
-    margin-block: 1.5rem;
-  }
-  .icon-grid {
-    display: grid;
     gap: 0.5rem;
-    grid-template-columns: repeat(auto-fill, minmax(6.5rem, 1fr));
-    list-style: none;
+    margin: 0;
     padding: 0;
-    margin-block: 1rem;
+    list-style: none;
+    font-size: var(--text-body-xs);
+    line-height: var(--text-body-xs--line-height);
   }
-  .icon-cell {
+  .crumbs li + li::before {
+    content: "/";
+    margin-inline-end: 0.5rem;
+    color: var(--color-text-secondary);
+  }
+  .crumbs a {
+    color: var(--color-text-secondary);
+    text-decoration: none;
+  }
+  .crumbs a:hover {
+    color: var(--color-text-primary);
+  }
+  .set-back {
+    display: none;
+  }
+  .subscribe {
+    display: inline-flex;
+    grid-area: subscribe;
+    align-items: center;
+    justify-self: end;
+    gap: 0.5rem;
+    padding: 0.375rem 0.5rem;
+    border: 0;
     border-radius: var(--radius-md);
-    text-align: center;
+    background: var(--color-bg-inverse);
+    color: var(--color-text-inverse);
+    font: inherit;
+    font-size: var(--text-body-base);
+    line-height: var(--text-body-base--line-height);
   }
-  .icon-cell-svg {
-    font-size: 2rem;
+  .set-meta {
+    display: flex;
+    flex-wrap: wrap;
+    grid-area: meta;
+    align-items: center;
+    gap: 0.5rem 0;
+    /* Группы через 12 px с разделителем 1 × 16 (кадр «Icon Set Page»). Разделитель стоит перед каждой
+       группой, а полоса 25 px слева срезана: у первой группы строки — и после переноса — его не видно. */
+    margin: 0 0 0 -1.5625rem;
+    padding: 0;
+    list-style: none;
+    clip-path: inset(-100vh -100vw -100vh 1.5625rem);
+    font-size: var(--text-body-sm);
+    line-height: var(--text-body-sm--line-height);
   }
-  .icon-cell-name {
-    color: var(--color-muted);
-    font-size: 0.75rem;
-    line-height: 1.3;
-    overflow-wrap: anywhere;
+  .set-meta li {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
   }
-  .page .grid-status {
-    color: var(--color-muted);
-    margin-block: 2rem;
+  .set-meta li::before {
+    content: "";
+    flex: none;
+    width: 1px;
+    height: 1rem;
+    margin-inline: 0.75rem 0.375rem;
+    background: var(--color-border-secondary-20);
+  }
+  .set-meta .set-meta-news {
+    display: none;
+  }
+  .set-meta-icon {
+    font-size: 1rem;
+    opacity: 0.5;
+  }
+  .set-meta-label {
+    color: var(--color-text-secondary);
+  }
+  .tip {
+    display: inline-flex;
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--color-text-primary);
+    cursor: help;
+  }
+  /*
+   * Цели нажатия не меньше 24 px (WCAG 2.2, 2.5.8; axe target-size): «?» после лицензии рисуется 16 px, а
+   * поле нажатия — 24 × 24, наружу от ссылки лицензии (вправо, вверх и вниз): строка не сдвигается, и
+   * круг 24 px вокруг ссылки его не задевает (план редизайна, шаг 5).
+   */
+  .set-meta .tip {
+    padding: 0.25rem 0.5rem 0.25rem 0;
+    margin: -0.25rem -0.5rem -0.25rem 0;
+  }
+  .set-body {
+    padding: 1.5rem var(--page-x-end) 2.5rem var(--page-x);
+  }
+  .set-browser {
+    display: grid;
+    /* Одна колонка не шире страницы: сетка внутри, конечной ширины во время сворачивания панели
+       (lib/sidebar-motion.ts), не раздвигает соседей. */
+    grid-template-columns: minmax(0, 1fr);
+    gap: 1.75rem;
+    min-width: 0;
+    align-content: start;
+  }
+
+  /* Панель над сеткой: поиск по набору, AI Search, вид, настройки — высота 46 px. */
+  .grid-toolbar {
+    display: flex;
+    align-items: stretch;
+    gap: 0.75rem;
+  }
+  .grid-search {
+    display: flex;
+    flex: 1;
+    min-width: 0;
+  }
+  .grid-field {
+    min-height: 2.875rem;
+    padding: calc(0.5rem - 1px) calc(1rem - 1px);
+  }
+  .ai-search-md {
+    padding: 0.6875rem 0.5rem;
+  }
+  .ai-search-md .ai-toggle {
+    width: 2.5rem;
+    height: 1.5rem;
+  }
+  .ai-search-md .ai-knob {
+    width: 1rem;
+    height: 1rem;
+  }
+  .view-switch {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    min-width: 0;
+    margin: 0;
+    padding: 0.4375rem 0.5rem;
+    border: 0;
+    border-radius: var(--radius-lg);
+    background: var(--color-bg-surface);
+  }
+  .view-item {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2rem;
+    height: 2rem;
+    padding: 0;
+    border: 0;
+    border-radius: var(--radius-xs);
+    background: none;
+    color: var(--color-text-primary);
+    font-size: 1.5rem;
+    opacity: 0.5;
+  }
+  .view-item[aria-current="true"] {
+    background: var(--color-bg-surface-strong);
+    opacity: 1;
+  }
+  .grid-settings {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.6875rem 0.75rem;
+    border: 0;
+    border-radius: var(--radius-lg);
+    background: var(--color-bg-surface);
+    color: var(--color-text-primary);
+    font: inherit;
+    font-size: var(--text-body-base);
+    line-height: var(--text-body-base--line-height);
+  }
+  .grid-settings-icon {
+    font-size: 1.5rem;
+    opacity: 0.5;
+  }
+  /* Стили и категории — строкой с прокруткой: в макете их нет, сетка начинается сразу. */
+  /*
+   * Строка поиска набора сжимается по своей ширине, а не по ширине окна (план, шаг 3): с открытой панелью
+   * во всю высоту левая колонка узкая. Уже 44rem — без подсказки «Ctrl K», Settings — квадратная кнопка
+   * со значком; уже 34rem — два ряда, как на телефоне: поиск и Settings, под ними AI Search и вид.
+   */
+  .grid-toolbar-box {
+    container: toolbar / inline-size;
+    overflow-anchor: none;
+  }
+  @container toolbar (max-width: 44rem) {
+    .grid-field .hero-keys,
+    .grid-settings-label {
+      display: none;
+    }
+    .grid-settings {
+      flex: none;
+      justify-content: center;
+      width: 2.875rem;
+      padding: 0;
+      border-radius: 0.625rem;
+      background: var(--color-bg-surface-strong);
+    }
+    .grid-settings-icon {
+      font-size: 1.25rem;
+      opacity: 1;
+    }
+  }
+  @container toolbar (max-width: 34rem) {
+    .grid-toolbar {
+      flex-wrap: wrap;
+      gap: 0.75rem 0.5rem;
+    }
+    .grid-search {
+      flex: 1 1 calc(100% - 3.375rem);
+    }
+    .ai-search-md {
+      order: 1;
+    }
+    .view-switch {
+      order: 2;
+      margin-inline-start: auto;
+    }
+  }
+  .grid-filters {
+    display: grid;
+    gap: 0.75rem;
+    min-width: 0;
+  }
+  .grid-filters:empty {
+    display: none;
+  }
+  .grid-filters .chips-nav {
+    flex-wrap: nowrap;
+    min-width: 0;
+  }
+  .grid-filters .chips-label {
+    flex: none;
+  }
+  .grid-filters .chips {
+    flex-wrap: nowrap;
+    min-width: 0;
+    margin-bottom: calc(-1 * var(--scrollbar-lane));
+    padding-bottom: 0.25rem;
+    overflow-x: scroll;
+  }
+  .grid-filters .chip {
+    white-space: nowrap;
+  }
+
+  /* Строки номеров страниц по макету: «Icons per page», пунктир, номера 28 px. */
+  .grid-bar {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    min-height: 1.75rem;
+  }
+  /* Пока браузер не посчитал колонки (lib/grid-columns.ts), число на странице и номера страниц ещё не
+     известны: строка держит место, но не видна — неверные цифры не мелькают. */
+  .grid-bar[data-pending] {
+    visibility: hidden;
+  }
+  .per-page {
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--color-text-primary);
+    font: inherit;
+    font-size: var(--text-body-sm);
+    line-height: var(--text-body-sm--line-height);
+  }
+  .per-page-label {
+    margin-inline-end: 0.25rem;
+    opacity: 0.5;
+  }
+  .grid-bar-line {
+    flex: 1;
+    border-top: 1px dashed var(--color-border-secondary-20);
   }
   .pagination-list {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
     gap: 0.25rem;
-    list-style: none;
+    margin: 0;
     padding: 0;
-    margin-block: 1.5rem;
+    list-style: none;
   }
   .pagination a,
   .pagination-off,
@@ -741,22 +2261,403 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    min-width: 2.25rem;
-    min-height: 2.25rem;
-    padding: 0 0.5rem;
-    border-radius: var(--radius-md);
-    color: var(--color-fg);
+    min-width: 1.75rem;
+    height: 1.75rem;
+    padding: 0 0.25rem;
+    border-radius: var(--radius-xs);
+    color: var(--color-text-primary);
+    font-size: var(--text-body-base);
+    line-height: var(--text-body-base--line-height);
     text-decoration: none;
   }
+  /* Стрелки «назад» и «вперёд» — 20 px, как в макете. */
+  .pagination svg {
+    font-size: 1.25rem;
+  }
+  .pagination a {
+    background: var(--color-bg-surface);
+  }
+  .pagination a[aria-label] {
+    background: none;
+  }
   .pagination a:hover {
-    background: var(--color-surface);
+    background: var(--color-bg-hover);
   }
   .pagination a[aria-current="page"] {
-    background: var(--color-accent);
-    color: var(--color-bg);
+    background: var(--color-bg-surface-strong);
   }
   .pagination-off {
-    color: var(--color-muted);
+    opacity: 0.4;
+  }
+
+  /* Сетка карточек по макету (Icon Card): 152 × 101, значок 24 px, имя 13/17, 7 в ряд на 1440 px.
+     Колонок — --icon-cols, от ширины окна (ниже). */
+  .icon-grid {
+    display: grid;
+    gap: 0.75rem;
+    grid-template-columns: repeat(var(--icon-cols), minmax(0, 1fr));
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  /*
+   * Колонки сетки набора и выдачи поиска — только от ширины окна (решение владельца 13 ноября 2026): ни
+   * боковая панель слева, ни панель иконки справа их не меняют — карточки только растягиваются и
+   * сужаются, а число иконок на странице (целые ряды, pageSizeFor в lib/catalog.ts) не прыгает. Как в
+   * кадре макета «Контекст: свёрнутый сайдбар»: при свёрнутой панели карточек в ряду столько же, они
+   * шире. Колонок — сколько карточек встало бы в колонку страницы при развёрнутой боковой панели: окно
+   * − 19rem (панель 14rem и поля страницы по 2,5rem; полоса прокрутки — внутри правого поля). Карточка
+   * набора — не уже 8,75rem с зазором 0,75rem: n колонок — с окна 9,5n + 18,25rem; выдачи поиска —
+   * 7,5rem с зазором 0,5rem: с окна 8n + 18,5rem. До 64rem у сетки набора — 3 колонки, у выдачи —
+   * сколько влезет. Таблица стилей задаёт колонки сразу, ещё до скриптов страницы; число на странице
+   * считает браузер по --icon-cols (lib/grid-columns.ts). Пороги сверяет lib/grid-columns.test.ts.
+   */
+  :root {
+    --icon-cols: 3;
+  }
+  @media (min-width: 64rem) {
+    :root {
+      --icon-cols: 4;
+      --result-cols: 5;
+    }
+    .result-grid {
+      grid-template-columns: repeat(var(--result-cols), minmax(0, 1fr));
+    }
+  }
+  @media (min-width: 65.75rem) {
+    :root {
+      --icon-cols: 5;
+    }
+  }
+  @media (min-width: 66.5rem) {
+    :root {
+      --result-cols: 6;
+    }
+  }
+  @media (min-width: 74.5rem) {
+    :root {
+      --result-cols: 7;
+    }
+  }
+  @media (min-width: 75.25rem) {
+    :root {
+      --icon-cols: 6;
+    }
+  }
+  @media (min-width: 82.5rem) {
+    :root {
+      --result-cols: 8;
+    }
+  }
+  @media (min-width: 84.75rem) {
+    :root {
+      --icon-cols: 7;
+    }
+  }
+  @media (min-width: 90.5rem) {
+    :root {
+      --result-cols: 9;
+    }
+  }
+  @media (min-width: 94.25rem) {
+    :root {
+      --icon-cols: 8;
+    }
+  }
+  @media (min-width: 98.5rem) {
+    :root {
+      --result-cols: 10;
+    }
+  }
+  @media (min-width: 103.75rem) {
+    :root {
+      --icon-cols: 9;
+    }
+  }
+  @media (min-width: 106.5rem) {
+    :root {
+      --result-cols: 11;
+    }
+  }
+  @media (min-width: 113.25rem) {
+    :root {
+      --icon-cols: 10;
+    }
+  }
+  @media (min-width: 114.5rem) {
+    :root {
+      --result-cols: 12;
+    }
+  }
+  @media (min-width: 122.5rem) {
+    :root {
+      --result-cols: 13;
+    }
+  }
+  @media (min-width: 122.75rem) {
+    :root {
+      --icon-cols: 11;
+    }
+  }
+  @media (min-width: 130.5rem) {
+    :root {
+      --result-cols: 14;
+    }
+  }
+  @media (min-width: 132.25rem) {
+    :root {
+      --icon-cols: 12;
+    }
+  }
+  @media (min-width: 138.5rem) {
+    :root {
+      --result-cols: 15;
+    }
+  }
+  @media (min-width: 141.75rem) {
+    :root {
+      --icon-cols: 13;
+    }
+  }
+  @media (min-width: 146.5rem) {
+    :root {
+      --result-cols: 16;
+    }
+  }
+  @media (min-width: 151.25rem) {
+    :root {
+      --icon-cols: 14;
+    }
+  }
+  @media (min-width: 154.5rem) {
+    :root {
+      --result-cols: 17;
+    }
+  }
+  @media (min-width: 160.75rem) {
+    :root {
+      --icon-cols: 15;
+    }
+  }
+  @media (min-width: 162.5rem) {
+    :root {
+      --result-cols: 18;
+    }
+  }
+  @media (min-width: 170.25rem) {
+    :root {
+      --icon-cols: 16;
+    }
+  }
+  @media (min-width: 170.5rem) {
+    :root {
+      --result-cols: 19;
+    }
+  }
+  @media (min-width: 178.5rem) {
+    :root {
+      --result-cols: 20;
+    }
+  }
+  @media (min-width: 179.75rem) {
+    :root {
+      --icon-cols: 17;
+    }
+  }
+  @media (min-width: 186.5rem) {
+    :root {
+      --result-cols: 21;
+    }
+  }
+  @media (min-width: 189.25rem) {
+    :root {
+      --icon-cols: 18;
+    }
+  }
+  @media (min-width: 194.5rem) {
+    :root {
+      --result-cols: 22;
+    }
+  }
+  @media (min-width: 198.75rem) {
+    :root {
+      --icon-cols: 19;
+    }
+  }
+  @media (min-width: 202.5rem) {
+    :root {
+      --result-cols: 23;
+    }
+  }
+  @media (min-width: 208.25rem) {
+    :root {
+      --icon-cols: 20;
+    }
+  }
+  @media (min-width: 210.5rem) {
+    :root {
+      --result-cols: 24;
+    }
+  }
+  @media (min-width: 217.75rem) {
+    :root {
+      --icon-cols: 21;
+    }
+  }
+  @media (min-width: 218.5rem) {
+    :root {
+      --result-cols: 25;
+    }
+  }
+  @media (min-width: 226.5rem) {
+    :root {
+      --result-cols: 26;
+    }
+  }
+  @media (min-width: 227.25rem) {
+    :root {
+      --icon-cols: 22;
+    }
+  }
+  @media (min-width: 234.5rem) {
+    :root {
+      --result-cols: 27;
+    }
+  }
+  @media (min-width: 236.75rem) {
+    :root {
+      --icon-cols: 23;
+    }
+  }
+  @media (min-width: 242.5rem) {
+    :root {
+      --result-cols: 28;
+    }
+  }
+  @media (min-width: 246.25rem) {
+    :root {
+      --icon-cols: 24;
+    }
+  }
+  .icon-cell {
+    min-width: 0;
+  }
+  .icon-cell-svg {
+    font-size: 1.5rem;
+  }
+  .icon-cell-name {
+    max-width: 100%;
+    overflow: hidden;
+    color: var(--color-text-primary);
+    font-size: var(--text-body-sm);
+    line-height: var(--text-body-sm--line-height);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .page .grid-status {
+    margin-block: 2rem;
+    color: var(--color-text-secondary);
+  }
+  .grid-clear {
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--color-link-unicode);
+    font: inherit;
+    text-decoration: underline;
+    cursor: pointer;
+  }
+
+  /* Телефон (кадр «Icon Set Page / Mobile»): «‹ Icon Sets», поиск и настройки, ниже AI Search и вид. */
+  @media (max-width: 63.98rem) {
+    .set-head {
+      grid-template-areas:
+        "title"
+        "meta"
+        "subscribe";
+      grid-template-columns: minmax(0, 1fr);
+      gap: 0.75rem;
+      padding-block: 1rem 1.25rem;
+      border-bottom: 0;
+    }
+    .set-head-title {
+      gap: 0.75rem;
+    }
+    .page .set-title {
+      font-size: 1.75rem;
+      line-height: 2rem;
+    }
+    .set-head .crumbs {
+      display: none;
+    }
+    .set-back {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.125rem;
+      color: var(--color-text-secondary);
+      font-size: var(--text-body-sm);
+      line-height: var(--text-body-sm--line-height);
+      text-decoration: none;
+    }
+    .subscribe {
+      justify-self: start;
+    }
+    .set-body {
+      padding-block: 0 1.5rem;
+    }
+    .set-browser {
+      gap: 1rem;
+    }
+    /* Кадр «Icon Set Page / Mobile»: без значка счётчика, «What’s new» — отдельной группой. */
+    .set-meta .set-meta-icon,
+    .set-meta .set-meta-news-long {
+      display: none;
+    }
+    .set-meta .set-meta-news {
+      display: inline-flex;
+    }
+    .grid-toolbar {
+      flex-wrap: wrap;
+      gap: 0.75rem 0.5rem;
+    }
+    .grid-search {
+      flex: 1 1 calc(100% - 3.375rem);
+    }
+    /* Settings на телефоне — квадратная кнопка 46 × 46 (Icon Button, вариант Secondary): фон ярче, значок
+       20 px без приглушения. */
+    .grid-settings {
+      flex: none;
+      justify-content: center;
+      width: 2.875rem;
+      padding: 0;
+      border-radius: 0.625rem;
+      background: var(--color-bg-surface-strong);
+    }
+    .grid-settings-icon {
+      font-size: 1.25rem;
+      opacity: 1;
+    }
+    .grid-settings-label,
+    .grid-field .hero-keys,
+    .grid-bar-top,
+    .grid-bar .per-page,
+    .grid-bar .grid-bar-line {
+      display: none;
+    }
+    .ai-search-md {
+      order: 1;
+    }
+    .view-switch {
+      order: 2;
+      margin-inline-start: auto;
+    }
+    .grid-bar {
+      justify-content: center;
+    }
+    .icon-grid {
+      gap: 0.5rem;
+    }
   }
 
   /* Лента «Что нового» и короткий список на главной. */
@@ -765,11 +2666,11 @@
     padding: 0;
   }
   .news-lines li {
-    border-bottom: 1px solid var(--color-line);
+    border-bottom: 1px solid var(--color-border-secondary);
     padding-block: 0.5rem;
   }
   .release {
-    border-bottom: 1px solid var(--color-line);
+    border-bottom: 1px solid var(--color-border-secondary);
     padding-block: 1.25rem;
     scroll-margin-top: 1rem;
   }
@@ -778,7 +2679,7 @@
     font-weight: 600;
   }
   .page .release-meta {
-    color: var(--color-muted);
+    color: var(--color-text-secondary);
     font-size: 0.875rem;
     margin-block: 0.25rem;
   }
@@ -798,7 +2699,7 @@
     margin-block: 0.25rem;
   }
   .page .release-names {
-    color: var(--color-muted);
+    color: var(--color-text-secondary);
     font-family: var(--font-mono);
     font-size: 0.8rem;
     overflow-wrap: anywhere;
@@ -807,13 +2708,13 @@
 
   /* Лицензии наборов. */
   .license {
-    border-top: 1px solid var(--color-line);
+    border-top: 1px solid var(--color-border-secondary);
     margin-top: 1.5rem;
     padding-top: 1rem;
     scroll-margin-top: 1rem;
   }
   .license-text {
-    background: var(--color-surface);
+    background: var(--color-bg-surface);
     border-radius: var(--radius-md);
     font-size: 0.8rem;
     overflow-wrap: anywhere;
@@ -821,748 +2722,2405 @@
     white-space: pre-wrap;
   }
 
-  /* Карточка сетки — ссылка на страницу иконки; обычный щелчок открывает панель (шаг 4 фазы 4). */
+  /*
+   * Карточка сетки по макету (Icon Card) — ссылка на страницу иконки; обычный щелчок открывает панель
+   * (шаг 4 фазы 4). Наведение — bg/hover, открытая в панели — bg/cardHover (варианты Icon Card).
+   */
   .icon-card-link {
+    position: relative;
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 0.375rem;
+    justify-content: center;
+    gap: 0.75rem;
     inline-size: 100%;
-    block-size: 100%;
-    padding: 0.75rem 0.25rem;
-    border-radius: var(--radius-md);
-    color: inherit;
+    min-block-size: 6.3125rem;
+    padding: 1.5rem 0.5rem;
+    border-radius: var(--radius-lg);
+    background: var(--color-bg-icon-card);
+    color: var(--color-text-primary);
     text-decoration: none;
   }
-  .icon-card-link:hover,
-  .icon-card-link[aria-current="true"] {
-    background: var(--color-surface);
+  .icon-card-link:hover {
+    background: var(--color-bg-hover);
   }
   .icon-card-link[aria-current="true"] {
-    outline: 2px solid var(--color-accent);
-    outline-offset: -2px;
+    background: var(--color-bg-card-hover);
   }
 
-  /* Боковая панель: на телефоне — шторка снизу, выдача над ней видна и листается; «развернуть» — во весь
-     экран. На компьютере — колонка справа от сетки, сетка сужается сама. */
-  .icon-panel {
-    position: fixed;
-    inset-inline: 0;
-    inset-block-end: 0;
-    z-index: 20;
-    max-block-size: var(--height-sheet);
-    overflow-y: auto;
-    overscroll-behavior: contain;
-    padding: 0.75rem 1rem 1.5rem;
-    border-top: 1px solid var(--color-line);
-    border-radius: var(--radius-md) var(--radius-md) 0 0;
-    background: var(--color-bg);
-    box-shadow: var(--shadow-md);
-  }
-  .icon-panel[data-expanded] {
-    inset-block-start: 0;
-    max-block-size: none;
-    border-radius: 0;
-  }
-  /* Под шторкой — место: последние ряды выдачи прокручиваются выше неё. */
-  body:has(.icon-panel) {
-    padding-block-end: var(--height-sheet);
-  }
-  .icon-panel-head {
-    position: sticky;
-    inset-block-start: -0.75rem;
-    z-index: 1;
-    display: flex;
-    align-items: center;
-    gap: 0.25rem;
-    margin: -0.75rem -1rem 0.5rem;
-    padding: 0.5rem 0.5rem 0.5rem 1rem;
-    background: var(--color-bg);
-  }
-  .icon-panel-head h2 {
-    flex: 1;
-    min-inline-size: 0;
-    font-size: 1.125rem;
-    font-weight: 600;
-    overflow-wrap: anywhere;
-  }
-  .icon-panel-set {
-    display: block;
-    color: var(--color-muted);
-    font-size: 0.75rem;
-    font-weight: 400;
-  }
-  @media (min-width: 48rem) {
+  /*
+   * Панель иконки по макету «Icon Panel» (Figma «Iconavo — Макеты»): 355 px, скругление 16, bg/surface.
+   * На компьютере — колонка справа от сетки на уровне строки номеров страниц, не выше окна, со своей
+   * прокруткой; поиск над ними — во всю ширину. На телефоне — шторка снизу (ниже).
+   */
+  @media (min-width: 64rem) {
     .with-panel[data-panel] {
       display: grid;
       grid-template-columns: minmax(0, 1fr) var(--width-panel);
-      gap: 1.5rem;
+      gap: 1.75rem;
       align-items: start;
     }
-    .icon-panel {
-      position: sticky;
-      inset-block-start: 1rem;
-      inset-inline: auto;
-      max-block-size: calc(100vh - 2rem);
-      border: 1px solid var(--color-line);
-      border-radius: var(--radius-md);
-      box-shadow: none;
+    /* Колонок с открытой панелью столько же, сколько без неё (--icon-cols, --result-cols — от ширины
+       окна; решение владельца 13 ноября 2026, вместо кадра «Selected Icon + Opened Panel» с 6 колонками
+       по 116 px): карточки сужаются и сдвигаются, но не перескакивают в другие ряды. */
+  }
+  /*
+   * Панель во всю высоту страницы (решение владельца 13 ноября 2026, lib/panel-layout.ts): пока панель
+   * открыта, страница набора — две колонки: слева заголовок, строка поиска, фильтры и сетка, справа —
+   * панель от уровня хлебных крошек до низа. Поиск — так же (план, шаг 4): слева заголовок «Search», поле
+   * и выдача, справа панель; главная — та же раскладка, но панели на ней нет. Прилипает к верху окна и помещается в окно
+   * (lib/panel-fit.ts).
+   *
+   * Открытие и закрытие — одним движением (план, шаг 2): правая колонка раздвигается от 0 до ширины
+   * панели переходом grid-template-columns, и вся левая колонка — заголовок, Subscribe, строка поиска,
+   * категории, сетка — плавно сужается вместе с ней; колонок у сетки столько же, карточки только
+   * сужаются. Панель — своей ширины у правого края колонки и выезжает из-за него, пока колонка растёт
+   * (overflow-x: clip — не мешает прилипанию). Закрытие — колонка сходится, уходящая панель — копией
+   * (PanelLayout). Анимация карточек PanelLayout здесь не нужна — двигается сама раскладка.
+   */
+  @media (min-width: 64rem) {
+    :is(.set-page, .find-page) {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 0px;
+      grid-template-rows: auto 1fr;
+      align-items: start;
     }
-    .icon-panel[data-expanded] {
-      max-block-size: calc(100vh - 2rem);
-      border-radius: var(--radius-md);
+    :is(.set-page, .find-page):has(> .page-panel > .icon-panel) {
+      grid-template-columns:
+        minmax(0, 1fr)
+        calc(var(--width-panel) + var(--page-x-end));
     }
-    .icon-panel-expand {
-      display: none;
+    :is(.set-page, .find-page) > :is(.set-head, .set-body, .hero, .find-body) {
+      grid-column: 1;
+      min-width: 0;
     }
-    body:has(.icon-panel) {
-      padding-block-end: 0;
+    :is(.set-page, .find-page) > .page-panel {
+      grid-column: 2;
+      grid-row: 1 / span 2;
+      align-self: stretch;
+      min-width: 0;
+      overflow-x: clip;
+    }
+    :is(.set-page, .find-page) > .page-panel:has(> .icon-panel) {
+      padding: 2rem var(--page-x-end) 2.5rem 0;
+    }
+    :is(.set-page, .find-page) > .page-panel > .icon-panel {
+      width: var(--width-panel);
+      margin-left: auto;
     }
   }
-
-  /* Сведения об иконке — в панели и на странице иконки. */
-  .icon-preview-pair {
+  @media (min-width: 64rem) and (prefers-reduced-motion: no-preference) {
+    :is(.set-page, .find-page) {
+      transition: grid-template-columns var(--motion-panel-in)
+        var(--motion-ease-out);
+    }
+  }
+  /*
+   * Строка с номерами страниц в узкой колонке — без «Icons per page» (как на телефоне): номера страниц
+   * помещаются в одну строку. Контейнер — сама строка, не вся область сетки.
+   */
+  /* Пока панель во всю высоту открывается или закрывается, прокрутку держит сайт (lib/panel-anchor.ts). */
+  :root[data-panel-anchor],
+  :root[data-panel-anchor] body {
+    overflow-anchor: none;
+  }
+  .grid-bar {
+    container: grid-bar / inline-size;
+    /* Строки над сеткой — не опора прокрутки: иначе Chrome держал на месте строку, а не карточки, и при
+       открытии панели сетка прыгала (план редизайна, шаг 5). */
+    overflow-anchor: none;
+  }
+  @media (min-width: 64rem) {
+    @container grid-bar (max-width: 34rem) {
+      .per-page,
+      .grid-bar-line {
+        display: none;
+      }
+      .pagination {
+        margin-inline-start: auto;
+      }
+    }
+  }
+  .grid-area {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    /* Одна колонка не шире страницы: сетка внутри, конечной ширины во время сворачивания панели
+       (lib/sidebar-motion.ts), не раздвигает соседей. */
+    grid-template-columns: minmax(0, 1fr);
+    gap: 1.25rem;
+    min-width: 0;
+    align-content: start;
+  }
+  .icon-panel {
+    position: sticky;
+    top: 1rem;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    /* Не выше места от верха панели до низа окна (--panel-fit, lib/panel-fit.ts): пока страница не
+       прокручена, низ панели не уходит за край окна. */
+    max-height: var(--panel-fit, calc(100vh - 2rem));
+    overflow-y: scroll;
+    overscroll-behavior: contain;
+    border-radius: 1rem;
+    background: var(--color-bg-surface);
+    font-size: var(--text-body-base);
+    line-height: var(--text-body-base--line-height);
+    --panel-x-end: calc(1.25rem - var(--scrollbar-lane));
+  }
+  /* Панель ещё растёт (lib/panel-fit.ts): её содержимое не прокручивается — колесо над ней крутит
+     страницу, панель поднимается и растёт. Полосы прокрутки нет — её место отдано правому полю, и
+     содержимое не сдвигается. */
+  .icon-panel[data-fit="grow"] {
+    overflow-y: hidden;
+    /* Иначе Chrome не передаёт колесо странице и с панели, которая сама не прокручивается. */
+    overscroll-behavior: auto;
+    --panel-x-end: 1.25rem;
+  }
+  .panel-backdrop,
+  .panel-handle {
+    display: none;
+  }
+  /* Колонка — minmax(0, 1fr): ширина текста кнопок в браузере на пиксель больше, чем в Figma, и не
+     должна раздвигать панель. */
+  .panel-top {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 1rem;
+    padding: 1.25rem var(--panel-x-end) 1.25rem 1.25rem;
+  }
+  .panel-head {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+  /* Иконки с таким именем нет — строка вместо превью, настроек и кода. */
+  .page .panel-missing {
+    margin: 0;
+    color: var(--color-text-secondary);
+  }
+  .page .panel-head h2 {
+    display: grid;
+    flex: 1;
+    gap: 0.375rem;
+    min-width: 0;
+    margin: 0;
+  }
+  .panel-title {
+    font-size: var(--text-heading-md);
+    font-weight: 600;
+    line-height: var(--text-heading-md--line-height);
+    overflow-wrap: anywhere;
+  }
+  .panel-set {
+    color: var(--color-text-secondary);
+    font-size: var(--text-body-xs);
+    font-weight: 400;
+    line-height: var(--text-body-xs--line-height);
+  }
+  .panel-head-actions {
+    display: flex;
+    flex: none;
+    align-items: center;
     gap: 0.5rem;
   }
-  .icon-preview {
+  .panel-head-button {
+    display: inline-flex;
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--color-text-primary);
+    font-size: 1.25rem;
+    cursor: pointer;
+  }
+  .panel-previews,
+  .panel-pair {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.75rem;
+  }
+  /* Превью — светлый фон с шахматкой и тёмный; от темы сайта не зависят (гайд макета). */
+  .panel-preview {
     display: flex;
     align-items: center;
     justify-content: center;
-    min-block-size: 9rem;
-    margin: 0;
-    padding: 1rem;
+    height: 6.25rem;
     overflow: hidden;
-    border: 1px solid var(--color-line);
-    border-radius: var(--radius-md);
-    background: var(--color-bg);
-    color: var(--color-fg);
+    border-radius: var(--radius-lg);
+    background-color: var(--color-bg-page);
+    color: var(--color-bg-inverse);
   }
-  /* Размер копии, файла и кода под крупным превью (решение владельца 3 ноября 2026). */
-  .icon-preview-size {
-    margin-block: 0.375rem 0;
-    color: var(--color-muted);
-    font-size: 0.8rem;
-    font-variant-numeric: tabular-nums;
-    text-align: center;
-  }
-  .icon-preview.preview-light {
+  .panel-preview.preview-light {
     color-scheme: light;
+    background-image: conic-gradient(
+      var(--color-bg-surface-strong) 25%,
+      var(--color-bg-page) 0 50%,
+      var(--color-bg-surface-strong) 0 75%,
+      var(--color-bg-page) 0
+    );
+    background-size: 1rem 1rem;
   }
-  .icon-preview.preview-dark {
+  .panel-preview.preview-dark {
     color-scheme: dark;
   }
+  /* Колонка поля — не шире панели (замечание владельца 13 ноября 2026): иначе длинное имя иконки в
+     Name раздвигало колонку под себя, и панель прокручивалась вбок. Теперь текст в поле уходит в «…». */
+  .panel-field {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0.25rem;
+    min-width: 0;
+  }
+  .panel-name-section .panel-field {
+    gap: 0.5rem;
+  }
+  .panel-label {
+    padding: 0;
+    color: var(--color-text-secondary);
+    font-size: var(--text-body-xs);
+    line-height: var(--text-body-xs--line-height);
+  }
+  .panel-control {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    width: 100%;
+    min-width: 0;
+    height: 2.125rem;
+    padding: 0.5rem 0.75rem;
+    border: 0;
+    border-radius: var(--radius-md);
+    background: var(--color-bg-surface-strong);
+    color: var(--color-text-primary);
+    font: inherit;
+    text-align: start;
+    cursor: pointer;
+  }
+  .panel-control-text {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .panel-icon {
+    flex: none;
+    font-size: 1rem;
+  }
+  .panel-icon-muted {
+    opacity: 0.5;
+  }
+  /* Списки полей панели не шире места в окне (Radix считает его с отступом collisionPadding): длинное
+     имя в строке формата уходит в «…», подпись формата видна (замечание владельца 13 ноября 2026). */
+  .panel-menu {
+    max-width: var(--radix-dropdown-menu-content-available-width);
+    max-height: 20rem;
+    overflow-y: auto;
+  }
+  .name-format-code {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .panel-color {
+    cursor: default;
+  }
+  .panel-color:focus-within {
+    outline: 2px solid var(--color-selection-bg);
+  }
+  .color-swatch {
+    flex: none;
+    width: 1rem;
+    height: 1rem;
+    padding: 0;
+    border: 0;
+    border-radius: var(--radius-xs);
+    background: none;
+    cursor: pointer;
+  }
+  .color-swatch::-webkit-color-swatch-wrapper {
+    padding: 0;
+  }
+  .color-swatch::-webkit-color-swatch {
+    border: 0;
+    border-radius: var(--radius-xs);
+  }
+  .color-swatch::-moz-color-swatch {
+    border: 0;
+    border-radius: var(--radius-xs);
+  }
+  /* Своего цвета нет — квадратик цвета текста вокруг: иконка берёт его. */
+  .color-swatch[data-auto] {
+    border-radius: var(--radius-xs);
+    background: var(--color-text-primary);
+  }
+  .color-swatch[data-auto]::-webkit-color-swatch {
+    opacity: 0;
+  }
+  .color-swatch[data-auto]::-moz-color-swatch {
+    opacity: 0;
+  }
+  .color-hex {
+    flex: 1;
+    width: 100%;
+    min-width: 0;
+    padding: 0;
+    border: 0;
+    outline: none;
+    background: none;
+    color: var(--color-text-primary);
+    font: inherit;
+    text-transform: uppercase;
+  }
+  .color-hex::placeholder {
+    color: var(--color-text-primary);
+    text-transform: none;
+  }
+  .color-alpha {
+    display: inline-flex;
+    flex: none;
+    gap: 0.125rem;
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--color-text-primary);
+    font: inherit;
+  }
+  .color-alpha-unit {
+    color: var(--color-text-secondary);
+  }
+  .panel-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .panel-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.25rem;
+    /* Обводка в Figma внутри размера: 12/16 макета минус рамка 1 px — кнопка 42 px. */
+    padding: calc(0.75rem - 1px) calc(1rem - 1px);
+    border: 1px solid transparent;
+    border-radius: var(--radius-md);
+    font: inherit;
+    font-weight: 500;
+    white-space: nowrap;
+    cursor: pointer;
+  }
+  .panel-btn-primary {
+    background: var(--color-accent-lemon);
+    color: var(--color-text-on-accent);
+  }
+  .panel-btn-primary:hover {
+    opacity: 0.9;
+  }
+  .panel-btn-secondary {
+    background: var(--color-bg-surface-strong);
+    color: var(--color-text-primary);
+  }
+  .panel-btn-secondary:hover,
+  .panel-btn-outline:hover {
+    background: var(--color-bg-hover);
+  }
+  .panel-btn-outline {
+    border-color: var(--color-border-secondary-20);
+    background: none;
+    color: var(--color-text-primary);
+  }
+  .panel-actions .panel-btn-primary,
+  .panel-actions .panel-btn-secondary {
+    flex: none;
+  }
+  .panel-btn-sm {
+    padding: calc(0.5rem - 1px) calc(0.75rem - 1px);
+    font-weight: 400;
+  }
+  .code-download .panel-icon,
+  .code-copy .panel-icon {
+    opacity: 0.5;
+  }
+  .panel-btn-sm .panel-icon {
+    opacity: 0.5;
+  }
+  .panel-btn-sm[data-copied] .panel-icon {
+    opacity: 1;
+  }
+  .panel-btn[aria-disabled="true"] {
+    opacity: 0.5;
+    cursor: default;
+  }
+  /* Как в макете: Copy Icon и Download — по ширине надписи, сумка — на остаток (69 px из 315, 104 на
+     телефоне); по-русски надписи длиннее — сумка ужимается до своего содержимого. */
+  .panel-bag {
+    flex: 1 1 4.3125rem;
+  }
+  .label-swap {
+    display: inline-grid;
+  }
+  .label-swap > * {
+    grid-area: 1 / 1;
+  }
+  .label-swap > [aria-hidden="true"] {
+    visibility: hidden;
+  }
+  .panel-bag[aria-pressed="true"] {
+    border-color: var(--color-accent-mint);
+  }
+
+  /* Разделы под разделителем: Name и Stroke Width, блок кода, автор и лицензия. */
+  .panel-section {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 1.25rem;
+    padding: 1rem var(--panel-x-end) 1.25rem 1.25rem;
+    border-top: 1px solid var(--color-border-secondary-20);
+  }
+  .panel-code-section {
+    padding: 1.25rem var(--panel-x-end) 1.25rem 1.25rem;
+  }
+  .panel-name-row {
+    display: flex;
+    gap: 0.5rem;
+  }
+  .panel-name {
+    flex: 1;
+    width: auto;
+  }
+  .panel-name-row > .panel-btn {
+    flex: none;
+  }
+  .panel-stroke {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .panel-range {
+    flex: 1;
+    min-width: 0;
+    height: 1rem;
+    margin: 0;
+    appearance: none;
+    background: none;
+    cursor: pointer;
+  }
+  .panel-range::-webkit-slider-runnable-track {
+    height: 0.25rem;
+    border-radius: 9999px;
+    background: var(--color-bg-surface-strong);
+  }
+  .panel-range::-moz-range-track {
+    height: 0.25rem;
+    border-radius: 9999px;
+    background: var(--color-bg-surface-strong);
+  }
+  .panel-range::-webkit-slider-thumb {
+    width: 1rem;
+    height: 1rem;
+    margin-top: -0.375rem;
+    border: 0;
+    border-radius: 9999px;
+    appearance: none;
+    background: var(--color-selection-bg);
+  }
+  .panel-range::-moz-range-thumb {
+    width: 1rem;
+    height: 1rem;
+    border: 0;
+    border-radius: 9999px;
+    background: var(--color-selection-bg);
+  }
+  .panel-range:focus-visible {
+    outline: 2px solid var(--color-selection-bg);
+    outline-offset: 4px;
+  }
+  .panel-stroke-value {
+    display: inline-flex;
+    flex: none;
+    gap: 0.25rem;
+    color: var(--color-text-secondary);
+  }
+  .panel-stroke-value b {
+    color: var(--color-text-primary);
+    font-weight: 500;
+  }
+
+  /* Блок кода (Icon Panel/Code): форматы, вкладки, настройки, блоки кода. */
+  .panel-code {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 1rem;
+    min-width: 0;
+  }
+  .pill-groups {
+    display: grid;
+    gap: 0.75rem;
+  }
+  .pill-group {
+    min-width: 0;
+    margin: 0;
+    padding: 0;
+    border: 0;
+  }
+  .pill-group > legend {
+    float: left;
+    width: 100%;
+    margin-bottom: 0.5rem;
+  }
+  .pill-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    clear: both;
+  }
+  .pill-option {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: calc(0.375rem - 1px) calc(0.5rem - 1px);
+    border: 1px solid var(--color-border-secondary-20);
+    border-radius: var(--radius-md);
+    background: none;
+    color: var(--color-text-primary);
+    font: inherit;
+    cursor: pointer;
+  }
+  .pill-option:hover {
+    background: var(--color-bg-hover);
+  }
+  .pill-logo {
+    flex: none;
+    width: 1rem;
+    height: 1rem;
+  }
+  /* Пара логотипов в пилюле (Extensions, For AI agents) — через 4 px, как в макете. */
+  .pill-logos {
+    display: inline-flex;
+    flex: none;
+    gap: 0.25rem;
+  }
+  .topbar-account-chevron {
+    font-size: 1rem;
+  }
+  .pill-option[aria-pressed="true"] {
+    border-color: transparent;
+    background: var(--color-accent-mint);
+    color: var(--color-text-on-accent);
+  }
+  .pill-option:focus-visible {
+    outline: none;
+    border-color: var(--color-selection-bg);
+  }
+  .panel-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0 0.75rem;
+    min-width: 0;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    border-bottom: 1px solid var(--color-border-secondary-20);
+  }
+  .panel-tab {
+    margin-bottom: -1px;
+    padding: 0.5rem 0;
+    border: 0;
+    border-bottom: 1px solid transparent;
+    background: none;
+    color: var(--color-text-secondary);
+    font: inherit;
+    white-space: nowrap;
+    opacity: 0.5;
+    cursor: pointer;
+  }
+  .panel-tab[aria-pressed="true"] {
+    border-bottom-color: var(--color-text-primary);
+    color: var(--color-text-primary);
+    font-weight: 500;
+    opacity: 1;
+  }
+  .panel-options {
+    display: grid;
+    gap: 0.625rem;
+  }
+  .panel-option {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.5rem;
+    font-size: var(--text-body-sm);
+    line-height: var(--text-body-sm--line-height);
+    cursor: pointer;
+  }
+  .panel-option > span:last-child {
+    padding-top: 0.1875rem;
+  }
+  .panel-option-box {
+    flex: none;
+    color: var(--color-bg-inverse);
+    font-size: 1.5rem;
+  }
+  .panel-option input:focus-visible + .panel-option-box {
+    border-radius: var(--radius-xs);
+    outline: 2px solid var(--color-selection-bg);
+  }
+  .code-block {
+    min-width: 0;
+    margin: 0;
+    border-radius: var(--radius-md);
+    background: var(--color-bg-surface-strong);
+  }
+  .code-block-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    padding: 0.625rem 0.75rem 0.5rem;
+    border-bottom: 1px solid var(--color-border-primary);
+  }
+  .code-block-label {
+    color: var(--color-text-secondary);
+    font-size: var(--text-body-xs);
+    line-height: var(--text-body-xs--line-height);
+  }
+  .code-block-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+  .code-download,
+  .code-copy {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--color-text-secondary);
+    font: inherit;
+    font-size: var(--text-body-xs);
+    line-height: var(--text-body-xs--line-height);
+    cursor: pointer;
+  }
+  .code-copy[data-copied] {
+    color: var(--color-text-success);
+  }
+  .code-copy[data-copied] .panel-icon {
+    opacity: 1;
+  }
+  .code-block-code {
+    margin: 0;
+    padding: 0.75rem;
+    overflow-x: auto;
+    color: var(--color-text-primary);
+    font-family: var(--font-mono);
+    font-size: var(--text-body-xs);
+    line-height: var(--text-body-xs--line-height);
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+  }
+  .code-block-limited {
+    max-height: 10rem;
+    padding-right: calc(0.75rem - var(--scrollbar-lane));
+    overflow-y: scroll;
+  }
+  .panel-row {
+    display: flex;
+    gap: 0.5rem;
+  }
+  .page .panel-docs {
+    display: inline-flex;
+    align-items: center;
+    justify-self: start;
+    gap: 0.25rem;
+    margin: 0;
+    color: var(--color-link-unicode);
+    font-size: var(--text-body-xs);
+    line-height: var(--text-body-xs--line-height);
+  }
+  .panel-docs a {
+    color: var(--color-link-unicode);
+  }
+  .panel-facts {
+    display: grid;
+    gap: 0.75rem;
+    margin: 0;
+  }
+  .panel-facts > div {
+    display: grid;
+    gap: 0.25rem;
+  }
+  .panel-facts dd {
+    margin: 0;
+  }
+  .panel-facts a {
+    color: var(--color-link-unicode);
+  }
+
   /*
-   * Панели со своей темой: превью и мокапы страницы иконки. Lightning CSS, которым Tailwind собирает
+   * Телефон (кадры «Icon Set Page / Mobile — Selected Icon» и «Panel Expanded»): шторка снизу
+   * высотой --height-sheet поверх затемнения; ручка раскрывает её до 44 px от верха экрана, тап по
+   * затемнению закрывает.
+   */
+  @media (max-width: 63.98rem) {
+    .icon-panel {
+      position: fixed;
+      inset: auto 0 0;
+      z-index: 41;
+      max-height: var(--height-sheet);
+      border-radius: 1rem 1rem 0 0;
+    }
+    .icon-panel[data-expanded] {
+      max-height: calc(100dvh - 2.75rem);
+    }
+    .panel-backdrop {
+      position: fixed;
+      inset: 0;
+      z-index: 31;
+      display: block;
+      background: var(--color-bg-overlay);
+    }
+    .panel-handle {
+      position: sticky;
+      top: 0;
+      z-index: 1;
+      display: flex;
+      flex: none;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      height: 1.25rem;
+      padding: 0;
+      border: 0;
+      background: var(--color-bg-surface);
+      cursor: grab;
+      touch-action: none;
+    }
+    .panel-handle::before {
+      content: "";
+      width: 2.25rem;
+      height: 0.25rem;
+      border-radius: 9999px;
+      background: var(--color-border-primary);
+      /* Посередине шторки, а не её содержимого: справа — дорожка полосы. */
+      translate: calc(var(--scrollbar-lane) / 2) 0;
+    }
+    .panel-top {
+      padding-top: 0.75rem;
+    }
+  }
+
+  /*
+   * Микроанимация панели. Появление — проявляется и въезжает справа на 24 px (на телефоне шторка
+   * выезжает снизу, затемнение проявляется). Закрытие — копия панели (PanelLayout) на прежнем месте
+   * поверх страницы гаснет и уезжает, затем удаляется. Раскрытие шторки ручкой — плавная высота.
+   * «Уменьшить движение» в системе — всё мгновенно.
+   */
+  .panel-leaving {
+    position: fixed;
+    inset: auto;
+    top: var(--leave-top);
+    left: var(--leave-left);
+    width: var(--leave-width);
+    height: var(--leave-height);
+    max-height: none;
+    margin: 0;
+    pointer-events: none;
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .icon-panel {
+      animation: panel-in var(--motion-panel-in) var(--motion-ease-out)
+        var(--motion-panel-delay) both;
+    }
+    .icon-panel.panel-leaving {
+      animation: panel-out var(--motion-panel-out) var(--motion-ease-in)
+        forwards;
+    }
+  }
+  @media (max-width: 63.98rem) and (prefers-reduced-motion: no-preference) {
+    .icon-panel {
+      animation-name: sheet-in;
+      animation-duration: var(--motion-sheet-in);
+      animation-delay: 0s;
+      transition: max-height var(--motion-sheet-in) var(--motion-ease-out);
+    }
+    .icon-panel.panel-leaving {
+      animation-name: sheet-out;
+      animation-duration: var(--motion-sheet-out);
+    }
+    .panel-backdrop {
+      animation: fade-in var(--motion-fade) var(--motion-ease-out) both;
+    }
+    .panel-backdrop.panel-leaving {
+      animation: fade-out var(--motion-fade) var(--motion-ease-in) forwards;
+    }
+  }
+  @keyframes panel-in {
+    from {
+      opacity: 0;
+      translate: 1.5rem 0;
+    }
+    60% {
+      opacity: 1;
+    }
+  }
+  @keyframes panel-out {
+    to {
+      opacity: 0;
+      translate: 1.5rem 0;
+    }
+  }
+  @keyframes sheet-in {
+    from {
+      translate: 0 100%;
+    }
+  }
+  @keyframes sheet-out {
+    to {
+      translate: 0 100%;
+    }
+  }
+  @keyframes fade-in {
+    from {
+      opacity: 0;
+    }
+  }
+  @keyframes fade-out {
+    to {
+      opacity: 0;
+    }
+  }
+
+  /*
+   * Панели со своей темой: превью панели и страницы иконки, «In context» на светлом и тёмном фоне. Lightning CSS, которым Tailwind собирает
    * стили, заменяет light-dark() переменными --lightningcss-light и --lightningcss-dark, и токен
    * вычисляется один раз — у :root: color-scheme вложенного элемента его уже не меняет. Здесь токены
    * объявлены заново — значениями из @theme (--theme(… inline)), без новых цветов: элемент со своим
    * color-scheme вычисляет их сам. Список токенов сверяет lib/tokens.test.ts.
    */
   .preview-light,
-  .preview-dark,
-  .mockup-light,
-  .mockup-dark {
+  .preview-dark {
     /* biome-ignore-start lint/correctness/noMissingVarFunction: --theme(… inline) Tailwind подставляет значение токена из @theme, а не ссылку на переменную */
-    --color-bg: --theme(--color-bg inline);
-    --color-fg: --theme(--color-fg inline);
-    --color-muted: --theme(--color-muted inline);
-    --color-line: --theme(--color-line inline);
-    --color-control: --theme(--color-control inline);
-    --color-surface: --theme(--color-surface inline);
-    --color-accent: --theme(--color-accent inline);
-    --color-focus: --theme(--color-focus inline);
+    --color-bg-page: --theme(--color-bg-page inline);
+    --color-bg-surface: --theme(--color-bg-surface inline);
+    --color-bg-surface-muted: --theme(--color-bg-surface-muted inline);
+    --color-bg-surface-strong: --theme(--color-bg-surface-strong inline);
+    --color-bg-overlay: --theme(--color-bg-overlay inline);
+    --color-bg-hover: --theme(--color-bg-hover inline);
+    --color-bg-card-hover: --theme(--color-bg-card-hover inline);
+    --color-bg-inverse: --theme(--color-bg-inverse inline);
+    --color-bg-inverse-hover: --theme(--color-bg-inverse-hover inline);
+    --color-bg-icon-card: --theme(--color-bg-icon-card inline);
+    --color-border-primary: --theme(--color-border-primary inline);
+    --color-border-secondary: --theme(--color-border-secondary inline);
+    --color-border-secondary-20: --theme(--color-border-secondary-20 inline);
+    --color-text-primary: --theme(--color-text-primary inline);
+    --color-text-secondary: --theme(--color-text-secondary inline);
+    --color-text-muted: --theme(--color-text-muted inline);
+    --color-text-hover-muted: --theme(--color-text-hover-muted inline);
+    --color-text-primary-hover: --theme(--color-text-primary-hover inline);
+    --color-text-inverse: --theme(--color-text-inverse inline);
+    --color-text-on-accent: --theme(--color-text-on-accent inline);
+    --color-text-success: --theme(--color-text-success inline);
+    --color-text-danger: --theme(--color-text-danger inline);
+    --color-text-on-danger: --theme(--color-text-on-danger inline);
+    --color-link-unicode: --theme(--color-link-unicode inline);
+    --color-selection-bg: --theme(--color-selection-bg inline);
+    --color-selection-text: --theme(--color-selection-text inline);
+    --color-accent-highlight: --theme(--color-accent-highlight inline);
+    --color-accent-highlight-subtle: --theme(
+      --color-accent-highlight-subtle inline
+    );
+    --color-accent-cyan: --theme(--color-accent-cyan inline);
+    --color-accent-mint: --theme(--color-accent-mint inline);
+    --color-accent-lemon: --theme(--color-accent-lemon inline);
+    --color-status-danger: --theme(--color-status-danger inline);
+    --color-status-badge: --theme(--color-status-badge inline);
+    --color-status-success: --theme(--color-status-success inline);
     --shadow-md: --theme(--shadow-md inline);
     /* biome-ignore-end lint/correctness/noMissingVarFunction: конец значений из @theme */
   }
-  .icon-name-row {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 0.5rem;
-    overflow-wrap: anywhere;
-  }
-  /* Формат имени и главные действия под превью (шаг 5 фазы 4): «нашёл, скопировал, вставил». */
-  .name-format {
-    max-inline-size: 100%;
-    white-space: normal;
-  }
-  .name-format-text {
-    overflow-wrap: anywhere;
-  }
+  /* Подпись формата в списке Name панели иконки (шаг 5 фазы 4). */
   .name-format-label {
-    color: var(--color-muted);
+    flex: none;
+    color: var(--color-text-secondary);
     font-size: 0.75rem;
+    white-space: nowrap;
   }
-  .icon-actions {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.5rem;
-    margin-block: 0.75rem;
+  /*
+   * Выделение и рюкзак по макету (редизайн, шаг 5; сценарии «Выделение» и «Рюкзак» Figma). Кнопки
+   * карточки при наведении (Icon Card, State=Hover): слева «в рюкзак», справа чекбокс — 20 × 20 в 8 px от
+   * углов, полупрозрачные; отмеченная карточка держит чекбокс (link/unicode). На экранах уже 768 px их
+   * нет — выделения на телефоне нет (гайд макета).
+   */
+  .icon-cell,
+  .result-cell {
+    position: relative;
   }
-  .icon-section {
-    margin-block-start: 1.25rem;
-  }
-  .icon-section-title {
-    margin-block: 0.75rem 0.375rem;
-    font-size: 0.875rem;
-    font-weight: 600;
-  }
-  .icon-variants {
-    display: grid;
-    gap: 0.25rem;
-    margin-block-end: 0.5rem;
-  }
-  .icon-variants-style {
-    color: var(--color-muted);
-    font-size: 0.75rem;
-  }
-  .icon-variants-list {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.25rem;
-  }
-  .icon-similar {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(5.5rem, 1fr));
-    gap: 0.25rem;
-  }
-  .icon-variant {
-    display: flex;
-    flex-direction: column;
+  .card-tool {
+    position: absolute;
+    top: 0.5rem;
+    z-index: 1;
+    display: none;
     align-items: center;
-    gap: 0.25rem;
-    min-inline-size: 3rem;
-    padding: 0.5rem 0.25rem;
-    border: 1px solid transparent;
-    border-radius: var(--radius-md);
+    justify-content: center;
+    width: 1.25rem;
+    height: 1.25rem;
+    padding: 0;
+    border: 0;
+    border-radius: var(--radius-xs);
     background: none;
-    color: inherit;
-    font: inherit;
-    text-align: center;
-    text-decoration: none;
+    color: var(--color-bg-inverse);
+    font-size: 1.25rem;
+    opacity: 0.5;
     cursor: pointer;
   }
-  .icon-variant:hover {
-    background: var(--color-surface);
+  .card-bag {
+    left: 0.5rem;
   }
-  .icon-variant[aria-pressed="true"],
-  .icon-variant[aria-current="page"] {
-    border-color: var(--color-accent);
+  .card-check {
+    right: 0.5rem;
   }
-  .icon-variant-svg {
-    font-size: 1.5rem;
+  .card-tool:hover,
+  .card-tool:focus-visible,
+  .card-check:has(:focus-visible) {
+    opacity: 1;
   }
-  .icon-variant-name,
-  .icon-variant-set {
-    max-inline-size: 6rem;
-    font-size: 0.7rem;
-    line-height: 1.2;
-    overflow-wrap: anywhere;
+  .card-tool:focus-visible,
+  .card-check:has(:focus-visible) {
+    outline: 2px solid var(--color-selection-bg);
   }
-  .icon-variant-set {
-    color: var(--color-muted);
+  .card-tool-on {
+    opacity: 1;
   }
-  .icon-settings {
-    display: grid;
-    gap: 0.5rem;
-    margin-block-start: 1.25rem;
-    padding: 0;
-    border: 0;
+  .card-check.card-tool-on {
+    color: var(--color-link-unicode);
   }
-  .icon-setting {
+  .card-tool-icon {
+    font-size: 1.25rem;
+  }
+  /* Чекбокс — родной, невидимый поверх значка: щелчок, Пробел и экранный диктор работают сами. */
+  .card-check-input {
+    position: absolute;
+    inset: 0;
+    margin: 0;
+    opacity: 0;
+    cursor: pointer;
+  }
+  .card-check-input:disabled {
+    cursor: not-allowed;
+  }
+  @media (min-width: 48rem) {
+    .icon-cell:focus-within > .card-tool,
+    .result-cell:focus-within > .card-tool,
+    [data-picked] > .card-check {
+      display: inline-flex;
+    }
+  }
+  @media (min-width: 48rem) and (hover: hover) {
+    .icon-cell:hover > .card-tool,
+    .result-cell:hover > .card-tool {
+      display: inline-flex;
+    }
+  }
+  /* Наведение — bg/hover; отмеченная и открытая в панели — bg/cardHover (варианты Icon Card). */
+  .icon-cell:hover > .icon-card-link,
+  .result-cell:hover > .icon-card-link {
+    background: var(--color-bg-hover);
+  }
+  .icon-cell[data-picked] > .icon-card-link,
+  .result-cell[data-picked] > .icon-card-link {
+    background: var(--color-bg-card-hover);
+  }
+
+  /*
+   * Строка выбора (Selection Mode / Selected): Download N Icons, Cancel Selection и «N/100» над поиском,
+   * до строки поиска 28 px. Прилипает к верху окна; поля сверху и снизу — за счёт отрицательных отступов:
+   * в потоке строка занимает свои 42 px, как в кадре.
+   */
+  .select-bar {
+    position: sticky;
+    top: 0;
+    z-index: 5;
     display: flex;
     flex-wrap: wrap;
     align-items: center;
-    gap: 0.5rem;
-    font-size: 0.875rem;
+    justify-content: space-between;
+    gap: 0.75rem;
+    margin-block: -0.5rem 1.25rem;
+    padding-block: 0.5rem;
+    background: var(--color-bg-page);
+    font-size: var(--text-body-base);
+    line-height: var(--text-body-base--line-height);
   }
-  .icon-setting > label:first-child,
-  .icon-setting-label {
-    min-inline-size: 7rem;
+  /* На странице набора отступ до строки поиска — зазор сетки страницы (28 px). */
+  .set-browser > .select-bar {
+    margin-bottom: -0.5rem;
   }
-  .icon-setting input[type="range"] {
-    flex: 1;
-    min-inline-size: 6rem;
-    accent-color: var(--color-accent);
+  .select-actions {
+    display: flex;
+    gap: 0.75rem;
   }
-  .icon-setting output {
-    min-inline-size: 3.5rem;
-    font-variant-numeric: tabular-nums;
+  .select-cancel {
+    border-color: var(--color-text-danger);
+    background: none;
+    color: var(--color-text-danger);
   }
-  fieldset.icon-setting {
-    min-inline-size: 0;
+  .select-cancel:hover {
+    background: var(--color-bg-hover);
+  }
+  .page .select-count {
     margin: 0;
-    padding: 0;
-    border: 0;
-  }
-  /* Легенда группы — в строку с кнопками, как подпись поля. */
-  fieldset.icon-setting > legend {
-    float: inline-start;
-    margin-inline-end: 0.5rem;
-    padding: 0;
-  }
-  .icon-setting-buttons {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.25rem;
-  }
-  .icon-setting-toggle {
-    padding-inline: 0.625rem;
-  }
-  .icon-setting-note {
-    color: var(--color-muted);
-    font-size: 0.8rem;
-    margin-block: 0.25rem;
-  }
-  /* Генератор кода и скачивание (шаг 5 фазы 4, ADR-0042). */
-  .icon-code .code {
-    margin-block: 0.5rem;
-  }
-  .icon-code-choice {
-    min-inline-size: 0;
-    margin: 0 0 0.5rem;
-    padding: 0;
-    border: 0;
-  }
-  .icon-download {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.5rem;
-    margin-block-end: 0.5rem;
+    font-size: var(--text-body-base);
+    line-height: var(--text-body-base--line-height);
   }
 
-  /* Сумка (шаг 5 фазы 4, ADR-0042): кнопка с числом в шапке и немодальное меню; режим «Выбрать
-     несколько» над сетками. Число — поверх кнопки: появляется после гидратации и шапку не сдвигает. */
+  /*
+   * Кнопка рюкзака (Bag в шапке): число — лаймовая таблетка справа от слова; у квадратной кнопки
+   * (телефон, подвал) — кружок 16 px в углу, на 4 px за краем (Mobile App Bar, Bag Count).
+   */
   .bag-button {
     position: relative;
   }
   .bag-count {
-    position: absolute;
-    inset-block-start: 0;
-    inset-inline-end: 0;
-    min-inline-size: 1.125rem;
-    padding-inline: 0.25rem;
-    border-radius: 999px;
-    background: var(--color-accent);
-    color: var(--color-bg);
-    font-size: 0.7rem;
-    font-weight: 600;
-    line-height: 1.125rem;
-    text-align: center;
-  }
-  .bag-menu {
-    display: grid;
-    gap: 0.5rem;
-    inline-size: min(24rem, calc(100vw - 1rem));
-    max-block-size: min(36rem, calc(100vh - 5rem));
-    overflow-y: auto;
-  }
-  .bag-head {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 0.5rem;
-  }
-  .bag-title {
-    font-size: 1rem;
-    font-weight: 600;
-  }
-  .bag-empty {
-    color: var(--color-muted);
-    font-size: 0.875rem;
-  }
-  .bag-list {
-    display: grid;
-    gap: 0.125rem;
-    max-block-size: 14rem;
-    overflow-y: auto;
-  }
-  .bag-list li {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-  }
-  .bag-name {
-    flex: 1;
-    font-size: 0.8rem;
-    overflow-wrap: anywhere;
-  }
-  .bag-svg {
-    flex: none;
-    font-size: 1.25rem;
-  }
-  .bag-remove {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    min-block-size: 2rem;
-    min-inline-size: 2rem;
-    border-radius: 0.25rem;
-    color: var(--color-muted);
+    min-width: 1rem;
+    height: 1rem;
+    padding-inline: 0.1875rem;
+    border-radius: 9999px;
+    background: var(--color-accent-lemon);
+    color: var(--color-text-on-accent);
+    font-size: var(--text-body-xs);
+    font-variant-numeric: tabular-nums;
+    line-height: var(--text-body-xs--line-height);
+  }
+  .bag-square .bag-count {
+    position: absolute;
+    top: -0.25rem;
+    right: -0.25rem;
+  }
+
+  /*
+   * Панель рюкзака (кадр Backpack): справа во всю высоту поверх страницы, 320 px, bg/surface; сверху —
+   * «Backpack» и ✕, список прокручивается, настройки и строки скачивания закреплены внизу. Немодальная.
+   */
+  .bag-panel {
+    position: fixed;
+    inset: 0 0 0 auto;
+    z-index: 60;
+    width: 20rem;
+    max-width: 100%;
+    height: 100dvh;
+    max-height: none;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    border: 0;
+    background: var(--color-bg-surface);
+    color: var(--color-text-primary);
+    font-size: var(--text-body-base);
+    line-height: var(--text-body-base--line-height);
+  }
+  .bag-panel::backdrop {
+    background: var(--color-bg-overlay);
+  }
+  /*
+   * Пока рюкзак открыт, полоса прокрутки страницы спрятана, а её место отдано полю справа: панель встаёт
+   * вплотную к краю окна, как в макете, а не в 12 px от него; страница под ней не сдвигается и по-прежнему
+   * прокручивается колесом. Ширину полосы BagPanel замеряет до того, как спрятать. Chrome и Safari рисуют
+   * полосу страницы стилями <body> — прячутся обе.
+   */
+  :root[data-bag-panel] {
+    padding-right: var(--bag-page-lane, 0px);
+    scrollbar-width: none;
+  }
+  :root[data-bag-panel]::-webkit-scrollbar,
+  :root[data-bag-panel] body::-webkit-scrollbar {
+    display: none;
+  }
+  .bag-panel-body {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+  }
+  .bag-grabber {
+    display: none;
+  }
+  .bag-panel-head {
+    display: flex;
+    flex: none;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.625rem;
+    padding: 1rem 1.25rem;
+    border-bottom: 1px solid var(--color-border-secondary-20);
+  }
+  .bag-panel-title {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 0;
+    font-size: var(--text-body-base);
+    font-weight: 500;
+    line-height: var(--text-body-base--line-height);
+    outline: none;
+  }
+  .bag-panel-title-icon {
+    font-size: 1rem;
+  }
+  .bag-panel-close,
+  .bag-item-remove {
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--color-text-primary);
+    font-size: 1.25rem;
     cursor: pointer;
   }
-  .bag-remove:hover {
-    color: var(--color-fg);
-    background: var(--color-surface);
+  .bag-panel-list {
+    display: grid;
+    flex: 1;
+    align-content: start;
+    gap: 1rem;
+    min-height: 0;
+    /* Место под полосу — overflow scroll вместе со scrollbar-gutter, как у страницы: по одному
+       scrollbar-gutter WebKit места не оставляет (в Safari список стоял бы на 12 px правее), по одному
+       overflow scroll — Chrome со спрятанными полосами. */
+    overflow-y: scroll;
+    padding: 1rem calc(1.25rem - var(--scrollbar-lane)) 1rem 1.25rem;
+    scrollbar-gutter: stable;
   }
-  .select-bar {
+  .bag-picked {
+    margin: 0;
+    color: var(--color-text-secondary);
+    font-size: var(--text-body-xs);
+    line-height: var(--text-body-xs--line-height);
+  }
+  /* Строка счётчика с Clear справа (решение владельца 13 ноября 2026, в макете кнопки нет). Высота строки —
+     по тексту, 16 px: зона нажатия Clear и «Undo» шире букв за счёт отрицательных полей. */
+  .bag-picked-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+  }
+  .bag-clear,
+  .bag-undo {
+    margin: -0.25rem;
+    padding: 0.25rem;
+    border: 0;
+    background: none;
+    color: var(--color-text-primary);
+    font: inherit;
+    font-weight: 500;
+    cursor: pointer;
+  }
+  .bag-clear {
+    font-size: var(--text-body-xs);
+    line-height: var(--text-body-xs--line-height);
+  }
+  .bag-clear:hover,
+  .bag-undo:hover {
+    text-decoration: underline;
+  }
+  .bag-list {
+    display: grid;
+    gap: 1rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .bag-item {
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
+  }
+  .bag-item-icon {
+    flex: none;
+    margin-inline-end: 0.125rem;
+    font-size: 1.25rem;
+  }
+  .bag-item-name {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .bag-panel-section {
+    display: grid;
+    flex: none;
+    gap: 1.25rem;
+    padding: 1rem 1.25rem 1.25rem;
+    border-top: 1px solid var(--color-border-secondary-20);
+  }
+  .bag-options .panel-field:has(.panel-stroke) {
+    gap: 0.5rem;
+  }
+  .bag-without-fill {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--color-text-secondary);
+    cursor: pointer;
+  }
+  .bag-without-fill > span {
+    flex: 1;
+  }
+  .bag-check-input {
+    position: absolute;
+    inset: 0;
+    margin: 0;
+    opacity: 0;
+    cursor: pointer;
+  }
+  .bag-check-icon {
+    flex: none;
+    color: var(--color-text-primary);
+    font-size: 1.5rem;
+  }
+  .bag-without-fill:has(:checked) .bag-check-icon {
+    color: var(--color-link-unicode);
+  }
+  .bag-without-fill:has(:focus-visible) .bag-check-icon {
+    outline: 2px solid var(--color-selection-bg);
+    border-radius: var(--radius-xs);
+  }
+  .bag-downloads {
+    gap: 1rem;
+    padding-bottom: 1.5rem;
+  }
+  .bag-download {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--color-text-primary);
+    font: inherit;
+    font-weight: 500;
+    text-align: start;
+    cursor: pointer;
+  }
+  .bag-download:hover {
+    text-decoration: underline;
+  }
+  .bag-download[aria-disabled="true"] {
+    opacity: 0.5;
+    cursor: default;
+  }
+  .bag-download-icon {
+    flex: none;
+    font-size: 1rem;
+    opacity: 0.5;
+  }
+  .bag-failed {
+    margin: 0;
+    color: var(--color-text-danger);
+    font-size: var(--text-body-xs);
+  }
+  /* Пустой рюкзак (кадр Backpack-Empty): значок и «Backpack is empty…» посередине. */
+  .bag-empty {
+    display: grid;
+    justify-items: center;
+    gap: 1rem;
+    padding: 2.25rem 1.25rem;
+    color: var(--color-text-secondary);
+    text-align: center;
+  }
+  .bag-empty-icon {
+    color: var(--color-text-primary);
+    font-size: 1.25rem;
+  }
+  .bag-empty-text,
+  .bag-empty-hint {
+    margin: 0;
+  }
+  .bag-empty-hint {
+    display: none;
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .bag-panel[open] {
+      animation: bag-panel-in var(--motion-panel-in) var(--motion-ease-out);
+    }
+    .bag-panel[open]::backdrop {
+      animation: fade-in var(--motion-fade);
+    }
+  }
+  @keyframes bag-panel-in {
+    from {
+      translate: 100% 0;
+    }
+  }
+
+  /*
+   * Телефон (кадры «Backpack / Mobile — Opened» и «— Empty»): шторка снизу почти на весь экран, сверху
+   * 44 px страницы под затемнением; ручка, ✕ 40 × 40, строки скачивания по 44 px. Пустая — по высоте
+   * содержимого, с подсказкой про «+» в панели иконки.
+   */
+  @media (max-width: 63.98rem) {
+    .bag-panel {
+      inset: auto 0 0;
+      width: 100%;
+      height: calc(100dvh - 2.75rem);
+      border-radius: 1rem 1rem 0 0;
+    }
+    .bag-panel[data-empty] {
+      height: auto;
+    }
+    .bag-grabber {
+      display: flex;
+      flex: none;
+      justify-content: center;
+      width: 100%;
+      padding: 0.5rem 0 0.25rem;
+      border: 0;
+      background: none;
+      cursor: grab;
+      touch-action: none;
+    }
+    .bag-grabber-bar {
+      width: 2.25rem;
+      height: 0.25rem;
+      border-radius: 9999px;
+      background: var(--color-border-primary);
+    }
+    .bag-panel-head {
+      padding: 0.25rem 0.5rem 0.5rem 1rem;
+    }
+    .bag-panel-close {
+      width: 2.5rem;
+      height: 2.5rem;
+    }
+    /* Справа, как на компьютере, — поле за вычетом дорожки полосы списка: в узком окне с мышью ✕ строк
+       стоят в 16 px от края, а не в 28. */
+    .bag-panel-list {
+      padding: 1rem calc(1rem - var(--scrollbar-lane)) 1rem 1rem;
+    }
+    /* Строки по 40 px: ✕ — кнопка 40 × 40 под палец (гайд макета). */
+    .bag-list {
+      gap: 0;
+    }
+    .bag-item {
+      min-height: 2.5rem;
+    }
+    /* Как в кадре: кнопка 40 × 40 — внутри строки, значок посередине. */
+    .bag-item-remove {
+      width: 2.5rem;
+      height: 2.5rem;
+    }
+    /* Clear — под палец: зона нажатия 40 px в высоту, строка счётчика остаётся 16 px. */
+    .bag-clear {
+      margin-block: -0.75rem;
+      padding-block: 0.75rem;
+    }
+    .bag-panel-section {
+      padding: 1rem 1rem 1.25rem;
+    }
+    .bag-downloads {
+      gap: 0;
+      padding-top: 0.25rem;
+    }
+    .bag-download {
+      min-height: 2.75rem;
+    }
+    .bag-empty {
+      gap: 0.5rem;
+      padding: 1.5rem 1rem 2.5rem;
+    }
+    .bag-empty-icon {
+      margin-bottom: 0.5rem;
+    }
+    .bag-empty-hint {
+      display: block;
+      font-size: var(--text-body-sm);
+      line-height: var(--text-body-sm--line-height);
+    }
+    @media (prefers-reduced-motion: no-preference) {
+      .bag-panel[open] {
+        animation: ip-sheet-in var(--motion-sheet-in) var(--motion-ease-out);
+      }
+    }
+  }
+
+  /*
+   * Страница иконки по макету Figma «Страница иконки» (редизайн, шаг 4): кадры «Icon Page / Similar Icons»,
+   * «Code», «In Context», «Copy Menu», «Loading», «Removed Icon» и их телефонные пары. Первый экран — две
+   * колонки: превью 320 px с фоном, сеткой и размерами слева, сведения справа; ниже — вкладки.
+   */
+  .icon-page {
+    padding: 2rem var(--page-x-end) 2.5rem var(--page-x);
+    font-size: var(--text-body-base);
+    line-height: var(--text-body-base--line-height);
+  }
+  .ip-crumbs {
+    margin-bottom: 1.5rem;
+  }
+  .ip-hero {
+    display: grid;
+    grid-template-areas:
+      "visual head"
+      "visual info";
+    grid-template-columns: 20rem minmax(0, 1fr);
+    grid-template-rows: auto 1fr;
+    gap: 1.25rem 2.5rem;
+    align-items: start;
+    padding-bottom: 2rem;
+  }
+  .ip-head {
+    display: grid;
+    grid-area: head;
+    gap: 1.25rem;
+    min-width: 0;
+  }
+  .ip-visual {
+    display: grid;
+    grid-area: visual;
+    gap: 1rem;
+    min-width: 0;
+  }
+  .ip-info {
+    display: grid;
+    grid-area: info;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 1.25rem;
+    min-width: 0;
+  }
+
+  /* Имя 32/36, пометка Removed и кнопка-ссылка 20 px. */
+  .ip-title-row {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    min-width: 0;
+  }
+  .page .ip-title {
+    margin: 0;
+    font-size: var(--text-display);
+    font-weight: 500;
+    line-height: var(--text-display--line-height);
+    overflow-wrap: anywhere;
+  }
+  .ip-link {
+    display: inline-flex;
+    flex: none;
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--color-text-primary);
+    font-size: 1.25rem;
+    cursor: pointer;
+  }
+  .ip-badge {
+    flex: none;
+    padding: calc(0.125rem - 1px) calc(0.5rem - 1px);
+    border: 1px solid var(--color-status-danger);
+    border-radius: var(--radius-sm);
+    color: var(--color-text-danger);
+    font-size: var(--text-body-sm);
+    line-height: var(--text-body-sm--line-height);
+  }
+
+  /* Мета-строка и строка дат: подпись, значение, разделитель 1 × 16 через 12 px. */
+  .ip-meta {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
     gap: 0.75rem;
-    margin-block: 0.75rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    font-size: var(--text-body-sm);
+    line-height: var(--text-body-sm--line-height);
   }
-  .select-status {
-    color: var(--color-muted);
-    font-size: 0.875rem;
+  .ip-meta li {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
   }
-  button.icon-card-pick {
-    border: 1px solid transparent;
-    background: none;
-    font: inherit;
-    cursor: pointer;
+  .ip-meta li + li::before {
+    content: "";
+    flex: none;
+    width: 1px;
+    height: 1rem;
+    margin-inline-end: 0.375rem;
+    background: var(--color-border-secondary-20);
   }
-  button.icon-card-pick[aria-pressed="true"] {
-    border-color: var(--color-accent);
-    background: var(--color-surface);
+  .ip-meta-label {
+    color: var(--color-text-secondary);
   }
-  .icon-facts {
-    display: grid;
-    grid-template-columns: auto 1fr;
-    gap: 0.25rem 0.75rem;
-    font-size: 0.875rem;
+  .ip-link-text {
+    color: var(--color-link-unicode);
+    text-decoration: underline;
   }
-  .icon-facts dt {
-    color: var(--color-muted);
-  }
-  .icon-credit {
-    display: block;
-    color: var(--color-muted);
-  }
-  /* Указание авторства — свёрнуто под стрелкой (решение владельца 3 ноября 2026). */
-  .icon-attribution {
-    margin-block-start: 0.75rem;
-  }
-  .icon-attribution summary {
-    cursor: pointer;
-    font-size: 0.875rem;
-    font-weight: 600;
-  }
-  .icon-attribution-text {
-    margin-block: 0.5rem;
-    padding: 0.5rem 0.75rem;
+  .page .ip-notice {
+    display: flex;
+    gap: 0.5rem;
+    margin: 0;
+    padding: calc(0.625rem - 1px) calc(0.75rem - 1px);
+    border: 1px solid var(--color-status-badge);
     border-radius: var(--radius-md);
-    background: var(--color-surface);
-    font-size: 0.8rem;
-    overflow-wrap: anywhere;
+    font-size: var(--text-body-xs);
+    line-height: var(--text-body-xs--line-height);
   }
-  .icon-hidden,
-  .icon-alias {
-    padding: 0.5rem 0.75rem;
-    border: 1px solid var(--color-control);
-    border-radius: var(--radius-md);
-    font-size: 0.875rem;
+  .ip-notice-icon {
+    flex: none;
+    color: var(--color-status-badge);
+    font-size: 1rem;
   }
-  .icon-open-page {
-    margin-block-start: 1.25rem;
-  }
-  .icon-loading {
+
+  /* Превью: плитка 320, внутри сетка и иконка во все 288 px; фон — по выбору или как тема. */
+  .ip-tile {
     display: grid;
+    place-items: center;
+    aspect-ratio: 1;
+    width: 100%;
+    padding: 1rem;
+    border-radius: 1rem;
+    background: var(--color-bg-surface);
+    color: var(--color-text-primary);
+  }
+  .ip-tile.preview-light {
+    color-scheme: light;
+  }
+  .ip-tile.preview-dark {
+    color-scheme: dark;
+  }
+  .ip-tile-transparent {
+    background-color: var(--color-bg-page);
+    background-image: conic-gradient(
+      var(--color-bg-surface-strong) 25%,
+      var(--color-bg-page) 0 50%,
+      var(--color-bg-surface-strong) 0 75%,
+      var(--color-bg-page) 0
+    );
+    background-size: 1rem 1rem;
+  }
+  .ip-tile-canvas {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 1;
+  }
+  .ip-grid,
+  .ip-tile-icon {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+  }
+  /* Крайние линии — на краю холста: половина обводки вышла бы за него. */
+  .ip-grid {
+    overflow: visible;
+    fill: none;
+    stroke: var(--color-border-secondary-20);
+  }
+  .ip-grid path {
+    stroke-width: 1px;
+    vector-effect: non-scaling-stroke;
+  }
+  .ip-tile-removed .ip-tile-icon {
+    opacity: 0.3;
+  }
+  /* По-русски фон и сетка в 320 px не помещаются — выключатель уходит строкой ниже. */
+  .ip-controls {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
     gap: 0.5rem;
   }
-  .icon-skeleton {
-    display: block;
-    block-size: 2.5rem;
+  .ip-bg {
+    display: flex;
+    gap: 0.5rem;
+    min-width: 0;
+    margin: 0;
+    padding: 0;
+    border: 0;
+  }
+  .pill-option.ip-pressed {
+    border-color: transparent;
+    background: var(--color-accent-mint);
+    color: var(--color-text-on-accent);
+  }
+  /* Выключатель сетки (Toggle макета): 40 × 24, ручка 16, включён — справа и лимонная. */
+  .ip-switch {
+    position: relative;
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--color-text-secondary);
+    font-size: var(--text-body-sm);
+    line-height: var(--text-body-sm--line-height);
+    cursor: pointer;
+  }
+  .ip-switch-input {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    overflow: hidden;
+    clip-path: inset(50%);
+    border: 0;
+    white-space: nowrap;
+    appearance: none;
+  }
+  .ip-switch-track,
+  .ctx-switch {
+    position: relative;
+    flex: none;
+    width: 2.5rem;
+    height: 1.5rem;
+    border-radius: 9999px;
+    background: var(--color-bg-surface-strong);
+  }
+  .ip-switch-track::after,
+  .ctx-switch::after {
+    content: "";
+    position: absolute;
+    top: 0.25rem;
+    left: 0.25rem;
+    width: 1rem;
+    height: 1rem;
+    border-radius: 9999px;
+    background: var(--color-text-secondary);
+  }
+  .ip-switch-input:checked + .ip-switch-track::after,
+  .ip-switch-on::after,
+  .ctx-switch-on::after {
+    translate: 1rem 0;
+    background: var(--color-accent-lemon);
+  }
+  .ctx-switch::after {
+    background: var(--color-accent-lemon);
+  }
+  .ip-switch-input:focus-visible + .ip-switch-track {
+    outline: 2px solid var(--color-selection-bg);
+    outline-offset: 2px;
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .ip-switch-track::after {
+      transition: translate 0.15s var(--motion-ease-out);
+    }
+  }
+
+  /* Подписи разделов 12/16 и блок «подпись — содержимое» через 8 px. */
+  .ip-block {
+    display: grid;
+    gap: 0.5rem;
+    min-width: 0;
+  }
+  .ip-label {
+    margin: 0;
+    color: var(--color-text-secondary);
+    font-size: var(--text-body-xs);
+    font-weight: 400;
+    line-height: var(--text-body-xs--line-height);
+  }
+  /* Ряд «Sizes»: плитки 74 × 84, иконка в поле 48, подпись под ней. */
+  .ip-size-row {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 0.5rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .ip-size {
+    display: grid;
+    justify-items: center;
+    align-content: start;
+    gap: 0.375rem;
+    height: 5.25rem;
+    padding-top: 0.4375rem;
     border-radius: var(--radius-md);
-    background: currentColor;
-    opacity: 0.12;
+    background: var(--color-bg-surface);
+  }
+  .ip-size-box {
+    display: grid;
+    place-items: center;
+    width: 3rem;
+    height: 3rem;
+    color: var(--color-text-primary);
+  }
+  .ip-size-label {
+    color: var(--color-text-secondary);
+    font-size: var(--text-body-xs);
+    line-height: var(--text-body-xs--line-height);
+  }
+
+  /* Теги — строкой через «·», «+N» — в конце строки; категории — таблетки-ссылки на набор. */
+  .page .ip-tag-list {
+    margin: 0;
+    font-size: var(--text-body-sm);
+    line-height: var(--text-body-sm--line-height);
+  }
+  .ip-more {
+    margin-inline-start: 0.5rem;
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--color-link-unicode);
+    font: inherit;
+    text-decoration: underline;
+    cursor: pointer;
+  }
+  .ip-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .ip-chips .pill-option {
+    text-decoration: none;
+  }
+  .ip-pair {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.75rem;
+    width: min(100%, 27.625rem);
+  }
+
+  /* Действия: Copy SVG ▾ — одна лимонная кнопка из двух частей, Download ▾ и сумка. */
+  .ip-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+  .ip-actions-off .panel-btn {
+    opacity: 0.5;
+  }
+  .ip-split {
+    display: inline-flex;
+    flex: none;
+  }
+  .ip-split-main {
+    padding-inline-end: calc(0.125rem - 1px);
+    border-start-end-radius: 0;
+    border-end-end-radius: 0;
+  }
+  .ip-split-arrow {
+    padding-inline: calc(0.125rem - 1px) calc(1rem - 1px);
+    border-start-start-radius: 0;
+    border-end-start-radius: 0;
+  }
+  .ip-bag-narrow {
+    display: none;
+  }
+  .ip-bag[aria-pressed="true"] {
+    border-color: var(--color-accent-mint);
+  }
+  .ip-open-set {
+    text-decoration: none;
+  }
+
+  /* Другие стили — плитки 116 × 101 карточки сетки; текущая — bg/cardHover. */
+  .ip-style-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .ip-style {
+    width: 7.25rem;
+  }
+  .icon-card-link.ip-style[aria-current="page"] {
+    background: var(--color-bg-card-hover);
+  }
+  .ip-style-label {
+    font-size: var(--text-body-sm);
+    line-height: var(--text-body-sm--line-height);
+    text-align: center;
+  }
+  .ip-style-skeleton {
+    display: block;
+    min-block-size: 6.3125rem;
+    border-radius: var(--radius-lg);
+    background: var(--color-bg-surface);
+  }
+
+  /* Меню выбора на компьютере (Copy Menu макета): 224 px, пункты 30 px, галочка справа. */
+  .ip-menu {
+    z-index: 50;
+    min-width: 14rem;
+    font-size: var(--text-body-base);
+    line-height: var(--text-body-base--line-height);
+    padding: 0.25rem;
+    border-radius: var(--radius-lg);
+    background: var(--color-bg-surface-muted);
+    color: var(--color-text-primary);
+    box-shadow: var(--shadow-md);
+  }
+  .ip-menu-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    min-height: 1.875rem;
+    padding: 0.375rem 0.5rem;
+    border-radius: var(--radius-md);
+    outline: none;
+    cursor: default;
+    user-select: none;
+  }
+  .ip-menu-item[data-highlighted] {
+    background: var(--color-bg-surface-strong);
+  }
+  .ip-menu-check {
+    flex: none;
+    font-size: 1rem;
+  }
+  .ip-menu-separator {
+    height: 1px;
+    margin-block: 0.25rem;
+    background: var(--color-border-secondary);
+  }
+
+  /* Шторка на телефоне («Bottom Sheet — Copy as»): снизу во всю ширину, строки по 44 px. */
+  .ip-sheet {
+    inset: auto 0 0;
+    width: 100%;
+    max-width: none;
+    max-height: 85dvh;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    border-radius: 1rem 1rem 0 0;
+    background: var(--color-bg-surface);
+    color: var(--color-text-primary);
+  }
+  .ip-sheet::backdrop {
+    background: var(--color-bg-overlay);
+  }
+  .ip-sheet-body {
+    display: grid;
+    padding: 0.5rem 0 1rem;
+    outline: none;
+  }
+  .ip-sheet-handle {
+    justify-self: center;
+    width: 2.25rem;
+    height: 0.25rem;
+    margin-bottom: 0.5rem;
+    border-radius: 9999px;
+    background: var(--color-border-primary);
+  }
+  .ip-sheet-head {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem 1rem;
+    border-bottom: 1px solid var(--color-border-secondary-20);
+  }
+  .ip-sheet-icon {
+    flex: none;
+    font-size: 1rem;
+    opacity: 0.5;
+  }
+  .ip-sheet-title {
+    flex: 1;
+  }
+  .ip-sheet-close {
+    display: inline-flex;
+    padding: 0;
+    border: 0;
+    background: none;
+    color: inherit;
+    font-size: 1.25rem;
+    cursor: pointer;
+  }
+  .ip-sheet-list {
+    display: grid;
+    margin: 0;
+    padding: 0.5rem 0.5rem 0;
+    list-style: none;
+  }
+  .ip-sheet-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    height: 2.75rem;
+    padding: 0 0.5rem;
+    border: 0;
+    border-radius: var(--radius-md);
+    background: none;
+    color: inherit;
+    font: inherit;
+    text-align: start;
+    cursor: pointer;
+  }
+  .ip-sheet-item:hover {
+    background: var(--color-bg-surface-strong);
+  }
+  .ip-sheet-separated {
+    margin-top: 0.5rem;
+    padding-top: 0.5rem;
+    border-top: 1px solid var(--color-border-secondary);
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .ip-sheet[open] {
+      animation: ip-sheet-in var(--motion-sheet-in) var(--motion-ease-out);
+    }
+    .ip-sheet[open]::backdrop {
+      animation: fade-in var(--motion-fade);
+    }
+  }
+  @keyframes ip-sheet-in {
+    from {
+      translate: 0 100%;
+    }
+  }
+
+  /* Вкладки: 14/18, между ними 20 px, выбранная — с чертой; ширина — по жирной подписи, без сдвигов. */
+  .ip-tabs {
+    display: flex;
+    gap: 1.25rem;
+    border-bottom: 1px solid var(--color-border-secondary-20);
+  }
+  .ip-tab {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: -1px;
+    padding: 0.5rem 0;
+    border: 0;
+    border-bottom: 1px solid transparent;
+    background: none;
+    color: var(--color-text-secondary);
+    font: inherit;
+    white-space: nowrap;
+    cursor: pointer;
+  }
+  .ip-tab::after {
+    content: attr(data-label);
+    height: 0;
+    overflow: hidden;
+    font-weight: 500;
+    visibility: hidden;
+  }
+  .ip-tab[aria-selected="true"],
+  .ip-tab-selected {
+    border-bottom-color: var(--color-text-primary);
+    color: var(--color-text-primary);
+    font-weight: 500;
+  }
+  .ip-tabpanel {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 1rem;
+    padding-top: 1.5rem;
+  }
+  .page .ip-lead {
+    margin: 0;
+    color: var(--color-text-secondary);
+    font-size: var(--text-body-sm);
+    line-height: var(--text-body-sm--line-height);
+  }
+  .ip-failed {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  /* Похожие: карточки 152 × 113 — иконка 24, имя и набор; на телефоне — три колонки. */
+  .ip-similar {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(9.5rem, 1fr));
+    gap: 0.75rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .ip-similar-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+    height: 100%;
+    min-height: 7.0625rem;
+    padding: 1rem 0.5rem;
+    border-radius: var(--radius-lg);
+    background: var(--color-bg-icon-card);
+    color: var(--color-text-primary);
+    text-decoration: none;
+  }
+  a.ip-similar-card:hover {
+    background: var(--color-bg-card-hover);
+  }
+  .ip-similar-icon {
+    flex: none;
+    font-size: 1.5rem;
+  }
+  .ip-similar-text {
+    display: grid;
+    gap: 0.5rem;
+    width: 100%;
+    text-align: center;
+  }
+  .ip-similar-name,
+  .ip-similar-set {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .ip-similar-name {
+    font-size: var(--text-body-sm);
+    line-height: var(--text-body-sm--line-height);
+  }
+  .ip-similar-set {
+    color: var(--color-text-secondary);
+    font-size: var(--text-body-xs);
+    line-height: var(--text-body-xs--line-height);
+  }
+  .ip-similar-skeleton {
+    gap: 0.625rem;
+    padding-top: 1.625rem;
+    background: var(--color-bg-surface);
+  }
+
+  /* Скелетоны кадра Loading: полосы bg/surfaceStrong, видны через 150 мс и мерцают, как в поиске. */
+  .ip-skeleton {
+    display: block;
+    flex: none;
+    border-radius: var(--radius-xs);
+    background: var(--color-bg-surface-strong);
     animation:
       search-h 0.15s step-end,
       search-p 1s 0.15s infinite alternate;
   }
   @media (prefers-reduced-motion: reduce) {
-    .icon-skeleton {
+    .ip-skeleton {
       animation: search-h 0.15s step-end;
     }
   }
-  .icon-page .icon-details {
-    max-inline-size: var(--width-text);
+  .ip-skeleton-crumbs {
+    width: 16rem;
+    height: 1rem;
+  }
+  .ip-skeleton-title {
+    width: 15rem;
+    height: 2rem;
+    border-radius: var(--radius-sm);
+  }
+  .ip-skeleton-meta {
+    width: min(100%, 23.75rem);
+    height: 0.875rem;
+  }
+  .ip-skeleton-tile {
+    width: 7.5rem;
+    height: 7.5rem;
+    border-radius: 1rem;
+  }
+  .ip-skeleton-tags {
+    width: min(100%, 28.75rem);
+    height: 0.875rem;
+  }
+  .ip-skeleton-chip {
+    width: 5.25rem;
+    height: 1.875rem;
+    border-radius: var(--radius-md);
+  }
+  .ip-skeleton-dates {
+    width: min(100%, 18.75rem);
+    height: 0.875rem;
+  }
+  .ip-skeleton-lead {
+    width: min(100%, 17.5rem);
+    height: 0.75rem;
+  }
+  .ip-skeleton-icon {
+    width: 1.5rem;
+    height: 1.5rem;
+    border-radius: var(--radius-sm);
+  }
+  .ip-skeleton-name {
+    width: 5rem;
+    height: 0.625rem;
+  }
+  .ip-skeleton-set {
+    width: 6.25rem;
+    height: 0.5rem;
   }
 
-  /* Мокапы страницы иконки (шаг 4 фазы 4, ADR-0041; утверждены владельцем 2 ноября 2026): места интерфейса
-     в светлой и тёмной теме. У панели темы свой color-scheme — пары light-dark() токенов подстраиваются
-     сами, новых цветов нет. Иконки в серверном HTML — заглушки того же размера: место не прыгает. */
-  .mockups-lead {
-    color: var(--color-muted);
-  }
-  .mockup {
+  /* Вкладка Code: Name и Stroke Width, блок кода панели в карточке 760 px, автор и лицензия. */
+  .ip-code-fields {
     display: grid;
-    gap: 0.75rem;
-    margin-block-start: 1.25rem;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: end;
+    gap: 1.25rem;
+    max-width: 47.5rem;
   }
-  .mockup-head h3 {
-    margin: 0;
-    font-size: 1rem;
-    font-weight: 600;
+  .ip-code-card {
+    max-width: 47.5rem;
+    padding: 1.25rem;
+    border-radius: 1rem;
+    background: var(--color-bg-surface);
   }
-  .mockup-size {
-    margin: 0.25rem 0 0;
-    color: var(--color-muted);
-    font-size: 0.875rem;
-  }
-  .mockup-pane {
-    position: relative;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    min-block-size: 12.5rem;
-    padding: 1.75rem 1rem 1rem;
-    overflow: hidden;
-    border: 1px solid var(--color-line);
-    border-radius: var(--radius-md);
-    background: var(--color-bg);
-    color: var(--color-fg);
-  }
-  .mockup-light {
-    color-scheme: light;
-  }
-  .mockup-dark {
-    color-scheme: dark;
-  }
-  .mockup-theme {
-    position: absolute;
-    inset-block-start: 0.5rem;
-    inset-inline-start: 0.75rem;
-    color: var(--color-muted);
-    font-size: 0.75rem;
-  }
-  .mockup-pane svg {
-    flex: none;
-  }
-  .mockup-muted {
-    display: inline-flex;
-    color: var(--color-muted);
-  }
-  @media (min-width: 48rem) {
-    .mockup {
-      grid-template-columns: 12rem 1fr 1fr;
-      gap: 1rem;
-    }
-  }
-
-  /* Кнопки: основная, обычная и кнопка-иконка. */
-  .mockup-buttons {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    justify-content: center;
-    gap: 0.75rem;
-  }
-  .mockup-btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    block-size: 2.5rem;
-    padding-inline: 1rem;
-    border: 1px solid transparent;
-    border-radius: var(--radius-md);
-    font-weight: 600;
-  }
-  .mockup-btn-primary {
-    background: var(--color-accent);
-    color: var(--color-bg);
-  }
-  .mockup-btn-outline {
-    border-color: var(--color-control);
-  }
-  .mockup-btn-icon {
-    justify-content: center;
-    inline-size: 2.5rem;
+  .icon-page .panel-credits {
+    max-width: 47.5rem;
     padding: 0;
-    background: var(--color-surface);
+    border-top: 0;
   }
 
-  /* Нижняя панель вкладок приложения на телефоне. */
-  .mockup-phone {
-    inline-size: min(20rem, 100%);
-    overflow: hidden;
-    border: 1px solid var(--color-line);
-    border-radius: 1.25rem;
-    background: var(--color-surface);
+  /* Вкладка In context: шесть карточек 368 × 248 — компоненты сайта с иконкой. */
+  .ctx-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(18rem, 1fr));
+    gap: 1rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
   }
-  .mockup-screen {
-    block-size: 3.5rem;
+  .ctx-card {
+    display: grid;
+    grid-template-rows: auto 1fr;
+    gap: 1rem;
+    min-height: 15.5rem;
+    padding: 1.5rem;
+    border-radius: 1rem;
+    background: var(--color-bg-surface);
   }
-  .mockup-tabs {
-    display: flex;
-    justify-content: space-around;
-    padding-block: 0.5rem 0.625rem;
-    border-block-start: 1px solid var(--color-line);
-    background: var(--color-bg);
+  .ctx-title {
+    margin: 0;
+    color: var(--color-text-secondary);
+    font-size: var(--text-body-xs);
+    font-weight: 400;
+    line-height: var(--text-body-xs--line-height);
   }
-  .mockup-tab {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 0.125rem;
-    color: var(--color-muted);
-    font-size: 0.75rem;
+  .ctx-stage {
+    display: grid;
+    align-content: center;
+    justify-items: center;
+    gap: 0.75rem;
+    min-height: 10.5rem;
   }
-  .mockup-tab.mockup-active {
-    color: var(--color-accent);
-    font-weight: 600;
+  .ctx-stage .panel-btn {
+    cursor: default;
   }
-
-  /* Выпадающее меню: пункт с иконкой — под курсором. */
-  .mockup-menu {
-    inline-size: min(15rem, 100%);
-    padding: 0.375rem;
-    border: 1px solid var(--color-line);
-    border-radius: var(--radius-md);
-    background: var(--color-bg);
-    box-shadow: var(--shadow-md);
-  }
-  .mockup-item {
+  .ctx-input {
     display: flex;
     align-items: center;
     gap: 0.625rem;
-    padding: 0.375rem 0.625rem;
-    border-radius: calc(var(--radius-md) - 0.125rem);
-    font-size: 0.875rem;
+    width: 100%;
+    height: 2.75rem;
+    padding-inline: calc(1rem - 1px);
+    border: 1px solid var(--color-border-secondary);
+    border-radius: var(--radius-md);
   }
-  .mockup-item.mockup-hover {
-    background: var(--color-surface);
+  .ctx-input-text {
+    flex: 1;
+    min-width: 0;
   }
-  .mockup-item kbd {
-    margin-inline-start: auto;
-    color: var(--color-muted);
-    font: 0.75rem var(--font-mono);
+  .ctx-nav,
+  .ctx-toggles {
+    justify-items: stretch;
   }
-
-  /* Поле ввода: иконка в начале, справа — «очистить». */
-  .mockup-input {
+  .ctx-nav {
+    gap: 0.25rem;
+  }
+  .ctx-nav-item,
+  .ctx-menu-item {
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    inline-size: min(18rem, 100%);
-    block-size: 2.5rem;
-    padding-inline: 0.625rem;
-    border: 1px solid var(--color-control);
-    border-radius: var(--radius-md);
-    background: var(--color-bg);
+    min-height: 1.875rem;
+    padding: 0.375rem 0.5rem;
   }
-  .mockup-input-text {
-    flex: 1;
-    overflow: hidden;
-    font-size: 0.875rem;
-    white-space: nowrap;
-    text-overflow: ellipsis;
+  .ctx-nav-item {
+    border-radius: var(--radius-xs);
   }
-
-  /* Всплывающее уведомление с заголовком. */
-  .mockup-toast {
-    display: flex;
-    align-items: flex-start;
-    gap: 0.75rem;
-    inline-size: min(20rem, 100%);
-    padding: 0.875rem 1rem;
-    border: 1px solid var(--color-line);
-    border-radius: var(--radius-md);
-    background: var(--color-bg);
+  .ctx-nav-current {
+    background: var(--color-bg-surface-strong);
+  }
+  .ctx-menu {
+    display: grid;
+    width: 14rem;
+    padding: 0.25rem;
+    border-radius: var(--radius-lg);
+    background: var(--color-bg-surface-muted);
     box-shadow: var(--shadow-md);
-    font-size: 0.875rem;
   }
-  .mockup-toast-text {
-    flex: 1;
-    min-inline-size: 0;
+  .ctx-menu-item {
+    border-radius: var(--radius-md);
   }
-  .mockup-toast-text strong {
-    display: block;
+  .ctx-menu-separator {
+    height: 1px;
+    margin-block: 0.25rem;
+    background: var(--color-border-secondary);
   }
-  .mockup-toast-text p {
-    margin: 0.125rem 0 0;
-    color: var(--color-muted);
-  }
-
-  /* Экран приложений: плитка 60 px, иконка 36 px. */
-  .mockup-tiles {
-    display: flex;
+  .ctx-toggles {
     gap: 1rem;
   }
-  .mockup-tile {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 0.375rem;
-    max-inline-size: 4.5rem;
-    font-size: 0.75rem;
-  }
-  .mockup-tile-label {
-    max-inline-size: 100%;
-    overflow: hidden;
-    white-space: nowrap;
-    text-overflow: ellipsis;
-  }
-  .mockup-tile-box {
+  .ctx-toggle {
     display: flex;
     align-items: center;
-    justify-content: center;
-    inline-size: 3.75rem;
-    block-size: 3.75rem;
-    border-radius: 1rem;
-    background: var(--color-surface);
+    gap: 0.75rem;
   }
-  .mockup-tile-box.mockup-tile-main {
-    background: var(--color-accent);
-    color: var(--color-bg);
-  }
-
-  /* Панель инструментов: ряд кнопок-иконок, выбранная нажата. */
-  .mockup-toolbar {
-    display: flex;
-    gap: 0.25rem;
-    padding: 0.25rem;
-    border: 1px solid var(--color-line);
-    border-radius: var(--radius-md);
-    background: var(--color-bg);
-  }
-  .mockup-tool {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    inline-size: 2.25rem;
-    block-size: 2.25rem;
-    border-radius: calc(var(--radius-md) - 0.125rem);
-    color: var(--color-muted);
-  }
-  .mockup-tool.mockup-on {
-    background: var(--color-surface);
-    color: var(--color-fg);
-  }
-
-  /* Боковое меню: навигация, выбранный раздел подсвечен. */
-  .mockup-sidebar {
-    display: flex;
-    flex-direction: column;
+  .ctx-toggle-text {
+    display: grid;
+    flex: 1;
     gap: 0.125rem;
-    inline-size: min(13rem, 100%);
-    padding: 0.5rem;
-    border-inline-end: 1px solid var(--color-line);
   }
-  .mockup-nav {
+  .ctx-toggle-state {
+    color: var(--color-text-secondary);
+    font-size: var(--text-body-sm);
+    line-height: var(--text-body-sm--line-height);
+  }
+  .ctx-themes {
+    grid-template-columns: repeat(2, 9.25rem);
+    justify-content: center;
+    justify-items: stretch;
+  }
+  .ctx-theme {
     display: flex;
     align-items: center;
-    gap: 0.625rem;
-    padding: 0.375rem 0.625rem;
-    border-radius: calc(var(--radius-md) - 0.125rem);
-    color: var(--color-muted);
-    font-size: 0.875rem;
+    justify-content: center;
+    gap: 1rem;
+    height: 7.5rem;
+    border-radius: var(--radius-lg);
+    background: var(--color-bg-page);
+    color: var(--color-text-primary);
   }
-  .mockup-nav.mockup-active {
-    background: var(--color-surface);
-    color: var(--color-fg);
-    font-weight: 600;
+  .ctx-theme.preview-light {
+    color-scheme: light;
+  }
+  .ctx-theme.preview-dark {
+    color-scheme: dark;
+  }
+
+  /*
+   * Телефон (кадры «Icon Page / Mobile — …»): «‹ Набор» вместо крошек, одна колонка в порядке панели
+   * иконки — имя и мета-строка, превью на всю ширину, фон и сетка, Size и Color, кнопки (Copy SVG видна
+   * без прокрутки), затем размеры, теги, категории, стили 3 × 2 и даты.
+   */
+  @media (max-width: 63.98rem) {
+    .icon-page {
+      padding-block: 1rem 2rem;
+    }
+    .ip-crumbs {
+      display: none;
+    }
+    .ip-back {
+      margin-bottom: 0.75rem;
+    }
+    .ip-hero {
+      display: flex;
+      flex-direction: column;
+      align-items: stretch;
+      gap: 1.25rem;
+    }
+    .ip-visual,
+    .ip-info {
+      display: contents;
+    }
+    .ip-tile {
+      order: 1;
+      padding: 1.125rem;
+      border-radius: 1.125rem;
+    }
+    .ip-controls {
+      order: 2;
+    }
+    .ip-pair {
+      order: 3;
+      width: 100%;
+    }
+    .ip-actions {
+      order: 4;
+      flex-wrap: nowrap;
+    }
+    .ip-sizes {
+      order: 5;
+    }
+    .ip-tags {
+      order: 6;
+    }
+    .ip-cats {
+      order: 7;
+    }
+    .ip-styles {
+      order: 8;
+    }
+    .ip-dates {
+      order: 9;
+    }
+    .page .ip-title {
+      font-size: 1.75rem;
+      line-height: 2rem;
+    }
+    .ip-head .ip-meta {
+      gap: 0.5rem 1rem;
+    }
+    .ip-head .ip-meta li + li::before {
+      display: none;
+    }
+    /*
+     * Copy SVG и Download растут поровну от своей ширины, сумка — по себе: по-английски выходит, как в кадре
+     * «Mobile — Similar Icons» (141 + 141 + 61). Поля у этих двух — 12 px вместо 16: иначе русские
+     * «Копировать» и «Скачать» рядом с сумкой не помещаются.
+     */
+    .ip-split,
+    .ip-download {
+      flex: 1 1 auto;
+    }
+    .ip-split-main {
+      flex: 1 1 auto;
+      padding-inline-start: calc(0.75rem - 1px);
+    }
+    .ip-split-arrow {
+      padding-inline-end: calc(0.75rem - 1px);
+    }
+    .ip-download {
+      padding-inline: calc(0.75rem - 1px);
+    }
+    :lang(ru) .ip-copy-format {
+      display: none;
+    }
+    /* Removed: «Download last version» и «Open Lucide» — поровну на всю строку (кадр «Mobile — Removed Icon»). */
+    .ip-actions-removed > * {
+      flex: 1 1 0;
+      min-width: 0;
+    }
+    .ip-bag-wide {
+      display: none;
+    }
+    .ip-bag-narrow {
+      display: inline-flex;
+    }
+    .ip-style-row {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+    .ip-style {
+      width: auto;
+    }
+    .ip-tabpanel {
+      padding-top: 1rem;
+    }
+    .ip-similar {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 0.5rem;
+    }
+    .ip-code-fields,
+    .ctx-grid {
+      grid-template-columns: minmax(0, 1fr);
+    }
+    .ctx-grid {
+      gap: 0.75rem;
+    }
   }
 }

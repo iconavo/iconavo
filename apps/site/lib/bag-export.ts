@@ -53,7 +53,12 @@ export function bagApplies(icons: readonly BagIcon[]): {
   };
 }
 
-/** Наборы сумки: название, указание авторства и полный текст лицензии. */
+/**
+ * Наборы сумки: название, указание авторства и полный текст лицензии. Части набора от других авторов
+ * (Feather у Lucide) знает только /icon — поиск Meilisearch; не ответил — указание авторства собирается
+ * из каталога наборов без них (решение владельца 13 ноября 2026: сайт работает и без поиска), а полный
+ * текст лицензии в ZIP их всё равно называет.
+ */
 async function bagSets(icons: readonly BagIcon[]): Promise<BagSet[]> {
   const prefixes = [...new Set(icons.map((i) => splitName(i.name)[0]))];
   return Promise.all(
@@ -62,17 +67,31 @@ async function bagSets(icons: readonly BagIcon[]): Promise<BagSet[]> {
         icons.find((i) => splitName(i.name)[0] === prefix)?.name ?? "";
       const [set, details] = await Promise.all([
         getSet(prefix),
-        fetch(iconDetailsUrl(API, sample)).then(async (r) =>
-          r.ok ? parseIconDetails(await r.json()) : undefined,
+        fetch(iconDetailsUrl(API, sample)).then(
+          async (r) => (r.ok ? parseIconDetails(await r.json()) : undefined),
+          () => undefined,
         ),
       ]);
-      if (set === undefined || details === undefined) {
+      if (set === undefined) {
         throw new Error(`нет сведений о наборе ${prefix}`);
       }
+      const summary = details?.set ?? {
+        prefix,
+        name: set.info.name,
+        author: set.info.author,
+        license: {
+          title: set.info.license.title,
+          spdx: set.info.license.spdx,
+          ...(set.info.license.url === undefined
+            ? {}
+            : { url: set.info.license.url }),
+        },
+        palette: set.info.palette,
+      };
       return {
         prefix,
         name: set.info.name,
-        attribution: attributionText(details),
+        attribution: attributionText({ set: summary }),
         license: set.info.license.text,
         ...(set.info.license.notice === undefined
           ? {}

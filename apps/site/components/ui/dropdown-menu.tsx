@@ -29,7 +29,7 @@ export function DropdownMenuContent({
       <Primitive.Content
         sideOffset={sideOffset}
         className={cn(
-          "z-50 min-w-40 rounded-md border border-line bg-bg p-1 text-fg shadow-md",
+          "z-50 min-w-40 rounded-md border border-border-secondary bg-bg-page p-1 text-text-primary shadow-md",
           className,
         )}
         {...props}
@@ -46,14 +46,14 @@ export function DropdownMenuRadioItem({
   return (
     <Primitive.RadioItem
       className={cn(
-        "relative flex cursor-default items-center gap-2 rounded-md py-1.5 pr-2 pl-8 text-sm select-none focus-visible:-outline-offset-2 data-disabled:pointer-events-none data-disabled:opacity-50 data-highlighted:bg-surface",
+        "relative flex cursor-default items-center gap-2 rounded-md py-1.5 pr-2 pl-8 text-sm select-none focus-visible:-outline-offset-2 data-disabled:pointer-events-none data-disabled:opacity-50 data-highlighted:bg-bg-surface",
         className,
       )}
       {...props}
     >
       <span className="pointer-events-none absolute left-2 flex size-4 items-center justify-center">
         <Primitive.ItemIndicator>
-          <Icon icon="lucide:check" />
+          <Icon icon="material-symbols:check" />
         </Primitive.ItemIndicator>
       </span>
       {children}

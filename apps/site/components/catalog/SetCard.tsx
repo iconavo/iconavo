@@ -1,5 +1,5 @@
 import { Icon } from "@iconavo-ui/react";
-import { DICTIONARIES, type Lang } from "../../lib/i18n";
+import type { Lang } from "../../lib/i18n";
 import { PageLink } from "../PageLink";
 
 /** Набор для карточки: строки уже на языке страницы — их считает сервер (lib/format.ts). */
@@ -14,6 +14,7 @@ export interface SetSummary {
   /** SPDX — для фильтра. */
   licenseId: string;
   palette: boolean;
+  /** Витрина: на главной — 9 иконок (showcase в lib/catalog.ts), иначе — 6 из данных набора. */
   samples: string[];
   /** Стили набора по общей шкале (ADR-0052) — для фильтра. */
   styles: string[];
@@ -22,8 +23,9 @@ export interface SetSummary {
 }
 
 /**
- * Карточка набора: название, витрина, число иконок, лицензия, стили (ADR-0052) и автор. Уровень заголовка — по странице:
- * на /sets — h2, на главной под разделом «Популярные наборы» — h3.
+ * Карточка набора по макету (Figma «Iconavo — Макеты», Icon Set Card): слева название, лицензия и число
+ * иконок, справа витрина 3 × 3. Вся карточка — ссылка на страницу набора. Уровень заголовка — по
+ * странице: на /sets — h2, на главной под заголовком группы — h3.
  */
 export function SetCard({
   lang,
@@ -34,35 +36,23 @@ export function SetCard({
   set: SetSummary;
   heading?: "h2" | "h3";
 }) {
-  const t = DICTIONARIES[lang];
   const Heading = heading;
   return (
-    <article className="set-card">
-      <Heading className="set-card-title">
-        <PageLink lang={lang} path={`/${set.id}`}>
-          {set.name}
-        </PageLink>
-      </Heading>
-      <p className="set-card-samples" aria-hidden="true">
+    <PageLink lang={lang} path={`/${set.id}`} className="set-card">
+      <div className="set-card-info">
+        <Heading className="set-card-title">{set.name}</Heading>
+        <p className="set-card-meta">{set.license}</p>
+        <p className="set-card-meta">{set.total}</p>
+      </div>
+      <div className="set-card-samples" aria-hidden="true">
         {set.samples.map((name) => (
           <Icon
             key={name}
             icon={`${set.id}:${name}`}
-            className="inline-block"
+            className="set-card-icon"
           />
         ))}
-      </p>
-      <p className="set-card-meta">
-        {set.total} · {set.license}
-      </p>
-      <p className="set-card-meta">
-        {set.stylesLine === ""
-          ? set.palette
-            ? t.setMulticolor
-            : t.setMonochrome
-          : set.stylesLine}
-      </p>
-      <p className="set-card-meta">{set.author}</p>
-    </article>
+      </div>
+    </PageLink>
   );
 }

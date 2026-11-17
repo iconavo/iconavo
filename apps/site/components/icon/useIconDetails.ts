@@ -1,7 +1,9 @@
 "use client";
 
-// Сведения об иконке из адреса /icon edge API (шаг 4 фазы 4) — для панели. Память вкладки: щёлкнуть
-// туда-обратно — без новых запросов. Быстрая смена иконки отменяет прежний запрос; сбой — «Повторить».
+// Сведения об иконке из адреса /icon edge API (шаг 4 фазы 4) — для панели и страницы иконки. Память
+// вкладки: щёлкнуть туда-обратно — без новых запросов. Быстрая смена иконки отменяет прежний запрос; сбой —
+// «Повторить». Страница передаёт сведения, полученные при её сборке (initial), — тогда запроса нет; поиск
+// не ответил при сборке — браузер спросит сам (редизайн, шаг 4).
 
 import { useEffect, useState } from "react";
 import { API } from "../../lib/api";
@@ -25,7 +27,10 @@ function remember(name: string, details: IconDetails) {
 
 export type DetailsState = "loading" | "ready" | "failed";
 
-export function useIconDetails(name: string): {
+export function useIconDetails(
+  name: string,
+  initial?: IconDetails,
+): {
   details?: IconDetails;
   state: DetailsState;
   retry: () => void;
@@ -34,13 +39,19 @@ export function useIconDetails(name: string): {
     name: string;
     details?: IconDetails;
     state: DetailsState;
-  }>(() => ({ name, state: "loading" }));
+  }>(() =>
+    initial?.icon === name
+      ? { name, details: initial, state: "ready" }
+      : { name, state: "loading" },
+  );
   const [attempt, setAttempt] = useState(0);
 
   useEffect(() => {
     void attempt;
-    const kept = memory.get(name);
+    const kept =
+      memory.get(name) ?? (initial?.icon === name ? initial : undefined);
     if (kept !== undefined) {
+      remember(name, kept);
       setView({ name, details: kept, state: "ready" });
       return;
     }
@@ -61,7 +72,7 @@ export function useIconDetails(name: string): {
         if (!controller.signal.aborted) setView({ name, state: "failed" });
       });
     return () => controller.abort();
-  }, [name, attempt]);
+  }, [name, attempt, initial]);
 
   const current =
     view.name === name ? view : { name, state: "loading" as const };

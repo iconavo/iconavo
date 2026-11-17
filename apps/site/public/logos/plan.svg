@@ -1,0 +1,11 @@
+<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+<title>Ultimate</title>
+<path d="M12 20L1 9.30645L4.74537 3H19.2546L23 9.30645L12 20Z" fill="url(#paint0_linear_123_18778)"/>
+<path d="M17 4L17.0881 4.25376C17.5031 5.44871 18.3686 6.43421 19.5 7C18.3686 7.56579 17.5031 8.55129 17.0881 9.74624L17 10L16.9119 9.74624C16.4969 8.55129 15.6314 7.56579 14.5 7C15.6314 6.43421 16.4969 5.44871 16.9119 4.25376L17 4Z" fill="white"/>
+<defs>
+<linearGradient id="paint0_linear_123_18778" x1="5" y1="3" x2="12" y2="20" gradientUnits="userSpaceOnUse">
+<stop stop-color="#8B8CFF"/>
+<stop offset="1" stop-color="#6263C9"/>
+</linearGradient>
+</defs>
+</svg>

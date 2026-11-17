@@ -14,10 +14,27 @@ describe("языки сайта", () => {
   });
 
   it("русский словарь переведён, а не скопирован", () => {
+    // Имена, одинаковые на обоих языках: тариф и группы наборов из макета (Figma «Iconavo — Макеты»).
+    const proper = new Set([
+      "planName",
+      "groupMaterialTitle",
+      "groupMaterialShort",
+      "groupUi24Title",
+      "groupUi24Short",
+      // Названия форматов кода и инструментов в панели иконки — одинаковы на обоих языках.
+      "pTabUnplugin",
+      "pTabUnpluginIcons",
+      "pTabUrl",
+      "pTabJsx",
+      "pTabSymbol",
+      "pTabTailwind",
+      "pTabUnocss",
+    ]);
     const same = Object.keys(DICTIONARIES.en).filter(
       (key) =>
+        !proper.has(key) &&
         DICTIONARIES.en[key as keyof typeof DICTIONARIES.en] ===
-        DICTIONARIES.ru[key as keyof typeof DICTIONARIES.ru],
+          DICTIONARIES.ru[key as keyof typeof DICTIONARIES.ru],
     );
     expect(same).toEqual([]);
   });

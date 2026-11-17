@@ -1,91 +1,88 @@
-import { Icon, IconavoProvider } from "@iconavo-ui/react";
+import { IconavoProvider } from "@iconavo-ui/react";
 import {
-  getReleases,
-  getSetStyles,
+  CATALOG_TAG,
+  getNames,
   getSets,
-  orderSets,
+  groupSets,
+  type SetGroupId,
+  setStyles,
+  showcase,
 } from "../../lib/catalog";
-import {
-  releaseSummary,
-  releaseView,
-  setSummary,
-} from "../../lib/catalog-view";
+import { GROUP_TEXTS, setSummary } from "../../lib/catalog-view";
+import { countOf, SET_FORMS } from "../../lib/format";
 import { DICTIONARIES, type Lang } from "../../lib/i18n";
 import { loadPageIcons } from "../../lib/icons";
-import { SetCard } from "../catalog/SetCard";
-import { PageLink } from "../PageLink";
-
-/** Новостей на главной — остальное в ленте /changelog. */
-const HOME_RELEASES = 4;
+import { SetCard, type SetSummary } from "../catalog/SetCard";
+import { HomeGroups, SeeAll } from "../home/HomeGroups";
 
 /**
- * Главная (ADR-0037, решение владельца): поиск в центре, ниже популярные наборы и «Что нового». Заголовок
- * и поле поиска — в общей раскладке с /search (SearchHero): при наборе поле не пересоздаётся.
+ * Главная по макету «Icon Sets — Search (start scenario)» (Figma «Iconavo — Макеты»): заголовок и поле
+ * поиска — в общей раскладке с /search (SearchHero), ниже — наборы по группам (lib/catalog.ts,
+ * SET_GROUPS) с карточками и витриной 3 × 3. Иконки витрин — в серверном HTML (loadPageIcons).
  */
 export async function Home({ lang }: { lang: Lang }) {
   const t = DICTIONARIES[lang];
   const sets = await getSets();
-  const ids = orderSets(Object.keys(sets));
-  const cards = (
+  const groups = groupSets(sets);
+  const cards = new Map<string, SetSummary>(
     await Promise.all(
-      ids.map(async (id) => {
-        const info = sets[id];
-        return info === undefined
-          ? []
-          : [setSummary(lang, id, info, await getSetStyles(id))];
-      }),
-    )
-  ).flat();
-  const news = (await getReleases())
-    .slice(0, HOME_RELEASES)
-    .map((r) => releaseView(lang, r, sets[r.prefix]?.name ?? r.prefix));
-  const icons = await loadPageIcons(
-    cards.flatMap((c) => c.samples.map((name) => `${c.id}:${name}`)),
+      groups
+        .flatMap((g) => g.ids)
+        .flatMap((id) => {
+          const info = sets[id];
+          return info === undefined ? [] : [{ id, info }];
+        })
+        .map(async ({ id, info }): Promise<[string, SetSummary]> => {
+          // Общая страница — метка catalog, как у getSetStyles (ADR-0039): её сбрасывает выпуск любого набора.
+          const names = await getNames(id, CATALOG_TAG);
+          return [
+            id,
+            {
+              ...setSummary(lang, id, info, setStyles(names)),
+              samples: showcase(info.samples ?? [], names),
+            },
+          ];
+        }),
+    ),
   );
+  const icons = await loadPageIcons(
+    [...cards.values()].flatMap((c) => c.samples.map((n) => `${c.id}:${n}`)),
+  );
+  const text = (id: SetGroupId) => GROUP_TEXTS[id];
   return (
-    <>
-      <p>
-        {t.homeBeta}{" "}
-        <PageLink lang={lang} path="/docs">
-          {t.homeDocs}
-        </PageLink>
-      </p>
-      <section aria-labelledby="home-sets" className="page-section">
-        <h2 id="home-sets">{t.homeSets}</h2>
-        <IconavoProvider icons={icons}>
-          <div className="set-grid">
-            {cards.map((set) => (
-              <SetCard key={set.id} lang={lang} set={set} heading="h3" />
-            ))}
-          </div>
-        </IconavoProvider>
-        <p>
-          <PageLink lang={lang} path="/sets">
-            {t.homeAllSets}{" "}
-            <Icon icon="lucide:arrow-right" className="inline-block" />
-          </PageLink>
-        </p>
-      </section>
-      <section aria-labelledby="home-news" className="page-section">
-        <h2 id="home-news">{t.homeNews}</h2>
-        <ul className="news-lines">
-          {news.map((r) => (
-            <li key={r.id}>
-              <PageLink lang={lang} path={`/${r.prefix}`}>
-                {r.setName}
-              </PageLink>{" "}
-              · <time dateTime={r.iso}>{r.date}</time> ·{" "}
-              {releaseSummary(lang, r)}
-            </li>
-          ))}
-        </ul>
-        <p>
-          <PageLink lang={lang} path="/changelog">
-            {t.homeAllNews}{" "}
-            <Icon icon="lucide:arrow-right" className="inline-block" />
-          </PageLink>
-        </p>
-      </section>
-    </>
+    <IconavoProvider icons={icons}>
+      <HomeGroups
+        lang={lang}
+        groups={groups.map((g) => ({ id: g.id, label: t[text(g.id).short] }))}
+      >
+        {groups.map((g) => (
+          <section
+            key={g.id}
+            className="set-group"
+            data-group={g.id}
+            aria-labelledby={`group-${g.id}`}
+          >
+            <div className="set-group-head">
+              <h2 id={`group-${g.id}`} className="set-group-title">
+                {t[text(g.id).title]}{" "}
+                <span className="set-group-count">
+                  ({countOf(lang, g.ids.length, SET_FORMS[lang])})
+                </span>
+              </h2>
+              {g.ids.length > 1 ? <SeeAll lang={lang} group={g.id} /> : null}
+              <p className="set-group-text">{t[text(g.id).text]}</p>
+            </div>
+            <div id={`group-grid-${g.id}`} className="set-grid">
+              {g.ids.flatMap((id) => {
+                const card = cards.get(id);
+                return card === undefined
+                  ? []
+                  : [<SetCard key={id} lang={lang} set={card} heading="h3" />];
+              })}
+            </div>
+          </section>
+        ))}
+      </HomeGroups>
+    </IconavoProvider>
   );
 }

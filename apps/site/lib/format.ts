@@ -35,3 +35,15 @@ export const ICON_FORMS: Record<Lang, Forms> = {
   en: { one: "icon", other: "icons" },
   ru: { one: "иконка", few: "иконки", many: "иконок", other: "иконки" },
 };
+
+/** Слово «набор» по языку: «(3 sets)» у группы наборов на главной. */
+export const SET_FORMS: Record<Lang, Forms> = {
+  en: { one: "set", other: "sets" },
+  ru: { one: "набор", few: "набора", many: "наборов", other: "набора" },
+};
+
+/** «в 5 наборах» — подзаголовок главной: у русского — предложный падеж. */
+export const FAMILY_FORMS: Record<Lang, Forms> = {
+  en: { one: "open-source family", other: "open-source families" },
+  ru: { one: "открытом наборе", other: "открытых наборах" },
+};

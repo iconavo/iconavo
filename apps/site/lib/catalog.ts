@@ -26,6 +26,13 @@ export const CATALOG_TAG = "catalog";
 /** Метка страницы набора и страниц его иконок (ADR-0039). */
 export const setTag = (prefix: string) => `set-${prefix}`;
 
+/**
+ * Метка запросов общей раскладки — левой панели с наборами и числами иконок (редизайн, ADR-0039). Её
+ * носит каждая страница, поэтому сброс по наборам её не трогает: иначе выпуск любого набора сбрасывал бы
+ * все страницы иконок. Числа в панели обновляет выкладка сайта (решение владельца 17 ноября 2026).
+ */
+export const SHELL_TAG = "shell";
+
 /** Лицензия в сведениях о наборе — как у Iconify. */
 export interface SetLicense {
   title: string;
@@ -235,9 +242,14 @@ function getJson(path: string, tag: string): Promise<Got | undefined> {
   return promise;
 }
 
-/** Все наборы каталога. */
-export async function getSets(): Promise<Record<string, SetInfo>> {
-  const got = await getJson("/collections", CATALOG_TAG);
+/**
+ * Все наборы каталога. Метка — по странице: страница иконки берёт отсюда только названия наборов похожих
+ * иконок и передаёт setTag своего набора.
+ */
+export async function getSets(
+  tag: string = CATALOG_TAG,
+): Promise<Record<string, SetInfo>> {
+  const got = await getJson("/collections", tag);
   if (got === undefined) stop("/collections — 404");
   return parseSets(got.data);
 }
@@ -282,32 +294,63 @@ export async function getSet(
   };
 }
 
-/** Имена набора без сведений — их догружает браузер для сетки (≈ 75 КБ у Material Symbols в br). */
-export async function getNames(prefix: string): Promise<Collection> {
+/**
+ * Имена набора без сведений — их догружает браузер для сетки (≈ 75 КБ у Material Symbols в br). Метка —
+ * по странице, как у getSet: общие страницы (главная) передают CATALOG_TAG.
+ */
+export async function getNames(
+  prefix: string,
+  tag: string = setTag(prefix),
+): Promise<Collection> {
   const got = await getJson(
     `/collection?prefix=${encodeURIComponent(prefix)}`,
-    setTag(prefix),
+    tag,
   );
   if (got === undefined) stop(`набора «${prefix}» нет`);
   return parseCollection(got.data);
 }
 
 /**
- * Выпуски всех наборов, свежие сверху. Метка — по странице: страница набора берёт отсюда только свой
- * последний выпуск и передаёт setTag.
+ * Выпуски всех наборов, свежие сверху; с prefix — только этого набора. Метка — по странице: страница
+ * набора берёт отсюда только свой последний выпуск, страница иконки — даты иконки, обе передают setTag.
  */
 export async function getReleases(
   tag: string = CATALOG_TAG,
+  prefix?: string,
 ): Promise<Release[]> {
-  const got = await getJson("/changelog", tag);
+  const got = await getJson(
+    prefix === undefined
+      ? "/changelog"
+      : `/changelog?prefix=${encodeURIComponent(prefix)}`,
+    tag,
+  );
   if (got === undefined) stop("/changelog — 404");
   return parseReleases(got.data);
 }
 
 const order = (a: string, b: string) => (a < b ? -1 : a > b ? 1 : 0);
 
-/** Иконок на странице сетки — как в поиске (ADR-0040). */
+/**
+ * Иконок на странице сетки — около 96, как в поиске (ADR-0040), но всегда целыми рядами (решение
+ * владельца 13 ноября 2026): сколько колонок, знает только браузер (lib/grid-columns.ts), и страница —
+ * столько полных рядов, сколько ближе всего к 96 (pageSizeFor). Пока колонки не посчитаны (серверный HTML
+ * и гидратация) — ровно 96.
+ */
 export const PAGE_SIZE = 96;
+
+/** Иконок на странице при columns колонках: целые ряды, ближе всего к PAGE_SIZE. */
+export function pageSizeFor(columns: number): number {
+  const cols = Math.max(1, Math.floor(columns));
+  return cols * Math.max(1, Math.round(PAGE_SIZE / cols));
+}
+
+/**
+ * Сколько первых карточек набора сервер отдаёт браузеру: первой страницы хватает при любой ширине до 32
+ * колонок, и браузер дополняет ряд без запроса к API.
+ */
+export const FIRST_PAGE_MAX = Math.max(
+  ...Array.from({ length: 32 }, (_, i) => pageSizeFor(i + 1)),
+);
 
 /**
  * Наборы в витрине: популярность ещё не измерить (аналитика — шаг 7), поэтому порядок задан списком;
@@ -328,6 +371,69 @@ export function orderSets(ids: readonly string[]): string[] {
     return i === -1 ? FEATURED.length : i;
   };
   return [...ids].sort((a, b) => rank(a) - rank(b) || order(a, b));
+}
+
+/**
+ * Группы наборов главной и боковой панели — по макету (Figma «Iconavo — Макеты»: Material, UI 24px,
+ * UI 16px / 32px, Brands, Emoji). У нас пока три: набора нет в списке — цветной идёт в эмодзи,
+ * остальные — в UI 24px.
+ */
+export const SET_GROUPS = [
+  { id: "material", sets: ["material-symbols"] },
+  { id: "ui-24", sets: ["lucide", "tabler", "ph"] },
+  { id: "emoji", sets: ["fluent-emoji-flat"] },
+] as const;
+
+export type SetGroupId = (typeof SET_GROUPS)[number]["id"];
+
+/** Наборы по группам, внутри — в порядке витрины; пустых групп нет. */
+export function groupSets(
+  sets: Record<string, Pick<SetInfo, "palette">>,
+): { id: SetGroupId; ids: string[] }[] {
+  const groupOf = (id: string): SetGroupId =>
+    SET_GROUPS.find((g) => (g.sets as readonly string[]).includes(id))?.id ??
+    (sets[id]?.palette ? "emoji" : "ui-24");
+  const ids = orderSets(Object.keys(sets));
+  return SET_GROUPS.map((g) => ({
+    id: g.id,
+    ids: ids.filter((id) => groupOf(id) === g.id),
+  })).filter((g) => g.ids.length > 0);
+}
+
+/** Знакомые имена для витрины карточки, если своих шести мало: их ищут по набору по порядку. */
+const SHOWCASE_EXTRAS = [
+  "star",
+  "heart",
+  "bell",
+  "camera",
+  "settings",
+  "user",
+  "mail",
+  "search",
+  "red-heart",
+  "fire",
+  "rocket",
+  "sparkles",
+  "light-bulb",
+];
+
+/**
+ * Витрина карточки набора — 3 × 3 по макету: шесть иконок витрины автора набора (info.samples) и
+ * знакомые имена из набора, затем первые его имена.
+ */
+export function showcase(
+  samples: readonly string[],
+  c: Collection,
+  size = 9,
+): string[] {
+  const names = visibleNames(c);
+  const have = new Set(names);
+  const picked = [...new Set(samples)].filter((n) => have.has(n));
+  for (const name of [...SHOWCASE_EXTRAS, ...names]) {
+    if (picked.length >= size) break;
+    if (have.has(name) && !picked.includes(name)) picked.push(name);
+  }
+  return picked.slice(0, size);
 }
 
 /** Видимые имена набора: категории и uncategorized, без повторов, по кодам символов, как у Iconify. */
@@ -417,6 +523,29 @@ export const cardsInStyle = (cards: readonly Card[], style?: Style) =>
 export const shownName = (card: Card, style?: Style) =>
   (style === undefined ? undefined : card.styles[style]) ?? card.base;
 
+/** Текст поиска по набору как имя иконки: строчные, пробелы и дефисы — один дефис, края без дефисов. */
+export const nameQuery = (q: string) =>
+  q
+    .toLowerCase()
+    .trim()
+    .replace(/[\s_-]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+
+/**
+ * Поиск по набору на его странице (редизайн по макету Figma, шаг 2): карточки, у которых имя базы или
+ * любого варианта содержит текст запроса. Без смысла и тегов — по именам, прямо в браузере: Meilisearch
+ * для этого не нужен. Пустой запрос — все карточки.
+ */
+export function filterCards(cards: readonly Card[], q: string): Card[] {
+  const needle = nameQuery(q);
+  if (needle === "") return [...cards];
+  return cards.filter(
+    (card) =>
+      card.base.includes(needle) ||
+      card.variants.some((name) => name.includes(needle)),
+  );
+}
+
 /**
  * Стили набора по его странице /collection — для фильтра «Стиль» на /sets и карточек наборов на главной:
  * общие страницы, метка catalog.
@@ -426,13 +555,16 @@ export async function getSetStyles(prefix: string): Promise<Style[]> {
   return set === undefined ? [] : setStyles(set);
 }
 
-/** Страниц в списке имён. */
-export const pageCount = (total: number) =>
-  Math.max(1, Math.ceil(total / PAGE_SIZE));
+/** Страниц в списке имён при size на странице. */
+export const pageCount = (total: number, size = PAGE_SIZE) =>
+  Math.max(1, Math.ceil(total / size));
 
-/** Элементы страницы page (с 1): имена или карточки. */
-export const pageOf = <T>(items: readonly T[], page: number): T[] =>
-  items.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+/** Элементы страницы page (с 1) при size на странице: имена или карточки. */
+export const pageOf = <T>(
+  items: readonly T[],
+  page: number,
+  size = PAGE_SIZE,
+): T[] => items.slice((page - 1) * size, page * size);
 
 /** Номера для навигации: первая, соседние с текущей и последняя; между ними — пропуск «gap». */
 export function pageItems(page: number, pages: number): (number | "gap")[] {

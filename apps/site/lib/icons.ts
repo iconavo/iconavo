@@ -12,31 +12,48 @@
 import type { IconavoIconSet } from "@iconavo-ui/react";
 import { cache } from "react";
 import { API } from "./api";
+import { SITE_SET } from "./site-icons";
 
 export const SITE_ICONS = [
-  "lucide:menu",
-  "lucide:copy",
-  "lucide:check",
-  "lucide:arrow-left",
-  "lucide:arrow-right",
-  "lucide:pencil",
-  "tabler:brand-github",
-  // Шапка: поиск и меню темы.
-  "lucide:search",
-  "lucide:monitor",
-  "lucide:sun",
-  "lucide:moon",
-  // Номера страниц сетки набора.
-  "lucide:chevron-left",
-  "lucide:chevron-right",
-  // Панель иконки (шаг 4 фазы 4): закрыть, развернуть и свернуть шторку, открыть страницу.
-  "lucide:x",
-  "lucide:maximize-2",
-  "lucide:minimize-2",
-  "lucide:arrow-up-right",
-  // Сумка в шапке и список форматов имени (шаг 5 фазы 4).
-  "lucide:shopping-bag",
-  "lucide:chevron-down",
+  // Интерфейс — по библиотеке макета (Figma «Iconavo — Макеты», страница «Icons»): Material Symbols,
+  // сплошные варианты. Свои рисунки макета — набор site: (lib/site-icons.ts), цветные картинки —
+  // public/logos (components/shell/Logos.tsx).
+  "material-symbols:account-circle",
+  "material-symbols:arrow-back",
+  "material-symbols:arrow-forward",
+  "material-symbols:arrow-menu-close",
+  "material-symbols:arrow-menu-open",
+  "material-symbols:arrow-outward",
+  "material-symbols:auto-stories",
+  "material-symbols:backpack",
+  "material-symbols:check",
+  "material-symbols:check-box",
+  "material-symbols:check-box-outline-blank",
+  "material-symbols:close",
+  "material-symbols:content-copy",
+  "material-symbols:download",
+  "material-symbols:folder-zip",
+  "material-symbols:edit",
+  "material-symbols:grid-on",
+  "material-symbols:grid-view",
+  "material-symbols:handyman",
+  "material-symbols:height",
+  "material-symbols:help",
+  "material-symbols:home",
+  "material-symbols:keyboard-arrow-down",
+  "material-symbols:keyboard-arrow-left",
+  "material-symbols:keyboard-arrow-right",
+  "material-symbols:link",
+  "material-symbols:link-2",
+  "material-symbols:list",
+  "material-symbols:menu",
+  "material-symbols:moon-stars",
+  "material-symbols:open-in-new",
+  "material-symbols:report",
+  "material-symbols:search",
+  "material-symbols:settings",
+  "material-symbols:toc",
+  "material-symbols:wb-sunny",
 ] as const;
 
 export type SiteIcon = (typeof SITE_ICONS)[number];
@@ -141,32 +158,44 @@ async function loadAll(
   return sets;
 }
 
-/** Все иконки сайта; не хватает хоть одной — ошибка. */
-export const loadSiteIcons = (): Promise<IconavoIconSet[]> =>
-  loadAll(SITE_ICONS, "иконки сайта");
+/** Все иконки сайта и свои рисунки макета (набор site:); не хватает хоть одной — ошибка. */
+export const loadSiteIcons = async (): Promise<IconavoIconSet[]> => [
+  ...(await loadAll(SITE_ICONS, "иконки сайта")),
+  SITE_SET,
+];
 
 /**
- * Какие из имён есть в наборах и не скрыты — для соседей в мокапах страницы иконки (lib/mockups.ts):
- * рисунки в страницу не идут, их догружает браузер.
+ * Иконки страницы иконки одной пачкой на набор (редизайн, шаг 4): обязательных не хватает — ошибка,
+ * необязательные (соседи в «In context») — только те, что есть и не скрыты. Рисунки всех найденных
+ * идут во вложенный IconavoProvider — в серверный HTML.
  */
-export async function existingIcons(
-  names: readonly string[],
-): Promise<Set<string>> {
-  const wanted = [...new Set(names)];
-  if (wanted.length === 0) return new Set();
+export async function loadIconPageIcons(
+  required: readonly string[],
+  optional: readonly string[],
+): Promise<{ icons: IconavoIconSet[]; existing: Set<string> }> {
+  const wanted = [...new Set([...required, ...optional])];
   const sets = await Promise.all(
     batchUrls(API, wanted).map(([prefix, url]) => fetchBatch(prefix, url)),
   );
-  return new Set(
-    sets.flatMap((set) =>
-      [
-        ...Object.entries(set.icons),
-        ...Object.entries(set.aliases ?? {}),
-      ].flatMap(([name, entry]) =>
-        entry.hidden ? [] : [`${set.prefix}:${name}`],
-      ),
-    ),
-  );
+  const found = new Map<string, boolean>();
+  for (const set of sets) {
+    for (const [name, entry] of [
+      ...Object.entries(set.icons),
+      ...Object.entries(set.aliases ?? {}),
+    ]) {
+      found.set(`${set.prefix}:${name}`, entry.hidden !== true);
+    }
+  }
+  const missing = required.filter((name) => !found.has(name));
+  if (missing.length > 0) {
+    throw new Error(
+      `СТОП: иконки страницы не загрузились: ${missing.slice(0, 10).join(", ")} — хосты иконок не ответили или имени нет`,
+    );
+  }
+  return {
+    icons: sets,
+    existing: new Set(optional.filter((name) => found.get(name) === true)),
+  };
 }
 
 /** Иконки страницы — для вложенного IconavoProvider; не хватает хоть одной — ошибка. */

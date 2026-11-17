@@ -7,7 +7,6 @@ import {
   HIDDEN_ICON,
   iconPath,
   isIconPath,
-  MOCKUPS,
   REDIRECT_CODES,
 } from "./config.js";
 import {
@@ -245,8 +244,8 @@ describe("языки страниц", () => {
     page(path, `<html lang="en"><body>${body}</body></html>`);
   const ru = (path: string, body: string) =>
     page(path, `<html lang="ru"><body>${body}</body></html>`);
-  const search = (action: string) =>
-    `<search class="header-search"><form action="${action}" class="f"></form></search>`;
+  const search = (href: string) =>
+    `<header class="topbar"><div class="topbar-group"><a class="pill topbar-wide" href="${href}">Search</a></div></header>`;
 
   it("lang у <html> — по адресу", () => {
     expect(htmlLang('<html lang="ru" class="x">')).toBe("ru");
@@ -284,7 +283,7 @@ describe("языки страниц", () => {
     expect(broken.note).toContain("/search: нет ссылки на /ru/search");
   });
 
-  it("поиск в шапке ведёт на поиск своего языка", () => {
+  it("«Поиск» в верхней полосе ведёт на поиск своего языка", () => {
     const pages = [
       en("/", search("/search")),
       ru("/ru", search("/ru/search")),
@@ -296,12 +295,15 @@ describe("языки страниц", () => {
       ...pages,
       ru("/ru/x", search("/search")),
       en("/docs", "<p>без поиска</p>"),
+      // Ссылка на поиск вне верхней полосы не в счёт.
+      en("/sets", '<main><a href="/search">Search</a></main>'),
     ]);
     expect(broken.ok).toBe(false);
     expect(broken.note).toContain(
-      "/ru/x: форма поиска — /search, а ждали /ru/search",
+      "/ru/x: «Поиск» в верхней полосе — /search, а ждали /ru/search",
     );
-    expect(broken.note).toContain("/docs: форма поиска — нет");
+    expect(broken.note).toContain("/docs: «Поиск» в верхней полосе — нет");
+    expect(broken.note).toContain("/sets: «Поиск» в верхней полосе — нет");
   });
 });
 
@@ -345,16 +347,19 @@ describe("страницы иконок в обходе (шаг 4 фазы 4)", 
   });
 });
 
-describe("страницы иконок и отпечатки содержимого (шаг 4 фазы 4)", () => {
-  const mockups = '<div class="mockup" data-mockup="m"></div>'.repeat(MOCKUPS);
-  /** Серверный HTML страницы иконки: метки, заголовок, превью и мокапы. */
+describe("страницы иконок и отпечатки содержимого (шаг 4 фазы 4, редизайн)", () => {
+  const tab = (id: string) =>
+    `<button id="ip-tab-${id}" type="button" role="tab" class="ip-tab">${id}</button>`;
+  /** Серверный HTML страницы иконки: метки, заголовок, иконка превью и вкладки. */
   const iconHtml = (name: string, content: string, extra = "") =>
     [
       `<meta name="iconavo-version" content="v1"/>`,
       `<meta name="${CONTENT_META}" content="${content}"/>`,
-      `<h1>${name.slice(name.indexOf(":") + 1)}</h1>`,
-      `<figure class="icon-preview preview-light"><svg viewBox="0 0 24 24"><path/></svg></figure>`,
-      mockups,
+      `<h1 class="ip-title">${name.slice(name.indexOf(":") + 1)}</h1>`,
+      `<div class="ip-tile"><div class="ip-tile-canvas"><svg width="288" height="288" viewBox="0 0 24 24" aria-hidden="true" class="ip-tile-icon"><path d="M0 0"/></svg></div></div>`,
+      (name === HIDDEN_ICON ? ["similar"] : ["similar", "code", "context"])
+        .map(tab)
+        .join(""),
       extra,
     ].join("");
   const setOf = (name: string) => name.slice(0, name.indexOf(":"));
@@ -363,8 +368,7 @@ describe("страницы иконок и отпечатки содержимо
     CRAWL_ICON_NAMES.flatMap((name) =>
       ["", "/ru"].map((lang) => {
         const path = `${lang}${iconPath(name)}`;
-        const mark =
-          name === HIDDEN_ICON ? (lang ? "Устарела" : "Deprecated") : "";
+        const mark = name === HIDDEN_ICON ? (lang ? "Удалена" : "Removed") : "";
         return page(
           path,
           change?.(path) ?? iconHtml(name, `c-${setOf(name)}`, mark),
@@ -372,24 +376,32 @@ describe("страницы иконок и отпечатки содержимо
       }),
     );
 
-  it("заголовок, превью, метки, мокапы; у скрытой — «Устарела»", () => {
+  it("заголовок, иконка превью, метки, вкладки; у скрытой — «Removed» и одна вкладка", () => {
     expect(iconPagesProblems(sample())).toEqual([]);
   });
 
-  it("нет мокапов, нет «Устарела» или страница не открыта — проблема", () => {
-    const noMockups = sample((path) =>
+  it("пустое превью, не те вкладки, нет «Удалена» или страница не открыта — проблема", () => {
+    const empty = sample((path) =>
       path === "/lucide/house"
-        ? iconHtml("lucide:house", "c-lucide").replaceAll("data-mockup", "x")
+        ? iconHtml("lucide:house", "c-lucide").replace('<path d="M0 0"/>', "")
         : undefined,
     );
-    expect(iconPagesProblems(noMockups)).toEqual([
-      `/lucide/house: нет ${MOCKUPS} мокапов`,
+    expect(iconPagesProblems(empty)).toEqual([
+      "/lucide/house: нет нарисованной иконки в превью",
+    ]);
+    const noCode = sample((path) =>
+      path === "/ru/lucide/house"
+        ? iconHtml("lucide:house", "c-lucide").replace(tab("code"), "")
+        : undefined,
+    );
+    expect(iconPagesProblems(noCode)).toEqual([
+      "/ru/lucide/house: вкладки «similar,context», а ждали «similar,code,context»",
     ]);
     const hidden = `/ru${iconPath(HIDDEN_ICON)}`;
     const notHidden = sample((path) =>
       path === hidden ? iconHtml(HIDDEN_ICON, "c-lucide") : undefined,
     );
-    expect(iconPagesProblems(notHidden)).toEqual([`${hidden}: нет «Устарела»`]);
+    expect(iconPagesProblems(notHidden)).toEqual([`${hidden}: нет «Удалена»`]);
     expect(iconPagesProblems(sample().slice(1))[0]).toBe(
       "/lucide/house: не открыта",
     );

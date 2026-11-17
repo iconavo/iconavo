@@ -9,15 +9,70 @@ import type {
 import type { SetSummary } from "../components/catalog/SetCard";
 import {
   getSet,
+  groupSets,
   type Release,
   releaseCounts,
   revisionLabel,
+  type SetGroupId,
   type SetInfo,
   visibleNames,
 } from "./catalog";
 import { countOf, formatDate, formatNumber, ICON_FORMS } from "./format";
-import { DICTIONARIES, type Lang, STYLE_KEYS } from "./i18n";
+import { DICTIONARIES, type Dictionary, type Lang, STYLE_KEYS } from "./i18n";
 import type { Style } from "./search";
+
+/** Тексты группы наборов: заголовок на главной, короткое имя — в боковой панели и чипсах, описание. */
+export const GROUP_TEXTS: Record<
+  SetGroupId,
+  { title: keyof Dictionary; short: keyof Dictionary; text: keyof Dictionary }
+> = {
+  material: {
+    title: "groupMaterialTitle",
+    short: "groupMaterialShort",
+    text: "groupMaterialText",
+  },
+  "ui-24": {
+    title: "groupUi24Title",
+    short: "groupUi24Short",
+    text: "groupUi24Text",
+  },
+  emoji: {
+    title: "groupEmojiTitle",
+    short: "groupEmojiShort",
+    text: "groupEmojiText",
+  },
+};
+
+/** Строка набора в боковой панели: число — без слова, как в макете. */
+export interface SidebarSet {
+  id: string;
+  name: string;
+  count: string;
+}
+
+export interface SidebarGroup {
+  id: SetGroupId;
+  title: string;
+  sets: SidebarSet[];
+}
+
+/** Наборы боковой панели по группам — на языке страницы. */
+export function sidebarGroups(
+  lang: Lang,
+  sets: Record<string, SetInfo>,
+): SidebarGroup[] {
+  const t = DICTIONARIES[lang];
+  return groupSets(sets).map((g) => ({
+    id: g.id,
+    title: t[GROUP_TEXTS[g.id].short],
+    sets: g.ids.flatMap((id) => {
+      const info = sets[id];
+      return info === undefined
+        ? []
+        : [{ id, name: info.name, count: formatNumber(lang, info.total) }];
+    }),
+  }));
+}
 
 /** Добавленных иконок в превью выпуска. */
 export const RELEASE_PREVIEW = 24;

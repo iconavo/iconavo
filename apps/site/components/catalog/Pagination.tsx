@@ -13,10 +13,13 @@ export function Pagination({
   pages,
   hrefOf,
   onSelect,
+  label,
 }: {
   lang: Lang;
   page: number;
   pages: number;
+  /** Своё имя области: у страницы две строки номеров — над сеткой и под ней. */
+  label?: string;
   hrefOf: (page: number) => string;
   onSelect: (page: number) => void;
 }) {
@@ -37,14 +40,18 @@ export function Pagination({
     </a>
   );
   return (
-    <nav aria-label={t.setPages} className="pagination">
+    <nav aria-label={label ?? t.setPages} className="pagination">
       <ul className="pagination-list">
         <li>
           {page > 1 ? (
-            link(page - 1, <Icon icon="lucide:chevron-left" />, t.pagePrev)
+            link(
+              page - 1,
+              <Icon icon="material-symbols:keyboard-arrow-left" />,
+              t.pagePrev,
+            )
           ) : (
             <span className="pagination-off" aria-hidden="true">
-              <Icon icon="lucide:chevron-left" />
+              <Icon icon="material-symbols:keyboard-arrow-left" />
             </span>
           )}
         </li>
@@ -59,10 +66,14 @@ export function Pagination({
         ))}
         <li>
           {page < pages ? (
-            link(page + 1, <Icon icon="lucide:chevron-right" />, t.pageNext)
+            link(
+              page + 1,
+              <Icon icon="material-symbols:keyboard-arrow-right" />,
+              t.pageNext,
+            )
           ) : (
             <span className="pagination-off" aria-hidden="true">
-              <Icon icon="lucide:chevron-right" />
+              <Icon icon="material-symbols:keyboard-arrow-right" />
             </span>
           )}
         </li>

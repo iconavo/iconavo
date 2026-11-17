@@ -119,7 +119,7 @@ export function renderSiteCheckPage(results: SiteResult[]): string {
     "Сайт в трёх браузерах",
     STYLE,
     `<h1>Сайт в трёх браузерах</h1>
-<p class="muted">pnpm site --check: продакшен-сборка apps/site (next build, next start) на этом компьютере; иконки сайта отдаёт превью API этой ветки. Сначала обход всех страниц по HTTP — коды, заголовки, языки, ссылки, разделы README, — затем каждая страница в Chrome, Firefox и WebKit, движке Safari, и меню темы. Доступность проверяет axe-core по правилам WCAG 2.2 A и AA в светлой и тёмной теме. «—» — не проверялось или только сведения.</p>
+<p class="muted">pnpm site --check: продакшен-сборка apps/site (next build, next start) на этом компьютере; иконки сайта отдаёт превью API этой ветки. Сначала обход всех страниц по HTTP — коды, заголовки, языки, ссылки, разделы README, — затем каждая страница в Chrome, Firefox и WebKit, движке Safari, и кнопка темы. Доступность проверяет axe-core по правилам WCAG 2.2 A и AA в светлой и тёмной теме. «—» — не проверялось или только сведения.</p>
 ${verdict}
 ${failures ? `<ul>${failures}</ul>` : ""}
 <table><thead><tr><th>Проверка</th>${head}</tr></thead><tbody>
