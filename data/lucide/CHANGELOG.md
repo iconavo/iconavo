@@ -4,6 +4,20 @@
 Имена не пропадают: иконка, которую удалил автор, скрыта, но работает по имени, а старое имя переименованной ведёт на новое (ADR-0005).
 Скрытия и переименования вы одобряете лично в pull request (ADR-0019). Полные списки — в `changelog.json`.
 
+## 17 ноября 2026 · версия 979b90dd
+
+Прошлая версия: 09cf60cb · источник: f8feea7 · иконок: 2 089.
+
+**Требуют вашего одобрения**
+
+- Скрыты — автор удалил, имя продолжает работать (6): `fold-horizontal`, `fold-vertical`, `square-centerline-dashed-horizontal`, `square-centerline-dashed-vertical`, `unfold-horizontal`, `unfold-vertical`
+- Переименованы — старое имя ведёт на новое (2): `triangles-centerline-dashed-horizontal` → `carets-to-axis-dashed-horizontal`, `triangles-centerline-dashed-vertical` → `carets-to-axis-dashed-vertical`
+
+**Изменения**
+
+- Добавлены (40): `arrows-from-axis-dashed-horizontal`, `arrows-from-axis-dashed-vertical`, `arrows-from-axis-horizontal`, `arrows-from-axis-vertical`, `arrows-to-axis-dashed-horizontal`, `arrows-to-axis-dashed-vertical`, `arrows-to-axis-horizontal`, `arrows-to-axis-vertical`, `bot-check`, `bot-minus`, `bot-plus`, `bot-x`, `carets-from-axis-dashed-horizontal`, `carets-from-axis-dashed-vertical`, `carets-from-axis-horizontal`, `carets-from-axis-vertical`, `carets-to-axis-horizontal`, `carets-to-axis-vertical`, `chevrons-from-axis-dashed-horizontal`, `chevrons-from-axis-dashed-vertical`, `chevrons-from-axis-horizontal`, `chevrons-from-axis-vertical`, `chevrons-to-axis-dashed-horizontal`, `chevrons-to-axis-dashed-vertical`, `chevrons-to-axis-horizontal`, `chevrons-to-axis-vertical`, `cinema`, `circle-bounce`, `circle-person-arms-spread`, `doghouse`, `hand-truck`, `house-arrow-left`, `house-arrow-right`, `nigerian-naira`, `square-axis-dashed-horizontal`, `square-axis-dashed-vertical`, `square-axis-horizontal`, `square-axis-vertical`, `stroke-width`, `warehouse-waves`
+- Изменены (1): `loader-pinwheel`
+
 ## 14 ноября 2026 · версия 09cf60cb
 
 Прошлая версия: ac88e2c8 · источник: 55782be · иконок: 2 055.
