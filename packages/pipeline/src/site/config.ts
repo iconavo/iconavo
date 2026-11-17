@@ -226,16 +226,17 @@ export const STYLES_SET = "ph";
  * повторяет код сайта, а сверяет его с README тега и ответом превью edge API.
  */
 export const CODE_ICON = "lucide:house";
-export const CODE_SETTINGS =
-  "size=64&color=e11d48&stroke=1.5&rotate=90&flip=horizontal";
+export const CODE_SETTINGS = "size=64&color=e11d48&stroke=1.5";
+/**
+ * Код генератора (редизайн) для CODE_SETTINGS: поворота и отражения в редизайне нет — в макете их нет ни в
+ * панели, ни на странице иконки.
+ */
 export const CODE_EXPECT = {
-  tag: '<iconavo-icon icon="lucide:house" width="64" color="#e11d48" stroke-width="1.5" rotate="90deg" flip="horizontal"></iconavo-icon>',
+  tag: '<iconavo-icon icon="lucide:house" width="64" color="#e11d48" stroke-width="1.5"></iconavo-icon>',
   react:
-    'import { Icon } from "@iconavo-ui/react";\n\n<Icon icon="lucide:house" width={64} color="#e11d48" strokeWidth={1.5} rotate="90deg" flip="horizontal" />',
+    'import { Icon } from "@iconavo-ui/react";\n\n<Icon icon="lucide:house" width={64} color="#e11d48" strokeWidth={1.5} />',
   /** Параметры адреса SVG edge API для тех же настроек. */
-  query: "width=64&color=e11d48&stroke-width=1.5&rotate=90deg&flip=horizontal",
-  css: (api: string) =>
-    `<link rel="stylesheet" href="${api}/lucide.css?icons=house&color=e11d48&stroke-width=1.5">\n<span class="icon--lucide icon--lucide--house" style="font-size: 64px; transform: rotate(90deg) scaleX(-1)"></span>`,
+  query: "width=64&color=e11d48&stroke-width=1.5",
   /** Цвет из адреса — у PNG. */
   rgb: [225, 29, 72] as const,
 };
@@ -248,5 +249,7 @@ export const CODE_FILLED = {
   path: "/ph/house-bold?color=e11d48&stroke=1.5",
   tag: '<iconavo-icon icon="ph:house-bold" width="24" color="#e11d48"></iconavo-icon>',
 };
-/** Размеры PNG, которые скачивает проверка: самый маленький и самый большой (ADR-0042). */
-export const PNG_CHECK_SIZES = [16, 512] as const;
+/** Размер из CODE_SETTINGS. */
+export const CODE_SIZE = 64;
+/** PNG, которые скачивает проверка: 1× и 4× размера из настроек (меню «Download ▾», редизайн). */
+export const PNG_CHECK_SCALES = [1, 4] as const;

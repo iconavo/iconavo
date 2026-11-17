@@ -22,7 +22,6 @@ import {
 } from "./config.js";
 import {
   type CrawledPage,
-  codeHtmlProblems,
   contentVerdict,
   crawl,
   freshnessVerdict,
@@ -135,16 +134,13 @@ export async function checkLiveSite(o: {
         fail(`оглавление каталога раздачи: ${e.message.split("\n")[0]}`),
     ),
   });
-  const iconProblems = [
-    ...iconPagesProblems(pages),
-    ...codeHtmlProblems(pages, o.readme),
-  ];
+  const iconProblems = iconPagesProblems(pages);
   rows.push({
     what: "Страницы иконок",
     verdict:
       iconProblems.length === 0
         ? pass(
-            "выборка обхода: заголовок, превью, метки, мокапы, код тега и строка скрипта из README; скрытая — «Устарела»",
+            "выборка обхода: заголовок, иконка превью, метки, вкладки; скрытая — «Removed» / «Удалена»",
           )
         : fail(iconProblems.slice(0, 5).join("; ")),
   });
