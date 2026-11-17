@@ -7614,35 +7614,35 @@
     },
     "adjust": {
       "en": {
-        "description": "A solid black circle with a small white hole in its center, usually representing adjustment, focus, or a target point in an interface.",
+        "description": "A solid black circle with a small white dot at its center, usually indicating a standby or idle state.",
         "synonyms": [
-          "target",
-          "focus",
-          "aim",
-          "bullseye",
+          "sleep mode",
+          "idle",
+          "waiting",
+          "indicator",
           "radio button",
-          "center",
-          "dot",
           "circle",
-          "precision",
-          "calibrate"
+          "disc",
+          "power",
+          "paused",
+          "hold"
         ]
       },
       "fingerprint": "13d866af330e",
       "promptVersion": 1,
       "ru": {
-        "description": "Чёрный круг с белым центральным отверстием; в интерфейсе обозначает настройку, регулировку или выбор точки.",
+        "description": "Изображена чёрная сплошная окружность с маленьким белым кружком в центре; обычно обозначает режим ожидания или индикатор состояния.",
         "synonyms": [
-          "регулировка",
-          "настройка",
-          "точка",
-          "мишень",
-          "прицел",
-          "круг",
+          "режим ожидания",
+          "ожидание",
+          "спящий режим",
+          "пауза",
+          "индикатор",
+          "радиокнопка",
+          "кружок",
+          "диск",
           "выбор",
-          "фокус",
-          "центр",
-          "кнопка"
+          "готовность"
         ]
       },
       "tags": [
@@ -52927,65 +52927,6 @@
         "free"
       ]
     },
-    "crop-landscape": {
-      "en": {
-        "description": "A wide rounded rectangle representing landscape orientation or a crop frame in landscape format.",
-        "synonyms": [
-          "crop",
-          "landscape",
-          "orientation",
-          "rectangle",
-          "frame",
-          "horizontal",
-          "aspect ratio",
-          "trim",
-          "wide",
-          "photo format"
-        ]
-      },
-      "fingerprint": "0d3fba9e2a96",
-      "promptVersion": 1,
-      "ru": {
-        "description": "Прямоугольник с закруглёнными углами, горизонтальная рамка; обозначает инструмент обрезки в альбомной ориентации.",
-        "synonyms": [
-          "обрезка",
-          "кадрирование",
-          "альбом",
-          "горизонтальный",
-          "прямоугольник",
-          "рамка",
-          "кроп",
-          "пейзаж",
-          "формат",
-          "соотношение сторон"
-        ]
-      },
-      "tags": [
-        "crop",
-        "landscape"
-      ]
-    },
-    "crop-landscape-outline": {
-      "fingerprint": "7e16396ad284",
-      "tags": [
-        "crop",
-        "landscape"
-      ]
-    },
-    "crop-landscape-outline-sharp": {
-      "fingerprint": "332be0254ea7",
-      "tags": [
-        "crop",
-        "landscape"
-      ]
-    },
-    "crop-landscape-sharp": {
-      "fingerprint": "3191035ab19c",
-      "tags": [
-        "crop",
-        "landscape"
-      ]
-    },
     "crop-portrait": {
       "en": {
         "description": "A vertical rounded rectangle representing a portrait-oriented crop frame, used to crop images or set portrait orientation.",
@@ -63401,6 +63342,54 @@
       "tags": [
         "document",
         "share"
+      ]
+    },
+    "document-share-off": {
+      "fingerprint": "bb3532a6e41e",
+      "tags": [
+        "document",
+        "share",
+        "off"
+      ]
+    },
+    "document-share-off-outline": {
+      "fingerprint": "68ae3fec5d7a",
+      "tags": [
+        "document",
+        "share",
+        "off"
+      ]
+    },
+    "document-share-off-outline-rounded": {
+      "fingerprint": "b51e799efab2",
+      "tags": [
+        "document",
+        "share",
+        "off"
+      ]
+    },
+    "document-share-off-outline-sharp": {
+      "fingerprint": "6d3eb5c42e8b",
+      "tags": [
+        "document",
+        "share",
+        "off"
+      ]
+    },
+    "document-share-off-rounded": {
+      "fingerprint": "3c68e9e1837f",
+      "tags": [
+        "document",
+        "share",
+        "off"
+      ]
+    },
+    "document-share-off-sharp": {
+      "fingerprint": "5f861e44d7c8",
+      "tags": [
+        "document",
+        "share",
+        "off"
       ]
     },
     "document-share-outline": {
@@ -74473,13 +74462,6 @@
     },
     "eyeglasses-2-outline-sharp": {
       "fingerprint": "92486df8f592",
-      "tags": [
-        "eyeglasses",
-        "2"
-      ]
-    },
-    "eyeglasses-2-rounded": {
-      "fingerprint": "a28337ae61ef",
       "tags": [
         "eyeglasses",
         "2"
@@ -89201,6 +89183,30 @@
       "tags": [
         "frame",
         "person"
+      ]
+    },
+    "frame-person-2": {
+      "fingerprint": "c4a4e1f8e463",
+      "tags": [
+        "frame",
+        "person",
+        "2"
+      ]
+    },
+    "frame-person-2-rounded": {
+      "fingerprint": "2f447688a0bf",
+      "tags": [
+        "frame",
+        "person",
+        "2"
+      ]
+    },
+    "frame-person-2-sharp": {
+      "fingerprint": "a8a9a47f2c61",
+      "tags": [
+        "frame",
+        "person",
+        "2"
       ]
     },
     "frame-person-mic": {
@@ -131240,51 +131246,6 @@
         "on"
       ]
     },
-    "mode-standby": {
-      "en": {
-        "description": "A solid black circle with a small white dot at its center, usually indicating a standby or idle state.",
-        "synonyms": [
-          "sleep mode",
-          "idle",
-          "waiting",
-          "indicator",
-          "radio button",
-          "circle",
-          "disc",
-          "power",
-          "paused",
-          "hold"
-        ]
-      },
-      "fingerprint": "13d866af330e",
-      "promptVersion": 1,
-      "ru": {
-        "description": "Изображена чёрная сплошная окружность с маленьким белым кружком в центре; обычно обозначает режим ожидания или индикатор состояния.",
-        "synonyms": [
-          "режим ожидания",
-          "ожидание",
-          "спящий режим",
-          "пауза",
-          "индикатор",
-          "радиокнопка",
-          "кружок",
-          "диск",
-          "выбор",
-          "готовность"
-        ]
-      },
-      "tags": [
-        "mode",
-        "standby"
-      ]
-    },
-    "mode-standby-outline": {
-      "fingerprint": "f3d46a0f749a",
-      "tags": [
-        "mode",
-        "standby"
-      ]
-    },
     "model-training": {
       "en": {
         "description": "A light bulb inside a circular arrow pointing right, representing model training or an iterative improvement process.",
@@ -159410,6 +159371,94 @@
         "error"
       ]
     },
+    "print-landscape-long": {
+      "fingerprint": "b18bdd6c209a",
+      "tags": [
+        "print",
+        "landscape",
+        "long"
+      ]
+    },
+    "print-landscape-long-outline": {
+      "fingerprint": "09bf6e20141b",
+      "tags": [
+        "print",
+        "landscape",
+        "long"
+      ]
+    },
+    "print-landscape-long-outline-rounded": {
+      "fingerprint": "523c2ee1fd2b",
+      "tags": [
+        "print",
+        "landscape",
+        "long"
+      ]
+    },
+    "print-landscape-long-outline-sharp": {
+      "fingerprint": "4e2de2812601",
+      "tags": [
+        "print",
+        "landscape",
+        "long"
+      ]
+    },
+    "print-landscape-long-rounded": {
+      "fingerprint": "5b75a251ecdf",
+      "tags": [
+        "print",
+        "landscape",
+        "long"
+      ]
+    },
+    "print-landscape-long-sharp": {
+      "fingerprint": "2143be187923",
+      "tags": [
+        "print",
+        "landscape",
+        "long"
+      ]
+    },
+    "print-landscape-short": {
+      "fingerprint": "8669d0b49c22",
+      "tags": [
+        "print",
+        "landscape",
+        "short"
+      ]
+    },
+    "print-landscape-short-outline": {
+      "fingerprint": "5ca105b63eb6",
+      "tags": [
+        "print",
+        "landscape",
+        "short"
+      ]
+    },
+    "print-landscape-short-outline-rounded": {
+      "fingerprint": "17f1c5cc2263",
+      "tags": [
+        "print",
+        "landscape",
+        "short"
+      ]
+    },
+    "print-landscape-short-outline-sharp": {
+      "fingerprint": "47a01e69d525",
+      "tags": [
+        "print",
+        "landscape",
+        "short"
+      ]
+    },
+    "print-landscape-short-sharp": {
+      "fingerprint": "5efcbe0c8d66",
+      "tags": [
+        "print",
+        "landscape",
+        "short"
+      ]
+    },
     "print-lock": {
       "en": {
         "description": "A printer with a padlock at the bottom right, meaning secure or confidential printing that requires a passcode.",
@@ -159499,6 +159548,102 @@
       "fingerprint": "031203f5e530",
       "tags": [
         "print"
+      ]
+    },
+    "print-portrait-long": {
+      "fingerprint": "1eae653805a6",
+      "tags": [
+        "print",
+        "portrait",
+        "long"
+      ]
+    },
+    "print-portrait-long-outline": {
+      "fingerprint": "1fb0012a1ed0",
+      "tags": [
+        "print",
+        "portrait",
+        "long"
+      ]
+    },
+    "print-portrait-long-outline-rounded": {
+      "fingerprint": "8c0e4bd1e8d0",
+      "tags": [
+        "print",
+        "portrait",
+        "long"
+      ]
+    },
+    "print-portrait-long-outline-sharp": {
+      "fingerprint": "0704bf1e4d0a",
+      "tags": [
+        "print",
+        "portrait",
+        "long"
+      ]
+    },
+    "print-portrait-long-rounded": {
+      "fingerprint": "001b984042b6",
+      "tags": [
+        "print",
+        "portrait",
+        "long"
+      ]
+    },
+    "print-portrait-long-sharp": {
+      "fingerprint": "0d1703079828",
+      "tags": [
+        "print",
+        "portrait",
+        "long"
+      ]
+    },
+    "print-portrait-short": {
+      "fingerprint": "c2374776842e",
+      "tags": [
+        "print",
+        "portrait",
+        "short"
+      ]
+    },
+    "print-portrait-short-outline": {
+      "fingerprint": "1d5f04a03446",
+      "tags": [
+        "print",
+        "portrait",
+        "short"
+      ]
+    },
+    "print-portrait-short-outline-rounded": {
+      "fingerprint": "c733bc233c10",
+      "tags": [
+        "print",
+        "portrait",
+        "short"
+      ]
+    },
+    "print-portrait-short-outline-sharp": {
+      "fingerprint": "7f8c54f967b0",
+      "tags": [
+        "print",
+        "portrait",
+        "short"
+      ]
+    },
+    "print-portrait-short-rounded": {
+      "fingerprint": "4254199ba18a",
+      "tags": [
+        "print",
+        "portrait",
+        "short"
+      ]
+    },
+    "print-portrait-short-sharp": {
+      "fingerprint": "7d9f04dc52f7",
+      "tags": [
+        "print",
+        "portrait",
+        "short"
       ]
     },
     "print-rounded": {
@@ -208422,6 +208567,60 @@
         "touch",
         "double",
         "2"
+      ]
+    },
+    "touch-double-2-hold": {
+      "fingerprint": "f2c688d7527e",
+      "tags": [
+        "touch",
+        "double",
+        "2",
+        "hold"
+      ]
+    },
+    "touch-double-2-hold-outline": {
+      "fingerprint": "b007fe39440c",
+      "tags": [
+        "touch",
+        "double",
+        "2",
+        "hold"
+      ]
+    },
+    "touch-double-2-hold-outline-rounded": {
+      "fingerprint": "4058ae5e5354",
+      "tags": [
+        "touch",
+        "double",
+        "2",
+        "hold"
+      ]
+    },
+    "touch-double-2-hold-outline-sharp": {
+      "fingerprint": "a96bec5ab098",
+      "tags": [
+        "touch",
+        "double",
+        "2",
+        "hold"
+      ]
+    },
+    "touch-double-2-hold-rounded": {
+      "fingerprint": "1aede8abc1c6",
+      "tags": [
+        "touch",
+        "double",
+        "2",
+        "hold"
+      ]
+    },
+    "touch-double-2-hold-sharp": {
+      "fingerprint": "d727d8c198f2",
+      "tags": [
+        "touch",
+        "double",
+        "2",
+        "hold"
       ]
     },
     "touch-double-2-outline": {

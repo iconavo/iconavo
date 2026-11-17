@@ -3,6 +3,67 @@
   "releases": [
     {
       "added": [
+        "document-share-off",
+        "document-share-off-outline",
+        "document-share-off-outline-rounded",
+        "document-share-off-outline-sharp",
+        "document-share-off-rounded",
+        "document-share-off-sharp",
+        "frame-person-2",
+        "frame-person-2-rounded",
+        "frame-person-2-sharp",
+        "print-landscape-long",
+        "print-landscape-long-outline",
+        "print-landscape-long-outline-rounded",
+        "print-landscape-long-outline-sharp",
+        "print-landscape-long-rounded",
+        "print-landscape-long-sharp",
+        "print-landscape-short",
+        "print-landscape-short-outline",
+        "print-landscape-short-outline-rounded",
+        "print-landscape-short-outline-sharp",
+        "print-landscape-short-sharp",
+        "print-portrait-long",
+        "print-portrait-long-outline",
+        "print-portrait-long-outline-rounded",
+        "print-portrait-long-outline-sharp",
+        "print-portrait-long-rounded",
+        "print-portrait-long-sharp",
+        "print-portrait-short",
+        "print-portrait-short-outline",
+        "print-portrait-short-outline-rounded",
+        "print-portrait-short-outline-sharp",
+        "print-portrait-short-rounded",
+        "print-portrait-short-sharp",
+        "touch-double-2-hold",
+        "touch-double-2-hold-outline",
+        "touch-double-2-hold-outline-rounded",
+        "touch-double-2-hold-outline-sharp",
+        "touch-double-2-hold-rounded",
+        "touch-double-2-hold-sharp"
+      ],
+      "changed": [
+        "eyeglasses-2-outline-rounded",
+        "eyeglasses-2-rounded"
+      ],
+      "date": "2026-11-12T11:08:48Z",
+      "hidden": [
+        "crop-landscape",
+        "crop-landscape-outline"
+      ],
+      "previous": "76e7ac83",
+      "renamed": {
+        "crop-landscape-outline-sharp": "rectangle-outline",
+        "crop-landscape-sharp": "rectangle",
+        "mode-standby": "adjust",
+        "mode-standby-outline": "adjust-outline"
+      },
+      "revision": "0.49.0",
+      "total": 15833,
+      "version": "4149b6cc"
+    },
+    {
+      "added": [
         "devices-2",
         "devices-2-outline",
         "devices-2-outline-rounded",
