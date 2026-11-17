@@ -23,6 +23,7 @@ import { buildPackage, packageJsonOf } from "./files.js";
 import { loadNpmSet } from "./load.js";
 import {
   integrityHex,
+  isTarballNotServed,
   type NpmVersionDoc,
   type Packument,
   type Provenance,
@@ -138,10 +139,11 @@ export async function verifyPackages(
       const pkg = buildPackage(set, tag);
       entry.fingerprint = pkg.fingerprint;
       const expected = options.expected?.get(config.id);
-      // Реестр показывает новую версию и её подпись не сразу: ждём их под тегом до срока.
+      // Реестр показывает новую версию, её подпись и архив не сразу: ждём их под тегом до срока.
       let p: Packument | undefined;
       let doc: NpmVersionDoc | undefined;
       let prov: Provenance | undefined;
+      let fetched: Map<string, Uint8Array> | undefined;
       for (;;) {
         p = await options.registry.packument(pkg.name);
         doc = tagged(p, tag);
@@ -153,13 +155,21 @@ export async function verifyPackages(
         if (arrived && doc?.attestationsUrl !== undefined) {
           prov = await options.registry.provenance(doc);
         }
-        if (arrived && prov !== undefined) break;
+        if (arrived && doc !== undefined && prov !== undefined) {
+          try {
+            fetched = await options.registry.files(doc);
+            break;
+          } catch (e) {
+            // Версия и подпись видны, а архив ещё не раздаётся — ждём и его.
+            if (!isTarballNotServed(e)) throw e;
+          }
+        }
         // Пакета нет и этот запуск его не выпускал — ждать нечего.
         if (p === undefined && expected === undefined) break;
         const left = deadline - now();
         if (left <= 0) break;
         log(
-          `${pkg.name}: жду, пока реестр покажет ${expected ?? "новую версию"} и её подпись…`,
+          `${pkg.name}: жду, пока реестр покажет ${expected ?? "новую версию"}, её подпись и архив…`,
         );
         await sleep(Math.min(pollMs, left));
       }
@@ -196,7 +206,7 @@ export async function verifyPackages(
         continue;
       }
 
-      const published = await options.registry.files(doc);
+      const published = fetched ?? (await options.registry.files(doc));
       const wanted = new Map(
         [...pkg.files, packageJsonOf(set, tag, pkg, doc.version)].map((f) => [
           f.path,

@@ -207,10 +207,30 @@ export const integrityHex = (integrity: string) =>
 export const integrityOfBytes = (bytes: Uint8Array) =>
   `sha512-${createHash("sha512").update(bytes).digest("base64")}`;
 
+/**
+ * Описание пакета уже показывает версию, а архив реестр ещё не раздаёт (404): npm выкладывает его с
+ * задержкой — 17 ноября 2026 так было у @iconavo-ui/icons-lucide 1.8.0. Проверка с --wait на такой
+ * ошибке ждёт дальше, остальные команды останавливаются с этим сообщением.
+ */
+export function tarballNotServed(version: string): Error {
+  return Object.assign(
+    new Error(
+      `npm: архив ${version} реестр ещё не раздаёт (HTTP 404): npm выкладывает его с задержкой — повторите «Проверку» позже`,
+    ),
+    { tarballNotServed: true },
+  );
+}
+
+export const isTarballNotServed = (e: unknown): boolean =>
+  (e as { tarballNotServed?: boolean } | undefined)?.tarballNotServed === true;
+
 export interface RegistryClient {
   /** Описание пакета; пакета нет — undefined. */
   packument(name: string): Promise<Packument | undefined>;
-  /** Файлы опубликованной версии: путь без верхней папки package/ → байты. */
+  /**
+   * Файлы опубликованной версии: путь без верхней папки package/ → байты. Архив ещё не раздаётся (404) —
+   * ошибка tarballNotServed.
+   */
   files(doc: NpmVersionDoc): Promise<Map<string, Uint8Array>>;
   /** Подпись provenance версии; нет — undefined. */
   provenance(doc: NpmVersionDoc): Promise<Provenance | undefined>;
@@ -301,9 +321,13 @@ export function registryClient(options: RegistryOptions = {}): RegistryClient {
       const bytes = await requestWithRetries(
         `npm: архив ${doc.version}`,
         (signal) => fetchFn(url, { signal }),
-        async (res) => new Uint8Array(await res.arrayBuffer()),
-        rules,
+        async (res) =>
+          res.status === 404
+            ? undefined
+            : new Uint8Array(await res.arrayBuffer()),
+        { ...rules, allow404: true },
       );
+      if (bytes === undefined) throw tarballNotServed(doc.version);
       if (integrityOfBytes(bytes) !== doc.integrity) {
         throw new Error(
           `npm: целостность архива ${doc.version} не совпала с реестром`,

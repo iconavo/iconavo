@@ -22,6 +22,7 @@ import {
   type NpmVersionDoc,
   type Provenance,
   type RegistryClient,
+  tarballNotServed,
 } from "./registry.js";
 
 export interface NpmDemoSet extends CdnDemoSet {
@@ -103,6 +104,11 @@ export interface FakeVersion {
   provenance?: Provenance | null;
   /** Сколько первых запросов подписи она ещё «не готова»: так npm отдаёт её после своей проверки. */
   provenanceLag?: number;
+  /**
+   * Сколько первых запросов архива он ещё не раздаётся (404), хотя версия уже в описании пакета: так
+   * было 17 ноября 2026 у @iconavo-ui/icons-lucide 1.8.0.
+   */
+  tarballLag?: number;
   /** Время выхода; по умолчанию — по порядку в списке. */
   time?: string;
 }
@@ -125,6 +131,7 @@ export function fakeRegistry(
   const asked = new Map<string, number>();
   const byTarball = new Map<string, FakeVersion>();
   const provenanceAsked = new Map<FakeVersion, number>();
+  const tarballAsked = new Map<FakeVersion, number>();
   const client: RegistryClient = {
     async packument(name) {
       calls.push(`packument ${name}`);
@@ -177,6 +184,9 @@ export function fakeRegistry(
       calls.push(`files ${doc.version}`);
       const v = byTarball.get(doc.tarball);
       if (v === undefined) throw new Error(`нет архива ${doc.tarball}`);
+      const asked = tarballAsked.get(v) ?? 0;
+      tarballAsked.set(v, asked + 1);
+      if (asked < (v.tarballLag ?? 0)) throw tarballNotServed(v.version);
       return new Map(v.files);
     },
     async provenance(doc) {

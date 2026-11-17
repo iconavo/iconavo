@@ -257,6 +257,30 @@ describe("ожидание выпущенной версии (npm показыв
     expect(report.packages[0]?.status).toBe("ok");
   });
 
+  it("версия и подпись видны, а архив ещё не раздаётся — ждёт и его", async () => {
+    // Так было 17 ноября 2026 у @iconavo-ui/icons-lucide 1.8.0: описание пакета уже с версией, архив — 404.
+    const v = await version("1.0.0", { trusted: false, tarballLag: 2 });
+    const { report, sleeps } = await verify(
+      { [NAME]: { versions: [v], tags: { next: "1.0.0" } } },
+      60_000,
+    );
+    expect(sleeps).toEqual([20_000, 20_000]);
+    expect(report.packages[0]).toMatchObject({ status: "ok", files: 8 });
+  });
+
+  it("срок вышел, а архив так и не раздаётся — не так, с объяснением", async () => {
+    const v = await version("1.0.0", { trusted: false, tarballLag: 5 });
+    const { report, sleeps } = await verify(
+      { [NAME]: { versions: [v], tags: { next: "1.0.0" } } },
+      40_000,
+    );
+    expect(sleeps).toEqual([20_000, 20_000]);
+    expect(report.packages[0]?.status).toBe("failed");
+    expect(report.packages[0]?.problems).toEqual([
+      expect.stringContaining("архив 1.0.0 реестр ещё не раздаёт (HTTP 404)"),
+    ]);
+  });
+
   it("срок вышел, а выпущенной версии нет — не так, с объяснением", async () => {
     const old = await version("1.0.0", { trusted: false });
     const { report, sleeps } = await verify(
