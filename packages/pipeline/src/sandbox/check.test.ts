@@ -15,6 +15,7 @@ import {
 } from "./check-report.js";
 import {
   isAbortedPrefetch,
+  isAbortedScript,
   isRequestFailure,
   layoutVerdict,
 } from "./verdict.js";
@@ -124,6 +125,18 @@ describe("разбор проверки в браузерах", () => {
       ),
     ).toBe(false);
     expect(isRequestFailure("TypeError: boom")).toBe(false);
+    // Firefox: скрипт Next.js, оборванный перезагрузкой, — не ошибка; скрипт тега или примера — ошибка.
+    expect(
+      isAbortedScript(
+        '[JavaScript Warning: "Loading failed for the <script> with source “http://127.0.0.1:37397/_next/static/chunks/1n69piibvegtq.js”." {file: "http://127.0.0.1:37397/" line: 1}]',
+      ),
+    ).toBe(true);
+    expect(
+      isAbortedScript(
+        "Loading failed for the <script> with source “http://127.0.0.1:4282/icon/iconavo-icon.js”.",
+      ),
+    ).toBe(false);
+    expect(isAbortedScript("Some other warning")).toBe(false);
     // WebKit: предзагрузка Next.js, оборванная уходом со страницы, — не ошибка; та же запись о хосте
     // иконок — ошибка.
     expect(
