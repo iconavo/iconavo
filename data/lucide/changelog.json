@@ -3,6 +3,20 @@
   "releases": [
     {
       "added": [
+        "jacket",
+        "paint-gun"
+      ],
+      "changed": [
+        "spray-can"
+      ],
+      "date": "2026-11-18T11:41:40Z",
+      "previous": "979b90dd",
+      "revision": "149eba0aea48178a5ab1efe2c701de1da94f4be8",
+      "total": 2091,
+      "version": "ba0790b2"
+    },
+    {
+      "added": [
         "arrows-from-axis-dashed-horizontal",
         "arrows-from-axis-dashed-vertical",
         "arrows-from-axis-horizontal",
