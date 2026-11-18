@@ -8,6 +8,15 @@ import {
 import { StorageError } from "./http.js";
 import { manifestLoader, parseManifest } from "./manifest.js";
 
+/** Обещание, которое обязано выполниться быстро: зависло — ошибка теста, а не вечное ожидание. */
+const within = <T>(promise: Promise<T>, ms = 300): Promise<T> =>
+  Promise.race([
+    promise,
+    new Promise<never>((_, reject) =>
+      setTimeout(() => reject(new Error(`не дождались за ${ms} мс`)), ms),
+    ),
+  ]);
+
 describe("parseManifest", () => {
   it("наборы в Map: имена из прототипа объекта ничего не находят", () => {
     const manifest = parseManifest(manifestText({ lucide: VERSION }));
@@ -63,15 +72,50 @@ describe("manifestLoader", () => {
     };
   };
 
-  it("одна загрузка на одновременные запросы и на минуту", async () => {
+  it("прочитанный манифест — на минуту; одновременные запросы читают каждый сам", async () => {
     const { bucket, load, advance } = setup();
     await Promise.all([load(), load(), load()]);
-    expect(bucket.reads).toEqual(["manifest.json"]);
+    expect(bucket.reads).toHaveLength(3);
     advance(59_999);
     await load();
-    expect(bucket.reads).toHaveLength(1);
+    expect(bucket.reads).toHaveLength(3);
     advance(1);
     await load();
+    expect(bucket.reads).toHaveLength(4);
+  });
+
+  // 18 ноября 2026: живой API отвечал 500 «This promise was created by a request that has since ended».
+  // Запрос, начавший загрузку, оборвался, а другой ждал его загрузку — в workerd так нельзя.
+  it("загрузка оборванного запроса не держит другие: и холодная копия, и обновление через минуту", async () => {
+    const { bucket, load, advance } = setup();
+    bucket.stuck.add("manifest.json");
+    void load();
+    expect((await within(load())).get("lucide")?.version).toBe(VERSION);
+    advance(60_000);
+    bucket.stuck.add("manifest.json");
+    void load();
+    expect((await within(load())).get("lucide")?.version).toBe(VERSION);
+  });
+
+  it("запись в кэше дата-центра нашлась, но не дочиталась — как промах: манифест из R2", async () => {
+    const bucket = fakeBucket({
+      "manifest.json": manifestText({ lucide: VERSION }),
+    });
+    const cache = fakeCache();
+    await manifestLoader(
+      bucket,
+      () => 0,
+      () => {},
+      cache,
+    )();
+    cache.broken = /manifest/;
+    const cold = manifestLoader(
+      bucket,
+      () => 0,
+      () => {},
+      cache,
+    );
+    expect((await cold()).get("lucide")?.version).toBe(VERSION);
     expect(bucket.reads).toHaveLength(2);
   });
 

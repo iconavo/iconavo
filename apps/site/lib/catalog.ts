@@ -18,7 +18,7 @@ import {
   type Style,
 } from "@iconavo-ui/search";
 import { cache } from "react";
-import { API } from "./api";
+import { API, fetchApi } from "./api";
 
 /** Метка общих страниц: их данные — весь каталог (ADR-0039). */
 export const CATALOG_TAG = "catalog";
@@ -225,13 +225,13 @@ interface Got {
 
 const onServer = typeof window === "undefined";
 
-/** JSON адреса API; 404 — undefined, другой сбой — ошибка. */
+/** JSON адреса API; 404 — undefined, другой сбой — ошибка (после одного повтора, fetchApi). */
 async function load(path: string, tag: string): Promise<Got | undefined> {
   let response: Response;
   try {
     // Без cache: ответ не ложится в кэш запросов Next.js — тот пережил бы выкладки; метка достаётся
     // странице, и сброс по ней пересоберёт её из свежих данных (ADR-0039).
-    response = await fetch(
+    response = await fetchApi(
       `${API}${path}`,
       onServer ? { next: { tags: [tag] } } : undefined,
     );

@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   cardsInStyle,
   categoriesOf,
@@ -6,6 +6,7 @@ import {
   categorySlug,
   FIRST_PAGE_MAX,
   filterCards,
+  getSets,
   groupSets,
   nameQuery,
   orderSets,
@@ -378,5 +379,27 @@ describe("сведения о наборе для панели иконки", ()
       license: { title: "ISC", spdx: "ISC" },
       palette: true,
     });
+  });
+});
+
+describe("данные каталога с edge API", () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  // 17 ноября 2026 страница /ru/ph/house-bold один раз ответила 500: запрос к API сорвался, а сборка
+  // страницы не повторяла его.
+  it("сорвавшийся запрос повторяется один раз: 500, затем ответ", async () => {
+    const answers = [
+      new Response('{"status":500}', { status: 500 }),
+      Response.json({ lucide: INFO }),
+    ];
+    const calls: string[] = [];
+    vi.stubGlobal("fetch", async (url: string) => {
+      calls.push(String(url));
+      return answers.shift() ?? new Response("", { status: 599 });
+    });
+    expect(Object.keys(await getSets("test"))).toEqual(["lucide"]);
+    expect(calls).toHaveLength(2);
   });
 });

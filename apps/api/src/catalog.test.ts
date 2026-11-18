@@ -103,6 +103,15 @@ function setup() {
 
 const json = async (res: Response) => JSON.parse(await res.text());
 
+/** Ответ, который обязан прийти быстро: зависший запрос — ошибка теста, а не вечное ожидание. */
+const within = <T>(promise: Promise<T>, ms = 500): Promise<T> =>
+  Promise.race([
+    promise,
+    new Promise<never>((_, reject) =>
+      setTimeout(() => reject(new Error(`не дождались за ${ms} мс`)), ms),
+    ),
+  ]);
+
 describe("каталог наборов", () => {
   it("/collections — IconifyInfo наборов манифеста, без полного текста лицензии", async () => {
     const { get } = setup();
@@ -224,6 +233,31 @@ describe("каталог наборов", () => {
     expect(modified.headers.get("x-iconavo-version")).toBeNull();
     // Каталог на месте — те же адреса отвечают.
     expect((await get("/collections")).status).toBe(200);
+  });
+
+  // 18 ноября 2026, журнал живого API: 500 «This promise was created by a request that has since ended».
+  it("оборванный запрос не держит следующий: /collection?info=true отвечает", async () => {
+    const { get, bucket } = setup();
+    bucket.stuck.add("manifest.json");
+    void get("/collection?prefix=demo&info=true");
+    const res = await within(get("/collection?prefix=demo&info=true"));
+    expect(res.status).toBe(200);
+    expect((await json(res)).info.name).toBe("Demo");
+  });
+
+  it("служебный файл в кэше дата-центра не дочитался — как промах: 200, а не 500", async () => {
+    const { get, cache, bucket } = setup();
+    expect((await get("/collection?prefix=demo&info=true")).status).toBe(200);
+    // Новая копия функции: манифест и оглавление — из кэша дата-центра, а их тела обрываются.
+    cache.broken = /\/meta\//;
+    const handler = createHandler({ bucket, cache, build: "test" });
+    const w = waiter();
+    const res = await handler(
+      new Request("https://api.iconavo.dev/collection?prefix=demo&info=true"),
+      w.waitUntil,
+    );
+    expect(res.status).toBe(200);
+    expect((await json(res)).info.name).toBe("Demo");
   });
 
   it("файла каталога нет в R2 — 503, без кэша", async () => {

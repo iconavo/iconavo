@@ -11,7 +11,7 @@
 
 import type { IconavoIconSet } from "@iconavo-ui/react";
 import { cache } from "react";
-import { API } from "./api";
+import { API, fetchApi } from "./api";
 import { SITE_SET } from "./site-icons";
 
 export const SITE_ICONS = [
@@ -120,12 +120,12 @@ export function parseBatch(prefix: string, value: unknown): IconavoIconSet {
   return set as IconavoIconSet;
 }
 
-/** Пачка — один запрос на сборку страницы. */
+/** Пачка — один запрос на сборку страницы; сорвался — один повтор (fetchApi). */
 const fetchBatch = cache(
   async (prefix: string, url: string): Promise<IconavoIconSet> => {
     let response: Response;
     try {
-      response = await fetch(url);
+      response = await fetchApi(url);
     } catch (e) {
       throw new Error(`СТОП: ${url} не ответил: ${(e as Error).message}`);
     }

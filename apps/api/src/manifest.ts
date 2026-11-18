@@ -1,8 +1,14 @@
 // Манифест раздачи (ADR-0022) из R2: набор → версия и время выпуска; catalog — отпечаток оглавления
 // каталога наборов (шаг 2 фазы 4). В памяти функции — минуту, в кэше дата-центра — 30 секунд, чтобы
-// холодная копия функции не ждала R2; одновременные запросы ждут одну загрузку; если R2 не ответил,
-// служит прежняя копия. Наборы — в Map: имя «constructor» проходит правило имён, но не должно найти
-// что-то в прототипе объекта.
+// холодная копия функции не ждала R2; если R2 не ответил, служит прежняя копия. Наборы — в Map: имя
+// «constructor» проходит правило имён, но не должно найти что-то в прототипе объекта.
+//
+// Запросы делят только готовый манифест, а не его загрузку (18 ноября 2026). Раньше одновременные
+// запросы ждали одну загрузку — начатую первым из них. В workerd обещание живёт в запросе, который его
+// создал: если тот оборвался (клиент ушёл — панель сайта отменяет прежний запрос при смене иконки),
+// загрузка уже не завершится, а ждущий запрос получает ошибку «This promise was created by a request
+// that has since ended» — и отвечал 500. Теперь каждый запрос, которому нужен свежий манифест, читает
+// его сам: раз в минуту это несколько чтений из кэша дата-центра.
 
 import { isValidNamePart } from "@iconavo-ui/core/internal";
 import { sharedText } from "./cache.js";
@@ -79,7 +85,10 @@ async function readManifest(
   return parseManifest(text);
 }
 
-/** Загрузчик манифеста с памятью на минуту; с cache — ещё и через кэш дата-центра. */
+/**
+ * Загрузчик манифеста с памятью на минуту; с cache — ещё и через кэш дата-центра. Загрузку каждый запрос
+ * делает сам, общая — только готовая копия (выше).
+ */
 export function manifestLoader(
   bucket: Bucket,
   now: () => number,
@@ -87,24 +96,16 @@ export function manifestLoader(
   cache?: EdgeCache,
 ): () => Promise<Manifest> {
   let cached: { manifest: Manifest; at: number } | undefined;
-  let pending: Promise<Manifest> | undefined;
-  return () => {
-    if (cached && now() - cached.at < MANIFEST_TTL_MS) {
-      return Promise.resolve(cached.manifest);
+  return async () => {
+    if (cached && now() - cached.at < MANIFEST_TTL_MS) return cached.manifest;
+    try {
+      const manifest = await readManifest(bucket, cache);
+      cached = { manifest, at: now() };
+      return manifest;
+    } catch (e) {
+      if (cached === undefined) throw e;
+      log(`${(e as Error).message} — служит прежняя копия`);
+      return cached.manifest;
     }
-    pending ??= readManifest(bucket, cache)
-      .then((manifest) => {
-        cached = { manifest, at: now() };
-        return manifest;
-      })
-      .catch((e: Error) => {
-        if (cached === undefined) throw e;
-        log(`${e.message} — служит прежняя копия`);
-        return cached.manifest;
-      })
-      .finally(() => {
-        pending = undefined;
-      });
-    return pending;
   };
 }

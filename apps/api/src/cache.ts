@@ -20,7 +20,8 @@ export function cacheKey(
 /**
  * Небольшой файл хранилища через кэш дата-центра (META_CACHE, или cacheControl у неизменяемого файла):
  * сначала кэш, затем read и запись в кэш. Файла нет — undefined, в кэш ничего не пишется. Сбой кэша
- * чтение не останавливает.
+ * чтение не останавливает: и когда кэш не ответил, и когда запись нашлась, но её тело не дочиталось
+ * (18 ноября 2026 — раньше второй случай давал ответ 500).
  */
 export async function sharedText(
   cache: EdgeCache | undefined,
@@ -30,7 +31,13 @@ export async function sharedText(
 ): Promise<string | undefined> {
   const key = new Request(`${CACHE_ORIGIN}/${CACHE_GENERATION}/meta/${name}`);
   const hit = await cache?.match(key).catch(() => undefined);
-  if (hit !== undefined) return hit.text();
+  if (hit !== undefined) {
+    try {
+      return await hit.text();
+    } catch {
+      // Тело записи оборвалось — как промах: файл из хранилища.
+    }
+  }
   const text = await read();
   if (cache !== undefined && text !== undefined) {
     await cache

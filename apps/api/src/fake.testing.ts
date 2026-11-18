@@ -45,6 +45,12 @@ export interface FakeBucket extends Bucket {
   reads: string[];
   /** Ключи, на которых R2 «падает»; «*» — на всех. */
   failing: Set<string>;
+  /**
+   * Ключи, чтение которых один раз не кончается никогда: так выглядит загрузка запроса, который
+   * оборвался (клиент ушёл). В workerd ждать её из другого запроса нельзя — он получает ошибку «This
+   * promise was created by a request that has since ended», здесь — ждёт вечно.
+   */
+  stuck: Set<string>;
 }
 
 export function fakeBucket(
@@ -53,12 +59,15 @@ export function fakeBucket(
   const map = new Map(Object.entries(files));
   const reads: string[] = [];
   const failing = new Set<string>();
+  const stuck = new Set<string>();
   return {
     files: map,
     reads,
     failing,
+    stuck,
     async get(key) {
       reads.push(key);
+      if (stuck.delete(key)) return new Promise<never>(() => {});
       if (failing.has(key) || failing.has("*")) throw new Error("R2 down");
       const value = map.get(key);
       if (value === undefined) return null;
@@ -87,6 +96,8 @@ export interface FakeCache extends EdgeCache {
   calls: number;
   /** Обращения к адресам, подходящим под выражение, падают. */
   failing?: RegExp;
+  /** Записи по этим адресам находятся, но их тело не дочитывается — обрыв на середине. */
+  broken?: RegExp;
   /** Ответов в кэше — без служебных файлов (манифест, версия индекса) и файлов имён. */
   answers(): number;
   /** Файлов имён в кэше. */
@@ -117,7 +128,14 @@ export function fakeCache(now: () => number = () => 0): FakeCache {
         stored.delete(request.url);
         return undefined;
       }
-      const response = new Response(entry.body.slice().buffer as ArrayBuffer, {
+      const body = cache.broken?.test(request.url)
+        ? new ReadableStream<Uint8Array>({
+            start(controller) {
+              controller.error(new Error("Network connection lost."));
+            },
+          })
+        : (entry.body.slice().buffer as ArrayBuffer);
+      const response = new Response(body, {
         status: entry.status,
         headers: entry.headers,
       });
