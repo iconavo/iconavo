@@ -11,6 +11,7 @@ import {
   filterCards,
   getNames,
   PAGE_SIZE,
+  type PanelSet,
   pageCount,
   pageOf,
   pageParam,
@@ -78,9 +79,12 @@ export function IconGrid({
   allCount,
   categories,
   styles,
+  panelSets,
 }: {
   lang: Lang;
   prefix: string;
+  /** Сведения о наборе для панели иконки: она рисуется сразу целиком; нет — панель спросит каталог сама. */
+  panelSets?: Readonly<Record<string, PanelSet>> | undefined;
   /** Название набора — в подсказке поля поиска. */
   setName: string;
   /** Начало списка карточек — на первую страницу при любой ширине (FIRST_PAGE_MAX): имена баз. */
@@ -194,6 +198,7 @@ export function IconGrid({
       <IconPanel
         lang={lang}
         icon={panel.icon}
+        sets={panelSets}
         focus={panel.focus}
         onClose={panel.close}
         onPick={(name) => panel.open(name)}

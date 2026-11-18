@@ -53,6 +53,33 @@ export interface SetInfo {
   palette: boolean;
 }
 
+/**
+ * Сведения о наборе для панели иконки: название, автор, лицензия без текста, цветной ли набор. Их
+ * отдаёт панели сама страница — они у неё с сервера, и раздел «автор и лицензия» рисуется вместе с
+ * панелью, а не после ответа /collections (18 ноября 2026).
+ */
+export interface PanelSet {
+  name: string;
+  author: { name: string; url?: string };
+  license: SetLicense;
+  palette: boolean;
+}
+
+/** Только то, что нужно панели: полный текст лицензии (килобайты) в браузер не едет. */
+export const panelSet = (info: SetInfo): PanelSet => ({
+  name: info.name,
+  author:
+    info.author.url === undefined
+      ? { name: info.author.name }
+      : { name: info.author.name, url: info.author.url },
+  license: {
+    title: info.license.title,
+    spdx: info.license.spdx,
+    ...(info.license.url === undefined ? {} : { url: info.license.url }),
+  },
+  palette: info.palette,
+});
+
 /** Лицензия полностью — дополнение Iconavo в /collection?info=true (ADR-0017). */
 export interface FullLicense extends SetLicense {
   text: string;

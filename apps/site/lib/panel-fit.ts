@@ -1,15 +1,18 @@
 // Панель иконки на компьютере всегда помещается в видимую часть окна (решение владельца 13 ноября 2026).
 // Панель прилипает к верху окна (sticky, top 1rem) и бывает высотой до окна без двух отступов. Пока
-// страница не прокручена, она начинается ниже шапки и фильтров — и её низ уходил за край окна, а
-// прокрутка внутри панели уводила содержимое как раз туда. Теперь высота панели — от её верха до низа
-// окна с тем же отступом: прокрутили страницу — панель поднялась к верху и выросла до полной высоты.
+// страница не прокручена, она начинается ниже шапки сайта — и её низ уходил за край окна, а прокрутка
+// внутри панели уводила содержимое как раз туда. Теперь высота панели — от её верха до низа окна с тем
+// же отступом: прокрутили страницу — панель поднялась к верху и выросла до полной высоты.
 // Число — --panel-fit у панели (app/globals.css); на телефоне панель — шторка, её высота своя.
 //
-// Колесо над панелью (замечание владельца 13 ноября 2026: панель «подвисала» сжатой): пока панель не
-// выросла до полной высоты, а страницу ещё можно прокрутить вниз, у панели data-fit="grow" — её
-// содержимое не прокручивается, и колесо над ней крутит страницу: панель поднимается и растёт. Когда она
-// прилипла к верху, колесо крутит уже её содержимое. Раньше колесо над сжатой панелью крутило только
-// её содержимое, а до конца — ничего: страница стояла, панель оставалась сжатой.
+// Колесо над панелью крутит только её (решение владельца 18 ноября 2026: панель прокручивается независимо
+// от страницы). Дошли до конца панели — страница стоит (overscroll-behavior: contain в стилях). Прежде,
+// пока панель не прилипла к верху, колесо над ней крутило страницу, чтобы панель «доросла» (13 ноября —
+// тогда она начиналась на уровне сетки и была вдвое короче); браузер, начав крутить страницу, крутил её
+// до остановки колеса — до содержимого панели было не добраться. Панель во всю высоту страницы короче
+// полной только на высоту шапки сайта, и дорастает она вместе с прокруткой страницы.
+// Одно исключение: содержимое помещается в панель целиком — прокручивать в ней нечего, и колесо над ней
+// крутит страницу, как над любым другим местом (data-fit="whole").
 //
 // Внизу страницы (план редизайна, шаг 5): место панели кончается над подвалом, и прилипшую панель полной
 // высоты оно выталкивало вверх — заголовок и ✕ уходили за край окна. Теперь панель там ниже: от отступа
@@ -54,20 +57,14 @@ function placeEnd(panel: HTMLElement): number {
   return place.getBoundingClientRect().bottom - bottom;
 }
 
-/** Растёт ли ещё панель: не прилипла к верху, страницу можно прокрутить вниз, содержимое не помещается. */
-export function panelGrows(
-  top: number,
-  inset: number,
-  scrollY: number,
-  maxScrollY: number,
-  overflowing: boolean,
-): boolean {
-  return overflowing && top > inset + 0.5 && scrollY < maxScrollY - 0.5;
+/** Помещается ли содержимое в панель целиком: прокручивать в ней нечего (пиксель — на округление). */
+export function panelWhole(content: number, height: number): boolean {
+  return content <= height + 1;
 }
 
 /**
  * Держать высоту панели по месту в окне: сразу, при прокрутке и смене размера окна, при смене высоты
- * страницы над панелью — не чаще раза за кадр. Возвращает отписку.
+ * страницы и содержимого панели — не чаще раза за кадр. Возвращает отписку.
  */
 export function fitPanel(panel: HTMLElement): () => void {
   let frame = 0;
@@ -88,22 +85,10 @@ export function fitPanel(panel: HTMLElement): () => void {
       MIN_HEIGHT,
       placeEnd(panel),
     );
+    const whole = panelWhole(panel.scrollHeight, fit);
     panel.style.setProperty("--panel-fit", `${fit}px`);
-    // Не помещается ли содержимое в панель такой высоты.
-    const overflowing = panel.scrollHeight > fit + 1;
-    if (
-      panelGrows(
-        top,
-        inset,
-        window.scrollY,
-        root.scrollHeight - root.clientHeight,
-        overflowing,
-      )
-    ) {
-      panel.dataset.fit = "grow";
-    } else {
-      delete panel.dataset.fit;
-    }
+    if (whole) panel.dataset.fit = "whole";
+    else delete panel.dataset.fit;
   };
   const schedule = () => {
     if (frame === 0) frame = requestAnimationFrame(update);
@@ -111,13 +96,23 @@ export function fitPanel(panel: HTMLElement): () => void {
   update();
   window.addEventListener("scroll", schedule, { passive: true });
   window.addEventListener("resize", schedule);
-  const observer = new ResizeObserver(schedule);
-  observer.observe(document.body);
+  // Высота страницы над панелью и высота её содержимого: сама панель зажата по высоте, поэтому следим за
+  // её разделами — и за их заменой (иконки нет — разделы другие).
+  const sizes = new ResizeObserver(schedule);
+  const watch = () => {
+    sizes.disconnect();
+    sizes.observe(document.body);
+    for (const section of panel.children) sizes.observe(section);
+  };
+  watch();
+  const sections = new MutationObserver(watch);
+  sections.observe(panel, { childList: true });
   return () => {
     cancelAnimationFrame(frame);
     delete panel.dataset.fit;
     window.removeEventListener("scroll", schedule);
     window.removeEventListener("resize", schedule);
-    observer.disconnect();
+    sizes.disconnect();
+    sections.disconnect();
   };
 }

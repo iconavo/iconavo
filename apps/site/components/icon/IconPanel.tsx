@@ -3,6 +3,7 @@
 import { getIcon, hasStrokeWidth } from "@iconavo-ui/core/internal";
 import { Icon } from "@iconavo-ui/react";
 import { useEffect, useRef, useState } from "react";
+import type { PanelSet } from "../../lib/catalog";
 import { DICTIONARIES, href, type Lang } from "../../lib/i18n";
 import { bareName, type IconSetSummary, iconPagePath } from "../../lib/icon";
 import {
@@ -23,7 +24,7 @@ import { PanelCode } from "../panel/PanelCode";
 import { PanelCredits } from "../panel/PanelCredits";
 import { useSetInfo } from "../panel/useSetInfo";
 import { useIconData } from "./useIconData";
-import { useIconDetails } from "./useIconDetails";
+import { knownSetCredits, useIconDetails } from "./useIconDetails";
 
 /** Поле ввода вне панели: там Esc остаётся своим — в поле поиска он очищает текст. */
 function typing(target: EventTarget | null): boolean {
@@ -51,15 +52,21 @@ const DRAG = 24;
  * - ✕ и Esc закрывают; Esc в полях ввода вне панели остаётся их.
  * Данные: рисунок — ядро пакета, набор — каталог наборов; адрес /icon (поиск) нужен только для строки про
  * части набора от других авторов (Feather у Lucide) — без него раздел авторства всё равно есть.
+ * Панель рисуется сразу целиком (18 ноября 2026): рисунок — из иконок страницы или хранилища ядра
+ * (useIconData), сведения о наборе отдаёт страница (sets), части от других авторов помнятся по набору —
+ * разделы не появляются позже остальных и высота панели не скачет.
  */
 export function IconPanel({
   lang,
   icon,
+  sets,
   focus,
   onClose,
 }: {
   lang: Lang;
   icon: string;
+  /** Сведения о наборах от страницы: набор → название, автор, лицензия; нет набора — спросит каталог. */
+  sets?: Readonly<Record<string, PanelSet>> | undefined;
   /** Номер открытия: меняется — фокус на заголовок. */
   focus: number;
   onClose: () => void;
@@ -73,7 +80,7 @@ export function IconPanel({
   // вкладка не видит хранилища настроек этой.
   const pageQuery = settingsParams(panelSettings(s)).toString();
   const data = useIconData(icon, true);
-  const info = useSetInfo(prefix);
+  const info = useSetInfo(prefix, sets?.[prefix]);
   const { details, state } = useIconDetails(icon);
   const [expanded, setExpanded] = useState(false);
   const panel = useRef<HTMLElement>(null);
@@ -82,8 +89,10 @@ export function IconPanel({
   const drag = useRef<number | undefined>(undefined);
   const dragged = useRef(false);
 
+  // Без прокрутки к заголовку: панель и так в окне, а пока её колонка раздвигается, браузер прокручивал
+  // к нему всю страницу вбок (18 ноября 2026).
   useEffect(() => {
-    if (focus > 0) heading.current?.focus();
+    if (focus > 0) heading.current?.focus({ preventScroll: true });
   }, [focus]);
 
   // На компьютере панель всегда помещается в видимую часть окна (lib/panel-fit.ts).
@@ -110,6 +119,8 @@ export function IconPanel({
   const palette = info?.palette ?? false;
   const strokes = data ? hasStrokeWidth(data.body) : false;
   const applies = { palette, strokes };
+  const credits =
+    state === "ready" ? details?.set.credits : knownSetCredits(prefix);
   const set: IconSetSummary | undefined =
     info === undefined
       ? undefined
@@ -119,9 +130,7 @@ export function IconPanel({
           author: info.author,
           license: info.license,
           palette,
-          ...(state === "ready" && details?.set.credits !== undefined
-            ? { credits: details.set.credits }
-            : {}),
+          ...(credits === undefined ? {} : { credits }),
         };
   const preview = {
     ...iconProps(panelSettings(s), { palette, strokes }),

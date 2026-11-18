@@ -1,4 +1,4 @@
-import { getSets, orderSets } from "../../lib/catalog";
+import { getSets, orderSets, panelSet } from "../../lib/catalog";
 import { sidebarGroups } from "../../lib/catalog-view";
 import { DICTIONARIES, type Lang } from "../../lib/i18n";
 import { SEARCH_EXAMPLES } from "../../lib/search";
@@ -31,6 +31,12 @@ export async function SearchPage({ lang }: { lang: Lang }) {
         licenses={licenses}
         groups={sidebarGroups(lang, sets)}
         examples={SEARCH_EXAMPLES[lang]}
+        panelSets={Object.fromEntries(
+          ids.flatMap((id) => {
+            const info = sets[id];
+            return info === undefined ? [] : [[id, panelSet(info)]];
+          }),
+        )}
       />
     </>
   );

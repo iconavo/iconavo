@@ -15,6 +15,7 @@ import {
   pageOf,
   pageParam,
   pageSizeFor,
+  panelSet,
   parseCollection,
   parseReleases,
   parseSets,
@@ -340,5 +341,42 @@ describe("карточки набора (шаг 3 фазы 4, ADR-0052)", () => 
     });
     expect(setStyles(bare)).toEqual([]);
     expect(setCards(bare).cards[0]?.styles).toEqual({});
+  });
+});
+
+describe("сведения о наборе для панели иконки", () => {
+  it("только название, автор, лицензия без текста и цветность", () => {
+    const full = {
+      ...INFO,
+      license: {
+        title: "ISC",
+        spdx: "ISC",
+        url: "https://example.com/license",
+        text: "ISC License. Copyright …",
+        source: "LICENSE",
+        revision: "81875c8",
+      },
+    };
+    expect(panelSet(full)).toEqual({
+      name: "Lucide",
+      author: { name: "Lucide Contributors", url: "https://lucide.dev" },
+      license: {
+        title: "ISC",
+        spdx: "ISC",
+        url: "https://example.com/license",
+      },
+      palette: false,
+    });
+  });
+
+  it("нет адресов автора и лицензии — нет и полей", () => {
+    expect(
+      panelSet({ ...INFO, author: { name: "Someone" }, palette: true }),
+    ).toEqual({
+      name: "Lucide",
+      author: { name: "Someone" },
+      license: { title: "ISC", spdx: "ISC" },
+      palette: true,
+    });
   });
 });

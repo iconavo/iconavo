@@ -159,6 +159,51 @@ async function closed(page: Page): Promise<Facts> {
   return facts(page);
 }
 
+/**
+ * Следить покадрово, пока панель открывается: не стала ли страница шире окна и не прокрутилась ли вбок
+ * (18 ноября 2026: место панели с полем в колонке нулевой ширины давало 28 px лишней ширины, а фокус на
+ * заголовке панели прокручивал к нему страницу). Выполняется в браузере.
+ */
+function watchSideways() {
+  const seen = { x: 0, wide: 0 };
+  (window as unknown as { __sideways?: typeof seen }).__sideways = seen;
+  let left = 120;
+  const tick = () => {
+    const root = document.documentElement;
+    seen.x = Math.max(seen.x, Math.abs(Math.round(window.scrollX)));
+    seen.wide = Math.max(seen.wide, root.scrollWidth - root.clientWidth);
+    left -= 1;
+    if (left > 0) requestAnimationFrame(tick);
+  };
+  tick();
+}
+
+/** Что насмотрел watchSideways. */
+const sideways = (page: Page) =>
+  page.evaluate(
+    () =>
+      (window as unknown as { __sideways?: { x: number; wide: number } })
+        .__sideways ?? { x: 0, wide: 0 },
+  );
+
+/** Где страница и содержимое панели по вертикали и куда вести мышь. Выполняется в браузере. */
+function scrollFacts() {
+  const panel = document.querySelector("#page-panel > aside.icon-panel");
+  const card = document.querySelector("a.icon-card-link");
+  const p = panel?.getBoundingClientRect();
+  const c = card?.getBoundingClientRect();
+  return {
+    page: Math.round(window.scrollY),
+    panel: Math.round(panel?.scrollTop ?? 0),
+    /** Сколько содержимого панели не помещается в неё. */
+    room: panel ? panel.scrollHeight - panel.clientHeight : 0,
+    panelX: p ? p.left + p.width / 2 : 0,
+    panelY: p ? p.top + p.height / 2 : 0,
+    gridX: c ? c.left + c.width / 2 : 0,
+    gridY: c ? c.top + c.height / 2 : 0,
+  };
+}
+
 /** Имя иконки n-й карточки сетки. */
 const cardName = (page: Page, n: number) =>
   page.locator("a.icon-card-link").nth(n).getAttribute("data-icon");
@@ -201,10 +246,20 @@ export async function panelProblems(
   const second = (await cardName(page, 1)) ?? "";
   const start = await facts(page);
 
-  // Мышью: открыть, сменить, Esc.
+  // Мышью: открыть, сменить, Esc. Пока панель открывается, страница не шире окна и не уезжает вбок.
+  await page.evaluate(watchSideways);
   await page.locator("a.icon-card-link").nth(0).click();
   let f = await shown(page, first);
   no(f.open && f.icon === first, `щелчок по ${first} не открыл панель`);
+  const side = await sideways(page);
+  no(
+    side.wide === 0,
+    `пока панель открывалась, страница была шире окна на ${side.wide} px`,
+  );
+  no(
+    side.x === 0,
+    `пока панель открывалась, страница уезжала вбок на ${side.x} px`,
+  );
   no(
     f.search === `?icon=${first}`,
     `адрес после открытия — «${f.search}», а ждали ?icon=${first}`,
@@ -286,6 +341,56 @@ export async function panelProblems(
       f.search === "?page=2",
       `после ✕ адрес — «${f.search}», а ждали ?page=2: «назад» отменил страницу или icon остался`,
     );
+  }
+
+  // Колесо над панелью крутит только её (решение владельца 18 ноября 2026): страница стоит и пока панель
+  // прокручивается, и когда она дошла до конца; над сеткой колесо крутит страницу. WebKit у Playwright в
+  // конце панели передаёт колесо странице (overscroll-behavior там не работает) — конец в нём не проверяется.
+  await page.goto(`${base}/${CATALOG_SET}`);
+  await hydrated(page);
+  await page.locator("a.icon-card-link").nth(0).click();
+  f = await shown(page, first);
+  if (f.open) {
+    const spin = async (times: number) => {
+      for (let i = 0; i < times; i++) {
+        await page.mouse.wheel(0, 100);
+        await page.waitForTimeout(30);
+      }
+      await page.waitForTimeout(400);
+      await settled(page);
+    };
+    let s = await page.evaluate(scrollFacts);
+    no(
+      s.room > 400,
+      `содержимое панели помещается в окно (запас ${s.room} px) — колесо проверить не на чем`,
+    );
+    await page.mouse.move(s.panelX, s.panelY);
+    await page.waitForTimeout(100);
+    await spin(3);
+    s = await page.evaluate(scrollFacts);
+    no(s.panel > 0, "колесо над панелью не прокрутило её содержимое");
+    no(s.page === 0, `колесо над панелью прокрутило страницу на ${s.page} px`);
+    if (page.context().browser()?.browserType().name() !== "webkit") {
+      await spin(25);
+      s = await page.evaluate(scrollFacts);
+      no(
+        s.panel >= s.room - 1,
+        `колесо не докрутило панель до конца: ${s.panel} из ${s.room} px`,
+      );
+      no(
+        s.page === 0,
+        `в конце панели колесо прокрутило страницу на ${s.page} px`,
+      );
+    }
+    // Мышь ушла на сетку: пауза — Firefox ещё полторы секунды помнит, что крутило колесо.
+    await page.mouse.move(s.gridX, s.gridY);
+    await page.waitForTimeout(1600);
+    const was = s.page;
+    await spin(3);
+    s = await page.evaluate(scrollFacts);
+    no(s.page > was, "колесо над сеткой не прокрутило страницу");
+    await page.keyboard.press("Escape");
+    await closed(page);
   }
 
   // Сетка не прыгает (план редизайна, шаг 5): с панелью шапка набора и строка поиска в узкой колонке выше,
@@ -422,7 +527,7 @@ export async function checkPanel(
   await context.close();
   return problems.length === 0
     ? pass(
-        "мышью и с клавиатуры: адрес, фокус, Esc, ✕, «назад» и «вперёд», ссылка с ?icon=; сетка не прыгает при открытии и закрытии (1040 px); вторая страница сетки и поиск с панелью; цвет и толщина — где положено; несуществующая иконка — «нет»; axe в обеих темах",
+        "мышью и с клавиатуры: адрес, фокус, Esc, ✕, «назад» и «вперёд», ссылка с ?icon=; при открытии страница не шире окна и не уезжает вбок; колесо над панелью крутит только её, над сеткой — страницу; сетка не прыгает при открытии и закрытии (1040 px); вторая страница сетки и поиск с панелью; цвет и толщина — где положено; несуществующая иконка — «нет»; axe в обеих темах",
       )
     : fail(problems.slice(0, 4).join("; "));
 }

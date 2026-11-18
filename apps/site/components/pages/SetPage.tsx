@@ -1,4 +1,4 @@
-import { Icon, IconavoProvider } from "@iconavo-ui/react";
+import { Icon } from "@iconavo-ui/react";
 import { notFound } from "next/navigation";
 import {
   categoriesOf,
@@ -6,6 +6,7 @@ import {
   FIRST_PAGE_MAX,
   getReleases,
   getSet,
+  panelSet,
   setCards,
   setStyles,
   setTag,
@@ -22,6 +23,7 @@ import { loadPageIcons } from "../../lib/icons";
 import { PAGE_PANEL_ID } from "../../lib/panel-layout";
 import { Crumbs } from "../Crumbs";
 import { IconGrid } from "../catalog/IconGrid";
+import { PageIcons } from "../PageIcons";
 import { PageLink } from "../PageLink";
 import { Soon } from "../shell/Soon";
 import { Tip } from "../shell/Tip";
@@ -123,12 +125,13 @@ export async function SetPage({
         </ul>
       </header>
       <div className="set-body">
-        <IconavoProvider icons={icons}>
+        <PageIcons icons={icons}>
           <IconGrid
             lang={lang}
             prefix={prefix}
             setName={info.name}
             first={first}
+            panelSets={{ [prefix]: panelSet(info) }}
             total={grouped.cards.length}
             allCount={formatNumber(lang, grouped.cards.length)}
             categories={categoriesOf(set).map((c) => {
@@ -145,7 +148,7 @@ export async function SetPage({
               return { style, size, count: formatNumber(lang, size) };
             })}
           />
-        </IconavoProvider>
+        </PageIcons>
       </div>
       {/* Место панели иконки во всю высоту страницы (lib/panel-layout.ts). */}
       <div id={PAGE_PANEL_ID} className="page-panel" />
