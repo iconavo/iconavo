@@ -16,7 +16,17 @@ import {
 const MEMORY_LIMIT = 100;
 const memory = new Map<string, IconDetails>();
 
+/**
+ * Части набора от других авторов (Feather у Lucide) — одни на весь набор: после первого ответа /icon панель
+ * знает их у любой иконки набора сразу, и текст указания авторства не меняется на глазах.
+ */
+const setCredits = new Map<string, IconDetails["set"]["credits"]>();
+
+/** Части набора от других авторов, если /icon уже отвечал про этот набор в этой вкладке. */
+export const knownSetCredits = (prefix: string) => setCredits.get(prefix);
+
 function remember(name: string, details: IconDetails) {
+  setCredits.set(details.set.prefix, details.set.credits);
   memory.delete(name);
   memory.set(name, details);
   if (memory.size > MEMORY_LIMIT) {

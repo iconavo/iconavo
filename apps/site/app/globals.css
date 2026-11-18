@@ -2886,11 +2886,16 @@
       min-width: 0;
       overflow-x: clip;
     }
+    /* Правое поле страницы — отступом самой панели, а не её места: у места с полем, пока колонка ещё
+       нулевой ширины, были свои 28 px — страница становилась шире окна, внизу мелькала горизонтальная
+       полоса, а фокус на заголовке панели прокручивал страницу вбок (18 ноября 2026). Панель шире
+       колонки обрезает overflow-x: clip места. */
     :is(.set-page, .find-page) > .page-panel:has(> .icon-panel) {
-      padding: 2rem var(--page-x-end) 2.5rem 0;
+      padding: 2rem 0 2.5rem;
     }
     :is(.set-page, .find-page) > .page-panel > .icon-panel {
       width: var(--width-panel);
+      margin-right: var(--page-x-end);
       margin-left: auto;
     }
   }
@@ -2944,6 +2949,8 @@
     /* Не выше места от верха панели до низа окна (--panel-fit, lib/panel-fit.ts): пока страница не
        прокручена, низ панели не уходит за край окна. */
     max-height: var(--panel-fit, calc(100vh - 2rem));
+    /* Панель прокручивается независимо от страницы (решение владельца 18 ноября 2026): колесо над ней
+       крутит только её, а в конце панели страница стоит на месте. */
     overflow-y: scroll;
     overscroll-behavior: contain;
     border-radius: 1rem;
@@ -2952,14 +2959,10 @@
     line-height: var(--text-body-base--line-height);
     --panel-x-end: calc(1.25rem - var(--scrollbar-lane));
   }
-  /* Панель ещё растёт (lib/panel-fit.ts): её содержимое не прокручивается — колесо над ней крутит
-     страницу, панель поднимается и растёт. Полосы прокрутки нет — её место отдано правому полю, и
-     содержимое не сдвигается. */
-  .icon-panel[data-fit="grow"] {
-    overflow-y: hidden;
-    /* Иначе Chrome не передаёт колесо странице и с панели, которая сама не прокручивается. */
+  /* Содержимое помещается в панель целиком (lib/panel-fit.ts): прокручивать в ней нечего, и колесо над
+     ней крутит страницу, как над любым другим местом. Без этого Chrome не передаёт колесо странице. */
+  .icon-panel[data-fit="whole"] {
     overscroll-behavior: auto;
-    --panel-x-end: 1.25rem;
   }
   .panel-backdrop,
   .panel-handle {

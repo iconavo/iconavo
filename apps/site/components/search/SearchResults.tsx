@@ -3,7 +3,7 @@
 import { type ReactNode, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { API } from "../../lib/api";
-import { pageSizeFor } from "../../lib/catalog";
+import { type PanelSet, pageSizeFor } from "../../lib/catalog";
 import type { SidebarGroup } from "../../lib/catalog-view";
 import { filterSheetStore } from "../../lib/filter-sheet";
 import { useGridColumns } from "../../lib/grid-columns";
@@ -88,10 +88,13 @@ export function SearchResults({
   licenses,
   groups,
   examples,
+  panelSets,
 }: {
   lang: Lang;
   /** Наборы в порядке витрины. */
   sets: SearchSet[];
+  /** Сведения о наборах для панели иконки: она рисуется сразу целиком; нет — панель спросит каталог сама. */
+  panelSets?: Readonly<Record<string, PanelSet>> | undefined;
   /** SPDX лицензий каталога. */
   licenses: string[];
   /** Наборы по группам с числом иконок — для шторки фильтра. */
@@ -527,6 +530,7 @@ export function SearchResults({
       <IconPanel
         lang={lang}
         icon={panel.icon}
+        sets={panelSets}
         focus={panel.focus}
         onClose={panel.close}
         onPick={(name) => panel.open(name)}
