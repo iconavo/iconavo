@@ -89,13 +89,19 @@ export function IconPanel({
   const drag = useRef<number | undefined>(undefined);
   const dragged = useRef(false);
 
-  // Без прокрутки к заголовку: панель и так в окне, а пока её колонка раздвигается, браузер прокручивал
-  // к нему всю страницу вбок (18 ноября 2026).
+  // Без прокрутки к заголовку: панель и так в окне, а пока её колонка раздвигалась, браузер прокручивал
+  // к нему всю страницу вбок (18 ноября 2026). И в следующем кадре, а не сразу: фокусу нужны свежие стили,
+  // и сразу после запуска переезда карточек браузер пересчитывал бы их лишний раз — в задаче щелчка.
   useEffect(() => {
-    if (focus > 0) heading.current?.focus({ preventScroll: true });
+    if (focus === 0) return;
+    const frame = requestAnimationFrame(() =>
+      heading.current?.focus({ preventScroll: true }),
+    );
+    return () => cancelAnimationFrame(frame);
   }, [focus]);
 
-  // На компьютере панель всегда помещается в видимую часть окна (lib/panel-fit.ts).
+  // На компьютере панель всегда помещается в видимую часть окна (lib/panel-fit.ts); высоту первого кадра
+  // ставит раскладка панели (PanelLayout) — до того, как запустит переезд карточек.
   useEffect(() => {
     const element = panel.current;
     return element === null ? undefined : fitPanel(element);

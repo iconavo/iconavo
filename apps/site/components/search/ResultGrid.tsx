@@ -1,14 +1,92 @@
 "use client";
 
 import { Icon } from "@iconavo-ui/react";
-import type { MouseEvent, ReactNode } from "react";
+import { type MouseEvent, memo } from "react";
 import { DICTIONARIES, href, type Lang } from "../../lib/i18n";
 import { iconPagePath } from "../../lib/icon";
 // Хосты иконок — для ядра браузера: иконки выдачи грузит оно само, пачками (lib/iconavo.ts).
 import "../../lib/iconavo";
 import type { SearchCard } from "../../lib/search";
+import { useStableCallback } from "../../lib/stable-callback";
 import { CardTools, type Selection } from "../catalog/Selection";
 import { CARD_LINK } from "../icon/usePanel";
+
+/** Выделение, которого нет: обработчик-пустышка с постоянной ссылкой. */
+const noToggle = () => {};
+
+/**
+ * Карточка выдачи. С памятью (memo), как карточка сетки набора: открытие панели и смена иконки в ней
+ * рисуют заново две карточки, а не всю страницу выдачи (18 ноября 2026). Пропсы — простые значения и
+ * обработчики с постоянной ссылкой.
+ */
+const ResultCard = memo(function ResultCard({
+  lang,
+  icon,
+  name,
+  set,
+  exact,
+  current,
+  tools,
+  picked,
+  full,
+  onOpen,
+  onToggle,
+}: {
+  lang: Lang;
+  /** Полное имя: набор:иконка. */
+  icon: string;
+  name: string;
+  /** Название набора — под именем. */
+  set: string;
+  /** Точное совпадение имени с запросом. */
+  exact: boolean;
+  /** Иконка открыта в панели. */
+  current: boolean;
+  /** Есть ли у карточки кнопки выбора и рюкзака. */
+  tools: boolean;
+  picked: boolean;
+  /** Выбрано 100 — новые не выбираются. */
+  full: boolean;
+  onOpen: (e: MouseEvent<HTMLAnchorElement>, icon: string) => void;
+  onToggle: (icon: string) => void;
+}) {
+  const t = DICTIONARIES[lang];
+  return (
+    <li
+      className="icon-cell result-cell"
+      data-icon={icon}
+      data-exact={exact ? "" : undefined}
+      data-picked={picked ? "" : undefined}
+    >
+      <a
+        href={href(lang, iconPagePath(icon))}
+        className={CARD_LINK}
+        data-icon={icon}
+        aria-current={current ? "true" : undefined}
+        onClick={(e) => onOpen(e, icon)}
+      >
+        <Icon icon={icon} className="icon-cell-svg" />
+        <span className="result-cell-text">
+          <span className="icon-cell-name">{name}</span>
+          <span className="result-cell-set">{set}</span>
+        </span>
+        {exact ? (
+          <span className="result-exact sr-only">{t.searchExact}</span>
+        ) : null}
+      </a>
+      {tools ? (
+        <CardTools
+          lang={lang}
+          name={icon}
+          label={name}
+          picked={picked}
+          full={full}
+          onToggle={onToggle}
+        />
+      ) : null}
+    </li>
+  );
+});
 
 /**
  * Сетка выдачи поиска (шаг 3 фазы 4, ADR-0040; редизайн — макет «Сценарий поиска иконок»): та же сетка и
@@ -43,49 +121,27 @@ export function ResultGrid({
   /** Выделение страницы: кнопки выбора и рюкзака у карточек. */
   selection?: Selection;
 }) {
-  const t = DICTIONARIES[lang];
-  const content = (card: SearchCard): ReactNode => (
-    <>
-      <Icon icon={card.icon} className="icon-cell-svg" />
-      <span className="result-cell-text">
-        <span className="icon-cell-name">{card.name}</span>
-        <span className="result-cell-set">
-          {setTitles[card.set] ?? card.set}
-        </span>
-      </span>
-      {card.exact ? (
-        <span className="result-exact sr-only">{t.searchExact}</span>
-      ) : null}
-    </>
+  // Карточкам — та же ссылка на обработчик при любой отрисовке (ResultCard с памятью).
+  const open = useStableCallback(
+    (e: MouseEvent<HTMLAnchorElement>, name: string) => onOpen?.(e, name),
   );
   return (
     <ul className="icon-grid result-grid" aria-busy={busy ? "true" : undefined}>
       {cards.map((card) => (
-        <li
+        <ResultCard
           key={card.card}
-          className="icon-cell result-cell"
-          data-icon={card.icon}
-          data-exact={card.exact ? "" : undefined}
-          data-picked={selection?.picked.includes(card.icon) ? "" : undefined}
-        >
-          <a
-            href={href(lang, iconPagePath(card.icon))}
-            className={CARD_LINK}
-            data-icon={card.icon}
-            aria-current={current === card.icon ? "true" : undefined}
-            onClick={(e) => onOpen?.(e, card.icon)}
-          >
-            {content(card)}
-          </a>
-          {selection === undefined ? null : (
-            <CardTools
-              lang={lang}
-              name={card.icon}
-              label={card.name}
-              selection={selection}
-            />
-          )}
-        </li>
+          lang={lang}
+          icon={card.icon}
+          name={card.name}
+          set={setTitles[card.set] ?? card.set}
+          exact={card.exact}
+          current={current === card.icon}
+          tools={selection !== undefined}
+          picked={selection?.picked.includes(card.icon) ?? false}
+          full={selection?.full ?? false}
+          onOpen={open}
+          onToggle={selection?.toggle ?? noToggle}
+        />
       ))}
       {Array.from(
         { length: skeletons },

@@ -2790,6 +2790,9 @@
     inline-size: 100%;
     min-block-size: 6.3125rem;
     padding: 1.5rem 0.5rem;
+    /* Пока карточка едет на новое место (панель иконки, lib/motion.ts), её подпись — уже новой длины:
+       при закрытии панели она длиннее карточки на экране и без обрезки ложилась на соседние. */
+    overflow: clip;
     border-radius: var(--radius-lg);
     background: var(--color-bg-icon-card);
     color: var(--color-text-primary);
@@ -2856,12 +2859,13 @@
    * и выдача, справа панель; главная — та же раскладка, но панели на ней нет. Прилипает к верху окна и помещается в окно
    * (lib/panel-fit.ts).
    *
-   * Открытие и закрытие — одним движением (план, шаг 2): правая колонка раздвигается от 0 до ширины
-   * панели переходом grid-template-columns, и вся левая колонка — заголовок, Subscribe, строка поиска,
-   * категории, сетка — плавно сужается вместе с ней; колонок у сетки столько же, карточки только
-   * сужаются. Панель — своей ширины у правого края колонки и выезжает из-за него, пока колонка растёт
-   * (overflow-x: clip — не мешает прилипанию). Закрытие — колонка сходится, уходящая панель — копией
-   * (PanelLayout). Анимация карточек PanelLayout здесь не нужна — двигается сама раскладка.
+   * Открытие и закрытие — одним движением (план, шаг 2), но без перехода раскладки (18 ноября 2026):
+   * правая колонка сразу своей ширины, страница перестраивается один раз, а всё в левой колонке —
+   * Subscribe, строка поиска, номера страниц, карточки — доезжает до новых мест сдвигом и сжатием
+   * (components/panel/PanelLayout.tsx, lib/motion.ts); колонок у сетки столько же, карточки только
+   * сужаются. Прежде ширина колонок переходила здесь (transition: grid-template-columns), и браузер
+   * заново раскладывал и рисовал страницу в каждом кадре — на занятом компьютере кадры пропадали.
+   * Панель появляется своей анимацией (.icon-panel ниже), уходит копией (PanelLayout).
    */
   @media (min-width: 64rem) {
     :is(.set-page, .find-page) {
@@ -2886,10 +2890,10 @@
       min-width: 0;
       overflow-x: clip;
     }
-    /* Правое поле страницы — отступом самой панели, а не её места: у места с полем, пока колонка ещё
-       нулевой ширины, были свои 28 px — страница становилась шире окна, внизу мелькала горизонтальная
-       полоса, а фокус на заголовке панели прокручивал страницу вбок (18 ноября 2026). Панель шире
-       колонки обрезает overflow-x: clip места. */
+    /* Правое поле страницы — отступом самой панели, а не её места: место с полем шире своей колонки,
+       пока та уже 28 px, и страница становилась шире окна — мелькала горизонтальная полоса, а фокус на
+       заголовке панели прокручивал страницу вбок (18 ноября 2026). Панель шире колонки обрезает
+       overflow-x: clip места. */
     :is(.set-page, .find-page) > .page-panel:has(> .icon-panel) {
       padding: 2rem 0 2.5rem;
     }
@@ -2897,12 +2901,6 @@
       width: var(--width-panel);
       margin-right: var(--page-x-end);
       margin-left: auto;
-    }
-  }
-  @media (min-width: 64rem) and (prefers-reduced-motion: no-preference) {
-    :is(.set-page, .find-page) {
-      transition: grid-template-columns var(--motion-panel-in)
-        var(--motion-ease-out);
     }
   }
   /*
@@ -2946,9 +2944,10 @@
     display: flex;
     flex-direction: column;
     width: 100%;
-    /* Не выше места от верха панели до низа окна (--panel-fit, lib/panel-fit.ts): пока страница не
-       прокручена, низ панели не уходит за край окна. */
-    max-height: var(--panel-fit, calc(100vh - 2rem));
+    /* Не выше места от верха панели до низа окна: точное число ставит lib/panel-fit.ts прямо панели
+       (max-height в её стиле), здесь — запасное до первого замера. Пока страница не прокручена, низ
+       панели не уходит за край окна. */
+    max-height: calc(100vh - 2rem);
     /* Панель прокручивается независимо от страницы (решение владельца 18 ноября 2026): колесо над ней
        крутит только её, а в конце панели страница стоит на месте. */
     overflow-y: scroll;
@@ -3598,9 +3597,14 @@
   }
 
   /*
-   * Микроанимация панели. Появление — проявляется и въезжает справа на 24 px (на телефоне шторка
-   * выезжает снизу, затемнение проявляется). Закрытие — копия панели (PanelLayout) на прежнем месте
-   * поверх страницы гаснет и уезжает, затем удаляется. Раскрытие шторки ручкой — плавная высота.
+   * Микроанимация панели.
+   * - Панель во всю высоту (компьютер) выезжает из-за правого края своей колонки и уезжает за край окна
+   *   сдвигом, в такт с краем левой колонки: то, что ещё едет слева, под неё не попадает. Это движение
+   *   запускает PanelLayout (у уходящей копии — класс .panel-slides), анимаций в стилях у неё нет.
+   * - Панель рядом с сеткой (без места во всю высоту) проявляется и въезжает справа на 24 px, уходит —
+   *   гаснет и уезжает.
+   * - Телефон: шторка выезжает снизу, затемнение проявляется; раскрытие шторки ручкой — плавная высота.
+   * Закрытие — копия панели (PanelLayout) на прежнем месте поверх страницы уходит и удаляется.
    * «Уменьшить движение» в системе — всё мгновенно.
    */
   .panel-leaving {
@@ -3614,26 +3618,24 @@
     margin: 0;
     pointer-events: none;
   }
-  @media (prefers-reduced-motion: no-preference) {
-    .icon-panel {
+  @media (min-width: 64rem) and (prefers-reduced-motion: no-preference) {
+    .with-panel > .icon-panel:not(.panel-slides) {
       animation: panel-in var(--motion-panel-in) var(--motion-ease-out)
         var(--motion-panel-delay) both;
     }
-    .icon-panel.panel-leaving {
+    .with-panel > .icon-panel.panel-leaving:not(.panel-slides) {
       animation: panel-out var(--motion-panel-out) var(--motion-ease-in)
         forwards;
     }
   }
   @media (max-width: 63.98rem) and (prefers-reduced-motion: no-preference) {
     .icon-panel {
-      animation-name: sheet-in;
-      animation-duration: var(--motion-sheet-in);
-      animation-delay: 0s;
+      animation: sheet-in var(--motion-sheet-in) var(--motion-ease-out) both;
       transition: max-height var(--motion-sheet-in) var(--motion-ease-out);
     }
     .icon-panel.panel-leaving {
-      animation-name: sheet-out;
-      animation-duration: var(--motion-sheet-out);
+      animation: sheet-out var(--motion-sheet-out) var(--motion-ease-in)
+        forwards;
     }
     .panel-backdrop {
       animation: fade-in var(--motion-fade) var(--motion-ease-out) both;

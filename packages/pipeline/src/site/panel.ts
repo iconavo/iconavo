@@ -91,7 +91,7 @@ export async function hydrated(page: Page) {
 
 /**
  * Страница успокоилась: прошло несколько кадров (высоту панели по прокрутке пересчитывает кадр после события
- * прокрутки, lib/panel-fit.ts) и закончились движения — переход колонок, появление и уход панели
+ * прокрутки, lib/panel-fit.ts) и закончились движения — переезд карточек, появление и уход панели
  * (бесконечные анимации не в счёт).
  */
 async function settled(page: Page) {
@@ -186,6 +186,79 @@ const sideways = (page: Page) =>
         .__sideways ?? { x: 0, wide: 0 },
   );
 
+/** Метки анимаций перехода панели на сайте (apps/site/components/panel/PanelLayout.tsx). */
+const MOTION_IDS = ["iconavo-flip", "iconavo-panel-slide"];
+
+/**
+ * Останавливать анимации перехода панели в самом их начале: тогда видно, с какого вида движение
+ * начинается, — и проверка не зависит от скорости машины. Выполняется в браузере.
+ */
+function holdMotion(ids: string[]) {
+  const held: Animation[] = [];
+  (window as unknown as { __held?: Animation[] }).__held = held;
+  const animate = Element.prototype.animate;
+  Element.prototype.animate = function (frames, options) {
+    const animation = animate.call(this, frames, options);
+    if (
+      typeof options === "object" &&
+      options !== null &&
+      ids.includes(String(options.id))
+    ) {
+      animation.pause();
+      animation.currentTime = 0;
+      held.push(animation);
+    }
+    return animation;
+  };
+}
+
+/** Доиграть остановленные анимации разом; ответ — сколько их было. Выполняется в браузере. */
+function releaseMotion() {
+  const held = (window as unknown as { __held?: Animation[] }).__held ?? [];
+  for (const animation of held) animation.finish();
+  return held.length;
+}
+
+/** Места того, что переезжает, когда открывается панель. Выполняется в браузере. */
+function motionFacts(icon: string) {
+  const rect = (element: Element | null | undefined) => {
+    const r = element?.getBoundingClientRect();
+    return r === undefined
+      ? undefined
+      : { left: r.left, top: r.top, width: r.width, height: r.height };
+  };
+  let link: HTMLElement | undefined;
+  for (const a of document.querySelectorAll<HTMLElement>("a.icon-card-link")) {
+    if (a.dataset.icon === icon) link = a;
+  }
+  return {
+    card: rect(link?.parentElement),
+    cardIcon: rect(link?.querySelector("svg")),
+    cardName: rect(link?.querySelector(".icon-cell-name")),
+    first: rect(document.querySelector(".icon-grid > li")),
+    subscribe: rect(document.querySelector(".subscribe")),
+    field: rect(document.querySelector(".grid-field")),
+    fieldIcon: rect(document.querySelector(".grid-field .hero-field-icon")),
+    pages: rect(document.querySelector(".grid-bar .pagination")),
+    panel: rect(document.querySelector("#page-panel > aside.icon-panel")),
+    /** Ширина колонки под панель по стилям: 0 — колонки нет. */
+    column: Number.parseFloat(
+      getComputedStyle(document.querySelector("main") as Element)
+        .gridTemplateColumns.split(" ")
+        .at(-1) ?? "0",
+    ),
+    /** Переходы ширины колонок в стилях: с ними страница раскладывается заново в каждом кадре. */
+    transitions: document
+      .getAnimations()
+      .filter(
+        (a) =>
+          (a as CSSTransition).transitionProperty === "grid-template-columns",
+      ).length,
+  };
+}
+
+type MotionRect = NonNullable<ReturnType<typeof motionFacts>["card"]>;
+
 /** Где страница и содержимое панели по вертикали и куда вести мышь. Выполняется в браузере. */
 function scrollFacts() {
   const panel = document.querySelector("#page-panel > aside.icon-panel");
@@ -276,9 +349,15 @@ export async function panelProblems(
   no(f.icon === second, "щелчок по второй карточке не сменил иконку панели");
   no(f.history === opened, "смена иконки добавила запись истории");
   no(!f.focusInPanel, "смена иконки щелчком увела фокус в панель");
+  await page.evaluate(watchSideways);
   await page.keyboard.press("Escape");
   f = await closed(page);
   no(!f.open, "Esc не закрыл панель");
+  const sideClose = await sideways(page);
+  no(
+    sideClose.wide === 0 && sideClose.x === 0,
+    `пока панель закрывалась, страница была шире окна на ${sideClose.wide} px и уезжала вбок на ${sideClose.x} px`,
+  );
   no(f.search === "", `после Esc в адресе осталось «${f.search}»`);
   no(f.focusIcon === second, "после закрытия фокус не вернулся к карточке");
 
@@ -434,6 +513,80 @@ export async function panelProblems(
       `закрытие панели (${how}) сдвинуло карточку ${card}: ${before} → ${after} px`,
     );
   }
+
+  // Движение начинается с прежнего вида (18 ноября 2026): страница перестраивается один раз, а карточки,
+  // строка поиска и кнопки доезжают до новых мест сдвигом — в первом кадре они там же, где были, и ничего
+  // не перескакивает; панель выезжает из-за края и не лежит на том, что ещё едет. Страница в самом верху и
+  // узкая: шапка набора и строка поиска с панелью выше — без движения сетка прыгала бы на их разницу.
+  // Анимации останавливаются в начале (holdMotion) — от скорости машины проверка не зависит.
+  await page.goto(`${base}/${CATALOG_SET}`);
+  await hydrated(page);
+  await settled(page);
+  const m = columns + 2;
+  const moving = (await cardName(page, m)) ?? "";
+  const was = await page.evaluate(motionFacts, moving);
+  await page.evaluate(holdMotion, MOTION_IDS);
+  await page.locator("a.icon-card-link").nth(m).click();
+  await shown(page, moving);
+  const begun = await page.evaluate(motionFacts, moving);
+  const same = (a: MotionRect | undefined, b: MotionRect | undefined) =>
+    a !== undefined &&
+    b !== undefined &&
+    Math.abs(a.left - b.left) <= 1.5 &&
+    Math.abs(a.top - b.top) <= 1.5 &&
+    Math.abs(a.width - b.width) <= 1.5 &&
+    Math.abs(a.height - b.height) <= 1.5;
+  const where = (r: MotionRect | undefined) =>
+    r === undefined
+      ? "нет"
+      : `${Math.round(r.left)},${Math.round(r.top)} ${Math.round(r.width)}×${Math.round(r.height)}`;
+  for (const [label, key] of [
+    ["карточка иконки", "card"],
+    ["иконка в карточке", "cardIcon"],
+    ["первая карточка", "first"],
+    ["Subscribe", "subscribe"],
+    ["поле поиска", "field"],
+    ["значок в поле поиска", "fieldIcon"],
+    ["номера страниц", "pages"],
+  ] as const) {
+    no(
+      same(begun[key], was[key]),
+      `в начале движения ${label} не на прежнем месте: было ${where(was[key])}, стало ${where(begun[key])}`,
+    );
+  }
+  no(
+    begun.cardName !== undefined &&
+      was.cardName !== undefined &&
+      Math.abs(begun.cardName.left - was.cardName.left) <= 1.5 &&
+      Math.abs(begun.cardName.top - was.cardName.top) <= 1.5,
+    `в начале движения подпись карточки не там, где была: было ${where(was.cardName)}, стало ${where(begun.cardName)}`,
+  );
+  no(
+    begun.column > 300,
+    `колонка под панель не сразу своей ширины: ${begun.column} px`,
+  );
+  no(
+    begun.transitions === 0,
+    "ширина колонок переходит в стилях — страница раскладывается заново в каждом кадре",
+  );
+  no(
+    begun.panel !== undefined &&
+      was.subscribe !== undefined &&
+      begun.panel.left >= was.subscribe.left + was.subscribe.width,
+    `в начале движения панель лежит на «Subscribe»: панель с ${Math.round(begun.panel?.left ?? 0)} px`,
+  );
+  const played = await page.evaluate(releaseMotion);
+  no(played > 10, `переезд не запущен: анимаций перехода — ${played}`);
+  await settled(page);
+  const end = await page.evaluate(motionFacts, moving);
+  no(
+    end.card !== undefined &&
+      was.card !== undefined &&
+      end.card.width < was.card.width - 10,
+    `после движения карточка не уже: было ${where(was.card)}, стало ${where(end.card)}`,
+  );
+  await page.keyboard.press("Escape");
+  await closed(page);
   await page.setViewportSize(DESKTOP);
 
   // Поиск: та же панель во всю высоту — справа от поля и выдачи.
@@ -527,7 +680,7 @@ export async function checkPanel(
   await context.close();
   return problems.length === 0
     ? pass(
-        "мышью и с клавиатуры: адрес, фокус, Esc, ✕, «назад» и «вперёд», ссылка с ?icon=; при открытии страница не шире окна и не уезжает вбок; колесо над панелью крутит только её, над сеткой — страницу; сетка не прыгает при открытии и закрытии (1040 px); вторая страница сетки и поиск с панелью; цвет и толщина — где положено; несуществующая иконка — «нет»; axe в обеих темах",
+        "мышью и с клавиатуры: адрес, фокус, Esc, ✕, «назад» и «вперёд», ссылка с ?icon=; при открытии и закрытии страница не шире окна и не уезжает вбок; колесо над панелью крутит только её, над сеткой — страницу; движение начинается с прежнего вида — карточки, поле поиска и кнопки доезжают сдвигом, колонка под панель сразу своей ширины; сетка не прыгает при открытии и закрытии (1040 px); вторая страница сетки и поиск с панелью; цвет и толщина — где положено; несуществующая иконка — «нет»; axe в обеих темах",
       )
     : fail(problems.slice(0, 4).join("; "));
 }
