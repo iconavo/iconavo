@@ -1,7 +1,7 @@
 "use client";
 
 import { Icon } from "@iconavo-ui/react";
-import { useEffect, useRef, useState } from "react";
+import { type MouseEvent, memo, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import {
   type Category,
@@ -27,6 +27,7 @@ import { PAGE_PANEL_ID } from "../../lib/panel-layout";
 // Хосты иконок — для ядра браузера: страницы и категории сетка грузит сама (lib/iconavo.ts).
 import "../../lib/iconavo";
 import { isStyle, type Style } from "../../lib/search";
+import { useStableCallback } from "../../lib/stable-callback";
 import { useUrlQuery, withParams } from "../../lib/url-query";
 import { IconPanel } from "../icon/IconPanel";
 import { CARD_LINK, usePanel } from "../icon/usePanel";
@@ -56,6 +57,57 @@ interface Loaded {
   set: SetCards;
   categories: Category[];
 }
+
+/**
+ * Карточка сетки. С памятью (memo): открытие панели и смена иконки в ней меняют отметку у двух карточек, и
+ * заново рисуются только они, а не вся страница сетки — щелчок по иконке отвечает быстрее (18 ноября
+ * 2026). Поэтому пропсы — простые значения и обработчики с постоянной ссылкой.
+ */
+const GridCard = memo(function GridCard({
+  lang,
+  icon,
+  name,
+  current,
+  picked,
+  full,
+  onOpen,
+  onToggle,
+}: {
+  lang: Lang;
+  /** Полное имя: набор:иконка. */
+  icon: string;
+  name: string;
+  /** Иконка открыта в панели. */
+  current: boolean;
+  picked: boolean;
+  /** Выбрано 100 — новые не выбираются. */
+  full: boolean;
+  onOpen: (e: MouseEvent<HTMLAnchorElement>, icon: string) => void;
+  onToggle: (icon: string) => void;
+}) {
+  return (
+    <li className="icon-cell" data-picked={picked ? "" : undefined}>
+      <a
+        href={href(lang, iconPagePath(icon))}
+        className={CARD_LINK}
+        data-icon={icon}
+        aria-current={current ? "true" : undefined}
+        onClick={(e) => onOpen(e, icon)}
+      >
+        <Icon icon={icon} className="icon-cell-svg" />
+        <span className="icon-cell-name">{name}</span>
+      </a>
+      <CardTools
+        lang={lang}
+        name={icon}
+        label={name}
+        picked={picked}
+        full={full}
+        onToggle={onToggle}
+      />
+    </li>
+  );
+});
 
 /**
  * Сетка набора (шаги 2 и 3 фазы 4, вид — по макету Figma «Iconavo — Макеты»): карточки — база со своими
@@ -100,6 +152,8 @@ export function IconGrid({
   const t = DICTIONARIES[lang];
   const { query, hrefOf, navigate } = useUrlQuery();
   const panel = usePanel(query, navigate);
+  // Карточкам — та же ссылка на обработчик при любой отрисовке (GridCard с памятью).
+  const openCard = useStableCallback(panel.onCardClick);
   const selection = useSelection();
   const slug = query.get("category");
   const category = categories.find((c) => c.slug === slug);
@@ -308,30 +362,17 @@ export function IconGrid({
               {shown.map((name) => {
                 const icon = `${prefix}:${name}`;
                 return (
-                  <li
+                  <GridCard
                     key={name}
-                    className="icon-cell"
-                    data-picked={
-                      selection.picked.includes(icon) ? "" : undefined
-                    }
-                  >
-                    <a
-                      href={href(lang, iconPagePath(icon))}
-                      className={CARD_LINK}
-                      data-icon={icon}
-                      aria-current={panel.icon === icon ? "true" : undefined}
-                      onClick={(e) => panel.onCardClick(e, icon)}
-                    >
-                      <Icon icon={icon} className="icon-cell-svg" />
-                      <span className="icon-cell-name">{name}</span>
-                    </a>
-                    <CardTools
-                      lang={lang}
-                      name={icon}
-                      label={name}
-                      selection={selection}
-                    />
-                  </li>
+                    lang={lang}
+                    icon={icon}
+                    name={name}
+                    current={panel.icon === icon}
+                    picked={selection.picked.includes(icon)}
+                    full={selection.full}
+                    onOpen={openCard}
+                    onToggle={selection.toggle}
+                  />
                 );
               })}
             </ul>

@@ -145,24 +145,30 @@ export function SelectionBar({
  * Кнопки карточки при наведении (Icon Card, State=Hover): слева — в рюкзак и обратно, справа — выбор.
  * Отмеченная карточка держит свой чекбокс на виду (State=Selected-Check). Это соседи ссылки-карточки, а
  * не её содержимое: кнопка внутри ссылки — ошибка разметки. На экранах уже 768 px их нет — выделения
- * на телефоне нет (гайд макета).
+ * на телефоне нет (гайд макета). Пропсы — простые значения, а не всё выделение: карточка сетки
+ * (React.memo) не рисуется заново, пока её собственная отметка не изменилась.
  */
 export function CardTools({
   lang,
   name,
   label,
-  selection,
+  picked,
+  full,
+  onToggle,
 }: {
   lang: Lang;
   /** Полное имя иконки. */
   name: string;
   /** Как иконку называет карточка — для подписей кнопок. */
   label: string;
-  selection: Selection;
+  /** Иконка отмечена. */
+  picked: boolean;
+  /** Выбрано 100 — новые не выбираются. */
+  full: boolean;
+  onToggle: (name: string) => void;
 }) {
   const t = DICTIONARIES[lang];
   const inBag = useBag().includes(name);
-  const picked = selection.picked.includes(name);
   return (
     <>
       <button
@@ -182,8 +188,8 @@ export function CardTools({
           type="checkbox"
           className="card-check-input"
           checked={picked}
-          disabled={!picked && selection.full}
-          onChange={() => selection.toggle(name)}
+          disabled={!picked && full}
+          onChange={() => onToggle(name)}
           aria-label={t.selPick.replace("{name}", label)}
         />
         <Icon

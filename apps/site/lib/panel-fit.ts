@@ -3,7 +3,9 @@
 // страница не прокручена, она начинается ниже шапки сайта — и её низ уходил за край окна, а прокрутка
 // внутри панели уводила содержимое как раз туда. Теперь высота панели — от её верха до низа окна с тем
 // же отступом: прокрутили страницу — панель поднялась к верху и выросла до полной высоты.
-// Число — --panel-fit у панели (app/globals.css); на телефоне панель — шторка, её высота своя.
+// Число — max-height у самой панели (в стилях — запасное значение до первого замера); на телефоне панель —
+// шторка, её высота своя. Не переменная CSS: её смена заставляла бы браузер заново считать стили всего
+// содержимого панели на каждом кадре прокрутки страницы у её верха.
 //
 // Колесо над панелью крутит только её (решение владельца 18 ноября 2026: панель прокручивается независимо
 // от страницы). Дошли до конца панели — страница стоит (overscroll-behavior: contain в стилях). Прежде,
@@ -62,38 +64,48 @@ export function panelWhole(content: number, height: number): boolean {
   return content <= height + 1;
 }
 
+/** Поставить панели высоту по её месту в окне — один раз, сейчас. */
+export function fitNow(panel: HTMLElement): void {
+  if (!window.matchMedia(DESKTOP).matches) {
+    panel.style.removeProperty("max-height");
+    delete panel.dataset.fit;
+    return;
+  }
+  const root = document.documentElement;
+  const inset = Number.parseFloat(getComputedStyle(panel).top) || 0;
+  const top = panel.getBoundingClientRect().top;
+  const fit = panelFit(
+    root.clientHeight,
+    top,
+    inset,
+    MIN_HEIGHT,
+    placeEnd(panel),
+  );
+  const whole = panelWhole(panel.scrollHeight, fit);
+  panel.style.maxHeight = `${fit}px`;
+  if (whole) panel.dataset.fit = "whole";
+  else delete panel.dataset.fit;
+}
+
 /**
- * Держать высоту панели по месту в окне: сразу, при прокрутке и смене размера окна, при смене высоты
- * страницы и содержимого панели — не чаще раза за кадр. Возвращает отписку.
+ * Держать высоту панели по месту в окне: при прокрутке и смене размера окна, при смене высоты страницы и
+ * содержимого панели — не чаще раза за кадр. Возвращает отписку.
+ *
+ * Первый замер — в следующем кадре, а не сразу: панель открывается в той же задаче, что и щелчок, и
+ * чтение раскладки сразу после запуска переезда карточек (components/panel/PanelLayout.tsx) заставило бы
+ * браузер лишний раз пересчитать стили всех едущих элементов. Высоту первого кадра ставит сама раскладка
+ * панели (fitNow) — до того, как запустит переезд.
  */
 export function fitPanel(panel: HTMLElement): () => void {
   let frame = 0;
   const update = () => {
     frame = 0;
-    if (!window.matchMedia(DESKTOP).matches) {
-      panel.style.removeProperty("--panel-fit");
-      delete panel.dataset.fit;
-      return;
-    }
-    const root = document.documentElement;
-    const inset = Number.parseFloat(getComputedStyle(panel).top) || 0;
-    const top = panel.getBoundingClientRect().top;
-    const fit = panelFit(
-      root.clientHeight,
-      top,
-      inset,
-      MIN_HEIGHT,
-      placeEnd(panel),
-    );
-    const whole = panelWhole(panel.scrollHeight, fit);
-    panel.style.setProperty("--panel-fit", `${fit}px`);
-    if (whole) panel.dataset.fit = "whole";
-    else delete panel.dataset.fit;
+    fitNow(panel);
   };
   const schedule = () => {
     if (frame === 0) frame = requestAnimationFrame(update);
   };
-  update();
+  schedule();
   window.addEventListener("scroll", schedule, { passive: true });
   window.addEventListener("resize", schedule);
   // Высота страницы над панелью и высота её содержимого: сама панель зажата по высоте, поэтому следим за
@@ -109,6 +121,7 @@ export function fitPanel(panel: HTMLElement): () => void {
   sections.observe(panel, { childList: true });
   return () => {
     cancelAnimationFrame(frame);
+    panel.style.removeProperty("max-height");
     delete panel.dataset.fit;
     window.removeEventListener("scroll", schedule);
     window.removeEventListener("resize", schedule);
