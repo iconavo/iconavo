@@ -1318,15 +1318,15 @@ async function checkCanary(
       },
     ],
     [
-      // У места панели снова своё правое поле: пока колонка под панель раздвигается с нуля, страница шире
-      // окна — внизу мелькает горизонтальная полоса.
+      // Место панели не обрезает её: пока колонка под панель раздвигается с нуля, панель торчит за край
+      // страницы, и страница шире окна — внизу мелькает горизонтальная полоса. Своё правое поле места
+      // (28 px, как было до 18 ноября 2026) для проверки не годится: в WebKit такая страница шире окна
+      // меньше кадра.
       "страница шире окна, пока панель открывается",
       () => {
         document.addEventListener("DOMContentLoaded", () => {
           const sheet = new CSSStyleSheet();
-          sheet.replaceSync(
-            ".page-panel:has(> .icon-panel) { padding-right: 28px !important }",
-          );
+          sheet.replaceSync(".page-panel { overflow-x: visible !important }");
           document.adoptedStyleSheets = [...document.adoptedStyleSheets, sheet];
         });
       },
