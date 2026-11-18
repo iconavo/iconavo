@@ -51483,6 +51483,31 @@
         "regeneration"
       ]
     },
+    "jacket": {
+      "fingerprint": "8993f75d5d5a",
+      "tags": [
+        "outerwear",
+        "fashion",
+        "apparel",
+        "styled",
+        "warm",
+        "outfit",
+        "wear",
+        "coat",
+        "blazer",
+        "tuxedo",
+        "tailor",
+        "uniform",
+        "attire",
+        "clothing",
+        "clothes",
+        "shopping",
+        "cold",
+        "warmth",
+        "winter",
+        "outdoors"
+      ]
+    },
     "japanese-yen": {
       "en": {
         "description": "Draws the Japanese yen sign, a Y-like glyph with two horizontal bars and a vertical stroke, representing the yen currency.",
@@ -68298,6 +68323,29 @@
         "bucket",
         "color",
         "colour"
+      ]
+    },
+    "paint-gun": {
+      "fingerprint": "ebd01a17461a",
+      "tags": [
+        "spray",
+        "airbrush",
+        "aerosol",
+        "painter",
+        "tool",
+        "diy",
+        "automotive",
+        "finishing",
+        "coating",
+        "color",
+        "colour",
+        "painting",
+        "sprayer",
+        "spraying",
+        "varnish",
+        "lacquer",
+        "enamel",
+        "pneumatic"
       ]
     },
     "paint-roller": {
@@ -85277,38 +85325,7 @@
       ]
     },
     "spray-can": {
-      "en": {
-        "description": "A spray can with dots of spray coming out of its nozzle, usually meaning spraying, paint, or aerosol products.",
-        "synonyms": [
-          "aerosol",
-          "spray bottle",
-          "paint can",
-          "graffiti",
-          "air freshener",
-          "deodorant",
-          "spray paint",
-          "mist",
-          "atomizer",
-          "sprayer"
-        ]
-      },
-      "fingerprint": "b97c416377d8",
-      "promptVersion": 1,
-      "ru": {
-        "description": "Изображён аэрозольный баллончик с брызгами из сопла; обычно означает распыление, краску или освежитель воздуха.",
-        "synonyms": [
-          "баллончик",
-          "аэрозоль",
-          "спрей",
-          "краска",
-          "граффити",
-          "освежитель воздуха",
-          "дезодорант",
-          "распылитель",
-          "пульверизатор",
-          "брызги"
-        ]
-      },
+      "fingerprint": "69e054c84b28",
       "tags": [
         "paint",
         "color",
