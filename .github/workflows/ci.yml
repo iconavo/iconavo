@@ -219,10 +219,12 @@ jobs:
   # Живые примеры (ADR-0050, шаг 10 фазы 3): архивы пакетов этой ветки (pnpm pack) npm ставит в копию
   # каждого примера — как у разработчика; хосты иконок — превью API на этой машине. Сеть нужна только npm
   # — за сторонними пакетами примеров, их держит кэш ~/.npm. Идёт параллельно задаче browser.
+  # 45 минут, как у browser: системные библиотеки Firefox и WebKit (apt) с медленного зеркала Ubuntu ставятся
+  # до 30 минут, и при 30 на саму проверку времени не оставалось (18–19 ноября 2026, ADR-0035).
   starters:
     name: starters (${{ matrix.browser }})
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 45
     strategy:
       fail-fast: false
       matrix:
@@ -290,10 +292,11 @@ jobs:
 
   # Сайт документации (ADR-0050): продакшен-сборка apps/site, хосты иконок — превью API на этой машине;
   # обход страниц, заголовки, ссылки, разделы README, доступность и ширина телефона. Параллельно browser.
+  # 45 минут — как у starters и browser: медленная установка системных библиотек (выше).
   site:
     name: site (${{ matrix.browser }})
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 45
     strategy:
       fail-fast: false
       matrix:
