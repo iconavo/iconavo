@@ -206,6 +206,12 @@ export class PanelLayout extends Component<{
 }> {
   private readonly root = createRef<HTMLDivElement>();
 
+  componentDidMount() {
+    // Длительность перехода — заранее, пока панель закрыта: при первом открытии её чтение шло бы до
+    // удержания опоры (componentDidUpdate) и давало Chrome держать прокрутку самому.
+    motionMs("--motion-panel-in", 240);
+  }
+
   getSnapshotBeforeUpdate(
     previous: Readonly<{ open: boolean; icon?: string | undefined }>,
   ) {
@@ -274,23 +280,29 @@ export class PanelLayout extends Component<{
   ) {
     const root = this.root.current;
     if (snapshot === null || root === null) return;
+    // Из памяти: прочитана при монтировании (componentDidMount).
     const duration = motionMs("--motion-panel-in", 240);
     // Недоигранный переход — прочь: новые места меряются без его сдвигов.
     cancelFlip(FLIP_ID);
-    const slot = this.props.slot ?? null;
-    const panel =
-      this.props.open && slot !== null
-        ? slot.querySelector<HTMLElement>(":scope > .icon-panel")
-        : null;
-    // Высота панели по окну — сейчас, до запуска переезда: это первое чтение новой раскладки, она и так
-    // нужна; позже то же чтение стоило бы лишнего пересчёта стилей (lib/panel-fit.ts).
-    if (panel !== null) fitNow(panel);
+    // Опора — до первого чтения новой раскладки и стилей: удержание включает data-panel-anchor и тем
+    // выключает «держание» прокрутки браузером. Раньше первым шло чтение высоты панели (ниже), а при первом
+    // открытии — и длительности перехода: Firefox и Chrome успевали докрутить страницу сами, удержанию
+    // сайта нечего было делать, и контрольная поломка «сетка прыгает» проверки сайта в Firefox иногда
+    // не замечалась (18 ноября 2026, CI на main). Пользователь разницы не видит: карточка на месте.
     if (snapshot.anchor !== undefined) {
       holdAnchor(
         snapshot.anchor,
         reducedMotion() ? HOLD_STILL_MS : duration + HOLD_EXTRA_MS,
       );
     }
+    const slot = this.props.slot ?? null;
+    const panel =
+      this.props.open && slot !== null
+        ? slot.querySelector<HTMLElement>(":scope > .icon-panel")
+        : null;
+    // Высота панели по окну — сейчас, до запуска переезда: новая раскладка уже прочитана, а позже то же
+    // чтение стоило бы лишнего пересчёта стилей (lib/panel-fit.ts).
+    if (panel !== null) fitNow(panel);
     // Панель во всю высоту выезжает из-за правого края своей колонки — в такт с краем левой колонки, в
     // том же запуске, что и переезд: ширина колонки читается до первой анимации — чтение после них
     // заставило бы браузер пересчитать стили всех едущих элементов ещё раз.
