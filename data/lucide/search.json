@@ -33574,6 +33574,30 @@
         "decision tree"
       ]
     },
+    "diagram-sankey": {
+      "fingerprint": "93b05d12ebbf",
+      "tags": [
+        "sankey",
+        "chart",
+        "diagram",
+        "flow",
+        "change",
+        "movement",
+        "intersection",
+        "road",
+        "dataflow",
+        "streams",
+        "links",
+        "transfer",
+        "allocation",
+        "distribution",
+        "energy",
+        "resources",
+        "budget",
+        "conversion",
+        "throughput"
+      ]
+    },
     "diameter": {
       "en": {
         "description": "A circle with a straight line connecting two points on its edge, representing diameter or measuring circle size.",
