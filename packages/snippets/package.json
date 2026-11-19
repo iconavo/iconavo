@@ -1,0 +1,22 @@
+{
+  "name": "@iconavo-ui/snippets",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./code": "./dist/code.js",
+    "./icon": "./dist/icon.js",
+    "./install": "./dist/install.js",
+    "./markdown": "./dist/markdown.js",
+    "./readme": "./dist/readme.js",
+    "./settings": "./dist/settings.js"
+  },
+  "sideEffects": false,
+  "scripts": {
+    "build": "tsc -b"
+  },
+  "dependencies": {
+    "@iconavo-ui/core": "workspace:*",
+    "@iconavo-ui/search": "workspace:*"
+  }
+}

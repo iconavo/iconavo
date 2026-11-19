@@ -3,7 +3,7 @@ import { join } from "node:path";
 import type { IconavoIconSet } from "@iconavo-ui/core";
 import { hasStrokeWidth, iconData } from "@iconavo-ui/core/internal";
 import { describe, expect, it } from "vitest";
-import { parseSvgOptions, svgBody } from "../../api/src/svg";
+import { parseSvgOptions, svgBody } from "../../../apps/api/src/svg.js";
 import {
   type Applies,
   commentText,
@@ -16,10 +16,10 @@ import {
   svgFile,
   svgLink,
   tagCode,
-} from "./code";
-import type { IconDetails } from "./icon";
-import { DEFAULT_SETTINGS, type IconSettings } from "./icon-settings";
-import { installFromReadme } from "./install-readme";
+} from "./code.js";
+import type { IconDetails } from "./icon.js";
+import { installFromReadme } from "./readme.js";
+import { DEFAULT_SETTINGS, type IconSettings } from "./settings.js";
 
 const root = join(import.meta.dirname, "..", "..", "..");
 const install = installFromReadme(
