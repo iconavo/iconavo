@@ -15,6 +15,7 @@ import {
 import { createHandler } from "../../../../apps/api/src/handler.js";
 import { compactJson } from "../../../../apps/api/src/json.js";
 import type { FetchFn } from "../sources/npm.js";
+import { HIT_ATTEMPTS, HIT_PAUSE_MS } from "./config.js";
 import { checkIcon, formatIconCheck, iconCheckFailed } from "./icon-check.js";
 
 const V = { lucide: "0123abcd", ph: "4567cdef", fluent: "89abcdef" };
@@ -205,6 +206,37 @@ function world(
   return { fetchFn };
 }
 
+/** Тот же ответ с другими заголовками: так отвечает другой дата-центр, где записи в кэше ещё нет. */
+async function withHeaders(
+  res: Response,
+  headers: Record<string, string>,
+): Promise<Response> {
+  const merged = new Headers(res.headers);
+  for (const [name, value] of Object.entries(headers)) merged.set(name, value);
+  return new Response(await res.arrayBuffer(), {
+    status: res.status,
+    headers: merged,
+  });
+}
+
+/** Ответы на один адрес по очереди: n — номер запроса к нему, с 1. */
+function onPath(
+  fetchFn: FetchFn,
+  suffix: string,
+  change: (res: Response, n: number) => Promise<Response>,
+): { fetch: FetchFn; count: () => number } {
+  let n = 0;
+  return {
+    fetch: async (input, init) => {
+      const res = await fetchFn(input, init);
+      if (!String(input).endsWith(suffix)) return res;
+      n++;
+      return change(res, n);
+    },
+    count: () => n,
+  };
+}
+
 // В подделке набор Fluent называется fluent: имена строк проверки — у живого API.
 const live =
   (fetchFn: FetchFn): FetchFn =>
@@ -275,6 +307,48 @@ describe("pnpm api check — сведения об иконке", () => {
     const alias = r.targets.find((t) => t.name === "Старое имя и Feather");
     expect(alias?.issues.map((i) => i.message)).toEqual([
       "icon: lucide:alert-circle — алиас не привёл к основному имени Lucide",
+    ]);
+    expect(iconCheckFailed(r)).toBe(true);
+  });
+
+  it("повтор не из кэша с первого раза — ещё попытка через паузу, в порядке", async () => {
+    const { fetchFn } = world();
+    // Первый повтор попал в другой дата-центр: там записи ещё нет.
+    const flaky = onPath(fetchFn, "icon=lucide:house", (res, n) =>
+      n === 2
+        ? withHeaders(res, { "x-cache": "MISS", "cf-ray": "1a2b-LHR" })
+        : Promise.resolve(res),
+    );
+    const sleeps: number[] = [];
+    const r = await checkIcon({
+      fetch: live(flaky.fetch),
+      sleep: async (ms) => {
+        sleeps.push(ms);
+      },
+      maxAttempts: 1,
+    });
+    expect(r.targets[0]?.issues).toEqual([]);
+    expect(flaky.count()).toBe(3);
+    expect(sleeps).toEqual([HIT_PAUSE_MS]);
+  });
+
+  it("повтор так и не из кэша — проблема, в сообщении дата-центры", async () => {
+    const { fetchFn } = world();
+    const colos = ["AMS", "LHR", "CDG", "AMS"];
+    const misses = onPath(fetchFn, "icon=lucide:house", (res, n) =>
+      withHeaders(res, {
+        "x-cache": "MISS",
+        "cf-ray": `8f3a${n}-${colos[n - 1]}`,
+      }),
+    );
+    const r = await checkIcon({
+      fetch: live(misses.fetch),
+      sleep: async () => {},
+      maxAttempts: 1,
+    });
+    expect(misses.count()).toBe(1 + HIT_ATTEMPTS);
+    expect(r.targets[0]?.issues.map((i) => i.message)).toEqual([
+      "X-Cache: «MISS» вместо «HIT» — повтор не из кэша (попыток: 3); дата-центры: первый ответ — AMS, повторы — LHR, CDG, AMS",
     ]);
     expect(iconCheckFailed(r)).toBe(true);
   });
