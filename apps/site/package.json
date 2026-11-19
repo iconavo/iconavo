@@ -13,6 +13,7 @@
     "@iconavo-ui/core": "workspace:*",
     "@iconavo-ui/react": "workspace:*",
     "@iconavo-ui/search": "workspace:*",
+    "@iconavo-ui/snippets": "workspace:*",
     "next": "16.4.6",
     "radix-ui": "1.8.1",
     "react": "19.3.1",

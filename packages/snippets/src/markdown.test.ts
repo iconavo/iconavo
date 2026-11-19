@@ -6,7 +6,7 @@ import {
   MarkdownError,
   parseMarkdown,
   plainText,
-} from "./markdown";
+} from "./markdown.js";
 
 const root = join(import.meta.dirname, "..", "..", "..");
 

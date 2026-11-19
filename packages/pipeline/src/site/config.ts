@@ -37,7 +37,7 @@ export const DOC_SOURCES = [
   "packages/icon/CHANGELOG.md",
 ];
 
-/** Путь страницы иконки без языка: lucide:house → /lucide/house (apps/site/lib/icon.ts). */
+/** Путь страницы иконки без языка: lucide:house → /lucide/house (packages/snippets/src/icon.ts). */
 export const iconPath = (name: string) => `/${name.replace(":", "/")}`;
 
 /**

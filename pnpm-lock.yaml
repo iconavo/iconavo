@@ -223,6 +223,9 @@ importers:
       '@iconavo-ui/search':
         specifier: workspace:*
         version: link:../../packages/search
+      '@iconavo-ui/snippets':
+        specifier: workspace:*
+        version: link:../../packages/snippets
       next:
         specifier: 16.4.6
         version: 16.4.6(@babel/core@7.29.7)(@opentelemetry/api@1.9.1)(@types/node@26.6.5)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
@@ -398,6 +401,15 @@ importers:
       '@iconavo-ui/core':
         specifier: workspace:*
         version: link:../core
+
+  packages/snippets:
+    dependencies:
+      '@iconavo-ui/core':
+        specifier: workspace:*
+        version: link:../core
+      '@iconavo-ui/search':
+        specifier: workspace:*
+        version: link:../search
 
   sources:
     devDependencies:
