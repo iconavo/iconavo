@@ -5,7 +5,8 @@ name: Сверка хостов
 # по спискам объектов — размер и контрольная сумма каждого файла версии, манифесты, — ничего не
 # записывая; затем pnpm cdn check --with-search проверяет живые адреса обоих хостов и edge API
 # api.iconavo.dev (ADR-0024) вместе с поиском /search и сведениями об иконке /icon (ADR-0049, ADR-0041):
-# сбой поискового сервиса 9–13 ноября 2026 прошёл без писем. Расхождение — красный запуск,
+# сбой поискового сервиса 9–13 ноября 2026 прошёл без писем; pnpm mcp check — MCP-сервер mcp.iconavo.dev
+# (ADR-0044): все пять инструментов клиентом SDK. Расхождение — красный запуск,
 # и GitHub присылает письмо о неудачном запуске по расписанию: это и есть оповещение. Ключи — те же
 # секреты, что у «Выкладки»; писать сверка ничего не пишет. Группа одновременности своя: в группе
 # «Выкладки» сверка могла бы отменить ждущую выкладку. Совпала с выкладкой — может покраснеть:
@@ -50,6 +51,10 @@ jobs:
       - name: Проверить живые адреса, поиск и сведения об иконке
         if: success() || failure()
         run: pnpm cdn check --with-search
+      # MCP-сервер (ADR-0044): тот же поиск и те же хранилища, но своя функция и своя выкладка.
+      - name: Проверить MCP-сервер
+        if: success() || failure()
+        run: pnpm mcp check
       # Страница без архива открывается в браузере. Копия — вне .cache: скрытые папки upload-artifact пропускает.
       - name: Отчёт — вне .cache
         id: pages
@@ -58,6 +63,7 @@ jobs:
           pages="$RUNNER_TEMP/pages"
           mkdir -p "$pages"
           cp .cache/reports/cdn/verify.html "$pages/verify.html" 2> /dev/null || true
+          cp .cache/reports/mcp/check.html "$pages/mcp-check.html" 2> /dev/null || true
           echo "pages=$pages" >> "$GITHUB_OUTPUT"
       - name: Отчёт — сверка
         if: always()
@@ -65,5 +71,13 @@ jobs:
         with:
           name: verify.html
           path: ${{ steps.pages.outputs.pages }}/verify.html
+          archive: false
+          if-no-files-found: ignore
+      - name: Отчёт — MCP-сервер
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: mcp-check.html
+          path: ${{ steps.pages.outputs.pages }}/mcp-check.html
           archive: false
           if-no-files-found: ignore

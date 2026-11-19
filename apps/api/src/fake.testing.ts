@@ -305,12 +305,17 @@ export function fakeSearchFetch(options: FakeSearchOptions) {
     if (url === "https://polza.ai/api/v1/embeddings") {
       polza.push(body);
       const make = options.polza ?? (async () => [1, 0, 0]);
-      const values = await make(body.input[0]);
-      const embedding = Array.from(
-        { length: body.dimensions ?? 1024 },
-        (_, i) => values[i % values.length] ?? 0,
+      const data = await Promise.all(
+        (body.input as string[]).map(async (text, index) => {
+          const values = await make(text);
+          const embedding = Array.from(
+            { length: body.dimensions ?? 1024 },
+            (_, i) => values[i % values.length] ?? 0,
+          );
+          return { embedding, index };
+        }),
       );
-      return Response.json({ data: [{ embedding }] });
+      return Response.json({ data });
     }
     throw new TypeError(`подменный fetch: нет адреса ${url}`);
   }) as typeof fetch;

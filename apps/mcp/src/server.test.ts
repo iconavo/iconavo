@@ -6,14 +6,27 @@ const textOf = (result: { content: { type: string; text?: string }[] }) =>
   result.content.find((c) => c.type === "text")?.text ?? "";
 
 describe("MCP: список инструментов", () => {
-  it("search_icons — с точным описанием, схемами входа и ответа, только чтение", async () => {
+  it("пять инструментов ADR-0011 с точными описаниями, схемами входа и ответа, только чтение", async () => {
     const s = mcpSetup();
     const { res, body } = await s.rpc("tools/list");
     expect(res.status).toBe(200);
     expect(res.headers.get("x-iconavo-build")).toBe("test");
     expect(res.headers.get("access-control-allow-origin")).toBe("*");
     const tools = (body.result as { tools: Record<string, unknown>[] }).tools;
-    expect(tools.map((t) => t.name)).toEqual(["search_icons"]);
+    expect(tools.map((t) => t.name)).toEqual([
+      "search_icons",
+      "get_icon",
+      "get_matching_set",
+      "get_usage",
+      "list_sets",
+    ]);
+    for (const tool of tools) {
+      expect(tool.outputSchema, String(tool.name)).toBeDefined();
+      expect(tool.annotations, String(tool.name)).toMatchObject({
+        readOnlyHint: true,
+      });
+      expect(String(tool.description).length).toBeGreaterThan(150);
+    }
     const [search] = tools;
     expect(search?.description).toMatch(/any language/);
     expect(search?.description).toMatch(/ONE PNG image/);

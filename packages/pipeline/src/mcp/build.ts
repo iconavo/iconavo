@@ -9,6 +9,7 @@ import { mkdir, readFile } from "node:fs/promises";
 import { createRequire } from "node:module";
 import { join } from "node:path";
 import { gzipSync } from "node:zlib";
+import { type Usage, usageFromReadme } from "@iconavo-ui/snippets/readme";
 import { bundleWorker, stampBuild, type WorkerTarget } from "../api/build.js";
 import {
   BUILD_FILE,
@@ -24,24 +25,41 @@ import { writeFileAtomic } from "../build/write.js";
 import { writeIfChanged } from "../cdn/write.js";
 import { SEARCH_BUCKET } from "../meili/config.js";
 import {
+  ICON_README,
   MCP_CONDITIONS,
   MCP_CPU_MS,
   MCP_ENTRY,
+  MCP_ICON_LIMIT_BINDING,
+  MCP_ICON_LIMIT_NAMESPACE,
+  MCP_ICON_RATE,
   MCP_SEARCH_LIMIT_BINDING,
   MCP_SEARCH_LIMIT_NAMESPACE,
   MCP_SEARCH_RATE,
   MCP_TSCONFIG,
+  README_MODULE,
   WASM_FILE,
   WASM_IMPORT,
   WASM_PACKAGE_FILE,
 } from "./config.js";
 
-export const MCP_TARGET: WorkerTarget = {
-  entry: MCP_ENTRY,
-  tsconfig: MCP_TSCONFIG,
-  conditions: MCP_CONDITIONS,
-  wasm: WASM_IMPORT,
-};
+/** Цель сборки MCP; usage — строки установки и разделы README тега для get_usage. */
+export function mcpTarget(usage: Usage): WorkerTarget {
+  return {
+    entry: MCP_ENTRY,
+    tsconfig: MCP_TSCONFIG,
+    conditions: MCP_CONDITIONS,
+    wasm: WASM_IMPORT,
+    virtual: {
+      [README_MODULE]: `export default ${JSON.stringify(usage)};
+`,
+    },
+  };
+}
+
+/** Разделы README тега: нужного нет — «СТОП» сборки (usageFromReadme). */
+export async function readUsage(root: string): Promise<Usage> {
+  return usageFromReadme(await readFile(join(root, ICON_README), "utf8"));
+}
 
 export interface McpBuildReport {
   build: string;
@@ -79,6 +97,12 @@ export function mcpMetadata(): Json {
           period: MCP_SEARCH_RATE.period,
         },
       },
+      {
+        type: "ratelimit",
+        name: MCP_ICON_LIMIT_BINDING,
+        namespace_id: MCP_ICON_LIMIT_NAMESPACE,
+        simple: { limit: MCP_ICON_RATE.limit, period: MCP_ICON_RATE.period },
+      },
     ],
     limits: { cpu_ms: MCP_CPU_MS },
     observability: {
@@ -111,7 +135,10 @@ async function writeBytesIfChanged(
 export async function buildMcp(
   options: McpBuildOptions,
 ): Promise<McpBuildReport> {
-  const code = await bundleWorker(options.root, MCP_TARGET);
+  const code = await bundleWorker(
+    options.root,
+    mcpTarget(await readUsage(options.root)),
+  );
   const wasm = await readResvgWasm(options.root);
   const metadata = canonicalJson(mcpMetadata());
   const stamped = stampBuild(code, `\n${sha256(wasm)}\n${metadata}`);

@@ -87,13 +87,27 @@ describe("превью MCP-сервера", () => {
       );
       try {
         const tools = await client.listTools();
-        expect(tools.tools.map((t) => t.name)).toEqual(["search_icons"]);
+        expect(tools.tools.map((t) => t.name)).toEqual([
+          "search_icons",
+          "get_icon",
+          "get_matching_set",
+          "get_usage",
+          "list_sets",
+        ]);
         const result = await client.callTool({
           name: "search_icons",
           arguments: { query: "house" },
         });
         expect(result.isError).toBe(true);
         expect(JSON.stringify(result.content)).toContain("search_unavailable");
+        // Ошибка схемы — по-английски, как в Workers: настройки zod конвейера (русские сообщения,
+        // общие через globalThis) в процесс превью не попадают.
+        const invalid = await client.callTool({
+          name: "search_icons",
+          arguments: { query: "" },
+        });
+        expect(invalid.isError).toBe(true);
+        expect(JSON.stringify(invalid.content)).not.toMatch(/[а-яё]/i);
       } finally {
         await client.close();
       }

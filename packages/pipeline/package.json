@@ -12,6 +12,7 @@
     "@anthropic-ai/sdk": "0.135.0",
     "@iconavo-ui/schema": "workspace:*",
     "@iconavo-ui/search": "workspace:*",
+    "@iconavo-ui/snippets": "workspace:*",
     "@resvg/resvg-wasm": "2.6.2",
     "pixelmatch": "7.2.0",
     "playwright": "1.64.1",

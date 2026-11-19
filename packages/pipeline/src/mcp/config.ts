@@ -1,7 +1,7 @@
 // Настройки MCP-сервера на стороне конвейера (ADR-0044, шаг 10 фазы 4): сборка функции, превью и
 // проверка живого адреса. Поведение самой функции — в apps/mcp/src/config.ts.
 
-import { SEARCH_RATE } from "@iconavo-ui/search";
+import { ICON_RATE, SEARCH_RATE } from "@iconavo-ui/search";
 
 /** Хост MCP-сервера (ADR-0004). */
 export const MCP_HOST = "mcp.iconavo.dev";
@@ -35,6 +35,13 @@ export const MCP_OUT_DIR = "dist-mcp";
 export const MCP_SEARCH_LIMIT_BINDING = "MCP_SEARCH_LIMIT";
 export const MCP_SEARCH_LIMIT_NAMESPACE = "1003";
 export const MCP_SEARCH_RATE = SEARCH_RATE;
+/** Сведения об иконке (get_icon): 300 в минуту с адреса, как /icon edge API, своё пространство 1004. */
+export const MCP_ICON_LIMIT_BINDING = "MCP_ICON_LIMIT";
+export const MCP_ICON_LIMIT_NAMESPACE = "1004";
+export const MCP_ICON_RATE = ICON_RATE;
+/** README тега: строки установки и разделы для get_usage вшиваются в функцию при сборке. */
+export const ICON_README = "packages/icon/README.md";
+export const README_MODULE = "virtual:iconavo/readme";
 /**
  * Предел процессора на вызов, мс (платный тариф Workers с 19 ноября 2026: без него — 30 с).
  * Сетка из 24 иконок на компьютере владельца — до 12 мс; запас — на холодный старт копии (SDK и

@@ -3,6 +3,7 @@
 // fetch: превью конвейера запускает этот же бандл в Node, где caches подставляет само превью.
 
 import "./wasm.js";
+import usage from "virtual:iconavo/readme";
 import { BUILD } from "../../api/src/config.js";
 import type { EdgeCache } from "../../api/src/env.js";
 import { createDeps, type McpDeps } from "./context.js";
@@ -19,6 +20,7 @@ export default {
       build: BUILD,
       log: (message) => console.error(message),
       render: renderPng,
+      usage,
     });
     return serve(request, deps, (promise) => ctx.waitUntil(promise));
   },

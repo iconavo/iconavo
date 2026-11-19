@@ -24,6 +24,8 @@ on:
       - "apps/api/src/**"
       - "packages/core/**"
       - "packages/search/**"
+      - "packages/snippets/**"
+      - "packages/icon/README.md"
       - "packages/pipeline/src/mcp/**"
       - "packages/pipeline/src/api/build.ts"
       - "packages/pipeline/src/api/config.ts"
@@ -92,7 +94,7 @@ jobs:
           live=false
           if [ "$GITHUB_REF" = refs/heads/main ] && [ "$EVENT" != pull_request ] && [ "$DRY_RUN" != true ]; then
             git fetch --quiet --no-tags --depth=1 origin "+refs/heads/main:refs/remotes/origin/main"
-            if git diff --quiet origin/main HEAD -- apps/mcp/ apps/api/src/ packages/core/ packages/search/ packages/pipeline/src/mcp/ packages/pipeline/src/api/build.ts packages/pipeline/src/api/config.ts pnpm-lock.yaml .github/workflows/mcp.yml; then
+            if git diff --quiet origin/main HEAD -- apps/mcp/ apps/api/src/ packages/core/ packages/search/ packages/snippets/ packages/icon/README.md packages/pipeline/src/mcp/ packages/pipeline/src/api/build.ts packages/pipeline/src/api/config.ts pnpm-lock.yaml .github/workflows/mcp.yml; then
               live=true
             else
               echo "::warning::main ушёл вперёд — этот запуск только показывает; выкладывает запуск от свежего main."

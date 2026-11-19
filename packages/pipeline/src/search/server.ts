@@ -19,6 +19,7 @@ import {
   stripSetPrefix,
   truncateUnit,
 } from "@iconavo-ui/search";
+import { allowedHost } from "../api/local.js";
 import type { EmbeddingClient } from "../embed/client.js";
 import type { MeiliClient } from "../meili/client.js";
 import { searchEmbeddingModel } from "../meili/embed.js";
@@ -70,9 +71,7 @@ const text = (status: number, message: string): Reply => ({
   body: htmlPage(message, "", `<p>${esc(message)}</p>`),
 });
 
-/** Хост запроса — адрес этого сервера: 127.0.0.1 или localhost с тем же портом. */
-export const allowedHost = (host: string | undefined, port: number) =>
-  host === `127.0.0.1:${port}` || host === `localhost:${port}`;
+export { allowedHost };
 
 /** Файл отчёта внутри reportsDir; путь за её пределы — нет. */
 async function reportFile(dir: string, path: string): Promise<Reply> {
