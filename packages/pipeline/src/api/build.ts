@@ -83,16 +83,56 @@ const sha256 = (text: string) =>
 /** Импорты, которых в бандле быть не должно: всё внутри одного файла (функция и скрипт тега). */
 export const IMPORT = /^\s*import[\s{*"']|\bimport\(|\brequire\(/m;
 
+/** Что собирать: точка входа и tsconfig от корня репозитория и особенности функции. */
+export interface WorkerTarget {
+  entry: string;
+  tsconfig: string;
+  /**
+   * Условия экспорта пакетов вместо обычных: `workerd` выбирает сборки под Workers (у SDK MCP — без
+   * eval и модулей Node, шаг 10 фазы 4).
+   */
+  conditions?: readonly string[];
+  /**
+   * Единственный внешний импорт — модуль wasm рядом с бандлом: Workers получает его отдельной частью
+   * загрузки (application/wasm) и отдаёт импорту готовый WebAssembly.Module.
+   */
+  wasm?: string;
+}
+
+/** Функция edge API: один файл, без внешних импортов. */
+export const API_TARGET: WorkerTarget = {
+  entry: WORKER_ENTRY,
+  tsconfig: WORKER_TSCONFIG,
+};
+
 /** Бандл с заглушкой метки — чистая функция исходников. */
-export async function bundleWorker(root: string): Promise<string> {
+export async function bundleWorker(
+  root: string,
+  target: WorkerTarget = API_TARGET,
+): Promise<string> {
   const { build } = await import("rolldown");
   const warnings: string[] = [];
+  const wasm = target.wasm;
   const result = await build({
-    input: join(root, WORKER_ENTRY),
+    input: join(root, target.entry),
     cwd: root,
     platform: "neutral",
-    tsconfig: join(root, WORKER_TSCONFIG),
-    resolve: { extensionAlias: { ".js": [".ts", ".js"] } },
+    tsconfig: join(root, target.tsconfig),
+    resolve: {
+      extensionAlias: { ".js": [".ts", ".js"] },
+      ...(target.conditions ? { conditionNames: [...target.conditions] } : {}),
+    },
+    ...(wasm === undefined
+      ? {}
+      : {
+          plugins: [
+            {
+              name: "iconavo-wasm-module",
+              resolveId: (source: string) =>
+                source === wasm ? { id: wasm, external: true } : null,
+            },
+          ],
+        }),
     write: false,
     onLog: (level, log) => {
       if (level === "warn") warnings.push(log.message);
@@ -108,21 +148,39 @@ export async function bundleWorker(root: string): Promise<string> {
   if (rest.length > 0 || chunk.type !== "chunk") {
     throw new Error("сборка функции дала не один файл");
   }
-  if (IMPORT.test(chunk.code)) {
-    throw new Error("в бандле функции остался импорт: всё должно быть внутри");
+  if (wasm === undefined) {
+    if (IMPORT.test(chunk.code)) {
+      throw new Error(
+        "в бандле функции остался импорт: всё должно быть внутри",
+      );
+    }
+  } else {
+    // Ровно один внешний импорт — модуль wasm; динамических импортов нет.
+    const imports = [...chunk.imports, ...chunk.dynamicImports];
+    if (imports.length !== 1 || imports[0] !== wasm) {
+      throw new Error(
+        `в бандле функции импорты ${JSON.stringify(imports)} вместо одного ${wasm}`,
+      );
+    }
   }
   return chunk.code;
 }
 
-/** Метка сборки вместо заглушки — ровно одно вхождение. */
-export function stampBuild(code: string): { build: string; code: string } {
+/**
+ * Метка сборки вместо заглушки — ровно одно вхождение. salt — то, что меняет выкладку помимо кода
+ * (у MCP — модуль wasm и metadata), у API пусто: метка прежняя.
+ */
+export function stampBuild(
+  code: string,
+  salt = "",
+): { build: string; code: string } {
   const parts = code.split(BUILD_PLACEHOLDER);
   if (parts.length !== 2) {
     throw new Error(
       `метка сборки ${BUILD_PLACEHOLDER} встречается ${parts.length - 1} раз вместо одного`,
     );
   }
-  const build = sha256(code).slice(0, BUILD_ID_LENGTH);
+  const build = sha256(code + salt).slice(0, BUILD_ID_LENGTH);
   return { build, code: parts.join(build) };
 }
 

@@ -8,6 +8,7 @@
     { "path": "packages/schema" },
     { "path": "packages/pipeline" },
     { "path": "sources" },
-    { "path": "apps/api" }
+    { "path": "apps/api" },
+    { "path": "apps/mcp" }
   ]
 }

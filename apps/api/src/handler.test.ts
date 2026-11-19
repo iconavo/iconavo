@@ -10,7 +10,9 @@ import {
   VERSION,
   waiter,
 } from "./fake.testing.js";
-import { createHandler } from "./handler.js";
+import { createHandler, createRoutes, toApiError } from "./handler.js";
+import { ApiError, StorageError } from "./http.js";
+import { SearchError } from "./search/meili.js";
 
 const HEART = '<path fill="none" stroke="currentColor" d="M1 1"/>';
 const LINE =
@@ -202,6 +204,48 @@ describe("маршруты и методы", () => {
       "application/json; charset=utf-8",
     );
     expect(await again.text()).toBe("");
+  });
+
+  it("маршруты отдельно от обработчика (MCP, шаг 10 фазы 4): те же загрузчики, тот же ответ", async () => {
+    const bucket = fakeBucket(FILES);
+    const options = {
+      bucket,
+      cache: fakeCache(),
+      build: "test",
+      now: () => 0,
+    };
+    const routes = createRoutes(options);
+    const handler = createHandler(options, routes);
+    const w = waiter();
+    const res = await handler(
+      new Request("https://api.iconavo.dev/demo.json?icons=heart"),
+      w.waitUntil,
+    );
+    expect(res.status).toBe(200);
+    // Манифест прочитан один раз на оба: обработчик взял загрузчик маршрутов.
+    expect((await routes.manifest()).get("demo")?.version).toBe(VERSION);
+    expect(bucket.reads.filter((k) => k === "manifest.json")).toHaveLength(1);
+  });
+
+  it("toApiError — те же коды и заголовки, что у ответов функции", () => {
+    const logs: string[] = [];
+    const log = (m: string) => logs.push(m);
+    const limited = toApiError(new ApiError(429, "rate_limited", "x"), log);
+    expect(limited.error.status).toBe(429);
+    expect(limited.headers).toEqual({
+      "cache-control": "no-store",
+      "retry-after": "60",
+    });
+    expect(toApiError(new SearchError("нет"), log).error.code).toBe(
+      "search_unavailable",
+    );
+    expect(toApiError(new StorageError("нет"), log).error.code).toBe(
+      "storage_unavailable",
+    );
+    const other = toApiError(new Error("boom"), log);
+    expect(other.error.status).toBe(500);
+    expect(other.error.code).toBe("internal_error");
+    expect(logs).toEqual(["поиск: нет", "R2: нет", "ошибка: boom"]);
   });
 });
 

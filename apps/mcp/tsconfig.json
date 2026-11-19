@@ -1,0 +1,15 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "composite": false,
+    "noEmit": true,
+    "types": [],
+    "customConditions": ["workerd"]
+  },
+  "include": ["src"],
+  "exclude": ["src/**/*.test.ts", "src/**/*.testing.ts"],
+  "references": [
+    { "path": "../../packages/core" },
+    { "path": "../../packages/search" }
+  ]
+}
