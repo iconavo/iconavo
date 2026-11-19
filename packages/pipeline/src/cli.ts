@@ -9,6 +9,7 @@
 // | pnpm cdn verify | pnpm cdn check [--with-search] | pnpm packages prepare [id…] [--new] [--force]
 // | pnpm packages verify [id…] [--wait=N] [--plan=…] | pnpm api build | pnpm api preview [--port=N]
 // | pnpm api check [--expect-build=…] | pnpm api bench [--batches] [--base=…] [--seed=N] | pnpm icon build
+// | pnpm mcp build | pnpm mcp preview [--port=N] | pnpm mcp check [--expect-build=…] [--base=…] | pnpm mcp bench [--base=…]
 // | pnpm sandbox [--port=N] [--browser=chrome|firefox|webkit | --check]
 // | pnpm example [--port=N] [--prod] [--webpack] | pnpm example --check [--browser=…] [--webpack]
 // | pnpm visual [id…] [--browser=…]
@@ -160,6 +161,16 @@ import { EXAMPLE_DIR, EXAMPLE_PORT, NAMES_FILE } from "./example/config.js";
 import { buildNext, freePort, startNext } from "./example/next.js";
 import { REACT18, startReact18 } from "./example/react18.js";
 import { buildIconScript, SCRIPT_FILE } from "./icon/build.js";
+import { benchMcp, formatMcpBench } from "./mcp/bench.js";
+import { buildMcp } from "./mcp/build.js";
+import { checkMcp, mcpCheckFailed } from "./mcp/check.js";
+import {
+  formatMcpCheck,
+  renderMcpCheckMarkdown,
+  renderMcpCheckPage,
+} from "./mcp/check-report.js";
+import { MCP_ORIGIN, MCP_OUT_DIR, MCP_PREVIEW_PORT } from "./mcp/config.js";
+import { startMcpPreview } from "./mcp/preview.js";
 import { type MeiliClient, meiliClient } from "./meili/client.js";
 import {
   DEFAULT_SEARCH_MAX_RUB,
@@ -449,6 +460,20 @@ const USAGE = `Использование:
                                       .cache/reports/api/bench-batches.html и .json
       --base=…                        другой адрес API: https://… или http://127.0.0.1:порт (превью)
       --seed=N                        номер случая для --batches: те же пачки, что в прошлом замере
+  pnpm mcp build                      собрать MCP-сервер (ADR-0044) в ${MCP_OUT_DIR}/: ${WORKER_FILE}, модуль
+                                      resvg.wasm, metadata.json и build.json; без изменений ничего не пишет
+  pnpm mcp preview                    превью MCP-сервера на 127.0.0.1/mcp в отдельном процессе Node с
+                                      запретами Workers (eval, компиляция wasm из байтов); данные —
+                                      из dist-cdn/, поиск — Meilisearch и Polza из .env
+      --port=N                        порт (по умолчанию ${MCP_PREVIEW_PORT})
+  pnpm mcp check                      проверить живой ${MCP_ORIGIN} клиентом SDK на обоих протоколах:
+                                      HTTP, список инструментов, вызовы search_icons с картинкой и
+                                      лицензиями; страница .cache/reports/mcp/check.html и check.md
+      --expect-build=…                ждать и проверять эту сборку (после выкладки в CI)
+      --base=…                        другой адрес: https://… или http://127.0.0.1:порт (превью)
+  pnpm mcp bench                      замер: поиски контрольной части эталона с картинкой и без,
+                                      время ответа и окна UTC для процессора в панели Cloudflare
+      --base=…                        другой адрес: https://… или http://127.0.0.1:порт (превью)
   pnpm icon build                     скрипт тега для страниц без сборщика (ADR-0032): ${SCRIPT_FILE} —
                                       один сжатый ES-модуль с ядром внутри; без изменений не пишет
   pnpm sandbox                        песочница пакета на 127.0.0.1 (фаза 3): иконки грузит
@@ -550,6 +575,7 @@ const reportsDir = join(root, ".cache", "reports");
 const distCdnDir = join(root, "dist-cdn");
 const distNpmDir = join(root, NPM_OUT_DIR);
 const distApiDir = join(root, API_OUT_DIR);
+const distMcpDir = join(root, MCP_OUT_DIR);
 const embeddingsDir = join(root, ".cache", "embeddings");
 const evalDir = join(root, "docs", "eval");
 const queriesPath = join(evalDir, "queries.csv");
@@ -652,13 +678,15 @@ let searchMaxRub = DEFAULT_SEARCH_MAX_RUB;
 let port =
   command === "api"
     ? PREVIEW_PORT
-    : command === "sandbox"
-      ? SANDBOX_PORT
-      : command === "example"
-        ? EXAMPLE_PORT
-        : command === "site"
-          ? SITE_PORT
-          : PAGE_PORT;
+    : command === "mcp"
+      ? MCP_PREVIEW_PORT
+      : command === "sandbox"
+        ? SANDBOX_PORT
+        : command === "example"
+          ? EXAMPLE_PORT
+          : command === "site"
+            ? SITE_PORT
+            : PAGE_PORT;
 let waitSeconds = 0;
 let planPath: string | undefined;
 let expectBuild: string | undefined;
@@ -812,6 +840,7 @@ for (const flag of flags) {
   if (
     (command === "search-page" ||
       command === "api" ||
+      command === "mcp" ||
       command === "sandbox" ||
       command === "example" ||
       command === "site") &&
@@ -858,7 +887,7 @@ for (const flag of flags) {
     }
   }
   if (
-    command === "api" &&
+    (command === "api" || command === "mcp") &&
     name === "--base" &&
     /^(https:\/\/[a-z0-9.-]+|http:\/\/127\.0\.0\.1:[0-9]{2,5})$/.test(
       value ?? "",
@@ -880,7 +909,7 @@ for (const flag of flags) {
     continue;
   }
   if (
-    command === "api" &&
+    (command === "api" || command === "mcp") &&
     name === "--expect-build" &&
     /^[0-9a-f]{8}$/.test(value ?? "")
   ) {
@@ -2611,6 +2640,118 @@ try {
     console.log(
       `Превью edge API: http://127.0.0.1:${preview.port}/ — сборка ${preview.build}, данные из dist-cdn/. Остановить — Ctrl+C.`,
     );
+  } else if (command === "mcp") {
+    const [sub, ...rest] = args;
+    if (
+      (sub !== "build" &&
+        sub !== "preview" &&
+        sub !== "check" &&
+        sub !== "bench") ||
+      rest.length > 0 ||
+      (sub !== "preview" && flags.some((f) => f.startsWith("--port="))) ||
+      (sub !== "check" && expectBuild !== undefined) ||
+      (sub !== "check" && sub !== "bench" && benchBase !== undefined)
+    ) {
+      usageError(
+        "pnpm mcp: нужна подкоманда build, preview [--port=N], check [--expect-build=…] [--base=…] или bench [--base=…].",
+      );
+    }
+    if (sub === "build") {
+      const report = await buildMcp({ root, outDir: distMcpDir });
+      console.log(
+        `MCP-сервер: ${MCP_OUT_DIR}/${WORKER_FILE} — ${formatBytes(report.bytes)}, в gzip ${formatBytes(report.gzipBytes)}; resvg.wasm — ${formatBytes(report.wasmBytes)}; сборка ${report.build}.`,
+      );
+      console.log(
+        report.written.length === 0
+          ? "Без изменений: файлы на диске те же."
+          : `Записано: ${report.written.join(", ")}.`,
+      );
+      process.exit(0);
+    }
+    const reportDir = join(reportsDir, "mcp");
+    if (sub === "check") {
+      const base = benchBase ?? MCP_ORIGIN;
+      console.log(
+        `Проверяю MCP-сервер ${base}${expectBuild === undefined ? "" : `, жду сборку ${expectBuild}`}…`,
+      );
+      const report = await checkMcp({
+        base,
+        ...(expectBuild === undefined ? {} : { expectBuild }),
+        log: (line) => console.log(`  ${line}`),
+      });
+      for (const line of formatMcpCheck(report)) console.log(line);
+      await mkdir(reportDir, { recursive: true });
+      const htmlPath = join(reportDir, "check.html");
+      await writeFile(htmlPath, renderMcpCheckPage(report), "utf8");
+      await writeFile(
+        join(reportDir, "check.md"),
+        renderMcpCheckMarkdown(report),
+        "utf8",
+      );
+      console.log(`Отчёт: ${htmlPath}`);
+      process.exit(mcpCheckFailed(report) ? 1 : 0);
+    }
+    if (sub === "bench") {
+      const holdout = (await readQueries(queriesPath)).filter(
+        (q) => q.split === "holdout",
+      );
+      const base = benchBase ?? MCP_ORIGIN;
+      console.log(
+        `Замер MCP-сервера ${base}: ${holdout.length} поисков контрольной части, половина с картинкой…`,
+      );
+      const report = await benchMcp({
+        base,
+        queries: holdout.map((q) => q.query),
+        log: (line) => console.log(`  ${line}`),
+      });
+      for (const line of formatMcpBench(report)) console.log(line);
+      await mkdir(reportDir, { recursive: true });
+      await writeFile(
+        join(reportDir, "bench.json"),
+        `${JSON.stringify(report, null, 2)}
+`,
+        "utf8",
+      );
+      process.exit(report.passes.some((x) => x.errors.length > 0) ? 1 : 0);
+    }
+    // Превью: раздача — от текущего data/, функция — свежая сборка, поиск — из .env.
+    const cdn = await buildCdn(configs, { dataDir, outDir: distCdnDir });
+    if (cdnStop(cdn)) {
+      console.error(
+        "Сборка раздачи остановлена — превью без данных не запустить: pnpm cdn build покажет почему.",
+      );
+      process.exit(1);
+    }
+    const searchUrl = process.env[SEARCH_ENV.url]?.trim() ?? "";
+    const searchKey =
+      process.env[SEARCH_ENV.readKey]?.trim() ||
+      process.env[SEARCH_ENV.adminKey]?.trim() ||
+      "";
+    const polzaKey = process.env.POLZA_API_KEY?.trim() ?? "";
+    const preview = await startMcpPreview({
+      root,
+      outDir: distMcpDir,
+      cdnDir: distCdnDir,
+      port,
+      ...(searchUrl !== "" && searchKey !== ""
+        ? {
+            search: {
+              url: searchUrl,
+              key: searchKey,
+              dir: join(root, ".cache", "search", "preview-bucket"),
+              ...(polzaKey === "" ? {} : { polzaKey }),
+            },
+          }
+        : {}),
+    });
+    console.log(
+      `Превью MCP-сервера: http://127.0.0.1:${preview.port}/mcp — сборка ${preview.build}, данные из dist-cdn/${searchUrl === "" ? ", без поиска (нет ключей в .env)" : ""}. Остановить — Ctrl+C.`,
+    );
+    const stopPreview = () => {
+      preview.close().then(() => process.exit(0));
+    };
+    process.once("SIGINT", stopPreview);
+    process.once("SIGTERM", stopPreview);
   } else if (command === "icon") {
     if (args.length !== 1 || args[0] !== "build") {
       usageError("pnpm icon: нужна подкоманда build.");

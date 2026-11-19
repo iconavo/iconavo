@@ -72,6 +72,8 @@ interface SetupOptions {
   meiliStatus?: number;
   limiter?: ReturnType<typeof fakeLimiter>;
   deadlineMs?: number;
+  /** Ждать модель вместо выдачи по словам (MCP, шаг 10 фазы 4). */
+  waitForModel?: boolean;
   /** Фразы каталога, векторы которых лежат в бакете поиска. */
   phrases?: string[];
   noMeili?: boolean;
@@ -114,6 +116,7 @@ async function setup(o: SetupOptions = {}) {
         polzaKey: "polza-key",
         fetch: net.fn,
         deadlineMs: o.deadlineMs ?? 60_000,
+        ...(o.waitForModel ? { waitForModel: true } : {}),
       },
     });
   const w = waiter();
@@ -393,6 +396,55 @@ describe("/search: сначала текст", () => {
       await s.flush();
     }
     expect(s.net.polza).toHaveLength(5);
+  });
+});
+
+describe("/search: ждать модель (MCP, waitForModel)", () => {
+  it("фразы нет — ждёт вектор от Polza и сразу отдаёт полную выдачу; слова впереди не ищутся", async () => {
+    let release: (v: number[]) => void = () => {};
+    const gate = new Promise<number[]>((resolve) => {
+      release = resolve;
+    });
+    const s = await setup({ polza: () => gate, waitForModel: true });
+    const pending = s.get("/search?query=love");
+    // Пока модель думает, Meilisearch не спрашивали: слова нужны только для запасного ответа.
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    expect(s.net.meili).toHaveLength(0);
+    release([0, 1, 0]);
+    const res = await pending;
+    expect(res.headers.get("cache-control")).toBe("public, max-age=300");
+    expect(res.headers.get("server-timing")).toMatch(/vector;desc="model"/);
+    const body = await json(res);
+    expect(body.semantic).toBe("full");
+    expect(body.icons[0]).toBe("demo:heart");
+    expect(s.net.meili).toHaveLength(1);
+    expect(s.net.polza).toHaveLength(1);
+    await s.flush();
+    // Вектор и полная выдача — в кэше: повтор не зовёт ни модель, ни Meilisearch.
+    const again = await s.get("/search?query=love");
+    expect(again.headers.get("x-cache")).toBe("HIT");
+    expect(s.net.polza).toHaveLength(1);
+  });
+
+  it("модель не ответила — выдача по словам text без кэша", async () => {
+    const s = await setup({
+      polza: async () => {
+        throw new Error("boom");
+      },
+      waitForModel: true,
+    });
+    const res = await s.get("/search?query=love");
+    expect(res.headers.get("cache-control")).toBe("no-store");
+    const body = await json(res);
+    expect(body.semantic).toBe("text");
+    expect(body.icons).toEqual(["demo:heart"]);
+  });
+
+  it("фраза в бакете — как без флажка: полная выдача без модели", async () => {
+    const s = await setup({ phrases: ["house"], waitForModel: true });
+    const body = await json(await s.get("/search?query=house"));
+    expect(body.semantic).toBe("full");
+    expect(s.net.polza).toHaveLength(0);
   });
 });
 

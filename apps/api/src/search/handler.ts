@@ -8,6 +8,7 @@
 //    ложатся в кэш: повторный запрос через секунду — полный.
 // 5. Polza не ответила три раза подряд или нет ключа — выдача по словам с пометкой text, не ошибка;
 //    Meilisearch недоступен — 503.
+// MCP (шаг 10 фазы 4) просит waitForModel: фразы нет — ждём модель и сразу отдаём полную выдачу.
 // Неполная выдача не кэшируется нигде. В журнал не попадают ни запрос, ни адрес (ADR-0028).
 
 import {
@@ -62,6 +63,13 @@ export interface SearchOptions {
   fetch?: typeof fetch;
   /** Срок первого ответа, мс; тесты ставят свой. */
   deadlineMs?: number;
+  /**
+   * Фразы нет в бакете — ждать вектор запроса от модели и сразу отдать полную выдачу, а не слова с
+   * пометкой pending (MCP, шаг 10 фазы 4, ADR-0044): ассистенту смысл важнее первых 0,25 с, а время
+   * ожидания не тратит процессор. Модель не ответила — выдача по словам (text). Поиск по словам
+   * тогда идёт только для запасного ответа. Срок deadlineMs ставится с запасом на модель.
+   */
+  waitForModel?: boolean;
 }
 
 /** Что поиск берёт у обработчика API. */
@@ -291,10 +299,18 @@ export function createSearch(
 
     // Слова — сразу; вектор — фраза каталога из бакета. Фразы нет — вектор считает модель, а это
     // секунда и больше: к сроку он не успеет, поэтому слова уходят, как только готовы, а модель
-    // и полная выдача — в фоне (замер скорости 26 октября 2026).
+    // и полная выдача — в фоне (замер скорости 26 октября 2026). С waitForModel слова ищутся, только
+    // когда понадобился запасной ответ.
     const textStarted = ctx.now();
-    const textP = run();
-    textP.catch(() => {});
+    let textP: Promise<Lists> | undefined;
+    const words = (): Promise<Lists> => {
+      if (textP === undefined) {
+        textP = run();
+        textP.catch(() => {});
+      }
+      return textP;
+    };
+    if (!options.waitForModel) words();
     const vectorStarted = ctx.now();
     const storedP: Promise<Float32Array | undefined> = (async () => {
       if (p.text === "") return undefined;
@@ -343,7 +359,7 @@ export function createSearch(
       );
     };
     const textOnly = async (semantic: "pending" | "text") => {
-      const lists = await textP;
+      const lists = await words();
       mark("meili", textStarted);
       return finish(lists, semantic);
     };
@@ -360,6 +376,23 @@ export function createSearch(
         mark("vector", vectorStarted, "error");
         if (!options.polzaKey) ctx.log("вектор запроса: нет ключа Polza");
         return textOnly("text");
+      }
+      if (options.waitForModel) {
+        const got = await vectorP;
+        if (!("vector" in got)) {
+          mark("vector", vectorStarted, "error");
+          return textOnly("text");
+        }
+        mark("vector", vectorStarted, "model");
+        waitUntil(remember(got.vector, hash));
+        const fullStarted = ctx.now();
+        const full = await run(got.vector).catch(() => undefined);
+        if (full === undefined) {
+          ctx.log("гибрид не ответил — выдача по словам");
+          return textOnly("text");
+        }
+        mark("meili", fullStarted);
+        return finish(full, "full");
       }
       mark("vector", vectorStarted, "pending");
       background();
@@ -383,7 +416,7 @@ export function createSearch(
     background(fullP);
     const first = await Promise.any([
       fullP.then((lists) => ({ lists, semantic: "full" as const })),
-      textP.then((lists) => ({ lists, semantic: "pending" as const })),
+      words().then((lists) => ({ lists, semantic: "pending" as const })),
     ]).catch(() => {
       throw new SearchError("Meilisearch не ответил");
     });

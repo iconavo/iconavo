@@ -28,6 +28,8 @@ jobs:
       - run: pnpm typecheck
       # Функция edge API собирается в один модуль без внешних импортов (ADR-0024).
       - run: pnpm api build
+      # MCP-сервер (ADR-0044): тот же сборщик, условия workerd и один внешний модуль resvg.wasm.
+      - run: pnpm mcp build
       # Скрипт тега для страниц без сборщика — тоже один модуль; его размер меряет pnpm size (ADR-0034).
       - run: pnpm icon build
       # С покрытием (ADR-0035): у ядра меньше 90% строк, веток или функций — тесты красные (vitest.config.ts).

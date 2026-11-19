@@ -28,6 +28,7 @@
     "cdn": "tsc -b && node --env-file-if-exists=.env packages/pipeline/dist/cli.js cdn",
     "packages": "tsc -b && node packages/pipeline/dist/cli.js packages",
     "api": "tsc -b && node --env-file-if-exists=.env packages/pipeline/dist/cli.js api",
+    "mcp": "tsc -b && node --env-file-if-exists=.env packages/pipeline/dist/cli.js mcp",
     "sandbox": "tsc -b && node packages/pipeline/dist/cli.js sandbox",
     "icon": "tsc -b && node packages/pipeline/dist/cli.js icon",
     "example": "tsc -b && node packages/pipeline/dist/cli.js example",
@@ -36,7 +37,7 @@
     "site": "tsc -b && node packages/pipeline/dist/cli.js site",
     "storybook": "tsc -b && pnpm --filter @iconavo-ui/site storybook",
     "release": "tsc -b && node packages/pipeline/dist/cli.js release",
-    "check": "pnpm lint && pnpm typecheck && pnpm api build && pnpm icon build && pnpm test --coverage && pnpm size"
+    "check": "pnpm lint && pnpm typecheck && pnpm api build && pnpm mcp build && pnpm icon build && pnpm test --coverage && pnpm size"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.5.15",

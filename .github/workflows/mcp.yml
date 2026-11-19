@@ -1,0 +1,274 @@
+name: MCP-сервер
+
+# MCP-сервер на mcp.iconavo.dev (ADR-0044, шаг 10 фазы 4): ИИ-ассистенты ищут иконки и получают код.
+# Устроен как «Edge API» (api.yml). «Сборка» — pnpm mcp build: один ES-модуль dist-mcp/worker.js,
+# модуль рисовальщика resvg.wasm и тело metadata; если на mcp.iconavo.dev уже эта сборка (заголовок
+# X-Iconavo-Build), выкладывать нечего. «Выкладка» — из окружения api (выкладывать из него можно только
+# из main): один запрос curl к API Cloudflare с тремя частями — metadata, модуль функции и модуль wasm;
+# в задаче нет ни checkout, ни pnpm install — ключ видит только curl. «Проверка» — pnpm mcp check:
+# клиент SDK на обоих протоколах, вызовы search_icons с картинкой и лицензиями; отчёт — артефакт.
+# Внутри MCP — код edge API с теми же хранилищами (ADR-0044), поэтому сервер пересобирается и при
+# правке apps/api. Ключи — те же, что у edge API: CLOUDFLARE_API_TOKEN (Account · Workers Scripts ·
+# Edit) и R2_ACCOUNT_ID; секреты поиска MEILISEARCH_URL, MEILISEARCH_SEARCH_KEY и POLZA_API_KEY
+# «Выкладка» вписывает в metadata при загрузке (jq читает их из окружения). Сменили ключ — ручной
+# запуск с «выложить заново». Функцию iconavo-mcp, домен mcp.iconavo.dev и выключенный workers.dev
+# владелец настроил в панели один раз (ADR-0044). Откат — откат PR: запуск от main выложит прежнюю
+# сборку. Что функция собирается, на каждом PR проверяет CI; PR с правкой этого файла — только показ.
+# Ручной запуск с «замер» — ещё pnpm mcp bench: окна времени для процессора в панели Cloudflare.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "apps/mcp/**"
+      - "apps/api/src/**"
+      - "packages/core/**"
+      - "packages/search/**"
+      - "packages/pipeline/src/mcp/**"
+      - "packages/pipeline/src/api/build.ts"
+      - "packages/pipeline/src/api/config.ts"
+      - "pnpm-lock.yaml"
+      - ".github/workflows/mcp.yml"
+  # Проверка самого workflow на PR — только показ: секретов и права выкладывать там нет.
+  pull_request:
+    paths:
+      - ".github/workflows/mcp.yml"
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: Только собрать и показать, ничего не выкладывать
+        type: boolean
+        default: false
+      force:
+        description: Выложить заново, даже если эта сборка уже отвечает (после смены ключей)
+        type: boolean
+        default: false
+      bench:
+        description: После проверки — замер (pnpm mcp bench)
+        type: boolean
+        default: false
+
+permissions: {}
+
+# Выкладки из main не пересекаются и не прерываются: следующая ждёт текущую. Показы с веток и PR —
+# в своих группах: в общей они отменяли бы ждущую выкладку.
+concurrency:
+  group: ${{ github.ref == 'refs/heads/main' && github.event_name != 'pull_request' && 'mcp' || format('mcp-{0}', github.ref) }}
+  cancel-in-progress: false
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  build:
+    name: Сборка
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    outputs:
+      live: ${{ steps.live.outputs.live }}
+      build: ${{ steps.build.outputs.build }}
+      deploy: ${{ steps.deployed.outputs.deploy }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      # «Живой» запуск: main и не «только показ», а main за это время не ушёл вперёд по коду функции —
+      # иначе запоздавший запуск выложил бы старую сборку поверх новой.
+      - name: Живой запуск?
+        id: live
+        env:
+          EVENT: ${{ github.event_name }}
+          DRY_RUN: ${{ inputs.dry_run == true }}
+        run: |
+          live=false
+          if [ "$GITHUB_REF" = refs/heads/main ] && [ "$EVENT" != pull_request ] && [ "$DRY_RUN" != true ]; then
+            git fetch --quiet --no-tags --depth=1 origin "+refs/heads/main:refs/remotes/origin/main"
+            if git diff --quiet origin/main HEAD -- apps/mcp/ apps/api/src/ packages/core/ packages/search/ packages/pipeline/src/mcp/ packages/pipeline/src/api/build.ts packages/pipeline/src/api/config.ts pnpm-lock.yaml .github/workflows/mcp.yml; then
+              live=true
+            else
+              echo "::warning::main ушёл вперёд — этот запуск только показывает; выкладывает запуск от свежего main."
+            fi
+          fi
+          echo "live=$live" >> "$GITHUB_OUTPUT"
+      - name: Собрать функцию
+        id: build
+        run: |
+          pnpm mcp build
+          echo "build=$(jq -r .build dist-mcp/build.json)" >> "$GITHUB_OUTPUT"
+      # Та же сборка уже отвечает — выкладывать нечего. Нет ответа или другая сборка — выкладываем.
+      - name: Уже выложена?
+        id: deployed
+        env:
+          BUILD: ${{ steps.build.outputs.build }}
+          FORCE: ${{ inputs.force == true }}
+        run: |
+          current=$(curl -sS --max-time 30 -o /dev/null -D - "https://mcp.iconavo.dev/" | tr -d '\r' | awk -F': ' 'tolower($1) == "x-iconavo-build" { print $2 }' || true)
+          if [ "$current" = "$BUILD" ] && [ "$FORCE" != true ]; then
+            echo "Сборка $BUILD уже на mcp.iconavo.dev — выкладывать нечего."
+            echo "deploy=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "На mcp.iconavo.dev сборка «${current:-нет ответа}» — нужна выкладка $BUILD (её делает только живой запуск из main)."
+            echo "deploy=true" >> "$GITHUB_OUTPUT"
+          fi
+          {
+            echo "### Сборка"
+            echo "- функция $BUILD: $(jq -r '"\(.bytes) байт, в gzip \(.gzipBytes); resvg.wasm \(.wasmBytes) байт"' dist-mcp/build.json)"
+            echo "- на mcp.iconavo.dev: ${current:-нет ответа}"
+          } >> "$GITHUB_STEP_SUMMARY"
+      # Бандл, модуль wasm и metadata — для задачи «Выкладка»: она ничего не собирает сама.
+      - uses: actions/upload-artifact@v7
+        with:
+          name: dist-mcp
+          path: dist-mcp/
+          if-no-files-found: error
+
+  deploy:
+    name: Выкладка
+    needs: build
+    if: needs.build.outputs.live == 'true' && needs.build.outputs.deploy == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    # Окружение api: выкладывать из него можно только из main; ключ Cloudflare и ключи поиска — его
+    # секреты, те же, что у edge API.
+    environment: api
+    permissions: {}
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          name: dist-mcp
+          path: dist-mcp
+      - name: Загрузить функцию в Cloudflare
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          ACCOUNT_ID: ${{ secrets.R2_ACCOUNT_ID }}
+          BUILD: ${{ needs.build.outputs.build }}
+          MEILISEARCH_URL: ${{ secrets.MEILISEARCH_URL }}
+          MEILISEARCH_SEARCH_KEY: ${{ secrets.MEILISEARCH_SEARCH_KEY }}
+          POLZA_API_KEY: ${{ secrets.POLZA_API_KEY }}
+        run: |
+          if [ -z "$CLOUDFLARE_API_TOKEN" ] || [ -z "$ACCOUNT_ID" ]; then
+            echo "::error::Нет секрета CLOUDFLARE_API_TOKEN окружения api или R2_ACCOUNT_ID (ADR-0024)"
+            exit 1
+          fi
+          for name in MEILISEARCH_URL MEILISEARCH_SEARCH_KEY POLZA_API_KEY; do
+            if [ -z "${!name}" ]; then
+              echo "::error::Нет секрета $name окружения api — поиск MCP без него не работает (ADR-0044)"
+              exit 1
+            fi
+          done
+          # Секреты поиска — в metadata при загрузке: jq читает их из окружения ($ENV), файл — во временной
+          # папке задачи, в артефакты он не попадает.
+          jq '.bindings += [
+            {type: "secret_text", name: "MEILISEARCH_URL", text: $ENV.MEILISEARCH_URL},
+            {type: "secret_text", name: "MEILISEARCH_SEARCH_KEY", text: $ENV.MEILISEARCH_SEARCH_KEY},
+            {type: "secret_text", name: "POLZA_API_KEY", text: $ENV.POLZA_API_KEY}
+          ]' dist-mcp/metadata.json > "$RUNNER_TEMP/metadata.json"
+          if ! [[ $ACCOUNT_ID =~ ^[0-9a-f]{32}$ ]]; then
+            echo "::error::R2_ACCOUNT_ID — не 32 шестнадцатеричных знака"
+            exit 1
+          fi
+          # Загрузка сразу выкладывает новую версию функции: модуль, дата совместимости, привязки R2 и
+          # лимита частоты, предел процессора — из metadata.json; модуль wasm — отдельной частью
+          # (application/wasm): Workers компилирует его при выкладке. Домен и выключенный workers.dev
+          # остаются как в панели.
+          code=$(curl -sS --max-time 180 --retry 3 -o "$RUNNER_TEMP/deploy.json" -w "%{http_code}" \
+            -X PUT "https://api.cloudflare.com/client/v4/accounts/$ACCOUNT_ID/workers/scripts/iconavo-mcp" \
+            -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
+            -F "metadata=@$RUNNER_TEMP/metadata.json;type=application/json" \
+            -F "worker.js=@dist-mcp/worker.js;type=application/javascript+module" \
+            -F "resvg.wasm=@dist-mcp/resvg.wasm;type=application/wasm" || echo 000)
+          if [ "$code" != 200 ] || ! jq -e '.success == true' "$RUNNER_TEMP/deploy.json" > /dev/null 2>&1; then
+            echo "::error::Cloudflare ответил $code: $(jq -c '.errors // .' "$RUNNER_TEMP/deploy.json" 2> /dev/null | head -c 1000)"
+            exit 1
+          fi
+          {
+            echo "- выложена сборка $BUILD"
+            echo "- время запуска функции: $(jq -r '.result.startup_time_ms // "—"' "$RUNNER_TEMP/deploy.json") мс (предел Cloudflare — 1000)"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  check:
+    name: Проверка
+    needs: [build, deploy]
+    # И без выкладки (сборка уже на месте): живой адрес должен отвечать этой сборкой.
+    if: ${{ !cancelled() && needs.build.result == 'success' && needs.build.outputs.live == 'true' && needs.deploy.result != 'failure' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      # Только чтение открытых адресов, ключи не нужны. Ждёт до 3 минут, пока ответит новая сборка.
+      - name: Проверить mcp.iconavo.dev
+        env:
+          BUILD: ${{ needs.build.outputs.build }}
+        run: pnpm mcp check --expect-build="$BUILD"
+      - name: Итог — в сводку запуска
+        if: always()
+        run: cat .cache/reports/mcp/check.md >> "$GITHUB_STEP_SUMMARY" 2> /dev/null || true
+      - name: Отчёт — вне .cache
+        id: pages
+        if: always()
+        run: |
+          pages="$RUNNER_TEMP/pages"
+          mkdir -p "$pages"
+          cp .cache/reports/mcp/check.html "$pages/mcp-check.html" 2> /dev/null || true
+          echo "pages=$pages" >> "$GITHUB_OUTPUT"
+      - name: Отчёт — ответы инструментов
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: mcp-check.html
+          path: ${{ steps.pages.outputs.pages }}/mcp-check.html
+          archive: false
+          if-no-files-found: ignore
+
+  # Замер (шаг 10 фазы 4) — только по ручному запуску: поиски контрольной части эталона с картинкой и
+  # без, не чаще 50 в минуту. Процессор за напечатанные окна — в панели Cloudflare.
+  bench:
+    name: Замер
+    needs: [build, check]
+    if: ${{ !cancelled() && inputs.bench == true && needs.check.result == 'success' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Замер
+        run: pnpm mcp bench | tee "$RUNNER_TEMP/bench.txt"
+      - name: Итог — в сводку запуска
+        if: always()
+        run: |
+          if [ -s "$RUNNER_TEMP/bench.txt" ]; then
+            {
+              echo "### Замер MCP-сервера"
+              echo '```'
+              cat "$RUNNER_TEMP/bench.txt"
+              echo '```'
+            } >> "$GITHUB_STEP_SUMMARY"
+          fi

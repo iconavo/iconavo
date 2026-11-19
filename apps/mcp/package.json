@@ -1,0 +1,13 @@
+{
+  "name": "@iconavo-ui/mcp",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@iconavo-ui/core": "workspace:*",
+    "@iconavo-ui/search": "workspace:*",
+    "@modelcontextprotocol/server": "2.4.0",
+    "@resvg/resvg-wasm": "2.6.2",
+    "zod": "^4.6.7"
+  }
+}

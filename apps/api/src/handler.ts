@@ -14,6 +14,8 @@ import { batchBody } from "./batch.js";
 import { cacheKey } from "./cache.js";
 import {
   CATALOG_ROUTES,
+  type CatalogIndexLoader,
+  type CatalogRoute,
   catalogIndexLoader,
   createCatalog,
 } from "./catalog.js";
@@ -28,13 +30,14 @@ import {
   respond,
   StorageError,
 } from "./http.js";
-import { createIcon } from "./icon.js";
-import { manifestLoader, type SetEntry } from "./manifest.js";
+import { createIcon, type IconRoute } from "./icon.js";
+import { type Manifest, manifestLoader, type SetEntry } from "./manifest.js";
 import { parseNames, searchable } from "./params.js";
 import {
   createSearch,
   SearchError,
   type SearchOptions,
+  type SearchRoute,
 } from "./search/handler.js";
 import { indexVersionLoader } from "./search/index-version.js";
 import { parseSvgOptions, svgBody, svgOptionsKey } from "./svg.js";
@@ -153,7 +156,21 @@ function planFor(r: Route, query: URLSearchParams): Plan {
   };
 }
 
-export function createHandler(options: HandlerOptions): Handler {
+/**
+ * Маршруты и загрузчики функции без HTTP-обёртки. Их же берёт MCP-сервер (шаг 10 фазы 4, ADR-0044):
+ * тот же код и те же хранилища, но со своими привязками, лимитами частоты и `waitForModel` у поиска.
+ * Загрузчики делят только готовые значения, не загрузку (ADR-0024).
+ */
+export interface Routes {
+  manifest: () => Promise<Manifest>;
+  indexVersion: () => Promise<string>;
+  catalogIndex: CatalogIndexLoader;
+  search: SearchRoute;
+  icon: IconRoute;
+  catalog: CatalogRoute;
+}
+
+export function createRoutes(options: HandlerOptions): Routes {
   const now = options.now ?? (() => Date.now());
   const log = options.log ?? (() => {});
   const manifest = manifestLoader(options.bucket, now, log, options.cache);
@@ -204,6 +221,64 @@ export function createHandler(options: HandlerOptions): Handler {
       ...(searchOptions.fetch ? { fetch: searchOptions.fetch } : {}),
     },
   );
+  return { manifest, indexVersion, catalogIndex, search, icon, catalog };
+}
+
+/**
+ * Ошибка маршрута → ответ API: код, текст и заголовки. Общая с MCP — у него те же 400, 404, 429 и
+ * 503, только в виде ошибки инструмента.
+ */
+export function toApiError(
+  e: unknown,
+  log: (message: string) => void,
+): { error: ApiError; headers: Record<string, string> } {
+  if (e instanceof ApiError) {
+    // Лимит частоты — ждать минуту; браузеру отказ не запоминать.
+    return {
+      error: e,
+      headers:
+        e.status === 429
+          ? { "cache-control": "no-store", "retry-after": "60" }
+          : {},
+    };
+  }
+  if (e instanceof SearchError) {
+    log(`поиск: ${e.message}`);
+    return {
+      error: new ApiError(
+        503,
+        "search_unavailable",
+        "Search is temporarily unavailable, retry later",
+      ),
+      headers: { "retry-after": "30" },
+    };
+  }
+  if (e instanceof StorageError) {
+    log(`R2: ${e.message}`);
+    return {
+      error: new ApiError(
+        503,
+        "storage_unavailable",
+        "Icon storage is temporarily unavailable, retry later",
+      ),
+      headers: { "retry-after": "30" },
+    };
+  }
+  log(`ошибка: ${(e as Error).message}`);
+  return {
+    error: new ApiError(500, "internal_error", "Internal error"),
+    headers: {},
+  };
+}
+
+/** Функция edge API: маршрутизатор поверх маршрутов; routes — уже собранные (MCP делит их). */
+export function createHandler(
+  options: HandlerOptions,
+  routes: Routes = createRoutes(options),
+): Handler {
+  const now = options.now ?? (() => Date.now());
+  const log = options.log ?? (() => {});
+  const { manifest, search, icon, catalog } = routes;
   return async (request, waitUntil) => {
     const started = now();
     const head = request.method === "HEAD";
@@ -309,45 +384,8 @@ export function createHandler(options: HandlerOptions): Handler {
         head,
       );
     } catch (e) {
-      if (e instanceof ApiError) {
-        // Лимит частоты — ждать минуту; браузеру отказ не запоминать.
-        return errorResponse(
-          e,
-          head,
-          e.status === 429
-            ? { "cache-control": "no-store", "retry-after": "60" }
-            : {},
-        );
-      }
-      if (e instanceof SearchError) {
-        log(`поиск: ${e.message}`);
-        return errorResponse(
-          new ApiError(
-            503,
-            "search_unavailable",
-            "Search is temporarily unavailable, retry later",
-          ),
-          head,
-          { "retry-after": "30" },
-        );
-      }
-      if (e instanceof StorageError) {
-        log(`R2: ${e.message}`);
-        return errorResponse(
-          new ApiError(
-            503,
-            "storage_unavailable",
-            "Icon storage is temporarily unavailable, retry later",
-          ),
-          head,
-          { "retry-after": "30" },
-        );
-      }
-      log(`ошибка: ${(e as Error).message}`);
-      return errorResponse(
-        new ApiError(500, "internal_error", "Internal error"),
-        head,
-      );
+      const { error, headers } = toApiError(e, log);
+      return errorResponse(error, head, headers);
     }
   };
 }

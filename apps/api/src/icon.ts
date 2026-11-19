@@ -80,7 +80,10 @@ const isObject = (value: unknown): value is Record<string, unknown> =>
   typeof value === "object" && value !== null && !Array.isArray(value);
 
 /** Набор иконки — из IconifyInfo оглавления, только нужное ответу. */
-function setSummary(prefix: string, entry: IndexEntry): IconDetails["set"] {
+export function setSummary(
+  prefix: string,
+  entry: IndexEntry,
+): IconDetails["set"] {
   const info = entry.info;
   const author = isObject(info.author) ? info.author : {};
   const license = isObject(info.license) ? info.license : {};
