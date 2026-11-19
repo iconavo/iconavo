@@ -27,7 +27,7 @@ import {
   SECURITY_HEADERS,
 } from "../cdn/config.js";
 import type { FetchFn } from "../sources/npm.js";
-import { API_HOST, API_TYPES } from "./config.js";
+import { API_HOST, API_TYPES, HIT_ATTEMPTS, HIT_PAUSE_MS } from "./config.js";
 
 export const ICON_CACHE_BROWSER = "public, max-age=300";
 export const ICON_CACHE_CLIENT_ERROR = "public, max-age=300";
@@ -97,6 +97,10 @@ function parse(res: Fetched): IconBody | undefined {
   }
 }
 
+/** Дата-центр Cloudflare, который ответил: три буквы в конце CF-Ray. */
+const coloOf = (headers: Headers) =>
+  /-([A-Z]{3})$/.exec(headers.get("cf-ray") ?? "")?.[1] ?? "?";
+
 const isNames = (v: unknown): v is string[] =>
   Array.isArray(v) && v.every((n) => typeof n === "string" && NAME.test(n));
 
@@ -146,6 +150,39 @@ export async function checkIcon(
       issue(target, mismatch(res.headers, name, value));
     }
   };
+
+  /**
+   * Повтор должен прийти из кэша дата-центра. Запись идёт после ответа (waitUntil), а соседние
+   * соединения попадают в разные дата-центры, и у каждого свой кэш: 19 ноября 2026 с одного
+   * компьютера — AMS, LHR, CDG. Поэтому до HIT_ATTEMPTS повторов, со второго — через HIT_PAUSE_MS;
+   * не из кэша — в сообщении дата-центры первого ответа и повторов (CF-Ray). Сбой сети на повторе —
+   * без вывода, как раньше.
+   */
+  async function fromCache(
+    path: string,
+    first: Fetched,
+  ): Promise<{ res: Fetched; issue?: string } | undefined> {
+    const colos: string[] = [];
+    let last: Fetched | undefined;
+    for (let attempt = 1; attempt <= HIT_ATTEMPTS; attempt++) {
+      if (attempt > 1) await sleep(HIT_PAUSE_MS);
+      const again = await get(path);
+      if ("error" in again) break;
+      last = again;
+      colos.push(coloOf(again.headers));
+      if (again.headers.get("x-cache") === "HIT") return { res: again };
+    }
+    if (last === undefined) return undefined;
+    const problem = mismatch(
+      last.headers,
+      "x-cache",
+      "HIT",
+      ` — повтор не из кэша (попыток: ${colos.length}); дата-центры: первый ответ — ${coloOf(first.headers)}, повторы — ${colos.join(", ")}`,
+    );
+    return problem === undefined
+      ? { res: last }
+      : { res: last, issue: problem };
+  }
 
   /** Ответ 200: заголовки, тело; expect — что должно быть в теле. */
   async function check200(
@@ -207,12 +244,12 @@ export async function checkIcon(
     expect(body, target);
     if (cached) {
       // Готовый ответ — в кэше дата-центра; браузеру — 5 минут.
-      const again = await get(path);
-      if (!("error" in again)) {
-        issue(target, mismatch(again.headers, "x-cache", "HIT"));
+      const again = await fromCache(path, res);
+      if (again !== undefined) {
+        issue(target, again.issue);
         issue(
           target,
-          mismatch(again.headers, "cache-control", ICON_CACHE_BROWSER),
+          mismatch(again.res.headers, "cache-control", ICON_CACHE_BROWSER),
         );
       }
     }
