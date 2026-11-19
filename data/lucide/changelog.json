@@ -3,6 +3,16 @@
   "releases": [
     {
       "added": [
+        "diagram-sankey"
+      ],
+      "date": "2026-11-19T11:39:16Z",
+      "previous": "ba0790b2",
+      "revision": "de8d11aac831d519d2377ff516868244475fac06",
+      "total": 2092,
+      "version": "c740a58a"
+    },
+    {
+      "added": [
         "jacket",
         "paint-gun"
       ],
