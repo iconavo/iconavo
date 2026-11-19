@@ -1,92 +1,21 @@
 // Превью edge API (ADR-0024): ровно бандл dist-api/worker.js в Node на 127.0.0.1 — с R2 из папки
 // раздачи dist-cdn/ и кэшем в памяти. Host сверяется, как у страницы поиска: чужой сайт через
 // браузер сюда не достучится. На / — страница для глаз, на /_static/… — файлы раздачи для
-// сравнения; остальное отвечает функция.
+// сравнения; остальное отвечает функция. Подделки привязок — в local.ts.
 
-import { readFile } from "node:fs/promises";
+export { diskBucket, memoryCache } from "./local.js";
+
 import { createServer, type Server } from "node:http";
 import type { AddressInfo } from "node:net";
-import { extname, isAbsolute, join, normalize, relative } from "node:path";
+import { extname, join } from "node:path";
 import { pathToFileURL } from "node:url";
 import { MANIFEST_FILE } from "../cdn/config.js";
 import { manifestSchema } from "../cdn/files.js";
 import { esc, htmlPage } from "../report/html.js";
-import { allowedHost } from "../search/server.js";
 import { buildApi } from "./build.js";
 import { WORKER_FILE } from "./config.js";
+import { allowedHost, diskBucket, fileIn, memoryCache } from "./local.js";
 import { LIVE_BASE, renderPreviewPage } from "./page.js";
-
-/** Файл внутри dir; путь за её пределы — нет. */
-async function fileIn(dir: string, path: string): Promise<Uint8Array | null> {
-  const file = normalize(join(dir, path));
-  const rel = relative(dir, file);
-  if (rel === "" || rel.startsWith("..") || isAbsolute(rel)) return null;
-  try {
-    return await readFile(file);
-  } catch {
-    return null;
-  }
-}
-
-/** Привязка R2 из папки раздачи: ключ — путь от её корня. */
-export function diskBucket(dir: string) {
-  return {
-    async get(key: string) {
-      const data = await fileIn(dir, key);
-      if (data === null) return null;
-      const text = Buffer.from(data).toString("utf8");
-      return {
-        text: async () => text,
-        arrayBuffer: async () => data.slice().buffer as ArrayBuffer,
-      };
-    },
-  };
-}
-
-const MAX_AGE = /max-age=(\d+)/;
-
-/** Cache API в памяти: только GET, записи живут max-age, как у Workers. */
-export function memoryCache(now: () => number = Date.now) {
-  const stored = new Map<
-    string,
-    {
-      status: number;
-      headers: [string, string][];
-      body: ArrayBuffer;
-      at: number;
-      ttl?: number;
-    }
-  >();
-  return {
-    async match(request: Request) {
-      const entry = stored.get(request.url);
-      if (entry === undefined) return undefined;
-      if (entry.ttl !== undefined && now() - entry.at >= entry.ttl) {
-        stored.delete(request.url);
-        return undefined;
-      }
-      return new Response(entry.body, {
-        status: entry.status,
-        headers: entry.headers,
-      });
-    },
-    async put(request: Request, response: Response) {
-      if (request.method !== "GET") {
-        throw new TypeError("Cannot cache response to non-GET request.");
-      }
-      const maxAge = MAX_AGE.exec(
-        response.headers.get("cache-control") ?? "",
-      )?.[1];
-      stored.set(request.url, {
-        status: response.status,
-        headers: [...response.headers],
-        body: await response.arrayBuffer(),
-        at: now(),
-        ...(maxAge === undefined ? {} : { ttl: Number(maxAge) * 1000 }),
-      });
-    },
-  };
-}
 
 interface WorkerModule {
   default: {

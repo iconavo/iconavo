@@ -11,8 +11,7 @@ import { registerHooks } from "node:module";
 import type { AddressInfo } from "node:net";
 import { Readable } from "node:stream";
 import { pathToFileURL } from "node:url";
-import { diskBucket, memoryCache } from "../api/preview.js";
-import { allowedHost } from "../search/server.js";
+import { allowedHost, diskBucket, memoryCache } from "../api/local.js";
 import { WASM_IMPORT } from "./config.js";
 
 export interface RunnerConfig {
