@@ -1,9 +1,10 @@
-// Строки установки из README тега для генератора кода (шаг 5 фазы 4, ADR-0042, ADR-0050). Модуль
-// читают только next.config.ts и Storybook при сборке — в код страниц разбор Markdown не попадает.
-// Нужной строки нет или она не одна — «СТОП» сборки с подсказкой, как у разделов документации.
+// Строки установки из README тега для генератора кода (шаг 5 фазы 4, ADR-0042, ADR-0050) и разделы
+// README для get_usage MCP-сервера (шаг 10 фазы 4, ADR-0044). Модуль читают только сборки — next.config.ts,
+// Storybook и pnpm mcp build: в код страниц и функции разбор Markdown не попадает. Нужной строки или
+// раздела нет или их несколько — «СТОП» сборки с подсказкой, как у разделов документации.
 
 import type { Install } from "./install.js";
-import { type Block, parseMarkdown } from "./markdown.js";
+import { type Block, parseMarkdown, plainText } from "./markdown.js";
 
 const SCRIPT =
   /^<script type="module" src="https:\/\/cdn\.jsdelivr\.net\/npm\/@iconavo-ui\/icon@[^"/]+\/dist\/iconavo-icon\.js" integrity="sha384-[^"]+"><\/script>$/;
@@ -86,4 +87,65 @@ export function installFromReadme(text: string): Install {
       ),
     },
   };
+}
+
+/** Разделы README тега, которые отдаёт get_usage MCP-сервера: ключ → заголовок. */
+export const USAGE_SECTIONS = {
+  install: "Install",
+  html: "HTML",
+  react: "React",
+  size: "Size and color",
+  label: "A label for screen readers",
+  next: "Next.js and server rendering",
+  license: "License",
+} as const;
+
+export type UsageSection = keyof typeof USAGE_SECTIONS;
+
+export interface Usage {
+  /** Версия пакетов — из адреса скрипта README (`@iconavo-ui/icon@0.1.1`). */
+  version: string;
+  install: Install;
+  /** Разделы дословно, Markdown: от заголовка до следующего заголовка того же или старшего уровня. */
+  sections: Record<UsageSection, string>;
+}
+
+const VERSION = /@iconavo-ui\/icon@([0-9A-Za-z.+-]+)\/dist\//;
+
+/** Строки установки, версия и разделы README тега для get_usage (шаг 10 фазы 4, ADR-0044). */
+export function usageFromReadme(text: string): Usage {
+  const install = installFromReadme(text);
+  const version = VERSION.exec(install.script)?.[1];
+  if (version === undefined) {
+    throw new Error(
+      "packages/icon/README.md: в адресе скрипта нет версии @iconavo-ui/icon@… (ADR-0044)",
+    );
+  }
+  const lines = text.replace(/\r\n/g, "\n").split("\n");
+  const headings = parseMarkdown(text).flatMap((b) =>
+    b.type === "heading"
+      ? [{ title: plainText(b.children), depth: b.depth, line: b.line }]
+      : [],
+  );
+  const sections = {} as Record<UsageSection, string>;
+  for (const [key, title] of Object.entries(USAGE_SECTIONS) as [
+    UsageSection,
+    string,
+  ][]) {
+    const found = headings.filter((h) => h.title === title);
+    const [heading, ...rest] = found;
+    if (heading === undefined || rest.length > 0) {
+      throw new Error(
+        `packages/icon/README.md: раздел «${title}» — ${heading === undefined ? "нет" : "не один"}. Его отдаёт ассистентам get_usage MCP-сервера (ADR-0044)`,
+      );
+    }
+    const next = headings.find(
+      (h) => h.line > heading.line && h.depth <= heading.depth,
+    );
+    sections[key] = lines
+      .slice(heading.line, next === undefined ? lines.length : next.line - 1)
+      .join("\n")
+      .trim();
+  }
+  return { version, install, sections };
 }

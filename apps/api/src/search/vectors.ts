@@ -75,6 +75,22 @@ export async function modelVector(
   text: string,
   timeoutMs: number,
 ): Promise<Float32Array> {
+  const [vector] = await modelVectors(fetchFn, apiKey, [text], timeoutMs);
+  if (vector === undefined) throw new ModelError("Polza: ответ без вектора");
+  return vector;
+}
+
+/**
+ * Векторы нескольких текстов одним запросом к Polza — у MCP get_matching_set (шаг 10 фазы 4): по
+ * понятию на вектор, в том же порядке (по index ответа, как у pnpm embed).
+ */
+export async function modelVectors(
+  fetchFn: typeof fetch,
+  apiKey: string,
+  texts: readonly string[],
+  timeoutMs: number,
+): Promise<Float32Array[]> {
+  if (texts.length === 0) return [];
   let res: Response;
   try {
     res = await fetchFn(POLZA_EMBEDDINGS_URL, {
@@ -85,7 +101,7 @@ export async function modelVector(
       },
       body: JSON.stringify({
         model: SEARCH_MODEL.id,
-        input: [text],
+        input: texts,
         dimensions: SEARCH_MODEL.dims,
       }),
       signal: AbortSignal.timeout(timeoutMs),
@@ -98,15 +114,28 @@ export async function modelVector(
     throw new ModelError(`Polza: HTTP ${res.status}`);
   }
   const data = (await res.json()) as {
-    data?: { embedding?: unknown }[];
+    data?: { embedding?: unknown; index?: unknown }[];
   };
-  const embedding = data.data?.[0]?.embedding;
-  if (
-    !Array.isArray(embedding) ||
-    embedding.length < SEARCH_MODEL.dims ||
-    !embedding.every((v) => typeof v === "number" && Number.isFinite(v))
-  ) {
+  const items = data.data ?? [];
+  if (items.length !== texts.length) {
     throw new ModelError("Polza: ответ без вектора");
   }
-  return truncateUnit(embedding as number[], SEARCH_MODEL.dims);
+  const out: Float32Array[] = Array.from({ length: texts.length });
+  for (const [i, item] of items.entries()) {
+    const at = typeof item.index === "number" ? item.index : i;
+    const embedding = item.embedding;
+    if (
+      !Number.isInteger(at) ||
+      at < 0 ||
+      at >= texts.length ||
+      out[at] !== undefined ||
+      !Array.isArray(embedding) ||
+      embedding.length < SEARCH_MODEL.dims ||
+      !embedding.every((v) => typeof v === "number" && Number.isFinite(v))
+    ) {
+      throw new ModelError("Polza: ответ без вектора");
+    }
+    out[at] = truncateUnit(embedding as number[], SEARCH_MODEL.dims);
+  }
+  return out;
 }

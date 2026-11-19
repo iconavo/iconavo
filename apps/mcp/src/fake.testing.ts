@@ -1,7 +1,10 @@
 // Помощники тестов MCP-сервера: те же подделки, что у edge API (бакеты, кэш, Meilisearch, Polza,
 // лимит частоты), набор demo с оглавлением каталога и запросы JSON-RPC к serve() без сети.
 
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import { STORE_KEYS } from "@iconavo-ui/search";
+import { usageFromReadme } from "@iconavo-ui/snippets/readme";
 import {
   type FakeDoc,
   fakeBucket,
@@ -19,6 +22,21 @@ import { createDeps } from "./context.js";
 import { serve } from "./http.js";
 
 export const CATALOG = "aaaaaaaaaaaa";
+/** Настоящий README тега: get_usage и строки установки — как в выкладке. */
+export const USAGE = usageFromReadme(
+  readFileSync(
+    join(
+      import.meta.dirname,
+      "..",
+      "..",
+      "..",
+      "packages",
+      "icon",
+      "README.md",
+    ),
+    "utf8",
+  ),
+);
 export const INDEX = "1234abcd";
 export const COLOR_VERSION = "89abcdef";
 /** Подменная картинка: PNG-подпись и номер отрисовки. */
@@ -73,15 +91,21 @@ export const DOCS: FakeDoc[] = [
     variants: ["house-fill"],
     style: ["outline", "filled"],
     styles: { outline: "house", filled: "house-fill" },
+    about: {
+      en: { description: "A house", synonyms: ["home", "building"] },
+      ru: { description: "Дом", synonyms: ["дом", "здание"] },
+      tags: ["home", "building"],
+    },
   },
   {
     icon: "demo:heart",
     set: "demo",
-    names: ["demo:heart", "heart"],
+    names: ["demo:heart", "demo:heart-fill", "heart", "heart-fill"],
     words: ["heart", "love", "сердце"],
     license: "ISC",
-    style: ["outline"],
-    styles: { outline: "heart" },
+    variants: ["heart-fill"],
+    style: ["outline", "filled"],
+    styles: { outline: "heart", filled: "heart-fill" },
   },
   {
     icon: "color:swan",
@@ -139,6 +163,14 @@ function bucketFiles(): Record<string, string> {
     [file("demo", VERSION, "heart")]: nameFileText("demo", {
       heart: { body: LINE },
     }),
+    [file("demo", VERSION, "heart-fill")]: nameFileText("demo", {
+      "heart-fill": { body: FILLED },
+    }),
+    [file("demo", VERSION, "home")]: nameFileText(
+      "demo",
+      { house: { body: LINE } },
+      { home: { parent: "house" } },
+    ),
     [file("color", COLOR_VERSION, "swan")]: nameFileText(
       "color",
       { swan: { body: SWAN, width: 32, height: 16 } },
@@ -151,6 +183,7 @@ function bucketFiles(): Record<string, string> {
 export interface McpSetupOptions {
   meiliStatus?: number;
   limiter?: ReturnType<typeof fakeLimiter>;
+  iconLimiter?: ReturnType<typeof fakeLimiter>;
   polza?: (text: string) => Promise<number[]>;
 }
 
@@ -185,6 +218,7 @@ export function mcpSetup(o: McpSetupOptions = {}) {
       CDN: bucket,
       SEARCH: searchBucket,
       ...(o.limiter ? { MCP_SEARCH_LIMIT: o.limiter } : {}),
+      ...(o.iconLimiter ? { MCP_ICON_LIMIT: o.iconLimiter } : {}),
       MEILISEARCH_URL: MEILI_URL,
       MEILISEARCH_SEARCH_KEY: "search-key",
       POLZA_API_KEY: "polza-key",
@@ -195,6 +229,7 @@ export function mcpSetup(o: McpSetupOptions = {}) {
       now: () => 0,
       log: (message) => logs.push(message),
       fetch: net.fn,
+      usage: USAGE,
       render: (svg) => {
         rendered.push(svg);
         return new Uint8Array([...PNG_SIGNATURE, rendered.length]);

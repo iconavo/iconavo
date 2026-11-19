@@ -35,7 +35,7 @@ export const SEARCH_DESCRIPTION = [
   "Searches open-source sets: Lucide, Tabler, Material Symbols, Phosphor and Fluent Emoji Flat; all of them allow commercial use.",
   `Returns up to ${SEARCH_LIMIT_DEFAULT} icons (limit up to ${SEARCH_LIMIT_MAX}) with name, set, style, license and author,`,
   "plus ONE PNG image: a grid of numbered previews, where cell N is result N.",
-  'Use the icon name with Iconavo packages: <iconavo-icon icon="lucide:house"> or <Icon icon="lucide:house" /> from @iconavo-ui/react.',
+  "Then call get_icon with the chosen name for ready code. For several icons that must look alike (a menu, a toolbar), use get_matching_set instead.",
 ].join(" ");
 
 export const SearchInput = z.object({

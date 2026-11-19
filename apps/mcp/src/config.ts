@@ -7,6 +7,16 @@ export const MCP_PATH = "/mcp";
 
 export const SITE_URL = "https://iconavo.dev";
 
+/** Адрес edge API: SVG с настройками — ссылкой у get_icon (svg). */
+export const API_ORIGIN = "https://api.iconavo.dev";
+
+/** get_matching_set: понятий в одном вызове — от 2 до 10. */
+export const MATCH_MIN = 2;
+export const MATCH_MAX = 10;
+/** Карточек на понятие в выборе набора и запасных иконок. */
+export const MATCH_POOL = 10;
+export const MATCH_ALTERNATIVES = 2;
+
 /** Тело запроса — не больше 64 КБ: вызов инструмента — это несколько строк JSON. */
 export const MAX_BODY_BYTES = 65_536;
 

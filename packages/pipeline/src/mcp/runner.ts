@@ -83,6 +83,7 @@ async function start(config: RunnerConfig): Promise<number> {
       ? {
           SEARCH: diskBucket(config.search.dir),
           MCP_SEARCH_LIMIT: allow,
+          MCP_ICON_LIMIT: allow,
           MEILISEARCH_URL: config.search.url,
           MEILISEARCH_SEARCH_KEY: config.search.key,
           ...(config.search.polzaKey

@@ -3,9 +3,11 @@
 // путь без состояния) и 2026-07-28. Ключи не нужны. Что проверяется:
 // - HTTP: страница /, robots.txt, 405 на GET /mcp (потока событий нет), CORS, отказ пачке сообщений,
 //   переход с http (только у живого адреса);
-// - список инструментов: описание, схемы входа и ответа, «только чтение»;
-// - вызовы search_icons: ответ по схеме (клиент SDK сверяет structuredContent со схемой сам),
-//   поиск по смыслу, лицензия и автор у каждой иконки, одна PNG-картинка нужного размера.
+// - список инструментов: пять инструментов ADR-0011, описание, схемы входа и ответа, «только чтение»;
+// - вызовы всех пяти: ответ по схеме (клиент SDK сверяет structuredContent со схемой сам); search_icons —
+//   поиск по смыслу и одна PNG-картинка нужного размера; get_icon — код как у генератора сайта, SVG
+//   побайтно как у адреса SVG edge API; get_matching_set — like: ph:house-bold даёт только ph:*-bold;
+//   get_usage — строки README; list_sets — пять наборов. Лицензия и автор — в каждом ответе.
 // Каждый вызов попадает в отчёт целиком: запрос, текст, картинка и данные — их смотрит владелец.
 
 import {
@@ -62,31 +64,28 @@ const WAIT_MS = 180_000;
 const STEP_MS = 15_000;
 const TIMEOUT_MS = 60_000;
 
-/** Вызовы search_icons и что должно получиться. */
+/** Инструменты ADR-0011 — в списке ровно они, в этом порядке. */
+export const TOOLS = [
+  "search_icons",
+  "get_icon",
+  "get_matching_set",
+  "get_usage",
+  "list_sets",
+] as const;
+
+// biome-ignore lint/suspicious/noExplicitAny: данные ответа сверяются по полям, схему уже проверил клиент SDK
+type Json = any;
+
+/** Вызов инструмента и что должно получиться; out — данные по схеме. */
 interface Case {
+  tool: (typeof TOOLS)[number];
   args: Record<string, unknown>;
   eras: readonly Era[];
-  expect: (r: SearchOut, images: McpImage[]) => string[];
-}
-
-interface SearchOut {
-  ranking: string;
-  count: number;
-  preview: boolean;
-  results: {
-    n: number;
-    icon: string;
-    set: string;
-    style: string | null;
-    exact?: boolean;
-    license: string;
-    author: string;
-  }[];
-  sets: {
-    prefix: string;
-    license: { spdx: string };
-    author: { name: string };
-  }[];
+  expect: (
+    out: Json,
+    images: McpImage[],
+    text: string,
+  ) => string[] | Promise<string[]>;
 }
 
 const size = (images: McpImage[], width: number, height: number) =>
@@ -98,19 +97,32 @@ const size = (images: McpImage[], width: number, height: number) =>
         ]
       : [];
 
+const same = (what: string, got: unknown, want: unknown) =>
+  got === want
+    ? []
+    : [`${what}: ${JSON.stringify(got)} вместо ${JSON.stringify(want)}`];
+
+/** Автор и лицензия набора в ответе (ADR-0011). */
+const setProblems = (set: Json, what: string): string[] =>
+  set?.license?.spdx && set?.author?.name
+    ? []
+    : [`${what}: нет лицензии или автора набора`];
+
 export const CASES: readonly Case[] = [
   {
+    tool: "search_icons",
     args: { query: "корзина" },
     eras: ERAS,
-    expect: (r, images) => [
-      ...(r.ranking === "meaning"
-        ? []
-        : [`ranking ${r.ranking} вместо meaning`]),
-      ...(r.count === 12 ? [] : [`иконок ${r.count} вместо 12`]),
+    expect: (r, images, text) => [
+      ...same("ranking", r.ranking, "meaning"),
+      ...same("иконок", r.count, 12),
       ...size(images, 384, 288),
+      ...licenseProblems(r),
+      ...(text.includes("Licenses") ? [] : ["в тексте нет лицензий"]),
     ],
   },
   {
+    tool: "search_icons",
     args: { query: "lucide:house", limit: 3 },
     eras: ERAS,
     expect: (r, images) => [
@@ -118,28 +130,174 @@ export const CASES: readonly Case[] = [
         ? []
         : [`первой не lucide:house с пометкой exact: ${r.results[0]?.icon}`]),
       ...size(images, 384, 96),
+      ...licenseProblems(r),
     ],
   },
   {
+    tool: "search_icons",
     args: { query: "settings", limit: 24, style: "outline" },
     eras: ["2025"],
     expect: (r, images) => [
-      ...(r.count === 24 ? [] : [`иконок ${r.count} вместо 24`]),
-      ...(r.results.every((x) => x.style === "outline")
+      ...same("иконок", r.count, 24),
+      ...(r.results.every((x: Json) => x.style === "outline")
         ? []
         : ["не все иконки в стиле outline"]),
       ...size(images, 576, 384),
+      ...licenseProblems(r),
     ],
   },
   {
+    tool: "search_icons",
     args: { query: "heart", sets: ["fluent-emoji-flat"], preview: false },
     eras: ["2025"],
     expect: (r, images) => [
       ...(r.results.length > 0 &&
-      r.results.every((x) => x.set === "fluent-emoji-flat")
+      r.results.every((x: Json) => x.set === "fluent-emoji-flat")
         ? []
         : ["не только fluent-emoji-flat"]),
       ...(images.length === 0 && !r.preview ? [] : ["картинка без просьбы"]),
+      ...licenseProblems(r),
+    ],
+  },
+  {
+    tool: "get_icon",
+    args: { icon: "lucide:house" },
+    eras: ERAS,
+    expect: (r, _, text) => [
+      ...same(
+        "код",
+        r.code,
+        '<iconavo-icon icon="lucide:house" width="24"></iconavo-icon>',
+      ),
+      ...same("установка", r.setup?.install, "npm install @iconavo-ui/icon"),
+      ...same("лицензия", r.set?.license?.spdx, "ISC"),
+      ...setProblems(r.set, "get_icon"),
+      ...(String(r.attribution).startsWith("Icons: Lucide")
+        ? []
+        : ["нет указания авторства"]),
+      ...(text.includes("License — keep this attribution")
+        ? []
+        : ["в тексте нет лицензии"]),
+    ],
+  },
+  {
+    tool: "get_icon",
+    args: { icon: "lucide:home" },
+    eras: ["2025"],
+    expect: (r) => [
+      ...same("основное имя", r.icon, "lucide:house"),
+      ...same("старое имя", r.requested, "lucide:home"),
+    ],
+  },
+  {
+    tool: "get_icon",
+    args: {
+      icon: "lucide:heart",
+      format: "react",
+      size: 32,
+      color: "#e11d48",
+      strokeWidth: 1.5,
+    },
+    eras: ["2025"],
+    expect: (r) =>
+      same(
+        "код React",
+        r.code,
+        'import { Icon } from "@iconavo-ui/react";\n\n<Icon icon="lucide:heart" width={32} color="#e11d48" strokeWidth={1.5} />',
+      ),
+  },
+  {
+    tool: "get_icon",
+    args: { icon: "lucide:heart", format: "svg", color: "#e11d48" },
+    eras: ["2025"],
+    expect: async (r) => {
+      const [comment, svg] = String(r.code).split("\n");
+      const res = await get(String(r.svgUrl));
+      const api = res instanceof Response ? await res.text() : res.message;
+      return [
+        ...(comment?.startsWith("<!-- lucide:heart. Icons: Lucide")
+          ? []
+          : ["нет комментария об авторстве"]),
+        ...(svg === api ? [] : ["SVG не совпадает с адресом SVG edge API"]),
+      ];
+    },
+  },
+  {
+    tool: "get_matching_set",
+    args: {
+      concepts: ["home", "search", "settings", "user"],
+      like: "ph:house-bold",
+    },
+    eras: ERAS,
+    expect: (r) => [
+      ...same("набор", r.set?.prefix, "ph"),
+      ...same("вариант", r.variant, "-bold"),
+      ...same("иконок", r.icons?.length, 4),
+      ...(r.icons?.every(
+        (x: Json) =>
+          String(x.icon).startsWith("ph:") && String(x.icon).endsWith("-bold"),
+      )
+        ? []
+        : [
+            `не все ph:*-bold: ${r.icons?.map((x: Json) => x.icon).join(", ")}`,
+          ]),
+      ...setProblems(r.set, "get_matching_set"),
+    ],
+  },
+  {
+    tool: "get_matching_set",
+    args: { concepts: ["дом", "поиск", "настройки"] },
+    eras: ["2025"],
+    expect: (r) => [
+      ...same("иконок", r.icons?.length, 3),
+      ...(r.icons?.every((x: Json) =>
+        String(x.icon).startsWith(`${r.set?.prefix}:`),
+      )
+        ? []
+        : ["иконки из разных наборов"]),
+      ...setProblems(r.set, "get_matching_set"),
+    ],
+  },
+  {
+    tool: "get_usage",
+    args: { framework: "react" },
+    eras: ["2025"],
+    expect: (r) => [
+      ...same("установка", r.install, "npm install @iconavo-ui/react"),
+      ...(String(r.example).includes("@iconavo-ui/react")
+        ? []
+        : ["пример без пакета"]),
+      ...(String(r.licenses).includes("MIT") ? [] : ["нет лицензий"]),
+    ],
+  },
+  {
+    tool: "get_usage",
+    args: { framework: "script" },
+    eras: ["2025"],
+    expect: (r) =>
+      String(r.setup).includes('integrity="sha384-')
+        ? []
+        : ["строка <script> без хэша"],
+  },
+  {
+    tool: "list_sets",
+    args: {},
+    eras: ERAS,
+    expect: (r) => [
+      ...same(
+        "наборы",
+        (r.sets ?? [])
+          .map((x: Json) => x.prefix)
+          .sort()
+          .join(","),
+        "fluent-emoji-flat,lucide,material-symbols,ph,tabler",
+      ),
+      ...(r.sets ?? []).flatMap((x: Json) => [
+        ...setProblems(x, x.prefix),
+        ...(x.commercialUse
+          ? []
+          : [`${x.prefix}: не для коммерческих проектов`]),
+      ]),
     ],
   },
 ];
@@ -157,10 +315,12 @@ export function pngSize(
 }
 
 /** Лицензия и автор у каждой иконки и у каждого набора выдачи (ADR-0011). */
-export function licenseProblems(r: SearchOut): string[] {
+export function licenseProblems(r: Json): string[] {
   const problems: string[] = [];
-  const sets = new Map(r.sets.map((s) => [s.prefix, s]));
-  for (const x of r.results) {
+  const sets = new Map<string, Json>(
+    (r.sets ?? []).map((s: Json) => [s.prefix, s]),
+  );
+  for (const x of r.results ?? []) {
     if (x.license === "" || x.author === "") {
       problems.push(`у ${x.icon} нет лицензии или автора`);
     }
@@ -330,28 +490,30 @@ async function eraChecks(
   }
   try {
     const tools = await client.listTools();
-    const search = tools.tools.find((t) => t.name === "search_icons");
+    const names = tools.tools.map((t) => t.name);
     rows.push({
       name: `Протокол ${era}: список инструментов`,
-      problems:
-        search === undefined
-          ? ["нет search_icons"]
-          : [
-              ...((search.description ?? "").length > 100
-                ? []
-                : ["короткое описание"]),
-              ...(search.outputSchema ? [] : ["нет схемы ответа"]),
-              ...(search.annotations?.readOnlyHint === true
-                ? []
-                : ["не помечен «только чтение»"]),
-            ],
+      problems: [
+        ...(names.join(",") === TOOLS.join(",")
+          ? []
+          : [`инструменты ${names.join(", ")} вместо ${TOOLS.join(", ")}`]),
+        ...tools.tools.flatMap((t) => [
+          ...((t.description ?? "").length > 100
+            ? []
+            : [`${t.name}: короткое описание`]),
+          ...(t.outputSchema ? [] : [`${t.name}: нет схемы ответа`]),
+          ...(t.annotations?.readOnlyHint === true
+            ? []
+            : [`${t.name}: не помечен «только чтение»`]),
+        ]),
+      ],
     });
     for (const c of CASES.filter((x) => x.eras.includes(era))) {
-      log?.(`${era}: search_icons ${JSON.stringify(c.args)}`);
+      log?.(`${era}: ${c.tool} ${JSON.stringify(c.args)}`);
       const started = performance.now();
       const call: McpCall = {
         era,
-        tool: "search_icons",
+        tool: c.tool,
         args: c.args,
         ms: 0,
         isError: false,
@@ -361,7 +523,7 @@ async function eraChecks(
       };
       try {
         const result = await client.callTool({
-          name: "search_icons",
+          name: c.tool,
           arguments: c.args,
         });
         call.ms = Math.round(performance.now() - started);
@@ -393,13 +555,12 @@ async function eraChecks(
         if (call.isError) {
           call.problems.push(`ошибка инструмента: ${call.text}`);
         } else {
-          const out = result.structuredContent as unknown as SearchOut;
           call.problems.push(
-            ...c.expect(out, call.images),
-            ...licenseProblems(out),
-            ...(call.text.includes("Licenses")
-              ? []
-              : ["в тексте нет лицензий"]),
+            ...(await c.expect(
+              result.structuredContent,
+              call.images,
+              call.text,
+            )),
           );
         }
       } catch (e) {

@@ -87,7 +87,13 @@ describe("превью MCP-сервера", () => {
       );
       try {
         const tools = await client.listTools();
-        expect(tools.tools.map((t) => t.name)).toEqual(["search_icons"]);
+        expect(tools.tools.map((t) => t.name)).toEqual([
+          "search_icons",
+          "get_icon",
+          "get_matching_set",
+          "get_usage",
+          "list_sets",
+        ]);
         const result = await client.callTool({
           name: "search_icons",
           arguments: { query: "house" },

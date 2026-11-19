@@ -17,6 +17,8 @@ export interface Env {
   SEARCH?: Bucket;
   /** 60 поисков в минуту с адреса человека — своё пространство счёта, не общее с API. */
   MCP_SEARCH_LIMIT?: RateLimiter;
+  /** 300 сведений об иконке в минуту с адреса (get_icon) — как /icon edge API, свой счёт. */
+  MCP_ICON_LIMIT?: RateLimiter;
   MEILISEARCH_URL?: string;
   MEILISEARCH_SEARCH_KEY?: string;
   POLZA_API_KEY?: string;

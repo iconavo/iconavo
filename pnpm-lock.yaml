@@ -202,6 +202,9 @@ importers:
       '@iconavo-ui/search':
         specifier: workspace:*
         version: link:../../packages/search
+      '@iconavo-ui/snippets':
+        specifier: workspace:*
+        version: link:../../packages/snippets
       '@modelcontextprotocol/server':
         specifier: 2.4.0
         version: 2.4.0
@@ -323,6 +326,9 @@ importers:
       '@iconavo-ui/search':
         specifier: workspace:*
         version: link:../search
+      '@iconavo-ui/snippets':
+        specifier: workspace:*
+        version: link:../snippets
       '@resvg/resvg-wasm':
         specifier: 2.6.2
         version: 2.6.2

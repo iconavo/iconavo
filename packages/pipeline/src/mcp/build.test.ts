@@ -5,13 +5,19 @@ import { fileURLToPath } from "node:url";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { bundleWorker, stampBuild } from "../api/build.js";
 import { BUILD_PLACEHOLDER } from "../api/config.js";
-import { buildMcp, MCP_TARGET, mcpMetadata, readResvgWasm } from "./build.js";
+import {
+  buildMcp,
+  mcpMetadata,
+  mcpTarget,
+  readResvgWasm,
+  readUsage,
+} from "./build.js";
 
 const ROOT = fileURLToPath(new URL("../../../../", import.meta.url));
 
 describe("bundleWorker: MCP-сервер", () => {
   it("один ES-модуль: единственный импорт — модуль wasm рисовальщика, export default, одна метка", async () => {
-    const code = await bundleWorker(ROOT, MCP_TARGET);
+    const code = await bundleWorker(ROOT, mcpTarget(await readUsage(ROOT)));
     expect(code.split("\n")[0]).toBe('import resvgWasm from "./resvg.wasm";');
     expect(code.match(/^\s*import[\s{*"']/gm)).toHaveLength(1);
     expect(code).not.toMatch(/\bimport\(|\brequire\(/);
@@ -20,12 +26,23 @@ describe("bundleWorker: MCP-сервер", () => {
   });
 
   it("сборки SDK под Workers: проверка схем без eval (cf-worker), без ajv и модулей Node; одна копия zod", async () => {
-    const code = await bundleWorker(ROOT, MCP_TARGET);
+    const code = await bundleWorker(ROOT, mcpTarget(await readUsage(ROOT)));
     expect(code).toContain("CfWorkerJsonSchemaValidator");
     // ajv строит проверки через new Function — в Workers это запрещено.
     expect(code).not.toMatch(/new Ajv\(|class Ajv\w*\b/);
     expect(code).not.toMatch(/from "node:/);
     expect(code.match(/function \$constructor\(/g)).toHaveLength(1);
+  });
+});
+
+describe("README тега в бандле", () => {
+  it("строки установки и разделы для get_usage вшиты модулем без файла", async () => {
+    const usage = await readUsage(ROOT);
+    const code = await bundleWorker(ROOT, mcpTarget(usage));
+    // Строки — как в README (у </script> rolldown экранирует косую черту: так строку можно вставить в HTML).
+    expect(code).toContain(JSON.stringify(usage.install.tag.import));
+    expect(code).toContain(JSON.stringify(usage.version));
+    expect(code).not.toMatch(/from "virtual:/);
   });
 });
 
@@ -70,7 +87,7 @@ describe("buildMcp", () => {
     ).toMatchObject({ build: first.build, wasmBytes: wasm.length });
   });
 
-  it("metadata: бакеты раздачи и поиска, свой лимит частоты 1003, предел процессора, журнал без запросов", () => {
+  it("metadata: бакеты раздачи и поиска, свои лимиты частоты 1003 и 1004, предел процессора, журнал без запросов", () => {
     expect(mcpMetadata()).toEqual({
       main_module: "worker.js",
       compatibility_date: "2026-10-01",
@@ -82,6 +99,12 @@ describe("buildMcp", () => {
           name: "MCP_SEARCH_LIMIT",
           namespace_id: "1003",
           simple: { limit: 60, period: 60 },
+        },
+        {
+          type: "ratelimit",
+          name: "MCP_ICON_LIMIT",
+          namespace_id: "1004",
+          simple: { limit: 300, period: 60 },
         },
       ],
       limits: { cpu_ms: 300 },
