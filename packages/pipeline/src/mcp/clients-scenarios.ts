@@ -32,7 +32,10 @@ export interface ClientScenario {
   chatPrompt?: string;
   /** Проект в папке сценария: ассистент вставляет код в него, прогон собирает его и открывает. */
   project?: ProjectKind;
-  /** Нужный инструмент — любой из списка. */
+  /**
+   * Нужный инструмент — любой из списка. В проекте ассистент может найти иконку поиском и собрать
+   * компонент сам по get_usage: код тот же, засчитываем (первый прогон 20 ноября 2026, сценарий 9).
+   */
   tools: readonly string[];
   /** Подходящие иконки «набор:основа»; нет — иконку не оцениваем. */
   icons?: readonly string[];
@@ -322,7 +325,7 @@ export const CLIENT_SCENARIOS: readonly ClientScenario[] = [
     prompt: "Add a trash icon to the Delete button in index.html",
     chatPrompt: `Add a trash icon to the Delete button in this index.html:\n\n\`\`\`html\n${HTML_FILE}\n\`\`\``,
     project: "html",
-    tools: ["get_icon"],
+    tools: ["get_icon", "search_icons", "pick_icon"],
     icons: [
       "lucide:trash",
       "lucide:trash-2",
@@ -343,7 +346,7 @@ export const CLIENT_SCENARIOS: readonly ClientScenario[] = [
     prompt: "Вставь иконку настроек в шапку моего React-приложения",
     chatPrompt: `Вставь иконку настроек в шапку моего React-приложения. Вот src/App.tsx:\n\n\`\`\`tsx\n${APP_FILE}\n\`\`\``,
     project: "react",
-    tools: ["get_icon"],
+    tools: ["get_icon", "search_icons", "pick_icon"],
     icons: [
       "lucide:settings",
       "lucide:settings-2",
@@ -420,7 +423,7 @@ export const CLIENT_SCENARIOS: readonly ClientScenario[] = [
     prompt: "Use lucide:home in my page",
     chatPrompt: `Use lucide:home in my page:\n\n\`\`\`html\n${HTML_FILE}\n\`\`\``,
     project: "html",
-    tools: ["get_icon"],
+    tools: ["get_icon", "search_icons", "pick_icon"],
     icons: ["lucide:house"],
     code: "html",
     license: true,

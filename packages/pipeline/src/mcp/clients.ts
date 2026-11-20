@@ -325,6 +325,8 @@ export interface ClaudeRun {
   followUp?: (t: Transcript) => string | undefined;
   timeoutMs?: number;
   exe?: string;
+  /** Каждая строка stream-json — для журнала разговора. */
+  onLine?: (line: string) => void;
 }
 
 /** Один разговор с Claude Code: первое сообщение, при надобности — второе, затем ввод закрывается. */
@@ -360,6 +362,7 @@ export function runClaude(o: ClaudeRun): Promise<Transcript> {
         buffer = buffer.slice(newline + 1);
         newline = buffer.indexOf("\n");
         if (line === "") continue;
+        o.onLine?.(line);
         let event: unknown;
         try {
           event = JSON.parse(line);
@@ -510,8 +513,22 @@ export function namesIn(text: string): string[] {
   return out;
 }
 
-/** Нумерованный список выдачи pick_icon и search_icons: «3. lucide:share — …». */
+/**
+ * Нумерованная выдача pick_icon и search_icons. Claude Code отдаёт модели не текст ответа, а данные
+ * (structuredContent) строкой JSON — results с n и icon; другие клиенты — текст «3. lucide:share — …».
+ */
 export function numberedIcons(text: string): { n: number; icon: string }[] {
+  try {
+    const data = JSON.parse(text) as { results?: unknown };
+    if (Array.isArray(data.results)) {
+      return data.results
+        .filter(isObject)
+        .filter((r) => typeof r.n === "number" && typeof r.icon === "string")
+        .map((r) => ({ n: r.n as number, icon: r.icon as string }));
+    }
+  } catch {
+    // не JSON — текст
+  }
   return [...text.matchAll(/^\s*(\d+)\.\s+([a-z0-9-]+:[a-z0-9-]+)/gm)].map(
     (m) => ({ n: Number(m[1]), icon: m[2] ?? "" }),
   );
@@ -520,11 +537,17 @@ export function numberedIcons(text: string): { n: number; icon: string }[] {
 // ---------------------------------------------------------------------------------------------------
 // Код
 
-/** Блоки кода из ответа. */
+/** Код из ответа: блоки ``` и короткие вставки `…` — ассистент часто кладёт код в ячейки таблицы. */
 export function codeBlocks(text: string): string[] {
-  return [...text.matchAll(/```[^\n`]*\n([\s\S]*?)```/g)].map(
+  const fenced = [...text.matchAll(/```[^\n`]*\n([\s\S]*?)```/g)].map(
     (m) => m[1] ?? "",
   );
+  const rest = text.replace(/```[^\n`]*\n[\s\S]*?```/g, "");
+  const inline = [...rest.matchAll(/`([^`\n]+)`/g)]
+    .map((m) => m[1] ?? "")
+    // Только похожее на код: тег, JSX, правило CSS; голое имя иконки — не код.
+    .filter((code) => /[<{=(]/.test(code));
+  return [...fenced, ...inline];
 }
 
 const TAG_RE = /<iconavo-icon\b[^>]*\bicon\s*=\s*["'][a-z0-9-]+:[a-z0-9-]+["']/;
@@ -1003,6 +1026,7 @@ export async function runClients(o: ClientsOptions): Promise<ClientsReport> {
       }
       o.log?.(`${s.id}. ${s.prompt}`);
       let followUp: string | undefined;
+      const raw: string[] = [];
       const t = await runClaude({
         cwd: dir,
         prompt: s.prompt,
@@ -1013,7 +1037,14 @@ export async function runClients(o: ClientsOptions): Promise<ClientsReport> {
           followUp = findFollowUp(s, tables, sofar);
           return followUp;
         },
+        onLine: (line) => raw.push(line),
       });
+      // Журнал разговора — для разбора ошибок: что модель увидела от инструментов и что ответила.
+      await writeFile(
+        join(shotsDir, `s${String(s.id).padStart(2, "0")}.jsonl`),
+        `${raw.join("\n")}\n`,
+        "utf8",
+      );
       report.version ||= t.init?.version ?? "";
       if (t.subscriptionLimited) report.stoppedBySubscription = true;
       const files = await changedFiles(dir, fixture);

@@ -254,6 +254,31 @@ describe("имена иконок", () => {
   });
 });
 
+describe("как Claude Code отдаёт ответы", () => {
+  it("выдача — данными JSON (results с n и icon), а не текстом; код — и в ячейках таблицы", () => {
+    expect(
+      numberedIcons(
+        JSON.stringify({
+          query: "trophy",
+          results: [
+            { n: 1, icon: "material-symbols:trophy", set: "x" },
+            { n: 4, icon: "lucide:trophy", set: "y" },
+          ],
+        }),
+      ),
+    ).toEqual([
+      { n: 1, icon: "material-symbols:trophy" },
+      { n: 4, icon: "lucide:trophy" },
+    ]);
+    const table =
+      '| Play | `tabler:player-play` | `<iconavo-icon icon="tabler:player-play" width="24"></iconavo-icon>` |\n```\nnpm install @iconavo-ui/icon\n```';
+    expect(codeBlocks(table)).toEqual([
+      "npm install @iconavo-ui/icon\n",
+      '<iconavo-icon icon="tabler:player-play" width="24"></iconavo-icon>',
+    ]);
+  });
+});
+
 describe("признаки", () => {
   it("вид кода: тег и React — только со строкой установки, SVG, CSS, Next.js", () => {
     const tag = '<iconavo-icon icon="lucide:trash" width="24"></iconavo-icon>';
