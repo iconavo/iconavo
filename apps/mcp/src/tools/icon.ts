@@ -31,9 +31,9 @@ import {
 export const ICON_NAME = "get_icon";
 
 export const ICON_DESCRIPTION = [
-  'Get ready-to-paste code for one icon by its full name from search_icons, e.g. "lucide:house".',
+  'Get ready-to-paste code for one icon by its full name from search_icons, e.g. "lucide:house" — use it instead of writing SVG or CSS for an icon yourself.',
   'By default the code uses the Iconavo package: format "html" — the <iconavo-icon> web component (works in any framework and in plain HTML);',
-  'use format "react" in React and Next.js projects; use "svg" only when the user explicitly needs raw SVG markup, and "css" for a CSS class with the icon.',
+  'use format "react" in React and Next.js projects; use "svg" only when the user explicitly needs raw SVG markup, and "css" for a CSS class with the icon as a mask, without JavaScript.',
   "Also returns the icon's set, license, author and attribution text, other styles of the same drawing, similar icons in the same style and a description.",
   "Call get_usage once per project to install and set up the package.",
 ].join(" ");

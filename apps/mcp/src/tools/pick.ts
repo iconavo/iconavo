@@ -36,7 +36,7 @@ export const PICK_NAME = "pick_icon";
 export const PICK_DESCRIPTION = [
   'The default answer when the user asks to find, show or pick an icon, in any language, e.g. "share button" or "корзина": shows an interactive grid of 12 icons right in the chat — in clients that support MCP Apps (Claude, ChatGPT, VS Code and others). Call it directly, without searching first.',
   "In the grid the user picks an icon, its color, stroke width and the kind of code (HTML web component, React, SVG or CSS) and presses Select: the ready code, license and author arrive in your context, and the user asks for that code in the chat — reply with it.",
-  "To choose icons by yourself, for example while writing UI code, use search_icons and get_icon.",
+  "To choose icons by yourself, for example while writing UI code, use search_icons and get_icon; for several icons that must look alike (a menu, a toolbar), use get_matching_set.",
   "Without MCP Apps you get a numbered list and ONE PNG image of the same icons: show it, ask the user for a number, then call get_icon.",
 ].join(" ");
 

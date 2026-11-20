@@ -54,7 +54,7 @@ export const SearchInput = z.object({
     .optional()
     .describe('Only these sets, e.g. ["lucide", "tabler"]; default — all sets'),
   style: StyleSchema.optional().describe(
-    "Only this style: outline (line icons), filled (solid), duotone (two tones), color (multicolor, emoji)",
+    'Only this style: outline (line icons), filled (solid), duotone (two tones), color (multicolor emoji — Fluent Emoji Flat). Set "color" when the user asks for an emoji',
   ),
   license: z
     .string()

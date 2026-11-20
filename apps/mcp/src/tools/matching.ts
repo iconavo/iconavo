@@ -63,6 +63,7 @@ export const MATCHING_DESCRIPTION = [
   'Pass like with an icon already used in the project (e.g. "ph:house-bold") to match its set, style and variant; or pass set and style;',
   "otherwise the set and style that cover the most concepts are chosen.",
   "Returns one icon per concept with ready code, two alternatives and the license and author of the set.",
+  "Reply with the code of each icon, the setup lines and the license — not only the icon names.",
 ].join(" ");
 
 export const MatchingInput = z.object({

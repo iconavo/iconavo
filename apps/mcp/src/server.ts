@@ -66,10 +66,13 @@ import {
 
 export const INSTRUCTIONS = [
   "Iconavo is a catalog of open-source icons (Lucide, Tabler, Material Symbols, Phosphor, Fluent Emoji Flat) with search by meaning in any language.",
+  "Use these tools whenever the user needs an icon in any form — the <iconavo-icon> web component, React, raw SVG markup or a CSS class — instead of drawing an icon or recalling its markup yourself: get_icon returns all four formats with the license.",
   "When the user asks to find, show or pick an icon, call pick_icon right away: it shows a grid in the chat where the user picks the icon, its color, stroke width and the kind of code, and the ready code comes back in your context.",
   "When you choose icons yourself, for example while writing UI code: search_icons to find candidates (its PNG preview numbers them in the same order as the list) → get_icon for ready code →",
-  "get_usage once per project to install the package. For several icons that must look alike, such as a menu or a toolbar, use get_matching_set.",
-  "Code uses the Iconavo package by default (the <iconavo-icon> web component, or React); give raw SVG only when the user asks for it.",
+  "get_usage once per project to install the package.",
+  "For several icons that must look alike, such as a menu or a toolbar, call get_matching_set and reply with the code of each icon, the setup lines and the license — not only the icon names.",
+  'For emoji, set style "color": Fluent Emoji Flat is the multicolor emoji set.',
+  "Code uses the Iconavo package by default (the <iconavo-icon> web component, or React); give raw SVG or a CSS class when the user asks for them.",
   "Every icon keeps the license of its set: tell the user the license and author shown in each response and keep the attribution.",
 ].join(" ");
 
