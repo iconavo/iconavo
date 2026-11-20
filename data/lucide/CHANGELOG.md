@@ -4,6 +4,15 @@
 Имена не пропадают: иконка, которую удалил автор, скрыта, но работает по имени, а старое имя переименованной ведёт на новое (ADR-0005).
 Скрытия и переименования вы одобряете лично в pull request (ADR-0019). Полные списки — в `changelog.json`.
 
+## 20 ноября 2026 · версия de1020d4
+
+Прошлая версия: c740a58a · источник: 742ea78 · иконок: 2 098.
+
+**Изменения**
+
+- Добавлены (6): `box-dashed`, `chocolate-bar`, `folder-network`, `folder-plus-corner`, `rectangle-landscape-play`, `user-round-clock`
+- Изменены (5): `calendar-clock`, `clipboard-clock`, `file-clock`, `folder-clock`, `mail-clock`
+
 ## 19 ноября 2026 · версия c740a58a
 
 Прошлая версия: ba0790b2 · источник: de8d11a · иконок: 2 092.
