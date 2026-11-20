@@ -36,6 +36,14 @@ export interface McpDeps {
   render: PngRenderer;
   /** Строки установки и разделы README тега — вшиты при сборке (pnpm mcp build). */
   usage: Usage;
+  /** Страница сетки выбора pick_icon (ADR-0045) — вшита при сборке. */
+  picker: PickerPage;
+}
+
+/** Страница сетки выбора: HTML со всем внутри и его версия — 8 знаков SHA-256. */
+export interface PickerPage {
+  html: string;
+  version: string;
 }
 
 /** Один запрос клиента MCP. */
@@ -51,6 +59,7 @@ export interface DepsOptions {
   log: (message: string) => void;
   render: PngRenderer;
   usage: Usage;
+  picker: PickerPage;
   now?: () => number;
   /** Подменный fetch для тестов и превью. */
   fetch?: typeof fetch;
@@ -95,5 +104,6 @@ export function createDeps(env: Env, o: DepsOptions): McpDeps {
     log: o.log,
     render: o.render,
     usage: o.usage,
+    picker: o.picker,
   };
 }

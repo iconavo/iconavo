@@ -38,6 +38,16 @@ export const SEARCH_OFFSET_MAX = 1000 - SEARCH_LIMIT_MAX;
 /** Список инструментов клиент может хранить час (протокол 2026-07-28): он меняется только выкладкой. */
 export const TOOLS_LIST_TTL_MS = 3_600_000;
 
+/**
+ * Сетка выбора в чате (pick_icon, ADR-0045): адрес интерфейса с версией страницы — клиенты MCP Apps могут
+ * хранить интерфейс у себя, и новая сборка получает новый адрес. Шаблон отдаёт текущую страницу по
+ * любой версии: список инструментов со старым адресом живёт у клиента до часа.
+ */
+export const PICKER_TEMPLATE = "ui://picker/{version}";
+export const pickerUri = (version: string) => `ui://picker/${version}`;
+/** Версия — 8 знаков SHA-256 страницы (pnpm mcp build). */
+export const PICKER_VERSION = /^[0-9a-f]{8}$/;
+
 /** Готовая картинка-сетка — неделю в кэше дата-центра: имена и версии наборов — в ключе. */
 export const GRID_CACHE = "public, max-age=604800";
 

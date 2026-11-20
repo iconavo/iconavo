@@ -3,7 +3,7 @@
 // имена, стиль, лицензия и автор каждой иконки и одна PNG-картинка: сетка с номерами, номер клетки —
 // номер в списке. Готовая картинка — в кэше дата-центра по именам и версиям наборов.
 
-import { iconData } from "@iconavo-ui/core/internal";
+import { type IconData, iconData } from "@iconavo-ui/core/internal";
 import type { IconSetSummary, SearchResponse, Style } from "@iconavo-ui/search";
 import type { CallToolResult } from "@modelcontextprotocol/server";
 import * as z from "zod";
@@ -84,7 +84,7 @@ export const SearchInput = z.object({
 
 export type SearchArgs = z.output<typeof SearchInput>;
 
-const ResultSchema = z.object({
+export const ResultSchema = z.object({
   n: z.number().int().describe("Number of the cell in the preview image"),
   icon: IconNameOut(),
   set: z.string(),
@@ -158,11 +158,61 @@ export function searchParams(args: SearchArgs): URLSearchParams {
   return q;
 }
 
-/** Картинка-сетка: из кэша дата-центра или нарисованная заново (файлы имён — тем же readNames). */
-async function preview(
+/** Рисунок по имени и его каноническое имя: алиас — имя иконки, к которой он ведёт (как /icon). */
+export interface ReadIcon {
+  canonical: string;
+  data: IconData;
+}
+
+/**
+ * Рисунки по полным именам: файлы имён из кэша дата-центра или R2 (readNames, как у пачек edge API),
+ * по одному чтению на набор. Нет файла или рисунка — null.
+ */
+export async function readIcons(
   deps: McpDeps,
   call: Call,
   names: readonly string[],
+): Promise<Map<string, ReadIcon | null>> {
+  const manifest = await deps.routes.manifest();
+  const sets = [...new Set(names.map(setOf))].sort();
+  const icons = new Map<string, ReadIcon | null>();
+  await Promise.all(
+    sets.map(async (set) => {
+      const version = manifest.get(set)?.version ?? "none";
+      const bare = [
+        ...new Set(names.filter((n) => setOf(n) === set).map(bareOf)),
+      ];
+      const read = await readNames(deps.bucket, version, set, bare, {
+        cache: deps.cache,
+        now: deps.now,
+        log: deps.log,
+      });
+      call.waitUntil(storeNames(deps.cache, version, set, read, deps.log));
+      for (const name of bare) {
+        const file = read.files.get(name);
+        const canonical = file ? Object.keys(file.icons)[0] : undefined;
+        const data = file ? iconData(file, name) : null;
+        icons.set(
+          `${set}:${name}`,
+          canonical === undefined || data === null
+            ? null
+            : { canonical: `${set}:${canonical}`, data },
+        );
+      }
+    }),
+  );
+  return icons;
+}
+
+/**
+ * Картинка-сетка: из кэша дата-центра или нарисованная заново. Рисунки, уже прочитанные вызывающим
+ * (pick_icon), второй раз не читаются.
+ */
+export async function gridPreview(
+  deps: McpDeps,
+  call: Call,
+  names: readonly string[],
+  known?: ReadonlyMap<string, ReadIcon | null>,
 ): Promise<Uint8Array> {
   const manifest = await deps.routes.manifest();
   const sets = [...new Set(names.map(setOf))].sort();
@@ -181,24 +231,13 @@ async function preview(
       // Тело записи оборвалось — рисуем заново.
     }
   }
-  const icons = new Map<string, ReturnType<typeof iconData>>();
-  await Promise.all(
-    sets.map(async (set, i) => {
-      const version = versions[i] as string;
-      const bare = names.filter((n) => setOf(n) === set).map(bareOf);
-      const read = await readNames(deps.bucket, version, set, bare, {
-        cache: deps.cache,
-        now: deps.now,
-        log: deps.log,
-      });
-      call.waitUntil(storeNames(deps.cache, version, set, read, deps.log));
-      for (const name of bare) {
-        const file = read.files.get(name);
-        icons.set(`${set}:${name}`, file ? iconData(file, name) : null);
-      }
-    }),
+  const missing = names.filter((n) => known?.has(n) !== true);
+  const read =
+    missing.length === 0 ? new Map() : await readIcons(deps, call, missing);
+  const icons = names.map(
+    (n) => (known?.get(n) ?? read.get(n) ?? null)?.data ?? null,
   );
-  const grid = gridSvg(names.map((n) => icons.get(n) ?? null));
+  const grid = gridSvg(icons);
   const png = deps.render(grid.svg);
   call.waitUntil(
     deps.cache
@@ -243,48 +282,75 @@ function text(result: SearchResult, sets: IconSetSummary[]): string {
   return lines.join("\n");
 }
 
+/** Найденное: карточки ответа с лицензией и автором и сведения о наборах. */
+export interface FoundIcons {
+  ranking: "meaning" | "words";
+  matched: boolean;
+  results: SearchResult["results"];
+  sets: IconSetSummary[];
+}
+
+/** Поиск тем же маршрутом, что /search edge API (общий у search_icons и pick_icon). */
+export async function findIcons(
+  deps: McpDeps,
+  call: Call,
+  args: SearchArgs,
+): Promise<FoundIcons> {
+  const params = searchParams(args);
+  const url = new URL(`https://mcp.iconavo.dev/search?${params}`);
+  const response = await deps.routes.search(
+    call.request,
+    url,
+    call.waitUntil,
+    false,
+  );
+  const found = (await response.json()) as SearchResponse;
+  const prefixes = [...new Set(found.icons.map(setOf))];
+  const sets = await setsInfo(deps, prefixes);
+  const bySet = new Map(sets.map((s) => [s.prefix, s]));
+  const results = found.results.map((card, i) => {
+    const shown = found.icons[i] ?? card.icon;
+    const set = setOf(shown);
+    const info = bySet.get(set);
+    const styles = Object.fromEntries(
+      Object.entries(card.styles).map(([style, name]) => [
+        style,
+        `${set}:${name}`,
+      ]),
+    );
+    return {
+      n: i + 1,
+      icon: shown,
+      set,
+      style: styleOf(shown, card.styles),
+      styles,
+      ...(card.exact ? { exact: true } : {}),
+      license: info?.license.spdx ?? "",
+      author: info?.author.name ?? "",
+    };
+  });
+  return {
+    ranking: found.semantic === "full" ? "meaning" : "words",
+    matched: found.matched,
+    results,
+    sets,
+  };
+}
+
 export async function searchIcons(
   deps: McpDeps,
   call: Call,
   args: SearchArgs,
 ): Promise<CallToolResult> {
   try {
-    const params = searchParams(args);
-    const url = new URL(`https://mcp.iconavo.dev/search?${params}`);
-    const response = await deps.routes.search(
-      call.request,
-      url,
-      call.waitUntil,
-      false,
+    const { ranking, matched, results, sets } = await findIcons(
+      deps,
+      call,
+      args,
     );
-    const found = (await response.json()) as SearchResponse;
-    const prefixes = [...new Set(found.icons.map(setOf))];
-    const sets = await setsInfo(deps, prefixes);
-    const bySet = new Map(sets.map((s) => [s.prefix, s]));
-    const results = found.results.map((card, i) => {
-      const shown = found.icons[i] ?? card.icon;
-      const set = setOf(shown);
-      const info = bySet.get(set);
-      const styles = Object.fromEntries(
-        Object.entries(card.styles).map(([style, name]) => [
-          style,
-          `${set}:${name}`,
-        ]),
-      );
-      return {
-        n: i + 1,
-        icon: shown,
-        set,
-        style: styleOf(shown, card.styles),
-        styles,
-        ...(card.exact ? { exact: true } : {}),
-        license: info?.license.spdx ?? "",
-        author: info?.author.name ?? "",
-      };
-    });
     const withPreview = args.preview && results.length > 0;
     const png = withPreview
-      ? await preview(
+      ? await gridPreview(
           deps,
           call,
           results.map((r) => r.icon),
@@ -292,8 +358,8 @@ export async function searchIcons(
       : undefined;
     const result: SearchResult = {
       query: args.query,
-      ranking: found.semantic === "full" ? "meaning" : "words",
-      matched: found.matched,
+      ranking,
+      matched,
       offset: args.offset,
       count: results.length,
       ...(results.length === args.limit &&

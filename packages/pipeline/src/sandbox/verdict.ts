@@ -2,7 +2,7 @@
 // раскладка текста, сторожа консоли и нарушений CSP, снимки. Чистые части проверяются тестами без
 // браузера.
 
-import type { Page } from "playwright";
+import type { Frame, Page } from "playwright";
 
 /** Итог проверки в браузере: true — да, false — нет, null — только сведения или не проверялось. */
 export interface Verdict {
@@ -99,7 +99,8 @@ export async function recordViolations(page: Page): Promise<void> {
   });
 }
 
-export const violations = (page: Page) =>
+/** Нарушения CSP страницы или рамки внутри неё: слушатель recordViolations ставится в каждую рамку. */
+export const violations = (page: Page | Frame) =>
   page.evaluate(
     () => (window as unknown as { violations?: string[] }).violations ?? [],
   );

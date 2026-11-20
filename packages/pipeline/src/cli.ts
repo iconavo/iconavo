@@ -162,14 +162,28 @@ import { buildNext, freePort, startNext } from "./example/next.js";
 import { REACT18, startReact18 } from "./example/react18.js";
 import { buildIconScript, SCRIPT_FILE } from "./icon/build.js";
 import { benchMcp, formatMcpBench } from "./mcp/bench.js";
-import { buildMcp } from "./mcp/build.js";
+import { buildMcp, readUsage } from "./mcp/build.js";
 import { checkMcp, mcpCheckFailed } from "./mcp/check.js";
 import {
   formatMcpCheck,
   renderMcpCheckMarkdown,
   renderMcpCheckPage,
 } from "./mcp/check-report.js";
-import { MCP_ORIGIN, MCP_OUT_DIR, MCP_PREVIEW_PORT } from "./mcp/config.js";
+import {
+  MCP_ORIGIN,
+  MCP_OUT_DIR,
+  MCP_PREVIEW_PORT,
+  PICKER_PORT,
+} from "./mcp/config.js";
+import { checkPicker, pickerCheckFailed } from "./mcp/picker-check.js";
+import {
+  formatPickerCheck,
+  markdownPickerCheck,
+  renderPickerCheckPage,
+} from "./mcp/picker-check-report.js";
+import { pickerScenarios } from "./mcp/picker-fixtures.js";
+import { startPickerHost } from "./mcp/picker-host.js";
+import { liveScenarios } from "./mcp/picker-live.js";
 import { startMcpPreview } from "./mcp/preview.js";
 import { type MeiliClient, meiliClient } from "./meili/client.js";
 import {
@@ -466,6 +480,14 @@ const USAGE = `Использование:
                                       запретами Workers (eval, компиляция wasm из байтов); данные —
                                       из dist-cdn/, поиск — Meilisearch и Polza из .env
       --port=N                        порт (по умолчанию ${MCP_PREVIEW_PORT})
+  pnpm mcp picker                     страница просмотра сетки выбора в чате (MCP Apps, шаг 11 фазы 4):
+                                      сценарии из data/ в рамке со строгой политикой, что получил ассистент
+      --port=N                        порт (по умолчанию ${PICKER_PORT})
+      --check                         проверить сетку в Chrome, Firefox и WebKit: рисунки, тема, стиль,
+                                      цвет, «Выбрать», клавиатура, политика рамки, axe, контрольный
+                                      запуск; .cache/reports/mcp/picker.html и picker.md
+      --browser=…                     только этот браузер: chrome, firefox или webkit
+      --base=…                        с --check: страница и ответы живого MCP-сервера
   pnpm mcp check                      проверить живой ${MCP_ORIGIN} клиентом SDK на обоих протоколах:
                                       HTTP, список инструментов, вызовы search_icons с картинкой и
                                       лицензиями; страница .cache/reports/mcp/check.html и check.md
@@ -865,7 +887,8 @@ for (const flag of flags) {
     command === "sandbox" ||
     command === "example" ||
     command === "visual" ||
-    command === "starters"
+    command === "starters" ||
+    command === "mcp"
   ) {
     if (flag === "--check" && command !== "visual") {
       checkBrowsers = true;
@@ -2645,21 +2668,29 @@ try {
     if (
       (sub !== "build" &&
         sub !== "preview" &&
+        sub !== "picker" &&
         sub !== "check" &&
         sub !== "bench") ||
       rest.length > 0 ||
-      (sub !== "preview" && flags.some((f) => f.startsWith("--port="))) ||
+      (sub !== "preview" &&
+        sub !== "picker" &&
+        flags.some((f) => f.startsWith("--port="))) ||
       (sub !== "check" && expectBuild !== undefined) ||
-      (sub !== "check" && sub !== "bench" && benchBase !== undefined)
+      (sub !== "check" &&
+        sub !== "bench" &&
+        sub !== "picker" &&
+        benchBase !== undefined) ||
+      (sub !== "picker" && (checkBrowsers || browserName !== undefined)) ||
+      (sub === "picker" && !checkBrowsers && benchBase !== undefined)
     ) {
       usageError(
-        "pnpm mcp: нужна подкоманда build, preview [--port=N], check [--expect-build=…] [--base=…] или bench [--base=…].",
+        "pnpm mcp: нужна подкоманда build, preview [--port=N], picker [--port=N] или picker --check [--browser=…] [--base=…], check [--expect-build=…] [--base=…] или bench [--base=…].",
       );
     }
     if (sub === "build") {
       const report = await buildMcp({ root, outDir: distMcpDir });
       console.log(
-        `MCP-сервер: ${MCP_OUT_DIR}/${WORKER_FILE} — ${formatBytes(report.bytes)}, в gzip ${formatBytes(report.gzipBytes)}; resvg.wasm — ${formatBytes(report.wasmBytes)}; сборка ${report.build}.`,
+        `MCP-сервер: ${MCP_OUT_DIR}/${WORKER_FILE} — ${formatBytes(report.bytes)}, в gzip ${formatBytes(report.gzipBytes)}; resvg.wasm — ${formatBytes(report.wasmBytes)}; сетка выбора ${report.picker.version} — ${formatBytes(report.picker.bytes)}, в gzip ${formatBytes(report.picker.gzipBytes)}; сборка ${report.build}.`,
       );
       console.log(
         report.written.length === 0
@@ -2714,44 +2745,109 @@ try {
       );
       process.exit(report.passes.some((x) => x.errors.length > 0) ? 1 : 0);
     }
-    // Превью: раздача — от текущего data/, функция — свежая сборка, поиск — из .env.
-    const cdn = await buildCdn(configs, { dataDir, outDir: distCdnDir });
-    if (cdnStop(cdn)) {
-      console.error(
-        "Сборка раздачи остановлена — превью без данных не запустить: pnpm cdn build покажет почему.",
+    if (sub === "picker" && checkBrowsers) {
+      // Проверка сетки выбора в браузерах (шаг 11 фазы 4): сборка этой ветки на данных data/ или, с
+      // --base, страница и ответы живого MCP-сервера.
+      const live =
+        benchBase === undefined ? undefined : await liveScenarios(benchBase);
+      const scenarios =
+        live?.scenarios ??
+        (await pickerScenarios({
+          configs,
+          dataDir,
+          install: (await readUsage(root)).install,
+        }));
+      const browsers = browserName === undefined ? BROWSERS : [browserName];
+      console.log(
+        `Проверяю сетку выбора в чате${live === undefined ? " этой ветки" : ` живого ${benchBase}, страница ${live.page.version}`} в ${browsers.map((b) => BROWSER_TITLES[b]).join(", ")}…`,
       );
-      process.exit(1);
+      const results = await checkPicker({
+        root,
+        scenarios,
+        browsers,
+        ...(live === undefined ? {} : { page: live.page }),
+        log: (line) => console.log(`  ${line}`),
+      });
+      for (const line of formatPickerCheck(results)) console.log(line);
+      await mkdir(reportDir, { recursive: true });
+      const htmlPath = join(reportDir, "picker.html");
+      await writeFile(
+        htmlPath,
+        renderPickerCheckPage(
+          results,
+          live === undefined
+            ? "Сборка этой ветки, данные — сценарии из data/"
+            : `Живой ${benchBase}, страница ${live.page.version}`,
+        ),
+        "utf8",
+      );
+      await writeFile(
+        join(reportDir, "picker.md"),
+        markdownPickerCheck(results),
+        "utf8",
+      );
+      console.log(`Отчёт: ${htmlPath}`);
+      process.exit(pickerCheckFailed(results) ? 1 : 0);
+    } else if (sub === "picker") {
+      // Сетка выбора в чате (шаг 11 фазы 4): страница-хост со сценариями из data/, без сервера и сети.
+      const scenarios = await pickerScenarios({
+        configs,
+        dataDir,
+        install: (await readUsage(root)).install,
+      });
+      const host = await startPickerHost({
+        root,
+        port: flags.some((f) => f.startsWith("--port=")) ? port : PICKER_PORT,
+        scenarios,
+      });
+      console.log(
+        `Сетка выбора в чате: http://127.0.0.1:${host.port}/ — сборка ${host.build.version}, ${formatBytes(host.build.bytes)}, в gzip ${formatBytes(host.build.gzipBytes)}; сценариев — ${scenarios.length}. Остановить — Ctrl+C.`,
+      );
+      const stopPicker = () => {
+        host.close().then(() => process.exit(0));
+      };
+      process.once("SIGINT", stopPicker);
+      process.once("SIGTERM", stopPicker);
+    } else {
+      // Превью: раздача — от текущего data/, функция — свежая сборка, поиск — из .env.
+      const cdn = await buildCdn(configs, { dataDir, outDir: distCdnDir });
+      if (cdnStop(cdn)) {
+        console.error(
+          "Сборка раздачи остановлена — превью без данных не запустить: pnpm cdn build покажет почему.",
+        );
+        process.exit(1);
+      }
+      const searchUrl = process.env[SEARCH_ENV.url]?.trim() ?? "";
+      const searchKey =
+        process.env[SEARCH_ENV.readKey]?.trim() ||
+        process.env[SEARCH_ENV.adminKey]?.trim() ||
+        "";
+      const polzaKey = process.env.POLZA_API_KEY?.trim() ?? "";
+      const preview = await startMcpPreview({
+        root,
+        outDir: distMcpDir,
+        cdnDir: distCdnDir,
+        port,
+        ...(searchUrl !== "" && searchKey !== ""
+          ? {
+              search: {
+                url: searchUrl,
+                key: searchKey,
+                dir: join(root, ".cache", "search", "preview-bucket"),
+                ...(polzaKey === "" ? {} : { polzaKey }),
+              },
+            }
+          : {}),
+      });
+      console.log(
+        `Превью MCP-сервера: http://127.0.0.1:${preview.port}/mcp — сборка ${preview.build}, данные из dist-cdn/${searchUrl === "" ? ", без поиска (нет ключей в .env)" : ""}. Остановить — Ctrl+C.`,
+      );
+      const stopPreview = () => {
+        preview.close().then(() => process.exit(0));
+      };
+      process.once("SIGINT", stopPreview);
+      process.once("SIGTERM", stopPreview);
     }
-    const searchUrl = process.env[SEARCH_ENV.url]?.trim() ?? "";
-    const searchKey =
-      process.env[SEARCH_ENV.readKey]?.trim() ||
-      process.env[SEARCH_ENV.adminKey]?.trim() ||
-      "";
-    const polzaKey = process.env.POLZA_API_KEY?.trim() ?? "";
-    const preview = await startMcpPreview({
-      root,
-      outDir: distMcpDir,
-      cdnDir: distCdnDir,
-      port,
-      ...(searchUrl !== "" && searchKey !== ""
-        ? {
-            search: {
-              url: searchUrl,
-              key: searchKey,
-              dir: join(root, ".cache", "search", "preview-bucket"),
-              ...(polzaKey === "" ? {} : { polzaKey }),
-            },
-          }
-        : {}),
-    });
-    console.log(
-      `Превью MCP-сервера: http://127.0.0.1:${preview.port}/mcp — сборка ${preview.build}, данные из dist-cdn/${searchUrl === "" ? ", без поиска (нет ключей в .env)" : ""}. Остановить — Ctrl+C.`,
-    );
-    const stopPreview = () => {
-      preview.close().then(() => process.exit(0));
-    };
-    process.once("SIGINT", stopPreview);
-    process.once("SIGTERM", stopPreview);
   } else if (command === "icon") {
     if (args.length !== 1 || args[0] !== "build") {
       usageError("pnpm icon: нужна подкоманда build.");

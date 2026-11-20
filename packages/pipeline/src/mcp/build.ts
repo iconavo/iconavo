@@ -36,14 +36,25 @@ import {
   MCP_SEARCH_LIMIT_NAMESPACE,
   MCP_SEARCH_RATE,
   MCP_TSCONFIG,
+  PICKER_MODULE,
   README_MODULE,
   WASM_FILE,
   WASM_IMPORT,
   WASM_PACKAGE_FILE,
 } from "./config.js";
+import { buildPicker } from "./picker-build.js";
 
-/** Цель сборки MCP; usage — строки установки и разделы README тега для get_usage. */
-export function mcpTarget(usage: Usage): WorkerTarget {
+/** Страница сетки выбора: HTML и версия — то, что получает функция. */
+export interface PickerModule {
+  html: string;
+  version: string;
+}
+
+/**
+ * Цель сборки MCP; usage — строки установки и разделы README тега для get_usage, picker — страница
+ * сетки выбора pick_icon.
+ */
+export function mcpTarget(usage: Usage, picker: PickerModule): WorkerTarget {
   return {
     entry: MCP_ENTRY,
     tsconfig: MCP_TSCONFIG,
@@ -51,6 +62,8 @@ export function mcpTarget(usage: Usage): WorkerTarget {
     wasm: WASM_IMPORT,
     virtual: {
       [README_MODULE]: `export default ${JSON.stringify(usage)};
+`,
+      [PICKER_MODULE]: `export default ${JSON.stringify({ html: picker.html, version: picker.version })};
 `,
     },
   };
@@ -66,6 +79,8 @@ export interface McpBuildReport {
   bytes: number;
   gzipBytes: number;
   wasmBytes: number;
+  /** Страница сетки выбора: версия и размер. */
+  picker: { version: string; bytes: number; gzipBytes: number };
   /** Записанные файлы; пусто — без изменений. */
   written: string[];
 }
@@ -135,9 +150,10 @@ async function writeBytesIfChanged(
 export async function buildMcp(
   options: McpBuildOptions,
 ): Promise<McpBuildReport> {
+  const picker = await buildPicker(options.root);
   const code = await bundleWorker(
     options.root,
-    mcpTarget(await readUsage(options.root)),
+    mcpTarget(await readUsage(options.root), picker),
   );
   const wasm = await readResvgWasm(options.root);
   const metadata = canonicalJson(mcpMetadata());
@@ -156,6 +172,11 @@ export async function buildMcp(
         bytes,
         gzipBytes,
         wasmBytes: wasm.length,
+        picker: {
+          version: picker.version,
+          bytes: picker.bytes,
+          gzipBytes: picker.gzipBytes,
+        },
         sha256: sha256(stamped.code),
       }),
     ],
@@ -173,6 +194,11 @@ export async function buildMcp(
     bytes,
     gzipBytes,
     wasmBytes: wasm.length,
+    picker: {
+      version: picker.version,
+      bytes: picker.bytes,
+      gzipBytes: picker.gzipBytes,
+    },
     written,
   };
 }

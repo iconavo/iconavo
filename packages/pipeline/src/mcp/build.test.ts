@@ -15,9 +15,21 @@ import {
 
 const ROOT = fileURLToPath(new URL("../../../../", import.meta.url));
 
+/**
+ * Заглушка страницы сетки: проверки чистоты бандла смотрят код функции регулярками, а в настоящей
+ * странице — код вида для браузера (свой zod, PostMessageTransport).
+ */
+const PICKER = {
+  html: '<!doctype html><title>stub</title><main id="picker"></main>',
+  version: "00000000",
+};
+
 describe("bundleWorker: MCP-сервер", () => {
   it("один ES-модуль: единственный импорт — модуль wasm рисовальщика, export default, одна метка", async () => {
-    const code = await bundleWorker(ROOT, mcpTarget(await readUsage(ROOT)));
+    const code = await bundleWorker(
+      ROOT,
+      mcpTarget(await readUsage(ROOT), PICKER),
+    );
     expect(code.split("\n")[0]).toBe('import resvgWasm from "./resvg.wasm";');
     expect(code.match(/^\s*import[\s{*"']/gm)).toHaveLength(1);
     expect(code).not.toMatch(/\bimport\(|\brequire\(/);
@@ -26,7 +38,10 @@ describe("bundleWorker: MCP-сервер", () => {
   });
 
   it("сборки SDK под Workers: проверка схем без eval (cf-worker), без ajv и модулей Node; одна копия zod", async () => {
-    const code = await bundleWorker(ROOT, mcpTarget(await readUsage(ROOT)));
+    const code = await bundleWorker(
+      ROOT,
+      mcpTarget(await readUsage(ROOT), PICKER),
+    );
     expect(code).toContain("CfWorkerJsonSchemaValidator");
     // ajv строит проверки через new Function — в Workers это запрещено.
     expect(code).not.toMatch(/new Ajv\(|class Ajv\w*\b/);
@@ -38,11 +53,26 @@ describe("bundleWorker: MCP-сервер", () => {
 describe("README тега в бандле", () => {
   it("строки установки и разделы для get_usage вшиты модулем без файла", async () => {
     const usage = await readUsage(ROOT);
-    const code = await bundleWorker(ROOT, mcpTarget(usage));
+    const code = await bundleWorker(ROOT, mcpTarget(usage, PICKER));
     // Строки — как в README (у </script> rolldown экранирует косую черту: так строку можно вставить в HTML).
     expect(code).toContain(JSON.stringify(usage.install.tag.import));
     expect(code).toContain(JSON.stringify(usage.version));
     expect(code).not.toMatch(/from "virtual:/);
+  });
+});
+
+describe("сетка выбора в бандле (pick_icon, ADR-0045)", () => {
+  it("страница вшита модулем без файла; в функции только серверная часть SDK MCP Apps, кода вида нет", async () => {
+    const code = await bundleWorker(
+      ROOT,
+      mcpTarget(await readUsage(ROOT), PICKER),
+    );
+    expect(code).toContain(JSON.stringify(PICKER.html));
+    expect(code).toContain('"text/html;profile=mcp-app"');
+    expect(code).toContain('"ui/resourceUri"');
+    expect(code).not.toMatch(
+      /PostMessageTransport|ResizeObserver|postMessage\(/,
+    );
   });
 });
 
@@ -84,7 +114,13 @@ describe("buildMcp", () => {
     ).toEqual(mcpMetadata());
     expect(
       JSON.parse(await readFile(join(outDir, "build.json"), "utf8")),
-    ).toMatchObject({ build: first.build, wasmBytes: wasm.length });
+    ).toMatchObject({
+      build: first.build,
+      wasmBytes: wasm.length,
+      picker: first.picker,
+    });
+    expect(first.picker.version).toMatch(/^[0-9a-f]{8}$/);
+    expect(worker).toContain(first.picker.version);
   });
 
   it("metadata: бакеты раздачи и поиска, свои лимиты частоты 1003 и 1004, предел процессора, журнал без запросов", () => {

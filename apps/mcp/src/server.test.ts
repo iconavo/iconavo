@@ -1,12 +1,12 @@
 import { describe, expect, it } from "vitest";
 import { fakeLimiter } from "../../api/src/fake.testing.js";
-import { FEATHER, mcpSetup, PNG_SIGNATURE } from "./fake.testing.js";
+import { FEATHER, mcpSetup, PICKER, PNG_SIGNATURE } from "./fake.testing.js";
 
 const textOf = (result: { content: { type: string; text?: string }[] }) =>
   result.content.find((c) => c.type === "text")?.text ?? "";
 
 describe("MCP: список инструментов", () => {
-  it("пять инструментов ADR-0011 с точными описаниями, схемами входа и ответа, только чтение", async () => {
+  it("шесть инструментов ADR-0011 и ADR-0045 с точными описаниями, схемами входа и ответа, только чтение", async () => {
     const s = mcpSetup();
     const { res, body } = await s.rpc("tools/list");
     expect(res.status).toBe(200);
@@ -19,6 +19,7 @@ describe("MCP: список инструментов", () => {
       "get_matching_set",
       "get_usage",
       "list_sets",
+      "pick_icon",
     ]);
     for (const tool of tools) {
       expect(tool.outputSchema, String(tool.name)).toBeDefined();
@@ -68,7 +69,99 @@ describe("MCP: список инструментов", () => {
       version: "test",
     });
     expect(result.instructions).toMatch(/license/);
+    expect(result.instructions).toMatch(/pick_icon/);
     expect(result.capabilities.tools.listChanged).toBe(false);
+  });
+});
+
+describe("MCP: интерфейс сетки выбора (MCP Apps, ADR-0045)", () => {
+  const uri = `ui://picker/${PICKER.version}`;
+
+  it("pick_icon ссылается на интерфейс: адрес с версией страницы, ключ спецификации и прежний плоский", async () => {
+    const s = mcpSetup();
+    const { body } = await s.rpc("tools/list");
+    const tools = (body.result as { tools: Record<string, unknown>[] }).tools;
+    const pick = tools.find((t) => t.name === "pick_icon");
+    expect(pick?._meta).toEqual({
+      ui: { resourceUri: uri },
+      "ui/resourceUri": uri,
+    });
+    expect(pick?.description).toMatch(/MCP Apps/);
+    expect(pick?.description).toMatch(/ONE PNG image/);
+    const input = pick?.inputSchema as
+      | { properties: Record<string, unknown> }
+      | undefined;
+    expect(Object.keys(input?.properties ?? {}).sort()).toEqual([
+      "color",
+      "format",
+      "license",
+      "query",
+      "sets",
+      "size",
+      "style",
+    ]);
+  });
+
+  it("ресурс: шаблон ui://picker/{version}, в списке — текущий адрес; списки не меняются без выкладки", async () => {
+    const s = mcpSetup();
+    const init = await s.rpc("initialize", {
+      protocolVersion: "2025-06-18",
+      capabilities: {},
+      clientInfo: { name: "test", version: "1" },
+    });
+    expect(
+      (init.body.result as { capabilities: { resources?: unknown } })
+        .capabilities.resources,
+    ).toEqual({ listChanged: false });
+    const templates = await s.rpc("resources/templates/list");
+    expect(
+      (
+        templates.body.result as {
+          resourceTemplates: { uriTemplate: string; mimeType?: string }[];
+        }
+      ).resourceTemplates,
+    ).toEqual([
+      expect.objectContaining({
+        uriTemplate: "ui://picker/{version}",
+        mimeType: "text/html;profile=mcp-app",
+      }),
+    ]);
+    const list = await s.rpc("resources/list");
+    expect(
+      (list.body.result as { resources: { uri: string; mimeType?: string }[] })
+        .resources,
+    ).toEqual([
+      expect.objectContaining({ uri, mimeType: "text/html;profile=mcp-app" }),
+    ]);
+  });
+
+  it("чтение: страница целиком, MIME MCP Apps, рамку рисует клиент; старая версия — та же страница, не версия — нет ресурса", async () => {
+    const s = mcpSetup();
+    for (const version of [PICKER.version, "0123abcd"]) {
+      const { body } = await s.rpc("resources/read", {
+        uri: `ui://picker/${version}`,
+      });
+      const contents = (
+        body.result as {
+          contents: {
+            uri: string;
+            mimeType: string;
+            text: string;
+            _meta?: unknown;
+          }[];
+        }
+      ).contents;
+      expect(contents).toEqual([
+        {
+          uri: `ui://picker/${version}`,
+          mimeType: "text/html;profile=mcp-app",
+          text: PICKER.html,
+          _meta: { ui: { prefersBorder: true } },
+        },
+      ]);
+    }
+    const bad = await s.rpc("resources/read", { uri: "ui://picker/latest" });
+    expect(bad.body.error).toBeDefined();
   });
 });
 
