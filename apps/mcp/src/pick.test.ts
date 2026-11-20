@@ -90,31 +90,39 @@ describe("MCP: pick_icon (сетка выбора в чате, ADR-0045)", () =>
     });
   });
 
-  it.each(["html", "react", "svg"] as const)(
-    "код выбора в сетке — побайтно как у get_icon (%s, свой цвет, стиль «Заливка»)",
+  it.each(["html", "react", "svg", "css"] as const)(
+    "код выбора в сетке — побайтно как у get_icon (%s, свой цвет и толщина линии)",
     async (format) => {
       const s = mcpSetup();
-      const picked = await s.call("pick_icon", { query: "house", format });
+      // Формат от ассистента — только начальная кнопка; человек выбирает другой.
+      const picked = await s.call("pick_icon", { query: "house" });
       const payload = payloadOf(picked);
       const card = payload.cards[0];
       if (card === undefined) throw new Error("нет карточки");
-      const choice = pickerChoice(payload, card, "filled", "#e11d48");
-      const icon = await s.call("get_icon", {
-        icon: "demo:house-fill",
+      const choice = pickerChoice(payload, card, {
         format,
         color: "#e11d48",
+        stroke: 1.5,
+      });
+      const icon = await s.call("get_icon", {
+        icon: "demo:house",
+        format,
+        color: "#e11d48",
+        strokeWidth: 1.5,
       });
       const out = icon.structuredContent as {
         code: string;
         svgUrl?: string;
         setup?: unknown;
+        notes: string[];
         attribution: string;
       };
       expect(choice?.code).toBe(out.code);
       expect(choice?.svgUrl).toBe(out.svgUrl);
       expect(choice?.setup).toEqual(out.setup);
+      expect(choice?.notes).toEqual(out.notes);
       expect(choice?.attribution).toBe(out.attribution);
-      expect(choice?.color).toBe("#e11d48");
+      expect(choice).toMatchObject({ format, color: "#e11d48", stroke: 1.5 });
     },
   );
 
@@ -125,7 +133,7 @@ describe("MCP: pick_icon (сетка выбора в чате, ADR-0045)", () =>
     );
     const card = payload.cards[0];
     if (card === undefined) throw new Error("нет карточки");
-    const choice = pickerChoice(payload, card, "any", undefined);
+    const choice = pickerChoice(payload, card, { format: "svg" });
     const icon = await s.call("get_icon", {
       icon: "demo:house",
       format: "svg",
@@ -144,17 +152,19 @@ describe("MCP: pick_icon (сетка выбора в чате, ADR-0045)", () =>
     expect(payload.icons["demo:home"]).toBeUndefined();
   });
 
-  it("цвет и стиль от ассистента — начальные в сетке; у цветного набора цвет в код не идёт", async () => {
+  it("формат, цвет и размер от ассистента — в данных сетки; у цветного набора цвет в код не идёт", async () => {
     const s = mcpSetup();
     const payload = payloadOf(
       await s.call("pick_icon", {
         query: "house",
+        format: "css",
         color: "#E11",
         style: "filled",
         size: 32,
       }),
     );
     expect(payload).toMatchObject({
+      format: "css",
       color: "#ee1111",
       style: "filled",
       size: 32,
@@ -162,7 +172,10 @@ describe("MCP: pick_icon (сетка выбора в чате, ADR-0045)", () =>
     const all = payloadOf(await s.call("pick_icon", { query: "house" }));
     const swan = all.cards.find((card) => card.icon === "color:swan");
     if (swan === undefined) throw new Error("нет лебедя");
-    const choice = pickerChoice(all, swan, "any", "#e11d48");
+    const choice = pickerChoice(all, swan, {
+      format: "html",
+      color: "#e11d48",
+    });
     expect(choice?.color).toBeUndefined();
     expect(choice?.notes).toEqual([
       "Color is not applied: Color is a multicolor set.",

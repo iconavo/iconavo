@@ -412,9 +412,9 @@ export async function matchingSet(
       format: args.format,
       icons,
       missing,
-      ...(args.format === "svg"
-        ? {}
-        : { setup: setupFor(args.format, deps.usage.install) }),
+      ...(args.format === "html" || args.format === "react"
+        ? { setup: setupFor(args.format, deps.usage.install) }
+        : {}),
       attribution: attributionText({ set: info }),
       notes,
     };
@@ -437,7 +437,7 @@ function text(r: MatchingResult): string {
     ...r.icons
       .flatMap((x) => [
         `- ${x.concept} → ${x.icon}${x.alternatives.length === 0 ? "" : ` (alternatives: ${x.alternatives.join(", ")})`}`,
-        r.format === "svg" ? "" : `  ${x.code}`,
+        r.format === "html" || r.format === "react" ? `  ${x.code}` : "",
       ])
       .filter((line) => line !== ""),
     ...(r.missing.length === 0
@@ -445,7 +445,11 @@ function text(r: MatchingResult): string {
       : [`No icon in this set for: ${r.missing.join(", ")}.`]),
     ...(r.format === "svg"
       ? ["SVG markup of each icon is in the structured result (icons[].code)."]
-      : []),
+      : r.format === "css"
+        ? [
+            "The CSS class and the element of each icon are in the structured result (icons[].code).",
+          ]
+        : []),
     "",
     ...(r.setup === undefined
       ? []

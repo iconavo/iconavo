@@ -85,7 +85,7 @@ const FULL_CAPS: HostCaps = {
 export const SCENARIOS: readonly ScenarioPlan[] = [
   {
     id: "share-en-light",
-    title: "«share» — все наборы, светлая тема, английский",
+    title: "«share» — все наборы, светлая тема",
     width: 720,
     theme: "light",
     locale: "en-US",
@@ -110,7 +110,8 @@ export const SCENARIOS: readonly ScenarioPlan[] = [
   },
   {
     id: "share-ru-dark",
-    title: "«поделиться» — тёмная тема, русский, код React",
+    title:
+      "«поделиться» — тёмная тема, русский чат (сетка — по-английски), сначала React",
     width: 720,
     theme: "dark",
     locale: "ru-RU",
@@ -135,7 +136,7 @@ export const SCENARIOS: readonly ScenarioPlan[] = [
   },
   {
     id: "heart-emoji",
-    title: "«heart» — только эмодзи: цвета нет",
+    title: "«heart» — только эмодзи: нет цвета и толщины",
     width: 720,
     theme: "light",
     locale: "en-US",
@@ -161,7 +162,7 @@ export const SCENARIOS: readonly ScenarioPlan[] = [
   },
   {
     id: "basket-phone",
-    title: "«корзина» — узкая рамка (телефон), код SVG",
+    title: "«корзина» — узкая рамка (телефон), сначала SVG",
     width: 360,
     theme: "light",
     locale: "ru-RU",

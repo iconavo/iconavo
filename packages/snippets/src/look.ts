@@ -8,6 +8,8 @@
 import type { IconData } from "@iconavo-ui/core/internal";
 import {
   type Applies,
+  cssClassCode,
+  cssSpanCode,
   fileComment,
   reactCode,
   svgFile,
@@ -18,14 +20,19 @@ import type { IconDetails } from "./icon.js";
 import { type Install, installCommand } from "./install.js";
 import type { IconSettings, Quarter } from "./settings.js";
 
-export const FORMATS = ["html", "react", "svg"] as const;
+export const FORMATS = ["html", "react", "svg", "css"] as const;
 export type Format = (typeof FORMATS)[number];
+
+/** Виду нужен рисунок иконки: SVG и CSS-класс с маской; тегу и React — только имя. */
+export const needsDrawing = (format: Format): format is "svg" | "css" =>
+  format === "svg" || format === "css";
 
 /** Вид кода словами — для текста ассистенту. */
 export const FORMAT_TITLES: Record<Format, string> = {
   html: "web component <iconavo-icon>",
   react: "React <Icon> from @iconavo-ui/react",
   svg: "SVG markup",
+  css: "CSS class with the icon as a mask, and an element that uses it",
 };
 
 export const PACKAGE_MANAGERS = ["npm", "pnpm", "yarn"] as const;
@@ -135,7 +142,10 @@ export interface SvgSource {
   details: Pick<IconDetails, "set" | "credits">;
 }
 
-/** Код иконки нужного вида; для svg нужен рисунок и сведения об авторстве, api — адрес edge API. */
+/**
+ * Код иконки нужного вида; для svg и css нужен рисунок (у svg — и сведения об авторстве), api — адрес
+ * edge API. css — CSS-класс с маской и элемент с ним, как вид «CSS» панели сайта.
+ */
 export function lookCode(
   api: string,
   format: Format,
@@ -145,6 +155,14 @@ export function lookCode(
   install: Install,
   svg?: SvgSource,
 ): Code {
+  if (format === "css") {
+    if (svg === undefined) throw new Error("для CSS нужен рисунок иконки");
+    return {
+      code: `${cssClassCode(name, svg.icon, settings, applies)}
+
+${cssSpanCode(name)}`,
+    };
+  }
   if (format === "svg") {
     if (svg === undefined) throw new Error("для SVG нужен рисунок иконки");
     return {

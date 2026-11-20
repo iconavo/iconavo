@@ -74,7 +74,7 @@ async function mount(s: Scenario, list: HTMLElement): Promise<void> {
   const body = node(
     "pre",
     "log-body",
-    "Пока ничего: выберите иконку и нажмите «Выбрать».",
+    "Пока ничего: выберите иконку и нажмите Select.",
   );
   log.append(node("h3", "log-title", "Что получил ассистент"), body);
   section.append(node("h2", "scenario-title", s.title), chat, log);

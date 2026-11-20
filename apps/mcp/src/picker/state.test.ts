@@ -5,9 +5,9 @@ import {
   moveTo,
   selectCard,
   setColor,
-  setStyle,
+  setFormat,
+  setStroke,
   withPayload,
-  withQuery,
 } from "./state.js";
 
 const ICON = { body: "<path/>", left: 0, top: 0, width: 24, height: 24 };
@@ -59,43 +59,47 @@ function payload(over: Partial<PickerPayload> = {}): PickerPayload {
 }
 
 describe("состояние сетки", () => {
-  it("запрос до ответа, затем ответ: «Любой», без выбора; стиль и цвет от ассистента — начальные", () => {
-    const waiting = withQuery(initialState(), "house");
-    expect(waiting).toMatchObject({ status: "waiting", query: "house" });
+  it("до ответа — ожидание и HTML; ответ: без выбора, формат и цвет от ассистента — начальные", () => {
+    const waiting = initialState();
+    expect(waiting).toMatchObject({ status: "waiting", format: "html" });
     const ready = withPayload(waiting, payload());
     expect(ready).toMatchObject({
       status: "ready",
-      style: "any",
+      format: "html",
       delivery: "idle",
     });
     expect(ready.selected).toBeUndefined();
+    expect(ready.stroke).toBeUndefined();
     expect(
-      withPayload(waiting, payload({ style: "filled", color: "#E11D48" })),
-    ).toMatchObject({ style: "filled", color: "#e11d48" });
+      withPayload(waiting, payload({ format: "react", color: "#E11D48" })),
+    ).toMatchObject({ format: "react", color: "#e11d48" });
     expect(withPayload(waiting, payload({ cards: [] })).status).toBe("empty");
   });
 
-  it("выбор только доступной карточки; другой стиль снимает выбор карточки без него", () => {
+  it("выбор — только карточки из ответа; формат, цвет и толщина выбор не снимают", () => {
     const ready = withPayload(initialState(), payload());
     const picked = selectCard(ready, 2);
     expect(picked.selected).toBe(2);
-    const filled = setStyle(picked, "filled");
-    expect(filled.selected).toBeUndefined();
-    expect(selectCard(filled, 2)).toBe(filled);
-    expect(selectCard(selectCard(filled, 1), 1).selected).toBe(1);
-    expect(setStyle(selectCard(ready, 1), "filled").selected).toBe(1);
+    expect(selectCard(picked, 7)).toBe(picked);
+    const look = setStroke(setColor(setFormat(picked, "css"), "#000000"), 1.5);
+    expect(look).toMatchObject({
+      selected: 2,
+      format: "css",
+      color: "#000000",
+      stroke: 1.5,
+    });
+    expect(setStroke(look, undefined).stroke).toBeUndefined();
+    expect(setColor(look, undefined).color).toBeUndefined();
   });
 
-  it("после отправки любое изменение снова разрешает «Выбрать»", () => {
+  it("после отправки любое изменение снова разрешает Select", () => {
     const sent = {
       ...selectCard(withPayload(initialState(), payload()), 1),
       delivery: "sent" as const,
     };
     expect(setColor(sent, "#000000").delivery).toBe("idle");
-    expect(
-      setColor(setColor(sent, "#000000"), undefined).color,
-    ).toBeUndefined();
-    expect(setStyle(sent, "outline").delivery).toBe("idle");
+    expect(setStroke(sent, 1).delivery).toBe("idle");
+    expect(setFormat(sent, "svg").delivery).toBe("idle");
     expect(selectCard(sent, 2).delivery).toBe("idle");
   });
 

@@ -163,6 +163,86 @@ export function cssCode(
   return `<link rel="stylesheet" href="${href}">\n<span class="icon--${set} icon--${set}--${icon}"${style === "" ? "" : ` style="${style}"`}></span>`;
 }
 
+/** Класс CSS иконки — как у Iconify: набор--иконка. */
+export const cssClassName = (name: string): string => name.replace(":", "--");
+
+/**
+ * SVG в data URL, как у Iconify: кавычки — одинарные, кодируются только символы, которые ломают адрес в
+ * CSS и HTML; пробелы подряд — один.
+ */
+export function svgDataUrl(svg: string): string {
+  const text = svg
+    .replace(/"/g, "'")
+    .replace(/%/g, "%25")
+    .replace(/#/g, "%23")
+    .replace(/</g, "%3C")
+    .replace(/>/g, "%3E")
+    .replace(/\s+/g, " ");
+  return `data:image/svg+xml,${text}`;
+}
+
+/** Размер в пикселях по пропорции рисунка: высота — выбранный размер. */
+export function pixelBox(
+  icon: IconData,
+  size: number,
+): { width: number; height: number } {
+  const ratio = icon.width / icon.height;
+  return {
+    width: Math.round(size * ratio * 100) / 100,
+    height: size,
+  };
+}
+
+/**
+ * CSS-класс с иконкой — вид «CSS» панели сайта и формат css у MCP (ADR-0042, ADR-0045): монохромная иконка —
+ * маска с цветом текста вокруг (свой цвет — background-color), цветная — картинкой фона. Размер — в
+ * пикселях, толщина линии — в рисунке, как у SVG.
+ */
+export function cssClassCode(
+  name: string,
+  icon: IconData,
+  s: IconSettings,
+  o: Applies,
+): string {
+  const { width, height } = pixelBox(icon, s.size);
+  const head = [
+    `.${cssClassName(name)} {`,
+    "  display: inline-block;",
+    `  width: ${width}px;`,
+    `  height: ${height}px;`,
+  ];
+  if (o.palette) {
+    const url = svgDataUrl(fileSvg(icon, s, o));
+    return [
+      ...head,
+      `  background: no-repeat center / 100% 100% url("${url}");`,
+      "}",
+    ].join("\n");
+  }
+  // Для маски цвет рисунка не важен — чёрный, как у Iconify; цвет иконке даёт background-color.
+  const url = svgDataUrl(
+    fileSvg(icon, { ...s, color: undefined }, o)
+      .split("currentColor")
+      .join("black"),
+  );
+  return [
+    ...head,
+    `  --svg: url("${url}");`,
+    `  background-color: ${s.color === undefined ? "currentColor" : s.color};`,
+    "  -webkit-mask-image: var(--svg);",
+    "  mask-image: var(--svg);",
+    "  -webkit-mask-repeat: no-repeat;",
+    "  mask-repeat: no-repeat;",
+    "  -webkit-mask-size: 100% 100%;",
+    "  mask-size: 100% 100%;",
+    "}",
+  ].join("\n");
+}
+
+/** Элемент с классом CSS иконки. */
+export const cssSpanCode = (name: string): string =>
+  `<span class="${cssClassName(name)}"></span>`;
+
 /** SVG с настройками: ширина в пикселях, высота по пропорции. */
 function svg(
   icon: IconData,

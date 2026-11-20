@@ -26,6 +26,7 @@ export {
   type Format,
   jsxOnly,
   type Look,
+  needsDrawing,
   normalizeColor,
   PACKAGE_MANAGERS,
   type Setup,
@@ -41,7 +42,7 @@ export const LookFields = {
     .enum(FORMATS)
     .default("html")
     .describe(
-      "html (default) — the <iconavo-icon> web component: works in any framework and in plain HTML; react — <Icon> from @iconavo-ui/react for React and Next.js; svg — raw SVG markup without the package, only if the user explicitly asks for SVG",
+      "html (default) — the <iconavo-icon> web component: works in any framework and in plain HTML; react — <Icon> from @iconavo-ui/react for React and Next.js; svg — raw SVG markup without the package, only if the user explicitly asks for SVG; css — a CSS class with the icon as a mask and an element that uses it, without the package, only if the user asks for CSS",
     ),
   size: z.number().int().min(8).max(512).default(24).describe("Size in pixels"),
   color: z

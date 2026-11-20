@@ -1,9 +1,9 @@
 // Сетка выбора иконки в чате (шаг 11 фазы 4, ADR-0045): данные, которые инструмент pick_icon MCP-сервера
 // кладёт в служебную часть ответа (_meta: её видит сетка, а не модель), и что сетка отдаёт ассистенту
-// после «Выбрать». Общее у сервера, сетки и проверок конвейера: код выбранной иконки считают те же
+// после Select. Общее у сервера, сетки и проверок конвейера: код выбранной иконки считают те же
 // функции, что у get_icon (look.ts), поэтому он совпадает побайтно. Чистые функции без DOM и сети.
 
-import type { IconData } from "@iconavo-ui/core/internal";
+import { hasStrokeWidth, type IconData } from "@iconavo-ui/core/internal";
 import {
   type IconCredit,
   type IconSetSummary,
@@ -19,10 +19,12 @@ import {
   FORMATS,
   type Format,
   lookCode,
+  needsDrawing,
   type Setup,
   settingsOf,
   setupFor,
 } from "./look.js";
+import { DEFAULT_SETTINGS } from "./settings.js";
 
 /** Ключ данных сетки в _meta ответа: имя со своим доменом, как велит MCP. */
 export const PICKER_META_KEY = "iconavo.dev/picker";
@@ -31,26 +33,56 @@ export const PICKER_FORMAT = 1;
 /** Вариантов в сетке (решение владельца 17 октября 2026, ADR-0045). */
 export const PICKER_SIZE = 12;
 
-/** Стиль переключателя: любой — каждая карточка в своём стиле, как нашлась. */
-export type PickerStyle = Style | "any";
-
-/** Подписи стилей — как на сайте (ADR-0052). */
-export const STYLE_LABELS: Record<"en" | "ru", Record<PickerStyle, string>> = {
-  en: {
-    any: "Any",
-    outline: "Outline",
-    filled: "Filled",
-    duotone: "Duotone",
-    color: "Color",
-  },
-  ru: {
-    any: "Любой",
-    outline: "Контур",
-    filled: "Заливка",
-    duotone: "Двухцветные",
-    color: "Цветные",
-  },
+/** Подписи стилей — как на сайте (ADR-0052); сетка и сообщения — по-английски (решение владельца 20 ноября 2026). */
+export const STYLE_LABELS: Record<Style, string> = {
+  outline: "Outline",
+  filled: "Filled",
+  duotone: "Duotone",
+  color: "Color",
 };
+
+/** Подписи форматов — как кнопки панели сайта. */
+export const FORMAT_LABELS: Record<Format, string> = {
+  svg: "SVG",
+  css: "CSS",
+  html: "HTML",
+  react: "React",
+};
+
+/** Кнопка формата: без format — «Soon», как в панели сайта. */
+export interface PickerFormatOption {
+  label: string;
+  format?: Format;
+}
+
+/**
+ * Кнопки формата сетки — те же группы и тот же порядок, что в панели сайта (ADR-0042). Чего в продукте
+ * нет, то «Soon» (решение владельца 20 ноября 2026): заработает в сетке, когда появится на сайте.
+ */
+export const PICKER_FORMAT_GROUPS: readonly {
+  label: string;
+  options: readonly PickerFormatOption[];
+}[] = [
+  {
+    label: "SVG and CSS",
+    options: [
+      { label: "SVG", format: "svg" },
+      { label: "SVG+CSS" },
+      { label: "CSS", format: "css" },
+    ],
+  },
+  {
+    label: "Components",
+    options: [
+      { label: "HTML", format: "html" },
+      { label: "React", format: "react" },
+      { label: "Vue" },
+      { label: "Svelte" },
+      { label: "Solid" },
+      { label: "Astro" },
+    ],
+  },
+];
 
 export interface PickerCard {
   /** Номер — как в списке ответа и на картинке-сетке. */
@@ -226,34 +258,6 @@ export function parsePickerPayload(value: unknown): PickerPayload | undefined {
   return { ...(value as unknown as PickerPayload), cards };
 }
 
-/** Имя карточки в стиле переключателя; нет такого стиля — undefined. */
-export function cardName(
-  p: PickerPayload,
-  card: PickerCard,
-  style: PickerStyle,
-): string | undefined {
-  const name = style === "any" ? card.icon : card.styles[style];
-  return name !== undefined && p.icons[name] !== undefined ? name : undefined;
-}
-
-/** Стиль имени по карточке. */
-function styleOfName(card: PickerCard, name: string): Style | null {
-  for (const style of STYLES) {
-    if (card.styles[style] === name) return style;
-  }
-  return name === card.icon ? card.style : null;
-}
-
-/** Стили переключателя: «Любой» и те, что есть хотя бы у одной карточки, — в порядке шкалы. */
-export function pickerStyles(p: PickerPayload): PickerStyle[] {
-  return [
-    "any",
-    ...STYLES.filter((style) =>
-      p.cards.some((card) => cardName(p, card, style) !== undefined),
-    ),
-  ];
-}
-
 export const cardSet = (
   p: PickerPayload,
   name: string,
@@ -262,6 +266,21 @@ export const cardSet = (
 /** Цвет применим хотя бы к одной карточке: у монохромного набора. */
 export const pickerHasColor = (p: PickerPayload): boolean =>
   p.sets.some((s) => !s.palette);
+
+/** Толщина линии меняет рисунок карточки: линии с currentColor (hasStrokeWidth ядра, как у /icon). */
+export const cardHasStroke = (p: PickerPayload, card: PickerCard): boolean => {
+  const icon = p.icons[card.icon];
+  return icon !== undefined && hasStrokeWidth(icon.body);
+};
+
+/** Что выбрал человек в сетке, кроме иконки. */
+export interface PickerLook {
+  format: Format;
+  /** Свой цвет #rrggbb; нет — цвет текста вокруг. */
+  color?: string | undefined;
+  /** Своя толщина линии; нет — как у рисунка. */
+  stroke?: number | undefined;
+}
 
 export interface PickerChoice {
   query: string;
@@ -273,6 +292,8 @@ export interface PickerChoice {
   size: number;
   /** Цвет, который попал в код: только у монохромного набора. */
   color?: string;
+  /** Толщина, которая попала в код: только у линий. */
+  stroke?: number;
   code: string;
   svgUrl?: string;
   setup?: Setup;
@@ -286,26 +307,29 @@ export interface PickerChoice {
 export function pickerChoice(
   p: PickerPayload,
   card: PickerCard,
-  style: PickerStyle,
-  color: string | undefined,
+  look: PickerLook,
 ): PickerChoice | undefined {
-  const name = cardName(p, card, style);
-  if (name === undefined) return undefined;
+  const name = card.icon;
   const set = cardSet(p, name);
   const icon = p.icons[name];
   if (set === undefined || icon === undefined) return undefined;
-  const look = { format: p.format, size: p.size, color };
-  const applies = { palette: set.palette, strokes: false };
-  const { applied, notes } = appliedOf(look, applies, set.name);
+  const asked = {
+    format: look.format,
+    size: p.size,
+    color: look.color,
+    strokeWidth: look.stroke,
+  };
+  const applies = { palette: set.palette, strokes: hasStrokeWidth(icon.body) };
+  const { applied, notes } = appliedOf(asked, applies, set.name);
   const credits = icon.credits ?? [];
   const code = lookCode(
     p.api,
-    p.format,
+    look.format,
     name,
-    settingsOf(look),
+    settingsOf(asked),
     applies,
     p.install,
-    p.format === "svg"
+    needsDrawing(look.format)
       ? {
           icon,
           details: { set, ...(credits.length > 0 ? { credits } : {}) },
@@ -316,13 +340,18 @@ export function pickerChoice(
     query: p.query,
     icon: name,
     set,
-    style: styleOfName(card, name),
-    format: p.format,
+    style: card.style,
+    format: look.format,
     size: p.size,
     ...(applied.color === undefined ? {} : { color: applied.color }),
+    ...(applied.strokeWidth === undefined
+      ? {}
+      : { stroke: applied.strokeWidth }),
     code: code.code,
     ...(code.svgUrl === undefined ? {} : { svgUrl: code.svgUrl }),
-    ...(p.format === "svg" ? {} : { setup: setupFor(p.format, p.install) }),
+    ...(look.format === "html" || look.format === "react"
+      ? { setup: setupFor(look.format, p.install) }
+      : {}),
     notes,
     attribution: attributionText({ set }),
     ...(credits.length > 0 ? { credits } : {}),
@@ -333,7 +362,7 @@ export function pickerChoice(
 /** Текст для модели — как ответ get_icon: имя, код, установка, лицензия, страница. */
 export function pickerContextText(c: PickerChoice): string {
   return [
-    `The user picked ${c.icon} — ${c.set.name}${c.style === null ? "" : `, ${c.style}`} — in the Iconavo picker for "${c.query}".`,
+    `The user picked ${c.icon} — ${c.set.name}${c.style === null ? "" : `, ${c.style}`} — in the Iconavo picker for "${c.query}" and asked for ${FORMAT_LABELS[c.format]} code.`,
     "",
     `Code (${FORMAT_TITLES[c.format]}):`,
     c.code,
@@ -349,7 +378,7 @@ export function pickerContextText(c: PickerChoice): string {
     ...c.notes,
     `License — keep this attribution: ${c.attribution}`,
     `Page: ${c.page}`,
-    "Insert this code where the user needs the icon.",
+    "Reply with this code, ready to paste, and the attribution; insert it where the user needs the icon.",
   ].join("\n");
 }
 
@@ -365,23 +394,25 @@ export function pickerContext(c: PickerChoice): {
 }
 
 /**
- * Сообщение в чат от имени человека (решение владельца 20 ноября 2026): коротко — имя, стиль, цвет.
- * Код в нём не идёт: у Claude предел сообщения 8 000 знаков, а SVG эмодзи бывает до 21 КБ. Если
- * контекст модели не принят, сообщение просит ассистента взять код у get_icon.
+ * Сообщение в чат от имени человека — сразу просьба о коде выбранного формата (решения владельца
+ * 20 ноября 2026: по-английски; ChatGPT отправляет его сразу, Claude кладёт в поле ввода). Код в нём не
+ * идёт: у Claude предел сообщения 8 000 знаков, а SVG эмодзи бывает до 21 КБ — он в контексте модели.
+ * Контекст не принят — ассистент берёт код у get_icon с теми же настройками.
  */
-export function pickerMessage(
-  c: PickerChoice,
-  lang: "en" | "ru",
-  delivered: boolean,
-): string {
-  const parts = [
-    c.icon,
-    ...(c.style === null ? [] : [STYLE_LABELS[lang][c.style]]),
+export function pickerMessage(c: PickerChoice, delivered: boolean): string {
+  const details = [
+    c.set.name,
+    ...(c.style === null ? [] : [STYLE_LABELS[c.style].toLowerCase()]),
     ...(c.color === undefined ? [] : [c.color.toUpperCase()]),
-  ].join(" · ");
-  const format = c.format === "html" ? "" : ` (${c.format})`;
-  if (lang === "ru") {
-    return `Выбрана иконка ${parts}.${delivered ? "" : ` Код возьми через get_icon${format}.`}`;
-  }
-  return `Picked ${parts}.${delivered ? "" : ` Get the code with get_icon${format}.`}`;
+    ...(c.stroke === undefined ? [] : [`stroke ${c.stroke}`]),
+  ].join(", ");
+  const ask = `Use ${c.icon} (${details}) — give me the ${FORMAT_LABELS[c.format]} code.`;
+  if (delivered) return ask;
+  const args = [
+    `format ${c.format}`,
+    ...(c.size === DEFAULT_SETTINGS.size ? [] : [`size ${c.size}`]),
+    ...(c.color === undefined ? [] : [`color ${c.color.toUpperCase()}`]),
+    ...(c.stroke === undefined ? [] : [`strokeWidth ${c.stroke}`]),
+  ].join(", ");
+  return `${ask} Get it with get_icon (${args}).`;
 }

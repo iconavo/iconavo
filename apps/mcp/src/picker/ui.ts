@@ -1,35 +1,42 @@
-// Разметка и поведение сетки выбора (ADR-0045): карточки, переключатель стиля, цвет и «Выбрать». Узлы —
-// через DOM-API; разметка строкой — только у рисунков иконок: SVG собирает ядро (renderIcon) из данных
-// ответа, и ID у каждой карточки свои. Стилей в атрибутах нет — классы и переменные CSS; хранилищ браузера
-// нет: в рамке клиента без своего адреса они недоступны.
+// Разметка и поведение сетки выбора (ADR-0045). Решения владельца 20 ноября 2026 после проверки в Claude и
+// ChatGPT: сверху вниз — 12 карточек, цвет и толщина линии, кнопки формата как в панели сайта (чего нет в
+// продукте — «Soon»), строка с автором и лицензией и «Select». Без переключателя стиля, заголовка и
+// подсказок; всё по-английски. Узлы — через DOM-API; разметка строкой — только у рисунков иконок: SVG
+// собирает ядро (renderIcon) из данных ответа, ID у каждой карточки свои. Стилей в атрибутах нет —
+// классы и переменные CSS; хранилищ браузера нет: в рамке клиента без своего адреса они недоступны.
 
 import { renderIcon, svgToString } from "@iconavo-ui/core/internal";
+import type { Format } from "@iconavo-ui/snippets/look";
 import {
-  cardName,
+  cardHasStroke,
   cardSet,
+  PICKER_FORMAT_GROUPS,
   PICKER_META_KEY,
   type PickerChoice,
   type PickerPayload,
-  type PickerStyle,
   parsePickerPayload,
   pickerChoice,
   pickerHasColor,
-  pickerStyles,
 } from "@iconavo-ui/snippets/picker";
-import { COLOR_START, parseColor } from "@iconavo-ui/snippets/settings";
-import { type Lang, TEXTS } from "./i18n.js";
+import {
+  COLOR_START,
+  parseColor,
+  STROKE_DEFAULT,
+  STROKE_MAX,
+  STROKE_MIN,
+  STROKE_STEP,
+} from "@iconavo-ui/snippets/settings";
 import {
   cardOf,
   type GridCell,
   initialState,
-  isAvailable,
   moveTo,
   type PickerState,
   selectCard,
   setColor,
-  setStyle,
+  setFormat,
+  setStroke,
   withPayload,
-  withQuery,
 } from "./state.js";
 
 /** Ответ инструмента в том виде, как его передаёт клиент. */
@@ -41,19 +48,34 @@ export interface ToolResultLike {
 }
 
 export interface PickerHandlers {
-  /** «Выбрать»: отдать выбор ассистенту; ответ — дошло ли сообщение. */
-  pick: (choice: PickerChoice, lang: Lang) => Promise<"sent" | "tell">;
+  /** «Select»: отдать выбор ассистенту. */
+  pick: (choice: PickerChoice) => Promise<void>;
 }
 
 export interface PickerView {
-  query(query: string): void;
   result(result: ToolResultLike): void;
   cancelled(): void;
-  lang(lang: Lang): void;
 }
 
 /** Мест под карточки, пока ответа нет: столько же, сколько вариантов. */
 const SKELETONS = 12;
+
+const TEXT = {
+  heading: "Pick an icon",
+  icons: "Icons",
+  color: "Color",
+  colorHex: "Color, hex",
+  colorAuto: "Auto",
+  stroke: "Stroke width",
+  soon: "Soon",
+  select: "Select",
+  selected: "Selected",
+  sent: "Sent to the chat",
+  empty: "No icons found. Ask the assistant to try other words.",
+  error: "The picker could not show the icons.",
+  cancelled: "The search was cancelled.",
+  fallback: "Tell the assistant the number of the icon you like.",
+};
 
 function el<K extends keyof HTMLElementTagNameMap>(
   tag: K,
@@ -69,8 +91,6 @@ const bareOf = (name: string) => name.slice(name.indexOf(":") + 1);
 interface CardNodes {
   button: HTMLButtonElement;
   svg: HTMLSpanElement;
-  name: HTMLSpanElement;
-  set: HTMLSpanElement;
 }
 
 export function mountPicker(
@@ -78,181 +98,216 @@ export function mountPicker(
   handlers: PickerHandlers,
 ): PickerView {
   let state: PickerState = initialState();
-  let lang: Lang = "en";
   let built: PickerPayload | undefined;
-  let builtLang: Lang | undefined;
   const cards = new Map<number, CardNodes>();
-  const pills = new Map<PickerStyle, HTMLButtonElement>();
+  const pills = new Map<Format, HTMLButtonElement>();
 
-  const title = el("h1", "picker-title");
-  const styleGroup = el("div", "style-switch");
-  styleGroup.setAttribute("role", "group");
-  const colorField = el("div", "color-field");
+  const heading = el("h1", "sr-only");
+  heading.textContent = TEXT.heading;
+
+  const grid = el("div", "picker-grid");
+  grid.setAttribute("role", "radiogroup");
+  grid.setAttribute("aria-label", TEXT.icons);
+
+  // Цвет и толщина линии — как поля панели сайта.
+  const colorField = el("div", "picker-field");
+  const colorLabel = el("span", "picker-label");
+  colorLabel.textContent = TEXT.color;
+  const colorBox = el("div", "color-field");
   const swatch = el("input", "color-swatch");
   swatch.type = "color";
+  swatch.setAttribute("aria-label", TEXT.color);
   const hex = el("input", "color-hex");
   hex.type = "text";
   hex.maxLength = 7;
   hex.spellcheck = false;
   hex.autocomplete = "off";
-  colorField.append(swatch, hex);
-  const tools = el("div", "picker-tools");
-  tools.append(styleGroup, colorField);
-  const head = el("header", "picker-head");
-  head.append(title, tools);
-  const grid = el("div", "picker-grid");
-  grid.setAttribute("role", "radiogroup");
+  hex.placeholder = TEXT.colorAuto;
+  hex.setAttribute("aria-label", TEXT.colorHex);
+  colorBox.append(swatch, hex);
+  colorField.append(colorLabel, colorBox);
+
+  const strokeField = el("div", "picker-field");
+  const strokeId = "picker-stroke";
+  const strokeLabel = el("label", "picker-label");
+  strokeLabel.htmlFor = strokeId;
+  strokeLabel.textContent = TEXT.stroke;
+  const strokeBox = el("div", "stroke-field");
+  const range = el("input", "stroke-range");
+  range.type = "range";
+  range.id = strokeId;
+  range.min = String(STROKE_MIN);
+  range.max = String(STROKE_MAX);
+  range.step = String(STROKE_STEP);
+  const strokeValue = el("span", "stroke-value");
+  strokeValue.setAttribute("aria-hidden", "true");
+  strokeBox.append(range, strokeValue);
+  strokeField.append(strokeLabel, strokeBox);
+
+  const controls = el("div", "picker-controls");
+  controls.append(colorField, strokeField);
+
+  // Кнопки формата: те же группы, что в панели сайта; чего нет — «Soon».
+  const formats = el("div", "picker-formats");
+  for (const group of PICKER_FORMAT_GROUPS) {
+    const set = el("fieldset", "pill-group");
+    const legend = el("legend", "picker-label");
+    legend.textContent = group.label;
+    const row = el("div", "pill-row");
+    for (const option of group.options) {
+      const pill = el("button", "pill");
+      pill.type = "button";
+      pill.textContent = option.label;
+      if (option.format === undefined) {
+        pill.setAttribute("aria-disabled", "true");
+        pill.setAttribute("aria-label", `${option.label} — ${TEXT.soon}`);
+        pill.dataset.tip = TEXT.soon;
+      } else {
+        pill.dataset.format = option.format;
+        pills.set(option.format, pill);
+      }
+      row.append(pill);
+    }
+    set.append(legend, row);
+    formats.append(set);
+  }
+
   const image = el("img", "picker-image");
   image.alt = "";
+  const note = el("p", "picker-note");
   const info = el("p", "picker-info");
   const button = el("button", "picker-select");
   button.type = "button";
   const foot = el("footer", "picker-foot");
   foot.append(info, button);
-  const status = el("p", "picker-status");
-  status.setAttribute("role", "status");
-  root.replaceChildren(head, grid, image, foot, status);
-
-  const t = () => TEXTS[lang];
+  const live = el("p", "sr-only");
+  live.setAttribute("role", "status");
+  root.replaceChildren(
+    heading,
+    grid,
+    controls,
+    formats,
+    foot,
+    image,
+    note,
+    live,
+  );
 
   function skeleton(): void {
     if (grid.dataset.skeleton !== undefined) return;
     const cells: HTMLDivElement[] = [];
     for (let i = 0; i < SKELETONS; i++) {
-      const li = el("div", "picker-cell");
-      li.append(el("span", "card card-skeleton"));
-      cells.push(li);
+      const cell = el("div", "picker-cell");
+      cell.append(el("span", "card card-skeleton"));
+      cells.push(cell);
     }
     grid.replaceChildren(...cells);
     grid.dataset.skeleton = "";
   }
 
-  /** Карточки и кнопки стиля — заново только для нового ответа или языка. */
+  /** Карточки — заново только для нового ответа. */
   function build(p: PickerPayload): void {
     delete grid.dataset.skeleton;
     cards.clear();
     const cells = p.cards.map((card) => {
-      const li = el("div", "picker-cell");
+      const cell = el("div", "picker-cell");
       const b = el("button", "card");
       b.type = "button";
       b.setAttribute("role", "radio");
       b.dataset.n = String(card.n);
+      b.dataset.icon = card.icon;
       if (card.exact) b.dataset.exact = "";
+      const set = cardSet(p, card.icon);
+      b.classList.toggle("mono", set !== undefined && !set.palette);
+      b.setAttribute("aria-label", `${bareOf(card.icon)} — ${set?.name ?? ""}`);
       const num = el("span", "card-num");
       num.textContent = String(card.n);
       num.setAttribute("aria-hidden", "true");
       const svg = el("span", "card-svg");
       svg.setAttribute("aria-hidden", "true");
       const name = el("span", "card-name");
-      const set = el("span", "card-set");
-      b.append(num, svg, name, set);
-      li.append(b);
-      cards.set(card.n, { button: b, svg, name, set });
-      return li;
+      name.textContent = bareOf(card.icon);
+      name.setAttribute("aria-hidden", "true");
+      const setName = el("span", "card-set");
+      setName.textContent = set?.name ?? "";
+      setName.setAttribute("aria-hidden", "true");
+      b.append(num, svg, name, setName);
+      cell.append(b);
+      cards.set(card.n, { button: b, svg });
+      return cell;
     });
     grid.replaceChildren(...cells);
-    pills.clear();
-    const styles = pickerStyles(p);
-    styleGroup.replaceChildren(
-      ...styles.map((style) => {
-        const pill = el("button", "pill");
-        pill.type = "button";
-        pill.dataset.style = style;
-        pill.textContent = t().styles[style];
-        pills.set(style, pill);
-        return pill;
-      }),
-    );
     built = p;
-    builtLang = lang;
   }
 
+  /** Рисунок карточки: толщина — только у линий, ID — свои у каждой карточки. */
   function draw(p: PickerPayload, n: number, name: string): string {
     const icon = p.icons[name];
     return icon === undefined
       ? ""
-      : svgToString(renderIcon(icon, { idPrefix: `p${n}_${name}` }));
+      : svgToString(
+          renderIcon(icon, {
+            idPrefix: `p${n}_${name}`,
+            ...(state.stroke === undefined
+              ? {}
+              : { strokeWidth: state.stroke }),
+          }),
+        );
   }
 
-  /** Карточка, на которой стоит фокус по Tab: выбранная, иначе первая доступная. */
-  function tabTarget(p: PickerPayload): number | undefined {
-    if (state.selected !== undefined) return state.selected;
-    return p.cards.find((card) => isAvailable(state, card))?.n;
-  }
+  /** Карточка, на которой стоит фокус по Tab: выбранная, иначе первая. */
+  const tabTarget = (p: PickerPayload) => state.selected ?? p.cards[0]?.n;
 
   function renderCards(p: PickerPayload): void {
     const focus = tabTarget(p);
+    const stroke = state.stroke === undefined ? "" : String(state.stroke);
     for (const card of p.cards) {
       const nodes = cards.get(card.n);
       if (nodes === undefined) continue;
-      const name = cardName(p, card, state.style);
-      const shown = name ?? card.icon;
-      if (nodes.button.dataset.icon !== shown) {
-        nodes.button.dataset.icon = shown;
-        nodes.svg.innerHTML = draw(p, card.n, shown);
-        nodes.name.textContent = bareOf(shown);
+      if (nodes.svg.dataset.stroke !== stroke || !nodes.svg.hasChildNodes()) {
+        nodes.svg.innerHTML = draw(p, card.n, card.icon);
+        nodes.svg.dataset.stroke = stroke;
       }
-      const set = cardSet(p, shown);
-      nodes.set.textContent = set?.name ?? "";
-      nodes.button.classList.toggle("mono", set !== undefined && !set.palette);
-      const available = name !== undefined;
-      if (available) nodes.button.removeAttribute("aria-disabled");
-      else nodes.button.setAttribute("aria-disabled", "true");
       nodes.button.setAttribute(
         "aria-checked",
         String(state.selected === card.n),
       );
       nodes.button.tabIndex = focus === card.n ? 0 : -1;
-      const style = state.style === "any" ? "" : t().styles[state.style];
-      nodes.button.setAttribute(
-        "aria-label",
-        `${bareOf(shown)} — ${set?.name ?? ""}${available ? "" : `, ${t().missing(style)}`}`,
-      );
     }
   }
 
-  function renderTools(p: PickerPayload): void {
-    const styles = pickerStyles(p);
-    styleGroup.hidden = styles.length <= 2;
-    styleGroup.setAttribute("aria-label", t().style);
-    for (const [style, pill] of pills) {
-      pill.setAttribute("aria-pressed", String(state.style === style));
-    }
+  function renderControls(p: PickerPayload): void {
     colorField.hidden = !pickerHasColor(p);
     swatch.value = state.color ?? COLOR_START;
-    swatch.setAttribute("aria-label", t().color);
     if (state.color === undefined) swatch.dataset.auto = "";
     else delete swatch.dataset.auto;
     if (document.activeElement !== hex) {
       hex.value =
         state.color === undefined ? "" : state.color.slice(1).toUpperCase();
     }
-    hex.placeholder = t().colorAuto;
-    hex.setAttribute("aria-label", t().colorHex);
     if (state.color === undefined) grid.style.removeProperty("--picker-color");
     else grid.style.setProperty("--picker-color", state.color);
+    strokeField.hidden = !p.cards.some((card) => cardHasStroke(p, card));
+    const stroke = state.stroke ?? STROKE_DEFAULT;
+    range.value = String(stroke);
+    strokeValue.textContent = `${stroke} px`;
+    for (const [format, pill] of pills) {
+      pill.setAttribute("aria-pressed", String(state.format === format));
+    }
   }
 
-  function statusText(): string {
+  function noteText(): string {
     switch (state.status) {
       case "empty":
-        return t().empty(state.query);
+        return TEXT.empty;
       case "error":
         return state.error === undefined
-          ? t().error
-          : `${t().error} ${state.error}`;
+          ? TEXT.error
+          : `${TEXT.error} ${state.error}`;
       case "cancelled":
-        return t().cancelled;
+        return TEXT.cancelled;
       case "fallback":
-        return t().fallback;
-      case "ready":
-        return state.delivery === "sending"
-          ? t().sending
-          : state.delivery === "sent"
-            ? t().sent
-            : state.delivery === "tell" && state.told !== undefined
-              ? t().tell(state.told)
-              : "";
+        return TEXT.fallback;
       default:
         return "";
     }
@@ -262,44 +317,36 @@ export function mountPicker(
     const p = state.payload;
     root.setAttribute("aria-busy", String(state.status === "waiting"));
     root.dataset.status = state.status;
-    grid.setAttribute("aria-label", t().icons);
     const ready = state.status === "ready" && p !== undefined;
-    if (state.status === "waiting") {
-      title.textContent = state.query === "" ? "" : t().searching(state.query);
-      skeleton();
-    } else if (ready) {
-      if (built !== p || builtLang !== lang) build(p);
-      title.textContent = t().title(p.cards.length, p.query);
-      renderTools(p);
+    if (state.status === "waiting") skeleton();
+    else if (ready) {
+      if (built !== p) build(p);
+      renderControls(p);
       renderCards(p);
-    } else {
-      title.textContent = state.query;
     }
-    tools.hidden = !ready;
     grid.hidden = !(ready || state.status === "waiting");
+    controls.hidden = !ready;
+    formats.hidden = !ready;
     foot.hidden = !ready;
     image.hidden = !(state.status === "fallback" && state.image !== undefined);
     if (!image.hidden && state.image !== undefined) image.src = state.image;
+    const text = noteText();
+    note.hidden = text === "";
+    note.textContent = text;
     const card =
       ready && state.selected !== undefined
         ? cardOf(state, state.selected)
         : undefined;
-    const name =
-      card === undefined || p === undefined
-        ? undefined
-        : cardName(p, card, state.style);
     const set =
-      name === undefined || p === undefined ? undefined : cardSet(p, name);
+      card === undefined || p === undefined ? undefined : cardSet(p, card.icon);
     info.textContent =
       set === undefined
-        ? t().hint
+        ? ""
         : `${set.name} · ${set.license.title} · ${set.author.name}`;
-    button.textContent = t().select;
-    button.disabled =
-      name === undefined ||
-      state.delivery === "sending" ||
-      state.delivery === "sent";
-    status.textContent = statusText();
+    button.textContent =
+      state.delivery === "sent" ? TEXT.selected : TEXT.select;
+    button.disabled = card === undefined || state.delivery !== "idle";
+    live.textContent = state.delivery === "sent" ? TEXT.sent : "";
   }
 
   function update(next: PickerState): void {
@@ -308,10 +355,7 @@ export function mountPicker(
   }
 
   function cells(p: PickerPayload): GridCell[] {
-    return p.cards.map((card) => ({
-      n: card.n,
-      available: isAvailable(state, card),
-    }));
+    return p.cards.map((card) => ({ n: card.n, available: true }));
   }
 
   const columns = (): number =>
@@ -345,10 +389,10 @@ export function mountPicker(
     cards.get(to)?.button.focus();
   });
 
-  styleGroup.addEventListener("click", (event) => {
+  formats.addEventListener("click", (event) => {
     const pill = (event.target as Element).closest<HTMLElement>(".pill");
-    const style = pill?.dataset.style as PickerStyle | undefined;
-    if (style !== undefined) update(setStyle(state, style));
+    const format = pill?.dataset.format as Format | undefined;
+    if (format !== undefined) update(setFormat(state, format));
   });
 
   swatch.addEventListener("input", () => {
@@ -366,38 +410,44 @@ export function mountPicker(
 
   hex.addEventListener("blur", () => render());
 
+  range.addEventListener("input", () => {
+    const value = Number(range.value);
+    update(setStroke(state, Number.isFinite(value) ? value : undefined));
+  });
+
   button.addEventListener("click", () => {
     const p = state.payload;
     const card =
       state.selected === undefined ? undefined : cardOf(state, state.selected);
     if (p === undefined || card === undefined) return;
-    const choice = pickerChoice(p, card, state.style, state.color);
+    const choice = pickerChoice(p, card, {
+      format: state.format,
+      color: state.color,
+      stroke: state.stroke,
+    });
     if (choice === undefined) return;
     const sending = state;
     update({ ...state, delivery: "sending" });
+    // Итог отправки — «Selected» при любом ответе клиента: Claude, например, кладёт сообщение в поле
+    // ввода и отвечает ошибкой, хотя сообщение на месте. Пока сообщение уходило, человек мог поменять
+    // выбор — тогда итог прежнего не показываем.
     handlers
-      .pick(choice, lang)
-      .catch(() => "tell" as const)
-      .then((delivery) => {
-        // Пока сообщение уходило, человек мог выбрать другое: тогда итог прежнего выбора не показываем.
+      .pick(choice)
+      .catch(() => undefined)
+      .then(() => {
         if (
           state.selected !== sending.selected ||
-          state.style !== sending.style
+          state.format !== sending.format ||
+          state.color !== sending.color ||
+          state.stroke !== sending.stroke
         ) {
           return;
         }
-        update({
-          ...state,
-          delivery,
-          ...(delivery === "tell" ? { told: choice.icon } : {}),
-        });
+        update({ ...state, delivery: "sent" });
       });
   });
 
   return {
-    query(query) {
-      update(withQuery(state, query));
-    },
     result(result) {
       const payload = parsePickerPayload(result._meta?.[PICKER_META_KEY]);
       const png = result.content?.find(
@@ -424,11 +474,6 @@ export function mountPicker(
     },
     cancelled() {
       if (state.status === "waiting") update({ ...state, status: "cancelled" });
-    },
-    lang(next) {
-      if (next === lang) return;
-      lang = next;
-      render();
     },
   };
 }
