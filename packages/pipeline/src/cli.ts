@@ -10,6 +10,7 @@
 // | pnpm packages verify [id…] [--wait=N] [--plan=…] | pnpm api build | pnpm api preview [--port=N]
 // | pnpm api check [--expect-build=…] | pnpm api bench [--batches] [--base=…] [--seed=N] | pnpm icon build
 // | pnpm mcp build | pnpm mcp preview [--port=N] | pnpm mcp check [--expect-build=…] [--base=…] | pnpm mcp bench [--base=…]
+// | pnpm mcp clients [--only=1,2…] [--model=…] [--limits] [--keep]
 // | pnpm sandbox [--port=N] [--browser=chrome|firefox|webkit | --check]
 // | pnpm example [--port=N] [--prod] [--webpack] | pnpm example --check [--browser=…] [--webpack]
 // | pnpm visual [id…] [--browser=…]
@@ -169,6 +170,14 @@ import {
   renderMcpCheckMarkdown,
   renderMcpCheckPage,
 } from "./mcp/check-report.js";
+import {
+  DEFAULT_MODEL as CLIENTS_MODEL,
+  clientsFailed,
+  runClients,
+} from "./mcp/clients.js";
+import { checkLimits } from "./mcp/clients-limits.js";
+import { formatClients, markdownClients } from "./mcp/clients-report.js";
+import { CLIENT_SCENARIOS } from "./mcp/clients-scenarios.js";
 import {
   MCP_ORIGIN,
   MCP_OUT_DIR,
@@ -729,6 +738,11 @@ let refreshWait: number | undefined;
 let refreshSince: number | undefined;
 let refreshSets: string[] | undefined;
 let siteOnly: string[] | undefined;
+// pnpm mcp clients (шаг 12 фазы 4): сценарии, модель Claude Code, проверка лимитов, папки для разбора.
+let clientsOnly: number[] | undefined;
+let clientsModel: string | undefined;
+let clientsLimits = false;
+let clientsKeep = false;
 const modelKeys = new Set<string>();
 for (const flag of flags) {
   const eq = flag.indexOf("=");
@@ -938,6 +952,24 @@ for (const flag of flags) {
   ) {
     expectBuild = value;
     continue;
+  }
+  if (command === "mcp") {
+    if (name === "--only" && /^[1-9][0-9]?(,[1-9][0-9]?)*$/.test(value ?? "")) {
+      clientsOnly = (value ?? "").split(",").map(Number);
+      continue;
+    }
+    if (name === "--model" && /^[a-z0-9][a-z0-9.-]*$/.test(value ?? "")) {
+      clientsModel = value;
+      continue;
+    }
+    if (flag === "--limits") {
+      clientsLimits = true;
+      continue;
+    }
+    if (flag === "--keep") {
+      clientsKeep = true;
+      continue;
+    }
   }
   if (
     command === "embed" ||
@@ -2670,8 +2702,14 @@ try {
         sub !== "preview" &&
         sub !== "picker" &&
         sub !== "check" &&
-        sub !== "bench") ||
+        sub !== "bench" &&
+        sub !== "clients") ||
       rest.length > 0 ||
+      (sub !== "clients" &&
+        (clientsOnly !== undefined ||
+          clientsModel !== undefined ||
+          clientsLimits ||
+          clientsKeep)) ||
       (sub !== "preview" &&
         sub !== "picker" &&
         flags.some((f) => f.startsWith("--port="))) ||
@@ -2684,7 +2722,7 @@ try {
       (sub === "picker" && !checkBrowsers && benchBase !== undefined)
     ) {
       usageError(
-        "pnpm mcp: нужна подкоманда build, preview [--port=N], picker [--port=N] или picker --check [--browser=…] [--base=…], check [--expect-build=…] [--base=…] или bench [--base=…].",
+        "pnpm mcp: нужна подкоманда build, preview [--port=N], picker [--port=N] или picker --check [--browser=…] [--base=…], check [--expect-build=…] [--base=…], bench [--base=…] или clients [--only=1,2…] [--model=…] [--limits] [--keep].",
       );
     }
     if (sub === "build") {
@@ -2700,6 +2738,60 @@ try {
       process.exit(0);
     }
     const reportDir = join(reportsDir, "mcp");
+    if (sub === "clients") {
+      // Проверка MCP в Claude Code (шаг 12 фазы 4): каждый сценарий — свежий claude -p в чистой папке
+      // вне репозитория, только с нашим сервером; --limits — ещё и лимиты глазами ассистента.
+      const only = clientsOnly;
+      const scenarios =
+        only === undefined
+          ? clientsLimits
+            ? []
+            : CLIENT_SCENARIOS
+          : CLIENT_SCENARIOS.filter((x) => only.includes(x.id));
+      const model = clientsModel ?? CLIENTS_MODEL;
+      console.log(
+        `Проверка MCP в Claude Code: сценариев — ${scenarios.length}, модель ${model}${clientsLimits ? ", затем лимиты" : ""}…`,
+      );
+      const report = await runClients({
+        root,
+        dataDir,
+        scenarios,
+        model,
+        reportDir,
+        keep: clientsKeep,
+        log: (line) => console.log(`  ${line}`),
+      });
+      const limits = clientsLimits
+        ? await checkLimits({ model, log: (line) => console.log(`  ${line}`) })
+        : undefined;
+      if (scenarios.length > 0) {
+        for (const line of formatClients(report)) console.log(line);
+      }
+      if (limits !== undefined) {
+        for (const [title, v] of [
+          ["Счётчик", limits.verdicts.trip],
+          ["Ассистент", limits.verdicts.assistant],
+          ["После паузы", limits.verdicts.recovery],
+        ] as const) {
+          console.log(
+            `${title}: ${v.ok === true ? "да" : v.ok === false ? "НЕТ" : "—"} — ${v.note}`,
+          );
+        }
+      }
+      await mkdir(reportDir, { recursive: true });
+      await writeFile(
+        join(reportDir, "clients.json"),
+        `${JSON.stringify({ ...report, limits }, null, 2)}\n`,
+        "utf8",
+      );
+      const mdPath = join(reportDir, "clients.md");
+      await writeFile(mdPath, markdownClients(report, limits), "utf8");
+      console.log(`Отчёт: ${mdPath}`);
+      const limitsFailed =
+        limits !== undefined &&
+        Object.values(limits.verdicts).some((v) => v.ok === false);
+      process.exit(clientsFailed(report) || limitsFailed ? 1 : 0);
+    }
     if (sub === "check") {
       const base = benchBase ?? MCP_ORIGIN;
       console.log(

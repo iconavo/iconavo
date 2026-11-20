@@ -122,7 +122,7 @@ export interface PageCheckOptions {
 }
 
 /** Состояние иконок страницы: тег — по его shadow DOM, React — по <svg> в самой странице. */
-interface IconState {
+export interface IconState {
   /** По значению на иконку: нарисована ли. */
   drawn: boolean[];
   /** Заглушки и рамки «иконки нет» у React. */
@@ -158,8 +158,11 @@ function everyIconDrawn(): boolean {
   return all.length > 0 && all.every(Boolean);
 }
 
-/** Ждать, пока все иконки нарисуются; не дождались — то, что есть. */
-async function waitDrawn(page: Page, timeout: number): Promise<IconState> {
+/** Ждать, пока все иконки нарисуются; не дождались — то, что есть. Её же берёт проверка MCP в клиентах. */
+export async function waitDrawn(
+  page: Page,
+  timeout: number,
+): Promise<IconState> {
   await page.waitForFunction(everyIconDrawn, null, { timeout }).catch(() => {});
   return page.evaluate(iconState);
 }
