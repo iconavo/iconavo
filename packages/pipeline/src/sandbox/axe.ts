@@ -3,7 +3,7 @@
 
 import { readFile } from "node:fs/promises";
 import { createRequire } from "node:module";
-import type { Page } from "playwright";
+import type { Frame, Page } from "playwright";
 import { fail, pass, type Verdict } from "./verdict.js";
 
 /** Нарушение axe: правило, важность и первые элементы. */
@@ -54,7 +54,7 @@ export const axe = () => {
  * которые axe не оценит: например, кнопка с подписью тега через ElementInternals — её axe не видит.
  */
 export async function runAxe(
-  page: Page,
+  page: Page | Frame,
   source: string,
   path: string,
   pages: { path: string; violations: AxeViolation[] }[],

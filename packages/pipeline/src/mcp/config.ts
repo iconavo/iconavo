@@ -42,6 +42,8 @@ export const MCP_ICON_RATE = ICON_RATE;
 /** README тега: строки установки и разделы для get_usage вшиваются в функцию при сборке. */
 export const ICON_README = "packages/icon/README.md";
 export const README_MODULE = "virtual:iconavo/readme";
+/** Страница сетки выбора pick_icon (шаг 11 фазы 4, ADR-0045) вшивается в функцию так же. */
+export const PICKER_MODULE = "virtual:iconavo/picker";
 /**
  * Предел процессора на вызов, мс (платный тариф Workers с 19 ноября 2026: без него — 30 с).
  * Сетка из 24 иконок на компьютере владельца — до 12 мс; запас — на холодный старт копии (SDK и
@@ -50,3 +52,5 @@ export const README_MODULE = "virtual:iconavo/readme";
 export const MCP_CPU_MS = 300;
 /** Порт превью: у API 4281, у песочницы 4282, у примера 4283, у сайта 4284. */
 export const MCP_PREVIEW_PORT = 4285;
+/** Страница просмотра сетки выбора в чате (pnpm mcp picker, шаг 11 фазы 4). */
+export const PICKER_PORT = 4286;

@@ -3,13 +3,23 @@
 // путь без состояния) и 2026-07-28. Ключи не нужны. Что проверяется:
 // - HTTP: страница /, robots.txt, 405 на GET /mcp (потока событий нет), CORS, отказ пачке сообщений,
 //   переход с http (только у живого адреса);
-// - список инструментов: пять инструментов ADR-0011, описание, схемы входа и ответа, «только чтение»;
+// - список инструментов: шесть инструментов ADR-0011 и ADR-0045, описание, схемы входа и ответа,
+//   «только чтение»;
 // - вызовы всех пяти: ответ по схеме (клиент SDK сверяет structuredContent со схемой сам); search_icons —
 //   поиск по смыслу и одна PNG-картинка нужного размера; get_icon — код как у генератора сайта, SVG
 //   побайтно как у адреса SVG edge API; get_matching_set — like: ph:house-bold даёт только ph:*-bold;
-//   get_usage — строки README; list_sets — пять наборов. Лицензия и автор — в каждом ответе.
+//   get_usage — строки README; list_sets — пять наборов; pick_icon — данные сетки в _meta. Лицензия и
+//   автор — в каждом ответе;
+// - сетка выбора (MCP Apps, ADR-0045): адрес интерфейса у pick_icon, шаблон и чтение ресурса, версия —
+//   отпечаток страницы, код выбора в сетке — как у get_icon.
 // Каждый вызов попадает в отчёт целиком: запрос, текст, картинка и данные — их смотрит владелец.
 
+import { createHash } from "node:crypto";
+import {
+  PICKER_META_KEY,
+  parsePickerPayload,
+  pickerChoice,
+} from "@iconavo-ui/snippets/picker";
 import {
   Client,
   StreamableHTTPClientTransport,
@@ -64,19 +74,20 @@ const WAIT_MS = 180_000;
 const STEP_MS = 15_000;
 const TIMEOUT_MS = 60_000;
 
-/** Инструменты ADR-0011 — в списке ровно они, в этом порядке. */
+/** Инструменты ADR-0011 и сетка выбора ADR-0045 — в списке ровно они, в этом порядке. */
 export const TOOLS = [
   "search_icons",
   "get_icon",
   "get_matching_set",
   "get_usage",
   "list_sets",
+  "pick_icon",
 ] as const;
 
 // biome-ignore lint/suspicious/noExplicitAny: данные ответа сверяются по полям, схему уже проверил клиент SDK
 type Json = any;
 
-/** Вызов инструмента и что должно получиться; out — данные по схеме. */
+/** Вызов инструмента и что должно получиться; out — данные по схеме, meta — служебная часть ответа. */
 interface Case {
   tool: (typeof TOOLS)[number];
   args: Record<string, unknown>;
@@ -85,6 +96,7 @@ interface Case {
     out: Json,
     images: McpImage[],
     text: string,
+    meta: Json,
   ) => string[] | Promise<string[]>;
 }
 
@@ -300,7 +312,87 @@ export const CASES: readonly Case[] = [
       ]),
     ],
   },
+  {
+    tool: "pick_icon",
+    args: { query: "поделиться" },
+    eras: ERAS,
+    expect: (r, images, text, meta) => {
+      const payload = parsePickerPayload(meta?.[PICKER_META_KEY]);
+      return [
+        ...same("иконок", r.count, 12),
+        ...size(images, 384, 288),
+        ...licenseProblems(r),
+        ...(text.includes("ask the user for a number")
+          ? []
+          : ["в тексте нет подсказки для клиентов без сетки"]),
+        ...(payload === undefined
+          ? ["нет данных сетки в _meta"]
+          : [
+              ...same("карточек в сетке", payload.cards.length, 12),
+              ...payload.cards.flatMap((c) =>
+                Object.values(c.styles).every(
+                  (name) => payload.icons[name] !== undefined,
+                )
+                  ? []
+                  : [`у ${c.icon} нет рисунка стиля`],
+              ),
+              ...payload.sets.flatMap((x) => setProblems(x, x.prefix)),
+            ]),
+      ];
+    },
+  },
 ];
+
+/**
+ * Сетка выбора (MCP Apps, ADR-0045): адрес интерфейса у pick_icon, шаблон и чтение ресурса, версия —
+ * отпечаток страницы; код, который сетка отдаст ассистенту, — как у get_icon.
+ */
+async function pickerProblems(client: Client, uri: unknown): Promise<string[]> {
+  const problems: string[] = [];
+  if (typeof uri !== "string" || !/^ui:\/\/picker\/[0-9a-f]{8}$/.test(uri)) {
+    return [`у pick_icon адрес интерфейса ${JSON.stringify(uri)}`];
+  }
+  const templates = await client.listResourceTemplates();
+  if (
+    !templates.resourceTemplates.some(
+      (t) => t.uriTemplate === "ui://picker/{version}",
+    )
+  ) {
+    problems.push("нет шаблона ui://picker/{version}");
+  }
+  const read = await client.readResource({ uri });
+  const content = read.contents[0] as Json;
+  const html = typeof content?.text === "string" ? content.text : "";
+  problems.push(
+    ...same("MIME", content?.mimeType, "text/html;profile=mcp-app"),
+    ...same("рамка клиента", content?._meta?.ui?.prefersBorder, true),
+    ...(html.startsWith("<!doctype html>") ? [] : ["ресурс — не страница"]),
+    ...same(
+      "версия",
+      uri.slice("ui://picker/".length),
+      createHash("sha256").update(html).digest("hex").slice(0, 8),
+    ),
+  );
+  const picked = await client.callTool({
+    name: "pick_icon",
+    arguments: { query: "share", format: "react", color: "#e11d48" },
+  });
+  const payload = parsePickerPayload((picked._meta as Json)?.[PICKER_META_KEY]);
+  const card = payload?.cards[0];
+  const choice =
+    payload === undefined || card === undefined
+      ? undefined
+      : pickerChoice(payload, card, "any", payload.color);
+  if (choice === undefined) return [...problems, "выбор в сетке не считается"];
+  const icon = await client.callTool({
+    name: "get_icon",
+    arguments: { icon: choice.icon, format: "react", color: "#e11d48" },
+  });
+  return [
+    ...problems,
+    ...same("код выбора", choice.code, (icon.structuredContent as Json)?.code),
+  ];
+}
 
 /** Размер PNG из заголовка IHDR; не PNG — undefined. */
 export function pngSize(
@@ -508,6 +600,24 @@ async function eraChecks(
         ]),
       ],
     });
+    try {
+      rows.push({
+        name: `Протокол ${era}: сетка выбора`,
+        problems: await pickerProblems(
+          client,
+          (
+            tools.tools.find((t) => t.name === "pick_icon")?._meta?.ui as
+              | Json
+              | undefined
+          )?.resourceUri,
+        ),
+      });
+    } catch (e) {
+      rows.push({
+        name: `Протокол ${era}: сетка выбора`,
+        problems: [(e as Error).message],
+      });
+    }
     for (const c of CASES.filter((x) => x.eras.includes(era))) {
       log?.(`${era}: ${c.tool} ${JSON.stringify(c.args)}`);
       const started = performance.now();
@@ -560,6 +670,7 @@ async function eraChecks(
               result.structuredContent,
               call.images,
               call.text,
+              result._meta,
             )),
           );
         }

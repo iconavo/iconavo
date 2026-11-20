@@ -25,6 +25,7 @@
     "@iconavo-ui/icon": "workspace:*",
     "@iconavo-ui/react": "workspace:*",
     "@modelcontextprotocol/client": "2.4.0",
+    "@modelcontextprotocol/ext-apps": "2.0.4",
     "@types/node": "^26.6.5",
     "axe-core": "4.14.0",
     "react-18": "npm:react@18.3.1",

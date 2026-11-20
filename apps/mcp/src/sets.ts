@@ -1,7 +1,7 @@
 // Набор иконки — автор и лицензия для каждого ответа (ADR-0011): из оглавления каталога раздачи, тем
 // же правилом, что у адреса /icon edge API (setSummary).
 
-import type { IconSetSummary } from "@iconavo-ui/search";
+import type { IconCredit, IconSetSummary } from "@iconavo-ui/search";
 import { catalogOf } from "../../api/src/catalog.js";
 import { StorageError } from "../../api/src/http.js";
 import { setSummary } from "../../api/src/icon.js";
@@ -22,6 +22,34 @@ export async function setsInfo(
     }
     return setSummary(prefix, entry);
   });
+}
+
+/**
+ * Части от других авторов у каждой иконки (Feather у Lucide, ADR-0017) — тем же правилом, что /icon:
+ * имя иконки — каноническое, в списке автора части. Нет частей — имени в ответе нет.
+ */
+export async function iconCredits(
+  deps: McpDeps,
+  names: readonly string[],
+): Promise<Map<string, IconCredit[]>> {
+  const manifest = await deps.routes.manifest();
+  const index = await deps.routes.catalogIndex(catalogOf(manifest));
+  const out = new Map<string, IconCredit[]>();
+  for (const name of names) {
+    const colon = name.indexOf(":");
+    const entry = index.sets.get(name.slice(0, colon));
+    const bare = name.slice(colon + 1);
+    const credits = (entry?.credits ?? [])
+      .filter((c) => c.icons.includes(bare))
+      .map((c) => ({
+        name: c.name,
+        author: c.author,
+        license: c.license,
+        url: c.url,
+      }));
+    if (credits.length > 0) out.set(name, credits);
+  }
+  return out;
 }
 
 /** Строка для текста ответа: «Lucide — ISC, Lucide Contributors (url)», и части других авторов. */

@@ -38,6 +38,11 @@ export const USAGE = usageFromReadme(
   ),
 );
 export const INDEX = "1234abcd";
+/** Заглушка страницы сетки выбора pick_icon: настоящую вшивает pnpm mcp build. */
+export const PICKER = {
+  html: '<!doctype html><title>picker</title><main id="picker"></main>',
+  version: "abcdef12",
+};
 export const COLOR_VERSION = "89abcdef";
 /** Подменная картинка: PNG-подпись и номер отрисовки. */
 export const PNG_SIGNATURE = [137, 80, 78, 71, 13, 10, 26, 10];
@@ -230,6 +235,7 @@ export function mcpSetup(o: McpSetupOptions = {}) {
       log: (message) => logs.push(message),
       fetch: net.fn,
       usage: USAGE,
+      picker: PICKER,
       render: (svg) => {
         rendered.push(svg);
         return new Uint8Array([...PNG_SIGNATURE, rendered.length]);
@@ -270,6 +276,7 @@ export function mcpSetup(o: McpSetupOptions = {}) {
         mimeType?: string;
       }[];
       structuredContent?: Record<string, unknown>;
+      _meta?: Record<string, unknown>;
     };
   };
   return {

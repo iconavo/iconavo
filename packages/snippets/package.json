@@ -7,7 +7,9 @@
     "./code": "./dist/code.js",
     "./icon": "./dist/icon.js",
     "./install": "./dist/install.js",
+    "./look": "./dist/look.js",
     "./markdown": "./dist/markdown.js",
+    "./picker": "./dist/picker.js",
     "./readme": "./dist/readme.js",
     "./settings": "./dist/settings.js"
   },

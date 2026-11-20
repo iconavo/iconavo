@@ -1,0 +1,346 @@
+/*
+ * Сетка выбора иконки в чате (ADR-0045, ADR-0038): только токены сайта — их значения сборка переносит из
+ * блока @theme apps/site/app/globals.css (picker-build.ts). Тема — как у чата: data-theme у <html> ставит
+ * вид по контексту клиента, и color-scheme переключает пары light-dark(). Шрифт — шрифт чата: рамка не
+ * пускает внешние шрифты (решение владельца 20 ноября 2026). Свои цвета здесь не пишутся — их не пускает
+ * тест сборки.
+ */
+
+:root {
+  color-scheme: light dark;
+  --font-sans: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+:root[data-theme="light"] {
+  color-scheme: light;
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+}
+
+body {
+  background: var(--color-bg-page);
+  color: var(--color-text-primary);
+  font-family: var(--font-sans);
+  font-size: var(--text-body-base);
+  line-height: var(--text-body-base--line-height);
+}
+
+/* Скрытое — скрыто, даже если у класса свой display. */
+.picker [hidden] {
+  display: none;
+}
+
+.picker {
+  display: grid;
+  gap: 1rem;
+  padding: calc(1rem + var(--safe-top, 0px)) calc(1rem + var(--safe-right, 0px))
+    calc(1rem + var(--safe-bottom, 0px)) calc(1rem + var(--safe-left, 0px));
+}
+
+.picker-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.picker-title {
+  margin: 0;
+  min-inline-size: 0;
+  font-size: var(--text-heading-md);
+  line-height: var(--text-heading-md--line-height);
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.picker-tools {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.style-switch {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+}
+
+.pill,
+.picker-select,
+.card {
+  appearance: none;
+  font: inherit;
+  cursor: pointer;
+}
+
+.pill {
+  padding: 0.25rem 0.625rem;
+  border: 1px solid var(--color-border-secondary);
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--color-text-primary);
+  font-size: var(--text-body-sm);
+  line-height: var(--text-body-sm--line-height);
+}
+.pill:hover {
+  background: var(--color-bg-hover);
+}
+.pill[aria-pressed="true"] {
+  border-color: transparent;
+  background: var(--color-accent-mint);
+  color: var(--color-text-on-accent);
+}
+
+.color-field {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  block-size: 2.125rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: var(--radius-md);
+  background: var(--color-bg-surface-strong);
+}
+.color-field:focus-within {
+  outline: 2px solid var(--color-selection-bg);
+  outline-offset: 2px;
+}
+
+.color-swatch {
+  inline-size: 1rem;
+  block-size: 1rem;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-xs);
+  background: transparent;
+  cursor: pointer;
+}
+.color-swatch::-webkit-color-swatch-wrapper {
+  padding: 0;
+}
+.color-swatch::-webkit-color-swatch {
+  border: 0;
+  border-radius: var(--radius-xs);
+}
+.color-swatch::-moz-color-swatch {
+  border: 0;
+  border-radius: var(--radius-xs);
+}
+/* «Авто» — квадрат цвета текста, как в панели сайта: образец цвета прозрачен, виден фон поля. */
+.color-swatch[data-auto] {
+  background: var(--color-text-primary);
+}
+.color-swatch[data-auto]::-webkit-color-swatch {
+  opacity: 0;
+}
+.color-swatch[data-auto]::-moz-color-swatch {
+  opacity: 0;
+}
+.color-swatch:focus-visible {
+  outline: none;
+}
+
+.color-hex {
+  inline-size: 4.5rem;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--color-text-primary);
+  font: inherit;
+  font-size: var(--text-body-sm);
+  line-height: var(--text-body-sm--line-height);
+  text-transform: uppercase;
+}
+.color-hex::placeholder {
+  color: var(--color-text-secondary);
+  text-transform: none;
+}
+.color-hex:focus {
+  outline: none;
+}
+
+.picker-grid {
+  --cols: 2;
+  display: grid;
+  grid-template-columns: repeat(var(--cols), minmax(0, 1fr));
+  gap: 0.5rem;
+  margin: 0;
+  padding: 0;
+}
+@media (min-width: 22rem) {
+  .picker-grid {
+    --cols: 3;
+  }
+}
+@media (min-width: 30rem) {
+  .picker-grid {
+    --cols: 4;
+  }
+}
+@media (min-width: 46rem) {
+  .picker-grid {
+    --cols: 6;
+  }
+}
+
+.picker-cell {
+  display: flex;
+  min-inline-size: 0;
+}
+
+.card {
+  position: relative;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  min-inline-size: 0;
+  min-block-size: 6.75rem;
+  padding: 1.25rem 0.5rem 0.75rem;
+  border: 0;
+  border-radius: var(--radius-lg);
+  background: var(--color-bg-icon-card);
+  color: var(--color-text-primary);
+}
+.card:hover {
+  background: var(--color-bg-hover);
+}
+/* Точное совпадение имени — рамкой, как на сайте. */
+.card[data-exact] {
+  box-shadow: inset 0 0 0 1px var(--color-border-primary);
+}
+/* Выбранная — фон и рамка цвета отмеченного: одним фоном выбор почти не виден. */
+.card[aria-checked="true"] {
+  background: var(--color-bg-card-hover);
+  box-shadow: inset 0 0 0 2px var(--color-link-unicode);
+}
+/* Нет выбранного стиля — бледная и недоступна, но на своём месте (решение владельца 20 ноября 2026). */
+.card[aria-disabled="true"] {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+.card[aria-disabled="true"]:hover {
+  background: var(--color-bg-icon-card);
+}
+.card:focus-visible,
+.pill:focus-visible,
+.picker-select:focus-visible {
+  outline: 2px solid var(--color-selection-bg);
+  outline-offset: 2px;
+}
+
+.card-num {
+  position: absolute;
+  inset-block-start: 0.375rem;
+  inset-inline-start: 0.5rem;
+  color: var(--color-text-secondary);
+  font-size: var(--text-body-xs);
+  line-height: var(--text-body-xs--line-height);
+}
+
+.card-svg {
+  display: block;
+  font-size: 2rem;
+  line-height: 0;
+}
+.card-svg svg {
+  display: block;
+}
+/* Свой цвет — только у монохромных наборов: цветные рисуются как есть. */
+.card.mono .card-svg {
+  color: var(--picker-color, var(--color-text-primary));
+}
+
+.card-name,
+.card-set {
+  max-inline-size: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.card-name {
+  font-size: var(--text-body-sm);
+  line-height: var(--text-body-sm--line-height);
+}
+.card-set {
+  color: var(--color-text-secondary);
+  font-size: var(--text-body-xs);
+  line-height: var(--text-body-xs--line-height);
+}
+
+/* Место под карточку, пока ответа нет: тот же размер, без движения. */
+.card-skeleton {
+  cursor: default;
+}
+.card-skeleton:hover {
+  background: var(--color-bg-icon-card);
+}
+.card-skeleton::before {
+  content: "";
+  inline-size: 2rem;
+  block-size: 2rem;
+  border-radius: var(--radius-sm);
+  background: var(--color-bg-surface-strong);
+}
+
+.picker-image {
+  display: block;
+  max-inline-size: 100%;
+  block-size: auto;
+  border-radius: var(--radius-lg);
+}
+
+.picker-foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.picker-info {
+  flex: 1 1 12rem;
+  min-inline-size: 0;
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: var(--text-body-sm);
+  line-height: var(--text-body-sm--line-height);
+}
+
+.picker-select {
+  block-size: 2.625rem;
+  padding: 0 1.5rem;
+  border: 0;
+  border-radius: var(--radius-md);
+  background: var(--color-accent-lemon);
+  color: var(--color-text-on-accent);
+  font-weight: 500;
+}
+.picker-select:hover {
+  opacity: 0.9;
+}
+.picker-select:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.picker-status {
+  min-block-size: var(--text-body-sm--line-height);
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: var(--text-body-sm);
+  line-height: var(--text-body-sm--line-height);
+}

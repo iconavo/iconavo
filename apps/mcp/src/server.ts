@@ -3,9 +3,20 @@
 // инструментов — схемы созданы заранее (schemas.ts, tools/*.ts). Названия инструментов — из ADR-0011,
 // дальше они меняются только добавлением: новые необязательные поля, новые инструменты.
 
-import { McpServer } from "@modelcontextprotocol/server";
+import {
+  RESOURCE_MIME_TYPE,
+  registerAppTool,
+} from "@modelcontextprotocol/ext-apps/server";
+import {
+  McpServer,
+  ResourceNotFoundError,
+  ResourceTemplate,
+} from "@modelcontextprotocol/server";
 import {
   MAX_TOOL_INPUT_ELEMENTS,
+  PICKER_TEMPLATE,
+  PICKER_VERSION,
+  pickerUri,
   SITE_URL,
   TOOLS_LIST_TTL_MS,
 } from "./config.js";
@@ -32,6 +43,13 @@ import {
   matchingSet,
 } from "./tools/matching.js";
 import {
+  PICK_DESCRIPTION,
+  PICK_NAME,
+  PickInput,
+  PickOutput,
+  pickIcon,
+} from "./tools/pick.js";
+import {
   SEARCH_DESCRIPTION,
   SEARCH_NAME,
   SearchInput,
@@ -50,6 +68,7 @@ export const INSTRUCTIONS = [
   "Iconavo is a catalog of open-source icons (Lucide, Tabler, Material Symbols, Phosphor, Fluent Emoji Flat) with search by meaning in any language.",
   "Typical flow: search_icons to find candidates (its PNG preview numbers them in the same order as the list) → get_icon for ready code →",
   "get_usage once per project to install the package. For several icons that must look alike, such as a menu or a toolbar, use get_matching_set.",
+  "When the user wants to choose or see options, call pick_icon: it shows a grid in the chat, and the user's choice comes back with ready code.",
   "Code uses the Iconavo package by default (the <iconavo-icon> web component, or React); give raw SVG only when the user asks for it.",
   "Every icon keeps the license of its set: tell the user the license and author shown in each response and keep the attribution.",
 ].join(" ");
@@ -72,10 +91,18 @@ export function createServer(deps: McpDeps, call: Call): McpServer {
     },
     {
       instructions: INSTRUCTIONS,
-      // Список инструментов меняется только выкладкой: подписываться на его изменения незачем.
-      capabilities: { tools: { listChanged: false } },
+      // Списки инструментов и ресурсов меняются только выкладкой: подписываться на изменения незачем.
+      capabilities: {
+        tools: { listChanged: false },
+        resources: { listChanged: false },
+      },
       cacheHints: {
         "tools/list": { ttlMs: TOOLS_LIST_TTL_MS, cacheScope: "public" },
+        "resources/list": { ttlMs: TOOLS_LIST_TTL_MS, cacheScope: "public" },
+        "resources/templates/list": {
+          ttlMs: TOOLS_LIST_TTL_MS,
+          cacheScope: "public",
+        },
       },
       maxToolInputElements: MAX_TOOL_INPUT_ELEMENTS,
     },
@@ -134,6 +161,60 @@ export function createServer(deps: McpDeps, call: Call): McpServer {
       annotations: { title: "List icon sets", ...READ_ONLY },
     },
     (args) => listSets(deps, args),
+  );
+  // Сетка выбора в чате (ADR-0045): инструмент с интерфейсом MCP Apps и сам интерфейс — ресурс.
+  const uri = pickerUri(deps.picker.version);
+  registerAppTool(
+    server,
+    PICK_NAME,
+    {
+      title: "Pick an icon in the chat",
+      description: PICK_DESCRIPTION,
+      inputSchema: PickInput,
+      outputSchema: PickOutput,
+      annotations: { title: "Pick an icon in the chat", ...READ_ONLY },
+      _meta: { ui: { resourceUri: uri } },
+    },
+    (args) => pickIcon(deps, call, args),
+  );
+  server.registerResource(
+    "picker",
+    new ResourceTemplate(PICKER_TEMPLATE, {
+      list: () => ({
+        resources: [
+          {
+            uri,
+            name: "picker",
+            title: "Icon picker",
+            mimeType: RESOURCE_MIME_TYPE,
+          },
+        ],
+      }),
+    }),
+    {
+      title: "Icon picker",
+      description:
+        "Interactive grid for pick_icon: the user picks an icon right in the chat (MCP Apps)",
+      mimeType: RESOURCE_MIME_TYPE,
+      cacheHint: { ttlMs: TOOLS_LIST_TTL_MS, cacheScope: "public" },
+    },
+    (url, variables) => {
+      // Любая версия — текущая страница: у клиента список инструментов со старым адресом живёт до часа.
+      if (!PICKER_VERSION.test(String(variables.version))) {
+        throw new ResourceNotFoundError(url.href);
+      }
+      return {
+        contents: [
+          {
+            uri: url.href,
+            mimeType: RESOURCE_MIME_TYPE,
+            text: deps.picker.html,
+            // Рамку рисует клиент; сети сетке не нужно — доменов в политике нет.
+            _meta: { ui: { prefersBorder: true } },
+          },
+        ],
+      };
+    },
   );
   return server;
 }

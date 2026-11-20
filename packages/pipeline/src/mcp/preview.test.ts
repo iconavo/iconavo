@@ -93,7 +93,20 @@ describe("превью MCP-сервера", () => {
           "get_matching_set",
           "get_usage",
           "list_sets",
+          "pick_icon",
         ]);
+        // Сетка выбора (ADR-0045): адрес интерфейса — у инструмента, страница — ресурс по этому адресу.
+        const pick = tools.tools.find((t) => t.name === "pick_icon");
+        const uri = (pick?._meta?.ui as { resourceUri?: string } | undefined)
+          ?.resourceUri;
+        expect(uri).toMatch(/^ui:\/\/picker\/[0-9a-f]{8}$/);
+        const page = await client.readResource({ uri: uri as string });
+        const content = page.contents[0] as {
+          mimeType?: string;
+          text?: string;
+        };
+        expect(content.mimeType).toBe("text/html;profile=mcp-app");
+        expect(content.text).toMatch(/^<!doctype html>/);
         const result = await client.callTool({
           name: "search_icons",
           arguments: { query: "house" },

@@ -9,8 +9,8 @@ import * as z from "zod";
 import {
   appliedOf,
   codeOf,
+  FORMAT_TITLES,
   FORMATS,
-  type Format,
   LookFields,
   type Setup,
   settingsOf,
@@ -102,12 +102,6 @@ export const IconOutput = z.object({
 });
 
 export type IconResult = z.output<typeof IconOutput>;
-
-const FORMAT_TITLES: Record<Format, string> = {
-  html: "web component <iconavo-icon>",
-  react: "React <Icon> from @iconavo-ui/react",
-  svg: "SVG markup",
-};
 
 function text(r: IconResult, partial: boolean): string {
   const others = r.styles

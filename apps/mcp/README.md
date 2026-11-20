@@ -52,6 +52,7 @@ Then ask in your own words, for example: "Find an icon for a share button" or "A
 | `get_matching_set` | Several icons that look alike — one set, one style, one variant — for a group of concepts, optionally matching an icon you already use |
 | `get_usage` | How to install and set up the package: HTML with npm, HTML without a build step, React or Next.js |
 | `list_sets` | The icon sets with authors, licenses, styles and sample icons |
+| `pick_icon` | Shows a grid of 12 icons right in the chat (MCP Apps). The user picks one, and the choice comes back to the assistant with ready code |
 
 ### `search_icons`
 
@@ -110,11 +111,30 @@ The text comes from the package documentation, so it always matches the publishe
 
 `licenseText: true` adds the full license text of each set. It is long, so it is off by default.
 
+### `pick_icon`
+
+An interactive icon picker for clients that support [MCP Apps](https://github.com/modelcontextprotocol/ext-apps), such as Claude and ChatGPT.
+
+- `query`, `sets`, `style`, `license` — as in `search_icons`. The grid always shows 12 icons.
+- `format`, `size` — the code the picker returns, as in `get_icon`.
+- `color` — optional starting color of the preview, such as a brand color. The user can change it.
+
+The grid follows the chat's theme and language. The user can switch the style for all icons at once, preview a color on single-color sets, and press **Select**. Icons that have no variant in the chosen style are dimmed.
+
+After **Select**:
+
+- the ready code, the license and the attribution go into the assistant's context;
+- a short message such as "Picked lucide:share-2 · Outline · #E11D48" goes to the chat. Claude asks the user to confirm it.
+
+The picker is the `ui://picker/{version}` resource. The version changes with every new build, so clients never show a stale picker. It loads nothing from the network: the icons arrive with the tool result.
+
+Clients without MCP Apps get the same numbered list and PNG grid as `search_icons`. The assistant then asks the user for a number and calls `get_icon`.
+
 ## Limits
 
 | Tool | Calls per minute from one address |
 | --- | --- |
-| `search_icons`, `get_matching_set` | 60 |
+| `search_icons`, `get_matching_set`, `pick_icon` | 60 |
 | `get_icon` | 300 |
 | `get_usage`, `list_sets` | not limited |
 
@@ -142,4 +162,6 @@ The server runs on Cloudflare Workers and uses the official MCP TypeScript SDK. 
 pnpm mcp build     # the bundle in dist-mcp/
 pnpm mcp preview   # http://127.0.0.1:4285/mcp, with the same restrictions as Workers
 pnpm mcp check --base=http://127.0.0.1:4285   # all tools with the official MCP client
+pnpm mcp picker    # http://127.0.0.1:4286 — the pick_icon grid in a test host
+pnpm mcp picker --check   # the grid in Chrome, Firefox and WebKit
 ```
