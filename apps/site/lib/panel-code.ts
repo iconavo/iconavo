@@ -4,9 +4,16 @@
 // 12 ноября 2026: в панели — размер, цвет и толщина линии).
 
 import type { IconData } from "@iconavo-ui/core/internal";
-import { type Applies, fileSvg, splitName, svgLink, tagCode } from "./code";
+import {
+  type Applies,
+  cssClassCode as classCode,
+  fileSvg,
+  pixelBox,
+  splitName,
+  svgLink,
+  tagCode,
+} from "./code";
 import type { IconSettings } from "./icon-settings";
-import { formatName } from "./names";
 
 /**
  * Виды блока кода: формат и подвкладка. Что из макета в продукте есть — здесь; остальное (SVG+CSS, JSX,
@@ -124,85 +131,24 @@ export function svgView(
   return options.comment ? `<!-- ${name} -->\n${svg}` : svg;
 }
 
-/**
- * SVG в data URL, как у Iconify: кавычки — одинарные, кодируются только символы, которые ломают адрес в
- * CSS и HTML; пробелы подряд — один.
- */
-export function svgDataUrl(svg: string): string {
-  const text = svg
-    .replace(/"/g, "'")
-    .replace(/%/g, "%25")
-    .replace(/#/g, "%23")
-    .replace(/</g, "%3C")
-    .replace(/>/g, "%3E")
-    .replace(/\s+/g, " ");
-  return `data:image/svg+xml,${text}`;
-}
+/** SVG в data URL, класс CSS и его элемент — общие с MCP (packages/snippets/src/code.ts). */
+export { cssClassName, cssSpanCode, svgDataUrl } from "./code";
 
 /** SVG для data URL и CSS: в одну строку, без настроек вывода. */
 export const plainSvg = (icon: IconData, s: IconSettings, o: Applies): string =>
   fileSvg(icon, panelSettings(s), o);
 
-/** Класс CSS иконки — как у Iconify: набор--иконка. */
-export const cssClassName = (name: string) => formatName(name, "cssClass");
-
-/** Размер в пикселях по пропорции рисунка: высота — выбранный размер. */
-function box(icon: IconData, size: number): { width: number; height: number } {
-  const ratio = icon.width / icon.height;
-  return {
-    width: Math.round(size * ratio * 100) / 100,
-    height: size,
-  };
-}
-
 /**
  * CSS-класс вида «CSS» (макет View=CSS): монохромная иконка — маска с цветом текста вокруг (свой цвет —
- * background-color), цветная — картинкой фона.
+ * background-color), цветная — картинкой фона. Код — общий с форматом css MCP; поворот и отражение в
+ * панели не участвуют.
  */
-export function cssClassCode(
+export const cssClassCode = (
   name: string,
   icon: IconData,
   s: IconSettings,
   o: Applies,
-): string {
-  const { width, height } = box(icon, s.size);
-  const head = [
-    `.${cssClassName(name)} {`,
-    "  display: inline-block;",
-    `  width: ${width}px;`,
-    `  height: ${height}px;`,
-  ];
-  if (o.palette) {
-    const url = svgDataUrl(plainSvg(icon, s, o));
-    return [
-      ...head,
-      `  background: no-repeat center / 100% 100% url("${url}");`,
-      "}",
-    ].join("\n");
-  }
-  // Для маски цвет рисунка не важен — чёрный, как у Iconify; цвет иконке даёт background-color.
-  const url = svgDataUrl(
-    plainSvg(icon, { ...s, color: undefined }, o)
-      .split("currentColor")
-      .join("black"),
-  );
-  return [
-    ...head,
-    `  --svg: url("${url}");`,
-    `  background-color: ${s.color === undefined ? "currentColor" : s.color};`,
-    "  -webkit-mask-image: var(--svg);",
-    "  mask-image: var(--svg);",
-    "  -webkit-mask-repeat: no-repeat;",
-    "  mask-repeat: no-repeat;",
-    "  -webkit-mask-size: 100% 100%;",
-    "  mask-size: 100% 100%;",
-    "}",
-  ].join("\n");
-}
-
-/** Элемент с классом CSS. */
-export const cssSpanCode = (name: string) =>
-  `<span class="${cssClassName(name)}"></span>`;
+): string => classCode(name, icon, panelSettings(s), o);
 
 /** Адрес SVG edge API для вида «URL» — с размером, цветом и толщиной. */
 export const urlView = (
@@ -219,7 +165,7 @@ export function imgCode(
   icon: IconData,
   size: number,
 ) {
-  const { width, height } = box(icon, size);
+  const { width, height } = pixelBox(icon, size);
   return `<img src="${url}" width="${width}" height="${height}" alt="${splitName(name)[1]}" />`;
 }
 

@@ -12,6 +12,7 @@ import {
   FORMAT_TITLES,
   FORMATS,
   LookFields,
+  needsDrawing,
   type Setup,
   settingsOf,
   setupFor,
@@ -32,7 +33,7 @@ export const ICON_NAME = "get_icon";
 export const ICON_DESCRIPTION = [
   'Get ready-to-paste code for one icon by its full name from search_icons, e.g. "lucide:house".',
   'By default the code uses the Iconavo package: format "html" — the <iconavo-icon> web component (works in any framework and in plain HTML);',
-  'use format "react" in React and Next.js projects; use "svg" only when the user explicitly needs raw SVG markup.',
+  'use format "react" in React and Next.js projects; use "svg" only when the user explicitly needs raw SVG markup, and "css" for a CSS class with the icon.',
   "Also returns the icon's set, license, author and attribution text, other styles of the same drawing, similar icons in the same style and a description.",
   "Call get_usage once per project to install and set up the package.",
 ].join(" ");
@@ -161,14 +162,14 @@ export async function getIcon(
       settings,
       applies,
       deps.usage.install,
-      args.format === "svg"
+      needsDrawing(args.format)
         ? { icon: await iconBody(deps, call, details.icon), details }
         : undefined,
     );
     const setup: Setup | undefined =
-      args.format === "svg"
-        ? undefined
-        : setupFor(args.format, deps.usage.install);
+      args.format === "html" || args.format === "react"
+        ? setupFor(args.format, deps.usage.install)
+        : undefined;
     const result: IconResult = {
       icon: details.icon,
       ...(details.alias === undefined ? {} : { requested: details.alias }),

@@ -220,6 +220,26 @@ export const CASES: readonly Case[] = [
   },
   {
     tool: "get_icon",
+    args: { icon: "lucide:house", format: "css", strokeWidth: 1.5 },
+    eras: ["2025"],
+    expect: (r) => [
+      ...(String(r.code).startsWith(
+        ".lucide--house {\n  display: inline-block;",
+      )
+        ? []
+        : ["CSS без класса lucide--house"]),
+      ...(String(r.code).endsWith('\n\n<span class="lucide--house"></span>')
+        ? []
+        : ["CSS без элемента с классом"]),
+      ...(String(r.code).includes("stroke-width='1.5'")
+        ? []
+        : ["толщина не в рисунке маски"]),
+      ...same("установка", r.setup, undefined),
+      ...setProblems(r.set, "набор"),
+    ],
+  },
+  {
+    tool: "get_icon",
     args: { icon: "lucide:heart", format: "svg", color: "#e11d48" },
     eras: ["2025"],
     expect: async (r) => {
@@ -382,7 +402,10 @@ async function pickerProblems(client: Client, uri: unknown): Promise<string[]> {
   const choice =
     payload === undefined || card === undefined
       ? undefined
-      : pickerChoice(payload, card, "any", payload.color);
+      : pickerChoice(payload, card, {
+          format: "react",
+          color: payload.color,
+        });
   if (choice === undefined) return [...problems, "выбор в сетке не считается"];
   const icon = await client.callTool({
     name: "get_icon",

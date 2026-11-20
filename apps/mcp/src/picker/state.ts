@@ -1,14 +1,9 @@
 // Состояние сетки выбора (ADR-0045): чистые функции без DOM — их проверяют тесты в Node. Решения владельца
-// 20 ноября 2026: переключатель стиля меняет все карточки сразу, а карточки без выбранного стиля
-// приглушены и недоступны — сетка не прыгает.
+// 20 ноября 2026 после проверки в Claude и ChatGPT: без переключателя стиля и надписей; цвет, толщина линии
+// и формат кода выбираются в сетке, и «Select» сразу просит у ассистента код этого формата.
 
-import {
-  cardName,
-  type PickerCard,
-  type PickerPayload,
-  type PickerStyle,
-  pickerStyles,
-} from "@iconavo-ui/snippets/picker";
+import type { Format } from "@iconavo-ui/snippets/look";
+import type { PickerCard, PickerPayload } from "@iconavo-ui/snippets/picker";
 import { parseColor } from "@iconavo-ui/snippets/settings";
 
 /** Что показывает сетка. */
@@ -20,21 +15,21 @@ export type Status =
   | "cancelled"
   | "fallback";
 
-/** Что с выбором: ещё не отправлен, уходит, ушёл, клиент не принял — подсказка сказать имя. */
-export type Delivery = "idle" | "sending" | "sent" | "tell";
+/** Что с выбором: ещё не отправлен, уходит, ушёл в чат. */
+export type Delivery = "idle" | "sending" | "sent";
 
 export interface PickerState {
   status: Status;
-  query: string;
   payload?: PickerPayload;
-  style: PickerStyle;
-  /** Свой цвет #rrggbb; нет — «Авто», цвет текста чата. */
+  /** Вид кода — кнопка формата. */
+  format: Format;
+  /** Свой цвет #rrggbb; нет — «Auto», цвет текста чата. */
   color?: string;
+  /** Своя толщина линии; нет — как у рисунка. */
+  stroke?: number;
   /** Номер выбранной карточки. */
   selected?: number;
   delivery: Delivery;
-  /** Имя, которое человек скажет ассистенту, если сообщение не ушло. */
-  told?: string;
   /** Текст ошибки сервера. */
   error?: string;
   /** Картинка-сетка из обычной части ответа — когда данных сетки нет. */
@@ -43,24 +38,17 @@ export interface PickerState {
 
 export const initialState = (): PickerState => ({
   status: "waiting",
-  query: "",
-  style: "any",
+  format: "html",
   delivery: "idle",
 });
 
-/** Запрос пришёл раньше ответа: показываем его, пока ищем. */
-export const withQuery = (s: PickerState, query: string): PickerState =>
-  s.status === "waiting" ? { ...s, query } : s;
-
-/** Ответ инструмента: стиль — тот, которым ассистент сузил поиск, иначе «Любой». */
+/** Ответ инструмента: формат и цвет — те, что передал ассистент. */
 export function withPayload(s: PickerState, p: PickerPayload): PickerState {
-  const styles = pickerStyles(p);
   const color = p.color === undefined ? undefined : parseColor(p.color);
   return {
     status: p.cards.length === 0 ? "empty" : "ready",
-    query: p.query,
     payload: p,
-    style: p.style !== undefined && styles.includes(p.style) ? p.style : "any",
+    format: p.format,
     ...(color === undefined ? {} : { color }),
     delivery: "idle",
     ...(s.image === undefined ? {} : { image: s.image }),
@@ -70,26 +58,17 @@ export function withPayload(s: PickerState, p: PickerPayload): PickerState {
 export const cardOf = (s: PickerState, n: number): PickerCard | undefined =>
   s.payload?.cards.find((card) => card.n === n);
 
-/** Есть ли у карточки выбранный стиль. */
-export const isAvailable = (s: PickerState, card: PickerCard): boolean =>
-  s.payload !== undefined && cardName(s.payload, card, s.style) !== undefined;
-
+/** Любое изменение снова разрешает «Select». */
 export function selectCard(s: PickerState, n: number): PickerState {
-  const card = cardOf(s, n);
-  if (card === undefined || !isAvailable(s, card)) return s;
+  if (cardOf(s, n) === undefined) return s;
   return { ...s, selected: n, delivery: "idle" };
 }
 
-/** Другой стиль: выбранная карточка без него перестаёт быть выбранной. */
-export function setStyle(s: PickerState, style: PickerStyle): PickerState {
-  const next: PickerState = { ...s, style, delivery: "idle" };
-  const card = s.selected === undefined ? undefined : cardOf(s, s.selected);
-  if (card !== undefined && !isAvailable(next, card)) {
-    const { selected: _, ...rest } = next;
-    return rest;
-  }
-  return next;
-}
+export const setFormat = (s: PickerState, format: Format): PickerState => ({
+  ...s,
+  format,
+  delivery: "idle",
+});
 
 export function setColor(
   s: PickerState,
@@ -99,6 +78,18 @@ export function setColor(
   return {
     ...rest,
     ...(color === undefined ? {} : { color }),
+    delivery: "idle",
+  };
+}
+
+export function setStroke(
+  s: PickerState,
+  stroke: number | undefined,
+): PickerState {
+  const { stroke: _, ...rest } = s;
+  return {
+    ...rest,
+    ...(stroke === undefined ? {} : { stroke }),
     delivery: "idle",
   };
 }

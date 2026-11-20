@@ -48,11 +48,11 @@ Then ask in your own words, for example: "Find an icon for a share button" or "A
 | Tool | What it does |
 | --- | --- |
 | `search_icons` | Finds icons by meaning in any language, or by exact name. Returns names, styles, licenses and authors, plus one PNG grid of numbered previews |
-| `get_icon` | Code for one icon: the `<iconavo-icon>` web component by default, React `<Icon>`, or raw SVG on request. Size, color, stroke width and rotation |
+| `get_icon` | Code for one icon: the `<iconavo-icon>` web component by default, React `<Icon>`, or raw SVG or a CSS class on request. Size, color, stroke width and rotation |
 | `get_matching_set` | Several icons that look alike — one set, one style, one variant — for a group of concepts, optionally matching an icon you already use |
 | `get_usage` | How to install and set up the package: HTML with npm, HTML without a build step, React or Next.js |
 | `list_sets` | The icon sets with authors, licenses, styles and sample icons |
-| `pick_icon` | Shows a grid of 12 icons right in the chat (MCP Apps). The user picks one, and the choice comes back to the assistant with ready code |
+| `pick_icon` | Shows a grid of 12 icons right in the chat (MCP Apps). The user picks an icon, its color, stroke width and kind of code, and the assistant gets ready code |
 
 ### `search_icons`
 
@@ -72,6 +72,7 @@ The grid numbers the icons in the same order as the list: cell N is result N. Re
   - `html` (default) — the `<iconavo-icon>` web component. It works in any framework and in plain HTML.
   - `react` — `<Icon>` from `@iconavo-ui/react`.
   - `svg` — raw SVG markup with an attribution comment and a link to the same SVG on the Iconavo API.
+  - `css` — a CSS class with the icon as a mask (multicolor icons as a background image) and a `<span>` that uses it. No package needed.
 - `size` — in pixels, default 24.
 - `color` — hex, such as `#e11d48`; omit it to inherit the text color.
 - `strokeWidth` — changes line icons only.
@@ -115,16 +116,21 @@ The text comes from the package documentation, so it always matches the publishe
 
 An interactive icon picker for clients that support [MCP Apps](https://github.com/modelcontextprotocol/ext-apps), such as Claude and ChatGPT.
 
-- `query`, `sets`, `style`, `license` — as in `search_icons`. The grid always shows 12 icons.
-- `format`, `size` — the code the picker returns, as in `get_icon`.
-- `color` — optional starting color of the preview, such as a brand color. The user can change it.
+- `query`, `sets`, `style`, `license` — as in `search_icons`. The grid always shows 12 icons, each in the style it was found in.
+- `format` — the kind of code selected first: `html` (default), `react`, `svg` or `css`. The user can change it.
+- `size` — in pixels, as in `get_icon`.
+- `color` — optional starting color, such as a brand color. The user can change it.
 
-The grid follows the chat's theme and language. The user can switch the style for all icons at once, preview a color on single-color sets, and press **Select**. Icons that have no variant in the chosen style are dimmed.
+The grid follows the chat's theme; its text is always in English. Under the icons the user can set:
 
-After **Select**:
+- **Color** — for single-color sets;
+- **Stroke width** — for line icons; the previews change right away;
+- **the kind of code** — the same buttons as the icon panel on iconavo.dev. SVG, CSS, HTML and React work; SVG+CSS, Vue, Svelte, Solid and Astro are marked "Soon".
 
-- the ready code, the license and the attribution go into the assistant's context;
-- a short message such as "Picked lucide:share-2 · Outline · #E11D48" goes to the chat. Claude asks the user to confirm it.
+Then the user presses **Select**:
+
+- the ready code in the chosen format, with the color and stroke width, the license and the attribution go into the assistant's context;
+- a request for that code goes to the chat, such as "Use lucide:house (Lucide, outline, #E11D48, stroke 1.5) — give me the React code." ChatGPT sends it at once; Claude puts it in the message box, where the user can add to it.
 
 The picker is the `ui://picker/{version}` resource. The version changes with every new build, so clients never show a stale picker. It loads nothing from the network: the icons arrive with the tool result.
 

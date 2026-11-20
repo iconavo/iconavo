@@ -36,6 +36,7 @@ export const SEARCH_DESCRIPTION = [
   `Returns up to ${SEARCH_LIMIT_DEFAULT} icons (limit up to ${SEARCH_LIMIT_MAX}) with name, set, style, license and author,`,
   "plus ONE PNG image: a grid of numbered previews, where cell N is result N.",
   "Then call get_icon with the chosen name for ready code. For several icons that must look alike (a menu, a toolbar), use get_matching_set instead.",
+  "When the user wants to find or pick an icon themselves, call pick_icon instead: it shows a grid in the chat.",
 ].join(" ");
 
 export const SearchInput = z.object({

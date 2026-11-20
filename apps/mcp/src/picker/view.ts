@@ -1,7 +1,8 @@
 // Сетка выбора иконки в чате (шаг 11 фазы 4, ADR-0045): вид MCP Apps. Клиент показывает эту страницу в
-// защищённой рамке и передаёт ей вход и ответ инструмента pick_icon. «Выбрать» отдаёт выбор ассистенту —
-// тихо в контекст модели и коротким сообщением в чат (решение владельца 20 ноября 2026). Тема и язык — как
-// у чата, шрифт — шрифт чата; переменные оформления чата не берём: их имена совпадают с токенами сайта.
+// защищённой рамке и передаёт ей ответ инструмента pick_icon. «Select» отдаёт выбор ассистенту: код
+// выбранного формата, автор и лицензия — тихо в контекст модели, и в чат — просьба о коде этого формата
+// (решения владельца 20 ноября 2026). Тема — как у чата, шрифт — шрифт чата, язык — всегда английский;
+// переменные оформления чата не берём: их имена совпадают с токенами сайта.
 
 // Первым: zod внутри SDK берёт настройку «без eval» при своей загрузке.
 import "./jitless.js";
@@ -11,7 +12,6 @@ import {
   applyHostFonts,
   type McpUiHostContext,
 } from "@modelcontextprotocol/ext-apps";
-import { langOf } from "./i18n.js";
 import { mountPicker } from "./ui.js";
 
 /** Сколько ждать ответа на запрос, о поддержке которого клиент не сказал. */
@@ -27,7 +27,7 @@ const app = new App(
 );
 
 const view = mountPicker(root, {
-  async pick(choice, lang) {
+  async pick(choice) {
     const caps = app.getHostCapabilities();
     const quick = (declared: unknown) =>
       declared === undefined ? { timeout: UNDECLARED_TIMEOUT_MS } : {};
@@ -41,20 +41,16 @@ const view = mountPicker(root, {
     } catch {
       delivered = false;
     }
-    try {
-      const result = await app.sendMessage(
+    // Ответ на сообщение ничего не меняет: Claude кладёт его в поле ввода и может ответить ошибкой.
+    await app
+      .sendMessage(
         {
           role: "user",
-          content: [
-            { type: "text", text: pickerMessage(choice, lang, delivered) },
-          ],
+          content: [{ type: "text", text: pickerMessage(choice, delivered) }],
         },
         quick(caps?.message),
-      );
-      return result.isError === true ? "tell" : "sent";
-    } catch {
-      return "tell";
-    }
+      )
+      .catch(() => undefined);
   },
 });
 
@@ -65,11 +61,6 @@ function applyContext(ctx: McpUiHostContext | undefined): void {
   const html = document.documentElement;
   if (ctx.theme === "light" || ctx.theme === "dark") {
     html.dataset.theme = ctx.theme;
-  }
-  if (ctx.locale !== undefined) {
-    const lang = langOf(ctx.locale);
-    html.lang = lang;
-    view.lang(lang);
   }
   const font = ctx.styles?.variables?.["--font-sans"];
   if (typeof font === "string" && font.trim() !== "") {
@@ -88,10 +79,6 @@ function applyContext(ctx: McpUiHostContext | undefined): void {
   }
 }
 
-app.addEventListener("toolinput", (params) => {
-  const query = params.arguments?.query;
-  if (typeof query === "string") view.query(query);
-});
 app.addEventListener("toolresult", (result) => view.result(result));
 app.addEventListener("toolcancelled", () => view.cancelled());
 app.addEventListener("hostcontextchanged", () =>

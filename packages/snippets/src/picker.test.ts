@@ -1,10 +1,12 @@
 import type { IconSetSummary } from "@iconavo-ui/search";
 import { describe, expect, it } from "vitest";
+import { cssClassCode } from "./code.js";
 import type { Install } from "./install.js";
-import { lookCode, normalizeColor, setupFor } from "./look.js";
+import { FORMATS, lookCode, normalizeColor, setupFor } from "./look.js";
 import {
-  cardName,
+  cardHasStroke,
   PICKER_FORMAT,
+  PICKER_FORMAT_GROUPS,
   type PickerIcon,
   type PickerPayload,
   parsePickerPayload,
@@ -13,7 +15,6 @@ import {
   pickerHasColor,
   pickerMessage,
   pickerPayload,
-  pickerStyles,
 } from "./picker.js";
 
 const INSTALL: Install = {
@@ -26,7 +27,7 @@ const INSTALL: Install = {
 };
 
 const LINE: PickerIcon = {
-  body: '<path fill="none" stroke="currentColor" d="M1 1h4"/>',
+  body: '<path fill="none" stroke="currentColor" stroke-width="2" d="M1 1h4"/>',
   left: 0,
   top: 0,
   width: 24,
@@ -151,117 +152,150 @@ describe("данные сетки", () => {
     expect(parsed?.cards.map((c) => c.n)).toEqual([1, 2]);
   });
 
-  it("стили переключателя — «Любой» и те, что есть у карточек, по шкале", () => {
-    expect(pickerStyles(payload())).toEqual([
-      "any",
-      "outline",
-      "filled",
-      "color",
-    ]);
-    const [house, emoji] = payload().cards;
+  it("цвет — если есть монохромный набор; толщина — у карточек с линиями (hasStrokeWidth ядра)", () => {
+    const p = payload();
+    const [house, emoji] = p.cards;
     if (house === undefined || emoji === undefined) throw new Error("карточки");
-    expect(cardName(payload(), house, "filled")).toBe("demo:house-fill");
-    expect(cardName(payload(), emoji, "filled")).toBeUndefined();
-    expect(pickerHasColor(payload())).toBe(true);
+    expect(pickerHasColor(p)).toBe(true);
     expect(pickerHasColor(payload({ sets: [EMOJIS] }))).toBe(false);
+    expect(cardHasStroke(p, house)).toBe(true);
+    expect(cardHasStroke(p, emoji)).toBe(false);
+  });
+
+  it("кнопки формата — группы панели сайта: работают все форматы get_icon, остальное — Soon", () => {
+    expect(
+      PICKER_FORMAT_GROUPS.map((g) => [
+        g.label,
+        g.options.map((o) => o.format ?? `${o.label} (Soon)`),
+      ]),
+    ).toEqual([
+      ["SVG and CSS", ["svg", "SVG+CSS (Soon)", "css"]],
+      [
+        "Components",
+        [
+          "html",
+          "react",
+          "Vue (Soon)",
+          "Svelte (Soon)",
+          "Solid (Soon)",
+          "Astro (Soon)",
+        ],
+      ],
+    ]);
+    const working = PICKER_FORMAT_GROUPS.flatMap((g) =>
+      g.options.flatMap((o) => (o.format === undefined ? [] : [o.format])),
+    );
+    expect([...working].sort()).toEqual([...FORMATS].sort());
   });
 });
 
 describe("выбор", () => {
-  it("код — функциями get_icon: тег, React, SVG с адресом edge API", () => {
-    const [house] = payload().cards;
+  it("код — функциями get_icon: тег, React, SVG с адресом edge API и CSS; цвет и толщина — из сетки", () => {
+    const p = payload();
+    const [house] = p.cards;
     if (house === undefined) throw new Error("карточка");
-    const html = pickerChoice(payload(), house, "filled", "#E11D48");
+    const html = pickerChoice(p, house, {
+      format: "html",
+      color: "#E11D48",
+      stroke: 1.5,
+    });
     expect(html?.code).toBe(
-      '<iconavo-icon icon="demo:house-fill" width="24" color="#e11d48"></iconavo-icon>',
+      '<iconavo-icon icon="demo:house" width="24" color="#e11d48" stroke-width="1.5"></iconavo-icon>',
     );
     expect(html?.setup).toEqual(setupFor("html", INSTALL));
-    expect(html?.style).toBe("filled");
-    const react = pickerChoice(
-      payload({ format: "react" }),
-      house,
-      "any",
-      undefined,
-    );
+    expect(html).toMatchObject({ color: "#e11d48", stroke: 1.5, notes: [] });
+    const react = pickerChoice(p, house, { format: "react" });
     expect(react?.code).toBe(
       lookCode(
         "https://api.example",
         "react",
         "demo:house",
         { size: 24, rotate: 0, hflip: false, vflip: false },
-        { palette: false, strokes: false },
+        { palette: false, strokes: true },
         INSTALL,
       ).code,
     );
-    const svg = pickerChoice(
-      payload({ format: "svg" }),
-      house,
-      "any",
-      "#e11d48",
-    );
+    const svg = pickerChoice(p, house, { format: "svg", color: "#e11d48" });
     expect(svg?.code).toMatch(/^<!-- demo:house\. Icons: Demo by Demo Authors/);
     expect(svg?.svgUrl).toBe(
       "https://api.example/demo/house.svg?width=24&color=e11d48",
     );
     expect(svg?.setup).toBeUndefined();
     expect(svg?.page).toBe("https://site.example/demo/house");
+    const css = pickerChoice(p, house, { format: "css", stroke: 1.5 });
+    expect(css?.code).toBe(
+      `${cssClassCode(
+        "demo:house",
+        LINE,
+        { size: 24, stroke: 1.5, rotate: 0, hflip: false, vflip: false },
+        { palette: false, strokes: true },
+      )}\n\n<span class="demo--house"></span>`,
+    );
+    expect(css?.setup).toBeUndefined();
   });
 
-  it("цвет у цветного набора не применяется — заметка, как у get_icon; нет стиля — нет выбора", () => {
+  it("цвет у цветного набора и толщина без линий не применяются — заметки, как у get_icon", () => {
     const emoji = payload().cards[1];
     if (emoji === undefined) throw new Error("карточка");
-    const choice = pickerChoice(
-      payload(),
-      emoji,
-      "any",
-      normalizeColor("#abc"),
-    );
+    const choice = pickerChoice(payload(), emoji, {
+      format: "html",
+      color: normalizeColor("#abc"),
+      stroke: 1.5,
+    });
     expect(choice?.color).toBeUndefined();
+    expect(choice?.stroke).toBeUndefined();
+    expect(choice?.code).toBe(
+      '<iconavo-icon icon="emo:house" width="24"></iconavo-icon>',
+    );
     expect(choice?.notes).toEqual([
       "Color is not applied: Emoji is a multicolor set.",
+      "Stroke width is not applied: this icon has no lines that change with it.",
     ]);
-    expect(
-      pickerChoice(payload(), emoji, "outline", undefined),
-    ).toBeUndefined();
   });
 
-  it("контекст модели — как ответ get_icon; без «<script>» и «<style>»: строка живёт внутри тега <script> страницы", () => {
+  it("контекст модели — как ответ get_icon, с форматом из сетки; без «<script>» и «<style>»: строка живёт внутри тега <script> страницы", () => {
     const [house] = payload().cards;
     if (house === undefined) throw new Error("карточка");
-    const choice = pickerChoice(payload(), house, "any", undefined);
+    for (const format of FORMATS) {
+      const choice = pickerChoice(payload(), house, { format });
+      if (choice === undefined) throw new Error("выбор");
+      expect(pickerContextText(choice)).not.toMatch(/<script|<style/i);
+    }
+    const choice = pickerChoice(payload(), house, { format: "react" });
     if (choice === undefined) throw new Error("выбор");
     const text = pickerContextText(choice);
     expect(text).toMatch(
-      /^The user picked demo:house — Demo, outline — in the Iconavo picker for "house"\./,
+      /^The user picked demo:house — Demo, outline — in the Iconavo picker for "house" and asked for React code\./,
     );
+    expect(text).toContain("Code (React <Icon> from @iconavo-ui/react):");
     expect(text).toMatch(
       /License — keep this attribution: Icons: Demo by Demo Authors/,
     );
-    expect(text).toMatch(/Insert this code/);
-    expect(text).not.toMatch(/<script|<style/i);
+    expect(text).toMatch(/Reply with this code, ready to paste/);
   });
 
-  it("сообщение в чат — коротко на языке чата; не принят контекст — просьба взять код у get_icon", () => {
-    const [house] = payload().cards;
-    if (house === undefined) throw new Error("карточка");
-    const choice = pickerChoice(
-      payload({ format: "react" }),
-      house,
-      "filled",
-      "#e11d48",
-    );
+  it("сообщение в чат — просьба о коде выбранного формата; не принят контекст — просьба взять код у get_icon", () => {
+    const [house, emoji] = payload().cards;
+    if (house === undefined || emoji === undefined) throw new Error("карточки");
+    const choice = pickerChoice(payload(), house, {
+      format: "react",
+      color: "#e11d48",
+      stroke: 1.5,
+    });
     if (choice === undefined) throw new Error("выбор");
-    expect(pickerMessage(choice, "ru", true)).toBe(
-      "Выбрана иконка demo:house-fill · Заливка · #E11D48.",
+    expect(pickerMessage(choice, true)).toBe(
+      "Use demo:house (Demo, outline, #E11D48, stroke 1.5) — give me the React code.",
     );
-    expect(pickerMessage(choice, "en", true)).toBe(
-      "Picked demo:house-fill · Filled · #E11D48.",
+    expect(pickerMessage(choice, false)).toBe(
+      "Use demo:house (Demo, outline, #E11D48, stroke 1.5) — give me the React code. Get it with get_icon (format react, color #E11D48, strokeWidth 1.5).",
     );
-    expect(pickerMessage(choice, "ru", false)).toBe(
-      "Выбрана иконка demo:house-fill · Заливка · #E11D48. Код возьми через get_icon (react).",
+    const big = pickerChoice(payload({ size: 32 }), emoji, { format: "svg" });
+    if (big === undefined) throw new Error("выбор");
+    expect(pickerMessage(big, true)).toBe(
+      "Use emo:house (Emoji, color) — give me the SVG code.",
     );
-    expect(pickerMessage(choice, "en", false)).toBe(
-      "Picked demo:house-fill · Filled · #E11D48. Get the code with get_icon (react).",
+    expect(pickerMessage(big, false)).toBe(
+      "Use emo:house (Emoji, color) — give me the SVG code. Get it with get_icon (format svg, size 32).",
     );
   });
 });

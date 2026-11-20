@@ -1,3 +1,5 @@
+import { iconData } from "@iconavo-ui/core/internal";
+import { cssClassCode } from "@iconavo-ui/snippets/code";
 import { describe, expect, it } from "vitest";
 import { fakeLimiter, VERSION } from "../../api/src/fake.testing.js";
 import { parseSvgOptions, svgBody } from "../../api/src/svg.js";
@@ -98,6 +100,39 @@ describe("MCP: get_icon", () => {
       ),
     );
     expect(out.setup).toBeUndefined();
+  });
+
+  it("CSS — класс с иконкой-маской и элемент, как вид CSS панели сайта: цвет — фоном, толщина — в рисунке", async () => {
+    const s = mcpSetup();
+    const result = await s.call("get_icon", {
+      icon: "demo:house",
+      format: "css",
+      color: "#e11d48",
+      strokeWidth: 1.5,
+    });
+    const out = result.structuredContent as Out;
+    const file = JSON.parse(
+      s.bucket.files.get(`v/${VERSION}/demo/house.json`) as string,
+    );
+    const icon = iconData(file, "house");
+    if (icon === null) throw new Error("рисунок");
+    const settings = {
+      size: 24,
+      color: "#e11d48",
+      stroke: 1.5,
+      rotate: 0,
+      hflip: false,
+      vflip: false,
+    } as const;
+    expect(out.code).toBe(
+      `${cssClassCode("demo:house", icon, settings, { palette: false, strokes: true })}\n\n<span class="demo--house"></span>`,
+    );
+    expect(String(out.code)).toContain("background-color: #e11d48;");
+    expect(String(out.code)).toContain("stroke-width='1.5'");
+    expect(out.setup).toBeUndefined();
+    expect(textOf(result)).toContain(
+      "Code (CSS class with the icon as a mask, and an element that uses it):\n.demo--house {",
+    );
   });
 
   it("старое имя — сведения об основной иконке и пометка", async () => {
@@ -205,6 +240,31 @@ describe("MCP: get_matching_set", () => {
     expect(out.setup).toMatchObject({ import: USAGE.install.react.import });
     expect(s.net.polza).toHaveLength(1);
     expect(s.net.polza[0]?.input).toEqual(["house", "heart"]);
+  });
+
+  it("CSS — класс и элемент у каждой иконки в данных, без установки; в тексте — где их взять", async () => {
+    const s = mcpSetup();
+    const result = await s.call("get_matching_set", {
+      concepts: ["house", "heart"],
+      format: "css",
+    });
+    const out = result.structuredContent as Out;
+    const codes = (out.icons as { icon: string; code: string }[]).map(
+      (x) => x.code,
+    );
+    expect(codes.map((code) => code.split("\n")[0])).toEqual([
+      ".demo--house {",
+      ".demo--heart {",
+    ]);
+    expect(codes.map((code) => code.split("\n").at(-1))).toEqual([
+      '<span class="demo--house"></span>',
+      '<span class="demo--heart"></span>',
+    ]);
+    expect(out.setup).toBeUndefined();
+    expect(textOf(result)).toContain(
+      "The CSS class and the element of each icon are in the structured result (icons[].code).",
+    );
+    expect(textOf(result)).not.toContain(".demo--house {");
   });
 
   it("лимит поиска — один на вызов, по адресу человека", async () => {

@@ -6,17 +6,16 @@
 // Контрольный запуск подкладывает четыре поломки (picker-host.ts, CANARIES) — каждую обязана заметить
 // своя строка.
 
+import type { Format } from "@iconavo-ui/snippets/look";
 import {
-  cardName,
+  cardHasStroke,
   PICKER_META_KEY,
   type PickerCard,
   type PickerPayload,
-  type PickerStyle,
   parsePickerPayload,
   pickerChoice,
   pickerContextText,
   pickerMessage,
-  pickerStyles,
 } from "@iconavo-ui/snippets/picker";
 import type { Browser, Frame, Page } from "playwright";
 import { type AxeViolation, axe, axeVerdict, runAxe } from "../sandbox/axe.js";
@@ -27,10 +26,8 @@ import {
 } from "../sandbox/browser.js";
 import {
   fail,
-  layoutVerdict,
   pass,
   recordViolations,
-  type Spot,
   shot,
   type Verdict,
   violations,
@@ -41,8 +38,9 @@ import { type Canary, startPickerHost } from "./picker-host.js";
 export const PICKER_ROWS = [
   "render",
   "theme",
-  "style",
+  "format",
   "color",
+  "stroke",
   "select",
   "keyboard",
   "tell",
@@ -56,10 +54,11 @@ export type PickerRowId = (typeof PICKER_ROWS)[number];
 
 export const PICKER_ROW_TITLES: Record<PickerRowId, string> = {
   render: "Карточки нарисованы",
-  theme: "Тема и язык чата",
-  style: "Стиль: приглушает, не двигает",
+  theme: "Тема чата, всё по-английски",
+  format: "Формат кода, Soon неактивны",
   color: "Цвет — только монохромным",
-  select: "«Выбрать»: контекст и сообщение",
+  stroke: "Толщина линии — только линиям",
+  select: "Select: контекст и просьба о коде",
   keyboard: "Клавиатура",
   tell: "Клиент без сообщений",
   empty: "Ничего не нашлось",
@@ -174,7 +173,6 @@ async function cardsOf(frame: Frame) {
 
 async function renderVerdict(frame: Frame, p: PickerPayload): Promise<Verdict> {
   const cards = await cardsOf(frame);
-  const title = await frame.$eval(".picker-title", (h) => h.textContent ?? "");
   if (cards.length !== p.cards.length || cards.length === 0) {
     return fail(`карточек ${cards.length} из ${p.cards.length}`);
   }
@@ -186,67 +184,69 @@ async function renderVerdict(frame: Frame, p: PickerPayload): Promise<Verdict> {
   if (wrong.length > 0) {
     return fail(`не те имена: ${wrong.map((c) => c.name).join(", ")}`);
   }
-  if (!title.includes(p.query)) return fail(`заголовок «${title}»`);
   return pass(`${cards.length} карточек с рисунками, имена как в выдаче`);
 }
 
+/** Тема — как у чата, язык сетки — всегда английский (решение владельца 20 ноября 2026). */
 async function themeVerdict(
   frame: Frame,
   theme: "light" | "dark",
-  lang: "en" | "ru",
 ): Promise<Verdict> {
   const seen = await frame.evaluate(() => ({
     theme: document.documentElement.dataset.theme,
     lang: document.documentElement.lang,
     background: getComputedStyle(document.body).backgroundColor,
-    title: document.querySelector(".picker-title")?.textContent ?? "",
+    text: document.body.innerText,
   }));
   const background = theme === "dark" ? PAGE_DARK : PAGE_LIGHT;
   if (seen.theme !== theme) return fail(`тема ${seen.theme} вместо ${theme}`);
-  if (seen.lang !== lang) return fail(`язык ${seen.lang} вместо ${lang}`);
   if (seen.background !== background) {
     return fail(`фон ${seen.background} вместо ${background}: токены сайта?`);
   }
-  const russian = /икон/.test(seen.title);
-  if ((lang === "ru") !== russian) return fail(`заголовок «${seen.title}»`);
-  return pass(`${theme}, ${lang}, фон токена bg-page`);
+  if (seen.lang !== "en" || /[а-яё]/i.test(seen.text)) {
+    return fail(`не по-английски: язык ${seen.lang}`);
+  }
+  return pass(`${theme}, фон токена bg-page, по-английски`);
 }
 
-async function styleVerdict(frame: Frame, p: PickerPayload): Promise<Verdict> {
-  const style = pickerStyles(p).find(
-    (s): s is Exclude<PickerStyle, "any"> =>
-      s !== "any" && p.cards.some((c) => cardName(p, c, s) === undefined),
-  );
-  if (style === undefined)
-    return fail("нет стиля, которого нет у части карточек");
-  const before = await cardsOf(frame);
-  await frame.click(`.pill[data-style="${style}"]`);
-  await frame.waitForSelector(
-    `.pill[data-style="${style}"][aria-pressed="true"]`,
-  );
-  const after = await cardsOf(frame);
-  const spots = (list: typeof before): Spot[] =>
-    list.map((c) => ({ left: c.left, top: c.top }));
-  const moved = layoutVerdict(spots(before), spots(after));
-  if (moved.ok !== true) return fail(`карточки сдвинулись: ${moved.note}`);
-  const expected = p.cards
-    .filter((c) => cardName(p, c, style) === undefined)
-    .map((c) => c.n);
-  const dimmed = after.filter((c) => c.disabled).map((c) => c.n);
-  if (expected.join() !== dimmed.join()) {
-    return fail(
-      `приглушены ${dimmed.join(", ")} вместо ${expected.join(", ")}`,
+/** Кнопки формата: как в панели сайта; выбранная — нажата, «Soon» — неактивны и выбор не меняют. */
+async function formatVerdict(frame: Frame, p: PickerPayload): Promise<Verdict> {
+  const pills = () =>
+    frame.$$eval(".pill", (list) =>
+      list.map((b) => ({
+        label: b.textContent ?? "",
+        pressed: b.getAttribute("aria-pressed") === "true",
+        soon: b.getAttribute("aria-disabled") === "true",
+      })),
     );
+  const before = await pills();
+  const labels = before.map((x) => x.label).join(",");
+  if (labels !== "SVG,SVG+CSS,CSS,HTML,React,Vue,Svelte,Solid,Astro") {
+    return fail(`кнопки ${labels}`);
   }
-  const wrong = p.cards.filter((c) => {
-    const name = cardName(p, c, style);
-    return name !== undefined && after.find((a) => a.n === c.n)?.icon !== name;
-  });
-  if (wrong.length > 0) {
-    return fail(`не тот вариант у ${wrong.map((c) => c.n).join(", ")}`);
+  const soon = before
+    .filter((x) => x.soon)
+    .map((x) => x.label)
+    .join(",");
+  if (soon !== "SVG+CSS,Vue,Svelte,Solid,Astro") return fail(`Soon: ${soon}`);
+  const pressed = before.filter((x) => x.pressed).map((x) => x.label);
+  const initial = { html: "HTML", react: "React", svg: "SVG", css: "CSS" }[
+    p.format
+  ];
+  if (pressed.join() !== initial) {
+    return fail(`нажата ${pressed.join()} вместо ${initial}`);
   }
+  // Playwright сам не нажимает кнопку с aria-disabled — нажимаем силой: выбор формата не меняется.
+  await frame.click('.pill[aria-disabled="true"] >> nth=1', { force: true });
+  const still = (await pills()).filter((x) => x.pressed).map((x) => x.label);
+  if (still.join() !== initial)
+    return fail(`Soon поменяла выбор: ${still.join()}`);
+  await frame.click('.pill[data-format="css"]');
+  const after = (await pills()).filter((x) => x.pressed).map((x) => x.label);
+  if (after.join() !== "CSS")
+    return fail(`после щелчков нажата ${after.join()}`);
   return pass(
-    `«${style}»: приглушено ${dimmed.length} из ${after.length}, ни одна карточка не сдвинулась`,
+    `две группы, как в панели; Soon — ${soon.split(",").length}; сначала ${initial}`,
   );
 }
 
@@ -266,32 +266,80 @@ async function colorVerdict(ctx: Ctx): Promise<Verdict> {
   const off = mono.filter((c) => c.color !== PICK_COLOR);
   if (off.length > 0) return fail(`цвет не у ${off.length} карточек`);
   const emoji = await openScenario(ctx, "heart-emoji");
-  const hidden = await emoji.$eval(
-    ".color-field",
-    (field) => getComputedStyle(field).display === "none",
-  );
+  const hidden = await emoji.evaluate(() => {
+    const field = document
+      .querySelector(".color-swatch")
+      ?.closest(".picker-field");
+    return (
+      field !== null &&
+      field !== undefined &&
+      getComputedStyle(field).display === "none"
+    );
+  });
   await problemsOf(ctx, emoji, "heart-emoji");
   if (!hidden) return fail("у эмодзи есть поле цвета");
   return pass(`#E11D48 у ${mono.length} монохромных; у эмодзи поля цвета нет`);
 }
 
+/** Толщина: ползунок меняет превью линейных иконок и только их; у эмодзи ползунка нет. */
+async function strokeVerdict(ctx: Ctx): Promise<Verdict> {
+  const id = "share-en-light";
+  const p = payloadOf(ctx, id);
+  const frame = await openScenario(ctx, id);
+  await frame.$eval(".stroke-range", (input) => {
+    (input as HTMLInputElement).value = "1.5";
+    input.dispatchEvent(new Event("input", { bubbles: true }));
+  });
+  await ctx.page.waitForTimeout(100);
+  const cards = await frame.$$eval(".card[data-n]", (list) =>
+    list.map((b) => ({
+      n: Number((b as HTMLElement).dataset.n),
+      widths: [...b.querySelectorAll("[stroke-width]")].map((x) =>
+        x.getAttribute("stroke-width"),
+      ),
+    })),
+  );
+  await problemsOf(ctx, frame, id);
+  const lines = p.cards.filter((c) => cardHasStroke(p, c)).map((c) => c.n);
+  if (lines.length === 0) return fail("нет линейных иконок");
+  const off = cards.filter(
+    (c) =>
+      lines.includes(c.n) &&
+      (c.widths.length === 0 || c.widths.some((w) => w !== "1.5")),
+  );
+  if (off.length > 0)
+    return fail(`толщина не у ${off.map((c) => c.n).join(", ")}`);
+  const emoji = await openScenario(ctx, "heart-emoji");
+  const hidden = await emoji.evaluate(() => {
+    const field = document
+      .querySelector(".stroke-range")
+      ?.closest(".picker-field");
+    return (
+      field !== null &&
+      field !== undefined &&
+      getComputedStyle(field).display === "none"
+    );
+  });
+  await problemsOf(ctx, emoji, "heart-emoji");
+  if (!hidden) return fail("у эмодзи есть толщина линии");
+  return pass(`1,5 у ${lines.length} линейных; у эмодзи ползунка нет`);
+}
+
 /**
- * «Выбрать»: кнопка неактивна без выбора; ушло ровно то, что считает общий модуль. Карточка — вторая
- * (у «Любого») или первая, у которой есть нужный стиль: так проверка годится и для живой выдачи.
+ * Select: кнопка неактивна без выбора; ушло ровно то, что считает общий модуль, — контекст с кодом
+ * выбранного формата и просьба о коде; кнопка — «Selected». Карточка — линейная, если нужна толщина.
  */
 async function selectVerdict(
   ctx: Ctx,
   id: string,
-  lang: "en" | "ru",
-  style: PickerStyle,
-  color: string | undefined,
+  look: { format: Format; color?: string; stroke?: number },
 ): Promise<Verdict> {
   const p = payloadOf(ctx, id);
-  const n =
-    style === "any"
-      ? (p.cards[1] ?? p.cards[0])?.n
-      : p.cards.find((c) => cardName(p, c, style) !== undefined)?.n;
-  if (n === undefined) return fail(`нет карточки в стиле ${style}`);
+  const card =
+    look.stroke === undefined
+      ? (p.cards[1] ?? p.cards[0])
+      : p.cards.find((c) => cardHasStroke(p, c));
+  if (card === undefined) return fail("нет подходящей карточки");
   const frame = await openScenario(ctx, id);
   if (
     !(await frame.$eval(
@@ -299,11 +347,22 @@ async function selectVerdict(
       (b) => (b as HTMLButtonElement).disabled,
     ))
   ) {
-    return fail("«Выбрать» активна без выбора");
+    return fail("Select активна без выбора");
   }
-  if (style !== "any") await frame.click(`.pill[data-style="${style}"]`);
-  if (color !== undefined) await frame.fill(".color-hex", color.slice(1));
-  await frame.click(`.card[data-n="${n}"]`);
+  await frame.click(`.pill[data-format="${look.format}"]`);
+  if (look.color !== undefined)
+    await frame.fill(".color-hex", look.color.slice(1));
+  if (look.stroke !== undefined) {
+    await frame.$eval(
+      ".stroke-range",
+      (input, value) => {
+        (input as HTMLInputElement).value = String(value);
+        input.dispatchEvent(new Event("input", { bubbles: true }));
+      },
+      look.stroke,
+    );
+  }
+  await frame.click(`.card[data-n="${card.n}"]`);
   await frame.click(".picker-select");
   await ctx.page.waitForFunction(
     (sid) =>
@@ -321,25 +380,20 @@ async function selectVerdict(
       ).pickerLog[sid] ?? [],
     id,
   );
-  const card = p.cards.find((c) => c.n === n) as PickerCard;
-  const choice = pickerChoice(p, card, style, color);
+  const choice = pickerChoice(p, card, look);
   if (choice === undefined) return fail("выбор не считается");
   const expected = [
     { kind: "Контекст модели", text: pickerContextText(choice) },
-    { kind: "Сообщение в чат", text: pickerMessage(choice, lang, true) },
+    { kind: "Сообщение в чат", text: pickerMessage(choice, true) },
   ];
   await problemsOf(ctx, frame, id);
   if (JSON.stringify(log) !== JSON.stringify(expected)) {
     return fail(`ушло не то: ${JSON.stringify(log).slice(0, 160)}`);
   }
-  const status = await frame.$eval(
-    ".picker-status",
-    (s) => s.textContent ?? "",
+  await frame.waitForFunction(
+    () => document.querySelector(".picker-select")?.textContent === "Selected",
   );
-  if (!/assistant|ассистенту/.test(status)) return fail(`статус «${status}»`);
-  return pass(
-    `${choice.icon} (${choice.format}): контекст и «${expected[1]?.text}»`,
-  );
+  return pass(`«${expected[1]?.text}»`);
 }
 
 async function keyboardVerdict(ctx: Ctx): Promise<Verdict> {
@@ -381,19 +435,15 @@ async function keyboardVerdict(ctx: Ctx): Promise<Verdict> {
   return pass(`стрелки, Home и End выбирают карточку, колонок ${cols}`);
 }
 
+/** Клиент без сообщений и контекста: ничего не ушло, сетка не сломалась, кнопка — «Selected». */
 async function tellVerdict(ctx: Ctx): Promise<Verdict> {
   const id = "settings-no-message";
-  const p = payloadOf(ctx, id);
   const frame = await openScenario(ctx, id);
   await frame.click('.card[data-n="1"]');
   await frame.click(".picker-select");
-  const name = p.cards[0]?.icon ?? "";
   await frame.waitForFunction(
-    (icon) =>
-      (document.querySelector(".picker-status")?.textContent ?? "").includes(
-        icon,
-      ),
-    name,
+    () => document.querySelector(".picker-select")?.textContent === "Selected",
+    null,
     { timeout: 15_000 },
   );
   const log = await ctx.page.evaluate(
@@ -405,14 +455,14 @@ async function tellVerdict(ctx: Ctx): Promise<Verdict> {
   );
   await problemsOf(ctx, frame, id);
   if (log.length > 0) return fail("клиент без сообщений что-то получил");
-  return pass(`подсказка сказать ассистенту «${name}»`);
+  return pass("ничего не ушло, кнопка — Selected, надписей нет");
 }
 
 async function emptyVerdict(ctx: Ctx): Promise<Verdict> {
   const frame = await openScenario(ctx, "empty");
   const seen = await frame.evaluate(() => ({
     status: document.getElementById("picker")?.dataset.status,
-    text: document.querySelector(".picker-status")?.textContent ?? "",
+    text: document.querySelector(".picker-note")?.textContent ?? "",
     grid: (document.querySelector(".picker-grid") as HTMLElement | null)
       ?.hidden,
   }));
@@ -462,7 +512,7 @@ async function canaryVerdict(ctx: Ctx, source: string): Promise<Verdict> {
     missed.push("nometa");
   }
   const tokens = await openScenario(ctx, "share-ru-dark", "notokens");
-  if ((await themeVerdict(tokens, "dark", "ru")).ok) missed.push("notokens");
+  if ((await themeVerdict(tokens, "dark")).ok) missed.push("notokens");
   const external = await openScenario(ctx, "share-en-light", "external");
   await ctx.page.waitForTimeout(500);
   if ((await violations(external)).length === 0) missed.push("external");
@@ -534,19 +584,20 @@ async function checkBrowser(
       return renderVerdict(frame, payloadOf(ctx, "share-en-light"));
     });
     rows.theme = await row(async () => {
+      // Русский чат: тема тёмная, сетка всё равно по-английски.
       const dark = await openScenario(ctx, "share-ru-dark");
-      const darkVerdict = await themeVerdict(dark, "dark", "ru");
+      const darkVerdict = await themeVerdict(dark, "dark");
       await problemsOf(ctx, dark, "share-ru-dark");
       if (darkVerdict.ok !== true) return darkVerdict;
       const light = await openScenario(ctx, "share-en-light");
-      const lightVerdict = await themeVerdict(light, "light", "en");
+      const lightVerdict = await themeVerdict(light, "light");
       return lightVerdict.ok === true
-        ? pass(`${darkVerdict.note}; ${lightVerdict.note}`)
+        ? pass(`${darkVerdict.note} (русский чат); ${lightVerdict.note}`)
         : lightVerdict;
     });
-    rows.style = await row(async () => {
+    rows.format = await row(async () => {
       const frame = await openScenario(ctx, "share-en-light");
-      const verdict = await styleVerdict(
+      const verdict = await formatVerdict(
         frame,
         payloadOf(ctx, "share-en-light"),
       );
@@ -554,23 +605,24 @@ async function checkBrowser(
       return verdict;
     });
     rows.color = await row(() => colorVerdict(ctx));
+    rows.stroke = await row(() => strokeVerdict(ctx));
     rows.select = await row(async () => {
-      const en = await selectVerdict(
-        ctx,
-        "share-en-light",
-        "en",
-        "any",
-        undefined,
-      );
-      if (en.ok !== true) return en;
-      const ru = await selectVerdict(
-        ctx,
-        "share-ru-dark",
-        "ru",
-        "filled",
-        "#e11d48",
-      );
-      return ru.ok === true ? pass(`${en.note}; ${ru.note}`) : ru;
+      const html = await selectVerdict(ctx, "share-en-light", {
+        format: "html",
+      });
+      if (html.ok !== true) return html;
+      const react = await selectVerdict(ctx, "share-ru-dark", {
+        format: "react",
+        color: "#e11d48",
+      });
+      if (react.ok !== true) return react;
+      const css = await selectVerdict(ctx, "share-en-light", {
+        format: "css",
+        stroke: 1.5,
+      });
+      return css.ok === true
+        ? pass(`${html.note}; ${react.note}; ${css.note}`)
+        : css;
     });
     rows.keyboard = await row(() => keyboardVerdict(ctx));
     rows.tell = await row(() => tellVerdict(ctx));
@@ -587,8 +639,8 @@ async function checkBrowser(
       ? { ok: null, note: "только у сборки этой ветки" }
       : await row(() => canaryVerdict(ctx, source));
     for (const [id, title] of [
-      ["share-en-light", "Светлая тема, английский"],
-      ["share-ru-dark", "Тёмная тема, русский"],
+      ["share-en-light", "Светлая тема"],
+      ["share-ru-dark", "Тёмная тема, русский чат"],
       ["heart-emoji", "Только эмодзи"],
       ["basket-phone", "Узкая рамка"],
     ] as const) {
