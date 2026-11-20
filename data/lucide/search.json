@@ -13738,6 +13738,39 @@
         "isometric"
       ]
     },
+    "box-dashed": {
+      "fingerprint": "a258b6a598cd",
+      "tags": [
+        "cube",
+        "package",
+        "container",
+        "storage",
+        "geometry",
+        "3d",
+        "isometric",
+        "dashed",
+        "dotted",
+        "broken line",
+        "augmented reality",
+        "ar",
+        "bounding box",
+        "bounds",
+        "spatial boundary",
+        "selection volume",
+        "placeholder",
+        "volume",
+        "wireframe",
+        "mesh",
+        "unrendered",
+        "3d scanning",
+        "spatial mapping",
+        "collision",
+        "hitbox",
+        "bounding volume",
+        "collision detection",
+        "selection boundary"
+      ]
+    },
     "boxes": {
       "en": {
         "description": "Three isometric cubes grouped together, usually representing a collection, package set, or multiple units.",
@@ -16304,37 +16337,7 @@
       ]
     },
     "calendar-clock": {
-      "en": {
-        "description": "Shows a calendar page with a clock overlay; it usually means scheduled events, appointments, or time-based planning.",
-        "synonyms": [
-          "calendar",
-          "schedule",
-          "time",
-          "date",
-          "event",
-          "clock",
-          "planner",
-          "appointment",
-          "agenda",
-          "timetable"
-        ]
-      },
-      "fingerprint": "0d440810fc18",
-      "promptVersion": 1,
-      "ru": {
-        "description": "Изображает календарь с часами в углу; обозначает запланированное событие, расписание или время встречи.",
-        "synonyms": [
-          "календарь",
-          "расписание",
-          "время",
-          "дата",
-          "событие",
-          "часы",
-          "планировщик",
-          "встреча",
-          "график"
-        ]
-      },
+      "fingerprint": "2a51284f6931",
       "tags": [
         "day",
         "date",
@@ -22120,6 +22123,21 @@
         "unfold"
       ]
     },
+    "chocolate-bar": {
+      "fingerprint": "c000b52c51c4",
+      "tags": [
+        "candy",
+        "dessert",
+        "snack",
+        "sweet",
+        "confectionery",
+        "cocoa",
+        "treat",
+        "sugar",
+        "nibble",
+        "munch"
+      ]
+    },
     "church": {
       "en": {
         "description": "Shows a church building with a cross on its facade and an arched doorway, representing a church or place of worship.",
@@ -26944,36 +26962,7 @@
       ]
     },
     "clipboard-clock": {
-      "en": {
-        "description": "A clipboard with a clock face on its page, usually meaning scheduled tasks, time tracking, or a deadline.",
-        "synonyms": [
-          "timesheet",
-          "schedule",
-          "logbook",
-          "deadline",
-          "time tracking",
-          "reminder",
-          "pending",
-          "appointment",
-          "history"
-        ]
-      },
-      "fingerprint": "b0731c0e68cf",
-      "promptVersion": 1,
-      "ru": {
-        "description": "Изображена папка-планшет с часами на листе; обозначает расписание, отметку времени или ожидание задачи.",
-        "synonyms": [
-          "буфер обмена",
-          "расписание",
-          "таймер",
-          "журнал",
-          "история",
-          "дедлайн",
-          "учет времени",
-          "напоминание",
-          "часы"
-        ]
-      },
+      "fingerprint": "d79f990c0f2c",
       "tags": [
         "copy",
         "paste",
@@ -38686,36 +38675,7 @@
       ]
     },
     "file-clock": {
-      "en": {
-        "description": "An outlined document with a clock on it, usually meaning file history, a log, or time-stamped records.",
-        "synonyms": [
-          "history",
-          "log",
-          "timestamp",
-          "schedule",
-          "document",
-          "file",
-          "records",
-          "time",
-          "archive"
-        ]
-      },
-      "fingerprint": "2255d82f310e",
-      "promptVersion": 1,
-      "ru": {
-        "description": "Иконка изображает документ с часами внизу, что обычно означает историю, журнал или отложенные по времени файлы.",
-        "synonyms": [
-          "история",
-          "журнал",
-          "часы",
-          "время",
-          "документ",
-          "файл",
-          "лог",
-          "таймер",
-          "запись"
-        ]
-      },
+      "fingerprint": "d7db8282311f",
       "tags": [
         "document",
         "clock",
@@ -42067,37 +42027,7 @@
       ]
     },
     "folder-clock": {
-      "en": {
-        "description": "Outlined folder with a clock overlay in the lower right, usually meaning recent files, folder history, or time-based storage.",
-        "synonyms": [
-          "folder history",
-          "recent files",
-          "directory time",
-          "time folder",
-          "schedule folder",
-          "archive time",
-          "pending folder",
-          "timestamp folder",
-          "old files"
-        ]
-      },
-      "fingerprint": "4956af914fcf",
-      "promptVersion": 1,
-      "ru": {
-        "description": "Контурная папка с часами в правом нижнем углу; обозначает папку с историей, недавними файлами или отложенным по времени содержимым.",
-        "synonyms": [
-          "папка часы",
-          "папка история",
-          "недавние файлы",
-          "папка время",
-          "директория часы",
-          "таймер папка",
-          "журнал папка",
-          "архив времени",
-          "последние файлы",
-          "папка по времени"
-        ]
-      },
+      "fingerprint": "6ef3541b8da3",
       "tags": [
         "directory",
         "clock",
@@ -42728,6 +42658,26 @@
         "-"
       ]
     },
+    "folder-network": {
+      "fingerprint": "a9c2ba0135da",
+      "tags": [
+        "directory",
+        "network",
+        "ftp",
+        "sftp",
+        "file transfer",
+        "file transfer protocol",
+        "shared folder",
+        "file sharing",
+        "network drive",
+        "network storage",
+        "remote",
+        "server",
+        "nas",
+        "smb",
+        "nfs"
+      ]
+    },
     "folder-open": {
       "en": {
         "description": "An open folder shape with a tilted front flap, usually meaning open directory or browse files.",
@@ -42945,6 +42895,23 @@
           "создание"
         ]
       },
+      "tags": [
+        "directory",
+        "plus",
+        "add",
+        "new",
+        "create",
+        "+",
+        "increase",
+        "increment",
+        "extra",
+        "insert",
+        "addition",
+        "added"
+      ]
+    },
+    "folder-plus-corner": {
+      "fingerprint": "cb488b80b343",
       "tags": [
         "directory",
         "plus",
@@ -58295,38 +58262,7 @@
       ]
     },
     "mail-clock": {
-      "en": {
-        "description": "Shows an envelope with a clock overlay, indicating a scheduled or delayed email delivery.",
-        "synonyms": [
-          "mail",
-          "letter",
-          "send later",
-          "scheduled email",
-          "delayed message",
-          "timer",
-          "reminder",
-          "outgoing mail",
-          "pending delivery",
-          "clock"
-        ]
-      },
-      "fingerprint": "eef24f1029f1",
-      "promptVersion": 1,
-      "ru": {
-        "description": "Изображает конверт с часами в углу, что обозначает отложенную или запланированную отправку письма.",
-        "synonyms": [
-          "письмо",
-          "почта",
-          "отложенная отправка",
-          "запланировать письмо",
-          "часы",
-          "таймер",
-          "напоминание",
-          "отправить позже",
-          "сообщение",
-          "email"
-        ]
-      },
+      "fingerprint": "4fbef4949ad1",
       "tags": [
         "email",
         "message",
@@ -75044,6 +74980,15 @@
         "16:9",
         "horizontal",
         "shape"
+      ]
+    },
+    "rectangle-landscape-play": {
+      "fingerprint": "d455cd71f9af",
+      "tags": [
+        "music",
+        "video",
+        "start",
+        "movie"
       ]
     },
     "rectangle-vertical": {
@@ -101578,6 +101523,50 @@
         "enabled",
         "followed",
         "subscribed"
+      ]
+    },
+    "user-round-clock": {
+      "fingerprint": "ea68c7911bb4",
+      "tags": [
+        "user",
+        "people",
+        "identity",
+        "individual",
+        "personal",
+        "person",
+        "account",
+        "contact",
+        "profile",
+        "member",
+        "client",
+        "participant",
+        "guest",
+        "customer",
+        "username",
+        "clock",
+        "time",
+        "hour",
+        "minute",
+        "second",
+        "timestamp",
+        "timer",
+        "duration",
+        "interval",
+        "frequency",
+        "schedule",
+        "deadline",
+        "pending",
+        "delayed",
+        "watch",
+        "history",
+        "log",
+        "recent",
+        "activity",
+        "session",
+        "avatar",
+        "badge",
+        "reminder",
+        "audit"
       ]
     },
     "user-round-cog": {

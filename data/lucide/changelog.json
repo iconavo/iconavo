@@ -3,6 +3,28 @@
   "releases": [
     {
       "added": [
+        "box-dashed",
+        "chocolate-bar",
+        "folder-network",
+        "folder-plus-corner",
+        "rectangle-landscape-play",
+        "user-round-clock"
+      ],
+      "changed": [
+        "calendar-clock",
+        "clipboard-clock",
+        "file-clock",
+        "folder-clock",
+        "mail-clock"
+      ],
+      "date": "2026-11-20T11:39:52Z",
+      "previous": "c740a58a",
+      "revision": "742ea78395b4122e13fd46743caba5140f47fb66",
+      "total": 2098,
+      "version": "de1020d4"
+    },
+    {
+      "added": [
         "diagram-sankey"
       ],
       "date": "2026-11-19T11:39:16Z",
