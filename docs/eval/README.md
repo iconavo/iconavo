@@ -89,3 +89,7 @@ pnpm eval --service-only --explore   # кривые устройств и выб
 ```
 node --env-file=.env tools/eval/generate-queries.mjs
 ```
+
+## Проверка MCP в клиентах
+
+[mcp-clients.md](mcp-clients.md) — 20 сценариев шага 12 фазы 4 в Claude, ChatGPT и Claude Code: запросы, итоги и что исправлено (ADR-0044).
