@@ -13739,7 +13739,38 @@
       ]
     },
     "box-dashed": {
+      "en": {
+        "description": "Shows a dashed hexagonal cube outline with a downward arrow inside, representing a bounding box or selection volume.",
+        "synonyms": [
+          "cube",
+          "box",
+          "dashed",
+          "outline",
+          "bounding box",
+          "hitbox",
+          "wireframe",
+          "3d",
+          "selection",
+          "dotted line"
+        ]
+      },
       "fingerprint": "a258b6a598cd",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Изображение показывает пунктирный контур шестигранного куба с внутренней стрелкой вниз, обозначая ограничивающую рамку или объём.",
+        "synonyms": [
+          "куб",
+          "коробка",
+          "пунктир",
+          "контур",
+          "граница объекта",
+          "габариты",
+          "рамка",
+          "пунктирная линия",
+          "3d",
+          "выделение"
+        ]
+      },
       "tags": [
         "cube",
         "package",
@@ -16337,7 +16368,38 @@
       ]
     },
     "calendar-clock": {
+      "en": {
+        "description": "Shows a calendar page with binder rings and a clock in the corner, meaning scheduled time, a deadline, or timed events.",
+        "synonyms": [
+          "calendar",
+          "schedule",
+          "date",
+          "time",
+          "deadline",
+          "appointment",
+          "event",
+          "clock",
+          "planner",
+          "timetable"
+        ]
+      },
       "fingerprint": "2a51284f6931",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Изображена страница календаря с кольцами и часами в правом нижнем углу; обозначает запланированное время, расписание или срок.",
+        "synonyms": [
+          "календарь",
+          "расписание",
+          "дата",
+          "время",
+          "срок",
+          "график",
+          "событие",
+          "часы",
+          "таймер",
+          "планирование"
+        ]
+      },
       "tags": [
         "day",
         "date",
@@ -22124,7 +22186,36 @@
       ]
     },
     "chocolate-bar": {
+      "en": {
+        "description": "A segmented chocolate bar with a bite taken from its top corner, meaning sweets, dessert or a snack.",
+        "synonyms": [
+          "chocolate",
+          "candy bar",
+          "sweet",
+          "dessert",
+          "snack",
+          "treat",
+          "cocoa",
+          "confectionery",
+          "sugar"
+        ]
+      },
       "fingerprint": "c000b52c51c4",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Плитка шоколада с откушенным углом, разделённая на квадраты; обозначает сладости, десерт или перекус.",
+        "synonyms": [
+          "шоколад",
+          "шоколадка",
+          "сладкое",
+          "десерт",
+          "конфета",
+          "перекус",
+          "сладости",
+          "кондитерские изделия",
+          "какао"
+        ]
+      },
       "tags": [
         "candy",
         "dessert",
@@ -26962,7 +27053,38 @@
       ]
     },
     "clipboard-clock": {
+      "en": {
+        "description": "A clipboard with a clock in the corner, usually meaning a schedule, deadline, pending task, or time tracking.",
+        "synonyms": [
+          "clipboard",
+          "clock",
+          "timer",
+          "schedule",
+          "deadline",
+          "time tracking",
+          "timesheet",
+          "pending",
+          "reminder",
+          "logbook"
+        ]
+      },
       "fingerprint": "d79f990c0f2c",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Изображён буфер обмена с часами в правом нижнем углу; обычно означает расписание, срок, отложенную задачу или учёт времени.",
+        "synonyms": [
+          "буфер обмена",
+          "часы",
+          "таймер",
+          "расписание",
+          "дедлайн",
+          "время",
+          "журнал",
+          "напоминание",
+          "учёт времени",
+          "отложенное"
+        ]
+      },
       "tags": [
         "copy",
         "paste",
@@ -33564,7 +33686,38 @@
       ]
     },
     "diagram-sankey": {
+      "en": {
+        "description": "Two intersecting flow bands of varying width drawn left to right, representing a Sankey diagram showing flows and allocation.",
+        "synonyms": [
+          "sankey",
+          "flow chart",
+          "flow diagram",
+          "streams",
+          "distribution",
+          "transfer",
+          "allocation",
+          "energy flow",
+          "budget",
+          "data flow"
+        ]
+      },
       "fingerprint": "93b05d12ebbf",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Рисунок показывает два переплетающихся потока разной ширины, идущих слева направо; обозначает диаграмму Санкея, распределение и перетекание величин.",
+        "synonyms": [
+          "диаграмма санкея",
+          "поток",
+          "потоки",
+          "диаграмма",
+          "распределение",
+          "перенос",
+          "график потоков",
+          "бюджет",
+          "ресурсы",
+          "диаграмма потоков"
+        ]
+      },
       "tags": [
         "sankey",
         "chart",
@@ -38675,7 +38828,38 @@
       ]
     },
     "file-clock": {
+      "en": {
+        "description": "A document with a folded corner and a clock in the lower left, usually meaning a timestamped file, history, or scheduled document.",
+        "synonyms": [
+          "document",
+          "file",
+          "clock",
+          "time",
+          "timer",
+          "schedule",
+          "history",
+          "deadline",
+          "log",
+          "timestamp"
+        ]
+      },
       "fingerprint": "d7db8282311f",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Изображен документ с отогнутым уголком и часами внизу слева; обычно означает файл с временной меткой, историю или отложенный документ.",
+        "synonyms": [
+          "документ",
+          "файл",
+          "часы",
+          "время",
+          "таймер",
+          "расписание",
+          "история",
+          "дедлайн",
+          "журнал",
+          "лог"
+        ]
+      },
       "tags": [
         "document",
         "clock",
@@ -42027,7 +42211,38 @@
       ]
     },
     "folder-clock": {
+      "en": {
+        "description": "Outline of a folder with a clock badge in the lower right corner, indicating time-based, scheduled, or recent files.",
+        "synonyms": [
+          "folder time",
+          "scheduled folder",
+          "history folder",
+          "pending files",
+          "timer",
+          "deadline",
+          "recent files",
+          "schedule",
+          "delayed",
+          "timestamp"
+        ]
+      },
       "fingerprint": "6ef3541b8da3",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Контур папки с часами в правом нижнем углу; обозначает папку с отложенными, запланированными или недавними файлами по времени.",
+        "synonyms": [
+          "папка с часами",
+          "папка время",
+          "календарь папка",
+          "расписание",
+          "история",
+          "таймер",
+          "ожидание",
+          "отложенные файлы",
+          "срок",
+          "часы"
+        ]
+      },
       "tags": [
         "directory",
         "clock",
@@ -42659,7 +42874,38 @@
       ]
     },
     "folder-network": {
+      "en": {
+        "description": "A folder connected by a line to a horizontal bar with a node, indicating a network folder or shared file storage.",
+        "synonyms": [
+          "network folder",
+          "shared folder",
+          "network drive",
+          "file sharing",
+          "file transfer",
+          "remote folder",
+          "network storage",
+          "file server",
+          "shared directory",
+          "nas"
+        ]
+      },
       "fingerprint": "a9c2ba0135da",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Изображена папка, соединённая вертикальной линией с горизонтальной шиной и узлом; обозначает сетевую папку или общий доступ к файлам.",
+        "synonyms": [
+          "сетевая папка",
+          "общий доступ",
+          "сетевой диск",
+          "файлы в сети",
+          "папка с сервером",
+          "общая папка",
+          "передача файлов",
+          "удалённая папка",
+          "сервер",
+          "шара"
+        ]
+      },
       "tags": [
         "directory",
         "network",
@@ -42911,7 +43157,38 @@
       ]
     },
     "folder-plus-corner": {
+      "en": {
+        "description": "Outlined folder with a plus sign at the bottom right, meaning create a new folder or add a directory.",
+        "synonyms": [
+          "create folder",
+          "new folder",
+          "add folder",
+          "folder plus",
+          "plus",
+          "add",
+          "create",
+          "directory",
+          "new",
+          "insert"
+        ]
+      },
       "fingerprint": "cb488b80b343",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Контур папки с плюсом в правом нижнем углу; обозначает создание новой папки или добавление директории.",
+        "synonyms": [
+          "создать папку",
+          "новая папка",
+          "добавить папку",
+          "папка с плюсом",
+          "плюс",
+          "добавить",
+          "создать",
+          "директория",
+          "каталог",
+          "новый"
+        ]
+      },
       "tags": [
         "directory",
         "plus",
@@ -51475,7 +51752,38 @@
       ]
     },
     "jacket": {
+      "en": {
+        "description": "An outline of a jacket or blazer with a V-shaped collar and front opening, representing outerwear, clothing, or apparel.",
+        "synonyms": [
+          "blazer",
+          "coat",
+          "outerwear",
+          "clothing",
+          "apparel",
+          "fashion",
+          "garment",
+          "menswear",
+          "winter wear",
+          "tailoring"
+        ]
+      },
       "fingerprint": "8993f75d5d5a",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Изображён контур куртки или пиджака с V-образным воротником и застёжкой, означает одежду, верхнюю одежду и гардероб.",
+        "synonyms": [
+          "куртка",
+          "пиджак",
+          "верхняя одежда",
+          "одежда",
+          "пальто",
+          "гардероб",
+          "магазин одежды",
+          "тёплая одежда",
+          "мода",
+          "наряд"
+        ]
+      },
       "tags": [
         "outerwear",
         "fashion",
@@ -58262,7 +58570,38 @@
       ]
     },
     "mail-clock": {
+      "en": {
+        "description": "Shows an envelope with a clock badge in the corner, meaning scheduled or delayed email delivery.",
+        "synonyms": [
+          "email",
+          "letter",
+          "scheduled mail",
+          "send later",
+          "clock",
+          "time",
+          "pending",
+          "reminder",
+          "deadline",
+          "delivery"
+        ]
+      },
       "fingerprint": "4fbef4949ad1",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Изображён конверт письма с часами в углу, что означает запланированную или отложенную отправку почты.",
+        "synonyms": [
+          "письмо",
+          "почта",
+          "отложенная отправка",
+          "запланировать письмо",
+          "часы",
+          "время",
+          "расписание",
+          "напоминание",
+          "дедлайн",
+          "ожидание"
+        ]
+      },
       "tags": [
         "email",
         "message",
@@ -68286,7 +68625,38 @@
       ]
     },
     "paint-gun": {
+      "en": {
+        "description": "A spray gun emitting paint droplets, usually representing painting, spraying, or applying a coating.",
+        "synonyms": [
+          "sprayer",
+          "spray gun",
+          "airbrush",
+          "painting",
+          "coating",
+          "paint sprayer",
+          "atomizer",
+          "varnish",
+          "lacquer",
+          "spraying"
+        ]
+      },
       "fingerprint": "ebd01a17461a",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Изображен пистолет-распылитель с каплями краски, обозначающий покраску, распыление или нанесение покрытия.",
+        "synonyms": [
+          "краскопульт",
+          "пульверизатор",
+          "распылитель",
+          "покраска",
+          "окрашивание",
+          "аэрограф",
+          "спрей",
+          "лак",
+          "малярные работы",
+          "покрытие"
+        ]
+      },
       "tags": [
         "spray",
         "airbrush",
@@ -74983,7 +75353,38 @@
       ]
     },
     "rectangle-landscape-play": {
+      "en": {
+        "description": "A rounded rectangle containing a right-pointing play triangle, usually meaning play video or start media.",
+        "synonyms": [
+          "play",
+          "video",
+          "play button",
+          "media player",
+          "start",
+          "movie",
+          "watch",
+          "clip",
+          "playback",
+          "film"
+        ]
+      },
       "fingerprint": "d455cd71f9af",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Прямоугольник с треугольником «играть» внутри — кнопка воспроизведения видео или медиа.",
+        "synonyms": [
+          "воспроизведение",
+          "видео",
+          "плей",
+          "кнопка play",
+          "запуск",
+          "фильм",
+          "проигрыватель",
+          "медиа",
+          "старт",
+          "плеер"
+        ]
+      },
       "tags": [
         "music",
         "video",
@@ -85294,7 +85695,38 @@
       ]
     },
     "spray-can": {
+      "en": {
+        "description": "Shows an aerosol can with dots spraying from its nozzle, representing spraying, painting, or aerosol products.",
+        "synonyms": [
+          "aerosol",
+          "spray bottle",
+          "spray paint",
+          "graffiti",
+          "paint can",
+          "deodorant",
+          "air freshener",
+          "atomizer",
+          "sprayer",
+          "shaving foam"
+        ]
+      },
       "fingerprint": "69e054c84b28",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Изображён аэрозольный баллончик с распыляемыми точками сбоку; значок обозначает распыление, покраску или аэрозоль.",
+        "synonyms": [
+          "баллончик",
+          "аэрозоль",
+          "спрей",
+          "краска",
+          "граффити",
+          "дезодорант",
+          "освежитель",
+          "распылитель",
+          "пульверизатор",
+          "покраска"
+        ]
+      },
       "tags": [
         "paint",
         "color",
@@ -101526,7 +101958,38 @@
       ]
     },
     "user-round-clock": {
+      "en": {
+        "description": "Shows a person silhouette with a clock badge at the bottom right, meaning a user's time, schedule, or session history.",
+        "synonyms": [
+          "user",
+          "person",
+          "profile",
+          "account",
+          "clock",
+          "time",
+          "schedule",
+          "history",
+          "session",
+          "timer"
+        ]
+      },
       "fingerprint": "ea68c7911bb4",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Изображён силуэт человека с круглыми часами справа внизу; означает пользователя с временем, расписание или время работы профиля.",
+        "synonyms": [
+          "пользователь",
+          "человек",
+          "профиль",
+          "аккаунт",
+          "часы",
+          "время",
+          "расписание",
+          "история активности",
+          "сессия",
+          "таймер"
+        ]
+      },
       "tags": [
         "user",
         "people",
