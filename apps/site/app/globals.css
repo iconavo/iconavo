@@ -489,7 +489,12 @@
     color: var(--color-text-primary);
     font: inherit;
   }
+  /* Подсказка — как у полей поиска (Search Input, Small): в покое text/secondary, при наведении и в фокусе —
+     text/primary. */
   .sidebar-filter input::placeholder {
+    color: var(--color-text-secondary);
+  }
+  .sidebar-filter:is(:hover, :focus-within) input::placeholder {
     color: var(--color-text-primary);
   }
   .sidebar-filter-icon {
@@ -1441,8 +1446,13 @@
     color: var(--color-text-primary);
     font: inherit;
   }
-  /* Подсказка в поле — text/primary, как в макете (Search Input, Placeholder) и в поле «Filter by name». */
+  /* Подсказка в поле — как в компоненте Search Input (решение владельца 23 ноября 2026): в покое
+     text/secondary, при наведении и в фокусе — text/primary; введённый текст — всегда text/primary. Так же
+     у поля «Filter by name» (размер Small). */
   .hero-input::placeholder {
+    color: var(--color-text-secondary);
+  }
+  .hero-field:is(:hover, :focus-within) .hero-input::placeholder {
     color: var(--color-text-primary);
   }
   .hero-keys {
