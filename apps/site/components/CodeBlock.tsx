@@ -1,9 +1,9 @@
-import { cn } from "../lib/cn";
-import { CopyButton } from "./CopyButton";
+import { PanelCopy } from "./panel/parts";
 
-// Блок кода: подпись языка, кнопка «Copy» и сам код. Подсветки пока нет: цвета — часть визуального
-// дизайна, фаза 6 (ADR-0050). Генератор кода в панели иконки (шаг 5 фазы 4) даёт свою подпись,
-// подписи кнопки на языке страницы, метку аналитики и узкий вид — с переносом длинных строк.
+// Блок кода документации — в виде блока кода панели иконки (Icon Panel/Code Block: подпись, Copy и код;
+// решение владельца 23 ноября 2026 — документация в стиле сайта). Отличие одно: длинные строки не
+// переносятся, а прокручиваются внутри блока — в примерах важны отступы. Подсветки пока нет: цвета —
+// часть визуального дизайна, фаза 6 (ADR-0050).
 
 const LANGUAGE_TITLES: Record<string, string> = {
   html: "HTML",
@@ -17,42 +17,19 @@ const LANGUAGE_TITLES: Record<string, string> = {
   "": "Text",
 };
 
-export function CodeBlock({
-  lang,
-  value,
-  title,
-  labels,
-  onCopied,
-  wrap = false,
-  snippet,
-}: {
-  lang: string;
-  value: string;
-  title?: string;
-  labels?: { copy: string; copied: string };
-  onCopied?: () => void;
-  /** Длинные строки переносятся, а не прокручиваются: узкая панель иконки. */
-  wrap?: boolean;
-  /** Что в блоке — для проверки сайта: data-snippet. */
-  snippet?: string;
-}) {
+export function CodeBlock({ lang, value }: { lang: string; value: string }) {
+  const title = LANGUAGE_TITLES[lang] ?? lang;
   return (
-    <figure
-      className={cn("code", wrap && "code-wrap")}
-      {...(snippet === undefined ? {} : { "data-snippet": snippet })}
-    >
-      <figcaption className="code-bar">
-        <span className="code-lang">
-          {title ?? LANGUAGE_TITLES[lang] ?? lang}
+    <figure className="code-block docs-code">
+      <figcaption className="code-block-head">
+        <span className="code-block-label">{title}</span>
+        <span className="code-block-actions">
+          <PanelCopy lang="en" text={value} what={title} />
         </span>
-        <CopyButton
-          text={value}
-          {...(labels === undefined ? {} : { labels })}
-          {...(onCopied === undefined ? {} : { onCopied })}
-        />
       </figcaption>
       {/* Длинная строка прокручивается внутри блока — его можно прокрутить и с клавиатуры. */}
       <pre
+        className="code-block-code"
         // biome-ignore lint/a11y/noNoninteractiveTabindex: область прокрутки должна получать фокус (WCAG 2.1.1)
         tabIndex={0}
       >

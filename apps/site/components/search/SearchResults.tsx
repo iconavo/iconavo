@@ -7,6 +7,7 @@ import { type PanelSet, pageSizeFor } from "../../lib/catalog";
 import type { SidebarGroup } from "../../lib/catalog-view";
 import { filterSheetStore } from "../../lib/filter-sheet";
 import { useGridColumns } from "../../lib/grid-columns";
+import { useKeptPage, usePerPage } from "../../lib/grid-settings";
 import { DICTIONARIES, type Lang } from "../../lib/i18n";
 import { PAGE_PANEL_ID } from "../../lib/panel-layout";
 import {
@@ -119,7 +120,16 @@ export function SearchResults({
   const state = readSearchState(query, known);
   // Страница — целые ряды: колонки — только от ширины окна (lib/grid-columns.ts), как у набора.
   const columns = useGridColumns();
-  const size = columns === undefined ? undefined : pageSizeFor(columns);
+  // Иконок на странице — из настроек сетки (ADR-0054), целыми рядами.
+  const perPage = usePerPage();
+  const size =
+    columns === undefined ? undefined : pageSizeFor(columns, perPage);
+  // Сменили число на странице — первая иконка страницы остаётся на экране.
+  useKeptPage(perPage, size, state.page, (p) =>
+    navigate(withParams(query, { page: p === 1 ? undefined : String(p) }), {
+      replace: true,
+    }),
+  );
   const key =
     state.q === "" || size === undefined ? "" : searchApiUrl(API, state, size);
   // Счётчик на кнопке фильтра (телефон) — по фильтрам этой выдачи.

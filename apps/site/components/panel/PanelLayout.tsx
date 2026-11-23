@@ -80,6 +80,8 @@ interface PageGroup {
   keepSize?: boolean;
   /** Элементы идут сверху вниз: первый ниже экрана — остальные не меряются. */
   ordered?: boolean;
+  /** Элементы — в колонке каркаса, а не в <main> страницы: подвал. */
+  column?: boolean;
 }
 const PAGE_GROUPS: readonly PageGroup[] = [
   {
@@ -96,6 +98,9 @@ const PAGE_GROUPS: readonly PageGroup[] = [
     selector: ".grid-filters > *, .search-status, .grid-status",
     keepSize: true,
   },
+  // Панель отодвигает подвал (решение владельца 23 ноября 2026): его группы ссылок доезжают на новые места,
+  // правая в узкой колонке — на вторую строку.
+  { selector: ".site-footer > .footer-group", keepSize: true, column: true },
 ];
 
 /**
@@ -232,7 +237,7 @@ export class PanelLayout extends Component<{
     } else if (window.matchMedia(DESKTOP).matches) {
       for (const group of PAGE_GROUPS) {
         const before = boxesNear(
-          page,
+          group.column ? (page.parentElement ?? page) : page,
           group.selector,
           NEAR,
           group.ordered === true,
@@ -252,19 +257,20 @@ export class PanelLayout extends Component<{
     const leaving: Leaving[] = [];
     if (previous.open) {
       const home = slot ?? root;
-      // Панель во всю высоту на компьютере уезжает на ширину своей колонки.
+      // Панель во всю высоту на компьютере уезжает на ширину своей колонки — вместе с полоской своего низа
+      // у края окна (.panel-cover, app/globals.css).
       const slide =
         slot !== null && window.matchMedia(DESKTOP).matches
           ? slot.getBoundingClientRect().width
           : undefined;
       for (const element of home.querySelectorAll<HTMLElement>(
-        ":scope > .icon-panel, :scope > .panel-backdrop",
+        ":scope > .icon-panel, :scope > .panel-backdrop, :scope > .panel-cover",
       )) {
         if (getComputedStyle(element).display !== "none") {
           leaving.push(
             copyOf(
               element,
-              element.classList.contains("icon-panel") ? slide : undefined,
+              element.classList.contains("panel-backdrop") ? undefined : slide,
             ),
           );
         }
@@ -313,7 +319,12 @@ export class PanelLayout extends Component<{
       !reducedMotion() &&
       window.matchMedia(DESKTOP).matches
     ) {
-      extra.push([panel, slideFrames(slot.getBoundingClientRect().width)]);
+      const width = slot.getBoundingClientRect().width;
+      extra.push([panel, slideFrames(width)]);
+      // Полоска низа панели у края окна выезжает вместе с ней: иначе её вырезы под углы стояли бы на месте,
+      // а панель ехала бы под ними.
+      const cover = slot.querySelector<HTMLElement>(":scope > .panel-cover");
+      if (cover !== null) extra.push([cover, slideFrames(width)]);
     }
     playFlips(snapshot.groups, { id: FLIP_ID, duration }, extra);
     playLeaving(root, snapshot.leaving, duration);

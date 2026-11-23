@@ -32,7 +32,7 @@ function minCardAfter(marker: string): number {
   return Number(match?.[1]);
 }
 
-type Cols = "icon" | "set" | "sets";
+type Cols = "icon" | "large-icon" | "list-icon" | "set" | "sets";
 
 /** Значения --{name}-cols по порогам ширины окна: [окно в rem, колонок], по возрастанию. */
 function steps(name: Cols): [number, number][] {
@@ -69,11 +69,19 @@ describe("колонки сеток — от ширины окна", () => {
       gap: remAfter("  .set-grid {", "gap"),
       max: 5,
     },
+    // Крупная сетка и список (настройки сетки, ADR-0054): плитка 16,25rem и строка 20rem, зазор — сетки.
+    {
+      name: "large-icon",
+      card: 16.25,
+      gap: remAfter("  .icon-grid {", "gap"),
+    },
+    { name: "list-icon", card: 20, gap: remAfter("  .icon-grid {", "gap") },
   ];
 
-  it("колонка страницы — окно − 19rem, карточка набора — 15rem", () => {
+  // Карточка набора не уже 17rem — 272 px компонента «Icon Set Card» (решение владельца 23 ноября 2026).
+  it("колонка страницы — окно − 19rem, карточка набора — 17rem", () => {
     expect(frame).toBe(19);
-    expect(grids[1].card).toBe(15);
+    expect(grids[1].card).toBe(17);
   });
 
   for (const { name, card, gap, max } of grids) {
@@ -106,6 +114,13 @@ describe("колонки сеток — от ширины окна", () => {
     expect(css).toMatch(/:root \{\s*--icon-cols: 3;\s*\}/);
     expect(css).toMatch(
       /\.icon-grid \{[^}]*grid-template-columns: repeat\(var\(--icon-cols\), minmax\(0, 1fr\)\);/,
+    );
+    // Вид сетки (data-grid-view у <html>) меняет колонки той же сетки — своими лестницами.
+    expect(css).toMatch(
+      /:root\[data-grid-view="large"\] \{\s*--icon-cols: var\(--large-icon-cols\);/,
+    );
+    expect(css).toMatch(
+      /:root\[data-grid-view="list"\] \{\s*--icon-cols: var\(--list-icon-cols\);/,
     );
     // Выдача поиска — та же сетка: класс icon-grid у списка выдачи, своей лестницы колонок нет.
     expect(css).not.toMatch(/--result-cols/);

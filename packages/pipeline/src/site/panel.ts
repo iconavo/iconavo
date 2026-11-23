@@ -241,12 +241,18 @@ function motionFacts(icon: string) {
     fieldIcon: rect(document.querySelector(".grid-field .hero-field-icon")),
     pages: rect(document.querySelector(".grid-bar .pagination")),
     panel: rect(document.querySelector("#page-panel > aside.icon-panel")),
-    /** Ширина колонки под панель по стилям: 0 — колонки нет. */
-    column: Number.parseFloat(
-      getComputedStyle(document.querySelector("main") as Element)
-        .gridTemplateColumns.split(" ")
-        .at(-1) ?? "0",
-    ),
+    /**
+     * Ширина колонки под панель по стилям: 0 — колонки нет. С открытой панелью <main> — подсетка (subgrid), и
+     * колонки задаёт .app-column: панель отодвигает подвал (23 ноября 2026).
+     */
+    column: (() => {
+      const main = document.querySelector("main") as Element;
+      const own = getComputedStyle(main).gridTemplateColumns;
+      const tracks = own.startsWith("subgrid")
+        ? getComputedStyle(main.parentElement as Element).gridTemplateColumns
+        : own;
+      return Number.parseFloat(tracks.split(" ").at(-1) ?? "0");
+    })(),
     /** Переходы ширины колонок в стилях: с ними страница раскладывается заново в каждом кадре. */
     transitions: document
       .getAnimations()
@@ -490,8 +496,12 @@ export async function panelProblems(
     for (const a of document.querySelectorAll<HTMLElement>(
       "a.icon-card-link",
     )) {
+      // Мгновенно: у сайта плавная прокрутка (scroll-behavior: smooth), и замер пришёлся бы на её середину.
       if (a.dataset.icon === icon)
-        scrollBy(0, a.getBoundingClientRect().top - 450);
+        scrollBy({
+          top: a.getBoundingClientRect().top - 450,
+          behavior: "instant",
+        });
     }
   }, card);
   await settled(page);
@@ -823,6 +833,9 @@ function layoutFacts() {
     panel: box("#page-panel > aside.icon-panel"),
     position: panel ? getComputedStyle(panel).position : "",
     crumbs: box(".crumbs"),
+    topbar: box(".topbar"),
+    /** Полоса у низа окна, прикрывающая низ панели (.panel-cover). */
+    cover: box(".panel-cover"),
     grid: box(".icon-grid"),
     footer: box(".site-footer"),
     main: box("main"),
@@ -861,10 +874,12 @@ export interface LayoutOptions {
 }
 
 /**
- * Панель во всю высоту страницы (план редизайна): справа от страницы с отступом края, с уровня хлебных
- * крошек, помещается в окно; колонки сетки — те же, что без панели (зависят только от ширины окна);
- * строка поиска не вылезает; без прокрутки вбок. На 1440 px — ещё свёрнутый сайдбар, прилипание во всю
- * высоту окна, подвал, короткая страница и смена ширины окна через 1024 px.
+ * Панель во всю высоту страницы (план редизайна; кадр 56:17777 — решение владельца 23 ноября 2026): справа
+ * от страницы с отступом края, в 24 px под верхней полосой, растянута — видимый низ в 24 px от низа окна, у
+ * края окна её прикрывает полоса .panel-cover; колонки сетки — те же, что без панели (зависят только от
+ * ширины окна); строка поиска не вылезает; без прокрутки вбок. На 1440 px — ещё свёрнутый сайдбар,
+ * прилипание (24 px сверху и снизу), конец страницы (низ панели — в 24 px от низа страницы, подвал — в левой
+ * колонке), короткая страница и смена ширины окна через 1024 px.
  */
 export async function layoutProblems(
   browser: Browser,
@@ -892,9 +907,18 @@ export async function layoutProblems(
       l.grid === undefined || l.grid.right <= p.left - 16,
       `${at}: сетка заходит под панель (сетка до ${r(l.grid?.right ?? 0)}, панель с ${r(p.left)} px)`,
     );
+    // Высота панели постоянная — окно без 24 px сверху и снизу; у самого верха страницы её низ уходит за
+    // окно, и его прикрывает полоса .panel-cover у края окна (23 ноября 2026).
     no(
-      p.bottom <= l.height - 16 + 1,
-      `${at}: низ панели ${r(p.bottom)} px — за окном ${l.height} px`,
+      p.bottom >= l.height - 24 - 1,
+      `${at}: низ панели ${r(p.bottom)} px — выше ${l.height - 24} px: панель не растянута`,
+    );
+    no(
+      l.cover !== undefined &&
+        Math.abs(l.cover.bottom - l.height) <= 1 &&
+        l.cover.left <= p.left + 1 &&
+        l.cover.right >= p.right - 1,
+      `${at}: у низа окна нет полосы, прикрывающей низ панели`,
     );
     no(!l.wide, `${at}: страница шире окна`);
     no(l.toolbarOut === 0, `${at}: строка поиска вылезает за свою колонку`);
@@ -917,9 +941,9 @@ export async function layoutProblems(
     placed(at, l);
     no(
       l.panel === undefined ||
-        l.crumbs === undefined ||
-        Math.abs(l.panel.top - l.crumbs.top) <= 4,
-      `${at}: панель начинается на ${r(l.panel?.top ?? 0)} px, а хлебные крошки — на ${r(l.crumbs?.top ?? 0)} px`,
+        l.topbar === undefined ||
+        Math.abs(l.panel.top - (l.topbar.bottom + 24)) <= 2,
+      `${at}: панель начинается на ${r(l.panel?.top ?? 0)} px, а ждали 24 px под верхней полосой — ${r((l.topbar?.bottom ?? 0) + 24)} px`,
     );
     no(
       l.columns === without.columns,
@@ -944,32 +968,41 @@ export async function layoutProblems(
       await settled(page);
       await page.waitForTimeout(300);
 
-      // Прокрутка: панель прилипает во всю высоту окна; внизу не заходит на подвал.
+      // Прокрутка: панель прилипает — 24 px сверху и снизу окна; в конце страницы её низ — в 24 px от низа
+      // страницы, подвал — в левой колонке. Прокрутка мгновенная: у сайта она плавная.
       await page.evaluate(() => {
         const main = document.querySelector("main")?.getBoundingClientRect();
-        scrollTo(
-          0,
-          Math.max(200, (main?.bottom ?? 0) + scrollY - innerHeight - 300),
-        );
+        scrollTo({
+          top: Math.max(200, (main?.bottom ?? 0) + scrollY - innerHeight - 300),
+          behavior: "instant",
+        });
       });
       await settled(page);
       const middle = await page.evaluate(layoutFacts);
       no(
         middle.panel !== undefined &&
-          Math.abs(middle.panel.top - 16) <= 1 &&
-          Math.abs(middle.panel.bottom - (middle.height - 16)) <= 1,
-        `${at}, прокрутка: панель ${r(middle.panel?.top ?? 0)}–${r(middle.panel?.bottom ?? 0)} px, а ждали 16–${middle.height - 16}`,
+          Math.abs(middle.panel.top - 24) <= 1 &&
+          Math.abs(middle.panel.bottom - (middle.height - 24)) <= 1,
+        `${at}, прокрутка: панель ${r(middle.panel?.top ?? 0)}–${r(middle.panel?.bottom ?? 0)} px, а ждали 24–${middle.height - 24}`,
       );
       await page.evaluate(() =>
-        scrollTo(0, document.documentElement.scrollHeight),
+        scrollTo({
+          top: document.documentElement.scrollHeight,
+          behavior: "instant",
+        }),
       );
       await settled(page);
       const end = await page.evaluate(layoutFacts);
       no(
         end.panel !== undefined &&
+          Math.abs(end.panel.bottom - (end.height - 24)) <= 2,
+        `${at}, конец страницы: низ панели ${r(end.panel?.bottom ?? 0)} px, а ждали 24 px от низа страницы — ${end.height - 24} px`,
+      );
+      no(
+        end.panel !== undefined &&
           end.footer !== undefined &&
-          end.panel.bottom <= end.footer.top + 1,
-        `${at}, конец страницы: панель (до ${r(end.panel?.bottom ?? 0)} px) заходит на подвал (с ${r(end.footer?.top ?? 0)} px)`,
+          end.footer.right <= end.panel.left + 1,
+        `${at}, конец страницы: подвал (до ${r(end.footer?.right ?? 0)} px) заходит под панель (с ${r(end.panel?.left ?? 0)} px) — ждали подвал в левой колонке`,
       );
       // Внизу панель становится ниже, а не уезжает вверх: заголовок и ✕ видны.
       no(
@@ -988,8 +1021,8 @@ export async function layoutProblems(
       no(
         short.panel !== undefined &&
           short.footer !== undefined &&
-          short.panel.bottom <= short.footer.top + 1,
-        `${at}, поиск по набору: панель заходит на подвал`,
+          short.footer.right <= short.panel.left + 1,
+        `${at}, поиск по набору: подвал заходит под панель — ждали его в левой колонке`,
       );
 
       // Окно уже 1024 px — шторка; снова шире — колонка справа.
@@ -1042,7 +1075,7 @@ export async function checkLayout(
   await context.close();
   return problems.length === 0
     ? pass(
-        `${WIDTHS.join(", ")} px: справа с отступом края, с уровня крошек, в окне, колонки сетки те же, строка поиска не вылезает; свёрнутый сайдбар, прилипание, подвал, короткая страница, окно 900 px и обратно`,
+        `${WIDTHS.join(", ")} px: справа с отступом края, в 24 px под верхней полосой, растянута до низа окна (низ прикрывает полоса), колонки сетки те же, строка поиска не вылезает; свёрнутый сайдбар, прилипание 24 px сверху и снизу, конец страницы (подвал — в левой колонке), короткая страница, окно 900 px и обратно`,
       )
     : fail(problems.slice(0, 4).join("; "));
 }

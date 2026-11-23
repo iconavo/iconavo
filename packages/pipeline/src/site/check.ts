@@ -75,6 +75,7 @@ import {
   panelProblems,
 } from "./panel.js";
 import { checkSearchPage, searchCanaryCaught } from "./search.js";
+import { checkSettings, GRID_KEY, settingsProblems } from "./settings.js";
 
 export const CHECKS = [
   [
@@ -132,7 +133,7 @@ export const CHECKS = [
   ],
   [
     "layout",
-    "Панель во всю высоту: справа от страницы на ширине 1040–2560 px и со свёрнутым сайдбаром, колонки сетки те же, в окне и прилипает, подвал, короткая страница, окно уже 1024 px и обратно",
+    "Панель во всю высоту: справа от страницы на ширине 1040–2560 px и со свёрнутым сайдбаром, колонки сетки те же, в 24 px под верхней полосой и растянута, прилипает, подвал в левой колонке, короткая страница, окно уже 1024 px и обратно",
   ],
   [
     "iconpage",
@@ -153,6 +154,10 @@ export const CHECKS = [
   [
     "bag",
     "Рюкзак: выделение — «Download N icons» и «Cancel Selection»; «в рюкзак» на карточке, в панели и в поиске, число на «Bag» после перезагрузки; с клавиатуры, «Clear» и «Undo», «Remove», общий цвет; ZIP с текстами лицензий и README; спрайт; Esc; axe, телефон",
+  ],
+  [
+    "settings",
+    "Настройки сетки: панель Settings, крупная сетка и список, размер иконки, вид после перезагрузки до гидратации, 192 на странице целыми рядами с первой иконкой на месте, Reset Settings, Esc и щелчок мимо, рюкзак и настройки по одной; axe, шторка на телефоне",
   ],
   [
     "catalog",
@@ -572,17 +577,20 @@ async function checkPages(
     const copyPage = await copyContext.newPage();
     await copyPage.goto(`${o.base}/docs`, { waitUntil: "load" });
     const expected = await copyPage
-      .locator("figure.code pre")
+      .locator(".prose figure.code-block pre")
       .first()
       .innerText();
-    await copyPage.locator("figure.code button.copy").first().click();
+    await copyPage
+      .locator(".prose figure.code-block button.code-copy")
+      .first()
+      .click();
     await copyPage.waitForTimeout(300);
     // Буфер Windows хранит переводы строк как \r\n.
     const copied = (
       await copyPage.evaluate(() => navigator.clipboard.readText())
     ).replace(/\r\n/g, "\n");
     const label = await copyPage
-      .locator("figure.code button.copy")
+      .locator(".prose figure.code-block button.code-copy")
       .first()
       .innerText();
     v.copy =
@@ -1459,6 +1467,22 @@ async function checkCanary(
     if (caught.length === 0) missed.push("сумка не переживает перезагрузку");
     await ctx.close();
   }
+  // Настройки сетки не сохраняются — строка «Настройки» обязана заметить после перезагрузки (ADR-0054).
+  {
+    const ctx = await browser.newContext({ viewport: DESKTOP });
+    await ctx.addInitScript((key) => {
+      const set = Storage.prototype.setItem;
+      Storage.prototype.setItem = function (k, value) {
+        if (k !== key) set.call(this, k, value);
+      };
+    }, GRID_KEY);
+    const p = await ctx.newPage();
+    const caught = await settingsProblems(p, o).catch(() => ["остановился"]);
+    if (caught.length === 0) {
+      missed.push("настройки не переживают перезагрузку");
+    }
+    await ctx.close();
+  }
   if (
     zipProblems(
       [
@@ -1500,7 +1524,7 @@ async function checkCanary(
   result.verdicts.canary =
     missed.length === 0
       ? pass(
-          "замечены все двадцать восемь: кнопка без подписи, style, ширина, иконка-блок, robots, битая ссылка, гидратация, чужой lang, нет ссылки на другой язык, переход не туда, нет скрипта темы, сетка без списка имён, поиск без полной выдачи, Esc не закрывает панель, фокус не возвращается, другая страница сетки закрывает панель, сетка прыгает при открытии и закрытии панели, колесо над панелью крутит страницу, страница шире окна при открытии панели, карточки перескакивают, панель без своей колонки, старое имя без перехода, метка catalog у страницы иконки, менеджер пакетов не запоминается, SVG-код не как у адреса, пустой PNG, сумка не переживает перезагрузку, ZIP без лицензий",
+          "замечены все двадцать девять: кнопка без подписи, style, ширина, иконка-блок, robots, битая ссылка, гидратация, чужой lang, нет ссылки на другой язык, переход не туда, нет скрипта темы, сетка без списка имён, поиск без полной выдачи, Esc не закрывает панель, фокус не возвращается, другая страница сетки закрывает панель, сетка прыгает при открытии и закрытии панели, колесо над панелью крутит страницу, страница шире окна при открытии панели, карточки перескакивают, панель без своей колонки, старое имя без перехода, метка catalog у страницы иконки, менеджер пакетов не запоминается, SVG-код не как у адреса, пустой PNG, сумка не переживает перезагрузку, ZIP без лицензий, настройки не сохраняются",
         )
       : fail(`проверка слепая: не замечено — ${missed.join(", ")}`);
 }
@@ -1518,6 +1542,7 @@ export const SITE_STEPS = [
   "code",
   "files",
   "bag",
+  "settings",
   "results",
   "canary",
 ] as const;
@@ -1536,6 +1561,7 @@ const STEP_ROWS: Record<SiteStep, readonly CheckId[]> = {
   code: ["code"],
   files: ["files"],
   bag: ["bag"],
+  settings: ["settings"],
   results: ["results"],
   canary: ["canary"],
 };
@@ -1598,6 +1624,11 @@ export async function checkSite(o: SiteCheckOptions): Promise<SiteResult[]> {
           "bag",
           "рюкзак",
           async () => (v.bag = await checkBag(b, o, result.shots)),
+        ],
+        [
+          "settings",
+          "настройки",
+          async () => (v.settings = await checkSettings(b, o, result.shots)),
         ],
         [
           "results",

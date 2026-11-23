@@ -1,11 +1,21 @@
 import { IconavoProvider } from "@iconavo-ui/react";
-import { getSetStyles, getSets, orderSets } from "../../lib/catalog";
+import {
+  CATALOG_TAG,
+  getNames,
+  getSets,
+  orderSets,
+  setStyles,
+  showcase,
+} from "../../lib/catalog";
 import { setSummary } from "../../lib/catalog-view";
 import { DICTIONARIES, type Lang } from "../../lib/i18n";
 import { loadPageIcons } from "../../lib/icons";
 import { SetsBrowser } from "../catalog/SetsBrowser";
 
-/** Каталог наборов /sets (ADR-0037): все наборы карточками, фильтры по лицензии и стилю (ADR-0052). */
+/**
+ * Каталог наборов /sets (ADR-0037): все наборы карточками с витриной 3 × 3, как на главной (компонент макета
+ * «Icon Set Card»), фильтры по лицензии и стилю (ADR-0052).
+ */
 export async function Sets({ lang }: { lang: Lang }) {
   const t = DICTIONARIES[lang];
   const sets = await getSets();
@@ -13,9 +23,15 @@ export async function Sets({ lang }: { lang: Lang }) {
     await Promise.all(
       orderSets(Object.keys(sets)).map(async (id) => {
         const info = sets[id];
-        return info === undefined
-          ? []
-          : [setSummary(lang, id, info, await getSetStyles(id))];
+        if (info === undefined) return [];
+        // Общая страница — метка catalog (ADR-0039): её сбрасывает выпуск любого набора.
+        const names = await getNames(id, CATALOG_TAG);
+        return [
+          {
+            ...setSummary(lang, id, info, setStyles(names)),
+            samples: showcase(info.samples ?? [], names),
+          },
+        ];
       }),
     )
   ).flat();

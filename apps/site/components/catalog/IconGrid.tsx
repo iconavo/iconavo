@@ -21,6 +21,7 @@ import {
   shownName,
 } from "../../lib/catalog";
 import { useGridColumns } from "../../lib/grid-columns";
+import { useKeptPage, usePerPage } from "../../lib/grid-settings";
 import { DICTIONARIES, href, type Lang, STYLE_KEYS } from "../../lib/i18n";
 import { iconPagePath } from "../../lib/icon";
 import { PAGE_PANEL_ID } from "../../lib/panel-layout";
@@ -174,7 +175,10 @@ export function IconGrid({
     setSlot(document.getElementById(PAGE_PANEL_ID));
   }, []);
   const columns = useGridColumns();
-  const size = columns === undefined ? undefined : pageSizeFor(columns);
+  // Иконок на странице — из настроек сетки (ADR-0054), целыми рядами.
+  const perPage = usePerPage();
+  const size =
+    columns === undefined ? undefined : pageSizeFor(columns, perPage);
   const pageSize = size ?? PAGE_SIZE;
 
   const list =
@@ -193,16 +197,27 @@ export function IconGrid({
           ),
           q,
         );
-  const pages = pageCount(
-    list?.length ??
-      (q !== ""
-        ? 1
-        : style === undefined
-          ? (category?.size ?? total)
-          : (styles.find((s) => s.style === style)?.size ?? total)),
-    pageSize,
-  );
+  // Сколько карточек в выборке, пока список имён не пришёл: число набора, категории или стиля.
+  const known =
+    style === undefined
+      ? (category?.size ?? total)
+      : (styles.find((s) => s.style === style)?.size ?? total);
+  const pages = pageCount(list?.length ?? (q !== "" ? 1 : known), pageSize);
   const page = pageParam(query.get("page"), pages);
+  // Сменили число на странице — первая иконка страницы остаётся на экране.
+  useKeptPage(perPage, size, page, (p) =>
+    navigate(withParams(query, { page: p === 1 ? undefined : String(p) }), {
+      replace: true,
+    }),
+  );
+  // Пока список имён грузится — скелетоны на месте карточек этой страницы (решение владельца 23 ноября 2026,
+  // плавная прокрутка): высота страницы не меняется, и подъём к началу сетки при смене страницы доезжает
+  // до места. Прежде на это время сетка становилась строкой «Загружаю…», страница схлопывалась до высоты
+  // окна, и браузер прижимал прокрутку к самому верху.
+  const waiting =
+    q !== ""
+      ? pageSize
+      : Math.max(0, Math.min(pageSize, known - (page - 1) * pageSize));
   // Первая страница всех карточек — из серверного HTML, если её хватает на ряды этой ширины.
   const initial =
     category === undefined &&
@@ -343,9 +358,24 @@ export function IconGrid({
               {t.gridError}
             </p>
           ) : shown === undefined ? (
-            <p className="grid-status" aria-live="polite">
-              {t.gridLoading}
-            </p>
+            <>
+              <p className="sr-only" role="status">
+                {t.gridLoading}
+              </p>
+              <ul className="icon-grid grid-skeletons" aria-hidden="true">
+                {Array.from({ length: waiting }, (_, i) => (
+                  <li
+                    // У пустых клеток нет имени: ключ — место в сетке.
+                    // biome-ignore lint/suspicious/noArrayIndexKey: клетки без данных, порядок постоянный
+                    key={i}
+                    className="icon-cell result-skeleton grid-skeleton"
+                  >
+                    <span className="result-skeleton-icon" />
+                    <span className="result-skeleton-line" />
+                  </li>
+                ))}
+              </ul>
+            </>
           ) : shown.length === 0 && q !== "" ? (
             <p className="grid-status grid-empty" role="status">
               {t.setNothing.replace("{set}", setName).replace("{q}", q)}{" "}

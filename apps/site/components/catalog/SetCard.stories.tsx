@@ -78,3 +78,16 @@ export const Russian: Story = {
   },
   parameters: { nextjs: { navigation: { pathname: "/ru/sets" } } },
 };
+
+// Длинное название — не больше двух строк, дальше многоточие; лицензия и число иконок — в одну строку
+// (решение владельца 23 ноября 2026).
+export const LongName: Story = {
+  args: {
+    lang: "en",
+    set: {
+      ...LUCIDE,
+      name: "Lucide Lab Experimental Icons for Very Wide Dashboards",
+      license: "Creative Commons Attribution 4.0 International",
+    },
+  },
+};

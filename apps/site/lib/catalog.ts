@@ -361,14 +361,20 @@ const order = (a: string, b: string) => (a < b ? -1 : a > b ? 1 : 0);
  * Иконок на странице сетки — около 96, как в поиске (ADR-0040), но всегда целыми рядами (решение
  * владельца 13 ноября 2026): сколько колонок, знает только браузер (lib/grid-columns.ts), и страница —
  * столько полных рядов, сколько ближе всего к 96 (pageSizeFor). Пока колонки не посчитаны (серверный HTML
- * и гидратация) — ровно 96.
+ * и гидратация) — ровно 96. Другое число выбирают в настройках сетки (ADR-0054).
  */
 export const PAGE_SIZE = 96;
 
-/** Иконок на странице при columns колонках: целые ряды, ближе всего к PAGE_SIZE. */
-export function pageSizeFor(columns: number): number {
+/**
+ * Иконок на странице при columns колонках: целые ряды, ближе всего к target — числу из настроек сетки
+ * (48, 96, 144 или 192, lib/grid-settings.ts; ADR-0054), по умолчанию PAGE_SIZE.
+ */
+export function pageSizeFor(
+  columns: number,
+  target: number = PAGE_SIZE,
+): number {
   const cols = Math.max(1, Math.floor(columns));
-  return cols * Math.max(1, Math.round(PAGE_SIZE / cols));
+  return cols * Math.max(1, Math.round(target / cols));
 }
 
 /**
@@ -571,15 +577,6 @@ export function filterCards(cards: readonly Card[], q: string): Card[] {
       card.base.includes(needle) ||
       card.variants.some((name) => name.includes(needle)),
   );
-}
-
-/**
- * Стили набора по его странице /collection — для фильтра «Стиль» на /sets и карточек наборов на главной:
- * общие страницы, метка catalog.
- */
-export async function getSetStyles(prefix: string): Promise<Style[]> {
-  const set = await getSet(prefix, CATALOG_TAG);
-  return set === undefined ? [] : setStyles(set);
 }
 
 /** Страниц в списке имён при size на странице. */

@@ -33,7 +33,7 @@ export async function Home({ lang }: { lang: Lang }) {
           return info === undefined ? [] : [{ id, info }];
         })
         .map(async ({ id, info }): Promise<[string, SetSummary]> => {
-          // Общая страница — метка catalog, как у getSetStyles (ADR-0039): её сбрасывает выпуск любого набора.
+          // Общая страница — метка catalog, как у /sets (ADR-0039): её сбрасывает выпуск любого набора.
           const names = await getNames(id, CATALOG_TAG);
           return [
             id,
