@@ -3,6 +3,19 @@
   "releases": [
     {
       "added": [
+        "circle-speed-lines",
+        "graph-path",
+        "hole",
+        "package-arrow-bend-up-left"
+      ],
+      "date": "2026-11-23T12:39:10Z",
+      "previous": "de1020d4",
+      "revision": "e00b2b26350fe4dfb6f5273aa366f94974430903",
+      "total": 2102,
+      "version": "8cdc8ae2"
+    },
+    {
+      "added": [
         "box-dashed",
         "chocolate-bar",
         "folder-network",

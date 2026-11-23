@@ -26412,6 +26412,25 @@
         "genderless"
       ]
     },
+    "circle-speed-lines": {
+      "fingerprint": "6b20906546f9",
+      "tags": [
+        "fast",
+        "quick",
+        "motion",
+        "movement",
+        "moving",
+        "velocity",
+        "animation",
+        "express",
+        "acceleration",
+        "rapid",
+        "swift",
+        "racing",
+        "momentum",
+        "motion blur"
+      ]
+    },
     "circle-star": {
       "en": {
         "description": "A star drawn inside a circle, usually meaning a badge, achievement, rating, or featured item.",
@@ -46762,6 +46781,35 @@
         "orchestration"
       ]
     },
+    "graph-path": {
+      "fingerprint": "401f23c23b65",
+      "tags": [
+        "network",
+        "nodes",
+        "edges",
+        "links",
+        "connections",
+        "relationships",
+        "structure",
+        "topology",
+        "line",
+        "dot",
+        "analysis",
+        "branch",
+        "branching",
+        "merging",
+        "converging",
+        "trail",
+        "route",
+        "analytics",
+        "timeline",
+        "waypoint",
+        "milestone",
+        "tracking",
+        "trend",
+        "sequence"
+      ]
+    },
     "graph-ring": {
       "en": {
         "description": "Three circular nodes connected by arcs form a ring; the icon represents a network, connections, or ring topology.",
@@ -49906,6 +49954,26 @@
         "ball",
         "match",
         "play"
+      ]
+    },
+    "hole": {
+      "fingerprint": "5f3f5403d8fa",
+      "tags": [
+        "opening",
+        "cavity",
+        "pit",
+        "void",
+        "tunnel",
+        "portal",
+        "bore",
+        "aperture",
+        "cutout",
+        "pothole",
+        "drilling",
+        "3d",
+        "cad",
+        "terrain",
+        "hazard"
       ]
     },
     "hop": {
@@ -68024,6 +68092,57 @@
         "tracking",
         "order",
         "product"
+      ]
+    },
+    "package-arrow-bend-up-left": {
+      "fingerprint": "62bc7a885e82",
+      "tags": [
+        "box",
+        "container",
+        "storage",
+        "sealed",
+        "delivery",
+        "undelivered",
+        "unopened",
+        "packed",
+        "archive",
+        "zip",
+        "module",
+        "shipping",
+        "recipient",
+        "inventory",
+        "logistics",
+        "tracking",
+        "order",
+        "product",
+        "direction",
+        "movement",
+        "horizontal",
+        "leftward",
+        "leftwards",
+        "west",
+        "diagonal",
+        "northwest",
+        "north-west",
+        "north west",
+        "shipment",
+        "move",
+        "framed",
+        "returned",
+        "back",
+        "send back",
+        "refund",
+        "exchange",
+        "reverse",
+        "revert",
+        "undo",
+        "return",
+        "parcel",
+        "return shipping",
+        "reverse logistics",
+        "restocking",
+        "return merchandise authorization",
+        "rma"
       ]
     },
     "package-check": {
