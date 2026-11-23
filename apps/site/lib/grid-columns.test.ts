@@ -71,9 +71,10 @@ describe("колонки сеток — от ширины окна", () => {
     },
   ];
 
-  it("колонка страницы — окно − 19rem, карточка набора — 15rem", () => {
+  // Карточка набора не уже 17rem — 272 px компонента «Icon Set Card» (решение владельца 23 ноября 2026).
+  it("колонка страницы — окно − 19rem, карточка набора — 17rem", () => {
     expect(frame).toBe(19);
-    expect(grids[1].card).toBe(15);
+    expect(grids[1].card).toBe(17);
   });
 
   for (const { name, card, gap, max } of grids) {

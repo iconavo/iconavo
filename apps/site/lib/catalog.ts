@@ -573,15 +573,6 @@ export function filterCards(cards: readonly Card[], q: string): Card[] {
   );
 }
 
-/**
- * Стили набора по его странице /collection — для фильтра «Стиль» на /sets и карточек наборов на главной:
- * общие страницы, метка catalog.
- */
-export async function getSetStyles(prefix: string): Promise<Style[]> {
-  const set = await getSet(prefix, CATALOG_TAG);
-  return set === undefined ? [] : setStyles(set);
-}
-
 /** Страниц в списке имён при size на странице. */
 export const pageCount = (total: number, size = PAGE_SIZE) =>
   Math.max(1, Math.ceil(total / size));
