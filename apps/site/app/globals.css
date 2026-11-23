@@ -1356,7 +1356,8 @@
   }
   /*
    * Начало главной и поле поиска по макету (кадр Header главной): заголовок 32/36, поле 54 px со
-   * значком и подсказкой Ctrl K, рядом «AI Search». Поле одно у главной и /search (шаг 3 фазы 4).
+   * значком и подсказкой Ctrl K; переключателя «AI Search» из макета не будет (решение владельца 23 ноября
+   * 2026, ADR-0040). Поле одно у главной и /search (шаг 3 фазы 4).
    */
   .find-page {
     padding-block: 0;
@@ -1455,38 +1456,6 @@
     background: var(--color-bg-surface-strong);
     font: inherit;
   }
-  .ai-search {
-    display: flex;
-    flex: none;
-    align-items: center;
-    gap: 0.75rem;
-    padding: 0.75rem;
-    border: 0;
-    border-radius: var(--radius-lg);
-    background: var(--color-bg-surface);
-    color: var(--color-text-primary);
-    font: inherit;
-    font-size: var(--text-body-base);
-    line-height: var(--text-body-base--line-height);
-    white-space: nowrap;
-  }
-  .ai-toggle {
-    display: inline-flex;
-    width: 2.875rem;
-    height: 1.75rem;
-    padding: 0.25rem;
-    border-radius: 9999px;
-    background: var(--color-bg-surface-strong);
-  }
-  .ai-help {
-    margin-inline-start: -0.25rem;
-  }
-  .ai-knob {
-    width: 1.25rem;
-    height: 1.25rem;
-    border-radius: 9999px;
-    background: var(--color-accent-lemon);
-  }
   @media (max-width: 63.98rem) {
     .hero {
       gap: 1rem;
@@ -1510,18 +1479,6 @@
     .hero-search-form {
       gap: 1rem;
     }
-    /* AI Search на телефоне — средний, 150 × 46, как на странице набора. */
-    .hero-search-form .ai-search {
-      padding: 0.6875rem 0.5rem;
-    }
-    .hero-search-form .ai-toggle {
-      width: 2.5rem;
-      height: 1.5rem;
-    }
-    .hero-search-form .ai-knob {
-      width: 1rem;
-      height: 1rem;
-    }
     .hero-field {
       width: 100%;
       min-height: 2.875rem;
@@ -1532,7 +1489,7 @@
   /*
    * Страница поиска по макету «Сценарий поиска иконок» (редизайн, 17 ноября 2026): шапка — как у набора,
    * крошки «Icon Sets / Search» и «Search Results», под ней строка инструментов набора — поле с запросом,
-   * AI Search, вид и Settings; на телефоне — ещё кнопка фильтра. Поле то же, что на главной (SearchHero):
+   * вид и Settings; на телефоне — ещё кнопка фильтра. Поле то же, что на главной (SearchHero):
    * меняются только обёртки вокруг него. Зазоры — как у страницы набора: 24 px до строки инструментов,
    * 28 px до строки номеров, строка статуса — в зазоре 28 px над сеткой.
    */
@@ -1592,8 +1549,8 @@
     font-variant-numeric: tabular-nums;
     line-height: var(--text-body-xs--line-height);
   }
-  /* Телефон (кадр «Search Results / Mobile»): «‹ Icon Sets», поле и Settings, ниже AI Search, фильтр и
-     вид; строки номеров над сеткой нет, и статус места не держит. */
+  /* Телефон (кадр «Search Results / Mobile», без AI Search): «‹ Icon Sets», поле и Settings, ниже фильтр
+     и вид; строки номеров над сеткой нет, и статус места не держит. */
   @media (max-width: 63.98rem) {
     .search-toolbar-box {
       padding: 0 var(--page-x-end) 0 var(--page-x);
@@ -2276,7 +2233,7 @@
     align-content: start;
   }
 
-  /* Панель над сеткой: поиск по набору, AI Search, вид, настройки — высота 46 px. */
+  /* Панель над сеткой: поиск по набору, вид, настройки — высота 46 px. */
   .grid-toolbar {
     display: flex;
     align-items: stretch;
@@ -2290,17 +2247,6 @@
   .grid-field {
     min-height: 2.875rem;
     padding: calc(0.5rem - 1px) calc(1rem - 1px);
-  }
-  .ai-search-md {
-    padding: 0.6875rem 0.5rem;
-  }
-  .ai-search-md .ai-toggle {
-    width: 2.5rem;
-    height: 1.5rem;
-  }
-  .ai-search-md .ai-knob {
-    width: 1rem;
-    height: 1rem;
   }
   .view-switch {
     display: flex;
@@ -2351,14 +2297,16 @@
   /* Стили и категории — строкой с прокруткой: в макете их нет, сетка начинается сразу. */
   /*
    * Строка поиска набора сжимается по своей ширине, а не по ширине окна (план, шаг 3): с открытой панелью
-   * во всю высоту левая колонка узкая. Уже 44rem — без подсказки «Ctrl K», Settings — квадратная кнопка
-   * со значком; уже 34rem — два ряда, как на телефоне: поиск и Settings, под ними AI Search и вид.
+   * во всю высоту левая колонка узкая. Уже 34rem — без подсказки «Ctrl K», Settings — квадратная кнопка
+   * со значком; уже 24rem — два ряда, как на телефоне: поиск и Settings, под ними вид. Пороги — те же
+   * ширины поля, что были с переключателем AI Search (его 161–167 px с зазором убрали 23 ноября 2026):
+   * прежде 44rem и 34rem.
    */
   .grid-toolbar-box {
     container: toolbar / inline-size;
     overflow-anchor: none;
   }
-  @container toolbar (max-width: 44rem) {
+  @container toolbar (max-width: 34rem) {
     .grid-field .hero-keys,
     .grid-settings-label {
       display: none;
@@ -2376,16 +2324,13 @@
       opacity: 1;
     }
   }
-  @container toolbar (max-width: 34rem) {
+  @container toolbar (max-width: 24rem) {
     .grid-toolbar {
       flex-wrap: wrap;
       gap: 0.75rem 0.5rem;
     }
     .grid-search {
       flex: 1 1 calc(100% - 3.375rem);
-    }
-    .ai-search-md {
-      order: 1;
     }
     .view-switch {
       order: 2;
@@ -2660,7 +2605,7 @@
     cursor: pointer;
   }
 
-  /* Телефон (кадр «Icon Set Page / Mobile»): «‹ Icon Sets», поиск и настройки, ниже AI Search и вид. */
+  /* Телефон (кадр «Icon Set Page / Mobile», без AI Search): «‹ Icon Sets», поиск и настройки, ниже вид. */
   @media (max-width: 63.98rem) {
     .set-head {
       grid-template-areas:
@@ -2735,9 +2680,6 @@
     .grid-bar .per-page,
     .grid-bar .grid-bar-line {
       display: none;
-    }
-    .ai-search-md {
-      order: 1;
     }
     .view-switch {
       order: 2;

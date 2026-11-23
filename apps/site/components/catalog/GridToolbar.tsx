@@ -9,9 +9,10 @@ import { Soon } from "../shell/Soon";
 
 /**
  * Панель над сеткой набора по макету (Figma «Iconavo — Макеты», Search Bar страницы набора): поиск по
- * набору, AI Search, вид и настройки. Поиск отбирает карточки по имени прямо в браузере (filterCards в
- * lib/catalog.ts) и пишет запрос в адрес (?q=) после паузы набора. AI Search, крупная сетка, список и
- * настройки — «Soon»: в продукте их пока нет.
+ * набору, вид и настройки. Поиск отбирает карточки по имени прямо в браузере (filterCards в
+ * lib/catalog.ts) и пишет запрос в адрес (?q=) после паузы набора. Крупная сетка, список и настройки —
+ * «Soon»: в продукте их пока нет. Переключателя AI Search из макета нет и не будет (решение владельца
+ * 23 ноября 2026, ADR-0040).
  */
 export function GridToolbar({
   lang,
@@ -89,31 +90,10 @@ export function GridToolbar({
             </span>
           </form>
         </search>
-        <AiSearch lang={lang} className="ai-search ai-search-md" />
         <ViewSwitch lang={lang} />
         <GridSettings lang={lang} />
       </div>
     </div>
-  );
-}
-
-/** «AI Search» — «Soon»: смыслового переключателя в продукте пока нет. Общий у главной, набора и поиска. */
-export function AiSearch({
-  lang,
-  className,
-}: {
-  lang: Lang;
-  className: string;
-}) {
-  const t = DICTIONARIES[lang];
-  return (
-    <Soon lang={lang} className={className}>
-      <span className="ai-toggle">
-        <span className="ai-knob" />
-      </span>
-      <span>{t.aiSearch}</span>
-      <Icon icon="material-symbols:help" className="pill-icon ai-help" />
-    </Soon>
   );
 }
 

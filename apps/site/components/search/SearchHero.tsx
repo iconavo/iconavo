@@ -16,7 +16,7 @@ import { QUERY_MAX_LENGTH, TYPING_PAUSE_MS } from "../../lib/search";
 import { takeHandoff } from "../../lib/search-handoff";
 import { useUrlQuery, withParams } from "../../lib/url-query";
 import { Crumbs } from "../Crumbs";
-import { AiSearch, GridSettings, ViewSwitch } from "../catalog/GridToolbar";
+import { GridSettings, ViewSwitch } from "../catalog/GridToolbar";
 import { PageLink } from "../PageLink";
 import { SEARCH_INPUT_ID } from "../shell/HotKey";
 import { FilterButton } from "./FilterSheet";
@@ -161,8 +161,8 @@ export function SearchHero({
   };
 
   // Поле — один и тот же элемент на главной и в поиске: цепочка обёрток (div > div > search > form > div >
-  // input) одинаковая, меняются только классы, а «AI Search» на главной — в форме, в поиске — в строке.
-  // Иначе React пересоздал бы поле при переходе, и фокус с набранными буквами пропали бы.
+  // input) одинаковая, меняются только классы. Иначе React пересоздал бы поле при переходе, и фокус с
+  // набранными буквами пропали бы.
   const field = (
     <div className={onSearch ? "hero-field grid-field" : "hero-field"}>
       <Icon icon="material-symbols:search" className="hero-field-icon" />
@@ -241,12 +241,10 @@ export function SearchHero({
               onSubmit={submit}
             >
               {field}
-              {onSearch ? null : <AiSearch lang={lang} className="ai-search" />}
             </form>
           </search>
           {onSearch ? (
             <>
-              <AiSearch lang={lang} className="ai-search ai-search-md" />
               <FilterButton lang={lang} />
               <ViewSwitch lang={lang} />
               <GridSettings lang={lang} />

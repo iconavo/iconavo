@@ -52,7 +52,6 @@ const en = {
   figmaPlugin: "Figma Plugin",
   vscodeExtension: "VS Code extension",
   privacy: "Privacy",
-  aiSearch: "AI Search",
   homeTitle: "Icons that actually match",
   homeSubtitle: "{icons} in {families}. Download or copy as SVG or PNG.",
   groupAll: "All",
@@ -362,7 +361,6 @@ const ru: Dictionary = {
   figmaPlugin: "Плагин для Figma",
   vscodeExtension: "Расширение для VS Code",
   privacy: "Приватность",
-  aiSearch: "ИИ-поиск",
   homeTitle: "Иконки, которые действительно подходят",
   homeSubtitle:
     "{icons} в {families}. Скачивайте или копируйте как SVG или PNG.",
