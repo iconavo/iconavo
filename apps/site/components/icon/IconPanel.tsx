@@ -262,6 +262,9 @@ export function IconPanel({
           {icon}
         </p>
       </aside>
+      {/* Видимый низ панели во всю высоту у края окна — полоска, закреплённая на экране (app/globals.css,
+          lib/panel-fit.ts): при прокрутке не отстаёт. На телефоне и рядом с сеткой её нет. */}
+      <div className="panel-cover" aria-hidden="true" />
     </>
   );
 }

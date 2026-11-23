@@ -2871,10 +2871,13 @@
   }
   /*
    * Панель во всю высоту страницы (решение владельца 13 ноября 2026, lib/panel-layout.ts): пока панель
-   * открыта, страница набора — две колонки: слева заголовок, строка поиска, фильтры и сетка, справа —
-   * панель от уровня хлебных крошек до низа. Поиск — так же (план, шаг 4): слева заголовок «Search», поле
-   * и выдача, справа панель; главная — та же раскладка, но панели на ней нет. Прилипает к верху окна и помещается в окно
-   * (lib/panel-fit.ts).
+   * открыта, колонка каркаса делится на две: слева заголовок, строка поиска, фильтры, сетка и подвал,
+   * справа — панель от верхней полосы до низа страницы. Панель отодвигает подвал и растянута до конца
+   * страницы, отступы сверху и снизу — 24 px (решение владельца 23 ноября 2026, кадр «Selected Icon +
+   * Opened Panel»). Делит колонку сетка .app-column, а <main> лежит в ней подсеткой (subgrid): место
+   * панели остаётся последним элементом <main> и идёт через строку подвала до низа. Поиск — так же: слева
+   * заголовок «Search», поле, выдача и подвал; главная — та же раскладка, но панели на ней нет. Панель
+   * прилипает к верху окна и растянута до низа окна или конца своего места (lib/panel-fit.ts).
    *
    * Открытие и закрытие — одним движением (план, шаг 2), но без перехода раскладки (18 ноября 2026):
    * правая колонка сразу своей ширины, страница перестраивается один раз, а всё в левой колонке —
@@ -2891,33 +2894,103 @@
       grid-template-rows: auto 1fr;
       align-items: start;
     }
-    :is(.set-page, .find-page):has(> .page-panel > .icon-panel) {
+    /* Панель открыта: строки колонки каркаса — верхняя полоса, шапка страницы, её содержимое, подвал. */
+    .app-column:has(> main > .page-panel > .icon-panel) {
+      display: grid;
       grid-template-columns:
         minmax(0, 1fr)
         calc(var(--width-panel) + var(--page-x-end));
+      grid-template-rows: auto auto 1fr auto;
+    }
+    .app-column:has(> main > .page-panel > .icon-panel) > .topbar {
+      grid-column: 1 / -1;
+    }
+    .app-column:has(> main > .page-panel > .icon-panel) > main {
+      grid-column: 1 / -1;
+      grid-row: 2 / -1;
+      grid-template-columns: subgrid;
+      grid-template-rows: subgrid;
+    }
+    .app-column:has(> main > .page-panel > .icon-panel) > .site-footer {
+      grid-column: 1;
+      grid-row: 4;
     }
     :is(.set-page, .find-page) > :is(.set-head, .set-body, .hero, .find-body) {
       grid-column: 1;
       min-width: 0;
     }
+    /* Правое поле левой колонки — полные 40 px, как в кадре: дорожка полосы прокрутки стоит у края окна,
+       за панелью, а не у сетки. */
+    .app-column:has(> main > .page-panel > .icon-panel) > .site-footer,
+    :is(.set-page, .find-page):has(> .page-panel > .icon-panel)
+      > :is(.set-head, .set-body, .hero, .find-body) {
+      --page-x-end: var(--page-x);
+    }
     :is(.set-page, .find-page) > .page-panel {
       grid-column: 2;
-      grid-row: 1 / span 2;
+      grid-row: 1 / -1;
       align-self: stretch;
       min-width: 0;
       overflow-x: clip;
     }
-    /* Правое поле страницы — отступом самой панели, а не её места: место с полем шире своей колонки,
-       пока та уже 28 px, и страница становилась шире окна — мелькала горизонтальная полоса, а фокус на
-       заголовке панели прокручивал страницу вбок (18 ноября 2026). Панель шире колонки обрезает
-       overflow-x: clip места. */
+    /* Отступы панели — 24 px от верхней полосы и от низа страницы (кадр). Правое поле страницы — отступом
+       самой панели, а не её места: место с полем шире своей колонки, пока та уже 28 px, и страница
+       становилась шире окна — мелькала горизонтальная полоса, а фокус на заголовке панели прокручивал
+       страницу вбок (18 ноября 2026). Панель шире колонки обрезает overflow-x: clip места. */
     :is(.set-page, .find-page) > .page-panel:has(> .icon-panel) {
-      padding: 2rem 0 2.5rem;
+      padding: 1.5rem 0;
     }
+    /* Высота панели — постоянная: окно без двух отступов. При прокрутке браузер только двигает прилипшую
+       панель и ничего не пересчитывает. Пока она не прилипла к верху (страница прокручена меньше высоты
+       верхней полосы), её низ ниже края окна: видимый низ со скруглёнными углами рисует полоска
+       .panel-cover, а в конце содержимого — запас на высоту верхней полосы (::after), чтобы последнее было
+       видно и вверху страницы. Прежде высоту на каждый кадр прокрутки ставил скрипт, и низ панели отставал
+       от прокрутки до 50 px за кадр (замер кадров Chrome 23 ноября 2026). Отступ прокрутки снизу — та же
+       высота: элемент, на который перешёл фокус с клавиатуры, панель докручивает выше полоски, а не под
+       неё (WCAG 2.2, 2.4.11). */
     :is(.set-page, .find-page) > .page-panel > .icon-panel {
       width: var(--width-panel);
+      height: calc(100vh - 3rem);
       margin-right: var(--page-x-end);
       margin-left: auto;
+      scroll-padding-bottom: 3.125rem;
+    }
+    :is(.set-page, .find-page) > .page-panel > .icon-panel::after {
+      content: "";
+      flex: none;
+      height: 3.125rem;
+    }
+    /* Полоска у низа окна: цвет страницы, сверху — вырезы под скруглённые углы панели. Закреплена на
+       экране, поэтому при прокрутке не отстаёт; выезжает и уходит вместе с панелью
+       (components/panel/PanelLayout.tsx, у уходящей копии — класс .panel-slides). */
+    .page-panel > .panel-cover,
+    .panel-cover.panel-slides {
+      display: block;
+      z-index: 1;
+      background:
+        radial-gradient(
+          circle at 100% 0,
+          transparent 1rem,
+          var(--color-bg-page) calc(1rem + 0.5px)
+        )
+        0 0 / 1rem 1rem no-repeat,
+        radial-gradient(
+          circle at 0 0,
+          transparent 1rem,
+          var(--color-bg-page) calc(1rem + 0.5px)
+        )
+        calc(var(--width-panel) - 1rem) 0 / 1rem 1rem no-repeat,
+        linear-gradient(var(--color-bg-page), var(--color-bg-page)) 0 100% /
+        100% 1.5rem no-repeat,
+        linear-gradient(var(--color-bg-page), var(--color-bg-page)) 100% 0 /
+        var(--page-x-end) 100% no-repeat;
+    }
+    .page-panel > .panel-cover {
+      position: fixed;
+      right: 0;
+      bottom: 0;
+      width: calc(var(--width-panel) + var(--page-x-end));
+      height: 2.5rem;
     }
   }
   /*
@@ -2957,14 +3030,14 @@
   }
   .icon-panel {
     position: sticky;
-    top: 1rem;
+    top: 1.5rem;
     display: flex;
     flex-direction: column;
     width: 100%;
     /* Не выше места от верха панели до низа окна: точное число ставит lib/panel-fit.ts прямо панели
-       (max-height в её стиле), здесь — запасное до первого замера. Пока страница не прокручена, низ
-       панели не уходит за край окна. */
-    max-height: calc(100vh - 2rem);
+       (во всю высоту страницы — height, рядом с сеткой — max-height), здесь — запасное до первого
+       замера. Пока страница не прокручена, низ панели не уходит за край окна. */
+    max-height: calc(100vh - 3rem);
     /* Панель прокручивается независимо от страницы (решение владельца 18 ноября 2026): колесо над ней
        крутит только её, а в конце панели страница стоит на месте. */
     overflow-y: scroll;
@@ -2981,7 +3054,8 @@
     overscroll-behavior: auto;
   }
   .panel-backdrop,
-  .panel-handle {
+  .panel-handle,
+  .panel-cover {
     display: none;
   }
   /* Колонка — minmax(0, 1fr): ширина текста кнопок в браузере на пиксель больше, чем в Figma, и не
