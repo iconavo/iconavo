@@ -9,15 +9,13 @@ import { type BagLook, SPRITE_NAME, ZIP_NAME } from "../../lib/bag-files";
 import { saveFile } from "../../lib/download";
 import { countOf, ICON_FORMS } from "../../lib/format";
 import { DICTIONARIES, type Lang } from "../../lib/i18n";
+import { useCloseOnOutsideClick, useSidePanel } from "../../lib/panel-store";
 // Хосты иконок — для ядра браузера: иконки рюкзака рисует оно (lib/iconavo.ts).
 import "../../lib/iconavo";
 import { ColorField, StrokeField } from "../panel/controls";
 
 /** id панели — для aria-controls кнопок Bag. */
 export const BAG_PANEL_ID = "bag-panel";
-
-/** Телефон — как раскладка сайта (до 64rem): вместо панели справа — шторка снизу. */
-const PHONE = "(max-width: 63.98rem)";
 
 /** Протяжка ручки шторки вниз дальше этого — закрыть. */
 const DRAG = 24;
@@ -29,8 +27,8 @@ const DRAG = 24;
  * picked», список с ✕, внизу Color, Stroke Width, «Download SVG without fill color» (галочка — цвет
  * не вшивается в файлы, остаётся currentColor), Download ZIP и Download SVG Sprite. Clear — справа в строке
  * счётчика (в макете её нет; решение владельца 13 ноября 2026): рюкзак пустеет сразу, а пока панель
- * открыта, на месте списка — «Backpack cleared · Undo». Закрывают ✕, Esc и кнопка Bag; на телефоне ещё
- * протяжка ручки вниз и тап по затемнению. Фокус — на заголовок при открытии и обратно на кнопку при
+ * открыта, на месте списка — «Backpack cleared · Undo». Закрывают ✕, Esc, кнопка Bag и щелчок мимо панели
+ * (решение владельца 23 ноября 2026); на телефоне ещё протяжка ручки вниз и тап по затемнению. Фокус — на заголовок при открытии и обратно на кнопку при
  * закрытии.
  */
 export function BagPanel({ lang }: { lang: Lang }) {
@@ -53,33 +51,13 @@ export function BagPanel({ lang }: { lang: Lang }) {
   const clearButton = useRef<HTMLButtonElement>(null);
   const undoButton = useRef<HTMLButtonElement>(null);
 
-  // Открыть и закрыть: на компьютере — немодально, на телефоне — модально, с затемнением. Пока панель
-  // открыта, у <html> — data-bag-panel: полоса прокрутки страницы спрятана, и панель встаёт вплотную к
-  // краю окна (globals.css). Ширина полосы замеряется до того, как она спрячется: столько же отдаётся полю
-  // справа, и страница не сдвигается — при любой полосе (Firefox с обычными полосами, сенсорный экран).
-  useEffect(() => {
-    const el = dialog.current;
-    if (el === null) return;
-    const root = document.documentElement;
-    if (open && root.dataset.bagPanel === undefined) {
-      root.style.setProperty(
-        "--bag-page-lane",
-        `${window.innerWidth - root.clientWidth}px`,
-      );
-      root.dataset.bagPanel = "";
-    } else if (!open) {
-      delete root.dataset.bagPanel;
-      root.style.removeProperty("--bag-page-lane");
-    }
-    if (open && !el.open) {
-      if (window.matchMedia(PHONE).matches) el.showModal();
-      else el.show();
-      heading.current?.focus();
-    } else if (!open && el.open) {
-      el.close();
-      bagPanelStore.takeOpener()?.focus();
-    }
-  }, [open]);
+  // Открыть и закрыть (lib/panel-store.ts): на компьютере — немодально, на телефоне — модально, с
+  // затемнением; закрытие — с анимацией.
+  useSidePanel(open, dialog, heading, bagPanelStore, BAG_PANEL_ID);
+
+  // Щелчок мимо панели закрывает её (решение владельца 23 ноября 2026, lib/panel-store.ts): «в рюкзак» у
+  // карточки при открытой панели кладёт иконку и закрывает панель.
+  useCloseOnOutsideClick(open, dialog, bagPanelStore, BAG_PANEL_ID);
 
   // Esc закрывает панель первой — раньше панели иконки (та слушает всплытие и пропускает обработанное).
   useEffect(() => {

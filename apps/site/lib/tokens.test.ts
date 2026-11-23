@@ -99,6 +99,7 @@ describe("токены вместо значений", () => {
     const tokens = [
       ...[...tokenColors().keys()].map((name) => `--color-${name}`),
       "--shadow-md",
+      "--shadow-panel",
     ];
     for (const token of tokens) {
       expect(rule).toContain(`${token}: --theme(${token} inline);`);

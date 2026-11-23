@@ -50,6 +50,11 @@
   --color-status-badge: light-dark(#fc4708, #fc4708);
   --color-status-success: light-dark(#12ff12, #12ff12);
   --shadow-md: 0 4px 12px light-dark(rgb(0 0 0 / 0.12), rgb(0 0 0 / 0.5));
+  /* Тень боковых панелей — рюкзака и настроек (решения владельца 23 ноября 2026): два слоя, как у шторки
+     настроек в макете, но влево — на страницу и вдвое прозрачнее; в светлой теме — ещё слабее. */
+  --shadow-panel:
+    -2px 0 6px light-dark(rgb(0 0 0 / 0.04), rgb(0 0 0 / 0.08)),
+    -12px 0 32px light-dark(rgb(0 0 0 / 0.06), rgb(0 0 0 / 0.16));
   --font-sans:
     var(--font-inter-tight, system-ui), -apple-system, "Segoe UI", Roboto,
     sans-serif;
@@ -1331,8 +1336,9 @@
     font-variant-numeric: tabular-nums;
     line-height: var(--text-body-xs--line-height);
   }
-  /* Телефон (кадр «Search Results / Mobile», без AI Search): «‹ Icon Sets», поле и Settings, ниже фильтр
-     и вид; строки номеров над сеткой нет, и статус места не держит. */
+  /* Телефон (кадр «Search Results / Mobile», без AI Search): «‹ Icon Sets»; поле, фильтр и Settings — в одну
+     строку, как в кадре «Settings / Mobile — Start Scenario» (решение владельца 23 ноября 2026), вид — в
+     шторке настроек; строки номеров над сеткой нет, и статус места не держит. */
   @media (max-width: 63.98rem) {
     .search-toolbar-box {
       padding: 0 var(--page-x-end) 0 var(--page-x);
@@ -1342,11 +1348,6 @@
     }
     .search-filter-button {
       display: inline-flex;
-      order: 2;
-      margin-inline-start: auto;
-    }
-    .search-filter-button + .view-switch {
-      margin-inline-start: 0;
     }
     /* Специфичнее общего правила строки статуса ниже: на телефоне места под статус нет. */
     .page.find-page .search-status {
@@ -1511,8 +1512,8 @@
       search-p 1s 0.15s infinite alternate;
   }
   .result-skeleton-icon {
-    width: 1.5rem;
-    height: 1.5rem;
+    width: var(--tile-icon-size, 1.5rem);
+    height: var(--tile-icon-size, 1.5rem);
   }
   .result-skeleton-line {
     width: 4.5rem;
@@ -2042,6 +2043,7 @@
     background: var(--color-bg-surface);
   }
   .view-item {
+    position: relative;
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -2054,8 +2056,27 @@
     color: var(--color-text-primary);
     font-size: 1.5rem;
     opacity: 0.5;
+    cursor: pointer;
   }
-  .view-item[aria-current="true"] {
+  /* Выбор — родной radio, невидимый поверх значка (components/catalog/GridToolbar.tsx). */
+  .view-input {
+    position: absolute;
+    inset: 0;
+    margin: 0;
+    opacity: 0;
+    cursor: pointer;
+  }
+  .view-item:hover {
+    opacity: 1;
+  }
+  .view-item:has(:focus-visible) {
+    outline: 2px solid var(--color-selection-bg);
+    outline-offset: 2px;
+  }
+  /* Выбранный вид — по data-grid-view у <html> (lib/grid-script.ts): подсветка верна ещё до гидратации. */
+  :root:not([data-grid-view]) .view-item[data-view="grid"],
+  :root[data-grid-view="large"] .view-item[data-view="large"],
+  :root[data-grid-view="list"] .view-item[data-view="list"] {
     background: var(--color-bg-surface-strong);
     opacity: 1;
   }
@@ -2071,6 +2092,7 @@
     font: inherit;
     font-size: var(--text-body-base);
     line-height: var(--text-body-base--line-height);
+    cursor: pointer;
   }
   .grid-settings-icon {
     font-size: 1.5rem;
@@ -2169,10 +2191,13 @@
     font: inherit;
     font-size: var(--text-body-sm);
     line-height: var(--text-body-sm--line-height);
+    cursor: pointer;
   }
+  /* Подпись — text/secondary, а не прозрачность: кнопка теперь рабочая, и 50 % чёрного на белом давали
+     3,95:1 (axe, WCAG AA). */
   .per-page-label {
     margin-inline-end: 0.25rem;
-    opacity: 0.5;
+    color: var(--color-text-secondary);
   }
   .grid-bar-line {
     flex: 1;
@@ -2230,6 +2255,9 @@
   /* Сетка карточек по макету (Icon Card): 152 × 101, значок 24 px, имя 13/17, 7 в ряд на 1440 px.
      Колонок — --icon-cols, от ширины окна (ниже). */
   .icon-grid {
+    /* Размер иконки в плитке — из настроек сетки (ADR-0054): выбранный ползунком (--tile-icon у <html>)
+       или по умолчанию вида (--tile-icon-default): 24 px, у крупной сетки — 48. */
+    --tile-icon-size: var(--tile-icon, var(--tile-icon-default, 1.5rem));
     display: grid;
     gap: 0.75rem;
     grid-template-columns: repeat(var(--icon-cols), minmax(0, 1fr));
@@ -2358,11 +2386,134 @@
       --icon-cols: 24;
     }
   }
+  /*
+   * Колонки крупной сетки и списка (настройки сетки, ADR-0054; макета нет — виды собраны из Icon Card) —
+   * тоже только от ширины окна, по той же формуле: крупная плитка не уже 16,25rem, строка списка — 20rem,
+   * зазор 0,75rem; n колонок — с окна 17n + 18,25rem и 20,75n + 18,25rem. До 64rem — 2 и 1. Вид выбирает
+   * data-grid-view у <html> (lib/grid-script.ts), у крупной сетки иконка по умолчанию — 48 px. Пороги
+   * сверяет lib/grid-columns.test.ts.
+   */
+  :root {
+    --large-icon-cols: 2;
+    --list-icon-cols: 1;
+  }
+  @media (min-width: 64rem) {
+    :root {
+      --large-icon-cols: 2;
+    }
+  }
+  @media (min-width: 69.25rem) {
+    :root {
+      --large-icon-cols: 3;
+    }
+  }
+  @media (min-width: 86.25rem) {
+    :root {
+      --large-icon-cols: 4;
+    }
+  }
+  @media (min-width: 103.25rem) {
+    :root {
+      --large-icon-cols: 5;
+    }
+  }
+  @media (min-width: 120.25rem) {
+    :root {
+      --large-icon-cols: 6;
+    }
+  }
+  @media (min-width: 137.25rem) {
+    :root {
+      --large-icon-cols: 7;
+    }
+  }
+  @media (min-width: 154.25rem) {
+    :root {
+      --large-icon-cols: 8;
+    }
+  }
+  @media (min-width: 171.25rem) {
+    :root {
+      --large-icon-cols: 9;
+    }
+  }
+  @media (min-width: 188.25rem) {
+    :root {
+      --large-icon-cols: 10;
+    }
+  }
+  @media (min-width: 205.25rem) {
+    :root {
+      --large-icon-cols: 11;
+    }
+  }
+  @media (min-width: 222.25rem) {
+    :root {
+      --large-icon-cols: 12;
+    }
+  }
+  @media (min-width: 239.25rem) {
+    :root {
+      --large-icon-cols: 13;
+    }
+  }
+  @media (min-width: 64rem) {
+    :root {
+      --list-icon-cols: 2;
+    }
+  }
+  @media (min-width: 80.5rem) {
+    :root {
+      --list-icon-cols: 3;
+    }
+  }
+  @media (min-width: 101.25rem) {
+    :root {
+      --list-icon-cols: 4;
+    }
+  }
+  @media (min-width: 122rem) {
+    :root {
+      --list-icon-cols: 5;
+    }
+  }
+  @media (min-width: 142.75rem) {
+    :root {
+      --list-icon-cols: 6;
+    }
+  }
+  @media (min-width: 163.5rem) {
+    :root {
+      --list-icon-cols: 7;
+    }
+  }
+  @media (min-width: 184.25rem) {
+    :root {
+      --list-icon-cols: 8;
+    }
+  }
+  @media (min-width: 205rem) {
+    :root {
+      --list-icon-cols: 9;
+    }
+  }
+  @media (min-width: 225.75rem) {
+    :root {
+      --list-icon-cols: 10;
+    }
+  }
+  :root[data-grid-view="large"] {
+    --icon-cols: var(--large-icon-cols);
+    --tile-icon-default: 3rem;
+  }
+  :root[data-grid-view="list"] {
+    --icon-cols: var(--list-icon-cols);
+  }
   .icon-cell {
     min-width: 0;
   }
   .icon-cell-svg {
-    font-size: 1.5rem;
+    font-size: var(--tile-icon-size, 1.5rem);
   }
   .icon-cell-name {
     max-width: 100%;
@@ -2442,6 +2593,11 @@
     .grid-search {
       flex: 1 1 calc(100% - 3.375rem);
     }
+    /* В выдаче поиска рядом с полем — ещё и фильтр: поле — без двух кнопок по 46 px и зазоров по 8 px, 250 px
+       при ширине 390, как в кадре «Settings / Mobile — Start Scenario». */
+    .search-toolbar-box .grid-search {
+      flex-basis: calc(100% - 6.75rem);
+    }
     /* Settings на телефоне — квадратная кнопка 46 × 46 (Icon Button, вариант Secondary): фон ярче, значок
        20 px без приглушения. */
     .grid-settings {
@@ -2463,9 +2619,10 @@
     .grid-bar .grid-bar-line {
       display: none;
     }
+    /* Вид на телефоне выбирают в шторке настроек (кадр «Settings / Mobile — Start Scenario», решение
+       владельца 23 ноября 2026): в строке — только поиск, у выдачи — фильтр, и Settings. */
     .view-switch {
-      order: 2;
-      margin-inline-start: auto;
+      display: none;
     }
     .grid-bar {
       justify-content: center;
@@ -2549,7 +2706,8 @@
     justify-content: center;
     gap: 0.75rem;
     inline-size: 100%;
-    min-block-size: 6.3125rem;
+    /* 101 px при значке 24: высота растёт вместе с размером иконки из настроек сетки. */
+    min-block-size: calc(4.8125rem + var(--tile-icon-size, 1.5rem));
     padding: 1.5rem 0.5rem;
     /* Пока карточка едет на новое место (панель иконки, lib/motion.ts), её подпись — уже новой длины:
        при закрытии панели она длиннее карточки на экране и без обрезки ложилась на соседние. */
@@ -2574,14 +2732,14 @@
   .result-cell > .icon-card-link,
   .result-skeleton {
     gap: 1rem;
-    min-block-size: 7.0625rem;
+    min-block-size: calc(5.5625rem + var(--tile-icon-size, 1.5rem));
     padding: 1rem 0.5rem;
   }
   /* Скелетоны сетки набора, пока список имён грузится (components/catalog/IconGrid.tsx): размер — как у
      карточки набора, иконка и одна строка; вид — как у скелетонов выдачи. */
   .result-skeleton.grid-skeleton {
     gap: 0.75rem;
-    min-block-size: 6.3125rem;
+    min-block-size: calc(4.8125rem + var(--tile-icon-size, 1.5rem));
     padding: 1.5rem 0.5rem;
   }
   .result-cell-text {
@@ -3569,6 +3727,7 @@
     --color-status-badge: --theme(--color-status-badge inline);
     --color-status-success: --theme(--color-status-success inline);
     --shadow-md: --theme(--shadow-md inline);
+    --shadow-panel: --theme(--shadow-panel inline);
     /* biome-ignore-end lint/correctness/noMissingVarFunction: конец значений из @theme */
   }
   /* Подпись формата в списке Name панели иконки (шаг 5 фазы 4). */
@@ -3750,6 +3909,8 @@
     overflow: hidden;
     border: 0;
     background: var(--color-bg-surface);
+    /* Небольшая тень влево, на страницу (решение владельца 23 ноября 2026): панель лежит поверх сетки. */
+    box-shadow: var(--shadow-panel);
     color: var(--color-text-primary);
     font-size: var(--text-body-base);
     line-height: var(--text-body-base--line-height);
@@ -3758,17 +3919,18 @@
     background: var(--color-bg-overlay);
   }
   /*
-   * Пока рюкзак открыт, полоса прокрутки страницы спрятана, а её место отдано полю справа: панель встаёт
-   * вплотную к краю окна, как в макете, а не в 12 px от него; страница под ней не сдвигается и по-прежнему
-   * прокручивается колесом. Ширину полосы BagPanel замеряет до того, как спрятать. Chrome и Safari рисуют
-   * полосу страницы стилями <body> — прячутся обе.
+   * Пока боковая панель на экране — рюкзак или настройки сетки, вместе с анимацией закрытия, — полоса
+   * прокрутки страницы спрятана, а её место отдано полю справа: панель встаёт вплотную к краю окна, как в
+   * макете, а не в 12 px от него; страница под ней не сдвигается и по-прежнему прокручивается колесом.
+   * Ширину полосы замеряет lib/panel-store.ts до того, как спрятать. Chrome и Safari рисуют полосу страницы
+   * стилями <body> — прячутся обе.
    */
-  :root[data-bag-panel] {
-    padding-right: var(--bag-page-lane, 0px);
+  :root[data-side-panel] {
+    padding-right: var(--side-page-lane, 0px);
     scrollbar-width: none;
   }
-  :root[data-bag-panel]::-webkit-scrollbar,
-  :root[data-bag-panel] body::-webkit-scrollbar {
+  :root[data-side-panel]::-webkit-scrollbar,
+  :root[data-side-panel] body::-webkit-scrollbar {
     display: none;
   }
   .bag-panel-body {
@@ -3978,6 +4140,14 @@
   .bag-empty-hint {
     display: none;
   }
+  /*
+   * Закрытие (решение владельца 23 ноября 2026; lib/panel-store.ts ставит data-closing и ждёт конца
+   * анимации): панель уезжает вправо, шторка на телефоне — вниз, затемнение гаснет; время и кривая — как у
+   * ухода панели иконки. Пока панель уезжает, нажатия её не задевают.
+   */
+  .bag-panel[data-closing] {
+    pointer-events: none;
+  }
   @media (prefers-reduced-motion: no-preference) {
     .bag-panel[open] {
       animation: bag-panel-in var(--motion-panel-in) var(--motion-ease-out);
@@ -3985,9 +4155,21 @@
     .bag-panel[open]::backdrop {
       animation: fade-in var(--motion-fade);
     }
+    .bag-panel[data-closing] {
+      animation: bag-panel-out var(--motion-panel-out) var(--motion-ease-in)
+        forwards;
+    }
+    .bag-panel[data-closing]::backdrop {
+      animation: fade-out var(--motion-fade) var(--motion-ease-in) forwards;
+    }
   }
   @keyframes bag-panel-in {
     from {
+      translate: 100% 0;
+    }
+  }
+  @keyframes bag-panel-out {
+    to {
       translate: 100% 0;
     }
   }
@@ -4003,6 +4185,8 @@
       width: 100%;
       height: calc(100dvh - 2.75rem);
       border-radius: 1rem 1rem 0 0;
+      /* Шторка — под затемнением, тень влево ей не нужна. */
+      box-shadow: none;
     }
     .bag-panel[data-empty] {
       height: auto;
@@ -4078,6 +4262,10 @@
     @media (prefers-reduced-motion: no-preference) {
       .bag-panel[open] {
         animation: ip-sheet-in var(--motion-sheet-in) var(--motion-ease-out);
+      }
+      .bag-panel[data-closing] {
+        animation: sheet-out var(--motion-sheet-out) var(--motion-ease-in)
+          forwards;
       }
     }
   }
@@ -5555,6 +5743,257 @@
     }
     .docs-pager-next {
       grid-column: auto;
+    }
+  }
+  /*
+   * Виды сетки набора и выдачи (настройки сетки, ADR-0054; макета нет — собраны из Icon Card). Разметка
+   * плиток у всех видов одна, вид выбирает data-grid-view у <html>. Крупная сетка: плитки шире (колонки —
+   * --large-icon-cols), поля больше, имя — 14/18. Высота плитки — от размера иконки: у всех клеток страницы и
+   * у скелетонов одна.
+   */
+  :root[data-grid-view="large"] .icon-card-link,
+  :root[data-grid-view="large"] .result-skeleton {
+    gap: 1rem;
+    padding: 2rem 1rem;
+    min-block-size: calc(6.125rem + var(--tile-icon-size, 3rem));
+  }
+  :root[data-grid-view="large"] .icon-cell-name,
+  :root[data-grid-view="list"] .icon-cell-name {
+    font-size: var(--text-body-base);
+    line-height: var(--text-body-base--line-height);
+  }
+  /*
+   * Список: строки в колонках (--list-icon-cols) — иконка слева, имя, у выдачи справа — набор. Высота строки
+   * — от размера иконки: 48 px при 24. Кнопки «в рюкзак» и выбора — справа, место под них оставлено.
+   */
+  :root[data-grid-view="list"] .icon-card-link,
+  :root[data-grid-view="list"] .result-skeleton {
+    flex-direction: row;
+    justify-content: flex-start;
+    gap: 0.75rem;
+    padding: 0.75rem 1rem;
+    min-block-size: calc(1.5rem + var(--tile-icon-size, 1.5rem));
+  }
+  :root[data-grid-view="list"] .icon-cell-svg,
+  :root[data-grid-view="list"] .result-skeleton-icon {
+    flex: none;
+  }
+  :root[data-grid-view="list"] .icon-cell-name {
+    flex: 0 1 auto;
+    min-width: 0;
+  }
+  :root[data-grid-view="list"] .result-cell-text,
+  :root[data-grid-view="list"] .result-skeleton-text {
+    display: flex;
+    flex: 1;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    min-width: 0;
+  }
+  :root[data-grid-view="list"] .result-cell-set {
+    flex: 0 1 auto;
+    max-width: 45%;
+  }
+  :root[data-grid-view="list"] .card-tool {
+    top: 50%;
+    translate: 0 -50%;
+  }
+  :root[data-grid-view="list"] .card-bag {
+    right: 2.25rem;
+    left: auto;
+  }
+  @media (min-width: 48rem) {
+    :root[data-grid-view="list"] .icon-card-link {
+      padding-inline-end: 4rem;
+    }
+  }
+  /* У выдачи под именем — ещё и набор: крупная плитка поиска выше. */
+  :root[data-grid-view="large"] .result-cell > .icon-card-link,
+  :root[data-grid-view="large"] .result-skeleton:not(.grid-skeleton) {
+    min-block-size: calc(7.625rem + var(--tile-icon-size, 3rem));
+  }
+
+  /*
+   * Панель настроек сетки по макету «Настройки» (кадры «Settings / Opened Panel» и «Settings / Mobile —
+   * Opened Sheet»; ADR-0054). Рамка — как у рюкзака (.bag-panel: справа во всю высоту поверх страницы,
+   * 320 px; на телефоне — шторка). Раздел — подпись 12/16 и карточка bg/surfaceMuted со скруглением 12 и
+   * полями 12; строки по 24 px, кружок radio справа; между разделами — линия; внизу — Reset Settings.
+   */
+  .settings-body {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+  }
+  .settings-section {
+    display: grid;
+    gap: 0.5rem;
+    padding: 1rem 1.25rem;
+  }
+  .settings-section + .settings-section {
+    border-top: 1px solid var(--color-border-secondary-20);
+  }
+  .settings-label {
+    margin: 0;
+    color: var(--color-text-secondary);
+    font-size: var(--text-body-xs);
+    line-height: var(--text-body-xs--line-height);
+  }
+  .settings-card {
+    display: grid;
+    gap: 0.625rem;
+    padding: 0.75rem;
+    border-radius: var(--radius-lg);
+    background: var(--color-bg-surface-muted);
+  }
+  /* Выбор — родной radio, невидимый поверх строки: щелчок по строке, стрелки, Пробел и экранный диктор. */
+  .settings-option {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.375rem;
+    min-height: 1.5rem;
+    color: var(--color-text-secondary);
+    cursor: pointer;
+  }
+  .settings-option:hover,
+  .settings-option:has(:checked) {
+    color: var(--color-text-primary);
+  }
+  .settings-option-name {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    min-width: 0;
+  }
+  .settings-option-icon {
+    flex: none;
+    font-size: 1.25rem;
+  }
+  .settings-radio-input {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    opacity: 0;
+    cursor: pointer;
+  }
+  .settings-radio {
+    flex: none;
+    border-radius: 9999px;
+    color: var(--color-bg-inverse);
+    font-size: 1.5rem;
+  }
+  .settings-option:has(:focus-visible) .settings-radio {
+    outline: 2px solid var(--color-selection-bg);
+  }
+  .settings-size {
+    margin: 0;
+    color: var(--color-text-secondary);
+  }
+  .settings-size-value {
+    color: var(--color-text-primary);
+    font-weight: 500;
+  }
+  /* Ползунок по макету: дорожка 4 px bg/surfaceStrong, ручка 16 px accent/lemon. Рамка ручки —
+     border/primary: лимонная ручка видна и на светлой теме. */
+  .settings-slider {
+    display: block;
+    width: 100%;
+    height: 1rem;
+    margin: 0;
+    background: none;
+    appearance: none;
+    cursor: pointer;
+  }
+  .settings-slider::-webkit-slider-runnable-track {
+    height: 0.25rem;
+    border-radius: 9999px;
+    background: var(--color-bg-surface-strong);
+  }
+  .settings-slider::-moz-range-track {
+    height: 0.25rem;
+    border-radius: 9999px;
+    background: var(--color-bg-surface-strong);
+  }
+  .settings-slider::-webkit-slider-thumb {
+    width: 1rem;
+    height: 1rem;
+    margin-top: -0.375rem;
+    border: 0;
+    border-radius: 9999px;
+    background: var(--color-accent-lemon);
+    box-shadow: 0 0 0 1px var(--color-border-primary);
+    appearance: none;
+  }
+  .settings-slider::-moz-range-thumb {
+    width: 1rem;
+    height: 1rem;
+    border: 0;
+    border-radius: 9999px;
+    background: var(--color-accent-lemon);
+    box-shadow: 0 0 0 1px var(--color-border-primary);
+  }
+  .settings-slider:focus-visible {
+    outline: none;
+  }
+  .settings-slider:focus-visible::-webkit-slider-thumb {
+    outline: 2px solid var(--color-selection-bg);
+    outline-offset: 2px;
+  }
+  .settings-slider:focus-visible::-moz-range-thumb {
+    outline: 2px solid var(--color-selection-bg);
+    outline-offset: 2px;
+  }
+  .settings-foot {
+    flex: none;
+    padding: 1rem 1.25rem 1.5rem;
+    border-top: 1px solid var(--color-border-secondary-20);
+  }
+  .settings-reset {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--color-text-primary);
+    font: inherit;
+    font-weight: 500;
+    cursor: pointer;
+  }
+  .settings-reset-icon {
+    font-size: 1rem;
+  }
+  /* Кнопка Settings у строки поиска: наведение и открытая панель — bg/surfaceMuted (Search Controls,
+     State=Hover); квадратная — bg/hover (Icon Button, State=Pressed). */
+  .grid-settings:hover,
+  .grid-settings[aria-expanded="true"] {
+    background: var(--color-bg-surface-muted);
+  }
+  @container toolbar (max-width: 34rem) {
+    .grid-settings:hover,
+    .grid-settings[aria-expanded="true"] {
+      background: var(--color-bg-hover);
+    }
+  }
+  @media (max-width: 63.98rem) {
+    .grid-settings:hover,
+    .grid-settings[aria-expanded="true"] {
+      background: var(--color-bg-hover);
+    }
+    /* Шторка — по высоте содержимого, поля — 16 px (заметки макета). */
+    .bag-panel.settings-panel {
+      height: auto;
+      max-height: calc(100dvh - 2.75rem);
+    }
+    .settings-section {
+      padding: 1rem;
+    }
+    .settings-foot {
+      padding: 1rem 1rem 1.5rem;
     }
   }
 }

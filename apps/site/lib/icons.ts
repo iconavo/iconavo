@@ -52,6 +52,7 @@ export const SITE_ICONS = [
   "material-symbols:radio-button-checked",
   "material-symbols:radio-button-unchecked",
   "material-symbols:report",
+  "material-symbols:reset-settings",
   "material-symbols:search",
   "material-symbols:settings",
   "material-symbols:toc",

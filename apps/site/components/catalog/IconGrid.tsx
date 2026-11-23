@@ -21,6 +21,7 @@ import {
   shownName,
 } from "../../lib/catalog";
 import { useGridColumns } from "../../lib/grid-columns";
+import { useKeptPage, usePerPage } from "../../lib/grid-settings";
 import { DICTIONARIES, href, type Lang, STYLE_KEYS } from "../../lib/i18n";
 import { iconPagePath } from "../../lib/icon";
 import { PAGE_PANEL_ID } from "../../lib/panel-layout";
@@ -174,7 +175,10 @@ export function IconGrid({
     setSlot(document.getElementById(PAGE_PANEL_ID));
   }, []);
   const columns = useGridColumns();
-  const size = columns === undefined ? undefined : pageSizeFor(columns);
+  // Иконок на странице — из настроек сетки (ADR-0054), целыми рядами.
+  const perPage = usePerPage();
+  const size =
+    columns === undefined ? undefined : pageSizeFor(columns, perPage);
   const pageSize = size ?? PAGE_SIZE;
 
   const list =
@@ -200,6 +204,12 @@ export function IconGrid({
       : (styles.find((s) => s.style === style)?.size ?? total);
   const pages = pageCount(list?.length ?? (q !== "" ? 1 : known), pageSize);
   const page = pageParam(query.get("page"), pages);
+  // Сменили число на странице — первая иконка страницы остаётся на экране.
+  useKeptPage(perPage, size, page, (p) =>
+    navigate(withParams(query, { page: p === 1 ? undefined : String(p) }), {
+      replace: true,
+    }),
+  );
   // Пока список имён грузится — скелетоны на месте карточек этой страницы (решение владельца 23 ноября 2026,
   // плавная прокрутка): высота страницы не меняется, и подъём к началу сетки при смене страницы доезжает
   // до места. Прежде на это время сетка становилась строкой «Загружаю…», страница схлопывалась до высоты

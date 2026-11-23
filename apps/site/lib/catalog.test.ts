@@ -1,3 +1,4 @@
+import { LIMIT_MAX } from "@iconavo-ui/search";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   cardsInStyle,
@@ -30,6 +31,7 @@ import {
 } from "./catalog";
 import { releaseSummary, releaseView, setSummary } from "./catalog-view";
 import { countOf, formatDate, formatNumber, ICON_FORMS } from "./format";
+import { PER_PAGE_CHOICES } from "./grid-settings";
 
 const INFO = {
   name: "Lucide",
@@ -120,14 +122,25 @@ describe("имена, категории и страницы", () => {
   });
 
   it("страница — целые ряды, ближе всего к 96 (решение владельца 13 ноября 2026)", () => {
-    expect([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 14].map(pageSizeFor)).toEqual([
-      96, 96, 96, 96, 95, 96, 98, 96, 99, 100, 98,
-    ]);
+    expect(
+      [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 14].map((c) => pageSizeFor(c)),
+    ).toEqual([96, 96, 96, 96, 95, 96, 98, 96, 99, 100, 98]);
     for (let columns = 1; columns <= 32; columns++) {
       expect(pageSizeFor(columns) % columns).toBe(0);
       expect(pageSizeFor(columns)).toBeLessThanOrEqual(FIRST_PAGE_MAX);
     }
     expect(FIRST_PAGE_MAX).toBe(108);
+  });
+
+  it("число из настроек сетки — тоже целыми рядами, и API поиска отдаёт его за раз (ADR-0054)", () => {
+    expect([3, 6, 7].map((c) => pageSizeFor(c, 48))).toEqual([48, 48, 49]);
+    expect([3, 6, 7].map((c) => pageSizeFor(c, 192))).toEqual([192, 192, 189]);
+    for (const target of PER_PAGE_CHOICES) {
+      for (let columns = 1; columns <= 32; columns++) {
+        expect(pageSizeFor(columns, target) % columns).toBe(0);
+        expect(pageSizeFor(columns, target)).toBeLessThanOrEqual(LIMIT_MAX);
+      }
+    }
   });
 
   it("страницы по 96, номера — первая, соседние и последняя", () => {
