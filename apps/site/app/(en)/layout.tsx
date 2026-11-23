@@ -25,7 +25,12 @@ export default async function RootLayout({
   ]);
   return (
     // Атрибут data-theme ставит скрипт темы до гидратации — расхождение с сервером ожидаемо.
-    <html lang="en" className={interTight.variable} suppressHydrationWarning>
+    <html
+      lang="en"
+      className={interTight.variable}
+      data-scroll-behavior="smooth"
+      suppressHydrationWarning
+    >
       <head>
         <ThemeScript />
       </head>

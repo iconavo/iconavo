@@ -157,6 +157,17 @@
     /* Место под полосу страницы занято всегда — и когда меню на телефоне прячет прокрутку. */
     scrollbar-gutter: stable;
   }
+  /*
+   * Плавные переходы внутри страницы (решение владельца 23 ноября 2026): номер страницы сетки поднимает к
+   * её началу, «к содержимому», якоря документации. Между страницами Next.js на время перехода выключает
+   * плавность сам — по атрибуту data-scroll-behavior="smooth" у <html> корневых раскладок. Колесо мыши
+   * сглаживает lib/smooth-wheel.ts. «Уменьшить движение» в системе — скачком.
+   */
+  @media (prefers-reduced-motion: no-preference) {
+    html {
+      scroll-behavior: smooth;
+    }
+  }
 
   /*
    * Полосы прокрутки по макету (слой Scrollbar блока кода «Icon Panel/Code»): бегунок 4 px со
@@ -2203,6 +2214,15 @@
     font-size: var(--text-body-sm);
     line-height: var(--text-body-sm--line-height);
   }
+  /* Строка сведений переносится так же, как при открытой панели (23 ноября 2026; как с колонками сетки —
+     раскладка зависит только от ширины окна): шапка набора одной высоты с панелью и без неё, и при открытии
+     панели поле поиска и сетка не съезжают вниз. С панелью шапка уже на её ширину и на поле 40 px справа
+     (--page-x вместо --page-x-end), 25 px — срезанная полоса разделителя слева. */
+  @media (min-width: 64rem) {
+    .set-page:not(:has(> .page-panel > .icon-panel)) .set-meta {
+      max-width: calc(100% + 1.5625rem - var(--width-panel) - var(--page-x));
+    }
+  }
   .set-meta li {
     display: inline-flex;
     align-items: center;
@@ -2832,6 +2852,13 @@
     gap: 1rem;
     min-block-size: 7.0625rem;
     padding: 1rem 0.5rem;
+  }
+  /* Скелетоны сетки набора, пока список имён грузится (components/catalog/IconGrid.tsx): размер — как у
+     карточки набора, иконка и одна строка; вид — как у скелетонов выдачи. */
+  .result-skeleton.grid-skeleton {
+    gap: 0.75rem;
+    min-block-size: 6.3125rem;
+    padding: 1.5rem 0.5rem;
   }
   .result-cell-text {
     display: grid;

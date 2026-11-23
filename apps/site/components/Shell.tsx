@@ -8,6 +8,7 @@ import { HotKey } from "./shell/HotKey";
 import { MenuController } from "./shell/Menu";
 import { ScrollbarActivity } from "./shell/ScrollbarActivity";
 import { Sidebar } from "./shell/Sidebar";
+import { SmoothWheel } from "./shell/SmoothWheel";
 import { TopBar } from "./shell/TopBar";
 import { ThemeSync } from "./ThemeSync";
 
@@ -35,6 +36,7 @@ export function Shell({
     <IconavoProvider icons={icons}>
       <ThemeSync />
       <ScrollbarActivity />
+      <SmoothWheel />
       <a className="skip-link" href="#content">
         {DICTIONARIES[lang].skip}
       </a>

@@ -193,16 +193,21 @@ export function IconGrid({
           ),
           q,
         );
-  const pages = pageCount(
-    list?.length ??
-      (q !== ""
-        ? 1
-        : style === undefined
-          ? (category?.size ?? total)
-          : (styles.find((s) => s.style === style)?.size ?? total)),
-    pageSize,
-  );
+  // Сколько карточек в выборке, пока список имён не пришёл: число набора, категории или стиля.
+  const known =
+    style === undefined
+      ? (category?.size ?? total)
+      : (styles.find((s) => s.style === style)?.size ?? total);
+  const pages = pageCount(list?.length ?? (q !== "" ? 1 : known), pageSize);
   const page = pageParam(query.get("page"), pages);
+  // Пока список имён грузится — скелетоны на месте карточек этой страницы (решение владельца 23 ноября 2026,
+  // плавная прокрутка): высота страницы не меняется, и подъём к началу сетки при смене страницы доезжает
+  // до места. Прежде на это время сетка становилась строкой «Загружаю…», страница схлопывалась до высоты
+  // окна, и браузер прижимал прокрутку к самому верху.
+  const waiting =
+    q !== ""
+      ? pageSize
+      : Math.max(0, Math.min(pageSize, known - (page - 1) * pageSize));
   // Первая страница всех карточек — из серверного HTML, если её хватает на ряды этой ширины.
   const initial =
     category === undefined &&
@@ -343,9 +348,24 @@ export function IconGrid({
               {t.gridError}
             </p>
           ) : shown === undefined ? (
-            <p className="grid-status" aria-live="polite">
-              {t.gridLoading}
-            </p>
+            <>
+              <p className="sr-only" role="status">
+                {t.gridLoading}
+              </p>
+              <ul className="icon-grid grid-skeletons" aria-hidden="true">
+                {Array.from({ length: waiting }, (_, i) => (
+                  <li
+                    // У пустых клеток нет имени: ключ — место в сетке.
+                    // biome-ignore lint/suspicious/noArrayIndexKey: клетки без данных, порядок постоянный
+                    key={i}
+                    className="icon-cell result-skeleton grid-skeleton"
+                  >
+                    <span className="result-skeleton-icon" />
+                    <span className="result-skeleton-line" />
+                  </li>
+                ))}
+              </ul>
+            </>
           ) : shown.length === 0 && q !== "" ? (
             <p className="grid-status grid-empty" role="status">
               {t.setNothing.replace("{set}", setName).replace("{q}", q)}{" "}
