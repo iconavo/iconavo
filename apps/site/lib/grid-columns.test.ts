@@ -32,7 +32,7 @@ function minCardAfter(marker: string): number {
   return Number(match?.[1]);
 }
 
-type Cols = "icon" | "large-icon" | "list-icon" | "set" | "sets";
+type Cols = "icon" | "large-icon" | "list-icon" | "set";
 
 /** Значения --{name}-cols по порогам ширины окна: [окно в rem, колонок], по возрастанию. */
 function steps(name: Cols): [number, number][] {
@@ -61,13 +61,6 @@ describe("колонки сеток — от ширины окна", () => {
       name: "set",
       card: minCardAfter("  .set-grid {"),
       gap: remAfter("  .set-grid {", "gap"),
-    },
-    // Список наборов — в .container: на широких окнах не шире 96rem (контейнер Tailwind), не больше 5.
-    {
-      name: "sets",
-      card: minCardAfter("  .set-grid {"),
-      gap: remAfter("  .set-grid {", "gap"),
-      max: 5,
     },
     // Крупная сетка и список (настройки сетки, ADR-0054): плитка 16,25rem и строка 20rem, зазор — сетки.
     {
@@ -127,9 +120,8 @@ describe("колонки сеток — от ширины окна", () => {
     expect(css).toMatch(
       /\.set-grid \{\s*grid-template-columns: repeat\(var\(--set-cols\), minmax\(0, 1fr\)\);/,
     );
-    expect(css).toMatch(
-      /\.container \.set-grid \{\s*grid-template-columns: repeat\(var\(--sets-cols\), minmax\(0, 1fr\)\);/,
-    );
+    // Список наборов /sets — та же лестница, что у главной (в стиле сайта с 23 ноября 2026).
+    expect(css).not.toMatch(/--sets-cols/);
     expect(css).not.toMatch(
       /\.with-panel\[data-panel\][^{]*\.icon-grid[^{]*\{[^}]*grid-template-columns/,
     );

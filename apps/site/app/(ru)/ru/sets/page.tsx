@@ -2,7 +2,10 @@ import type { Metadata } from "next";
 import { Sets } from "../../../../components/pages/Sets";
 import { DICTIONARIES } from "../../../../lib/i18n";
 
-export const metadata: Metadata = { title: DICTIONARIES.ru.setsTitle };
+export const metadata: Metadata = {
+  title: DICTIONARIES.ru.setsTitle,
+  description: DICTIONARIES.ru.setsLead,
+};
 
 export default function Page() {
   return <Sets lang="ru" />;

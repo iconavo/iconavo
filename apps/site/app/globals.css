@@ -1570,7 +1570,8 @@
     /* Одна колонка не шире страницы: сетка внутри, конечной ширины во время сворачивания панели
        (lib/sidebar-motion.ts), не раздвигает соседей. */
     grid-template-columns: minmax(0, 1fr);
-    gap: 1.25rem;
+    /* От заголовка с описанием до карточек — 12 px, как в макете (группа «Material Icons», 91:37927). */
+    gap: 0.75rem;
   }
   .set-group-head {
     display: grid;
@@ -1607,39 +1608,32 @@
    * макета «Контекст: свёрнутый сайдбар»): при свёрнутой боковой панели карточек в ряду столько же, они
    * шире. Колонок — сколько карточек не уже 17rem (272 px — ширина компонента «Icon Set Card»: так
    * название набора не обрезается, решение владельца 23 ноября 2026) с зазором 1rem встало бы при
-   * развёрнутой панели: на главной колонка страницы — окно − 19rem, n колонок — с окна 18n + 18rem.
-   * Список наборов лежит в .container, который не шире 96rem (контейнер Tailwind), — там не больше
-   * 5 колонок (--sets-cols). До 64rem — как было: на главной карусель, в списке — сколько влезет.
-   * Пороги сверяет lib/grid-columns.test.ts.
+   * развёрнутой панели: колонка страницы — окно − 19rem, n колонок — с окна 18n + 18rem. Та же лестница —
+   * у главной и у списка наборов /sets (в стиле сайта с 23 ноября 2026; прежде он лежал в .container и
+   * держал свою лестницу до 5 колонок). До 64rem — как было: на главной карусель, в списке — сколько
+   * влезет. Пороги сверяет lib/grid-columns.test.ts.
    */
   @media (min-width: 64rem) {
     :root {
       --set-cols: 2;
-      --sets-cols: 2;
     }
     .set-grid {
       grid-template-columns: repeat(var(--set-cols), minmax(0, 1fr));
-    }
-    .container .set-grid {
-      grid-template-columns: repeat(var(--sets-cols), minmax(0, 1fr));
     }
   }
   @media (min-width: 72rem) {
     :root {
       --set-cols: 3;
-      --sets-cols: 3;
     }
   }
   @media (min-width: 90rem) {
     :root {
       --set-cols: 4;
-      --sets-cols: 4;
     }
   }
   @media (min-width: 108rem) {
     :root {
       --set-cols: 5;
-      --sets-cols: 5;
     }
   }
   @media (min-width: 126rem) {
@@ -1784,7 +1778,8 @@
       cursor: pointer;
     }
     /* Группы: через 32 px, внутри — 12 px, заголовок и описание — через 6 px, описание 13/17. */
-    .home-groups {
+    .home-groups,
+    .sets-groups {
       gap: 2rem;
     }
     .set-group {
@@ -1816,11 +1811,6 @@
   }
 
   /* Фильтры «чипсами»: ссылки с параметрами адреса. */
-  .filters {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0 2rem;
-  }
   .chips-nav {
     display: flex;
     flex-wrap: wrap;
@@ -2005,6 +1995,19 @@
   }
   .set-body {
     padding: 1.5rem var(--page-x-end) 2.5rem var(--page-x);
+  }
+  /*
+   * Список наборов /sets в стиле сайта (решения владельца 23 ноября 2026): шапка и тело — как у страницы
+   * набора (.set-head, .set-body), фильтры — строками чипсов (.grid-filters), наборы — группами, как на
+   * главной, но без её карусели на телефоне: карточки идут столбцом.
+   */
+  .sets-page {
+    padding-block: 0;
+  }
+  .sets-groups {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 2.25rem;
   }
   .set-browser {
     display: grid;
