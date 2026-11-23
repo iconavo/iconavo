@@ -572,17 +572,20 @@ async function checkPages(
     const copyPage = await copyContext.newPage();
     await copyPage.goto(`${o.base}/docs`, { waitUntil: "load" });
     const expected = await copyPage
-      .locator("figure.code pre")
+      .locator(".prose figure.code-block pre")
       .first()
       .innerText();
-    await copyPage.locator("figure.code button.copy").first().click();
+    await copyPage
+      .locator(".prose figure.code-block button.code-copy")
+      .first()
+      .click();
     await copyPage.waitForTimeout(300);
     // Буфер Windows хранит переводы строк как \r\n.
     const copied = (
       await copyPage.evaluate(() => navigator.clipboard.readText())
     ).replace(/\r\n/g, "\n");
     const label = await copyPage
-      .locator("figure.code button.copy")
+      .locator(".prose figure.code-block button.code-copy")
       .first()
       .innerText();
     v.copy =
