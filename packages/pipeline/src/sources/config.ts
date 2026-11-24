@@ -220,6 +220,19 @@ export const sourceConfigSchema = z
       )
       .min(1)
       .optional(),
+    /**
+     * Иконки, исключённые при очистке, которые владелец одобрил (ADR-0019): у автора они есть, а в
+     * наборе их нет. PR робота ждёт владельца только из-за новых исключений. Вписывается только после
+     * явного «одобряю» человека — прямо в ветку PR робота, как отпечаток лицензии.
+     */
+    approvedExclusions: z
+      .array(nameSchema)
+      .min(1)
+      .refine(
+        (list) => new Set(list).size === list.length,
+        "имена не должны повторяться",
+      )
+      .optional(),
   })
   .superRefine((config, ctx) => {
     if (config.styles !== undefined) {

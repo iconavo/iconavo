@@ -217,6 +217,19 @@ describe("решение по PR робота", () => {
     ]);
   });
 
+  it("одобренные исключения PR не держат, новые — ждут владельца", () => {
+    const s = summary({
+      excluded: [
+        { name: "x", reason: "очистка: не SVG" },
+        { name: "y", reason: "очистка: скрипт" },
+      ],
+    });
+    expect(decide(s, git(OLD), undefined, ["x", "y"]).decision).toBe("auto");
+    expect(decide(s, git(OLD), undefined, ["x"]).reasons).toEqual([
+      "исключены при очистке: 1 — у автора они есть, а в наборе их не будет",
+    ]);
+  });
+
   it("версия стала меньше — ждёт одобрения; 3.9.0 → 3.10.0 — не откат", () => {
     expect(isDowngrade(npm("3.50.0"), npm("3.49.0"))).toBe(true);
     expect(isDowngrade(npm("3.9.0"), npm("3.10.0"))).toBe(false);
@@ -298,6 +311,28 @@ describe("текст PR робота", () => {
     expect(body).toContain("- Добавлены (2): `avocado`, `bacon`");
     expect(body).toContain("ISC — текст тот же, что вы подтвердили.");
     expect(body.endsWith("робот её больше не трогает.\n")).toBe(true);
+  });
+
+  it("исключённые при очистке: одобренные помечены, для новых — как их одобрить", () => {
+    const excluded = [
+      { name: "x", reason: "очистка: не SVG" },
+      { name: "y", reason: "очистка: скрипт" },
+    ];
+    const fresh = pr({ excluded });
+    expect(fresh.decision).toBe("approval");
+    expect(fresh.body).toContain("«одобряю исключения Lucide из PR робота»");
+    expect(fresh.body).toContain("`sources/lucide.ts`");
+    expect(fresh.body).toContain("- `lucide:x` — очистка: не SVG\n");
+    const config = sourceConfigSchema.parse({
+      ...lucide,
+      approvedExclusions: ["x", "y"],
+    });
+    const approved = pr({ excluded }, { config });
+    expect(approved.decision).toBe("auto");
+    expect(approved.body).toContain(
+      "- `lucide:x` — очистка: не SVG — вы одобрили раньше",
+    );
+    expect(approved.body).not.toContain("одобряю исключения");
   });
 
   it("пакет npm — ссылка на версию в реестре", () => {

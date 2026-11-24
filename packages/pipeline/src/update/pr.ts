@@ -6,7 +6,12 @@ import { CHANGED_PIXELS } from "../qc/config.js";
 import { share } from "../qc/run.js";
 import { LICENSE_TITLES, type SourceConfig } from "../sources/config.js";
 import type { LockEntry } from "../sources/lock.js";
-import { type Decision, decide, type Verdict } from "./decide.js";
+import {
+  type Decision,
+  decide,
+  newExclusions,
+  type Verdict,
+} from "./decide.js";
 import type { AttentionKind, SetSummary } from "./summary.js";
 
 /** Метки PR робота: все его PR; ждёт владельца; сборка остановилась. */
@@ -181,7 +186,11 @@ function todo(config: SourceConfig, s: SetSummary, v: Verdict, auto: boolean) {
     return `Прочитайте текст лицензии в отчёте «Лицензия и теги». Согласны — напишите Claude: «подтверждаю лицензию ${config.name} из PR робота». Он впишет отпечаток в \`sources/${config.id}.ts\` прямо в ветку этого PR и пересоберёт \`data/\`; после этого робот ветку не трогает, сливаете вы. Не согласны — закройте PR.`;
   }
   if (v.decision === "approval") {
-    return "Посмотрите отчёты ниже — прежде всего «Что изменилось». Согласны — «Squash and merge». Нет — закройте PR: эту версию робот больше не предложит (передумаете — Reopen).";
+    const base =
+      "Посмотрите отчёты ниже — прежде всего «Что изменилось». Согласны — «Squash and merge». Нет — закройте PR: эту версию робот больше не предложит (передумаете — Reopen).";
+    return newExclusions(s, config.approvedExclusions).length > 0
+      ? `${base} Иконки, исключённые при очистке: если согласны, что их не будет в наборе, перед слиянием напишите Claude «одобряю исключения ${config.name} из PR робота». Он впишет их в \`sources/${config.id}.ts\` прямо в ветку этого PR, и следующие обновления из-за них вас ждать не будут.`
+      : base;
   }
   return auto
     ? "Ничего. Если с обновлением что-то не так, закройте PR: эту версию робот больше не предложит, а следующую — предложит."
@@ -203,7 +212,9 @@ function journal(s: SetSummary): string {
   ]);
 }
 
-function quality(id: string, s: SetSummary): string {
+function quality(config: SourceConfig, s: SetSummary): string {
+  const { id } = config;
+  const approved = config.approvedExclusions ?? [];
   const c = s.qc.counts;
   const lines = [
     `Нарисовано ${groupDigits(s.qc.checked)}: пустых ${c.empty} · почти пустых ${c.sparse} · обрезанных ${c.cropped} · отличаются от оригинала ${c.original} · заметно изменились (больше ${share(CHANGED_PIXELS)} пикселей) ${c.changed}${c.failed > 0 ? ` · не нарисованы ${c.failed}` : ""}.`,
@@ -230,7 +241,8 @@ function quality(id: string, s: SetSummary): string {
       "",
       ...limited(
         s.excluded.map(
-          (e) => `- ${code(`${id}:${e.name}`)} — ${safe(e.reason)}`,
+          (e) =>
+            `- ${code(`${id}:${e.name}`)} — ${safe(e.reason)}${approved.includes(e.name) ? " — вы одобрили раньше" : ""}`,
         ),
       ),
     );
@@ -279,7 +291,7 @@ const FOOTER =
 /** Заголовок, метки и описание PR набора; решение — decide. */
 export function prText(input: PrInput): PrText {
   const { config, summary: s, before, tags, links = {} } = input;
-  const v = decide(s, before, tags);
+  const v = decide(s, before, tags, config.approvedExclusions);
   const autoMerge = v.decision === "auto" && input.autoMerge !== false;
   const from = before && revisionName(before, tags);
   const to = revisionName(s.entry, tags);
@@ -299,7 +311,7 @@ export function prText(input: PrInput): PrText {
     sourceLine(input, from, to),
   ].join("\n\n");
   const tail = [
-    quality(config.id, s),
+    quality(config, s),
     license(config, s),
     reports(links),
     FOOTER,

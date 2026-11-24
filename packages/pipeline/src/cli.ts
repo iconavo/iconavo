@@ -1,5 +1,5 @@
 // Команды конвейера: pnpm sources fetch [id…] | pnpm sources pin <id> [версия|коммит] | pnpm sanitize [id…]
-// | pnpm normalize [id…] | pnpm data [id…] [--accept-changes] | pnpm pr <id> [--run-url=… …] [--no-auto-merge]
+// | pnpm normalize [id…] | pnpm data [id…] [--accept-changes] | pnpm pr <id> [--run-url=… …] [--no-auto-merge] [--state]
 // | pnpm enrich [id…] [--limit=N] [--max-cost=USD] [--dry-run] [--no-wait]
 // | pnpm embed [id…] [--model=…] [--max-rub=N] [--dry-run] | pnpm nearest [запрос…] [--model=…]
 // | pnpm judge [--limit=N] [--max-rub=N] [--dry-run] [--service]
@@ -348,7 +348,8 @@ import {
   openStarter,
   unpublished,
 } from "./starters/run.js";
-import { type PrLinks, prText } from "./update/pr.js";
+import { type PrLinks, prMarker, prText } from "./update/pr.js";
+import { factsSchema, robotState } from "./update/state.js";
 import {
   buildSummarySchema,
   type SetSummary,
@@ -381,6 +382,9 @@ const USAGE = `Использование:
       --run-url=… --changelog-url=… --qc-url=… --metadata-url=… --reports-url=…
                                       ссылки на запуск и отчёты в описании PR (https://)
       --no-auto-merge                 не включать автослияние: PR ждёт владельца
+  pnpm pr <id> --state                что робот делает с PR набора: сведения GitHub из
+                                      .cache/update/{id}/facts.json (их пишет update.yml) →
+                                      .cache/update/{id}/state.json
   pnpm enrich [id…]                   описания и синонимы ru/en для базовых иконок без описаний:
                                       PNG → Claude (Message Batches) → data/{набор}/search.json;
                                       нужен ANTHROPIC_API_KEY в .env; отчёт .cache/reports/enrich/
@@ -751,6 +755,7 @@ for (const flag of flags) {
   const link = LINK_FLAGS[name];
   if (command === "data" && flag === "--accept-changes") continue;
   if (command === "pr" && flag === "--no-auto-merge") continue;
+  if (command === "pr" && flag === "--state") continue;
   if (command === "pr" && link && value?.startsWith("https://")) {
     links[link] = value;
     continue;
@@ -1203,6 +1208,38 @@ try {
       `Сводка для робота обновления: ${join(galleryDir, SUMMARY_FILE)}`,
     );
     process.exit(failed > 0 ? 1 : 0);
+  } else if (command === "pr" && flags.includes("--state")) {
+    // Что робот делает с PR набора (ADR-0019): сведения у GitHub собрал update.yml, решает robotState.
+    const [id, ...rest] = args;
+    if (!id || rest.length > 0) usageError("Нужно указать один набор.");
+    const [config] = pick([id]);
+    if (!config) usageError(`Набор «${id}» не найден.`);
+    const outDir = join(root, ".cache", "update", id);
+    const factsPath = join(outDir, "facts.json");
+    const text = await readFile(factsPath, "utf8").catch(() => {
+      throw new Error(
+        `нет сведений ${factsPath} — их пишет шаг «PR набора» в update.yml`,
+      );
+    });
+    const facts = factsSchema.parse(JSON.parse(text));
+    const entry = (await readLock(lockPath))[id];
+    if (!entry) {
+      throw new Error(
+        `в sources.lock.json нет набора ${id} — запустите pnpm sources pin ${id}`,
+      );
+    }
+    const state = robotState(facts, prMarker(id, entry), `auto/${id}`);
+    await writeFile(
+      join(outDir, "state.json"),
+      `${JSON.stringify(state, null, 2)}\n`,
+      "utf8",
+    );
+    const pr = [
+      state.open === undefined ? "" : ` (PR #${state.open})`,
+      state.rejected === undefined ? "" : ` (закрыт PR #${state.rejected})`,
+    ].join("");
+    console.log(`${id}: ${state.action}${pr}`);
+    if (state.problem !== undefined) console.log(`  ${state.problem}`);
   } else if (command === "pr") {
     const [id, ...rest] = args;
     if (!id || rest.length > 0) usageError("Нужно указать один набор.");

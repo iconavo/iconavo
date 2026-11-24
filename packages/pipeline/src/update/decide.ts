@@ -38,14 +38,25 @@ export function isDowngrade(
 }
 
 /**
+ * Исключённые при очистке, которых владелец ещё не одобрил (`approvedExclusions` в конфиге набора):
+ * одобренное исключение PR больше не держит.
+ */
+export const newExclusions = (
+  s: SetSummary,
+  approved: readonly string[] = [],
+): SetSummary["excluded"] =>
+  s.excluded.filter((e) => !approved.includes(e.name));
+
+/**
  * Правила ADR-0019. Сборка остановилась — проблема; но если причина одна и это лицензия, PR ждёт
- * подтверждения владельца. Скрытия, переименования, новые находки контроля, исключённые иконки и
- * откат версии — ждут владельца. Остальное (иконки только добавлены или изменены) сливается само.
+ * подтверждения владельца. Скрытия, переименования, новые находки контроля, новые исключённые иконки
+ * и откат версии — ждут владельца. Остальное (иконки только добавлены или изменены) сливается само.
  */
 export function decide(
   s: SetSummary,
   before: LockEntry | undefined,
   tags?: ReadonlyMap<string, string>,
+  approvedExclusions: readonly string[] = [],
 ): Verdict {
   const license = s.license.status;
   const licenseOnly =
@@ -81,9 +92,10 @@ export function decide(
       `новые находки контроля качества: ${s.qc.attention.length} — у добавленных или изменённых иконок`,
     );
   }
-  if (s.excluded.length > 0) {
+  const excluded = newExclusions(s, approvedExclusions);
+  if (excluded.length > 0) {
     reasons.push(
-      `исключены при очистке: ${s.excluded.length} — у автора они есть, а в наборе их не будет`,
+      `исключены при очистке: ${excluded.length} — у автора они есть, а в наборе их не будет`,
     );
   }
   if (before && isDowngrade(before, s.entry, tags)) {
