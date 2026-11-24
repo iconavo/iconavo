@@ -33,9 +33,10 @@ on:
 permissions:
   contents: read
 
-# Выгрузки не пересекаются и не прерываются: следующая ждёт текущую.
+# Выгрузки не пересекаются и не прерываются: следующая ждёт текущую. «Только показ» ничего не пишет и
+# стоит в своей группе: в общей он отменил бы ждущую выгрузку — у очереди одно место для ждущего.
 concurrency:
-  group: deploy
+  group: ${{ inputs.dry_run == true && format('deploy-show-{0}', github.run_id) || 'deploy' }}
   cancel-in-progress: false
 
 jobs:

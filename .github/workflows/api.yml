@@ -28,6 +28,13 @@ on:
       - "packages/core/**"
       - "packages/search/**"
       - "packages/pipeline/src/api/**"
+      # Остальной код конвейера, который берёт сборка функции; список сверяет workflows.test.ts.
+      - "packages/pipeline/src/build/json.ts"
+      - "packages/pipeline/src/build/write.ts"
+      - "packages/pipeline/src/cdn/config.ts"
+      - "packages/pipeline/src/cdn/write.ts"
+      - "packages/pipeline/src/meili/config.ts"
+      - "packages/pipeline/src/util/pool.ts"
       - "pnpm-lock.yaml"
       - ".github/workflows/api.yml"
   # Проверка самого workflow на PR — только показ: секретов и права выкладывать там нет.
@@ -55,10 +62,10 @@ on:
 
 permissions: {}
 
-# Выкладки из main не пересекаются и не прерываются: следующая ждёт текущую. Показы с веток и PR —
-# в своих группах: в общей они отменяли бы ждущую выкладку.
+# Выкладки из main не пересекаются и не прерываются: следующая ждёт текущую. Показы — с веток, PR и
+# «только показ» из main — в своих группах: в общей они отменяли бы ждущую выкладку.
 concurrency:
-  group: ${{ github.ref == 'refs/heads/main' && github.event_name != 'pull_request' && 'api' || format('api-{0}', github.ref) }}
+  group: ${{ github.ref == 'refs/heads/main' && github.event_name != 'pull_request' && inputs.dry_run != true && 'api' || format('api-{0}', github.ref) }}
   cancel-in-progress: false
 
 defaults:
@@ -97,7 +104,7 @@ jobs:
           live=false
           if [ "$GITHUB_REF" = refs/heads/main ] && [ "$EVENT" != pull_request ] && [ "$DRY_RUN" != true ]; then
             git fetch --quiet --no-tags --depth=1 origin "+refs/heads/main:refs/remotes/origin/main"
-            if git diff --quiet origin/main HEAD -- apps/api/ packages/core/ packages/search/ packages/pipeline/src/api/ pnpm-lock.yaml .github/workflows/api.yml; then
+            if git diff --quiet origin/main HEAD -- apps/api/ packages/core/ packages/search/ packages/pipeline/src/api/ packages/pipeline/src/build/json.ts packages/pipeline/src/build/write.ts packages/pipeline/src/cdn/config.ts packages/pipeline/src/cdn/write.ts packages/pipeline/src/meili/config.ts packages/pipeline/src/util/pool.ts pnpm-lock.yaml .github/workflows/api.yml; then
               live=true
             else
               echo "::warning::main ушёл вперёд — этот запуск только показывает; выкладывает запуск от свежего main."

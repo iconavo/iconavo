@@ -47,10 +47,10 @@ on:
 
 permissions: {}
 
-# Публикации из main не пересекаются и не прерываются: следующая ждёт текущую. Показы с веток и PR —
-# в своих группах: в общей они отменяли бы ждущую публикацию.
+# Публикации из main не пересекаются и не прерываются: следующая ждёт текущую. Показы — с веток, PR и
+# «только показ» из main — в своих группах: в общей они отменяли бы ждущую публикацию.
 concurrency:
-  group: ${{ github.ref == 'refs/heads/main' && github.event_name != 'pull_request' && 'publish' || format('publish-{0}', github.ref) }}
+  group: ${{ github.ref == 'refs/heads/main' && github.event_name != 'pull_request' && inputs.dry_run != true && 'publish' || format('publish-{0}', github.ref) }}
   cancel-in-progress: false
 
 defaults:
@@ -89,7 +89,9 @@ jobs:
           live=false
           if [ "$GITHUB_REF" = refs/heads/main ] && [ "$EVENT" != pull_request ] && [ "$DRY_RUN" != true ]; then
             git fetch --quiet --no-tags --depth=1 origin "+refs/heads/main:refs/remotes/origin/main"
-            if git diff --quiet origin/main HEAD -- data/ packages/pipeline/src/ .github/workflows/publish.yml; then
+            # Ровно то, что запускает публикацию (paths у push): иначе правка остального конвейера в main
+            # делала бы этот запуск показом, а новый запуск не начинался бы — до ночного по расписанию.
+            if git diff --quiet origin/main HEAD -- data/ packages/pipeline/src/npm/ .github/workflows/publish.yml; then
               live=true
             else
               echo "::warning::main ушёл вперёд — этот запуск только показывает; публикует запуск от свежего main."
@@ -122,7 +124,7 @@ jobs:
         run: |
           while IFS= read -r id; do
             want=$(jq -c --arg id "$id" '.packages[] | select(.id == $id) | .files | sort' dist-npm/plan.json)
-            got=$(npm pack "./dist-npm/$id" --dry-run --json --ignore-scripts | jq -c '[.[0].files[].path] | sort')
+            got=$(npm pack "./dist-npm/$id" --dry-run --json --ignore-scripts < /dev/null | jq -c '[.[0].files[].path] | sort')
             if [ "$want" != "$got" ]; then
               echo "::error::$id: npm упакует $got, а в плане $want"
               exit 1
@@ -234,7 +236,8 @@ jobs:
               failed=1
               continue
             fi
-            if npm publish "./dist-npm/$id" --tag "$tag" --access public --provenance --ignore-scripts; then
+            # Ввод — не из цикла: прочитай npm его, он съел бы оставшиеся строки плана.
+            if npm publish "./dist-npm/$id" --tag "$tag" --access public --provenance --ignore-scripts < /dev/null; then
               echo "- $name@$version — опубликован под тегом $tag" >> "$GITHUB_STEP_SUMMARY"
             else
               failed=1
