@@ -231,7 +231,8 @@ jobs:
               echo "::error::$name: новый пакет — первую версию выкладывает временный секрет NPM_TOKEN окружения npm (ADR-0051)"
               exit 1
             fi
-            npm publish "./dist-release/$file" --tag "$tag" --access public --provenance --ignore-scripts
+            # Ввод — не из цикла: прочитай npm его, он съел бы оставшиеся строки плана.
+            npm publish "./dist-release/$file" --tag "$tag" --access public --provenance --ignore-scripts < /dev/null
             echo "- $name@$version — опубликован под тегом $tag" >> "$GITHUB_STEP_SUMMARY"
           done < <(jq -r '.packages[] | select(.publish) | [.id, .name, .version, (.base // "-"), .action, .file, .integrity] | @tsv' dist-release/plan.json)
       # latest — за каждой бетой (решение владельца 30 октября 2026, ADR-0051): когда все пакеты плана
@@ -279,7 +280,7 @@ jobs:
             fi
             moved=false
             for attempt in 1 2 3; do
-              if npm dist-tag add "$name@$version" latest; then
+              if npm dist-tag add "$name@$version" latest < /dev/null; then
                 moved=true
                 break
               fi

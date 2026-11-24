@@ -70,12 +70,12 @@ permissions: {}
 
 # Выкладки из main не пересекаются и не прерываются: следующая ждёт текущую. Сбросы по наборам — в своей
 # очереди site-refresh: в общей новый сброс отменил бы ждущую выкладку кода (у очереди одно место для
-# ждущего), а сброс во время выкладки безвреден — новая выкладка и так начинает с пустого кэша. Показы с
-# веток и PR — в своих группах. Запуск после «Поискового индекса», который задача «Сверка с раздачей»
-# пропустит (условие у неё), — тоже в своей группе.
+# ждущего), а сброс во время выкладки безвреден — новая выкладка и так начинает с пустого кэша. Показы —
+# с веток, PR и «только показ» из main — в своих группах. Запуск после «Поискового индекса», который
+# задача «Сверка с раздачей» пропустит (условие у неё), — тоже в своей группе.
 concurrency:
   group: >-
-    ${{ github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+    ${{ github.ref == 'refs/heads/main' && github.event_name != 'pull_request' && inputs.dry_run != true
     && (github.event_name != 'workflow_run' || ((github.event.workflow_run.conclusion == 'success'
     || github.event.workflow_run.conclusion == 'failure')
     && github.event.workflow_run.head_repository.full_name == github.repository

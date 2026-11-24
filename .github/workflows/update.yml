@@ -51,9 +51,10 @@ on:
 
 permissions: {}
 
-# Запуски на одной ветке не пересекаются: следующий ждёт текущий.
+# Запуски на одной ветке не пересекаются: следующий ждёт текущий. «Только показ» ничего не пишет и стоит
+# в своей группе: в общей он отменил бы ждущий настоящий запуск — у очереди одно место для ждущего.
 concurrency:
-  group: update-${{ github.ref }}
+  group: ${{ inputs.dry_run == true && format('update-show-{0}', github.run_id) || format('update-{0}', github.ref) }}
   cancel-in-progress: false
 
 jobs:
