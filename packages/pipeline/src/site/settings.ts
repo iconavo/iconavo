@@ -8,12 +8,12 @@
 import type { Browser, Page } from "playwright";
 import { type AxeViolation, axe, axeVerdict, runAxe } from "../sandbox/axe.js";
 import {
+  allViolations,
   fail,
   pass,
   recordViolations,
   shot,
   type Verdict,
-  violations,
   watch,
 } from "../sandbox/verdict.js";
 import { CATALOG_SET, DESKTOP, PANEL_WAIT_MS, PHONE } from "./config.js";
@@ -311,16 +311,20 @@ export async function settingsProblems(
       `Esc: панель ${escClosed ? "закрылась" : "открыта"}, фокус ${backTo ? "на Settings" : "не на Settings"}`,
     );
   }
-  await openSettings(page);
-  await page.locator("h1").first().click();
-  if (!(await panelIs(page, false))) {
-    problems.push("щелчок мимо панели её не закрыл");
+  // Панель не открылась — «щелчок мимо закрыл» прошёл бы сам собой.
+  if (!(await openSettings(page))) {
+    problems.push("Settings второй раз не открыла панель");
+  } else {
+    await page.locator("h1").first().click();
+    if (!(await panelIs(page, false))) {
+      problems.push("щелчок мимо панели её не закрыл");
+    }
   }
 
   // Рюкзак и настройки — по одной: открытие настроек закрывает рюкзак.
   await page.locator(".topbar .bag-button").click();
   await page
-    .locator("dialog.bag-panel[open]")
+    .locator("dialog#bag-panel[open]")
     .waitFor({ timeout: 5_000 })
     .catch(() => {});
   await page
@@ -357,7 +361,7 @@ export async function checkSettings(
     `остановился: ${String(e).slice(0, 200)}`,
   ]);
   problems.push(
-    ...(await violations(page)).map((x) => `CSP: ${x}`),
+    ...(await allViolations(page)).map((x) => `CSP: ${x}`),
     ...[...new Set(seen.errors)].map((x) => `ошибка: ${x}`),
   );
   await context.close();
@@ -418,7 +422,7 @@ export async function checkSettings(
       `/${CATALOG_SET}, настройки, ${viewport.width} px, ${scheme}`,
       axePages,
     );
-    problems.push(...(await violations(p)).map((x) => `CSP: ${x}`));
+    problems.push(...(await allViolations(p)).map((x) => `CSP: ${x}`));
     await themed.close();
   }
   const access = axeVerdict(axePages);

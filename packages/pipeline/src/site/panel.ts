@@ -7,12 +7,12 @@
 import type { Browser, Page } from "playwright";
 import { type AxeViolation, axe, axeVerdict, runAxe } from "../sandbox/axe.js";
 import {
+  allViolations,
   fail,
   pass,
   recordViolations,
   shot,
   type Verdict,
-  violations,
   watch,
 } from "../sandbox/verdict.js";
 import {
@@ -195,8 +195,13 @@ const MOTION_IDS = ["iconavo-flip", "iconavo-panel-slide"];
  */
 function holdMotion(ids: string[]) {
   const held: Animation[] = [];
-  (window as unknown as { __held?: Animation[] }).__held = held;
+  const w = window as unknown as {
+    __held?: Animation[];
+    __animate?: typeof Element.prototype.animate;
+  };
+  w.__held = held;
   const animate = Element.prototype.animate;
+  w.__animate = animate;
   Element.prototype.animate = function (frames, options) {
     const animation = animate.call(this, frames, options);
     if (
@@ -212,10 +217,18 @@ function holdMotion(ids: string[]) {
   };
 }
 
-/** Доиграть остановленные анимации разом; ответ — сколько их было. Выполняется в браузере. */
+/**
+ * Доиграть остановленные анимации разом и вернуть Element.prototype.animate: дальше сценарий в этом же
+ * документе (закрытие панели) идёт с настоящими анимациями. Ответ — сколько их было. В браузере.
+ */
 function releaseMotion() {
-  const held = (window as unknown as { __held?: Animation[] }).__held ?? [];
+  const w = window as unknown as {
+    __held?: Animation[];
+    __animate?: typeof Element.prototype.animate;
+  };
+  const held = w.__held ?? [];
   for (const animation of held) animation.finish();
+  if (w.__animate !== undefined) Element.prototype.animate = w.__animate;
   return held.length;
 }
 
@@ -669,7 +682,7 @@ export async function checkPanel(
     png: await shot(page, seen),
   });
   problems.push(
-    ...(await violations(page)).map((x) => `CSP: ${x}`),
+    ...(await allViolations(page)).map((x) => `CSP: ${x}`),
     ...[...new Set(seen.errors)].map((x) => `ошибка: ${x}`),
   );
   const axePages: { path: string; violations: AxeViolation[] }[] = [];
@@ -805,7 +818,7 @@ export async function checkIconPage(
   const problems = await iconPageProblems(page, o);
   shots.push({ title: "Страница иконки", png: await shot(page, seen) });
   problems.push(
-    ...(await violations(page)).map((x) => `CSP: ${x}`),
+    ...(await allViolations(page)).map((x) => `CSP: ${x}`),
     ...[...new Set(seen.errors)].map((x) => `ошибка: ${x}`),
   );
   await context.close();
@@ -1069,7 +1082,7 @@ export async function checkLayout(
     png: await shot(page, seen),
   });
   problems.push(
-    ...(await violations(page)).map((x) => `CSP: ${x}`),
+    ...(await allViolations(page)).map((x) => `CSP: ${x}`),
     ...[...new Set(seen.errors)].map((x) => `ошибка: ${x}`),
   );
   await context.close();
@@ -1152,7 +1165,7 @@ export async function checkSheet(
   await shown(page, CRAWL_ICON_NAMES[0] as string);
   shots.push({ title: "Шторка на телефоне", png: await shot(page, seen) });
   problems.push(
-    ...(await violations(page)).map((x) => `CSP: ${x}`),
+    ...(await allViolations(page)).map((x) => `CSP: ${x}`),
     ...[...new Set(seen.errors)].map((x) => `ошибка: ${x}`),
   );
   await context.close();

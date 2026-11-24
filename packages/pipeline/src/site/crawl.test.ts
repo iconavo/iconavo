@@ -345,6 +345,21 @@ describe("страницы иконок в обходе (шаг 4 фазы 4)", 
     expect(statusVerdict(pages, { ...o, codes: REDIRECT_CODES }).ok).toBe(true);
     expect(statusVerdict(pages, o).ok).toBe(false);
   });
+
+  it("в итоге — все коды переходов, что ждали, а не только общий", () => {
+    const pages = [
+      page("/ru/docs", "", 307, { location: "/docs" }),
+      page("/lucide/home", "", 308, { location: "/lucide/house" }),
+    ];
+    const v = statusVerdict(pages, {
+      missing: [],
+      redirects: { "/ru/docs": "/docs", "/lucide/home": "/lucide/house" },
+      redirect: 307,
+      codes: REDIRECT_CODES,
+    });
+    expect(v.ok).toBe(true);
+    expect(v.note).toContain("переходы (2) — 307 и 308");
+  });
 });
 
 describe("страницы иконок и отпечатки содержимого (шаг 4 фазы 4, редизайн)", () => {

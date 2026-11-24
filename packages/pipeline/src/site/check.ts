@@ -19,6 +19,7 @@ import {
   launchBrowser,
 } from "../sandbox/browser.js";
 import {
+  allViolations,
   fail,
   pass,
   recordViolations,
@@ -593,11 +594,12 @@ async function checkPages(
       .locator(".prose figure.code-block button.code-copy")
       .first()
       .innerText();
+    const want = expected.replace(/\r\n/g, "\n");
     v.copy =
-      copied === expected.replace(/\r\n/g, "\n") && label.includes("Copied")
+      copied === want && label.includes("Copied")
         ? pass("код в буфере, на кнопке — «Copied»")
         : fail(
-            `в буфере ${copied === expected ? "тот же код" : "другое"}, на кнопке «${label}»`,
+            `в буфере ${copied === want ? "тот же код" : "другое"}, на кнопке «${label}»`,
           );
     await copyContext.close();
   } else {
@@ -908,11 +910,17 @@ async function checkCatalog(
     title: `/${CATALOG_SET} — сетка набора в конце сценария`,
     png: await shot(page, seen),
   });
+  // Нарушения CSP всех переходов сценария: сначала — сетки набора, затем — стилей и /sets.
+  const gridCsp = await allViolations(page);
   problems.push(
-    ...(await violations(page)).map((x) => `CSP: ${x}`),
+    ...gridCsp.map((x) => `CSP: ${x}`),
     ...(await stylesProblems(page, o.base, await styledExpect(o.api))),
     ...(await setsProblems(page, o.base, e)),
-    ...(await violations(page)).map((x) => `/sets, CSP: ${x}`),
+  );
+  problems.push(
+    ...(await allViolations(page))
+      .slice(gridCsp.length)
+      .map((x) => `/sets, CSP: ${x}`),
     ...[...new Set(seen.errors)].map((x) => `ошибка: ${x}`),
   );
   result.verdicts.catalog =
@@ -1088,7 +1096,7 @@ async function checkTheme(
       problems.push(`система ${title}: второе нажатие — фон не вернулся`);
     }
     problems.push(
-      ...(await violations(page)).map((x) => `CSP: ${x}`),
+      ...(await allViolations(page)).map((x) => `CSP: ${x}`),
       ...[...new Set(seen.errors)].map((e) => `ошибка: ${e}`),
       ...[...new Set(seen.warnings)].map((w) => `предупреждение: ${w}`),
     );
@@ -1116,6 +1124,13 @@ async function checkCanary(
   result: SiteResult,
 ) {
   const missed: string[] = [];
+  // Поломка, которую заметила остановка сценария, а не его строка: в настоящем прогоне такой сценарий
+  // тоже красный, но в итоге видно, что именно его остановило (ревизия фазы 5, И-18).
+  const stopped: string[] = [];
+  const stoppedBy = (title: string) => (e: unknown) => {
+    stopped.push(`${title} — ${(e as Error).message.split("\n")[0]}`);
+    return ["остановился"];
+  };
   const context = await browser.newContext({ viewport: PHONE });
   const page = await context.newPage();
   await recordViolations(page);
@@ -1136,6 +1151,26 @@ async function checkCanary(
   await page.waitForTimeout(300);
   const blocked = (await violations(page)).some((x) => x.includes("style-src"));
   if (!blocked) missed.push("атрибут style");
+  // Нарушение CSP на первой странице сценария, затем переход: сценарий из нескольких страниц обязан его
+  // увидеть (ревизия фазы 5, И-6) — раньше переход стирал список.
+  {
+    const ctx = await browser.newContext({ viewport: DESKTOP });
+    const p = await ctx.newPage();
+    await recordViolations(p);
+    await p.goto(`${o.base}/docs`, { waitUntil: "load" });
+    await waitForHydration(p);
+    await p.evaluate(() => {
+      document
+        .querySelector("main")
+        ?.insertAdjacentHTML("beforeend", '<p style="color: red">styled</p>');
+    });
+    await p.waitForTimeout(300);
+    await p.goto(`${o.base}/`, { waitUntil: "load" });
+    if (!(await allViolations(p)).some((x) => x.includes("style-src"))) {
+      missed.push("нарушение CSP до перехода");
+    }
+    await ctx.close();
+  }
   // Широкий блок — строка без пробелов в <pre>, без атрибутов стиля.
   await insert(`<pre>${"x".repeat(400)}</pre>`);
   const wide = await page.evaluate(() => document.documentElement.scrollWidth);
@@ -1356,7 +1391,7 @@ async function checkCanary(
     const ctx = await browser.newContext({ viewport: DESKTOP });
     await ctx.addInitScript(script);
     const p = await ctx.newPage();
-    const caught = await panelProblems(p, o.base).catch(() => ["остановился"]);
+    const caught = await panelProblems(p, o.base).catch(stoppedBy(title));
     if (caught.length === 0) missed.push(title);
     await ctx.close();
   }
@@ -1379,7 +1414,7 @@ async function checkCanary(
     const caught = await layoutProblems(browser, o.base, {
       widths: [1440],
       init,
-    }).catch(() => ["остановился"]);
+    }).catch(stoppedBy(title));
     if (caught.length === 0) missed.push(title);
   }
   // Код и скачивание (шаг 5 фазы 4): поломки — скриптом до страницы или подменой ответа API; строки «Код»
@@ -1442,7 +1477,7 @@ async function checkCanary(
     const caught = await (row === "code"
       ? codeProblems(p, code, false)
       : filesProblems(p, code, false)
-    ).catch(() => ["остановился"]);
+    ).catch(stoppedBy(title));
     if (caught.length === 0) missed.push(title);
     await ctx.close();
   }
@@ -1461,9 +1496,9 @@ async function checkCanary(
       };
     }, BAG_KEY);
     const p = await ctx.newPage();
-    const caught = await bagProblems(p, browser, o).catch(() => [
-      "остановился",
-    ]);
+    const caught = await bagProblems(p, browser, o).catch(
+      stoppedBy("сумка не переживает перезагрузку"),
+    );
     if (caught.length === 0) missed.push("сумка не переживает перезагрузку");
     await ctx.close();
   }
@@ -1477,7 +1512,9 @@ async function checkCanary(
       };
     }, GRID_KEY);
     const p = await ctx.newPage();
-    const caught = await settingsProblems(p, o).catch(() => ["остановился"]);
+    const caught = await settingsProblems(p, o).catch(
+      stoppedBy("настройки не переживают перезагрузку"),
+    );
     if (caught.length === 0) {
       missed.push("настройки не переживают перезагрузку");
     }
@@ -1521,12 +1558,18 @@ async function checkCanary(
   ) {
     missed.push("метка catalog у страницы иконки");
   }
+  const stoppedNote =
+    stopped.length === 0
+      ? ""
+      : `; замечены остановкой сценария, а не его строкой: ${stopped.join("; ")}`;
   result.verdicts.canary =
     missed.length === 0
       ? pass(
-          "замечены все двадцать девять: кнопка без подписи, style, ширина, иконка-блок, robots, битая ссылка, гидратация, чужой lang, нет ссылки на другой язык, переход не туда, нет скрипта темы, сетка без списка имён, поиск без полной выдачи, Esc не закрывает панель, фокус не возвращается, другая страница сетки закрывает панель, сетка прыгает при открытии и закрытии панели, колесо над панелью крутит страницу, страница шире окна при открытии панели, карточки перескакивают, панель без своей колонки, старое имя без перехода, метка catalog у страницы иконки, менеджер пакетов не запоминается, SVG-код не как у адреса, пустой PNG, сумка не переживает перезагрузку, ZIP без лицензий, настройки не сохраняются",
+          `замечены все тридцать: кнопка без подписи, style, нарушение CSP до перехода, ширина, иконка-блок, robots, битая ссылка, гидратация, чужой lang, нет ссылки на другой язык, переход не туда, нет скрипта темы, сетка без списка имён, поиск без полной выдачи, Esc не закрывает панель, фокус не возвращается, другая страница сетки закрывает панель, сетка прыгает при открытии и закрытии панели, колесо над панелью крутит страницу, страница шире окна при открытии панели, карточки перескакивают, панель без своей колонки, старое имя без перехода, метка catalog у страницы иконки, менеджер пакетов не запоминается, SVG-код не как у адреса, пустой PNG, сумка не переживает перезагрузку, ZIP без лицензий, настройки не сохраняются${stoppedNote}`,
         )
-      : fail(`проверка слепая: не замечено — ${missed.join(", ")}`);
+      : fail(
+          `проверка слепая: не замечено — ${missed.join(", ")}${stoppedNote}`,
+        );
 }
 
 /** Шаги браузерной части проверки, по порядку; --only= выбирает часть — для отладки на стенде. */
