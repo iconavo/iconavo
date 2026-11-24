@@ -3,6 +3,17 @@
   "releases": [
     {
       "added": [
+        "app-window-plus",
+        "square-plus-corner"
+      ],
+      "date": "2026-11-24T13:42:27Z",
+      "previous": "8cdc8ae2",
+      "revision": "c26ce5515667640ca2753e095ba319d225fc0d8d",
+      "total": 2104,
+      "version": "6a34a062"
+    },
+    {
+      "added": [
         "circle-speed-lines",
         "graph-path",
         "hole",

@@ -2199,9 +2199,18 @@
       },
       "tags": [
         "application",
+        "app",
+        "window",
+        "gui",
+        "interface",
+        "modal",
+        "popup",
         "menu bar",
         "pane",
-        "executable"
+        "executable",
+        "instance",
+        "integration",
+        "software"
       ]
     },
     "app-window-mac": {
@@ -2235,9 +2244,18 @@
       },
       "tags": [
         "application",
+        "app",
+        "window",
+        "gui",
+        "interface",
+        "modal",
+        "popup",
         "menu bar",
         "pane",
         "executable",
+        "instance",
+        "integration",
+        "software",
         "preferences",
         "macos",
         "osx",
@@ -2248,6 +2266,39 @@
         "minimize",
         "maximize",
         "native app"
+      ]
+    },
+    "app-window-plus": {
+      "fingerprint": "0f3b90c1726a",
+      "tags": [
+        "application",
+        "app",
+        "window",
+        "gui",
+        "interface",
+        "modal",
+        "popup",
+        "menu bar",
+        "pane",
+        "executable",
+        "instance",
+        "integration",
+        "software",
+        "plus",
+        "add",
+        "new",
+        "create",
+        "+",
+        "increase",
+        "increment",
+        "extra",
+        "insert",
+        "addition",
+        "added",
+        "open",
+        "install",
+        "tab",
+        "expand"
       ]
     },
     "apple": {
@@ -91742,6 +91793,35 @@
           "дополнить"
         ]
       },
+      "tags": [
+        "plus",
+        "add",
+        "new",
+        "create",
+        "+",
+        "increase",
+        "increment",
+        "extra",
+        "insert",
+        "addition",
+        "added",
+        "positive",
+        "calculate",
+        "calculator",
+        "button",
+        "keyboard",
+        "toolbar",
+        "maximum",
+        "upgrade",
+        "operator",
+        "join",
+        "concatenate",
+        "code",
+        "coding"
+      ]
+    },
+    "square-plus-corner": {
+      "fingerprint": "69bc5935e41c",
       "tags": [
         "plus",
         "add",
