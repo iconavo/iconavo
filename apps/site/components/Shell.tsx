@@ -1,5 +1,5 @@
 import { type IconavoIconSet, IconavoProvider } from "@iconavo-ui/react";
-import type { ReactNode } from "react";
+import { type ReactNode, Suspense } from "react";
 import type { SidebarGroup } from "../lib/catalog-view";
 import { DICTIONARIES, type Lang } from "../lib/i18n";
 import { BagPanel } from "./bag/BagPanel";
@@ -11,6 +11,7 @@ import { ScrollbarActivity } from "./shell/ScrollbarActivity";
 import { Sidebar } from "./shell/Sidebar";
 import { SmoothWheel } from "./shell/SmoothWheel";
 import { TopBar } from "./shell/TopBar";
+import { UrlWatch } from "./shell/UrlWatch";
 import { ThemeSync } from "./ThemeSync";
 
 /**
@@ -53,6 +54,11 @@ export function Shell({
         <SettingsPanel lang={lang} />
       </div>
       <HotKey lang={lang} />
+      {/* Переход по ссылке на эту же страницу с другими параметрами (С-1): useSearchParams — под своим
+          Suspense, в серверном HTML пусто, остальная страница статическая. */}
+      <Suspense fallback={null}>
+        <UrlWatch />
+      </Suspense>
     </IconavoProvider>
   );
 }

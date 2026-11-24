@@ -2,7 +2,7 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 import type { DocBlock } from "../lib/docs";
-import type { Block, Inline } from "../lib/markdown";
+import { type Block, type Inline, plainText } from "../lib/markdown";
 import { CodeBlock } from "./CodeBlock";
 
 // Страница документации из дерева разбора (lib/markdown.ts): текст — строками React, без вставки HTML.
@@ -38,11 +38,12 @@ function item(blocks: Block[], key: number): ReactNode {
   );
 }
 
-/** Подпись таблицы для области прокрутки: по заголовкам столбцов. */
+/**
+ * Подпись таблицы для области прокрутки: по заголовкам столбцов — весь их текст, и в жирном и в ссылках
+ * (ревизия фазы 5, С-16).
+ */
 const tableLabel = (head: Inline[][]) =>
-  `Table: ${head
-    .map((cell) => cell.map((n) => ("value" in n ? n.value : "")).join(""))
-    .join(", ")}`;
+  `Table: ${head.map((cell) => plainText(cell)).join(", ")}`;
 
 function block(node: DocBlock, i: number): ReactNode {
   switch (node.type) {

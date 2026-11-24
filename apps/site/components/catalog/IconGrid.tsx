@@ -165,7 +165,11 @@ export function IconGrid({
       : undefined;
   const q = (query.get("q") ?? "").trim();
   const [loaded, setLoaded] = useState<Loaded>();
-  const [failed, setFailed] = useState(false);
+  // Сбой загрузки списка имён — у адреса, где он случился: «назад», «вперёд» и любой другой переход
+  // спрашивают список ещё раз, а не показывают старую ошибку (ревизия фазы 5, С-10).
+  const queryKey = query.toString();
+  const [failedAt, setFailedAt] = useState<string>();
+  const failed = failedAt === queryKey;
   const top = useRef<HTMLDivElement>(null);
   // Колонок (от ширины окна) и иконок на странице; до гидратации — 96, а строки с номерами страниц
   // невидимы (GridBar).
@@ -197,11 +201,13 @@ export function IconGrid({
           ),
           q,
         );
-  // Сколько карточек в выборке, пока список имён не пришёл: число набора, категории или стиля.
-  const known =
+  // Сколько карточек в выборке, пока список имён не пришёл: число набора, категории или стиля. Категория и
+  // стиль вместе — не больше меньшего из них: точное число станет известно со списком (ревизия фазы 5, С-32).
+  const styleSize =
     style === undefined
-      ? (category?.size ?? total)
+      ? total
       : (styles.find((s) => s.style === style)?.size ?? total);
+  const known = Math.min(category?.size ?? total, styleSize);
   const pages = pageCount(list?.length ?? (q !== "" ? 1 : known), pageSize);
   const page = pageParam(query.get("page"), pages);
   // Сменили число на странице — первая иконка страницы остаётся на экране.
@@ -235,22 +241,20 @@ export function IconGrid({
         setLoaded({ set: setCards(c), categories: categoriesOf(c) });
       })
       .catch(() => {
-        if (!cancelled) setFailed(true);
+        if (!cancelled) setFailedAt(queryKey);
       });
     return () => {
       cancelled = true;
     };
-  }, [initial, loaded, prefix, failed]);
+  }, [initial, loaded, prefix, failed, queryKey]);
 
-  // После сбоя следующий переход спрашивает список ещё раз.
+  // Переход — и после сбоя: у нового адреса сбоя нет, список спрашивается ещё раз (failedAt).
   const go = (changes: Record<string, string | undefined>) => {
-    setFailed(false);
     navigate(withParams(query, changes));
     top.current?.scrollIntoView({ block: "start" });
   };
   // Поиск по набору: запись истории заменяется, страница — первая, прокрутки нет.
   const search = (text: string) => {
-    setFailed(false);
     navigate(
       withParams(query, { q: text === "" ? undefined : text, page: undefined }),
       { replace: true },
@@ -378,7 +382,10 @@ export function IconGrid({
             </>
           ) : shown.length === 0 && q !== "" ? (
             <p className="grid-status grid-empty" role="status">
-              {t.setNothing.replace("{set}", setName).replace("{q}", q)}{" "}
+              {/* Подстановка функцией: «$&» и «$1» в запросе — просто текст (ревизия фазы 5, С-34). */}
+              {t.setNothing
+                .replace("{set}", () => setName)
+                .replace("{q}", () => q)}{" "}
               <button
                 type="button"
                 className="grid-clear"

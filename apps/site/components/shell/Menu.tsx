@@ -59,6 +59,22 @@ export function MenuController() {
     if (pathname !== undefined) menuStore.set(false);
   }, [pathname]);
 
+  // Ссылка в шторке закрывает её, даже если ведёт на эту же страницу с другими параметрами: путь тогда не
+  // меняется (ревизия фазы 5, С-1). Щелчок с Ctrl или средней кнопкой открывает вкладку — шторка остаётся.
+  useEffect(() => {
+    if (!open) return;
+    const sidebar = document.getElementById("sidebar");
+    const onClick = (e: MouseEvent) => {
+      if (e.button !== 0 || e.ctrlKey || e.metaKey || e.shiftKey || e.altKey) {
+        return;
+      }
+      const link = e.target instanceof Element ? e.target.closest("a") : null;
+      if (link?.hasAttribute("href")) menuStore.set(false);
+    };
+    sidebar?.addEventListener("click", onClick);
+    return () => sidebar?.removeEventListener("click", onClick);
+  }, [open]);
+
   useEffect(() => {
     if (!open) return;
     document.getElementById(MENU_CLOSE_ID)?.focus();

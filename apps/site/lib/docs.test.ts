@@ -148,6 +148,24 @@ describe("страницы документации из README", () => {
     ).toThrow("только https://");
   });
 
+  it("ссылка на iconavo.dev/docs проверяется: страница и якорь есть (ревизия фазы 5, С-18)", () => {
+    const sections = PAGES.filter((p) => p.source === "icon")
+      .flatMap((p) => p.sections)
+      .filter((s) => s !== "");
+    const body = (extra: string) =>
+      `# Icons\n\n${extra}\n\n${sections.map((s) => `## ${s}\n\nText.\n`).join("\n")}`;
+    const pages = docPages(
+      fakeRoot(body("See [log](https://iconavo.dev/docs/changelog).")),
+    );
+    expect(pages.flatMap((p) => links(p.blocks))).toContain("/docs/changelog");
+    expect(() =>
+      docPages(fakeRoot(body("See [x](https://iconavo.dev/docs/nope)."))),
+    ).toThrow("такой страницы документации нет");
+    expect(() =>
+      docPages(fakeRoot(body("See [x](https://iconavo.dev/docs#nowhere)."))),
+    ).toThrow("такого заголовка нет");
+  });
+
   it("на сервере без исходников неизвестный адрес — «страницы нет», а не ошибка", () => {
     const empty = mkdtempSync(join(tmpdir(), "iconavo-docs-empty-"));
     expect(docPage("x", empty)).toBeUndefined();

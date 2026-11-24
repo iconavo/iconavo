@@ -1,4 +1,6 @@
 import { describe, expect, it } from "vitest";
+import { pageSizeFor } from "./catalog";
+import { PER_PAGE_CHOICES } from "./grid-settings";
 import {
   activeFilters,
   allCommercial,
@@ -11,11 +13,29 @@ import {
   readSearchState,
   retryAfterSeconds,
   SEARCH_MAX_PAGE,
+  SEARCH_MIN_PAGE_SIZE,
   searchApiUrl,
   stateParams,
   withFilters,
 } from "./search";
 import { queryText } from "./url-query";
+
+describe("предел номера страницы поиска (ревизия фазы 5, С-8)", () => {
+  it("самая мелкая страница — при меньшем числе из настроек и любых колонках до 32", () => {
+    const smallest = Math.min(...PER_PAGE_CHOICES);
+    const sizes = Array.from({ length: 32 }, (_, i) =>
+      pageSizeFor(i + 1, smallest),
+    );
+    expect(Math.min(...sizes)).toBe(SEARCH_MIN_PAGE_SIZE);
+    // 48 на странице: страницы с 13-й по 21-ю при 48 карточках тоже открываются.
+    expect(
+      readSearchState(new URLSearchParams("q=a&page=21"), KNOWN).page,
+    ).toBe(21);
+    expect(
+      readSearchState(new URLSearchParams("q=a&page=26"), KNOWN).page,
+    ).toBe(1);
+  });
+});
 
 const KNOWN = { sets: ["lucide", "ph"], licenses: ["ISC", "MIT"] };
 const read = (query: string) =>
@@ -39,7 +59,8 @@ describe("состояние страницы поиска в адресе", () 
     expect(read("page=0").page).toBe(1);
     expect(read("page=1.5").page).toBe(1);
     expect(read("page=12").page).toBe(12);
-    expect(read("page=13").page).toBe(1);
+    expect(read("page=13").page).toBe(13);
+    expect(read("page=26").page).toBe(1);
   });
 
   it("наборов и лицензий несколько: повторы параметра и списки через запятую, порядок — каталога", () => {
@@ -134,7 +155,7 @@ describe("адрес edge API и страницы", () => {
     expect(maxPage()).toBe(11);
     expect(maxPage(98)).toBe(11);
     expect(maxPage(84)).toBe(12);
-    expect(SEARCH_MAX_PAGE).toBe(12);
+    expect(SEARCH_MAX_PAGE).toBe(25);
     expect(pageWindow(1)).toEqual({ start: 0, limit: 96 });
     expect(pageWindow(11)).toEqual({ start: 960, limit: 40 });
     expect(pageWindow(11, 98)).toEqual({ start: 980, limit: 20 });

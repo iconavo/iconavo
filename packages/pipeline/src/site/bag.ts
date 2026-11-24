@@ -446,8 +446,9 @@ export async function bagProblems(
   await page.goto(`${o.base}/search?q=${SEARCH_QUERY}`);
   await hydrated(page);
   const results = ".result-grid li.result-cell";
+  // Ждём настоящую карточку: скелетоны выдачи — тоже li.result-cell, но без ссылки.
   await page
-    .locator(results)
+    .locator(`${results} a.icon-card-link`)
     .first()
     .waitFor({ timeout: PANEL_WAIT_MS })
     .catch(() => {});
@@ -459,7 +460,11 @@ export async function bagProblems(
   // Иконка не из рюкзака: щелчок по той, что уже в нём, вынул бы её, а не положил.
   const fresh = names.findIndex((n) => !left.includes(n));
   if (fresh === -1) {
-    problems.push("в выдаче поиска нет иконки не из рюкзака");
+    problems.push(
+      names.length === 0
+        ? "выдача поиска не пришла"
+        : "в выдаче поиска нет иконки не из рюкзака",
+    );
     return problems;
   }
   const result = await card(page, results, fresh);

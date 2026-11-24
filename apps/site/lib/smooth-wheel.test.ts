@@ -10,6 +10,7 @@ import {
   stepToward,
   TAU_MS,
   type WheelLike,
+  wheelOf,
 } from "./smooth-wheel";
 
 const wheel = (init: Partial<WheelLike>): WheelLike => ({
@@ -20,6 +21,46 @@ const wheel = (init: Partial<WheelLike>): WheelLike => ({
   metaKey: false,
   shiftKey: false,
   ...init,
+});
+
+/**
+ * Щелчок колеса в Firefox: deltaMode — строки (1), только если его прочитали раньше deltaX и deltaY;
+ * иначе шаг пересчитан в пиксели, дробно (3 строки — 57,6 px).
+ */
+function firefoxNotch(): WheelLike {
+  let pixels: boolean | undefined;
+  const mode = () => {
+    pixels ??= false;
+    return pixels ? 0 : 1;
+  };
+  const delta = (lines: number) => {
+    pixels ??= true;
+    return pixels ? lines * 19.2 : lines;
+  };
+  return {
+    get deltaMode() {
+      return mode();
+    },
+    get deltaX() {
+      return delta(0);
+    },
+    get deltaY() {
+      return delta(3);
+    },
+    ctrlKey: false,
+    metaKey: false,
+    shiftKey: false,
+  };
+}
+
+describe("колесо Firefox (ревизия фазы 5, С-15)", () => {
+  it("снимок события читает deltaMode первым — щелчок узнаётся строками", () => {
+    expect(isMouseNotch(firefoxNotch())).toBe(false);
+    const wheel = wheelOf(firefoxNotch());
+    expect(wheel.deltaMode).toBe(1);
+    expect(isMouseNotch(wheel)).toBe(true);
+    expect(notchDistance(wheel, 800)).toBe(3 * LINE_PX);
+  });
 });
 
 describe("какое колесо сглаживается", () => {

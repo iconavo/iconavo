@@ -5,6 +5,7 @@ import {
   categoriesOf,
   categoryCards,
   categorySlug,
+  FIRST_ICONS_MAX,
   FIRST_PAGE_MAX,
   filterCards,
   getSets,
@@ -12,6 +13,7 @@ import {
   nameQuery,
   orderSets,
   PAGE_SIZE,
+  PER_PAGE_MAX,
   pageCount,
   pageItems,
   pageOf,
@@ -119,6 +121,14 @@ describe("имена, категории и страницы", () => {
         categories: { "A & B": ["a"], "A-B": ["b"] },
       }).map((c) => c.slug),
     ).toEqual(["a-b", "a-b-1"]);
+    // Номер второй не совпадает с адресом другой категории (ревизия фазы 5, С-36).
+    const slugs = categoriesOf({
+      ...collection,
+      categories: { "A B": ["a"], "A-B": ["b"], "A B 1": ["c"] },
+    }).map((c) => c.slug);
+    expect(new Set(slugs).size).toBe(3);
+    expect(slugs).toContain("a-b-1");
+    expect(slugs).toContain("a-b");
   });
 
   it("страница — целые ряды, ближе всего к 96 (решение владельца 13 ноября 2026)", () => {
@@ -127,9 +137,15 @@ describe("имена, категории и страницы", () => {
     ).toEqual([96, 96, 96, 96, 95, 96, 98, 96, 99, 100, 98]);
     for (let columns = 1; columns <= 32; columns++) {
       expect(pageSizeFor(columns) % columns).toBe(0);
-      expect(pageSizeFor(columns)).toBeLessThanOrEqual(FIRST_PAGE_MAX);
+      expect(pageSizeFor(columns)).toBeLessThanOrEqual(FIRST_ICONS_MAX);
+      // Имена первой страницы — и при наибольшем числе из настроек (ревизия фазы 5, С-31).
+      expect(pageSizeFor(columns, PER_PAGE_MAX)).toBeLessThanOrEqual(
+        FIRST_PAGE_MAX,
+      );
     }
-    expect(FIRST_PAGE_MAX).toBe(108);
+    expect(FIRST_ICONS_MAX).toBe(108);
+    expect(FIRST_PAGE_MAX).toBe(203);
+    expect(PER_PAGE_MAX).toBe(Math.max(...PER_PAGE_CHOICES));
   });
 
   it("число из настроек сетки — тоже целыми рядами, и API поиска отдаёт его за раз (ADR-0054)", () => {
@@ -414,5 +430,15 @@ describe("данные каталога с edge API", () => {
     });
     expect(Object.keys(await getSets("test"))).toEqual(["lucide"]);
     expect(calls).toHaveLength(2);
+  });
+
+  it("битый ответ — остановка с адресом, а не голая SyntaxError (ревизия фазы 5, С-37)", async () => {
+    vi.stubGlobal(
+      "fetch",
+      async () => new Response("<html>не JSON</html>", { status: 200 }),
+    );
+    await expect(getSets("test")).rejects.toThrow(
+      /\/collections: ответ не JSON/,
+    );
   });
 });

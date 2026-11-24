@@ -2,7 +2,7 @@
 
 import { counterpart, isTranslated, LANGUAGE_NAMES } from "../lib/i18n";
 import { usePagePath } from "../lib/page-path";
-import { useUrlQuery } from "../lib/url-query";
+import { queryText, useUrlQuery } from "../lib/url-query";
 import { FlagLogo } from "./shell/Logos";
 
 /**
@@ -25,7 +25,8 @@ export function LanguageSwitch({
   const pathname = usePagePath();
   const other = counterpart(pathname);
   const { query, ready } = useUrlQuery();
-  const search = ready && isTranslated(pathname) ? query.toString() : "";
+  // Параметры — как в адресе страницы: двоеточие и запятые без %3A и %2C (ревизия фазы 5, С-17).
+  const search = ready && isTranslated(pathname) ? queryText(query) : "";
   const code = other.lang.toUpperCase();
   const name = LANGUAGE_NAMES[other.lang];
   return (
