@@ -218,6 +218,19 @@ describe("конфиг набора", () => {
     ]);
   });
 
+  it("одобренные исключения (ADR-0019) — имена по правилу, без повторов", () => {
+    expect(
+      parse({ ...baseConfig, approvedExclusions: ["broken-icon"] })
+        .approvedExclusions,
+    ).toEqual(["broken-icon"]);
+    for (const approvedExclusions of [[], ["a", "a"], ["Bad_Name"]]) {
+      expect(
+        sourceConfigSchema.safeParse({ ...baseConfig, approvedExclusions })
+          .success,
+      ).toBe(false);
+    }
+  });
+
   it("называет суффиксы без названия", () => {
     const r = sourceConfigSchema.safeParse({
       ...baseConfig,

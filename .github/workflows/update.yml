@@ -9,9 +9,12 @@ name: Обновление наборов
 # - «проблема»: сборка остановилась («СТОП»), например пустые иконки, — в PR только lock, слить нельзя.
 # PR открывает приложение GitHub организации iconavo: PR от стандартного токена ждут ручного
 # разрешения на проверки. Без приложения, вне main и на PR, которые меняют робота, — только показ.
-# Робот не трогает открытый PR, в ветке которого последний коммит — человека (её правят руками,
-# например подтверждают лицензию), и не предлагает снова версию, PR которой закрыли без слияния
-# (передумали — Reopen). Итог — на странице запуска, по строке на набор; отчёты — в артефактах.
+# Свои PR робот ищет только среди веток этого репозитория. Он не трогает открытый PR, в ветке
+# которого последний коммит — человека (её правят руками, например подтверждают лицензию), и не
+# предлагает снова версию, PR которой закрыл без слияния человек (передумали — Reopen). Коммит
+# человека в ветке без открытого PR — остановка, а не перезапись. Что делать с PR, решает
+# packages/pipeline/src/update/state.ts. Итог — на странице запуска, по строке на набор; отчёты — в
+# артефактах.
 
 on:
   schedule:
@@ -74,7 +77,8 @@ jobs:
           set -f
           # Наборы — конфиги sources/{id}.ts (ADR-0012).
           all=$(find sources -maxdepth 1 -name '*.ts' ! -name '*.d.ts' -printf '%f\n' | sed 's/\.ts$//' | sort)
-          picked=${REQUESTED:-$all}
+          # Набор, указанный дважды, — одна задача: две отправляли бы одну ветку наперегонки.
+          picked=$(printf '%s\n' ${REQUESTED:-$all} | sort -u)
           for id in $picked; do
             if ! grep -qxF -- "$id" <<< "$all"; then
               echo "::error::Набора «$id» нет. Есть: $(echo $all)"
@@ -95,6 +99,8 @@ jobs:
     permissions:
       contents: read
       pull-requests: read
+      # Кто закрыл PR без слияния — поле closed_by у API задач.
+      issues: read
       checks: read
       statuses: read
     strategy:
@@ -149,38 +155,53 @@ jobs:
         id: state
         env:
           CHANGED: ${{ steps.pin.outputs.changed }}
-          # Как prMarker в packages/pipeline/src/update/pr.ts.
-          MARKER: iconavo-bot:${{ matrix.set }}@${{ steps.pin.outputs.revision }}
+          OWNER: ${{ github.repository_owner }}
         run: |
-          # Только PR из веток этого репозитория: одноимённая ветка форка — не наша.
-          prs=$(gh pr list --head "$BRANCH" --state all --limit 30 \
-            --json number,state,body,isCrossRepository,labels,statusCheckRollup \
-            --jq '[.[] | select(.isCrossRepository | not)]')
-          pr=$(jq -c '[.[] | select(.state == "OPEN")][0] // {}' <<< "$prs")
-          open=$(jq -r '.number // empty' <<< "$pr")
-          rejected=$(jq -r --arg m "$MARKER" \
-            '[.[] | select(.state == "CLOSED" and (.body | contains($m)))][0].number // empty' <<< "$prs")
-          red=$(jq -r '[.statusCheckRollup[]? | select(.conclusion == "FAILURE" or .conclusion == "TIMED_OUT" or .conclusion == "STARTUP_FAILURE")] | length > 0' <<< "$pr")
-          flagged=$(jq -r 'any(.labels[]?; .name == "проблема")' <<< "$pr")
+          mkdir -p "$OUT"
+          # Свои PR ветки — отбирает сам GitHub по владельцу ветки (head=владелец:ветка): PR из чужих
+          # копий с той же веткой сюда не попадают, сколько бы их ни было. Из описания — только метки
+          # версии (как prMarker в packages/pipeline/src/update/pr.ts).
+          gh api --paginate "repos/$GH_REPO/pulls?head=$OWNER:$BRANCH&state=all&per_page=100" \
+            --jq '.[] | {number, state, merged: (.merged_at != null),
+              markers: [(.body // "") | scan("<!-- iconavo-bot:[^ <>]+ -->")],
+              headRepo: .head.repo.full_name, headSha: .head.sha}' > "$OUT/prs.jsonl"
+          # Кто закрыл PR без слияния: закрытый самим роботом — не отказ владельца.
+          for n in $(jq -r 'select(.state == "closed" and (.merged | not)) | .number' "$OUT/prs.jsonl"); do
+            gh api "repos/$GH_REPO/issues/$n" --jq '{number, closedBy: .closed_by.login}'
+          done > "$OUT/closed.jsonl"
           remote=$(git ls-remote origin "refs/heads/$BRANCH" | cut -f1)
-          own=false
-          if [ -n "$open" ] && [ -n "$remote" ]; then
+          branch=null
+          if [ -n "$remote" ]; then
             git fetch --quiet --no-tags --depth=1 origin "+refs/heads/$BRANCH:refs/remotes/origin/$BRANCH"
-            # Последний коммит не робота — ветку правят руками: робот её не трогает.
-            case "$(git log -1 --format=%an "origin/$BRANCH")" in *"[bot]") own=true ;; esac
+            branch=$(jq -nc --arg sha "$remote" --arg author "$(git log -1 --format=%an "origin/$BRANCH")" \
+              '{sha: $sha, author: $author}')
           fi
-          if [ "$CHANGED" = true ]; then
-            if [ -n "$open" ] && [ "$own" = false ]; then action=hands-off
-            elif [ -z "$open" ] && [ -n "$rejected" ]; then action=rejected
-            else action=build
-            fi
-          elif [ -n "$open" ] && [ "$own" = true ]; then action=close
-          else action=none
+          jq -n --arg repo "$GH_REPO" --argjson changed "$CHANGED" --argjson branch "$branch" \
+            --slurpfile prs "$OUT/prs.jsonl" --slurpfile closed "$OUT/closed.jsonl" \
+            '{repo: $repo, changed: $changed, prs: $prs,
+              closedBy: ($closed | map({(.number | tostring): .closedBy}) | add // {}), branch: $branch}' \
+            > "$OUT/facts.json"
+          # Решение — robotState: собрать, не трогать, версия отклонена, закрыть, ничего или стоп.
+          pnpm pr "$SET" --state
+          state="$OUT/state.json"
+          action=$(jq -r .action "$state")
+          open=$(jq -r '.open // empty' "$state")
+          red=false
+          flagged=false
+          if [ -n "$open" ]; then
+            pr=$(gh pr view "$open" --json statusCheckRollup,labels)
+            red=$(jq -r '[.statusCheckRollup[]? | select(.conclusion == "FAILURE" or .conclusion == "TIMED_OUT" or .conclusion == "STARTUP_FAILURE")] | length > 0' <<< "$pr")
+            flagged=$(jq -r 'any(.labels[]?; .name == "проблема")' <<< "$pr")
           fi
           {
-            echo "action=$action"; echo "open=$open"; echo "rejected=$rejected"
+            echo "action=$action"; echo "open=$open"; echo "rejected=$(jq -r '.rejected // empty' "$state")"
             echo "remote=$remote"; echo "red=$red"; echo "flagged=$flagged"
+            echo "problem=$(jq -r '.problem // empty' "$state")"
           } >> "$GITHUB_OUTPUT"
+          if [ "$action" = stop ]; then
+            echo "::error::$SET: $(jq -r .problem "$state")"
+            exit 1
+          fi
 
       - name: Скачать и собрать
         id: build
@@ -328,6 +349,7 @@ jobs:
           OPEN: ${{ steps.state.outputs.open }}
           REMOTE: ${{ steps.state.outputs.remote }}
           SAME: ${{ steps.build.outputs.same }}
+          RED: ${{ steps.state.outputs.red }}
         run: |
           title=$(jq -r .title "$OUT/pr.json")
           labels=$(jq -r '.labels | join(",")' "$OUT/pr.json")
@@ -341,8 +363,12 @@ jobs:
           number=$OPEN
           sha=$REMOTE
           if [ "$SAME" != true ]; then
-            # Автослияние — выключить до отправки: GitHub его не снимает, а новый коммит может требовать одобрения.
-            if [ -n "$OPEN" ]; then gh pr merge "$OPEN" --disable-auto > /dev/null 2>&1 || true; fi
+            # Автослияние — выключить до отправки: GitHub его не снимает, а новый коммит может требовать
+            # одобрения. Не вышло — шаг падает, и ветка не отправляется.
+            if [ -n "$OPEN" ]; then
+              auto_on=$(gh pr view "$OPEN" --json autoMergeRequest --jq '.autoMergeRequest != null')
+              if [ "$auto_on" = true ]; then gh pr merge "$OPEN" --disable-auto; fi
+            fi
             bot="$SLUG[bot]"
             id=$(gh api "/users/$bot" --jq .id)
             git switch --quiet -c "$BRANCH"
@@ -362,7 +388,11 @@ jobs:
             for label in "нужно одобрение" "проблема"; do
               case ",$labels," in
                 *",$label,"*) ;;
-                *) gh pr edit "$number" --remove-label "$label" > /dev/null 2>&1 || true ;;
+                *)
+                  # Проверки того же коммита красные — «проблема» остаётся: её ставит шаг «Проверки PR
+                  # не прошли», а тот не повторяется, если метка уже была.
+                  if [ "$label" = "проблема" ] && [ "$SAME" = true ] && [ "$RED" = true ]; then continue; fi
+                  gh pr edit "$number" --remove-label "$label" > /dev/null 2>&1 || true ;;
               esac
             done
           fi
@@ -405,6 +435,7 @@ jobs:
           REVISION: ${{ steps.pin.outputs.revision }}
           OPEN: ${{ steps.state.outputs.open }}
           REJECTED: ${{ steps.state.outputs.rejected }}
+          PROBLEM: ${{ steps.state.outputs.problem }}
           SAME: ${{ steps.build.outputs.same }}
           NUMBER: ${{ steps.publish.outputs.number }}
           STATUS: ${{ job.status }}
@@ -419,6 +450,7 @@ jobs:
             close) line="$(link "$OPEN") больше не нужен: в main уже последняя версия" ;;
             hands-off) line="$(link "$OPEN") правят руками — робот его не трогает" ;;
             rejected) line="версия $short отклонена: $(link "$REJECTED") закрыт без слияния (предложить снова — Reopen)" ;;
+            stop) line="робот остановился: $PROBLEM" ;;
             build)
               if [ -n "$NUMBER" ]; then line="$(link "$NUMBER"): $what"
               elif [ "$SAME" = true ]; then line="$(link "$OPEN") без изменений"
