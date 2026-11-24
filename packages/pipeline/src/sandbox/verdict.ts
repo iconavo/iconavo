@@ -86,24 +86,53 @@ export function watch(page: Page) {
   return { warnings, errors };
 }
 
-/** Нарушения CSP — слушатель до скриптов страницы. */
+/**
+ * Нарушения CSP всех документов страницы: слушатель recordViolations передаёт каждое сюда, и переход
+ * или перезагрузка их не стирают (ревизия фазы 5, И-6).
+ */
+const pageViolations = new WeakMap<Page, string[]>();
+
+/** Нарушения CSP — слушатель до скриптов страницы; второй вызов для той же страницы ничего не делает. */
 export async function recordViolations(page: Page): Promise<void> {
+  if (pageViolations.has(page)) return;
+  const all: string[] = [];
+  pageViolations.set(page, all);
+  await page.exposeBinding("iconavoViolation", (_source, text: string) => {
+    all.push(text);
+  });
   await page.addInitScript(() => {
     const list: string[] = [];
-    (window as unknown as { violations: string[] }).violations = list;
-    document.addEventListener("securitypolicyviolation", (e) =>
-      list.push(
-        `${e.violatedDirective} ${e.blockedURI} ${e.sourceFile}:${e.lineNumber} ${e.sample}`.trim(),
-      ),
-    );
+    const w = window as unknown as {
+      violations: string[];
+      iconavoViolation?: (text: string) => unknown;
+    };
+    w.violations = list;
+    document.addEventListener("securitypolicyviolation", (e) => {
+      const text =
+        `${e.violatedDirective} ${e.blockedURI} ${e.sourceFile}:${e.lineNumber} ${e.sample}`.trim();
+      list.push(text);
+      void w.iconavoViolation?.(text);
+    });
   });
 }
 
-/** Нарушения CSP страницы или рамки внутри неё: слушатель recordViolations ставится в каждую рамку. */
+/** Нарушения CSP текущего документа страницы или рамки внутри неё: слушатель — в каждой рамке. */
 export const violations = (page: Page | Frame) =>
   page.evaluate(
     () => (window as unknown as { violations?: string[] }).violations ?? [],
   );
+
+/**
+ * Нарушения CSP всех документов страницы с recordViolations: сценарий из нескольких переходов видит
+ * и те, что были до последнего. Сначала — пустой вызов в страницу: сообщения о нарушениях, отправленные
+ * раньше, доходят до него. Без recordViolations — нарушения текущего документа.
+ */
+export async function allViolations(page: Page): Promise<string[]> {
+  const all = pageViolations.get(page);
+  if (all === undefined) return violations(page);
+  await page.evaluate(() => 0).catch(() => {});
+  return [...all];
+}
 
 /** Шаг проверки с названием: ошибка говорит, на каком шаге она остановилась. */
 export async function step<T>(
@@ -127,15 +156,19 @@ export async function shot(
   selector?: string,
 ): Promise<string> {
   const before = (await violations(page)).length;
+  const all = pageViolations.get(page);
+  const kept = all?.length ?? 0;
   const errors = seen.errors.length;
   const png = await (selector ? page.locator(selector) : page).screenshot({
     caret: "initial",
   });
   await page.waitForTimeout(200);
   seen.errors.length = errors;
+  // Этот вызов в страницу — заодно последний: сообщения о нарушениях времени снимка дошли до него.
   await page.evaluate((n) => {
     const list = (window as unknown as { violations?: string[] }).violations;
     if (list) list.length = n;
   }, before);
+  if (all !== undefined) all.length = kept;
   return png.toString("base64");
 }

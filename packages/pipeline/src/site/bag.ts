@@ -11,12 +11,12 @@ import { crc32 } from "node:zlib";
 import type { Browser, Page } from "playwright";
 import { type AxeViolation, axe, axeVerdict, runAxe } from "../sandbox/axe.js";
 import {
+  allViolations,
   fail,
   pass,
   recordViolations,
   shot,
   type Verdict,
-  violations,
   watch,
 } from "../sandbox/verdict.js";
 import { recordTrack } from "./code.js";
@@ -293,27 +293,31 @@ export async function bagProblems(
   const addPh = page.locator("aside.icon-panel button.panel-bag");
   await addPh.waitFor({ timeout: PANEL_WAIT_MS }).catch(() => {});
   await addPh.click().catch(() => {});
-  await badgeIs(page, 3);
+  no(
+    (await badgeIs(page, 3)) === "3",
+    "«В сумку» в панели /ph не положила иконку",
+  );
 
   // Перезагрузка: рюкзак на месте.
   await page.reload();
   await hydrated(page);
-  no(
-    (await badgeIs(page, 3)) === "3",
-    `после перезагрузки на «Bag» ${await badge(page)}, а ждали 3`,
-  );
+  const kept = (await badgeIs(page, 3)) === "3";
+  no(kept, `после перезагрузки на «Bag» ${await badge(page)}, а ждали 3`);
+  // Рюкзак пропал — дальше сценарию не с чем работать: щелчок по «Clear» пустого рюкзака ждал бы 30 с
+  // и останавливал строку вместо понятного «нет».
+  if (!kept) return problems;
 
   // Рюкзак с клавиатуры: Enter на «Bag», фокус в панели, список по порядку.
   const button = page.locator(".topbar .bag-button");
   await button.focus();
   await page.keyboard.press("Enter");
-  const panel = page.locator("dialog.bag-panel[open]");
+  const panel = page.locator("dialog#bag-panel[open]");
   await panel.waitFor({ timeout: PANEL_WAIT_MS }).catch(() => {});
   no(
     await page.evaluate(
       () =>
         document
-          .querySelector("dialog.bag-panel")
+          .querySelector("dialog#bag-panel")
           ?.contains(document.activeElement) === true,
     ),
     "фокус не в рюкзаке",
@@ -421,11 +425,11 @@ export async function bagProblems(
   // Esc закрывает рюкзак, фокус — на «Bag».
   await page.keyboard.press("Escape");
   await page
-    .locator("dialog.bag-panel[open]")
+    .locator("dialog#bag-panel[open]")
     .waitFor({ state: "detached", timeout: PANEL_WAIT_MS })
     .catch(() => {});
   no(
-    (await page.locator("dialog.bag-panel[open]").count()) === 0,
+    (await page.locator("dialog#bag-panel[open]").count()) === 0,
     "Esc не закрыл рюкзак",
   );
   no(
@@ -452,10 +456,12 @@ export async function bagProblems(
     .evaluateAll((cards) =>
       cards.map((c) => c.getAttribute("data-icon") ?? ""),
     );
-  const fresh = Math.max(
-    names.findIndex((n) => !left.includes(n)),
-    0,
-  );
+  // Иконка не из рюкзака: щелчок по той, что уже в нём, вынул бы её, а не положил.
+  const fresh = names.findIndex((n) => !left.includes(n));
+  if (fresh === -1) {
+    problems.push("в выдаче поиска нет иконки не из рюкзака");
+    return problems;
+  }
   const result = await card(page, results, fresh);
   await result.cell
     .locator("button.card-bag")
@@ -484,7 +490,7 @@ export async function checkBag(
   await recordViolations(page);
   const problems = await bagProblems(page, browser, o);
   problems.push(
-    ...(await violations(page)).map((x) => `CSP: ${x}`),
+    ...(await allViolations(page)).map((x) => `CSP: ${x}`),
     ...[...new Set(seen.errors)].map((x) => `ошибка: ${x}`),
   );
   await context.close();
@@ -508,14 +514,14 @@ export async function checkBag(
     await hydrated(p);
     await p.locator(".topbar .bag-button").click();
     await p
-      .locator("dialog.bag-panel li.bag-item[data-icon]")
+      .locator("dialog#bag-panel li.bag-item[data-icon]")
       .nth(1)
       .waitFor({ timeout: PANEL_WAIT_MS })
       .catch(() => {});
     if (viewport === PHONE) {
       const wide = await p.evaluate(() => {
         const box = document
-          .querySelector("dialog.bag-panel")
+          .querySelector("dialog#bag-panel")
           ?.getBoundingClientRect();
         return (
           document.documentElement.scrollWidth > innerWidth ||
@@ -537,7 +543,7 @@ export async function checkBag(
         shots.push({ title: "Рюкзак", png: await shot(p, pageSeen) });
       }
     }
-    problems.push(...(await violations(p)).map((x) => `CSP: ${x}`));
+    problems.push(...(await allViolations(p)).map((x) => `CSP: ${x}`));
     await themed.close();
   }
   const access = axeVerdict(axePages);

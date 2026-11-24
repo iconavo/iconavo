@@ -31,6 +31,29 @@ export const anchorsOf = (html: string) =>
 export const idsOf = (html: string) =>
   new Set([...html.matchAll(/\bid="([^"]+)"/g)].map((m) => m[1] as string));
 
+/** Сколько ждать страницу обхода и сколько раз спрашивать: зависший ответ не держит проверку. */
+const CRAWL_TIMEOUT_MS = 60_000;
+const CRAWL_ATTEMPTS = 2;
+
+/** Страница обхода: до CRAWL_ATTEMPTS попыток по CRAWL_TIMEOUT_MS — на сбой сети и зависание. */
+async function fetchPage(
+  url: string,
+): Promise<{ response: Response; html: string }> {
+  for (let attempt = 1; ; attempt++) {
+    try {
+      const response = await fetch(url, {
+        redirect: "manual",
+        signal: AbortSignal.timeout(CRAWL_TIMEOUT_MS),
+      });
+      return { response, html: await response.text() };
+    } catch (e) {
+      if (attempt >= CRAWL_ATTEMPTS) {
+        throw new Error(`${url} не ответил: ${(e as Error).message}`);
+      }
+    }
+  }
+}
+
 /**
  * Обойти сайт со страницы / : только адреса того же сайта, без якорей и параметров. follow решает, идти
  * ли по ссылке: страниц иконок десятки тысяч, обход открывает только перечисленные (шаг 4 фазы 4).
@@ -45,12 +68,11 @@ export async function crawl(
   const pages: CrawledPage[] = [];
   while (queue.length > 0) {
     const path = queue.shift() as string;
-    const response = await fetch(`${base}${path}`, { redirect: "manual" });
+    const { response, html } = await fetchPage(`${base}${path}`);
     const headers: Record<string, string> = {};
     response.headers.forEach((value, name) => {
       headers[name] = value;
     });
-    const html = await response.text();
     pages.push({ path, status: response.status, headers, html });
     if (response.status !== 200) continue;
     for (const href of anchorsOf(html)) {
@@ -172,9 +194,17 @@ export function statusVerdict(
     if (!pages.some((p) => p.path === path)) problems.push(`${path} не открыт`);
   }
   const ok = pages.filter((p) => p.status === 200).length;
+  // Коды переходов — все, что ждали: у старых имён иконок свой (308).
+  const codes = [
+    ...new Set(
+      Object.keys(o.redirects).map((path) => o.codes?.[path] ?? o.redirect),
+    ),
+  ]
+    .sort()
+    .join(" и ");
   return problems.length === 0
     ? pass(
-        `${ok} страниц — 200, несуществующие (${o.missing.length}) — 404, переходы (${Object.keys(o.redirects).length}) — ${o.redirect}`,
+        `${ok} страниц — 200, несуществующие (${o.missing.length}) — 404, переходы (${Object.keys(o.redirects).length}) — ${codes || o.redirect}`,
       )
     : fail(problems.slice(0, 5).join("; "));
 }
@@ -497,6 +527,12 @@ export function readmeScript(readme: string): string {
   const style = lines.find((line) =>
     line.startsWith("<style>iconavo-icon:not(:defined)"),
   );
+  // Без строки — понятная ошибка, а не «undefined» в ожидаемом коде.
+  if (script === undefined || style === undefined) {
+    throw new Error(
+      `в README тега нет строки ${script === undefined ? "<script> с jsDelivr" : "<style> для iconavo-icon:not(:defined)"} — проверка кода без неё не сверит Script`,
+    );
+  }
   return `${script}\n${style}`;
 }
 

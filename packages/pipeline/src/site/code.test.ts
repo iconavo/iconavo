@@ -22,6 +22,17 @@ describe("ожидания строки «Код» из README тега", () => 
     );
   });
 
+  it("нет строки скрипта или стиля в README — понятная ошибка, а не «undefined»", () => {
+    expect(() => readmeScript("# README\n\nбез строк")).toThrow(
+      /нет строки <script> с jsDelivr/,
+    );
+    const onlyScript = readme
+      .split("\n")
+      .filter((line) => !line.trim().startsWith("<style>"))
+      .join("\n");
+    expect(() => readmeScript(onlyScript)).toThrow(/нет строки <style>/);
+  });
+
   it("строка подключения тега", () => {
     expect(readmeImport(readme)).toBe(
       'import "@iconavo-ui/icon"; // registers <iconavo-icon>',

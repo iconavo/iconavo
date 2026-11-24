@@ -95,8 +95,6 @@ export async function checkLiveSite(o: {
   base: string;
   expectBuild?: string;
   sections: string[];
-  /** README тега: строка скрипта, которую сборка вшила в страницы иконок (шаг 5 фазы 4). */
-  readme: string;
   log?: (line: string) => void;
 }): Promise<LiveRow[]> {
   const rows: LiveRow[] = [];

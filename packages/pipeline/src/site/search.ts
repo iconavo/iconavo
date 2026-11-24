@@ -3,15 +3,15 @@
 // выдача на странице — то, что API ответил на её запрос, проверяется по самому запросу страницы: он же
 // уходит в превью из Node. Остальное подменяет page.route: неполная выдача, 429, пустые ответы.
 
-import type { Browser, Page, Request } from "playwright";
+import type { Browser, Page, Request, Route } from "playwright";
 import { type AxeViolation, axe, axeVerdict, runAxe } from "../sandbox/axe.js";
 import {
+  allViolations,
   fail,
   pass,
   recordViolations,
   shot,
   type Verdict,
-  violations,
   watch,
 } from "../sandbox/verdict.js";
 import {
@@ -27,6 +27,28 @@ export interface SearchCheckContext {
   base: string;
   /** Превью API: его /search спрашивает страница. */
   api: string;
+}
+
+/**
+ * Подмена ответа без необработанных отказов (ревизия фазы 5, И-18): отказ в обработчике route ронял бы
+ * весь процесс без отчёта. Страница или контекст закрылись, пока ответ шёл, — не ошибка; остальное — в
+ * problems.
+ */
+export function guarded(
+  problems: string[],
+  handler: (route: Route) => Promise<void>,
+): (route: Route) => Promise<void> {
+  return async (route) => {
+    try {
+      await handler(route);
+    } catch (e) {
+      const message = (e as Error).message.split("\n")[0] ?? "";
+      if (!/closed|disposed/i.test(message)) {
+        problems.push(`подмена ответа ${route.request().url()}: ${message}`);
+      }
+      await route.abort().catch(() => {});
+    }
+  };
 }
 
 /** Выдача на странице: состояние, клетки, статус, поле. Выполняется в браузере. */
@@ -380,9 +402,10 @@ async function pendingProblems(
   const page = await context.newPage();
   const api = new URL(o.api);
   let calls = 0;
+  const routeProblems: string[] = [];
   await page.route(
     (url) => url.origin === api.origin && url.pathname === "/search",
-    async (route) => {
+    guarded(routeProblems, async (route) => {
       const response = await route.fetch();
       const json = (await response.json()) as Record<string, unknown>;
       calls++;
@@ -397,7 +420,7 @@ async function pendingProblems(
         json.semantic = "full";
       }
       await route.fulfill({ response, json });
-    },
+    }),
   );
   const problems: string[] = [];
   await page.goto(`${o.base}/search?q=${SEARCH_PAGES_QUERY}`, {
@@ -464,7 +487,7 @@ async function pendingProblems(
     if (shift > 0.001) problems.push(`сдвиг вёрстки ${shift.toFixed(3)}`);
   }
   await context.close();
-  return problems;
+  return [...problems, ...routeProblems];
 }
 
 /** Пустые ответы и 429 — подменой; понятное сообщение у каждого. */
@@ -500,14 +523,14 @@ async function emptyProblems(
   const meaningPage = await meaning.newPage();
   await meaningPage.route(
     (url) => isSearch(url),
-    async (route) => {
+    guarded(problems, async (route) => {
       const response = await route.fetch();
       const json = (await response.json()) as Record<string, unknown>;
       await route.fulfill({
         response,
         json: { ...json, semantic: "full", matched: false },
       });
-    },
+    }),
   );
   await meaningPage.goto(`${o.base}/search?q=${SEARCH_QUERY}`, {
     waitUntil: "load",
@@ -525,7 +548,7 @@ async function emptyProblems(
   const filteredPage = await filtered.newPage();
   await filteredPage.route(
     (url) => isSearch(url),
-    async (route) => {
+    guarded(problems, async (route) => {
       const response = await route.fetch();
       const json = (await response.json()) as Record<string, unknown>;
       const styled = new URL(route.request().url()).searchParams.has("style");
@@ -535,7 +558,7 @@ async function emptyProblems(
           ? { ...json, icons: [], results: [], total: 0, semantic: "full" }
           : { ...json, semantic: "full" },
       });
-    },
+    }),
   );
   await filteredPage.goto(`${o.base}/search?q=${SEARCH_QUERY}&style=duotone`, {
     waitUntil: "load",
@@ -558,7 +581,7 @@ async function emptyProblems(
   let calls = 0;
   await limitedPage.route(
     (url) => isSearch(url),
-    async (route) => {
+    guarded(problems, async (route) => {
       calls++;
       if (calls === 1) {
         await route.fulfill({
@@ -574,7 +597,7 @@ async function emptyProblems(
         return;
       }
       await route.continue();
-    },
+    }),
   );
   await limitedPage.goto(`${o.base}/search?q=${SEARCH_QUERY}`, {
     waitUntil: "load",
@@ -686,7 +709,7 @@ async function sheetProblems(
     problems.push("шторка: Esc применил черновик");
   }
   problems.push(
-    ...(await violations(page)).map((x) => `шторка, CSP: ${x}`),
+    ...(await allViolations(page)).map((x) => `шторка, CSP: ${x}`),
     ...[...new Set(seen.errors)].map((x) => `шторка, ошибка: ${x}`),
   );
   await context.close();
@@ -732,11 +755,11 @@ export async function checkSearchPage(
   const api = new URL(o.api);
   await page.route(
     (url) => url.origin === api.origin && url.pathname === "/search",
-    async (route) => {
+    guarded(problems, async (route) => {
       const response = await route.fetch();
       const json = (await response.json()) as Record<string, unknown>;
       await route.fulfill({ response, json: { ...json, semantic: "full" } });
-    },
+    }),
   );
   problems.push(...(await homeProblems(page, o, requests)));
   if (problems.length === 0) {
@@ -749,7 +772,7 @@ export async function checkSearchPage(
   problems.push(...(await pageProblems(page, o, requests)));
   problems.push(...(await headerProblems(page, o)));
   problems.push(
-    ...(await violations(page)).map((x) => `CSP: ${x}`),
+    ...(await allViolations(page)).map((x) => `CSP: ${x}`),
     ...[...new Set(seen.errors)].map((x) => `ошибка: ${x}`),
   );
   await context.close();

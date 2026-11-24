@@ -12,12 +12,12 @@ import { bundleIconScript } from "../icon/build.js";
 import { decodePng } from "../qc/png.js";
 import type { BrowserName } from "../sandbox/browser.js";
 import {
+  allViolations,
   fail,
   pass,
   recordViolations,
   shot,
   type Verdict,
-  violations,
   watch,
 } from "../sandbox/verdict.js";
 import {
@@ -164,10 +164,13 @@ async function openWithSettings(page: Page, base: string, path?: string) {
     .catch(() => {});
 }
 
-/** Скрипт тега этой ветки — один раз на прогон. */
+/** Скрипт тега этой ветки — один раз на прогон; не собрался — следующий вызов собирает заново. */
 let script: Promise<string> | undefined;
 const tagScript = (root: string) => {
-  script ??= bundleIconScript(root);
+  script ??= bundleIconScript(root).catch((e: unknown) => {
+    script = undefined;
+    throw e;
+  });
   return script;
 };
 
@@ -466,7 +469,7 @@ export async function checkCode(
   const problems = await codeProblems(page, o, name === "chrome");
   shots.push({ title: "Генератор кода в панели", png: await shot(page, seen) });
   problems.push(
-    ...(await violations(page)).map((x) => `CSP: ${x}`),
+    ...(await allViolations(page)).map((x) => `CSP: ${x}`),
     ...[...new Set(seen.errors)].map((x) => `ошибка: ${x}`),
     ...(await tagRenders(browser, o, CODE_EXPECT.tag)),
   );
@@ -668,7 +671,7 @@ export async function checkFiles(
   const problems = await filesProblems(page, o, name === "chrome");
   shots.push({ title: "Скачивание", png: await shot(page, seen) });
   problems.push(
-    ...(await violations(page)).map((x) => `CSP: ${x}`),
+    ...(await allViolations(page)).map((x) => `CSP: ${x}`),
     ...[...new Set(seen.errors)].map((x) => `ошибка: ${x}`),
   );
   await context.close();
