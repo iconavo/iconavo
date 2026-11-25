@@ -29,22 +29,28 @@ const tableHead = (results: StarterResult[]) => [
   ...results.map(column),
 ];
 
+/**
+ * Строка столбца со сбоем: решённое до сбоя (архивы, установка, сборка) — как есть, остальное — «сбой».
+ * Раньше сбой закрывал весь столбец, и «НЕТ» установки пропадало (ревизия фазы 5, И-20).
+ */
+const failedHere = (r: StarterResult, id: CheckId) =>
+  r.failure !== undefined && r.verdicts[id] === undefined;
+
 const tableRows = (results: StarterResult[]) =>
   CHECKS.map(([id, title]) => [
     title,
-    ...results.map((r) => (r.failure ? "сбой" : mark(r.verdicts[id]))),
+    ...results.map((r) => (failedHere(r, id) ? "сбой" : mark(r.verdicts[id]))),
   ]);
 
-/** Что не так: сбой в столбце или строки «НЕТ» с пояснением; общие строки — один раз. */
+/** Что не так: сбой в столбце и строки «НЕТ» с пояснением; общие строки — один раз. */
 const problems = (results: StarterResult[]) => [
   ...new Set(
-    results.flatMap((r) =>
-      r.failure
-        ? [`${column(r)}: ${r.failure}`]
-        : CHECKS.filter(([id]) => r.verdicts[id]?.ok === false).map(
-            ([id, title]) => `${column(r)} — ${title}: ${r.verdicts[id]?.note}`,
-          ),
-    ),
+    results.flatMap((r) => [
+      ...(r.failure ? [`${column(r)}: ${r.failure}`] : []),
+      ...CHECKS.filter(([id]) => r.verdicts[id]?.ok === false).map(
+        ([id, title]) => `${column(r)} — ${title}: ${r.verdicts[id]?.note}`,
+      ),
+    ]),
   ),
 ];
 
@@ -89,7 +95,7 @@ code { background: var(--code); border-radius: 4px; padding: 0 3px; }
 `;
 
 function cell(r: StarterResult, id: CheckId): string {
-  if (r.failure) return `<td class="stop">сбой</td>`;
+  if (failedHere(r, id)) return `<td class="stop">сбой</td>`;
   const v = r.verdicts[id];
   const status = v?.ok === true ? "ok" : v?.ok === false ? "stop" : "";
   return `<td class="${status}">${mark(v)}<span class="note">${esc(v?.note ?? "не проверялось")}</span></td>`;

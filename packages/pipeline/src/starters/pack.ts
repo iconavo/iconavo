@@ -33,17 +33,18 @@ export interface Pack {
 
 /**
  * Команда для spawn. На Windows pnpm и npm — файлы .cmd, их запускает только cmd.exe: строка команды
- * собирается здесь, аргумент с пробелом — в кавычках (shell: true с массивом аргументов Node считает
- * небезопасным, DEP0190).
+ * собирается здесь (shell: true с массивом аргументов Node считает небезопасным, DEP0190). Аргумент с
+ * пробелом или знаком cmd (& | < > ^ скобки) — в кавычках, кавычка внутри удваивается: путь вроде
+ * C:\R&D\… раньше cmd резал на две команды (ревизия фазы 5, И-20).
  */
 export function commandLine(
   command: string,
   args: string[],
+  platform: NodeJS.Platform = process.platform,
 ): { file: string; args: string[]; verbatim: boolean } {
-  if (process.platform !== "win32")
-    return { file: command, args, verbatim: false };
+  if (platform !== "win32") return { file: command, args, verbatim: false };
   const quoted = [command, ...args].map((a) =>
-    /[\s"]/.test(a) ? `"${a}"` : a,
+    /[\s"&|<>^()]/.test(a) ? `"${a.replaceAll('"', '""')}"` : a,
   );
   return {
     file: process.env.ComSpec ?? "cmd.exe",
@@ -52,12 +53,17 @@ export function commandLine(
   };
 }
 
-/** Ошибка команды: в сообщении — хвост вывода, в output — весь вывод (npm ls --json при коде 1). */
+/** Ошибка команды: в сообщении — хвост вывода, в output — стандартный вывод (npm ls --json при коде 1). */
 export interface RunError extends Error {
   output: string;
 }
 
-/** Запуск команды; код не 0 — ошибка с последними строками вывода и всем выводом в output. */
+/**
+ * Запуск команды. Возвращает только стандартный вывод: JSON npm и pnpm не смешивается с предупреждениями
+ * из stderr. Код не 0 — ошибка с последними строками обоих выводов, stdout — в output. Конец — по close,
+ * а не по exit: exit приходит раньше, чем дочитаны каналы, и длинный вывод мог обрезаться (ревизия
+ * фазы 5, А-32, И-10).
+ */
 export function run(
   command: string,
   args: string[],
@@ -72,24 +78,41 @@ export function run(
       windowsVerbatimArguments: line.verbatim,
       stdio: ["ignore", "pipe", "pipe"],
     });
-    const chunks: Buffer[] = [];
-    child.stdout.on("data", (c: Buffer) => chunks.push(c));
-    child.stderr.on("data", (c: Buffer) => chunks.push(c));
+    const out: Buffer[] = [];
+    const err: Buffer[] = [];
+    child.stdout.on("data", (c: Buffer) => out.push(c));
+    child.stderr.on("data", (c: Buffer) => err.push(c));
     child.once("error", reject);
-    child.once("exit", (code) => {
-      const output = Buffer.concat(chunks).toString("utf8");
-      if (code === 0) resolve(output);
-      else {
-        const tail = output.trim().split(/\r?\n/).slice(-20).join("\n");
-        reject(
-          Object.assign(
-            new Error(`${command} ${args.join(" ")}: код ${code}\n${tail}`),
-            { output },
-          ),
-        );
+    child.once("close", (code) => {
+      const output = Buffer.concat(out).toString("utf8");
+      if (code === 0) {
+        resolve(output);
+        return;
       }
+      const both = `${output}\n${Buffer.concat(err).toString("utf8")}`;
+      const tail = both.trim().split(/\r?\n/).slice(-20).join("\n");
+      reject(
+        Object.assign(
+          new Error(`${command} ${args.join(" ")}: код ${code}\n${tail}`),
+          { output },
+        ),
+      );
     });
   });
+}
+
+/** JSON из вывода команды: от первой «{» до последней «}»; не JSON — ошибка с началом вывода. */
+export function parseJsonOutput<T>(output: string, what: string): T {
+  const start = output.indexOf("{");
+  const end = output.lastIndexOf("}");
+  try {
+    if (start === -1 || end < start) throw new Error("нет объекта");
+    return JSON.parse(output.slice(start, end + 1)) as T;
+  } catch {
+    throw new Error(
+      `${what} вывел не JSON: ${output.trim().slice(0, 200) || "пусто"}`,
+    );
+  }
 }
 
 /**
@@ -132,8 +155,10 @@ async function readTarball(
     file,
     (path) => path === "package.json",
   );
-  const manifest = JSON.parse(
-    (contents.get("package.json") as Buffer).toString("utf8"),
+  // Нет package.json в архиве — пустой: это скажет packVerdict, а не TypeError (ревизия фазы 5, И-20).
+  const raw = contents.get("package.json");
+  const manifest = (
+    raw === undefined ? {} : JSON.parse(raw.toString("utf8"))
   ) as Record<string, unknown>;
   return { files: paths, manifest };
 }
@@ -152,11 +177,11 @@ export async function packPackages(
       ["pack", "--pack-destination", outDir, "--json"],
       join(root, "packages", id),
     );
-    const info = JSON.parse(output.slice(output.indexOf("{"))) as {
+    const info = parseJsonOutput<{
       name: string;
       version: string;
       filename: string;
-    };
+    }>(output, `pnpm pack ${id}`);
     const bytes = await readFile(info.filename);
     packs.push({
       id,

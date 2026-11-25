@@ -8,7 +8,7 @@ import { cp, readFile, rm, writeFile } from "node:fs/promises";
 import { join, relative, sep } from "node:path";
 import { setScriptIntegrity, sri } from "../release/text.js";
 import { fail, pass, type Verdict } from "../sandbox/verdict.js";
-import { type Pack, type RunError, run } from "./pack.js";
+import { type Pack, parseJsonOutput, type RunError, run } from "./pack.js";
 
 export type Manifest = Record<string, unknown> & {
   dependencies?: Record<string, string>;
@@ -99,12 +99,12 @@ export interface LsNode {
  * неудовлетворённых зависимостях дерево тоже нужно. Его даёт весь вывод команды, а не хвост ошибки.
  */
 export async function npmTree(dir: string): Promise<LsNode> {
+  // Дерево — из stdout: сообщения npm error идут в stderr и больше не попадают внутрь JSON (ревизия
+  // фазы 5, И-10).
   const output = await run("npm", ["ls", "--all", "--json"], dir).catch(
     (e: RunError) => e.output ?? "",
   );
-  const start = output.indexOf("{");
-  if (start === -1) throw new Error("npm ls не вывел дерево зависимостей");
-  return JSON.parse(output.slice(start, output.lastIndexOf("}") + 1)) as LsNode;
+  return parseJsonOutput<LsNode>(output, "npm ls");
 }
 
 /** Все копии наших пакетов в дереве зависимостей: имя, версия, откуда. */

@@ -240,6 +240,9 @@ describe("холст", () => {
     expect(formatNumber(1e-7)).toBe("0.0000001");
     expect(formatNumber(24 / 256)).toBe("0.09375");
     expect(formatNumber(32 / 33)).toBe("0.969696969697");
+    // Огромные — с показателем степени, как у копии в ядре (ревизия фазы 5, П-4).
+    expect(formatNumber(1e30)).toBe("1e+30");
+    expect(formatNumber(-1e-25)).toBe("0");
   });
 
   it.each([

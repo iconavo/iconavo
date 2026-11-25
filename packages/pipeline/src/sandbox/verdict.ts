@@ -160,8 +160,20 @@ export async function step<T>(
 }
 
 /**
- * Снимок страницы или её части. Для снимка Playwright вставляет в страницу свой стиль, и строгая
- * политика WebKit его отклоняет: нарушения и ошибки, пришедшие во время снимка, не в счёт.
+ * Нарушение от стиля, который Playwright вставляет для снимка: стиль без файла-источника — его вставил
+ * не сайт. Так его отклоняет строгая политика WebKit; Chrome и Firefox во время снимка молчат (замер
+ * 25 ноября 2026, ревизия фазы 5, И-7).
+ */
+export const SNAPSHOT_STYLE = /^style-src(?:-elem)? inline :\d+/;
+
+/** Сообщение WebKit в консоли о том же стиле — по одному на каждое такое нарушение. */
+export const SNAPSHOT_STYLE_MESSAGE =
+  /^Refused to apply a stylesheet because its hash, its nonce, or 'unsafe-inline' does not appear in the style-src directive/;
+
+/**
+ * Снимок страницы или её части. Во время снимка не в счёт только стиль Playwright (SNAPSHOT_STYLE) и
+ * столько же сообщений WebKit о нём; настоящие ошибки и другие нарушения этого времени остаются в
+ * отчёте — раньше снимок выбрасывал всё подряд (ревизия фазы 5, И-7).
  */
 export async function shot(
   page: Page,
@@ -176,12 +188,33 @@ export async function shot(
     caret: "initial",
   });
   await page.waitForTimeout(200);
-  seen.errors.length = errors;
   // Этот вызов в страницу — заодно последний: сообщения о нарушениях времени снимка дошли до него.
-  await page.evaluate((n) => {
-    const list = (window as unknown as { violations?: string[] }).violations;
-    if (list) list.length = n;
-  }, before);
-  if (all !== undefined) all.length = kept;
+  const noise = await page.evaluate(
+    ({ n, source }) => {
+      const list = (window as unknown as { violations?: string[] }).violations;
+      if (!list) return 0;
+      const pattern = new RegExp(source);
+      const fresh = list.splice(n);
+      const real = fresh.filter((text) => !pattern.test(text));
+      list.push(...real);
+      return fresh.length - real.length;
+    },
+    { n: before, source: SNAPSHOT_STYLE.source },
+  );
+  if (all !== undefined) {
+    const fresh = all.splice(kept);
+    all.push(...fresh.filter((text) => !SNAPSHOT_STYLE.test(text)));
+  }
+  let left = noise;
+  const fresh = seen.errors.splice(errors);
+  seen.errors.push(
+    ...fresh.filter((text) => {
+      if (left > 0 && SNAPSHOT_STYLE_MESSAGE.test(text)) {
+        left--;
+        return false;
+      }
+      return true;
+    }),
+  );
   return png.toString("base64");
 }

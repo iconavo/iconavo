@@ -532,7 +532,8 @@ const USAGE = `Использование:
       --browser=…                     с --check: только chrome, firefox или webkit
   pnpm visual [id…]                   визуальное сравнение (фаза 3, шаг 9; ADR-0035): каждое имя набора
                                       через тег и React рядом с SVG статики, в Chrome, Firefox и WebKit;
-                                      расхождение — хоть один пиксель; отчёт .cache/reports/visual/index.html
+                                      допуск — 0,5% пикселей иконки, больше — расхождение и код 1;
+                                      отчёт .cache/reports/visual/index.html и summary.md для CI
       --browser=…                     только chrome, firefox или webkit
   pnpm starters <пример>              живой пример (${STARTERS_DIR}, фаза 3, шаг 10; ADR-0050): html, react
                                       или next на пакетах этой ветки (pnpm pack) в окне браузера

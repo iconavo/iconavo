@@ -1,6 +1,12 @@
 import { describe, expect, it } from "vitest";
 import type { PackageId } from "./config.js";
-import { commandLine, type Pack, packVerdict } from "./pack.js";
+import {
+  commandLine,
+  type Pack,
+  packVerdict,
+  type RunError,
+  run,
+} from "./pack.js";
 
 const pack = (
   id: PackageId,
@@ -73,7 +79,42 @@ describe("состав архивов пакетов", () => {
   });
 });
 
+describe("запуск команды (ревизия фазы 5, А-32, И-10)", () => {
+  const node = (code: string) => run(process.execPath, ["-e", code], ".");
+
+  it("возвращает только stdout: предупреждения из stderr не портят JSON", async () => {
+    const out = await node(
+      "console.log(JSON.stringify({a:1}));console.error('WARN x')",
+    );
+    expect(JSON.parse(out)).toEqual({ a: 1 });
+  });
+
+  it("длинный вывод — целиком: конец по close, а не по exit", async () => {
+    const out = await node("process.stdout.write('x'.repeat(3000000))");
+    expect(out.length).toBe(3_000_000);
+  });
+
+  it("код не 0 — ошибка с хвостом stderr, в output — только stdout", async () => {
+    const error = (await node(
+      "console.log('{}');console.error('npm error boom');process.exit(1)",
+    ).catch((e: unknown) => e)) as RunError;
+    expect(error.message).toContain("npm error boom");
+    expect(error.output.trim()).toBe("{}");
+  });
+});
+
 describe("строка команды", () => {
+  it("cmd.exe: путь с & и скобками — в кавычках, кавычка внутри удваивается (ревизия фазы 5, И-20)", () => {
+    const line = commandLine(
+      "pnpm",
+      ["pack", "--pack-destination", "C:\\R&D (копия)\\out", 'a"b', "--json"],
+      "win32",
+    );
+    expect(line.args.at(-1)).toBe(
+      '"pnpm pack --pack-destination "C:\\R&D (копия)\\out" "a""b" --json"',
+    );
+  });
+
   it("на Windows — через cmd.exe, аргумент с пробелом в кавычках", () => {
     const line = commandLine("npm", ["install", "a b"]);
     if (process.platform === "win32") {

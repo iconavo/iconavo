@@ -147,8 +147,10 @@ export async function startNext(
       throw new Error(`next ${command[0]} остановился\n${output.join("\n")}`);
     }
     try {
+      // Срок запроса — остаток общего: зависший у самого конца запрос не растягивает ожидание вдвое
+      // (ревизия фазы 5, И-19).
       const response = await fetch(`${url}/`, {
-        signal: AbortSignal.timeout(START_TIMEOUT_MS),
+        signal: AbortSignal.timeout(Math.max(1000, deadline - Date.now())),
       });
       await response.arrayBuffer();
       if (response.ok) return { url, stop };

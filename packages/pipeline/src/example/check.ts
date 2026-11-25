@@ -155,15 +155,17 @@ export interface ExampleCheckOptions {
 
 /**
  * Имена из адресов пачек API: /{набор}.json?icons=a,b → набор:a, набор:b; запросы к статике — путями
- * после /_static.
+ * после /_static; другие запросы к API (SVG одной иконки, каталог) — путями в others: ядро их не
+ * делает, и раньше они молча не считались (ревизия фазы 5, И-19).
  */
 export function requested(
   urls: string[],
   api: string,
-): { names: string[]; batches: number; statics: string[] } {
+): { names: string[]; batches: number; statics: string[]; others: string[] } {
   const names: string[] = [];
   let batches = 0;
   const statics: string[] = [];
+  const others: string[] = [];
   for (const url of urls) {
     if (!url.startsWith(api)) continue;
     const parsed = new URL(url);
@@ -173,11 +175,14 @@ export function requested(
     }
     const set = /^\/([a-z0-9-]+)\.json$/.exec(parsed.pathname)?.[1];
     const icons = parsed.searchParams.get("icons");
-    if (set === undefined || icons === null) continue;
+    if (set === undefined || icons === null) {
+      others.push(parsed.pathname);
+      continue;
+    }
     batches++;
     for (const icon of icons.split(",")) names.push(`${set}:${icon}`);
   }
-  return { names, batches, statics };
+  return { names, batches, statics, others };
 }
 
 /**
@@ -207,7 +212,7 @@ export function networkVerdict(
   missing: string[],
   live: string[] = [],
 ): Verdict {
-  const { names, batches, statics } = requested(urls, api);
+  const { names, batches, statics, others } = requested(urls, api);
   const unique = (list: string[]) => [...new Set(list)].join(", ");
   const own = names.filter((n) => provided.includes(n));
   const twice = names.filter((n, i) => names.indexOf(n) !== i);
@@ -226,6 +231,7 @@ export function networkVerdict(
       ? `к статике не за иконками, которых нет: ${unique(stray)}`
       : "",
     again.length > 0 ? `у статики дважды: ${unique(again)}` : "",
+    others.length > 0 ? `к API не за пачками: ${unique(others)}` : "",
     live.length > 0
       ? `к живым хостам: ${live.length} (${unique(live.map((u) => new URL(u).host))})`
       : "",
@@ -376,7 +382,9 @@ function watchers(): void {
     Object.defineProperty(Element.prototype, "innerHTML", {
       ...own,
       set(value: unknown) {
-        if (this instanceof SVGSVGElement && this.isConnected) {
+        // И новый <svg>, ещё не в документе: React пишет рисунок до вставки элемента, и без этого
+        // первая отрисовка в браузере в проверку не попадала (ревизия фазы 5, И-19).
+        if (this instanceof SVGSVGElement) {
           w.inner.push(w.trustedTypes ? w.trustedTypes.isHTML(value) : null);
         }
         set.call(this, value);

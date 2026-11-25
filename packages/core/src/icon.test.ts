@@ -47,6 +47,17 @@ describe("iconData", () => {
     ).toMatchObject({ width: 16, height: 16 });
   });
 
+  it("имя и у иконки, и у алиаса — побеждает иконка, как у Iconify (ревизия фазы 5, П-2)", () => {
+    const both: IconavoIconSet = {
+      prefix: "x",
+      icons: { a: { body: "<a/>" }, b: { body: "<b/>" }, c: { body: "<c/>" } },
+      aliases: { a: { parent: "b" }, c: { parent: "b" }, d: { parent: "c" } },
+    };
+    expect(iconData(both, "a")?.body).toBe("<a/>");
+    // И в середине цепочки: родитель d — иконка c, хотя под тем же именем есть и алиас.
+    expect(iconData(both, "d")?.body).toBe("<c/>");
+  });
+
   it("имени нет — null, в том числе имён из прототипа объекта", () => {
     expect(iconData(SET, "missing")).toBeNull();
     expect(iconData(SET, "constructor")).toBeNull();

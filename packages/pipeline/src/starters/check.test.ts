@@ -6,6 +6,10 @@ import {
   startersCheckFailed,
   trafficVerdict,
 } from "./check.js";
+import {
+  markdownStartersCheck,
+  renderStartersCheckPage,
+} from "./check-report.js";
 
 describe("вердикты проверки примеров", () => {
   it("иконки: все нарисованы, без заглушек и рамок", () => {
@@ -71,5 +75,33 @@ describe("вердикты проверки примеров", () => {
         },
       ]),
     ).toBe(false);
+  });
+});
+
+describe("отчёт: сбой не прячет решённые строки (ревизия фазы 5, И-20)", () => {
+  it("архивы и установка до сбоя — видны, их «нет» — в списке проблем", () => {
+    const report = {
+      npm: false,
+      packs: [],
+      results: [
+        {
+          starter: "react" as const,
+          mode: "dev" as const,
+          browser: "chrome" as const,
+          failure: "не запустился: порт занят",
+          verdicts: {
+            pack: { ok: true, note: "три архива" },
+            install: { ok: false, note: "две копии ядра" },
+          },
+          shots: [],
+        },
+      ],
+    };
+    const text = markdownStartersCheck(report);
+    expect(text).toContain("две копии ядра");
+    expect(text).toContain("не запустился: порт занят");
+    const page = renderStartersCheckPage(report);
+    expect(page).toContain("три архива");
+    expect(page).toContain("сбой");
   });
 });

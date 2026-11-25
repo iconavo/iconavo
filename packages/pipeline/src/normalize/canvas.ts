@@ -28,11 +28,17 @@ export function cleanNumber(n: number): number {
   return Object.is(clean, -0) ? 0 : clean;
 }
 
-/** Число для атрибута: без шума и без экспоненты (1e-7 → 0.0000001). */
+/**
+ * Число для атрибута: без шума и без экспоненты у малых чисел (1e-7 → 0.0000001). У огромных, от 1e21,
+ * экспонента остаётся: toFixed её не раскрывает, а обрезка нулей откусила бы ноль показателя — 1e30 → 1e+3
+ * (ревизия фазы 5, П-4). Копия formatNumber ядра — менять вместе.
+ */
 export function formatNumber(n: number): string {
   const clean = cleanNumber(n);
   const text = String(clean);
-  return /e/i.test(text) ? clean.toFixed(20).replace(/\.?0+$/, "") : text;
+  if (!/e-/.test(text)) return text;
+  const fixed = clean.toFixed(20).replace(/\.?0+$/, "");
+  return fixed === "-0" ? "0" : fixed;
 }
 
 /** Длина без единиц или в px; проценты, em и прочее — undefined. */

@@ -179,6 +179,17 @@ describe("остальное на сервере — заглушка или «�
     expect(waiting).toContain('aria-hidden="true"');
   });
 
+  it("из JS — свой HTML отброшен, как дети: и у заглушки, и у рисунка (ревизия фазы 5, П-5)", () => {
+    const inject = {
+      dangerouslySetInnerHTML: { __html: "<text>чужое</text>" },
+    } as unknown as Parameters<typeof Icon>[0];
+    const waiting = html(h(Icon, { ...inject, icon: "demo:later" }));
+    expect(waiting).not.toContain("чужое");
+    expect(waiting).toContain("iconavo-loading");
+    const loaded = html(h(Icon, { ...inject, icon: "demo:house" }));
+    expect(loaded).not.toContain("чужое");
+  });
+
   it("вложенная обёртка: своя иконка, иконки внешней, свой not_found не заслоняет внешнюю", () => {
     const inner: IconavoIconSet = {
       prefix: "demo",

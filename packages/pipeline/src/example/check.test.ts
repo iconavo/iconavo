@@ -37,6 +37,7 @@ describe("запросы к хостам иконок", () => {
           `${API}/lucide.json?icons=cat,search`,
           `${API}/ph.json?icons=fish`,
           `${API}/_static/manifest.json`,
+          `${API}/lucide/house.svg`,
           "http://127.0.0.1:4283/more",
         ],
         API,
@@ -45,6 +46,7 @@ describe("запросы к хостам иконок", () => {
       names: ["lucide:cat", "lucide:search", "ph:fish"],
       batches: 2,
       statics: ["/manifest.json"],
+      others: ["/lucide/house.svg"],
     });
   });
 
@@ -89,6 +91,20 @@ describe("запросы к хостам иконок", () => {
       "к статике не за иконками, которых нет: /v/c3b3f7a7/lucide/cat.json",
     );
     expect(bad.note).toContain("у статики дважды: lucide:no-such-icon");
+    // Запрос к API не за пачкой — тоже проблема: раньше он молча не считался (ревизия фазы 5, И-19).
+    const svg = networkVerdict(
+      [
+        `${API}/lucide.json?icons=cat,no-such-icon,search`,
+        `${API}/ph.json?icons=fish`,
+        `${API}/lucide/house.svg`,
+      ],
+      API,
+      NAMES.server,
+      expected,
+      missing,
+    );
+    expect(svg.ok).toBe(false);
+    expect(svg.note).toContain("к API не за пачками: /lucide/house.svg");
     const live = networkVerdict(
       [`${API}/lucide.json?icons=cat,search`, `${API}/ph.json?icons=fish`],
       API,

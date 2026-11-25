@@ -76,7 +76,11 @@ export async function routeHosts(
       if (o.refuse) return route.abort("connectionrefused");
       if (o.map === null) return route.continue();
       try {
-        const response = await fetch(target);
+        // Срок — как у других запросов проверки: зависшее превью не держит обработчик 5 минут, когда
+        // ядро давно сдалось (ревизия фазы 5, И-20).
+        const response = await fetch(target, {
+          signal: AbortSignal.timeout(30_000),
+        });
         const headers: Record<string, string> = {};
         response.headers.forEach((value, name) => {
           if (!DROP.has(name)) headers[name] = value;
