@@ -77,12 +77,14 @@ describe("firstLook", () => {
       action: "unchanged",
       version: "1.0.0",
       base: "1.0.0",
+      tagged: "1.0.0",
     });
     expect(firstLook(input({ packument: p, force: true }))).toEqual({
       kind: "decided",
       action: "patch",
       version: "1.0.1",
       base: "1.0.0",
+      tagged: "1.0.0",
     });
   });
 
@@ -131,10 +133,15 @@ describe("firstLook", () => {
         latest: "1.0.0",
       },
     );
-    expect(firstLook(input({ packument: p }))).toMatchObject({
+    const look = firstLook(input({ packument: p }));
+    expect(look).toMatchObject({
       action: "unchanged",
       version: "1.2.0",
+      base: "1.2.0",
     });
+    // Тег, каким его видел план, — «нет»: публикация сверит реестр с ним и вернёт тег, а не будет
+    // вечно говорить «план устарел» (ревизия фазы 5, А-3).
+    expect(look.kind === "decided" && look.tagged).toBe(undefined);
   });
 
   it("версия без отметки iconavo — «СТОП»: её выложил не конвейер", () => {
@@ -168,6 +175,15 @@ describe("firstLook", () => {
   it("пакет без версий вида 1.2.3 — «СТОП»", () => {
     const p = packument([doc("0.0.0-x")], { next: "0.0.0-x" });
     expect(firstLook(input({ packument: p }))).toMatchObject({ kind: "stop" });
+  });
+});
+
+describe("пакет снят целиком (ревизия фазы 5, А-4)", () => {
+  it("понятный «СТОП»: номера заняты навсегда, разбираться вручную", () => {
+    const p = { ...packument([], {}, ["1.0.0", "1.0.1"]), unpublished: true };
+    const look = firstLook(input({ packument: p, allowNew: true }));
+    expect(look.kind).toBe("stop");
+    expect(look.kind === "stop" && look.message).toMatch(/снят с npm целиком/);
   });
 });
 

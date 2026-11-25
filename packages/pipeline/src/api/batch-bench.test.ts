@@ -1,3 +1,4 @@
+import { createServer } from "node:http2";
 import { describe, expect, it } from "vitest";
 import {
   type BatchTransport,
@@ -7,6 +8,7 @@ import {
   benchBatches,
   fetchTransport,
   formatBatchBench,
+  http2Transport,
   planBatches,
   renderBatchBenchPage,
 } from "./batch-bench.js";
@@ -253,5 +255,35 @@ describe("Server-Timing", () => {
     expect(t.get("files")).toEqual({ desc: "28/30", dur: 12 });
     expect(t.get("total")).toEqual({ dur: 160 });
     expect(parseServerTiming(null).size).toBe(0);
+  });
+});
+
+describe("соединение HTTP/2 замера (ревизия фазы 5, А-33)", () => {
+  it("таймаут одного запроса не обрывает соседний в той же сессии", async () => {
+    const server = createServer((req, res) => {
+      if (req.url === "/hang") return; // ответа не будет
+      setTimeout(() => {
+        res.writeHead(200, { "content-type": "application/json" });
+        res.end("{}");
+      }, 150);
+    });
+    await new Promise<void>((resolve) =>
+      server.listen(0, "127.0.0.1", resolve),
+    );
+    const { port } = server.address() as { port: number };
+    const transport = http2Transport(`http://127.0.0.1:${port}`, 200);
+    try {
+      const hang = transport.get("/hang").catch((e: Error) => e);
+      await new Promise((resolve) => setTimeout(resolve, 100));
+      // Второй запрос — в той же сессии; ответ придёт после таймаута первого.
+      const late = await transport.get("/late");
+      expect(late.status).toBe(200);
+      expect(((await hang) as Error).message).toMatch(/нет ответа/);
+      // Следующий запрос — по новому соединению: старое больше не берёт новых.
+      expect((await transport.get("/next")).newConnection).toBe(true);
+    } finally {
+      transport.close();
+      await new Promise((resolve) => server.close(resolve));
+    }
   });
 });

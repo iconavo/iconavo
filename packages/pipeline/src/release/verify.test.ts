@@ -255,4 +255,28 @@ describe("pnpm release verify", () => {
     expect(report.jsdelivr.status).toBe("ok");
     expect(fetchFn.calls).toBe(3);
   });
+
+  it("у каждой попытки к jsDelivr — срок (ревизия фазы 5, А-26)", async () => {
+    const { root, plan } = await planOf("0.1.0", {});
+    const { now, sleep } = clock();
+    const signals: (AbortSignal | null | undefined)[] = [];
+    const fetchFn = (async (_url: unknown, init?: RequestInit) => {
+      signals.push(init?.signal);
+      return script()();
+    }) as unknown as FetchFn;
+    await verifyRelease({
+      root,
+      plan,
+      registry: after([
+        { version: "0.1.0", token: true, provenance: { commit: COMMIT } },
+      ]),
+      waitMs: 300_000,
+      fetch: fetchFn,
+      clean: false,
+      now,
+      sleep,
+    });
+    expect(signals).toHaveLength(1);
+    expect(signals[0]).toBeInstanceOf(AbortSignal);
+  });
 });

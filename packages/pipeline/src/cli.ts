@@ -2355,6 +2355,7 @@ try {
     const report = await buildCdn(configs, {
       dataDir,
       outDir: distCdnDir,
+      verifyFiles: sub !== "build",
       log: (line) => console.log(line),
     });
     console.log("");

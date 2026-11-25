@@ -45,6 +45,15 @@ export const storageErrorScope = (e: unknown): StorageStopScope =>
 export interface RetryRules {
   /** Ответы, после которых нет смысла продолжать: код → подсказка. */
   runStops: Readonly<Record<number, string>>;
+  /**
+   * Уточнить подсказку по телу ответа: R2 пишет причину в <Code>…</Code> — часы, подпись, ключ
+   * (ревизия фазы 5, А-24). Нет — подсказка по коду ответа как есть.
+   */
+  explain?: (
+    text: string,
+    hint: string,
+    stops: Readonly<Record<number, string>>,
+  ) => string;
   /** Временный отказ — повторить. */
   retryable: (status: number) => boolean;
   /** Что нельзя показывать в сообщениях: ключи. */
@@ -84,8 +93,11 @@ export async function requestWithRetries<T>(
       }
       const text = await res.text();
       const reason = `HTTP ${res.status}${text.trim() === "" ? "" : ` — ${snippet(text)}`}`;
-      const fatal = rules.runStops[res.status];
-      if (fatal !== undefined) {
+      const hint = rules.runStops[res.status];
+      if (hint !== undefined) {
+        const fatal = rules.explain
+          ? rules.explain(text, hint, rules.runStops)
+          : hint;
         throw storageError(`${label}: ${fatal} (${reason})`, "run");
       }
       if (!rules.retryable(res.status)) {

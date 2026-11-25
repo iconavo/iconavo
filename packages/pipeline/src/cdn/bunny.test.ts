@@ -241,3 +241,30 @@ describe("повторы и остановки", () => {
     expect(requests).toHaveLength(2);
   });
 });
+
+describe("перенаправления (ревизия фазы 5, Б-4)", () => {
+  it("список, чтение и запись не идут по перенаправлению: ошибка набора с первого раза", async () => {
+    const redirect = () =>
+      new Response(null, {
+        status: 302,
+        headers: { location: "https://elsewhere.example/zone/" },
+      });
+    const { c, requests } = client([redirect, redirect, redirect]);
+    const listed = await c.list("v/x/").catch((e: Error) => e);
+    expect((listed as Error).message).toContain("HTTP 302");
+    const read = await c.get("v/x/a.json").catch((e: Error) => e);
+    expect((read as Error).message).toContain("HTTP 302");
+    const body = new Uint8Array([1]);
+    const put = await c
+      .put("v/x/a.json", body, {
+        contentType: "application/json",
+        cacheControl: "public",
+        md5: "",
+        sha256: "ab".repeat(32),
+      })
+      .catch((e: Error) => e);
+    expect((put as Error).message).toContain("HTTP 302");
+    expect(requests).toHaveLength(3);
+    expect(requests.every((r) => r.init.redirect === "manual")).toBe(true);
+  });
+});

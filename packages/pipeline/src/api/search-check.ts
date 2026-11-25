@@ -43,7 +43,8 @@ export interface SearchCheckTarget {
 }
 
 export interface SearchCheckReport {
-  host: string;
+  /** Корень API со схемой: у превью — http (ревизия фазы 5, А-37). */
+  base: string;
   /** Версия индекса из ответа (X-Iconavo-Index). */
   index?: string;
   targets: SearchCheckTarget[];
@@ -116,7 +117,7 @@ export async function checkSearch(
   const get = (path: string) =>
     liveGet(`${base}/${path}`, { origin: CHECK_ORIGIN }, live);
   const report: SearchCheckReport = {
-    host: base.replace(/^https?:\/\//, ""),
+    base,
     targets: [],
     requests: 0,
     ms: 0,
@@ -356,7 +357,7 @@ export async function checkSearch(
 /** Строки проверки для терминала. */
 export function formatSearchCheck(r: SearchCheckReport): string[] {
   const lines = [
-    `Поиск https://${r.host}/search — версия индекса ${r.index ?? "—"}, запросов ${r.requests}`,
+    `Поиск ${r.base}/search — версия индекса ${r.index ?? "—"}, запросов ${r.requests}`,
   ];
   for (const t of r.targets) {
     const head = `  ${t.issues.length === 0 ? "ок" : "не так"}  ${t.name}: ${t.status ?? "—"}${t.ms === undefined ? "" : `, ${Math.round(t.ms)} мс`}${t.notes.length > 0 ? ` (${t.notes.join("; ")})` : ""}`;

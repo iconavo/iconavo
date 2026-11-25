@@ -71,6 +71,8 @@ export interface SetUploadReport {
   present: number;
   /** Недоставало в хранилище. */
   missing: number;
+  /** Байт недостающих файлов — их показ и выгрузит (ревизия фазы 5, А-21). */
+  missingBytes: number;
   /** Выгружено за этот прогон. */
   uploaded: number;
   uploadedBytes: number;
@@ -387,6 +389,7 @@ const emptySetReport = (id: string, version: string): SetUploadReport => ({
   present: 0,
   missing: 0,
   uploaded: 0,
+  missingBytes: 0,
   uploadedBytes: 0,
   ms: 0,
   status: "stopped",
@@ -433,6 +436,7 @@ async function uploadSets(
       );
       r.present = before.present.length;
       r.missing = before.missing.length;
+      r.missingBytes = bytesOf(before.missing);
       if (before.conflicts.length > 0) {
         throw new Error(conflictMessage(before.conflicts));
       }
@@ -602,12 +606,17 @@ async function uploadCatalog(
   }
 }
 
-/** Почему манифест хоста не пишется из-за его собственного «СТОП». */
-function ownStopNote(h: HostUploadReport): string {
+/**
+ * Почему манифест хоста не пишется из-за его собственного «СТОП». Остановлен только каталог наборов —
+ * так и сказано: раньше это описывалось как остановка всего хоста (ревизия фазы 5, А-22).
+ */
+export function ownStopNote(h: HostUploadReport): string {
   const stopped = h.sets.filter((s) => s.stop.length > 0).length;
-  return h.stop.length > 0 || stopped === 0
-    ? "работа с хостом остановлена"
-    : `остановлено наборов: ${stopped}`;
+  if (h.stop.length > 0) return "работа с хостом остановлена";
+  if (stopped > 0) return `остановлено наборов: ${stopped}`;
+  return (h.catalog?.stop.length ?? 0) > 0
+    ? "остановлен каталог наборов"
+    : "работа с хостом остановлена";
 }
 
 /**

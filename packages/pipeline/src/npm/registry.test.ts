@@ -182,6 +182,32 @@ describe("registryClient", () => {
     expect(await registry.packument("@iconavo-ui/icons-none")).toBeUndefined();
   });
 
+  it("пакет снят целиком (надгробие) — без живых версий, номера заняты: и при 200, и при 404 (ревизия фазы 5, А-4)", async () => {
+    const tomb = {
+      name: NAME,
+      time: {
+        created: "2026-10-23T00:00:00Z",
+        modified: "2026-11-01T00:00:00Z",
+        unpublished: {
+          time: "2026-11-01T00:00:00Z",
+          versions: ["1.0.0", "1.0.1"],
+        },
+      },
+    };
+    for (const status of [200, 404]) {
+      const { fetch } = queueFetch([() => Response.json(tomb, { status })]);
+      const p = await registryClient({ fetch, sleep: noSleep }).packument(NAME);
+      expect(p?.unpublished).toBe(true);
+      expect(p?.versions.size).toBe(0);
+      expect([...(p?.times.keys() ?? [])]).toEqual(["1.0.0", "1.0.1"]);
+    }
+    // 404 без надгробия — пакета нет, как раньше.
+    const { fetch } = queueFetch([() => new Response("{}", { status: 404 })]);
+    expect(
+      await registryClient({ fetch, sleep: noSleep }).packument(NAME),
+    ).toBeUndefined();
+  });
+
   it("временный отказ реестра повторяется", async () => {
     const sleeps: number[] = [];
     const { fetch, urls } = queueFetch([

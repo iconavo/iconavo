@@ -58,6 +58,32 @@ export async function sameVersionOnDisk(
 }
 
 /**
+ * Каждый файл версии на диске — побайтно тот же, что собран в памяти. Выгрузка и сверка спрашивают это
+ * у папки, которая по файлу сумм «та же»: испорченный файл с прежним именем иначе давал замкнутый круг —
+ * сборка «без изменений», выгрузка «запустите pnpm cdn build» (ревизия фазы 5, А-2).
+ */
+export async function sameFilesOnDisk(
+  outDir: string,
+  id: string,
+  version: string,
+  files: readonly CdnFile[],
+  concurrency: number,
+): Promise<boolean> {
+  const dir = setDir(outDir, id, version);
+  let same = true;
+  await pool(files, concurrency, async (f) => {
+    if (!same) return;
+    const bytes = await readFile(join(dir, basename(f.path))).catch(
+      () => undefined,
+    );
+    if (bytes === undefined || Buffer.compare(bytes, f.data) !== 0) {
+      same = false;
+    }
+  });
+  return same;
+}
+
+/**
  * Пишет файлы версии набора: временная папка рядом → подмена старой папки → файл сумм последним.
  * При ошибке временная папка удаляется, а старая папка остаётся, если до подмены не дошло.
  */
@@ -161,7 +187,15 @@ export async function cleanupCatalog(
       if (!keep.has(key)) await remove(join(base, entry.name), key);
       continue;
     }
-    const inner = (await readdir(join(base, entry.name))).sort(order);
+    // Не прочиталась папка — предупреждение, как у неудачного удаления, а не обрыв сборки после
+    // записанного манифеста (ревизия фазы 5, А-20).
+    let inner: string[];
+    try {
+      inner = (await readdir(join(base, entry.name))).sort(order);
+    } catch (e) {
+      warnings.push(`не прочитано ${key}: ${(e as Error).message}`);
+      continue;
+    }
     const stale = inner.filter((name) => !keep.has(`${key}/${name}`));
     if (stale.length === inner.length) {
       await remove(join(base, entry.name), key);
@@ -210,7 +244,16 @@ export async function cleanupStale(
       wanted.add(id);
       wanted.add(`${id}${CHECKSUMS_SUFFIX}`);
     }
-    for (const entry of (await readdir(join(base, version))).sort(order)) {
+    let entries: string[];
+    try {
+      entries = (await readdir(join(base, version))).sort(order);
+    } catch (e) {
+      warnings.push(
+        `не прочитано ${VERSIONS_DIR}/${version}: ${(e as Error).message}`,
+      );
+      continue;
+    }
+    for (const entry of entries) {
       if (!wanted.has(entry)) {
         await remove(
           join(base, version, entry),

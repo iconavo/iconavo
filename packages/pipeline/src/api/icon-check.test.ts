@@ -268,6 +268,11 @@ describe("pnpm api check — сведения об иконке", () => {
     expect(formatIconCheck(r).at(-1)).toBe(
       "Итог сведений об иконке: всё в порядке.",
     );
+    // Адрес — как есть, со схемой: у превью — http (ревизия фазы 5, А-37).
+    expect(formatIconCheck(r)[0]).toContain("https://api.iconavo.dev/icon");
+    expect(
+      formatIconCheck({ ...r, base: "http://127.0.0.1:4281" })[0],
+    ).toContain("http://127.0.0.1:4281/icon");
   });
 
   it("старое имя после переименования в Lucide (1.69.0) — тоже в порядке", async () => {

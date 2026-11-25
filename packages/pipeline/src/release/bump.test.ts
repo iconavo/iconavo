@@ -129,6 +129,23 @@ describe("pnpm release bump", () => {
     ]);
   });
 
+  it("передумали на меньшую невышедшую: можно, но не ниже вышедшей (ревизия фазы 5, А-25)", async () => {
+    const root = await writeReleaseRepo({
+      version: "0.2.0",
+      changelog:
+        "# Changelog\n\n## 0.2.0 — 2026-11-02\n\n- Fixes.\n\n## 0.1.0 — 2026-10-29\n\n- First.\n",
+    });
+    const registry = fakeRegistry(publishedAll([{ version: "0.1.0" }]));
+    await expect(
+      bump({ root, version: "0.1.0", date: "2026-11-03", registry }),
+    ).rejects.toThrow("не выше вышедшей 0.1.0");
+    await bump({ root, version: "0.1.1", date: "2026-11-03", registry });
+    expect(await sections(root)).toEqual([
+      { version: "0.1.1", date: "2026-11-03", body: "- Fixes." },
+      { version: "0.1.0", date: "2026-10-29", body: "- First." },
+    ]);
+  });
+
   it("без версии, пока версия не вышла, — только хэш и дата раздела", async () => {
     const root = await writeReleaseRepo({
       version: "0.1.0",

@@ -99,7 +99,7 @@ export function formatUploadTable(sets: readonly SetUploadReport[]): string {
     String(r.files),
     String(r.present),
     r.status === "planned" ? `(${r.missing})` : String(r.uploaded),
-    formatBytes(r.status === "planned" ? r.bytes : r.uploadedBytes),
+    formatBytes(r.status === "planned" ? r.missingBytes : r.uploadedBytes),
     formatMs(r.ms),
     UPLOAD_STATUS[r.status],
   ]);
@@ -194,7 +194,7 @@ function hostSection(h: HostUploadReport): string {
   const rows = hostRows(h)
     .map(
       (s) =>
-        `<tr><td>${esc(s.id)}</td><td><code>${esc(s.version === "" ? "—" : s.version)}</code></td><td class="num">${s.files}</td><td class="num">${s.present}</td><td class="num">${s.status === "planned" ? `(${s.missing})` : s.uploaded}</td><td class="num">${esc(formatBytes(s.status === "planned" ? s.bytes : s.uploadedBytes))}</td><td class="num">${esc(formatMs(s.ms))}</td><td class="${statusClass(s.status)}">${esc(UPLOAD_STATUS[s.status])}</td></tr>`,
+        `<tr><td>${esc(s.id)}</td><td><code>${esc(s.version === "" ? "—" : s.version)}</code></td><td class="num">${s.files}</td><td class="num">${s.present}</td><td class="num">${s.status === "planned" ? `(${s.missing})` : s.uploaded}</td><td class="num">${esc(formatBytes(s.status === "planned" ? s.missingBytes : s.uploadedBytes))}</td><td class="num">${esc(formatMs(s.ms))}</td><td class="${statusClass(s.status)}">${esc(UPLOAD_STATUS[s.status])}</td></tr>`,
     )
     .join("");
   const parts = [`<h2>${esc(formatHostTitle(h))}</h2>`];

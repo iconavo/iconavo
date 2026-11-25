@@ -104,3 +104,5 @@ export const CLEAN_RETRY_MS = 30_000;
 
 /** jsDelivr берёт новую версию из npm не сразу: сколько ждать и как часто спрашивать. */
 export const JSDELIVR_POLL_MS = 20_000;
+/** Срок одной попытки к jsDelivr вместе с телом ответа (ревизия фазы 5, А-26). */
+export const JSDELIVR_TIMEOUT_MS = 30_000;

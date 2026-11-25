@@ -112,6 +112,7 @@ describe("preparePackages", () => {
     expect(entry).toMatchObject({
       publish: true,
       base: null,
+      tagged: null,
       version: "1.0.0",
     });
     expect(entry?.files).toEqual([
@@ -193,6 +194,31 @@ describe("preparePackages", () => {
       await readFile(join(outDir, "demo", "package.json"), "utf8"),
     );
     expect(manifest.version).toBe("1.1.0");
+  });
+
+  it("пропало имя старшей живой версии, когда тег смотрит ниже, — «СТОП» (ревизия фазы 5, А-30)", async () => {
+    const first = await published(DEMO, "1.0.0");
+    const { version: v1 } = await writeNpmDemoSet(dataDir, DEMO);
+    const moon: NpmDemoSet = {
+      ...DEMO,
+      icons: { ...DEMO.icons, moon: { body: "<circle/>" } },
+    };
+    const second = await published(moon, "1.1.0");
+    // Тег next откатили на 1.0.0, а 1.1.0 с moon — старшая живая версия.
+    const pkg: FakePackage = {
+      versions: [...first.versions, ...second.versions],
+      tags: { latest: "1.0.0", next: "1.0.0" },
+    };
+    // Нынешняя сборка — без moon и с другим рисунком star: отпечаток другой, имена сравниваются.
+    await writeNpmDemoSet(dataDir, {
+      ...DEMO,
+      icons: { ...DEMO.icons, star: { body: "<g><g/></g>" } },
+      previous: [v1],
+    });
+    const report = await run(fakeRegistry({ [NAME]: pkg }));
+    expect(report.packages[0]?.stop).toEqual([
+      expect.stringContaining("пропали имена (1): moon"),
+    ]);
   });
 
   it("пропало имя — «СТОП», плана нет, и прошлый план убран", async () => {

@@ -42,6 +42,8 @@ export interface NpmPackageReport {
   version?: string;
   /** Версия под тегом в npm, от которой считали. */
   base?: string;
+  /** Тег в npm, каким его видел план; нет тега — undefined (ревизия фазы 5, А-3). */
+  tagged?: string;
   /** Новые имена по сравнению с опубликованной версией. */
   added: string[];
   icons: number;
@@ -70,6 +72,11 @@ export interface NpmPlanEntry {
   action: NpmAction;
   version: string;
   base: string | null;
+  /**
+   * Тег в npm, каким его видел план (null — тега нет): публикация сверяет реестр с ним — так план, у
+   * которого тег пропал, не «устаревает» навсегда, а публикация вернёт тег (ревизия фазы 5, А-3).
+   */
+  tagged: string | null;
   publish: boolean;
   /** Файлы пакета, как их упакует npm: проверка в CI сравнивает с npm pack --dry-run. */
   files: string[];
@@ -212,27 +219,38 @@ export async function preparePackages(
         action = look.action;
         version = look.version;
         r.base = look.base;
+        r.tagged = look.tagged;
       } else {
         r.base = look.base.version;
+        r.tagged = look.tagged;
         log(
           `${pkg.name}: сравниваю имена с опубликованной версией ${look.base.version}…`,
         );
-        const published = await options.registry.files(look.base);
-        const icons = published.get("icons.json");
-        if (icons === undefined) {
-          throw new Error(
-            `в опубликованной версии ${look.base.version} нет icons.json`,
-          );
-        }
-        const decision = compareNames({
-          base: look.base,
-          highest: look.highest,
-          publishedNames: namesOf(
+        // Имена основы и, если тег смотрит ниже старшей живой версии, — и её: ни из одной имя не
+        // должно пропасть (ревизия фазы 5, А-30).
+        const publishedNames = new Set<string>();
+        for (const doc of [look.base, ...(look.newest ? [look.newest] : [])]) {
+          const published = await options.registry.files(doc);
+          const icons = published.get("icons.json");
+          if (icons === undefined) {
+            throw new Error(
+              `в опубликованной версии ${doc.version} нет icons.json`,
+            );
+          }
+          for (const name of namesOf(
             JSON.parse(Buffer.from(icons).toString("utf8")) as {
               icons: Record<string, unknown>;
               aliases?: Record<string, unknown>;
             },
-          ),
+          )) {
+            publishedNames.add(name);
+          }
+        }
+        const decision = compareNames({
+          base: look.base,
+          ...(look.newest ? { newest: look.newest } : {}),
+          highest: look.highest,
+          publishedNames,
           names: namesOf(set.file),
           formatMajor,
         });
@@ -263,6 +281,7 @@ export async function preparePackages(
         action,
         version,
         base: r.base ?? null,
+        tagged: r.tagged ?? null,
         publish: PUBLISH_ACTIONS.has(action),
         files: files.map((f) => f.path),
       });

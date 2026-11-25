@@ -32,6 +32,7 @@ import {
 import {
   cleanupCatalog,
   cleanupStale,
+  sameFilesOnDisk,
   sameVersionOnDisk,
   writeCatalog,
   writeIfChanged,
@@ -101,6 +102,11 @@ export interface CdnOptions {
   dataDir: string;
   outDir: string;
   concurrency?: number;
+  /**
+   * Папку, которая по файлу сумм «та же», сверить ещё и побайтно (sameFilesOnDisk): так делают выгрузка
+   * и сверка хостов (ревизия фазы 5, А-2). Обычной сборке хватает файла сумм.
+   */
+  verifyFiles?: boolean;
   log?: (line: string) => void;
 }
 
@@ -198,13 +204,21 @@ export async function buildCdn(
         .slice(0, CHECKSUMS_LIMIT)
         .map((f) => [f.path, f.sha256]);
       if (
-        await sameVersionOnDisk(
+        (await sameVersionOnDisk(
           options.outDir,
           set.id,
           set.version,
           checksums,
           files.length,
-        )
+        )) &&
+        (!options.verifyFiles ||
+          (await sameFilesOnDisk(
+            options.outDir,
+            set.id,
+            set.version,
+            files,
+            concurrency,
+          )))
       ) {
         r.status = "unchanged";
       } else {

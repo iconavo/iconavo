@@ -75,6 +75,10 @@ function world(
     staticSvg?: string;
     /** Каталог в манифесте R2; «static» — на статике есть, а функция ещё читает манифест без него. */
     catalog?: "both" | "static";
+    /** Пути, которых нет на статике (а у функции они есть). */
+    staticMissing?: string[];
+    /** /collections функции отвечает 503. */
+    breakCollections?: boolean;
   } = {},
 ) {
   const files: Record<string, string> = {
@@ -122,12 +126,16 @@ function world(
       });
     }
     if (url.host === STATIC_HOST) {
-      const text = files[url.pathname.slice(1)];
+      const path = url.pathname.slice(1);
+      const text = o.staticMissing?.includes(path) ? undefined : files[path];
       return new Response(text ?? "", {
         status: text === undefined ? 404 : 200,
       });
     }
     if (url.host !== API_HOST) throw new TypeError("fetch failed");
+    if (o.breakCollections && url.pathname === "/collections") {
+      return new Response("busy", { status: 503 });
+    }
     const res = await handler(new Request(url), w.waitUntil);
     await w.flush();
     const headers = new Headers(res.headers);
@@ -179,6 +187,21 @@ describe("checkApi", () => {
     // Манифест без catalog — каталог не проверялся, это не проблема.
     expect(report.notes[0]).toMatch(/^каталог наборов не проверялся/);
     expect(formatApiCheckSummary(report).at(-1)).toMatch(/^Итог: ок/);
+  });
+
+  it("статики нет — «не прочитаны»; /collections не прочитан — без лишних сверок с ним (ревизия фазы 5, А-35)", async () => {
+    const w = world({
+      catalog: "both",
+      staticMissing: [`v/${V}/lucide/heart.json`],
+      breakCollections: true,
+    });
+    const report = await checkApi({ fetch: w.fetchFn, ...w.clock });
+    const issues = report.targets.flatMap((t) =>
+      t.issues.map((i) => i.message),
+    );
+    expect(issues).toContain("файлы статики не прочитаны");
+    expect(issues.some((m) => m.includes("не как на статике"))).toBe(false);
+    expect(issues.some((m) => m.includes("не как в /collections"))).toBe(false);
   });
 
   it("каталог в манифесте — его адреса сверяются с манифестом, всё ок", async () => {

@@ -154,6 +154,10 @@ describe("pnpm api check — поиск", () => {
     ]);
     expect(r.targets[0]?.notes).toContain("вектор: store");
     expect(formatSearchCheck(r).at(-1)).toBe("Итог поиска: всё в порядке.");
+    // Адрес — как есть, со схемой: у превью — http (ревизия фазы 5, А-37).
+    expect(
+      formatSearchCheck({ ...r, base: "http://127.0.0.1:4281" })[0],
+    ).toContain("http://127.0.0.1:4281/search");
   });
 
   it("повтор не из кэша с первого раза — ещё попытка, в порядке", async () => {
