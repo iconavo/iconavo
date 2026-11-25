@@ -284,8 +284,33 @@ function rewrite(href: string, page: DocPage, pages: DocPage[]): string | null {
       return where(source, href.slice(blob.length + 1));
     }
   }
-  if (/^https:\/\/iconavo\.dev\/docs([/#]|$)/.test(href)) {
-    return href.slice("https://iconavo.dev".length);
+  // Ссылка на документацию сайта — тоже проверяется: такая страница и якорь на ней есть (ревизия фазы 5,
+  // С-18); раньше она проходила как есть.
+  const site = href.match(
+    /^https:\/\/iconavo\.dev(\/docs(?:\/[a-z0-9-]+)?)\/?(?:#(.*))?$/,
+  );
+  if (site) {
+    const path = site[1] as string;
+    const anchor = site[2] ?? "";
+    const target = pages.find((p) => p.path === path);
+    if (!target) {
+      stop(
+        `ссылка «${href}» (${SOURCES[page.source]}) — такой страницы документации нет`,
+      );
+    }
+    const t = target as DocPage;
+    if (anchor === "" || t.aliases.includes(anchor)) return t.path;
+    if (!t.headings.some((h) => h.id === anchor)) {
+      stop(
+        `ссылка «${href}» (${SOURCES[page.source]}) — на ${path} такого заголовка нет`,
+      );
+    }
+    return `${t.path}#${anchor}`;
+  }
+  if (/^https:\/\/iconavo\.dev\/docs([/#?]|$)/.test(href)) {
+    stop(
+      `ссылка «${href}» (${SOURCES[page.source]}) — адрес документации не по форме /docs/раздел#якорь`,
+    );
   }
   if (!href.startsWith("https://")) {
     stop(

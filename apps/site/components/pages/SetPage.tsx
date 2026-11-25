@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import {
   categoriesOf,
   categoryCards,
+  FIRST_ICONS_MAX,
   FIRST_PAGE_MAX,
   getReleases,
   getSet,
@@ -46,14 +47,19 @@ export async function SetPage({
   const set = await getSet(prefix);
   if (set === undefined) notFound();
   const { info } = set;
-  // Свой последний выпуск меняется только с выпуском набора — метка набора, а не catalog (ADR-0039).
-  const latest = (await getReleases(setTag(prefix))).find(
+  // Свой последний выпуск меняется только с выпуском набора — метка набора, а не catalog (ADR-0039). Журнал
+  // — только этого набора: в общем, из последних 100 выпусков всех наборов, у редкого набора его выпуска
+  // могло не оказаться (ревизия фазы 5, С-33).
+  const latest = (await getReleases(setTag(prefix), prefix)).find(
     (r) => r.prefix === prefix,
   );
   const names = visibleNames(set);
   const grouped = setCards(set);
   const first = grouped.cards.slice(0, FIRST_PAGE_MAX).map((card) => card.base);
-  const icons = await loadPageIcons(first.map((name) => `${prefix}:${name}`));
+  // Рисунки — для первой страницы при 96; у остальных имён их догружает браузер (FIRST_ICONS_MAX).
+  const icons = await loadPageIcons(
+    first.slice(0, FIRST_ICONS_MAX).map((name) => `${prefix}:${name}`),
+  );
   return (
     <main id="content" className="page set-page">
       <header className="set-head">

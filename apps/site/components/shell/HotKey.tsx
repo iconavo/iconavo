@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
+import { isSearchHotKey } from "../../lib/hotkey";
 import { href, type Lang } from "../../lib/i18n";
 import { handOff } from "../../lib/search-handoff";
 
@@ -16,8 +17,7 @@ export function HotKey({ lang }: { lang: Lang }) {
   const router = useRouter();
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (e.key.toLowerCase() !== "k" || !(e.ctrlKey || e.metaKey)) return;
-      if (e.altKey || e.shiftKey) return;
+      if (!isSearchHotKey(e)) return;
       e.preventDefault();
       const input = document.getElementById(SEARCH_INPUT_ID);
       if (input instanceof HTMLInputElement) {

@@ -210,9 +210,31 @@ export function usePerPage(): PerPage {
   return perPageOf(useGridSettings(), usePhone());
 }
 
+/** Что было на экране: число на странице из настроек, размер страницы целыми рядами и её номер. */
+export interface ShownPage {
+  perPage: number;
+  size: number;
+  page: number;
+}
+
+/**
+ * Куда перейти после смены числа на странице: туда, где первая иконка страницы, которую человек видел.
+ * Номер — от показанной страницы, а не от новой: с поздней страницы при большем числе номер в адресе уже
+ * за последней, и новая отрисовка видит первую (ревизия фазы 5, С-7). Смена колонок (окно, вид) номер не
+ * трогает; undefined — переходить некуда.
+ */
+export function keptPageAfter(
+  was: ShownPage | undefined,
+  now: ShownPage,
+): number | undefined {
+  if (was === undefined || was.perPage === now.perPage) return undefined;
+  const next = keptPage(was.page, was.size, now.size);
+  return next === now.page ? undefined : next;
+}
+
 /**
  * Сменили число иконок на странице — номер страницы в адресе такой, чтобы её первая иконка осталась на
- * экране. Смена колонок (окно, вид) номер не трогает, как и раньше.
+ * экране (keptPageAfter).
  */
 export function useKeptPage(
   perPage: number,
@@ -220,14 +242,13 @@ export function useKeptPage(
   page: number,
   go: (page: number) => void,
 ): void {
-  const before = useRef<{ perPage: number; size: number }>(undefined);
+  const before = useRef<ShownPage>(undefined);
   useEffect(() => {
     if (size === undefined) return;
-    const was = before.current;
-    before.current = { perPage, size };
-    if (was === undefined || was.perPage === perPage) return;
-    const next = keptPage(page, was.size, size);
-    if (next !== page) go(next);
+    const now = { perPage, size, page };
+    const next = keptPageAfter(before.current, now);
+    before.current = now;
+    if (next !== undefined) go(next);
   }, [perPage, size, page, go]);
 }
 

@@ -7,6 +7,7 @@
 // событию URL_EVENT.
 
 import { useCallback, useEffect, useState } from "react";
+import { PANEL_PARAM } from "./icon";
 import { usePagePath } from "./page-path";
 
 /** Событие окна после перехода через navigate: его слушают все useUrlQuery страницы. */
@@ -37,6 +38,24 @@ export function panelMarker(): string | undefined {
 export const queryText = (next: URLSearchParams): string =>
   next.toString().replaceAll("%3A", ":").replaceAll("%2C", ",");
 
+/**
+ * Замена записи сохраняет пометку панели, только если меняется одна иконка панели: набранный при открытой
+ * панели поиск по набору или смена фильтра делают запись своей, и закрытие панели уже не уходит назад —
+ * иначе «назад» стёр бы набранное (ревизия фазы 5, С-5).
+ */
+export function keepsPanelMarker(
+  current: URLSearchParams,
+  next: URLSearchParams,
+): boolean {
+  const rest = (query: URLSearchParams) => {
+    const copy = new URLSearchParams(query);
+    copy.delete(PANEL_PARAM);
+    copy.sort();
+    return copy.toString();
+  };
+  return rest(current) === rest(next);
+}
+
 export interface NavigateOptions {
   /** Заменить запись истории, а не добавить (набор текста, смена иконки в панели). */
   replace?: boolean;
@@ -65,14 +84,20 @@ export function useUrlQuery(): {
     () => ({ query: EMPTY }),
   );
   // Читается и после перехода Next.js на другую страницу: компонент общей раскладки при этом не
-  // пересоздаётся, а popstate не приходит.
+  // пересоздаётся, а popstate не приходит. Переход по ссылке на эту же страницу (путь тот же, параметры
+  // другие) приносит URL_EVENT от UrlWatch (components/shell/UrlWatch.tsx). Те же параметры — состояние
+  // прежнее: лишней отрисовки нет.
   useEffect(() => {
     void pathname;
-    const update = () =>
-      setRead({
-        path: window.location.pathname,
-        query: new URLSearchParams(window.location.search),
-      });
+    const update = () => {
+      const path = window.location.pathname;
+      const query = new URLSearchParams(window.location.search);
+      setRead((was) =>
+        was.path === path && was.query.toString() === query.toString()
+          ? was
+          : { path, query },
+      );
+    };
     update();
     window.addEventListener("popstate", update);
     window.addEventListener(URL_EVENT, update);
@@ -97,7 +122,11 @@ export function useUrlQuery(): {
       const marker =
         options?.panel !== undefined
           ? options.panel
-          : options?.replace
+          : options?.replace &&
+              keepsPanelMarker(
+                new URLSearchParams(window.location.search),
+                next,
+              )
             ? panelMarker()
             : undefined;
       const state: PanelState | null =

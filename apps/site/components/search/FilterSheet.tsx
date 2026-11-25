@@ -51,6 +51,10 @@ export function FilterSheet({
   const [draft, setDraft] = useState<FilterState>(value);
   const [needle, setNeedle] = useState("");
 
+  // Ушли со страницы с открытой шторкой («назад» на телефоне) — флаг в общем хранилище закрыт: иначе при
+  // следующем заходе на поиск шторка открылась бы сама (ревизия фазы 5, С-9).
+  useEffect(() => () => filterSheetStore.set(false), []);
+
   useEffect(() => {
     const el = dialog.current;
     if (el === null) return;

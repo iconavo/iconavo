@@ -250,11 +250,12 @@ export function SearchResults({
     return () => clearInterval(id);
   }, [phase.kind]);
 
-  // С фильтрами пусто — то же без фильтров, несколькими рядами.
+  // С фильтрами пусто — то же без фильтров, несколькими рядами. Ответ окончательный — полный или только
+  // по словам (semantic: text, смысл недоступен); неполный (pending) досчитывается (ревизия фазы 5, С-13).
   const empty =
     phase.kind === "answer" &&
     !phase.repeating &&
-    phase.answer.semantic === "full" &&
+    phase.answer.semantic !== "pending" &&
     phase.answer.cards.length === 0 &&
     state.page === 1 &&
     hasFilters(state);

@@ -783,6 +783,16 @@ async function gridProblems(
     pageOf(e.names, 3),
     "?page=3",
   );
+  if (problem) return [problem];
+  // Ссылка на эту же страницу без параметров — набор в левой панели: путь тот же, а номер страницы и
+  // фильтры сбрасываются (ревизия фазы 5, С-1; раньше сетка оставалась на третьей).
+  await page.locator(`#sidebar a[href="/${CATALOG_SET}"]`).first().click();
+  problem = await gridShows(
+    page,
+    "ссылка на эту же страницу без параметров",
+    pageOf(e.names, 1),
+    "",
+  );
   return problem ? [problem] : [];
 }
 
@@ -1323,14 +1333,26 @@ async function checkCanary(
       },
     ],
     [
+      // Адрес другой страницы без icon получают и Next.js, и строка адреса — как если бы сайт сам его так
+      // собрал. Обёртка — снаружи обёртки Next.js (та ставится при гидратации): обёрнутый изнутри, Next.js
+      // помнил бы переданный ему адрес, вернул бы его в строку адреса, а UrlWatch — сетке (ревизия фазы 5, С-1).
       "другая страница сетки закрывает панель",
       () => {
-        const push = history.pushState.bind(history);
-        history.pushState = (state, unused, url) => {
-          const next = new URL(String(url ?? location.href), location.href);
-          if (next.searchParams.has("page")) next.searchParams.delete("icon");
-          push(state, unused, next);
-        };
+        const strip =
+          (push: History["pushState"]): History["pushState"] =>
+          (state, unused, url) => {
+            const next = new URL(String(url ?? location.href), location.href);
+            if (next.searchParams.has("page")) next.searchParams.delete("icon");
+            push.call(history, state, unused, next);
+          };
+        let current = strip(history.pushState);
+        Object.defineProperty(history, "pushState", {
+          configurable: true,
+          get: () => current,
+          set: (push: History["pushState"]) => {
+            current = strip(push);
+          },
+        });
       },
     ],
     [

@@ -38,6 +38,23 @@ export interface WheelLike {
   readonly shiftKey: boolean;
 }
 
+/**
+ * Снимок события колеса, deltaMode — первым: Firefox отдаёт строки (deltaMode 1), только если deltaMode
+ * прочитан раньше deltaY, а иначе пересчитывает шаг в пиксели, и щелчок колеса не узнаётся — сглаживания
+ * не было (ревизия фазы 5, С-15).
+ */
+export function wheelOf(e: WheelLike): WheelLike {
+  const deltaMode = e.deltaMode;
+  return {
+    deltaMode,
+    deltaX: e.deltaX,
+    deltaY: e.deltaY,
+    ctrlKey: e.ctrlKey,
+    metaKey: e.metaKey,
+    shiftKey: e.shiftKey,
+  };
+}
+
 /** Щелчок колеса мыши вверх или вниз: строками или крупным целым шагом в пикселях, без клавиш. */
 export function isMouseNotch(e: WheelLike): boolean {
   if (e.ctrlKey || e.metaKey || e.shiftKey) return false;
@@ -146,11 +163,13 @@ export function smoothWheel(win: Window): () => void {
   };
 
   const onWheel = (e: WheelEvent) => {
-    if (e.defaultPrevented || reduce.matches || !isMouseNotch(e)) return;
+    if (e.defaultPrevented || reduce.matches) return;
+    const wheel = wheelOf(e);
+    if (!isMouseNotch(wheel)) return;
     if (
       ownsWheel(
         e.target as Element | null,
-        e.deltaY,
+        wheel.deltaY,
         doc.documentElement,
         (element) => win.getComputedStyle(element as Element),
       )
@@ -169,7 +188,7 @@ export function smoothWheel(win: Window): () => void {
     current = Math.min(current, max);
     const next = Math.min(
       max,
-      Math.max(0, target + notchDistance(e, win.innerHeight)),
+      Math.max(0, target + notchDistance(wheel, win.innerHeight)),
     );
     // Упёрлись в край страницы — дальше как в браузере.
     if (next === target) return;

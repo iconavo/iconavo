@@ -240,8 +240,15 @@ async function load(path: string, tag: string): Promise<Got | undefined> {
   }
   if (response.status === 404) return undefined;
   if (!response.ok) stop(`${API}${path} ответил ${response.status}`);
+  let data: unknown;
+  try {
+    data = await response.json();
+  } catch (e) {
+    // Битый ответ — остановка с адресом, а не голая SyntaxError (ревизия фазы 5, С-37).
+    stop(`${API}${path}: ответ не JSON — ${(e as Error).message}`);
+  }
   return {
-    data: await response.json(),
+    data,
     version: response.headers.get("x-iconavo-version") ?? "",
     content: response.headers.get("x-iconavo-content") ?? "",
   };
@@ -279,15 +286,6 @@ export async function getSets(
   const got = await getJson("/collections", tag);
   if (got === undefined) stop("/collections — 404");
   return parseSets(got.data);
-}
-
-/** Сведения об одном наборе — для страниц его иконок (витрина в мокапах); нет набора — undefined. */
-export async function getSetInfo(prefix: string): Promise<SetInfo | undefined> {
-  const got = await getJson(
-    `/collections?prefix=${encodeURIComponent(prefix)}`,
-    setTag(prefix),
-  );
-  return got === undefined ? undefined : parseSets(got.data)[prefix];
 }
 
 /**
@@ -377,13 +375,25 @@ export function pageSizeFor(
   return cols * Math.max(1, Math.round(target / cols));
 }
 
+/** Наибольшее число на странице из настроек сетки (PER_PAGE_CHOICES в lib/grid-settings.ts, ADR-0054). */
+export const PER_PAGE_MAX = 192;
+
+/** Наибольшая страница целыми рядами при любой ширине до 32 колонок. */
+const firstPageAt = (target: number) =>
+  Math.max(...Array.from({ length: 32 }, (_, i) => pageSizeFor(i + 1, target)));
+
 /**
- * Сколько первых карточек набора сервер отдаёт браузеру: первой страницы хватает при любой ширине до 32
- * колонок, и браузер дополняет ряд без запроса к API.
+ * Сколько первых карточек набора сервер отдаёт браузеру — имена: первой страницы хватает при любой ширине
+ * и любом числе на странице из настроек, и браузер дополняет ряд без запроса к API. Раньше — только под
+ * 96, и при 144 и 192 первая страница мигала скелетонами (ревизия фазы 5, С-31).
  */
-export const FIRST_PAGE_MAX = Math.max(
-  ...Array.from({ length: 32 }, (_, i) => pageSizeFor(i + 1)),
-);
+export const FIRST_PAGE_MAX = firstPageAt(PER_PAGE_MAX);
+
+/**
+ * Рисунки из серверного HTML — для первой страницы при 96 на странице (PAGE_SIZE): у остальных карточек
+ * первой страницы их догружает ядро браузера одной пачкой, а HTML страницы не растёт вдвое.
+ */
+export const FIRST_ICONS_MAX = firstPageAt(PAGE_SIZE);
 
 /**
  * Наборы в витрине: популярность ещё не измерить (аналитика — шаг 7), поэтому порядок задан списком;
@@ -493,21 +503,27 @@ export interface Category {
   names: string[];
 }
 
-/** Категории автора по алфавиту; одинаковый адрес у двух категорий — у второй номер. */
+/**
+ * Категории автора по алфавиту; одинаковый адрес у двух категорий — у второй номер, и номер не совпадает с
+ * адресом другой категории («Arrows 1» и вторая «Arrows»; ревизия фазы 5, С-36).
+ */
 export function categoriesOf(c: Collection): Category[] {
-  const seen = new Map<string, number>();
-  return Object.entries(c.categories ?? {})
-    .sort(([a], [b]) => a.localeCompare(b, "en"))
-    .map(([title, names]) => {
-      const base = categorySlug(title) || "category";
-      const count = seen.get(base) ?? 0;
-      seen.set(base, count + 1);
-      return {
-        title,
-        slug: count === 0 ? base : `${base}-${count}`,
-        names: [...new Set(names)].sort(order),
-      };
-    });
+  const entries = Object.entries(c.categories ?? {}).sort(([a], [b]) =>
+    a.localeCompare(b, "en"),
+  );
+  const taken = new Set(
+    entries.map(([title]) => categorySlug(title) || "category"),
+  );
+  const used = new Set<string>();
+  return entries.map(([title, names]) => {
+    const base = categorySlug(title) || "category";
+    let slug = base;
+    for (let n = 1; used.has(slug) || (slug !== base && taken.has(slug)); n++) {
+      slug = `${base}-${n}`;
+    }
+    used.add(slug);
+    return { title, slug, names: [...new Set(names)].sort(order) };
+  });
 }
 
 /** Суффикс из /collection — без дефиса, как у Iconify; правилу карточек он нужен с дефисом. */

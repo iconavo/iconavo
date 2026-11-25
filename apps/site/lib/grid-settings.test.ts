@@ -6,6 +6,7 @@ import {
   iconSizeOf,
   isIconSize,
   keptPage,
+  keptPageAfter,
   PER_PAGE_DESKTOP,
   PER_PAGE_PHONE,
   parseGridSettings,
@@ -61,6 +62,34 @@ describe("настройки сетки", () => {
     expect(keptPage(3, 98, 196)).toBe(2);
     expect(keptPage(1, 98, 196)).toBe(1);
     expect(keptPage(2, 48, 96)).toBe(1);
+  });
+
+  it("с поздней страницы при большем числе — страница, где показанная иконка (ревизия фазы 5, С-7)", () => {
+    // Страница 10 по 48: первая иконка — 433-я. По 192 страниц меньше 10, и новая отрисовка видела бы
+    // первую; номер — от показанной страницы: 433-я иконка на 3-й.
+    expect(
+      keptPageAfter(
+        { perPage: 48, size: 48, page: 10 },
+        { perPage: 192, size: 192, page: 1 },
+      ),
+    ).toBe(3);
+    // Сменились только колонки — номер прежний.
+    expect(
+      keptPageAfter(
+        { perPage: 96, size: 98, page: 4 },
+        { perPage: 96, size: 96, page: 4 },
+      ),
+    ).toBeUndefined();
+    // Первая отрисовка и уже нужная страница — переходить некуда.
+    expect(
+      keptPageAfter(undefined, { perPage: 96, size: 96, page: 2 }),
+    ).toBeUndefined();
+    expect(
+      keptPageAfter(
+        { perPage: 96, size: 96, page: 3 },
+        { perPage: 192, size: 192, page: 2 },
+      ),
+    ).toBeUndefined();
   });
 });
 
