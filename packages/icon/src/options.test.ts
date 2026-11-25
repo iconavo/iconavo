@@ -129,4 +129,18 @@ describe("настройки тега из атрибутов", () => {
     ].map((attributes) => tagOptions(from(attributes)).key);
     expect(new Set(keys).size).toBe(keys.length);
   });
+
+  it("строка значений однозначна и с запятыми в значениях (ревизия фазы 5, П-3)", () => {
+    // Раньше значения склеивались через запятую: обе пары давали «1,2,3,…», и тег не перерисовывался,
+    // хотя высота 3 в первой паре — верная, а во второй — ширина 1.
+    const a = tagOptions(from({ width: "1,2", height: "3" }));
+    const b = tagOptions(from({ width: "1", height: "2,3" }));
+    expect(a.render.height).toBe("3");
+    expect(b.render.width).toBe("1");
+    expect(a.key).not.toBe(b.key);
+    // Атрибута нет и атрибут со словом null — тоже разные строки.
+    expect(tagOptions(from({ color: "null" })).key).not.toBe(
+      tagOptions(from({})).key,
+    );
+  });
 });

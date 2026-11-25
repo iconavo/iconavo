@@ -118,6 +118,11 @@ export interface PageCheckOptions {
   liveScript?: string;
   /** Сведения, общие для всех браузеров: архивы, установка, сборка, журнал сервера Next.js. */
   shared: Partial<Record<CheckId, Verdict>>;
+  /**
+   * Журнал сервера Next.js, прочитанный заново: запросы, которые сервер сделал, пока браузер открывал
+   * страницу, — тоже в строке «Сеть» (ревизия фазы 5, И-9). Нет — берётся shared.network.
+   */
+  serverNetwork?: () => Promise<Verdict>;
   log?: (line: string) => void;
 }
 
@@ -517,7 +522,7 @@ async function checkPage(
   v.console = quietVerdict(seen.warnings, seen.errors);
   v.network = networkVerdict(
     trafficVerdict(traffic, { script: o.starter === "html" }),
-    o.shared.network,
+    o.serverNetwork ? await o.serverNetwork() : o.shared.network,
   );
   await context.close();
 }
@@ -613,7 +618,7 @@ async function checkSriCanary(
   const context = await browser.newContext({ viewport: VIEWPORT });
   const page = await context.newPage();
   const seen = watch(page);
-  await routeHosts(page, {
+  const traffic = await routeHosts(page, {
     map: o.map,
     script: {
       url,
@@ -629,13 +634,20 @@ async function checkSriCanary(
   const reported = [...seen.errors, ...seen.warnings].some((m) =>
     /integrity/i.test(m),
   );
+  // Скрипт должен был уйти в сеть ровно раз: иначе тег не определён потому, что его никто не
+  // запросил, и проверка прошла бы вслепую (ревизия фазы 5, И-20).
+  const asked = traffic.scripts.filter((s) => s === url).length;
   result.verdicts.canarySri = defined
     ? fail(
         "проверка слепая: скрипт с другим содержимым запустился — у строки подключения нет integrity?",
       )
-    : pass(
-        `скрипт с другим содержимым браузер не запустил${reported ? ", в консоли — ошибка integrity" : ""}`,
-      );
+    : asked !== 1
+      ? fail(
+          `проверка слепая: скрипт тега запрошен ${asked} раз вместо одного — браузеру нечего было отклонять`,
+        )
+      : pass(
+          `скрипт с другим содержимым браузер не запустил${reported ? ", в консоли — ошибка integrity" : ""}`,
+        );
   await context.close();
 }
 

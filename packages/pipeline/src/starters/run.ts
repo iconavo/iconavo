@@ -112,7 +112,14 @@ async function install(
             pack !== undefined && r.includes(basename(pack.file)),
         };
   });
-  const verdict = installVerdict(await npmTree(dir), expected);
+  // Дерево не прочиталось — «нет» установки, а не обрыв всей проверки без отчёта (ревизия фазы 5, И-10).
+  let tree: Awaited<ReturnType<typeof npmTree>>;
+  try {
+    tree = await npmTree(dir);
+  } catch (e) {
+    return fail(`npm ls: ${short(e)}`);
+  }
+  const verdict = installVerdict(tree, expected);
   if (!npm || verdict.ok !== true) return verdict;
   try {
     await run("npm", ["audit", "signatures"], dir);
@@ -295,6 +302,13 @@ export async function openStarter(o: {
     o.id === "html"
       ? SCRIPT_URL.exec(await readFile(join(dir, "index.html"), "utf8"))?.[1]
       : undefined;
+  // Без адреса скрипта подменять нечего, а хэш в копии — от файла этой ветки: окно открылось бы без
+  // иконок и без объяснений (ревизия фазы 5, И-20). Как у проверки — стоп с причиной.
+  if (o.id === "html" && scriptUrl === undefined) {
+    await browser.close();
+    await server.stop();
+    throw new Error("в index.html нет скрипта тега с jsDelivr");
+  }
   await routeHosts(page, {
     map: null,
     script: scriptUrl
@@ -324,10 +338,18 @@ export async function checkStarters(
 ): Promise<StartersReport> {
   const npm = o.api === undefined;
   const work = join(o.root, WORK_DIR);
-  const packs = npm ? [] : await packPackages(o.root, join(work, "packages"));
-  const packed: Verdict = npm
-    ? { ok: null, note: "пакеты из реестра npm" }
-    : packVerdict(packs);
+  // Архивы не собрались — «нет» в строке архивов и стоп у примеров на пакетах, а не обрыв всей проверки
+  // без отчёта (ревизия фазы 5, И-10).
+  let packs: Pack[] = [];
+  let packed: Verdict = { ok: null, note: "пакеты из реестра npm" };
+  if (!npm) {
+    try {
+      packs = await packPackages(o.root, join(work, "packages"));
+      packed = packVerdict(packs);
+    } catch (e) {
+      packed = fail(`архивы не собрались: ${short(e)}`);
+    }
+  }
   const map = npm ? null : hostMap(o.api as string);
   const preload = pathToFileURL(
     join(o.root, "packages", "pipeline", "dist", "starters", "preload.js"),
@@ -343,7 +365,9 @@ export async function checkStarters(
     const installed =
       id === "html"
         ? { ok: null, note: "без установки: скрипт тега — с jsDelivr" }
-        : await install(dir, packs, npm);
+        : !npm && packs.length === 0
+          ? fail("не установлено: архивов пакетов нет")
+          : await install(dir, packs, npm);
     const page =
       id === "html" ? await readFile(join(dir, "index.html"), "utf8") : "";
     const scriptUrl = SCRIPT_URL.exec(page)?.[1];
@@ -382,7 +406,10 @@ export async function checkStarters(
       const env: Record<string, string> =
         id === "next" && map !== null
           ? {
-              NODE_OPTIONS: `--import=${preload}`,
+              // Своё — к флагам вызывающего, а не вместо них (ревизия фазы 5, И-20).
+              NODE_OPTIONS: [process.env.NODE_OPTIONS, `--import=${preload}`]
+                .filter(Boolean)
+                .join(" "),
               ICONAVO_STARTERS_HOSTS: JSON.stringify(map),
               ICONAVO_STARTERS_LOG: logFile,
             }
@@ -403,11 +430,16 @@ export async function checkStarters(
         stopHere({}, `не запустился: ${short(e)}`);
         continue;
       }
+      // Журнал сервера — и сразу после запуска, и заново у каждого браузера (ревизия фазы 5, И-9).
+      const serverNetwork =
+        id === "next" && map !== null
+          ? async () => {
+              const log = await readFile(logFile, "utf8").catch(() => "");
+              return serverLogVerdict(log.split(/\r?\n/).filter(Boolean));
+            }
+          : undefined;
       try {
-        if (id === "next" && map !== null) {
-          const log = await readFile(logFile, "utf8").catch(() => "");
-          shared.network = serverLogVerdict(log.split(/\r?\n/).filter(Boolean));
-        }
+        if (serverNetwork) shared.network = await serverNetwork();
         results.push(
           ...(await checkStarterPages(
             {
@@ -424,6 +456,7 @@ export async function checkStarters(
                   : undefined,
               liveScript: npm ? scriptUrl : undefined,
               shared,
+              serverNetwork,
               log: (line) => o.log(`  ${line}`),
             },
             o.browsers,

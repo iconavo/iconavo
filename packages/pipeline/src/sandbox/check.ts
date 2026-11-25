@@ -11,6 +11,7 @@ import type { Browser, Page } from "playwright";
 import { BROWSERS, type BrowserName, launchBrowser } from "./browser.js";
 import { checkNetwork, NET_CHECKS } from "./net-check.js";
 import {
+  allViolations,
   fail,
   layoutVerdict,
   pass,
@@ -151,6 +152,26 @@ export function delayVerdict(p: PlaceholderMeasure | null): Verdict {
       }
     : pass(
         `при вставке и на ${at} мс анимации скрыта, после 150 мс видна; анимации ${p.skeleton} / ${p.spinner}`,
+      );
+}
+
+/**
+ * Без движения (prefers-reduced-motion): у заглушки только задержка показа h — и всё так же скрыта при
+ * вставке и видна после задержки. Раньше видимость не судилась: правило, которое оставляет скелетон
+ * скрытым навсегда, проходило (ревизия фазы 5, И-19).
+ */
+export function motionVerdict(p: PlaceholderMeasure | null): Verdict {
+  if (!p) return fail("класс skeleton не появился за 10 с");
+  const still = p.skeleton === "h" && p.spinner === "h";
+  return p.earlyAt !== null &&
+    still &&
+    p.startVisibility === "hidden" &&
+    p.lateVisibility === "visible"
+    ? pass(
+        "остаётся только задержка показа: при вставке скрыта, после неё видна",
+      )
+    : fail(
+        `при вставке — ${p.startVisibility}, после задержки — ${p.lateVisibility}; анимации ${p.skeleton} / ${p.spinner}`,
       );
 }
 
@@ -400,12 +421,11 @@ async function checkTagPage(
       return true;
     }
   });
+  // Trusted Types включают все три браузера проверки: не включились — сломан заголовок CSP страницы,
+  // а не ограничение браузера (ревизия фазы 5, И-8). «— 1» — ровно одна политика: не 10 и не 12.
   v.trusted = !enforced
-    ? {
-        ok: null,
-        note: `браузер не включил Trusted Types; политика: ${policy}`,
-      }
-    : policy.includes("«iconavo»") && policy.includes("— 1")
+    ? fail(`браузер не включил Trusted Types; политика: ${policy}`)
+    : policy.includes("«iconavo»") && /— 1(?!\d)/.test(policy)
       ? pass(`включены; политика ${policy}`)
       : fail(`политика: ${policy}`);
   await context.close();
@@ -417,22 +437,20 @@ async function checkMotion(
   browser: Browser,
   o: SandboxCheckOptions,
   result: BrowserResult,
-): Promise<void> {
+): Promise<{ errors: string[]; violations: string[] }> {
   const context = await browser.newContext({
     viewport: { width: 1280, height: 900 },
     reducedMotion: "reduce",
   });
   const page = await context.newPage();
+  // Ошибки и нарушения CSP и этой страницы — в строку «ошибки» (ревизия фазы 5, И-19).
+  const seen = watch(page);
+  await recordViolations(page);
   await open(page, `${o.base}/tag?api=${encodeURIComponent(o.api)}`);
-  const placeholder = await measurePlaceholder(page);
-  result.verdicts.motion = !placeholder
-    ? fail("класс skeleton не появился за 10 с")
-    : placeholder.earlyAt !== null &&
-        placeholder.skeleton === "h" &&
-        placeholder.spinner === "h"
-      ? pass("остаётся только задержка показа")
-      : fail(`анимации ${placeholder.skeleton} / ${placeholder.spinner}`);
+  result.verdicts.motion = motionVerdict(await measurePlaceholder(page));
+  const found = await allViolations(page);
   await context.close();
+  return { errors: seen.errors, violations: found };
 }
 
 /** Страница 5000 иконок: место до загрузки при задержанных ответах и ленивая загрузка. */
@@ -537,12 +555,12 @@ async function checkBrowser(
     o.log?.(`${name}: страница «Тег»…`);
     const tag = await checkTagPage(browser, name, o, result);
     o.log?.(`${name}: без анимации…`);
-    await checkMotion(browser, o, result);
+    const motion = await checkMotion(browser, o, result);
     o.log?.(`${name}: 5000 иконок…`);
     const many = await checkManyPage(browser, o, result);
     result.verdicts.errors = errorsVerdict(
-      [...tag.errors, ...many.errors],
-      [...tag.violations, ...many.violations],
+      [...tag.errors, ...motion.errors, ...many.errors],
+      [...tag.violations, ...motion.violations, ...many.violations],
     );
     Object.assign(
       result.verdicts,

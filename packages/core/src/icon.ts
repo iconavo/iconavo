@@ -75,7 +75,12 @@ export function iconData(set: IconavoIconSet, name: string): IconData | null {
   const chain: IconavoAlias[] = [];
   const seen: string[] = [];
   let current = name;
-  while (Object.hasOwn(aliases, current)) {
+  // Иконка главнее алиаса с тем же именем, как у Iconify (getIconsTree): в чужих данных addIcons имя
+  // бывает и там, и там (ревизия фазы 5, П-2).
+  while (
+    !Object.hasOwn(set.icons, current) &&
+    Object.hasOwn(aliases, current)
+  ) {
     if (seen.length >= ALIAS_CHAIN_LIMIT || seen.includes(current)) {
       throw new Error(`Alias "${name}" loops`);
     }

@@ -73,10 +73,15 @@ export const Icon = forwardRef<SVGSVGElement, IconProps>(
       placeholder,
       className,
       // Своё содержимое у <svg> иконки — рисунок через innerHTML, а детей вместе с ним React не
-      // рисует и падает: из JS их могут передать в обход типов — они отбрасываются.
+      // рисует и падает: из JS их могут передать в обход типов — они отбрасываются. Свой HTML — тоже:
+      // иначе он попадал в заглушку, пока иконка грузится (ревизия фазы 5, П-5).
       children: _children,
+      dangerouslySetInnerHTML: _html,
       ...rest
-    } = props as IconProps & { children?: unknown };
+    } = props as IconProps & {
+      children?: unknown;
+      dangerouslySetInnerHTML?: unknown;
+    };
     const scope = useContext(Icons);
     const provided = isValidIconName(icon) ? lookup(scope, icon) : undefined;
     const state = useSyncExternalStore(

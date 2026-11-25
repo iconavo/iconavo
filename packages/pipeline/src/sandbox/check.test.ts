@@ -5,6 +5,7 @@ import {
   delayVerdict,
   EXPECTED_WARNINGS,
   errorsVerdict,
+  motionVerdict,
   sandboxCheckFailed,
   warningsVerdict,
 } from "./check.js";
@@ -18,7 +19,62 @@ import {
   isAbortedScript,
   isRequestFailure,
   layoutVerdict,
+  shot,
 } from "./verdict.js";
+
+/** Страница для shot(): «снимок» добавляет то, что приходит во время него в WebKit, и ещё настоящее. */
+function snapshotPage(seen: { errors: string[] }) {
+  const win = { violations: [] as string[] };
+  const style =
+    "Refused to apply a stylesheet because its hash, its nonce, or 'unsafe-inline' does not appear in the style-src directive of the Content Security Policy.";
+  const page = {
+    evaluate: async <A, R>(fn: (arg: A) => R, arg: A) => {
+      const g = globalThis as unknown as { window?: unknown };
+      g.window = win;
+      try {
+        return fn(arg);
+      } finally {
+        delete g.window;
+      }
+    },
+    screenshot: async () => {
+      win.violations.push(
+        "style-src-elem inline :5 ",
+        "script-src-elem inline http://127.0.0.1:4282/tag:40 ",
+      );
+      seen.errors.push(style, "TypeError: настоящая ошибка");
+      return Buffer.from("png");
+    },
+    waitForTimeout: async () => {},
+  };
+  return { page, win, style };
+}
+
+describe("снимок страницы (ревизия фазы 5, И-7)", () => {
+  it("не в счёт только стиль Playwright и сообщение о нём; настоящее остаётся", async () => {
+    const seen = { errors: ["ошибка до снимка"] };
+    const { page, win } = snapshotPage(seen);
+    win.violations.push("connect-src https://evil.example/ :1 ");
+    await shot(page as never, seen);
+    expect(win.violations).toEqual([
+      "connect-src https://evil.example/ :1 ",
+      "script-src-elem inline http://127.0.0.1:4282/tag:40 ",
+    ]);
+    expect(seen.errors).toEqual([
+      "ошибка до снимка",
+      "TypeError: настоящая ошибка",
+    ]);
+    // Сообщение о стиле без своего нарушения — сайт сам вставил стиль: остаётся.
+    const alone = { errors: [] as string[] };
+    const quiet = snapshotPage(alone);
+    quiet.page.screenshot = async () => {
+      alone.errors.push(quiet.style);
+      return Buffer.from("png");
+    };
+    await shot(quiet.page as never, alone);
+    expect(alone.errors).toEqual([quiet.style]);
+  });
+});
 
 describe("разбор проверки в браузерах", () => {
   it("предупреждения: каждое ожидаемое — ровно один раз, чужие предупреждения пакета — проблема", () => {
@@ -255,5 +311,27 @@ describe("отчёт проверки", () => {
     );
     expect(md).toContain("Итог: есть проблемы.");
     expect(markdownSandboxCheck(results.slice(0, 1))).not.toContain("Не так:");
+  });
+});
+
+describe("заглушка без движения (ревизия фазы 5, И-19)", () => {
+  const still = {
+    startVisibility: "hidden",
+    earlyAt: 20,
+    earlyVisibility: "hidden",
+    lateVisibility: "visible",
+    skeleton: "h",
+    spinner: "h",
+  };
+  it("только задержка, скрыта при вставке и видна после — «да»", () => {
+    expect(motionVerdict(still).ok).toBe(true);
+  });
+  it("скрыта навсегда, мерцает или нет задержки — «нет»", () => {
+    expect(motionVerdict({ ...still, lateVisibility: "hidden" }).ok).toBe(
+      false,
+    );
+    expect(motionVerdict({ ...still, skeleton: "h, p" }).ok).toBe(false);
+    expect(motionVerdict({ ...still, earlyAt: null }).ok).toBe(false);
+    expect(motionVerdict(null).ok).toBe(false);
   });
 });

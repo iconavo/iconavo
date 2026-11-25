@@ -20,13 +20,15 @@ const write = (line: string) => {
 const original = globalThis.fetch;
 
 globalThis.fetch = (input, init) => {
-  const url =
-    typeof input === "string"
-      ? input
-      : input instanceof URL
-        ? input.href
-        : input.url;
-  const target = mapUrl(url, map);
+  // Request — свой адрес, остальное — строкой; адрес, который не разбирается (относительный), идёт как
+  // есть: подмена не должна ломать вызов, которого не касается (ревизия фазы 5, И-20).
+  const url = input instanceof Request ? input.url : String(input);
+  let target: string | null | undefined;
+  try {
+    target = mapUrl(url, map);
+  } catch {
+    return original(input, init);
+  }
   if (target === undefined) return original(input, init);
   if (target === null) {
     write(`unmapped ${url}`);

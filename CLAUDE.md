@@ -511,7 +511,7 @@ MCP-сервер (ADR-0044, шаг 10 фазы 4): функция Cloudflare Wor
   - Цвет — атрибутом `color` у `<svg>`, не стилем. Толщина линии (`setStrokeWidth`) — значения `stroke-width`, только если в рисунке есть `currentColor`.
   - Без подписи — `aria-hidden="true"`, с подписью — `role="img"` и `aria-label`, без `<title>`; подпись из пробелов — декоративная.
   - `svgToString` пишет атрибуты по порядку и экранирует `& " <`; без настроек вывод побайтно прежний.
-- Размер: ядро вместе с `internal` — 4,83 КБ в gzip из 5 (`pnpm size`; было 4,50 до правок ревью шага 11, 4,81 — до `hasStrokeWidth`). Заглушки, Trusted Types и рамку режима разработки — в бюджеты тега и React.
+- Размер: ядро вместе с `internal` — 4,86 КБ в gzip из 5 (`pnpm size`; было 4,50 до правок ревью шага 11, 4,81 — до `hasStrokeWidth`, 4,83 — до ревизии фазы 5). Заглушки, Trusted Types и рамку режима разработки — в бюджеты тега и React.
 
 Тег (ADR-0032, ADR-0031, шаг 5 фазы 3): `packages/icon` — `@iconavo-ui/icon`, тег `<iconavo-icon>` на ядре.
 - Входы — `src/index.ts` (обычная сборка), `src/development.ts` (условие экспорта `development`), `src/script.ts` (страницы без сборщика: из него `pnpm icon build` собирает `dist/iconavo-icon.js` — rolldown, один сжатый модуль с ядром внутри, код в `packages/pipeline/src/icon/`). Каждый отдаёт четыре функции README и вызывает `define(dev)`; входы отличаются только режимом разработки по умолчанию: выкл., вкл., по адресу страницы (`localhost`, `127.0.0.1`, `[::1]`, `file:`).
@@ -528,7 +528,7 @@ MCP-сервер (ADR-0044, шаг 10 фазы 4): функция Cloudflare Wor
 - Trusted Types — `src/trusted.ts`: политика `iconavo` при первой нарисованной иконке, под ключом `Symbol.for("iconavo.trusted-types")` без версии — одна на страницу; запрет — пустое место и одно предупреждение.
 - Заглушки — классы резерва `skeleton` и `spinner` (у `none` стилей нет): показ через 150 мс — CSS-анимация `h .15s step-end`, без движения — без мерцания и вращения. Рамка режима разработки — класс `missing`.
 - Тесты — Vitest в Node на подделке DOM `src/dom.testing.ts` (только API, которыми пользуется тег); данные — через `addIcons` и `setLoader`, без сети.
-- Размер: тег сверх ядра — 1,98 КБ из 2 (впритык), скрипт без сборщика — 6,20 КБ из 7 (`pnpm size`; CI собирает скрипт перед замером).
+- Размер: тег сверх ядра — 1,99 КБ из 2 (впритык: 1989 байт из 2000), скрипт без сборщика — 6,21 КБ из 7 (`pnpm size`; CI собирает скрипт перед замером).
 
 React (ADR-0033, ADR-0031, шаг 7 фазы 3): `packages/react` — `@iconavo-ui/react`, компонент `Icon` и обёртка `IconavoProvider` на ядре.
 - Вход `src/index.ts` — без `"use client"`: четыре функции и типы ядра, `Icon`, `IconavoProvider`; так `loadIcons` вызывается в серверном компоненте. `"use client"` — первой строкой у `icon.ts` и `provider.ts`; tsc его сохраняет (тест на `dist/`). Без JSX — `createElement`; `forwardRef` для React 18; `"sideEffects": false`; peer `react ^18 || ^19`, необязательный — `@types/react`.
@@ -549,7 +549,7 @@ React (ADR-0033, ADR-0031, шаг 7 фазы 3): `packages/react` — `@iconavo-
 - Стили (`src/style.ts`) — правила тега с классами страницы. Лист — `document.adoptedStyleSheets` из `useInsertionEffect`, один на страницу (`Symbol.for("iconavo.react.css.1")`); `display` не трогается. До загрузки скриптов стилей нет (решение владельца 28 октября 2026).
 - Режим разработки — `configure({ dev })`, иначе `process.env.NODE_ENV !== "production"`. Неверные пропсы пропускаются; предупреждения — тексты тега с именами пропсов React — печатает эффект браузера.
 - Тесты — Vitest в Node, серверная разметка — `react-dom/server` (`src/*.test.ts`); эффекты и гидратацию проверяет `pnpm example --check`. Что сборка `import { loadIcons }` обходится без компонентов, проверяет тест конвейера `src/icon/build.test.ts`.
-- Размер: React сверх ядра — 2,19 КБ из 2,5 (бюджет поднят решением владельца 28 октября 2026, ADR-0034).
+- Размер: React сверх ядра — 2,20 КБ из 2,5 (бюджет поднят решением владельца 28 октября 2026, ADR-0034).
 
 Пример на Next.js (ADR-0033, ADR-0035, шаг 7 фазы 3): `examples/next` — пакет рабочего пространства `@iconavo-ui/example-next`.
 - Next.js 16.4 (Turbopack), React 19.3; типы проверяет `tsc` TypeScript 7 репозитория (Next.js 16.4 вызывает его сам).
@@ -602,7 +602,7 @@ React (ADR-0033, ADR-0031, шаг 7 фазы 3): `packages/react` — `@iconavo-
   - собирает раздачу и поднимает превью API, второе превью (второй хост статики) и песочницу на свободных портах;
   - по очереди проверяет Chrome (установленный, `channel: "chrome"`), Firefox и WebKit: две копии, стили и Trusted Types при строгой CSP, ошибки и нарушения политики, предупреждения, заглушки (по их анимации задержки `h`, пойманной при вставке: скрыта сразу и в первом кадре после старта, видна после конца; без движения), рамку, перекраску, подпись (по дереву доступности — только Chrome), место до загрузки (ответы API задержаны на 800 мс) и ленивую загрузку;
   - сбои сети на `/net` — правилами Playwright (`page.route`), каждый в чистом контексте: API отказал → статика; API и первый хост статики отказали → второй; API молчит → статика примерно через 1,5 с; медленная сеть (+2 с) → заглушки и текст на месте; ничего не отвечает → пачки в 0, 1, 3 и 7 с, потом рамка и по предупреждению `failed to load`;
-  - нарушения политики во время снимков не в счёт: стиль для снимка вставляет сам Playwright; записи «Failed to load resource» и Firefox «CORS request did not succeed» о запросе без ответа — не ошибки страницы, как и предупреждение Firefox «Loading failed for the <script>» о скрипте Next.js (`/_next/static/`), оборванном перезагрузкой (`isAbortedScript`), и запись WebKit «… due to access control checks» о запросе ядра к статике превью (`/_static/`), отменённом ядром или переходом (`isAbortedStatic`; настоящий отказ CORS WebKit пишет ещё и строкой «… is not allowed by Access-Control-Allow-Origin» — она ошибка);
+  - во время снимков не в счёт только стиль, который вставляет сам Playwright: нарушение без файла-источника (его видит лишь WebKit) и столько же сообщений WebKit о нём (`shot()`, `SNAPSHOT_STYLE`); остальные ошибки и нарушения этого времени — в отчёте; записи «Failed to load resource» и Firefox «CORS request did not succeed» о запросе без ответа — не ошибки страницы, как и предупреждение Firefox «Loading failed for the <script>» о скрипте Next.js (`/_next/static/`), оборванном перезагрузкой (`isAbortedScript`), и запись WebKit «… due to access control checks» о запросе ядра к статике превью (`/_static/`), отменённом ядром или переходом (`isAbortedStatic`; настоящий отказ CORS WebKit пишет ещё и строкой «… is not allowed by Access-Control-Allow-Origin» — она ошибка);
   - пишет отчёт со снимками `.cache/reports/sandbox/check.html` и `check.md` для сводки CI, код 1 — есть проблемы.
 
   Браузеры ставит один раз `pnpm exec playwright install webkit firefox` (около 190 МБ, `%LOCALAPPDATA%\ms-playwright`); на Linux — с `--with-deps`, так ставит CI.

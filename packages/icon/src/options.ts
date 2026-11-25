@@ -47,7 +47,9 @@ export function tagOptions(get: (name: string) => string | null): TagOptions {
     allowed: string,
   ): T | undefined => {
     const value = get(name);
-    key += `${value},`;
+    // JSON — однозначно: запятая внутри значения не сливает два разных набора атрибутов в один ключ, и
+    // тег перерисуется (ревизия фазы 5, П-3).
+    key += JSON.stringify(value);
     if (value === null) return undefined;
     const parsed = parse(value);
     if (parsed === null) warn(`invalid ${name} "${value}", use ${allowed}`);
