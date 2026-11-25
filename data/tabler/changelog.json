@@ -3,6 +3,33 @@
   "releases": [
     {
       "added": [
+        "bed-pin",
+        "bike-pin",
+        "briefcase-pin",
+        "building-hospital-pin",
+        "building-store-pin",
+        "bus-pin",
+        "car-pin",
+        "coffee-pin",
+        "gas-station-pin",
+        "home-pin",
+        "package-pin",
+        "parking-pin",
+        "phone-pin",
+        "plane-pin",
+        "school-pin",
+        "tent-pin",
+        "tools-kitchen-2-pin",
+        "truck-delivery-pin"
+      ],
+      "date": "2026-11-25T12:54:37Z",
+      "previous": "11c2a09a",
+      "revision": "3.53.0",
+      "total": 6563,
+      "version": "84e2c2a9"
+    },
+    {
+      "added": [
         "align-center-justified",
         "align-left-justified",
         "align-right-justified",

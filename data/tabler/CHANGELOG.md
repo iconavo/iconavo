@@ -4,6 +4,14 @@
 Имена не пропадают: иконка, которую удалил автор, скрыта, но работает по имени, а старое имя переименованной ведёт на новое (ADR-0005).
 Скрытия и переименования вы одобряете лично в pull request (ADR-0019). Полные списки — в `changelog.json`.
 
+## 25 ноября 2026 · версия 84e2c2a9
+
+Прошлая версия: 11c2a09a · источник: 3.53.0 · иконок: 6 563.
+
+**Изменения**
+
+- Добавлены (18): `bed-pin`, `bike-pin`, `briefcase-pin`, `building-hospital-pin`, `building-store-pin`, `bus-pin`, `car-pin`, `coffee-pin`, `gas-station-pin`, `home-pin`, `package-pin`, `parking-pin`, `phone-pin`, `plane-pin`, `school-pin`, `tent-pin`, `tools-kitchen-2-pin`, `truck-delivery-pin`
+
 ## 15 ноября 2026 · версия 11c2a09a
 
 Прошлая версия: aa280c18 · источник: 3.52.0 · иконок: 6 545.

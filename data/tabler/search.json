@@ -24492,6 +24492,25 @@
         "disabled"
       ]
     },
+    "bed-pin": {
+      "fingerprint": "7550688c0ed7",
+      "tags": [
+        "sleep",
+        "bedroom",
+        "hotel",
+        "rest",
+        "night",
+        "furniture",
+        "accommodation",
+        "location",
+        "marker",
+        "place",
+        "map-pin",
+        "pinned",
+        "pin",
+        "gps"
+      ]
+    },
     "beer": {
       "en": {
         "description": "Outline of a pint beer glass with a foam band across the top; represents beer, drinks, and bars.",
@@ -26171,6 +26190,27 @@
         "disabled",
         "bike",
         "off"
+      ]
+    },
+    "bike-pin": {
+      "fingerprint": "2eecc620f24b",
+      "tags": [
+        "bicycle",
+        "cycling",
+        "cycle",
+        "ride",
+        "transport",
+        "vehicle",
+        "bike-lane",
+        "mountain-bike",
+        "bike",
+        "location",
+        "marker",
+        "place",
+        "map-pin",
+        "pinned",
+        "pin",
+        "gps"
       ]
     },
     "binary": {
@@ -49990,6 +50030,27 @@
         "career"
       ]
     },
+    "briefcase-pin": {
+      "fingerprint": "c10f6ed21e3f",
+      "tags": [
+        "briefcase",
+        "business",
+        "work",
+        "job",
+        "portfolio",
+        "bag",
+        "office",
+        "suitcase",
+        "career",
+        "location",
+        "marker",
+        "place",
+        "map-pin",
+        "pinned",
+        "pin",
+        "gps"
+      ]
+    },
     "brightness": {
       "en": {
         "description": "A circle split into a solid half and a hatched half, usually representing brightness, contrast, or switching between light and dark theme.",
@@ -52900,6 +52961,26 @@
         "building"
       ]
     },
+    "building-hospital-pin": {
+      "fingerprint": "14f8ff0233c8",
+      "tags": [
+        "hospital",
+        "clinic",
+        "medical",
+        "health",
+        "healthcare",
+        "emergency",
+        "doctor",
+        "building",
+        "location",
+        "marker",
+        "place",
+        "map-pin",
+        "pinned",
+        "pin",
+        "gps"
+      ]
+    },
     "building-lighthouse": {
       "en": {
         "description": "Draws a lighthouse tower with light beams on both sides, representing a beacon, coast, or navigation.",
@@ -53655,6 +53736,26 @@
         "building"
       ]
     },
+    "building-store-pin": {
+      "fingerprint": "7169dbe74c47",
+      "tags": [
+        "store",
+        "shop",
+        "retail",
+        "market",
+        "storefront",
+        "supermarket",
+        "commerce",
+        "building",
+        "location",
+        "marker",
+        "place",
+        "map-pin",
+        "pinned",
+        "pin",
+        "gps"
+      ]
+    },
     "building-tunnel": {
       "en": {
         "description": "A brick-lined arched tunnel opening with a passage inside, usually representing a tunnel, underpass, or subway.",
@@ -54222,6 +54323,26 @@
         "unavailable",
         "inactive",
         "no-bus"
+      ]
+    },
+    "bus-pin": {
+      "fingerprint": "fda1c94d680b",
+      "tags": [
+        "bus",
+        "public-transport",
+        "transit",
+        "transportation",
+        "vehicle",
+        "travel",
+        "coach",
+        "school-bus",
+        "location",
+        "marker",
+        "place",
+        "map-pin",
+        "pinned",
+        "pin",
+        "gps"
       ]
     },
     "bus-stop": {
@@ -59319,6 +59440,26 @@
         "adventure",
         "car",
         "vehicle"
+      ]
+    },
+    "car-pin": {
+      "fingerprint": "ee6fb96c29c2",
+      "tags": [
+        "car",
+        "vehicle",
+        "automobile",
+        "auto",
+        "drive",
+        "transport",
+        "travel",
+        "sedan",
+        "location",
+        "marker",
+        "place",
+        "map-pin",
+        "pinned",
+        "pin",
+        "gps"
       ]
     },
     "car-suspension": {
@@ -82814,6 +82955,28 @@
         "off",
         "disabled",
         "no-coffee"
+      ]
+    },
+    "coffee-pin": {
+      "fingerprint": "7807e2b68e38",
+      "tags": [
+        "coffee",
+        "cup",
+        "mug",
+        "cafe",
+        "espresso",
+        "latte",
+        "hot-drink",
+        "tea",
+        "break",
+        "beverage",
+        "location",
+        "marker",
+        "place",
+        "map-pin",
+        "pinned",
+        "pin",
+        "gps"
       ]
     },
     "coffin": {
@@ -130255,6 +130418,29 @@
         "off"
       ]
     },
+    "gas-station-pin": {
+      "fingerprint": "a2a3eb39f891",
+      "tags": [
+        "gas-station",
+        "petrol-station",
+        "fuel",
+        "gas",
+        "petrol",
+        "refuel",
+        "pump",
+        "diesel",
+        "car",
+        "filling-station",
+        "station",
+        "location",
+        "marker",
+        "place",
+        "map-pin",
+        "pinned",
+        "pin",
+        "gps"
+      ]
+    },
     "gauge": {
       "en": {
         "description": "A circular dial with an arc and needle, representing a gauge, speed reading, or performance indicator.",
@@ -142931,6 +143117,27 @@
         "off-state",
         "unavailable",
         "off"
+      ]
+    },
+    "home-pin": {
+      "fingerprint": "49f55db1fedc",
+      "tags": [
+        "home",
+        "house",
+        "homepage",
+        "main",
+        "start",
+        "dashboard",
+        "building",
+        "residence",
+        "real-estate",
+        "location",
+        "marker",
+        "place",
+        "map-pin",
+        "pinned",
+        "pin",
+        "gps"
       ]
     },
     "home-plus": {
@@ -190037,6 +190244,27 @@
         "off"
       ]
     },
+    "package-pin": {
+      "fingerprint": "12232eea1da8",
+      "tags": [
+        "box",
+        "parcel",
+        "delivery",
+        "shipping",
+        "product",
+        "cube",
+        "container",
+        "3d",
+        "package",
+        "location",
+        "marker",
+        "place",
+        "map-pin",
+        "pinned",
+        "pin",
+        "gps"
+      ]
+    },
     "packages": {
       "en": {
         "description": "Three stacked cube-shaped boxes arranged in a pyramid, usually representing packages, products, or inventory.",
@@ -191073,6 +191301,26 @@
         "inactive",
         "parking",
         "off"
+      ]
+    },
+    "parking-pin": {
+      "fingerprint": "9ad1c120531a",
+      "tags": [
+        "parking-lot",
+        "car",
+        "park",
+        "sign",
+        "p",
+        "vehicle",
+        "garage",
+        "parking",
+        "location",
+        "marker",
+        "place",
+        "map-pin",
+        "pinned",
+        "pin",
+        "gps"
       ]
     },
     "password": {
@@ -195185,6 +195433,28 @@
         "pause"
       ]
     },
+    "phone-pin": {
+      "fingerprint": "3f7d0af1dbdf",
+      "tags": [
+        "call",
+        "telephone",
+        "contact",
+        "dial",
+        "mobile",
+        "handset",
+        "ring",
+        "support",
+        "hotline",
+        "phone",
+        "location",
+        "marker",
+        "place",
+        "map-pin",
+        "pinned",
+        "pin",
+        "gps"
+      ]
+    },
     "phone-plus": {
       "en": {
         "description": "Outlined telephone handset with a plus sign at the upper right; it usually means adding a new call or contact.",
@@ -198897,6 +199167,29 @@
         "hidden",
         "plane",
         "off"
+      ]
+    },
+    "plane-pin": {
+      "fingerprint": "d2c2bbd2b146",
+      "tags": [
+        "airplane",
+        "aeroplane",
+        "flight",
+        "aircraft",
+        "travel",
+        "airport",
+        "trip",
+        "fly",
+        "jet",
+        "airplane-mode",
+        "plane",
+        "location",
+        "marker",
+        "place",
+        "map-pin",
+        "pinned",
+        "pin",
+        "gps"
       ]
     },
     "plane-tilt": {
@@ -214483,6 +214776,27 @@
         "unavailable",
         "inactive",
         "hidden"
+      ]
+    },
+    "school-pin": {
+      "fingerprint": "dfd17541a80a",
+      "tags": [
+        "graduation",
+        "education",
+        "student",
+        "mortarboard",
+        "university",
+        "college",
+        "academic",
+        "hat",
+        "learning",
+        "location",
+        "marker",
+        "place",
+        "map-pin",
+        "pinned",
+        "pin",
+        "gps"
       ]
     },
     "scissors": {
@@ -242614,6 +242928,27 @@
         "off"
       ]
     },
+    "tent-pin": {
+      "fingerprint": "1dc54480bb6c",
+      "tags": [
+        "camping",
+        "camp",
+        "outdoor",
+        "hiking",
+        "travel",
+        "vacation",
+        "adventure",
+        "campsite",
+        "tent",
+        "location",
+        "marker",
+        "place",
+        "map-pin",
+        "pinned",
+        "pin",
+        "gps"
+      ]
+    },
     "terminal": {
       "en": {
         "description": "Draws a greater-than chevron followed by a horizontal underscore, representing a terminal or command-line prompt for typing commands.",
@@ -246129,6 +246464,26 @@
         "food",
         "disabled",
         "inactive"
+      ]
+    },
+    "tools-kitchen-2-pin": {
+      "fingerprint": "11e76077fe2e",
+      "tags": [
+        "cutlery",
+        "utensils",
+        "fork",
+        "knife",
+        "restaurant",
+        "food",
+        "dining",
+        "eat",
+        "location",
+        "marker",
+        "place",
+        "map-pin",
+        "pinned",
+        "pin",
+        "gps"
       ]
     },
     "tools-kitchen-3": {
@@ -249906,6 +250261,26 @@
         "order",
         "courier",
         "dispatch"
+      ]
+    },
+    "truck-delivery-pin": {
+      "fingerprint": "cad7f7aa3340",
+      "tags": [
+        "delivery",
+        "shipping",
+        "truck",
+        "lorry",
+        "shipment",
+        "order",
+        "courier",
+        "dispatch",
+        "location",
+        "marker",
+        "place",
+        "map-pin",
+        "pinned",
+        "pin",
+        "gps"
       ]
     },
     "truck-filled": {
