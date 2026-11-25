@@ -42,6 +42,7 @@ import { compactJson, type Json } from "./json.js";
 import type { Manifest } from "./manifest.js";
 import { single } from "./params.js";
 import { limitKey } from "./search/handler.js";
+import { UNKNOWN_INDEX } from "./search/index-version.js";
 import {
   type MeiliConfig,
   multiSearchJson,
@@ -180,13 +181,17 @@ export function createIcon(ctx: IconContext, options: IconOptions): IconRoute {
       "/icon",
       new URLSearchParams({ icon: name }),
     );
-    let cacheOk = true;
+    // Версия индекса не прочиталась — мимо кэша: под общей меткой после сбоев лежали бы старые ответы
+    // (ревизия фазы 5, А-14).
+    let cacheOk = index !== UNKNOWN_INDEX;
     let hit: Response | undefined;
-    try {
-      hit = await ctx.cache.match(key);
-    } catch (e) {
-      ctx.log(`кэш не прочитан: ${(e as Error).message}`);
-      cacheOk = false;
+    if (cacheOk) {
+      try {
+        hit = await ctx.cache.match(key);
+      } catch (e) {
+        ctx.log(`кэш не прочитан: ${(e as Error).message}`);
+        cacheOk = false;
+      }
     }
     if (hit !== undefined) {
       const response = new Response(head ? null : hit.body, hit);
@@ -263,7 +268,8 @@ export function createIcon(ctx: IconContext, options: IconOptions): IconRoute {
         MEILI_TIMEOUT_MS,
       );
       if (json === undefined) {
-        ctx.log(`похожих нет: ${card.icon}`);
+        // Без имени иконки: в журнале не место тому, что смотрят люди (ADR-0028; ревизия фазы 5, А-17).
+        ctx.log("похожих нет: у документа нет вектора");
       } else {
         try {
           similar = parseSimilar(json)

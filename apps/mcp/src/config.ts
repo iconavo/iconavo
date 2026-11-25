@@ -1,5 +1,6 @@
 // Константы MCP-сервера (ADR-0044, шаг 10 фазы 4).
 
+import { MAX_TOTAL_HITS } from "@iconavo-ui/search";
 import { MEILI_TIMEOUT_MS, MODEL_TIMEOUT_MS } from "../../api/src/config.js";
 
 /** Адрес протокола: https://mcp.iconavo.dev/mcp. */
@@ -32,8 +33,15 @@ export const SEARCH_DEADLINE_MS = MODEL_TIMEOUT_MS + MEILI_TIMEOUT_MS;
 /** Сколько иконок отдаёт search_icons: по умолчанию 12, по просьбе ассистента — до 24. */
 export const SEARCH_LIMIT_DEFAULT = 12;
 export const SEARCH_LIMIT_MAX = 24;
-/** Дальше 1000-го места поиск не листает (MAX_TOTAL_HITS общего модуля). */
-export const SEARCH_OFFSET_MAX = 1000 - SEARCH_LIMIT_MAX;
+/**
+ * Дальше 1000-го места поиск не листает (MAX_TOTAL_HITS общего модуля): последнее смещение — 999, а
+ * страница у конца урезается до оставшегося. Раньше смещение кончалось на 976, и при 12 на странице
+ * nextOffset обрывался раньше конца выдачи (ревизия фазы 5, А-11).
+ */
+export const SEARCH_OFFSET_MAX = MAX_TOTAL_HITS - 1;
+/** Сколько иконок отдать со смещения offset: не дальше конца выдачи. */
+export const windowLimit = (offset: number, limit: number): number =>
+  Math.min(limit, MAX_TOTAL_HITS - offset);
 
 /** Список инструментов клиент может хранить час (протокол 2026-07-28): он меняется только выкладкой. */
 export const TOOLS_LIST_TTL_MS = 3_600_000;

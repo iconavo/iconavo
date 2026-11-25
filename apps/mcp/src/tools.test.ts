@@ -283,6 +283,58 @@ describe("MCP: get_matching_set", () => {
     const result = await s.call("get_matching_set", { concepts: ["house"] });
     expect(result.isError).toBe(true);
   });
+
+  it("понятие без букв и цифр — в missing без поиска, а не случайная иконка (ревизия фазы 5, А-6)", async () => {
+    const s = mcpSetup();
+    const result = await s.call("get_matching_set", {
+      concepts: ["house", "—"],
+    });
+    expect(result.isError).toBeFalsy();
+    const out = result.structuredContent as Out;
+    expect((out.icons as { concept: string }[]).map((x) => x.concept)).toEqual([
+      "house",
+    ]);
+    expect(out.missing).toEqual(["—"]);
+    const queries = s.net.meili.flatMap((b) => b.queries);
+    expect(queries.length).toBeGreaterThan(0);
+    expect(queries.every((q) => q.q !== "")).toBe(true);
+  });
+
+  it("SVG — строка про Feather у иконки из Feather, как у get_icon (ревизия фазы 5, А-7)", async () => {
+    const s = mcpSetup();
+    const result = await s.call("get_matching_set", {
+      concepts: ["house", "heart"],
+      format: "svg",
+    });
+    const codes = Object.fromEntries(
+      (
+        (result.structuredContent as Out).icons as {
+          icon: string;
+          code: string;
+        }[]
+      ).map((x) => [x.icon, x.code]),
+    );
+    expect(codes["demo:house"]).toContain(
+      "Based on Feather by Cole Bemis, MIT license.",
+    );
+    expect(codes["demo:heart"]).not.toContain("Based on Feather");
+  });
+
+  it("заметки: стиль образца перекрыл style, толщина линии не применилась (ревизия фазы 5, А-8, А-9)", async () => {
+    const s = mcpSetup();
+    const result = await s.call("get_matching_set", {
+      concepts: ["love", "home"],
+      like: "demo:house-fill",
+      style: "outline",
+      strokeWidth: 1.5,
+    });
+    const out = result.structuredContent as Out;
+    expect(out.style).toBe("filled");
+    expect(out.notes).toEqual([
+      "The style is taken from demo:house-fill: filled.",
+      "Stroke width is not applied: these icons have no lines that change with it.",
+    ]);
+  });
 });
 
 describe("MCP: get_usage", () => {

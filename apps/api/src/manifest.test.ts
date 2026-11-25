@@ -131,6 +131,22 @@ describe("manifestLoader", () => {
     await expect(fresh.load()).rejects.toThrow(StorageError);
   });
 
+  it("обновление не удалось — 10 секунд служит прежняя копия без чтения R2, затем снова R2 (ревизия фазы 5, А-15)", async () => {
+    const { bucket, load, advance } = setup();
+    await load();
+    bucket.failing.add("*");
+    advance(60_000);
+    await load();
+    const after = bucket.reads.length;
+    advance(9_999);
+    expect((await load()).get("lucide")?.version).toBe(VERSION);
+    expect(bucket.reads).toHaveLength(after);
+    bucket.failing.clear();
+    advance(1);
+    await load();
+    expect(bucket.reads.length).toBeGreaterThan(after);
+  });
+
   it("манифеста нет — ошибка хранилища", async () => {
     const load = manifestLoader(
       fakeBucket({}),

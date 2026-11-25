@@ -2,7 +2,7 @@
 // же правилом, что у адреса /icon edge API (setSummary).
 
 import type { IconCredit, IconSetSummary } from "@iconavo-ui/search";
-import { catalogOf } from "../../api/src/catalog.js";
+import { catalogOf, type IndexEntry } from "../../api/src/catalog.js";
 import { StorageError } from "../../api/src/http.js";
 import { setSummary } from "../../api/src/icon.js";
 import type { McpDeps } from "./context.js";
@@ -25,9 +25,25 @@ export async function setsInfo(
 }
 
 /**
- * Части от других авторов у каждой иконки (Feather у Lucide, ADR-0017) — тем же правилом, что /icon:
- * имя иконки — каноническое, в списке автора части. Нет частей — имени в ответе нет.
+ * Части иконки от других авторов по записи оглавления (Feather у Lucide, ADR-0017) — тем же правилом,
+ * что /icon: имя — каноническое, в списке автора части. Одно правило у сведений об иконке, сетки выбора
+ * и get_matching_set (ревизия фазы 5, А-7).
  */
+export function creditsOf(
+  entry: Pick<IndexEntry, "credits"> | undefined,
+  bare: string,
+): IconCredit[] {
+  return (entry?.credits ?? [])
+    .filter((c) => c.icons.includes(bare))
+    .map((c) => ({
+      name: c.name,
+      author: c.author,
+      license: c.license,
+      url: c.url,
+    }));
+}
+
+/** Части от других авторов у каждой иконки (creditsOf). Нет частей — имени в ответе нет. */
 export async function iconCredits(
   deps: McpDeps,
   names: readonly string[],
@@ -37,16 +53,10 @@ export async function iconCredits(
   const out = new Map<string, IconCredit[]>();
   for (const name of names) {
     const colon = name.indexOf(":");
-    const entry = index.sets.get(name.slice(0, colon));
-    const bare = name.slice(colon + 1);
-    const credits = (entry?.credits ?? [])
-      .filter((c) => c.icons.includes(bare))
-      .map((c) => ({
-        name: c.name,
-        author: c.author,
-        license: c.license,
-        url: c.url,
-      }));
+    const credits = creditsOf(
+      index.sets.get(name.slice(0, colon)),
+      name.slice(colon + 1),
+    );
     if (credits.length > 0) out.set(name, credits);
   }
   return out;

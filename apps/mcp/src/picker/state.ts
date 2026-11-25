@@ -135,3 +135,16 @@ export function moveTo(
       return undefined;
   }
 }
+
+/** Сколько ждать ответа на запрос, о поддержке которого клиент не сказал. */
+export const UNDECLARED_TIMEOUT_MS = 5_000;
+/**
+ * Сколько ждать ответа на объявленный клиентом запрос: и объявленный может не прийти — без срока «Select»
+ * висел бы, а код так и не дошёл бы до ассистента (ревизия фазы 5, А-12).
+ */
+export const DECLARED_TIMEOUT_MS = 15_000;
+
+/** Срок запроса к клиенту: declared — возможность из getHostCapabilities. */
+export const hostTimeout = (declared: unknown): { timeout: number } => ({
+  timeout: declared === undefined ? UNDECLARED_TIMEOUT_MS : DECLARED_TIMEOUT_MS,
+});

@@ -29,6 +29,7 @@ import {
   ResultSchema,
   readIcons,
   SearchInput,
+  sitePage,
 } from "./search.js";
 
 export const PICK_NAME = "pick_icon";
@@ -196,7 +197,7 @@ export async function pickIcon(
       format: args.format,
       size: args.size,
       preview: png !== undefined,
-      page: `${SITE_URL}/search?q=${encodeURIComponent(args.query)}`,
+      page: sitePage(args),
     };
     return {
       content: [

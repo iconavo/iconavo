@@ -20,6 +20,7 @@ import {
 } from "../fake.testing.js";
 import { createHandler } from "../handler.js";
 import { limitKey } from "./handler.js";
+import { rememberVector } from "./vectors.js";
 
 const DOCS: FakeDoc[] = [
   {
@@ -78,6 +79,12 @@ interface SetupOptions {
   phrases?: string[];
   noMeili?: boolean;
   noIndex?: boolean;
+  /** Без ключа Polza — только слова. */
+  noPolzaKey?: boolean;
+  /** Гибрид (запрос с вектором) отвечает этим кодом. */
+  hybridStatus?: number;
+  /** Чтение фразы из бакета ждёт это обещание — медленное хранилище. */
+  phraseGate?: Promise<void>;
   /** Часы функции, мс; по умолчанию стоят на нуле. */
   clock?: { t: number };
 }
@@ -95,12 +102,21 @@ async function setup(o: SetupOptions = {}) {
     "manifest.json": manifestText({ demo: VERSION, color: "89abcdef" }),
   });
   const searchBucket = fakeBucket(searchFiles);
+  if (o.phraseGate !== undefined) {
+    const gate = o.phraseGate;
+    const get = searchBucket.get.bind(searchBucket);
+    searchBucket.get = (async (key: string) => {
+      if (key.startsWith("phrases/")) await gate;
+      return get(key);
+    }) as typeof searchBucket.get;
+  }
   const cache = fakeCache();
   const logs: string[] = [];
   const net = fakeSearchFetch({
     docs: DOCS,
     ...(o.polza ? { polza: o.polza } : {}),
     ...(o.meiliStatus === undefined ? {} : { meiliStatus: o.meiliStatus }),
+    ...(o.hybridStatus === undefined ? {} : { hybridStatus: o.hybridStatus }),
   });
   const make = () =>
     createHandler({
@@ -113,7 +129,7 @@ async function setup(o: SetupOptions = {}) {
         bucket: searchBucket,
         ...(o.limiter ? { limiter: o.limiter } : {}),
         ...(o.noMeili ? {} : { meili: { url: MEILI_URL, key: "search-key" } }),
-        polzaKey: "polza-key",
+        ...(o.noPolzaKey ? {} : { polzaKey: "polza-key" }),
         fetch: net.fn,
         deadlineMs: o.deadlineMs ?? 60_000,
         ...(o.waitForModel ? { waitForModel: true } : {}),
@@ -446,6 +462,35 @@ describe("/search: ждать модель (MCP, waitForModel)", () => {
     expect(body.semantic).toBe("full");
     expect(s.net.polza).toHaveLength(0);
   });
+
+  it("фраза читается дольше срока — ассистент всё равно получает полную выдачу, не pending (ревизия фазы 5, А-18)", async () => {
+    const gate = new Promise<void>((resolve) => setTimeout(resolve, 50));
+    const s = await setup({
+      phrases: ["house"],
+      waitForModel: true,
+      deadlineMs: 10,
+      phraseGate: gate,
+    });
+    const body = await json(await s.get("/search?query=house"));
+    expect(body.semantic).toBe("full");
+  });
+});
+
+describe("/search: вектор запроса из кэша дата-центра", () => {
+  it("гибрид не ответил — выдача по словам text, а не 503 (ревизия фазы 5, А-13)", async () => {
+    const s = await setup({ hybridStatus: 500 });
+    await rememberVector(
+      s.cache,
+      await vectorHash(SEARCH_MODEL.id, "house"),
+      unit(1),
+    );
+    const res = await s.get("/search?query=house");
+    expect(res.status).toBe(200);
+    const body = await json(res);
+    expect(body.semantic).toBe("text");
+    expect(body.icons).toContain("demo:house");
+    expect(s.logs).toContain("гибрид не ответил — выдача по словам");
+  });
 });
 
 describe("/search: ошибки и лимит", () => {
@@ -497,6 +542,25 @@ describe("/search: ошибки и лимит", () => {
     expect(res.headers.get("retry-after")).toBe("60");
     expect(res.headers.get("cache-control")).toBe("no-store");
     expect([...limiter.counts.values()].reduce((a, b) => a + b, 0)).toBe(2);
+  });
+
+  it("нет ключа Polza — выдача по словам, строка журнала одна на копию функции (ревизия фазы 5, А-19)", async () => {
+    const s = await setup({ noPolzaKey: true });
+    expect((await json(await s.get("/search?query=house"))).semantic).toBe(
+      "text",
+    );
+    expect((await s.get("/search?query=heart")).status).toBe(200);
+    expect(s.logs.filter((l) => l.includes("нет ключа Polza"))).toHaveLength(1);
+  });
+
+  it("версия индекса не прочиталась — unknown, ответы мимо кэша дата-центра (ревизия фазы 5, А-14)", async () => {
+    const s = await setup({ phrases: ["house"] });
+    s.searchBucket.failing.add(STORE_KEYS.index);
+    const first = await s.get("/search?query=house");
+    expect(first.headers.get("x-iconavo-index")).toBe("unknown");
+    await s.flush();
+    const again = await s.get("/search?query=house");
+    expect(again.headers.get("x-cache")).toBe("MISS");
   });
 
   it("версии индекса нет — none; HEAD — без тела", async () => {

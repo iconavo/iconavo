@@ -53,7 +53,7 @@ import type { Call, McpDeps } from "../context.js";
 import { iconDetails } from "../details.js";
 import { toolError } from "../errors.js";
 import { IconName, SetInfoSchema, SetPrefix, StyleSchema } from "../schemas.js";
-import { setsInfo } from "../sets.js";
+import { creditsOf, setsInfo } from "../sets.js";
 
 export const MATCHING_NAME = "get_matching_set";
 
@@ -124,6 +124,8 @@ export type MatchingResult = z.output<typeof MatchingOutput>;
 
 const setOf = (name: string) => name.slice(0, name.indexOf(":"));
 const bareOf = (name: string) => name.slice(name.indexOf(":") + 1);
+/** В понятии есть буква или цифра: иначе для Meilisearch это пустой запрос (ревизия фазы 5, А-6). */
+const HAS_WORD = /[\p{L}\p{N}]/u;
 
 /** Суффикс варианта образца: ph:house-bold у карточки ph:house — «-bold». */
 export function variantSuffix(icon: string, card: string | null): string {
@@ -296,6 +298,16 @@ export async function matchingSet(
           `The set is taken from ${details.icon}: ${details.set.prefix}.`,
         );
       }
+      // Стиль образца перекрывает style — и об этом сказано, как о наборе (ревизия фазы 5, А-9).
+      if (
+        args.style !== undefined &&
+        details.style !== null &&
+        details.style !== args.style
+      ) {
+        notes.push(
+          `The style is taken from ${details.icon}: ${details.style}.`,
+        );
+      }
       set = details.set.prefix;
       style = details.style ?? style;
       suffix = variantSuffix(details.icon, details.card);
@@ -304,9 +316,19 @@ export async function matchingSet(
     if (set !== undefined && !manifest.has(set)) {
       throw new ApiError(400, "invalid_prefix", `Icon set "${set}" not found`);
     }
-    const texts = args.concepts.map((c) =>
+    const normalized = args.concepts.map((c) =>
       normalizeText(stripSetPrefix(c, (id) => manifest.has(id))),
     );
+    // Понятие без букв и цифр («—», «!!!») не ищется: знаки для Meilisearch — разделители, запрос пустой,
+    // и он вернул бы случайную иконку — оно сразу в missing (решение владельца 24 ноября 2026; ревизия
+    // фазы 5, А-6).
+    const searched = normalized.flatMap((t, i) =>
+      HAS_WORD.test(t) ? [i] : [],
+    );
+    if (searched.length === 0) {
+      throw new ApiError(404, "icon_not_found", "No icons found");
+    }
+    const texts = searched.map((i) => normalized[i] as string);
     const vectors = await conceptVectors(deps, call, texts);
     const queries = (filters: SearchFilters, limit: number) =>
       texts.map((q, i) => {
@@ -353,9 +375,14 @@ export async function matchingSet(
       ),
       MEILI_TIMEOUT_MS,
     );
-    const picked = lists.map((hits) =>
-      hits.map((hit) => pickName(hit, style, suffix)),
+    // Выдача — по искавшимся понятиям; пустые понятия выдачи не имеют.
+    const pickedOf = new Map(
+      searched.map((at, k) => [
+        at,
+        (lists[k] ?? []).map((hit) => pickName(hit, style, suffix)),
+      ]),
     );
+    const picked = [...pickedOf.values()];
     // Рисунки выбранных иконок: меняет ли их толщина линии, а для SVG — сам рисунок.
     const names = [
       ...new Set(picked.flatMap((p) => (p[0] === undefined ? [] : [p[0]]))),
@@ -374,8 +401,10 @@ export async function matchingSet(
     const settings = settingsOf(args);
     const icons: MatchingResult["icons"] = [];
     const missing: string[] = [];
+    const entry = catalog.sets.get(chosenSet);
+    let anyStrokes = false;
     args.concepts.forEach((concept, i) => {
-      const [name, ...alternatives] = picked[i] ?? [];
+      const [name, ...alternatives] = pickedOf.get(i) ?? [];
       const file =
         name === undefined ? undefined : read.files.get(bareOf(name));
       const icon =
@@ -388,13 +417,19 @@ export async function matchingSet(
         palette: info.palette,
         strokes: hasStrokeWidth(icon.body),
       };
+      anyStrokes ||= applies.strokes;
+      // Строка про Feather у иконки из Feather — в комментарии SVG и CSS, как у get_icon (А-7).
+      const credits = creditsOf(entry, bareOf(name));
       const code = codeOf(
         args.format,
         name,
         settings,
         applies,
         deps.usage.install,
-        { icon, details: { set: info } },
+        {
+          icon,
+          details: { set: info, ...(credits.length > 0 ? { credits } : {}) },
+        },
       );
       icons.push({
         concept,
@@ -405,6 +440,12 @@ export async function matchingSet(
     });
     if (args.color !== undefined && info.palette) {
       notes.push(`Color is not applied: ${info.name} is a multicolor set.`);
+    }
+    // Толщина линии не изменила ни одну иконку — сказано, как у get_icon (ревизия фазы 5, А-8).
+    if (args.strokeWidth !== undefined && icons.length > 0 && !anyStrokes) {
+      notes.push(
+        "Stroke width is not applied: these icons have no lines that change with it.",
+      );
     }
     const result: MatchingResult = {
       set: info,

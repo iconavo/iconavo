@@ -61,4 +61,16 @@ describe("modelVectors", () => {
       modelVectors(twice.fn, "key", ["a", "b"], 1000),
     ).rejects.toThrow(ModelError);
   });
+
+  it("ответ не JSON — ошибка модели без куска ответа: он мог бы попасть в журнал (ревизия фазы 5, А-1)", async () => {
+    const html = (async () =>
+      new Response("<html>секретный запрос человека</html>", {
+        status: 200,
+      })) as unknown as typeof fetch;
+    const error = await modelVectors(html, "key", ["a"], 1000).catch(
+      (e: unknown) => e,
+    );
+    expect(error).toBeInstanceOf(ModelError);
+    expect((error as Error).message).toBe("Polza: ответ не JSON");
+  });
 });

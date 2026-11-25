@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { fakeLimiter } from "../../api/src/fake.testing.js";
 import { FEATHER, mcpSetup, PICKER, PNG_SIGNATURE } from "./fake.testing.js";
+import { mcpErrorLine } from "./http.js";
+import { type SearchArgs, searchParams, sitePage } from "./tools/search.js";
 
 const textOf = (result: { content: { type: string; text?: string }[] }) =>
   result.content.find((c) => c.type === "text")?.text ?? "";
@@ -276,6 +278,50 @@ describe("MCP: search_icons", () => {
     );
   });
 
+  it("у конца выдачи страница урезается до 1000-го места, смещение — до 999 (ревизия фазы 5, А-11)", async () => {
+    const window = (offset: number, limit: number) =>
+      Object.fromEntries(
+        searchParams({
+          query: "house",
+          offset,
+          limit,
+          preview: false,
+        } as SearchArgs),
+      );
+    expect(window(972, 12)).toMatchObject({ start: "972", limit: "12" });
+    expect(window(984, 12)).toMatchObject({ start: "984", limit: "12" });
+    expect(window(990, 24)).toMatchObject({ start: "990", limit: "10" });
+    const s = mcpSetup();
+    const late = await s.call("search_icons", {
+      query: "house",
+      offset: 999,
+      preview: false,
+    });
+    expect(late.isError).toBeFalsy();
+  });
+
+  it("ссылка на выдачу на сайте — с наборами, стилем и лицензией (ревизия фазы 5, А-10)", async () => {
+    expect(
+      sitePage({
+        query: "дом",
+        sets: ["lucide", "ph"],
+        style: "outline",
+        license: "MIT",
+      }),
+    ).toBe(
+      "https://iconavo.dev/search?q=%D0%B4%D0%BE%D0%BC&style=outline&set=lucide,ph&license=MIT",
+    );
+    const s = mcpSetup();
+    const result = await s.call("search_icons", {
+      query: "house",
+      style: "filled",
+      preview: false,
+    });
+    expect((result.structuredContent as { page: string }).page).toBe(
+      "https://iconavo.dev/search?q=house&style=filled",
+    );
+  });
+
   it("ассистент ждёт смысл: фразы нет — вектор от модели, выдача полная", async () => {
     const s = mcpSetup();
     const result = await s.call("search_icons", { query: "love" });
@@ -412,5 +458,16 @@ describe("MCP: HTTP", () => {
       }),
     });
     expect(big.status).toBe(413);
+  });
+
+  it("ошибка SDK — в журнале только её вид и код, без текста: он может цитировать запрос (ADR-0028; ревизия фазы 5, А-5)", () => {
+    const quoted = new SyntaxError(
+      'Unexpected token in JSON: {"query":"секретный запрос"',
+    );
+    expect(mcpErrorLine(quoted)).toBe("MCP: SyntaxError");
+    const coded = Object.assign(new Error("Invalid params: секретный"), {
+      code: -32602,
+    });
+    expect(mcpErrorLine(coded)).toBe("MCP: Error -32602");
   });
 });

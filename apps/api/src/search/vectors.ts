@@ -113,9 +113,14 @@ export async function modelVectors(
     await res.body?.cancel();
     throw new ModelError(`Polza: HTTP ${res.status}`);
   }
-  const data = (await res.json()) as {
-    data?: { embedding?: unknown; index?: unknown }[];
-  };
+  // Ответ не JSON — ошибка без куска ответа: текст ошибки разбора цитирует тело, а он идёт в журнал
+  // Workers, где не место запросам людей (ADR-0028; ревизия фазы 5, А-1).
+  let data: { data?: { embedding?: unknown; index?: unknown }[] };
+  try {
+    data = (await res.json()) as typeof data;
+  } catch {
+    throw new ModelError("Polza: ответ не JSON");
+  }
   const items = data.data ?? [];
   if (items.length !== texts.length) {
     throw new ModelError("Polza: ответ без вектора");

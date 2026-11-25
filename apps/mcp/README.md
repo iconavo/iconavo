@@ -60,10 +60,10 @@ Then ask in your own words, for example: "Find an icon for a share button" or "A
 - `sets` — optional list of set prefixes.
 - `style` — optional: `outline`, `filled`, `duotone` or `color`.
 - `license` — optional SPDX identifier, such as `MIT`.
-- `limit` — 1–24, default 12. `offset` — for the next page.
+- `limit` — 1–24, default 12. `offset` — for the next page: the response gives `nextOffset` while there are more results, up to the 1000th.
 - `preview` — attach the PNG grid; default `true`. Set it to `false` if your model cannot see images.
 
-The grid numbers the icons in the same order as the list: cell N is result N. Results are ranked by meaning; if the meaning model is unavailable, they are ranked by words and the response says so.
+The grid numbers the icons in the same order as the list: cell N is result N. Results are ranked by meaning; if the meaning model is unavailable, they are ranked by words and the response says so. The response also links to the same results on iconavo.dev, with the same filters.
 
 ### `get_icon`
 
@@ -95,7 +95,7 @@ Settings that do not apply are reported, not dropped silently — for example, a
 - `set`, `style` — optional. Without them, the set and style that cover the most concepts are chosen.
 - `format`, `size`, `color`, `strokeWidth` — as in `get_icon`.
 
-For each concept, the response returns an icon, its code and two alternatives. It also lists the concepts that have no icon in the set.
+For each concept, the response returns an icon, its code and two alternatives. It also lists the concepts that have no icon in the set; a concept without letters or digits, such as `"—"`, is listed there too. As in `get_icon`, settings that do not apply are reported — and so is a `style` that `like` overrides.
 
 ### `get_usage`
 

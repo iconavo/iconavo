@@ -12,10 +12,8 @@ import {
   applyHostFonts,
   type McpUiHostContext,
 } from "@modelcontextprotocol/ext-apps";
+import { hostTimeout } from "./state.js";
 import { mountPicker } from "./ui.js";
-
-/** Сколько ждать ответа на запрос, о поддержке которого клиент не сказал. */
-const UNDECLARED_TIMEOUT_MS = 5_000;
 
 const root = document.getElementById("picker");
 if (root === null) throw new Error("нет места для сетки");
@@ -29,13 +27,11 @@ const app = new App(
 const view = mountPicker(root, {
   async pick(choice) {
     const caps = app.getHostCapabilities();
-    const quick = (declared: unknown) =>
-      declared === undefined ? { timeout: UNDECLARED_TIMEOUT_MS } : {};
     let delivered = false;
     try {
       await app.updateModelContext(
         pickerContext(choice),
-        quick(caps?.updateModelContext),
+        hostTimeout(caps?.updateModelContext),
       );
       delivered = true;
     } catch {
@@ -48,7 +44,7 @@ const view = mountPicker(root, {
           role: "user",
           content: [{ type: "text", text: pickerMessage(choice, delivered) }],
         },
-        quick(caps?.message),
+        hostTimeout(caps?.message),
       )
       .catch(() => undefined);
   },
