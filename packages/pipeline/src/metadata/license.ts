@@ -4,12 +4,9 @@
 import { createHash } from "node:crypto";
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
-import {
-  LICENSE_TITLES,
-  NOTICE_FILES,
-  type SourceConfig,
-} from "../sources/config.js";
+import { LICENSE_TITLES, type SourceConfig } from "../sources/config.js";
 import type { LockEntry } from "../sources/lock.js";
+import { findNotice } from "../sources/notice.js";
 
 /** Текст как у автора, но без BOM и с переводами строк LF: одинаково на Windows и Linux. */
 export const normalizeText = (raw: string) =>
@@ -101,16 +98,10 @@ export async function readLicense(
     return { stop: [`файл лицензии ${file} пустой`] };
   }
 
-  let notice: string | undefined;
-  let noticeFile: string | undefined;
-  for (const candidate of NOTICE_FILES) {
-    const found = await readText(join(dir, candidate));
-    if (found !== undefined && found.trim() !== "") {
-      notice = found;
-      noticeFile = candidate;
-      break;
-    }
-  }
+  // Правило выбора NOTICE — одно с отчётом загрузки (findNotice).
+  const found = await findNotice(dir);
+  const notice = found === undefined ? undefined : normalizeText(found.text);
+  const noticeFile = found?.file;
 
   // У пакета npm SPDX берётся из package.json автора (ADR-0017): расхождение с конфигом — повод
   // проверить, не сменил ли автор лицензию.

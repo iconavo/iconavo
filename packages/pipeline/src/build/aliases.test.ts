@@ -33,6 +33,24 @@ describe("алиасы одинаковых вариантов", () => {
     ).toEqual({ "add-outline": "add" });
   });
 
+  it("вариант с ID — тоже алиас, если отличается только своё имя в ID (ревизия фазы 5, Д-10)", () => {
+    const withIds = (name: string) =>
+      icon(
+        `<defs><linearGradient id="ms--${name}-0"/></defs><path d="M0 0h24v24H0z" fill="url(#ms--${name}-0)"/>`,
+      );
+    expect(
+      aliasesOf({ a: withIds("a"), "a-sharp": withIds("a-sharp") }),
+    ).toEqual({ "a-sharp": "a" });
+    expect(
+      aliasesOf({
+        b: withIds("b"),
+        "b-sharp": icon(
+          `<defs><linearGradient id="ms--b-sharp-0"/></defs><path d="M1 1h22v22H1z" fill="url(#ms--b-sharp-0)"/>`,
+        ),
+      }),
+    ).toEqual({});
+  });
+
   it("другое тело или другой размер — остаётся иконкой", () => {
     expect(
       aliasesOf({

@@ -100,6 +100,32 @@ describe("замена цветов на currentColor", () => {
     );
   });
 
+  it("полупрозрачная запаска после url() — как есть, с предупреждением: прозрачность не теряется (ревизия фазы 5, Д-8)", () => {
+    const r = normalized(
+      svg(
+        `<defs><linearGradient id="g"><stop offset="0" stop-color="#000"/></linearGradient></defs><path d="M4 4h16v16H4z" fill="url(#g) rgba(0,0,0,0.5)"/>`,
+      ),
+    );
+    expect(r.icon.body).toContain('fill="url(#demo--icon-0) rgba(0,0,0,0.5)"');
+    expect(r.warnings).toContain(
+      "полупрозрачный запасной цвет у url() в fill — оставлен как есть",
+    );
+  });
+
+  it("полупрозрачный lighting-color — своё предупреждение, не про группу (ревизия фазы 5, Д-9)", () => {
+    const r = normalized(
+      svg(
+        `<filter id="f"><feDiffuseLighting lighting-color="rgba(0,0,0,0.5)"><feDistantLight/></feDiffuseLighting></filter><path d="M4 4h16v16H4z" fill="#000" filter="url(#f)"/>`,
+      ),
+    );
+    expect(r.warnings).toContain(
+      "полупрозрачный lighting-color — прозрачность перенести некуда, цвет оставлен как есть",
+    );
+    expect(r.warnings).not.toContain(
+      "полупрозрачный цвет на группе — цвет оставлен как есть",
+    );
+  });
+
   it("атрибут color удаляется: иначе currentColor не возьмёт цвет текста", () => {
     const r = normalized(
       svg(`<g color="#f00"><path d="M4 4h16v16H4z" fill="currentColor"/></g>`),

@@ -99,12 +99,17 @@ export async function loadBaseline(
       return { baselineError: `в коммите ${short} нет ${iconsPath}` };
     }
     const changelog = await history.show(commit, changelogPath);
-    // Lock того же коммита; не читается — считаем, что источник обновился.
+    // Lock того же коммита; не читается — считаем, что источник обновился. И битый JSON тоже: раньше
+    // ошибка разбора уходила в общий перехват и давала «СТОП» (ревизия фазы 5, Д-13).
     const lockText = await history.show(commit, "sources.lock.json");
+    let lockJson: unknown;
+    try {
+      lockJson = lockText === undefined ? undefined : JSON.parse(lockText);
+    } catch {
+      lockJson = undefined;
+    }
     const lock =
-      lockText === undefined
-        ? undefined
-        : lockFileSchema.safeParse(JSON.parse(lockText));
+      lockJson === undefined ? undefined : lockFileSchema.safeParse(lockJson);
     const previous = lock?.success ? lock.data[config.id] : undefined;
     return {
       baseline: baselineFromTexts({

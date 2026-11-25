@@ -61,6 +61,21 @@ describe("listAfter", () => {
     expect(listAfter(LICENSE, "Другая фраза:")).toBeUndefined();
     expect(listAfter(`текст\n${ANCHOR}\n\n`, ANCHOR)).toBeUndefined();
   });
+
+  it("перенесённый список — весь абзац, до пустой строки (ревизия фазы 5, Д-15)", () => {
+    const wrapped = `${ANCHOR}\n\nairplay, alert-circle,\ntrash-2, trash\nx\n\nThe MIT License (MIT)\n`;
+    expect(listAfter(wrapped, ANCHOR)).toBe(
+      "airplay, alert-circle,\ntrash-2, trash\nx",
+    );
+    const read = readCredits(config(), wrapped, resolve);
+    expect(read.stop).toEqual([]);
+    expect(read.credits[0]?.icons).toEqual([
+      "airplay",
+      "circle-alert",
+      "trash",
+      "x",
+    ]);
+  });
 });
 
 describe("readCredits", () => {

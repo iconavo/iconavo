@@ -33,7 +33,7 @@ import { sourceLabel } from "../sources/fetch.js";
 import type { LockEntry } from "../sources/lock.js";
 import { variantAliases } from "./aliases.js";
 import { canonicalJson } from "./json.js";
-import { writeFileAtomic } from "./write.js";
+import { writeFilesAtomic } from "./write.js";
 
 export interface BuiltIcon {
   entry: NormalizedEntry;
@@ -299,9 +299,10 @@ export async function buildSet(
 }
 
 /**
- * Записывает файлы набора в `data/{набор}/`, каждый через временный файл: оборванная запись не
- * оставит половину файла. NOTICE, которого больше нет в источнике, удаляется. Набор со «СТОП» не
- * трогает; возвращает пути записанных файлов.
+ * Записывает файлы набора в `data/{набор}/` одной группой (writeFilesAtomic): сначала все во временные,
+ * затем подмена — оборванная запись не оставит ни половины файла, ни смеси новых и старых (ревизия
+ * фазы 5, Д-12). NOTICE, которого больше нет в источнике, удаляется. Набор со «СТОП» не трогает;
+ * возвращает пути записанных файлов.
  */
 export async function writeSetData(
   dataDir: string,
@@ -314,16 +315,11 @@ export async function writeSetData(
   }
   const dir = join(dataDir, r.normalize.id);
   await mkdir(dir, { recursive: true });
-  const written: string[] = [];
-  for (const file of [
-    { name: "icons.json", text: r.json },
-    ...files,
-    ...journal,
-  ]) {
-    const path = join(dir, file.name);
-    await writeFileAtomic(path, file.text);
-    written.push(path);
-  }
+  const all = [{ name: "icons.json", text: r.json }, ...files, ...journal];
+  const written = all.map((file) => join(dir, file.name));
+  await writeFilesAtomic(
+    all.map((file, i) => ({ path: written[i] as string, data: file.text })),
+  );
   if (!files.some((f) => f.name === "NOTICE")) {
     await rm(join(dir, "NOTICE"), { force: true });
   }

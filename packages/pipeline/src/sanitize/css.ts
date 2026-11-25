@@ -96,6 +96,14 @@ export function parseDeclarations(text: string): CssDeclaration[] {
     const important = /!\s*important$/i.test(value);
     if (important) value = value.replace(/!\s*important$/i, "").trim();
     if (value === "") throw new CssError(`у свойства ${property} нет значения`);
+    // Сокращение marker — три свойства, как у браузера: иначе стрелки на концах линий пропадали молча
+    // (ревизия фазы 5, Д-2).
+    if (property === "marker") {
+      for (const p of ["marker-start", "marker-mid", "marker-end"]) {
+        out.push({ property: p, value, important });
+      }
+      continue;
+    }
     out.push({ property, value, important });
   }
   return out;
@@ -256,9 +264,14 @@ const JUNK_PROPERTIES = new Set([
   "cursor",
   "solid-color",
   "solid-opacity",
-  "overflow",
-  "marker",
 ]);
+
+/**
+ * overflow, при котором рисунок выходит за свою область (visible, auto): не мусор — его потеря меняет
+ * рисунок и записывается в потери; hidden, clip и scroll рисуют так же, как без него (ревизия фазы 5, Д-2).
+ */
+export const showsOverflow = (value: string): boolean =>
+  !/^(?:hidden|clip|scroll)$/i.test(value.trim());
 
 /** Мусор из редакторов, который на рисунок иконки не влияет: отбрасывается. */
 export function isJunkProperty(property: string, value: string): boolean {

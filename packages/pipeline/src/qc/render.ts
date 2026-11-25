@@ -14,7 +14,10 @@ import { encodePng } from "./png.js";
 
 let ready: Promise<void> | undefined;
 
-/** Загружает resvg; повторные вызовы ждут ту же загрузку. */
+/**
+ * Загружает resvg; повторные вызовы ждут ту же загрузку. Неудачная загрузка не запоминается: следующий
+ * вызов пробует снова, а не получает тот же отказ до конца процесса (ревизия фазы 5, Д-23).
+ */
 export function initRenderer(): Promise<void> {
   ready ??= (async () => {
     const wasm = createRequire(import.meta.url).resolve(
@@ -27,7 +30,10 @@ export function initRenderer(): Promise<void> {
       // а resvg уже загружен — это не ошибка.
       if (!(e as Error).message.includes("Already initialized")) throw e;
     }
-  })();
+  })().catch((e: unknown) => {
+    ready = undefined;
+    throw e;
+  });
   return ready;
 }
 

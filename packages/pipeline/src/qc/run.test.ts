@@ -268,7 +268,8 @@ describe("контроль набора", () => {
       input([item("a", SQUARE)], { baseline: past(file()) }),
     );
     expect([quiet.changed, quiet.missing, quiet.added]).toEqual([0, [], []]);
-    expect(quiet.baseline?.names).toBe(2);
+    // Знаменатель — видимые иконки прошлой версии: без скрытых и без алиаса old (ревизия фазы 5, Д-19).
+    expect(quiet.baseline?.names).toBe(1);
     expect(quiet.stop).toEqual([]);
     const lost = await checkSet(
       input([item("a", SQUARE)], {
@@ -276,8 +277,8 @@ describe("контроль набора", () => {
       }),
     );
     expect(lost.missing).toEqual(["b"]);
-    expect(lost.changedShare).toBeCloseTo(1 / 3);
-    expect(lost.stop.join("\n")).toMatch(/изменилось или пропало 33,3% имён/);
+    expect(lost.changedShare).toBeCloseTo(1 / 2);
+    expect(lost.stop.join("\n")).toMatch(/изменилось или пропало 50% имён/);
   });
 
   it("без прошлой версии — причина вместо сравнения", async () => {

@@ -47,3 +47,30 @@ export async function writeFileAtomic(
     throw e;
   }
 }
+
+/**
+ * Несколько файлов одной группой — например, файлы набора в `data/{набор}/`: сначала все пишутся во
+ * временные рядом, затем подменяют прежние подряд. Сбой при записи не трогает прежние файлы, и набор не
+ * остаётся смесью новых и старых (ревизия фазы 5, Д-12).
+ */
+export async function writeFilesAtomic(
+  files: readonly { path: string; data: string | Uint8Array }[],
+): Promise<void> {
+  const staged: { tmp: string; path: string }[] = [];
+  try {
+    for (const { path, data } of files) {
+      const dir = dirname(path);
+      await mkdir(dir, { recursive: true });
+      const tmp = join(
+        dir,
+        `.${basename(path)}-${randomBytes(6).toString("hex")}.tmp`,
+      );
+      staged.push({ tmp, path });
+      await writeFile(tmp, data);
+    }
+  } catch (e) {
+    await Promise.all(staged.map((s) => rm(s.tmp, { force: true })));
+    throw e;
+  }
+  for (const { tmp, path } of staged) await renameRetrying(tmp, path);
+}

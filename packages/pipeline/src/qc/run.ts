@@ -195,6 +195,18 @@ export async function checkSet(input: QcInput): Promise<SetQcReport> {
     const icon = current.get(parent);
     if (icon) current.set(alias, icon);
   }
+  // Правило 2% считает одно и то же в числителе и знаменателе: видимые иконки прошлой версии. Скрытые и
+  // алиасы журнал переносит сам (ревизия фазы 5, Д-19: раньше знаменатель считал и алиасы, а пропавшие —
+  // нет, и доля размывалась).
+  const population = new Set<string>(
+    !baseline
+      ? []
+      : baseline.state
+        ? [...baseline.state.icons]
+            .filter(([, i]) => !i.hidden)
+            .map(([name]) => name)
+        : [...baseline.icons.keys()],
+  );
   let changed = 0;
   const added: string[] = [];
   const missing: string[] = [];
@@ -222,19 +234,13 @@ export async function checkSet(input: QcInput): Promise<SetQcReport> {
         text = `не нарисовалась одна из версий: ${message(e)}`;
       }
       if (diff <= CHANGED_PIXELS) continue;
-      changed++;
+      if (population.has(name)) changed++;
       const key = `${was.width} ${was.height} ${was.body}\n${now.width} ${now.height} ${now.body}`;
       if (shown.has(key)) continue;
       shown.add(key);
       add("changed", name, diff, text);
     }
-    // Скрытые иконки и алиасы прошлой версии журнал переносит сам: правило 2% их не касается.
-    const visible = baseline.state
-      ? [...baseline.state.icons]
-          .filter(([, i]) => !i.hidden)
-          .map(([name]) => name)
-      : [...baseline.icons.keys()];
-    for (const name of visible) {
+    for (const name of population) {
       if (!current.has(name)) missing.push(name);
     }
     added.sort(order);
@@ -304,9 +310,7 @@ export async function checkSet(input: QcInput): Promise<SetQcReport> {
       `пустые иконки: ${count("empty")} — закрашено меньше ${share(EMPTY_LIMIT)} холста`,
     );
   }
-  let hidden = 0;
-  for (const i of baseline?.state?.icons.values() ?? []) if (i.hidden) hidden++;
-  const names = (baseline?.icons.size ?? 0) - hidden;
+  const names = population.size;
   const changedShare = names === 0 ? 0 : (changed + missing.length) / names;
   let accepted = false;
   if (

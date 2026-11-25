@@ -15,7 +15,6 @@ import {
   folderMatcher,
   type MetadataFormat,
   metadataFiles,
-  NOTICE_FILES,
   pathPattern,
   type SourceConfig,
   wantedPath,
@@ -28,6 +27,7 @@ import {
 } from "./git.js";
 import type { LockEntry, LockFile } from "./lock.js";
 import { checkNames, type NameCheck } from "./names.js";
+import { findNotice } from "./notice.js";
 import { downloadAndExtract, type FetchFn, resolveNpm } from "./npm.js";
 
 export interface FetchOptions {
@@ -258,7 +258,8 @@ export async function fetchSource(
     format: config.metadata,
     files: all.filter((f) => patterns.some((re) => re.test(f))).length,
   };
-  const notice = NOTICE_FILES.find((f) => all.includes(f));
+  // Тот NOTICE, что берёт лицензия: первый непустой (findNotice; ревизия фазы 5, Д-22).
+  const notice = (await findNotice(dir))?.file;
   const extras = extraFiles(config);
   const found = extras.filter((f) => all.includes(f));
   const marker = await readMarker(dir);

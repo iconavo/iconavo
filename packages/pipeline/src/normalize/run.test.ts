@@ -103,6 +103,20 @@ describe("прогон набора", () => {
     expect(text).toContain("Итог: можно обновлять");
   });
 
+  it("предупреждения очистки — в сводке и у иконки, с пометкой «очистка» (ревизия фазы 5, Д-7)", async () => {
+    await makeSet({
+      "icons/a.svg": icon(
+        `<g id="x"><path d="M4 4h16v16H4z"/></g><g id="x"><path d="M0 0h1v1H0z"/></g>`,
+      ),
+    });
+    const r = await normalizeSet(config(), dir, "demo-icons@1.0.0");
+    expect(r.icons[0]?.warnings).toContain("очистка: id «x» повторяется");
+    expect(r.warnings).toContainEqual({
+      what: "очистка: id «x» повторяется",
+      icons: 1,
+    });
+  });
+
   it("исключённые при очистке и при нормализации считаются вместе; больше 1% — стоп", async () => {
     await iconsFiles(98);
     await makeSet({

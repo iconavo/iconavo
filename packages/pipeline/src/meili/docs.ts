@@ -7,10 +7,12 @@ import { createHash } from "node:crypto";
 import {
   documentId,
   normalizeText,
+  SEARCH_MODEL,
   type SearchDocument,
   STYLES,
 } from "@iconavo-ui/search";
 import { loadSetData } from "../cdn/load.js";
+import { TEXT_VERSION } from "../embed/config.js";
 import { type Catalog, loadCatalog } from "../search/catalog.js";
 import type { SourceConfig } from "../sources/config.js";
 
@@ -28,9 +30,27 @@ const phrases = (list: readonly string[]): string[] => [
   ...new Set(list.map(normalizeText).filter((p) => p !== "")),
 ];
 
-/** Отпечаток документа без вектора: 16 символов SHA-256. */
-export const documentHash = (doc: Omit<SearchDocument, "hash">): string =>
-  createHash("sha256").update(JSON.stringify(doc)).digest("hex").slice(0, 16);
+/** От чего зависит вектор документа: модель, длина вектора и версия текста (ADR-0047, ADR-0049). */
+export const VECTOR_SOURCE = {
+  model: SEARCH_MODEL.id,
+  dims: SEARCH_MODEL.dims,
+  text: TEXT_VERSION,
+} as const;
+
+/**
+ * Отпечаток документа без вектора: 16 символов SHA-256 — с тем, от чего зависит вектор. Сменили модель
+ * при той же длине или версию текста — документы уходят заново с новыми векторами, и версия индекса
+ * меняется; раньше векторы пересчитывались и оплачивались, а в индексе оставались старые (ревизия
+ * фазы 5, Д-4).
+ */
+export const documentHash = (
+  doc: Omit<SearchDocument, "hash">,
+  vector: { model: string; dims: number; text: number } = VECTOR_SOURCE,
+): string =>
+  createHash("sha256")
+    .update(JSON.stringify({ doc, vector }))
+    .digest("hex")
+    .slice(0, 16);
 
 /** Документы всех карточек каталога в его порядке. */
 export function searchDocuments(

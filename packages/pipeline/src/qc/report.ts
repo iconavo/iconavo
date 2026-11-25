@@ -191,7 +191,7 @@ function card(r: SetBuildReport, f: QcFinding, lookup: SetLookup): string {
   const id = r.normalize.id;
   const link = lookup.links.get(f.name);
   const title = link
-    ? `<a href="${link}">${esc(id)}:${esc(f.name)}</a>`
+    ? `<a href="${esc(link)}">${esc(id)}:${esc(f.name)}</a>`
     : `${esc(id)}:${esc(f.name)}`;
   const figures = f.images.map((img) => figure(img.label, img));
   const icon = lookup.icons.get(f.name);

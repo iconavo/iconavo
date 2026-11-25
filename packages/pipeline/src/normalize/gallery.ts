@@ -152,7 +152,7 @@ function card(r: GallerySet, item: GalleryItem, n: number): string {
       `<div class="row"><span class="lbl">SVGO</span>${resultRow(item.optimized, `p${n}`, base, TONES.length * SIZES.length)}</div>`,
     );
   }
-  return `<article class="card" id="${anchor(e.name)}"><h3>${esc(e.name)}${badges}${aliases}</h3>
+  return `<article class="card" id="${esc(anchor(e.name))}"><h3>${esc(e.name)}${badges}${aliases}</h3>
 ${rows.join("\n")}</article>`;
 }
 
@@ -246,7 +246,7 @@ export function attentionItems(
     if (item.attention.length === 0) return;
     const href = cardLink(r.id, index, item.entry.name);
     out.push(
-      `<li><a href="${href}">${esc(r.id)}:${esc(item.entry.name)}</a> — ${esc(item.attention.join("; "))}</li>`,
+      `<li><a href="${esc(href)}">${esc(r.id)}:${esc(item.entry.name)}</a> — ${esc(item.attention.join("; "))}</li>`,
     );
   });
   return out;

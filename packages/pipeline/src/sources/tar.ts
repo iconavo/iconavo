@@ -118,7 +118,16 @@ function relativeEntryPath(name: string): string {
   }
   // Сегмент «.» ничего не меняет (так упаковано, например, в @phosphor-icons/core), «..» опасен.
   const parts = name.split("/").filter((s) => s !== "" && s !== ".");
-  if (parts.some((s) => s === "..")) {
+  // Двоеточие в части пути — поток NTFS (a.svg:x), имена устройств Windows (CON, NUL, COM1…) — на
+  // Windows такой файл пишется не туда, куда сказано (ревизия фазы 5, Д-16).
+  if (
+    parts.some(
+      (s) =>
+        s === ".." ||
+        s.includes(":") ||
+        /^(?:con|prn|aux|nul|com[1-9]|lpt[1-9])(?:\..*)?$/i.test(s),
+    )
+  ) {
     throw new Error(`небезопасный путь в архиве: ${JSON.stringify(name)}`);
   }
   return parts.slice(1).join("/");
@@ -160,7 +169,9 @@ export async function extractTar(
         type === "x" ? paxPath(data) : cstring(data, 0, data.length);
       continue;
     }
-    if (type === "g") {
+    // «K» — длинное имя цели ссылки GNU: ссылки не поддерживаются, а отложенное длинное имя записи («L»)
+    // остаётся её записи, а не уходит на этот заголовок (ревизия фазы 5, Д-17).
+    if (type === "g" || type === "K") {
       await reader.skip(padded);
       continue;
     }

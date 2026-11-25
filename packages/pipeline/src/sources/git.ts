@@ -192,6 +192,16 @@ export async function resolveGitTag(repo: string): Promise<RemoteTag> {
   return latest;
 }
 
+/** Пути символических ссылок из вывода `git ls-files -s`: режим 120000. */
+export function symlinksOf(lsFiles: string): Set<string> {
+  const links = new Set<string>();
+  for (const line of lsFiles.split("\n")) {
+    const m = /^120000 [0-9a-f]+ \d+\t(.+)$/.exec(line);
+    if (m?.[1] !== undefined) links.add(m[1]);
+  }
+  return links;
+}
+
 async function* walk(
   dir: string,
   wanted: (path: string) => boolean,
@@ -237,10 +247,17 @@ export async function fetchGit(
       [...AS_COMMITTED, "checkout", "-q", "--detach", "FETCH_HEAD"],
       work,
     );
+    // Символические ссылки — по самому git (режим 120000), а не по файловой системе: на Windows без
+    // core.symlinks git выписывает ссылку обычным файлом с путём внутри, и она тихо попала бы в набор
+    // текстом, а на Linux была ошибкой (ревизия фазы 5, Д-14).
+    const links = symlinksOf(await git(["ls-files", "-s"], work));
     const files: { path: string; size: number }[] = [];
     let bytes = 0;
     for await (const path of walk(work, options.wanted)) {
       if (!options.wanted(path)) continue;
+      if (links.has(path)) {
+        throw new Error(`«${path}» — ссылка, ссылки не поддерживаются`);
+      }
       const from = join(work, path);
       const to = join(options.dest, path);
       await mkdir(dirname(to), { recursive: true });

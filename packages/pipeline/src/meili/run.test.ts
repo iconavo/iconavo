@@ -24,6 +24,7 @@ import {
   diffDocuments,
   type SearchIndexOptions,
   searchIndex,
+  settingsBody,
   settingsDiff,
 } from "./run.js";
 import { readSetVectors } from "./vectors.js";
@@ -379,6 +380,7 @@ describe("settingsDiff", () => {
       keys: [],
       embedderChanged: false,
       distributionChanged: false,
+      staleEmbedders: [],
     });
     // Калибровку Meilisearch хранит в f32 — отдаёт с хвостом, это не отличие.
     const f32 = structuredClone(INDEX_SETTINGS) as Record<string, unknown>;
@@ -403,7 +405,29 @@ describe("settingsDiff", () => {
       keys: ["embedders"],
       embedderChanged: false,
       distributionChanged: true,
+      staleEmbedders: [],
     });
+  });
+
+  it("лишний эмбеддер — в staleEmbedders, настройки удаляют его null (ревизия фазы 5, Д-5)", () => {
+    const extra = {
+      ...structuredClone(INDEX_SETTINGS),
+      embedders: {
+        ...INDEX_SETTINGS.embedders,
+        old: { source: "userProvided", dimensions: 3 },
+      },
+    };
+    const d = settingsDiff(extra);
+    expect(d.keys).toEqual(["embedders"]);
+    expect(d.staleEmbedders).toEqual(["old"]);
+    const body = settingsBody(d.staleEmbedders) as {
+      embedders: Record<string, unknown>;
+    };
+    expect(body.embedders.old).toBeNull();
+    expect(body.embedders[EMBEDDER]).toEqual(
+      INDEX_SETTINGS.embedders[EMBEDDER],
+    );
+    expect(settingsBody([])).toBe(INDEX_SETTINGS);
   });
 
   it("пустой индекс — эмбеддер добавляется, а не меняется", () => {

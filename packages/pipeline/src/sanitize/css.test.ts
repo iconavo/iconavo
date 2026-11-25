@@ -158,14 +158,15 @@ describe("что переносится в атрибуты", () => {
     ["text-anchor", "middle"],
     ["line-height", "1.25"],
     ["enable-background", "new"],
-    ["overflow", "visible"],
     ["mix-blend-mode", "normal"],
   ])("мусор из редакторов: %s", (property, value) => {
     expect(isJunkProperty(property, value)).toBe(true);
   });
 
-  it("свойства оформления — не мусор", () => {
+  it("свойства оформления — не мусор; overflow и marker — тоже: они меняют рисунок (ревизия фазы 5, Д-2)", () => {
     expect(isJunkProperty("fill", "red")).toBe(false);
     expect(isJunkProperty("stroke-width", "2")).toBe(false);
+    expect(isJunkProperty("overflow", "visible")).toBe(false);
+    expect(isJunkProperty("marker", "url(#m)")).toBe(false);
   });
 });

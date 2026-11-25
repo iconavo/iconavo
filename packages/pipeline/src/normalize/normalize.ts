@@ -109,6 +109,14 @@ export function normalizeSvg(
   };
 
   const warnings = [...canvas.warnings];
+  // preserveAspectRatio уходит вместе с холстом; обычное значение рисунок не меняет, а none (и другие)
+  // растягивали или сдвигали его — не молча (ревизия фазы 5, Д-11).
+  const aspect = input.attrs.preserveAspectRatio?.trim();
+  if (aspect !== undefined && !/^xMidYMid(\s+meet)?$/.test(aspect)) {
+    warnings.push(
+      `preserveAspectRatio="${aspect}" на корне отброшен — рисунок без растяжения и сдвига`,
+    );
+  }
   let paint: PaintStats | undefined;
   if (options.palette === "monochrome") {
     paint = normalizePaint(root);

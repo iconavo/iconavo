@@ -45,7 +45,8 @@ export const searchEntrySchema = z
 /** `search.json` — данные для поиска, в рантайм не идёт. */
 export const searchFileSchema = z.strictObject({
   prefix: nameSchema,
-  icons: z.record(z.string(), searchEntrySchema),
+  // Ключи — имена иконок по правилу имён (ADR-0001; ревизия фазы 5, Д-20).
+  icons: z.record(nameSchema, searchEntrySchema),
 });
 
 export type SearchEntry = z.infer<typeof searchEntrySchema>;

@@ -35,9 +35,11 @@ import {
   releaseTagsByCommit,
   remoteTags,
   resolveGitTag,
+  symlinksOf,
 } from "./git.js";
 import { type LockFile, lockFileSchema, readLock, writeLock } from "./lock.js";
 import { checkNames, iconNameFromFile } from "./names.js";
+import { findNotice } from "./notice.js";
 import { downloadAndExtract } from "./npm.js";
 import { loadRegistry } from "./registry.js";
 import { fetchStop, formatReport } from "./report.js";
@@ -49,7 +51,7 @@ import {
   makeTar,
   makeTgz,
 } from "./tar-builder.testing.js";
-import { compareVersions, parseVersion } from "./version.js";
+import { compareVersions, parseVersion, SEMVER } from "./version.js";
 
 let tmp: string;
 beforeEach(async () => {
@@ -314,6 +316,21 @@ describe("выбор нужных файлов", () => {
     expect(downloadRules(parse({ ...baseConfig, name: "Другое" }))).toBe(rules);
   });
 
+  it("другой пакет или репозиторий — другие правила: старые файлы из кэша не берутся (ревизия фазы 5, Д-3)", () => {
+    const rules = downloadRules(parse(baseConfig));
+    expect(
+      downloadRules(
+        parse({
+          ...baseConfig,
+          source: { type: "npm", package: "other-icons" },
+        }),
+      ),
+    ).not.toBe(rules);
+    const git = (repo: string) =>
+      downloadRules(parse({ ...baseConfig, source: { type: "git", repo } }));
+    expect(git("https://x.test/a.git")).not.toBe(git("https://x.test/b.git"));
+  });
+
   it("package.json нужен только наборам из npm", () => {
     const git = parse({
       ...baseConfig,
@@ -534,10 +551,22 @@ describe("распаковка tar", () => {
     ["выход вглубь через ..", "package/icons/../../evil.txt"],
     ["абсолютный путь", "/etc/passwd"],
     ["обратные слэши", "package\\icons\\a.svg"],
+    ["поток NTFS (ревизия фазы 5, Д-16)", "package/icons/a.svg:evil"],
+    ["имя устройства Windows (Д-16)", "package/icons/CON.svg"],
+    ["имя устройства без расширения (Д-16)", "package/icons/nul"],
   ])("отклоняет небезопасный путь: %s", async (_n, name) => {
     await expect(run([{ name, data: "x" }])).rejects.toThrow(
       /небезопасный путь/,
     );
+  });
+
+  it("заголовок GNU «K» не забирает длинное имя «L» у своей записи (ревизия фазы 5, Д-17)", async () => {
+    const r = await run([
+      { name: "././@LongLink", type: "L", data: "package/icons/long-name.svg" },
+      { name: "././@LongLink", type: "K", data: "somewhere/else" },
+      { name: "package/icons/short", data: "<svg/>" },
+    ]);
+    expect(r.files.map((f) => f.path)).toEqual(["icons/long-name.svg"]);
   });
 
   it("отклоняет симлинк на нужном месте, но пропускает ненужный", async () => {
@@ -1085,5 +1114,47 @@ describe("реестр конфигов", () => {
       `export default ${JSON.stringify({ ...baseConfig, svgFolders: [{ path: "../x" }] })};\n`,
     );
     await expect(loadRegistry(dir)).rejects.toThrow(/svgFolders/);
+  });
+});
+
+describe("ссылки в git-источнике (ревизия фазы 5, Д-14)", () => {
+  it("по режиму 120000 из git ls-files -s — одинаково на Windows и Linux", () => {
+    const out = [
+      "100644 aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa 0\ticons/house.svg",
+      "120000 bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb 0\ticons/home.svg",
+      "100755 cccccccccccccccccccccccccccccccccccccccc 0\tscripts/build.sh",
+      "",
+    ].join("\n");
+    expect([...symlinksOf(out)]).toEqual(["icons/home.svg"]);
+  });
+});
+
+describe("NOTICE набора (ревизия фазы 5, Д-22)", () => {
+  it("первый непустой: пустой NOTICE пропускается — так же, как у лицензии", async () => {
+    await writeFile(join(tmp, "NOTICE"), "  \n");
+    await writeFile(join(tmp, "NOTICE.md"), "Copyright Demo\n");
+    expect(await findNotice(tmp)).toEqual({
+      file: "NOTICE.md",
+      text: "Copyright Demo\n",
+    });
+    await rm(join(tmp, "NOTICE.md"));
+    expect(await findNotice(tmp)).toBeUndefined();
+  });
+});
+
+describe("версия пакета npm — semver (ревизия фазы 5, Б-5)", () => {
+  it("номера выпусков проходят, путь вместо версии — нет", () => {
+    for (const v of [
+      "0.49.0",
+      "2.1.1",
+      "3.52.0",
+      "1.0.0-rc.1",
+      "1.2.3+build.5",
+    ]) {
+      expect(SEMVER.test(v), v).toBe(true);
+    }
+    for (const v of ["../../x", "1.2", "1.2.3/..", "latest", ""]) {
+      expect(SEMVER.test(v), v).toBe(false);
+    }
   });
 });

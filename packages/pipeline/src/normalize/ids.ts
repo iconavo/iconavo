@@ -46,6 +46,15 @@ export function renameIds(root: SvgElement, base: string): IdsResult {
     removed++;
   }
 
+  const renamed = map.size;
+  // Ссылка на ID, которого в иконке нет, — тоже с основой иконки: такого ID нет нигде, рисунок тот же,
+  // а короткое имя на странице подхватило бы чужой градиент или маску (ревизия фазы 5, Д-6).
+  for (const id of used) {
+    if (map.has(id)) continue;
+    map.set(id, `${base}-missing`);
+    warnings.add("ссылка на несуществующий id — имя с основой иконки");
+  }
+
   for (const el of all) {
     for (const [name, value] of Object.entries(el.attrs)) {
       if (name === "id") continue;
@@ -53,5 +62,5 @@ export function renameIds(root: SvgElement, base: string): IdsResult {
       if (next !== value) el.attrs[name] = next;
     }
   }
-  return { renamed: map.size, removed, warnings: [...warnings] };
+  return { renamed, removed, warnings: [...warnings] };
 }
