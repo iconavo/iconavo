@@ -359,6 +359,15 @@ export async function bagProblems(
   const hex = panel.locator("input.color-hex");
   await hex.click();
   await hex.pressSequentially(BAG_COLOR.slice(1).toUpperCase());
+  // Список — как в файлах: иконка в нём берёт общий цвет рюкзака (правка владельца 25 ноября 2026).
+  const listed4 = panel.locator(`li.bag-item[data-icon="${fourth.name}"] svg`);
+  no(
+    (await listed4
+      .first()
+      .getAttribute("color")
+      .catch(() => null)) === BAG_COLOR,
+    `иконка ${fourth.name} в списке рюкзака не перекрасилась в общий цвет`,
+  );
 
   // ZIP: файлы, суммы, тексты лицензий и README; общий цвет — в SVG.
   const zip = await downloaded(page, () =>
@@ -514,18 +523,61 @@ export async function bagEdgeProblems(
       ([key, list]) => localStorage.setItem(key, JSON.stringify(list)),
       [BAG_KEY, names] as const,
     );
+  // Перед перезагрузкой и переходом — пока у страницы нет запросов в пути: иначе оборвалась бы загрузка
+  // иконок рюкзака, и WebKit записал бы отмену ошибкой страницы.
+  let inFlight = 0;
+  const finished = () => {
+    inFlight = Math.max(0, inFlight - 1);
+  };
+  page.on("request", () => {
+    inFlight += 1;
+  });
+  page.on("requestfinished", finished);
+  page.on("requestfailed", finished);
+  const idle = async () => {
+    // Иконки, которые ещё грузятся (заглушка React — iconavo-loading), — и те, что начались до счёта.
+    await page
+      .waitForFunction(
+        () => document.querySelector(".iconavo-loading") === null,
+        null,
+        { timeout: PANEL_WAIT_MS },
+      )
+      .catch(() => {});
+    let calm = 0;
+    for (let t = 0; t < PANEL_WAIT_MS && calm < 300; t += 100) {
+      calm = inFlight === 0 ? calm + 100 : 0;
+      await page.waitForTimeout(100);
+    }
+  };
 
-  // Иконка, которой нет: ZIP — только с загруженной, сообщение называет пропавшую.
+  // Иконка, которой нет: ZIP — только с загруженной, сообщение называет пропавшую. Загруженная — с
+  // длинным именем: оно обрезается многоточием, список не прокручивается вбок (правка владельца
+  // 25 ноября 2026).
+  await idle();
   await page.goto(`${o.base}/${CATALOG_SET}`);
   await hydrated(page);
   const lost = `${CATALOG_SET}:no-such-icon`;
-  await setBag([`${CATALOG_SET}:house`, lost]);
+  const long = "align-horizontal-distribute-center";
+  await idle();
+  await setBag([`${CATALOG_SET}:${long}`, lost]);
   await page.reload();
   await hydrated(page);
   await badgeIs(page, 2);
   await page.locator(".topbar .bag-button").click();
   const panel = page.locator("dialog#bag-panel[open]");
   await panel.waitFor({ timeout: PANEL_WAIT_MS }).catch(() => {});
+  const fit = await page.evaluate(() => {
+    const list = document.querySelector("dialog#bag-panel .bag-panel-list");
+    const name = document.querySelector("dialog#bag-panel .bag-item-name");
+    return {
+      wide: list === null || list.scrollWidth > list.clientWidth,
+      cut: name !== null && name.scrollWidth > name.clientWidth,
+    };
+  });
+  no(
+    !fit.wide && fit.cut,
+    `длинное имя в рюкзаке: ${fit.wide ? "список прокручивается вбок" : "имя не обрезано многоточием"}`,
+  );
   const zip = await downloaded(page, () =>
     panel.locator("button.bag-download", { hasText: "Download ZIP" }).click(),
   );
@@ -537,7 +589,7 @@ export async function bagEdgeProblems(
         .map((f) => f.path)
         .filter((path) => path.endsWith(".svg"));
       no(
-        svgs.join(" ") === `${CATALOG_SET}/house.svg`,
+        svgs.join(" ") === `${CATALOG_SET}/${long}.svg`,
         `в ZIP с иконкой, которой нет, — ${svgs.join(", ") || "ни одной иконки"}`,
       );
     } catch (e) {
@@ -561,6 +613,7 @@ export async function bagEdgeProblems(
     problems.push(`для полного рюкзака мало имён ph: ${full.length}`);
     return problems;
   }
+  await idle();
   await setBag(full);
   await page.reload();
   await hydrated(page);
@@ -592,16 +645,28 @@ export async function bagEdgeProblems(
     (await add.getAttribute("aria-label").catch(() => null)) === fullText,
     `полный рюкзак: кнопка панели — «${await add.getAttribute("aria-label").catch(() => "нет")}»`,
   );
+  await idle();
   await page.goto(`${o.base}/${CATALOG_SET}/house`);
   await hydrated(page);
   const pageBag = page.locator("button.ip-bag");
-  await pageBag.waitFor({ timeout: PANEL_WAIT_MS }).catch(() => {});
+  // Рюкзак страница читает после гидратации — надпись ждём, а не читаем один раз (WebKit медленнее).
+  await page
+    .waitForFunction(
+      () =>
+        document
+          .querySelector("button.ip-bag")
+          ?.textContent?.includes("Backpack is full") === true,
+      null,
+      { timeout: PANEL_WAIT_MS },
+    )
+    .catch(() => {});
   no(
     ((await pageBag.textContent().catch(() => "")) ?? "").includes(
       "Backpack is full",
     ),
     `полный рюкзак: кнопка страницы иконки — «${await pageBag.textContent().catch(() => "нет")}»`,
   );
+  await idle();
   await setBag([]);
   return problems;
 }

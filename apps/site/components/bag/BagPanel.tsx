@@ -276,8 +276,17 @@ export function BagPanel({ lang }: { lang: Lang }) {
               <ul className="bag-list">
                 {bag.map((name) => (
                   <li key={name} className="bag-item" data-icon={name}>
-                    <Icon icon={name} className="bag-item-icon" />
-                    <span className="bag-item-name">{name}</span>
+                    {/* Как в файлах: общий цвет (если он вшивается) и толщина линии рюкзака — цветные и
+                        иконки без линий их не берут (правка владельца 25 ноября 2026). */}
+                    <Icon
+                      icon={name}
+                      className="bag-item-icon"
+                      color={look.color}
+                      strokeWidth={look.stroke}
+                    />
+                    <span className="bag-item-name" title={name}>
+                      {name}
+                    </span>
                     <button
                       type="button"
                       className="bag-item-remove"
