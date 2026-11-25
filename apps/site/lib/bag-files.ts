@@ -4,8 +4,10 @@
 // тексты лицензий и README.txt с указанием авторства; спрайт начинается с комментария об авторах и
 // лицензиях. Чистые функции: данные и тексты лицензий приносит bag-export.ts.
 
+import type { IconavoIconSet } from "@iconavo-ui/core";
 import {
   type IconData,
+  iconData,
   iconToSvg,
   replaceIds,
   SVG_NS,
@@ -25,6 +27,31 @@ export interface BagLook {
 export interface BagIcon {
   name: string;
   icon: IconData;
+}
+
+/**
+ * Иконки сумки в её порядке из загруженных наборов и имена без рисунка — не загрузились за попытку ядра
+ * или рисунок не читается. Раньше такие молча пропадали из ZIP и спрайта (ревизия фазы 5, С-11).
+ */
+export function pickIcons(
+  names: readonly string[],
+  sets: readonly IconavoIconSet[],
+): { icons: BagIcon[]; missing: string[] } {
+  const icons: BagIcon[] = [];
+  const missing: string[] = [];
+  for (const name of names) {
+    const [prefix, bare] = splitName(name);
+    const set = sets.find((s) => s.prefix === prefix);
+    let icon: IconData | null = null;
+    try {
+      icon = set === undefined ? null : iconData(set, bare);
+    } catch {
+      icon = null;
+    }
+    if (icon === null) missing.push(name);
+    else icons.push({ name, icon });
+  }
+  return { icons, missing };
 }
 
 /** Набор в сумке: название, текст указания авторства и полный текст лицензии. */
@@ -63,7 +90,11 @@ export function bagFile(icon: IconData, look: BagLook): string {
 const credits = (sets: readonly BagSet[]): string[] =>
   sets.map((s) => s.attribution);
 
-/** SVG-спрайт: символ на иконку, ID внутри рисунков — свои у каждого символа. */
+/**
+ * SVG-спрайт: символ на иконку, ID внутри рисунков — свои у каждого символа. Внутренние ID — через «--»:
+ * в имени иконки двух дефисов подряд не бывает, и «lucide-house--0» не совпадёт с символом другой иконки
+ * («lucide-house-0» — у lucide:house-0; ревизия фазы 5, С-26).
+ */
 export function spriteSvg(
   icons: readonly BagIcon[],
   sets: readonly BagSet[],
@@ -72,7 +103,7 @@ export function spriteSvg(
   const symbols = icons.map(({ name, icon }) => {
     const parts = iconToSvg(icon);
     const id = symbolId(name);
-    const body = replaceIds(lookBody(parts.body, look), () => `${id}-`);
+    const body = replaceIds(lookBody(parts.body, look), () => `${id}--`);
     return `<symbol id="${id}" viewBox="${parts.attributes.viewBox}">${body}</symbol>`;
   });
   const xlink = symbols.some((s) => s.includes("xlink:"))

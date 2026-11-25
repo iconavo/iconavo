@@ -22,7 +22,11 @@ import {
   type IconSetSummary,
   iconPagePath,
 } from "../../lib/icon";
-import { type IconPageData, TAGS_SHOWN } from "../../lib/icon-page";
+import {
+  type IconPageData,
+  TAGS_SHOWN,
+  withBrowserDetails,
+} from "../../lib/icon-page";
 import {
   hasSettings,
   readSettings,
@@ -183,6 +187,8 @@ export function IconView({ lang, page }: { lang: Lang; page: IconPageData }) {
     details?.set.credits === undefined
       ? page.set
       : { ...page.set, credits: details.set.credits };
+  // Кнопкам — и сведения, пришедшие уже в браузере (ревизия фазы 5, С-6).
+  const actionPage = withBrowserDetails(page, details);
   const label =
     details?.synonyms === undefined || details.synonyms === null
       ? page.label
@@ -340,7 +346,12 @@ export function IconView({ lang, page }: { lang: Lang; page: IconPageData }) {
             </section>
           ) : null}
           {page.hidden ? (
-            <RemovedActions lang={lang} page={page} s={s} applies={applies} />
+            <RemovedActions
+              lang={lang}
+              page={actionPage}
+              s={s}
+              applies={applies}
+            />
           ) : (
             <>
               <div className="ip-pair">
@@ -350,10 +361,15 @@ export function IconView({ lang, page }: { lang: Lang; page: IconPageData }) {
                 )}
               </div>
               <div className="ip-actions">
-                <CopyAction lang={lang} page={page} s={s} applies={applies} />
+                <CopyAction
+                  lang={lang}
+                  page={actionPage}
+                  s={s}
+                  applies={applies}
+                />
                 <DownloadAction
                   lang={lang}
-                  page={page}
+                  page={actionPage}
                   s={s}
                   applies={applies}
                 />

@@ -3,7 +3,7 @@
 import { Icon } from "@iconavo-ui/react";
 import { useState } from "react";
 import { track } from "../../lib/analytics";
-import { bagStore, useBag } from "../../lib/bag";
+import { BAG_LIMIT, bagStore, useBag } from "../../lib/bag";
 import { copyText } from "../../lib/clipboard";
 import {
   type Applies,
@@ -14,7 +14,7 @@ import {
 } from "../../lib/code";
 import { saveFile } from "../../lib/download";
 import { DICTIONARIES, type Lang } from "../../lib/i18n";
-import type { IconSetSummary } from "../../lib/icon";
+import type { IconDetails, IconSetSummary } from "../../lib/icon";
 import type { IconSettings } from "../../lib/icon-settings";
 import { panelSettings } from "../../lib/panel-code";
 import { iconDataOf } from "../icon/useIconData";
@@ -31,6 +31,7 @@ export function PanelActions({
   s,
   applies,
   set,
+  credits,
 }: {
   lang: Lang;
   name: string;
@@ -38,10 +39,15 @@ export function PanelActions({
   applies: Applies;
   /** Набор — для комментария файла; до ответа каталога скачивание недоступно. */
   set: IconSetSummary | undefined;
+  /** Части иконки от других авторов (Feather у Lucide) из /icon — в комментарий файла (ревизия фазы 5, С-19). */
+  credits?: IconDetails["credits"];
 }) {
   const t = DICTIONARIES[lang];
   const bag = useBag();
   const inBag = bag.includes(name);
+  // Сумка полна — кнопка так и говорит, а не молчит (ревизия фазы 5, С-14).
+  const bagFull = !inBag && bag.length >= BAG_LIMIT;
+  const fullText = t.bagFull.replace("{max}", String(BAG_LIMIT));
   const [copied, done] = useCopied();
   const [busy, setBusy] = useState(false);
   const settings = panelSettings(s);
@@ -52,19 +58,26 @@ export function PanelActions({
     return fileSvg(icon, settings, applies);
   };
 
-  // Пока файл готовится, кнопка не отключается — иначе браузер снял бы с неё фокус.
+  // Пока файл готовится, кнопка не отключается — иначе браузер снял бы с неё фокус. Сбой сети при загрузке
+  // рисунка — без файла и без необработанного отказа (ревизия фазы 5, С-21).
   async function download() {
     if (set === undefined || busy) return;
     setBusy(true);
     try {
       const icon = await iconDataOf(name);
       if (icon === null) return;
+      const comment = fileComment(name, {
+        set,
+        ...(credits === undefined ? {} : { credits }),
+      });
       saveFile(
         fileName(name, "svg"),
-        svgFile(icon, settings, applies, fileComment(name, { set })),
+        svgFile(icon, settings, applies, comment),
         "image/svg+xml",
       );
       track({ name: "download", format: "svg", icon: name });
+    } catch {
+      // Рисунок не загрузился — файла нет; следующий щелчок попробует ещё раз.
     } finally {
       setBusy(false);
     }
@@ -116,7 +129,9 @@ export function PanelActions({
         type="button"
         className="panel-btn panel-btn-outline panel-bag"
         aria-pressed={inBag}
-        aria-label={inBag ? t.pBagRemove : t.pBagAdd}
+        aria-disabled={bagFull || undefined}
+        title={bagFull ? fullText : undefined}
+        aria-label={bagFull ? fullText : inBag ? t.pBagRemove : t.pBagAdd}
         onClick={() => bagStore.toggle(name)}
       >
         <span aria-hidden="true">{inBag ? "✓" : "+"}</span>

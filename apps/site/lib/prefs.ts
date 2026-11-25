@@ -23,6 +23,7 @@ import {
   SVG_OPTION_VALUES,
   type SvgOptionsValue,
 } from "./panel-code";
+import { touchesKey } from "./storage-event";
 
 export interface ChoiceStore<T extends string> {
   readonly fallback: T;
@@ -72,7 +73,7 @@ export function choiceStore<T extends string>(
     subscribe(listener) {
       listeners.add(listener);
       const onStorage = (event: StorageEvent) => {
-        if (event.key !== key) return;
+        if (!touchesKey(event.key, key)) return;
         current = read();
         listener();
       };

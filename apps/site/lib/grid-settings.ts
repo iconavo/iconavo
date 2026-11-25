@@ -18,6 +18,7 @@ import {
   ICON_SIZE_STEP,
 } from "./grid-script";
 import { createPanelStore, PHONE, usePanelOpen } from "./panel-store";
+import { touchesKey } from "./storage-event";
 
 export {
   GRID_KEY,
@@ -168,7 +169,7 @@ export const gridStore = {
   subscribe(listener: () => void): () => void {
     listeners.add(listener);
     const onStorage = (event: StorageEvent) => {
-      if (event.key !== GRID_KEY) return;
+      if (!touchesKey(event.key, GRID_KEY)) return;
       current = read();
       applyGrid(current);
       listener();

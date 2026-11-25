@@ -10,6 +10,8 @@ export type CopyWhat =
   | "react"
   | "svg"
   | "css"
+  /** Строка <span> с классом в виде «CSS» — своя метка, не «css» (ревизия фазы 5, С-23). */
+  | "css-span"
   | "link"
   | "install"
   | "import"

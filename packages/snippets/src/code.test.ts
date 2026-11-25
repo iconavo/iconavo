@@ -7,9 +7,11 @@ import { parseSvgOptions, svgBody } from "../../../apps/api/src/svg.js";
 import {
   type Applies,
   commentText,
+  cssClassCode,
   cssCode,
   fileComment,
   fileName,
+  pixelBox,
   pngSvg,
   reactCode,
   svgCode,
@@ -85,6 +87,37 @@ describe("код тега, React, CSS и ссылки", () => {
     expect(cssCode(API, "ph:house-bold", both, FILL)).toContain(
       'style="font-size: 64px; transform: scale(-1)"',
     );
+  });
+});
+
+describe("CSS-класс — размер как у SVG (ревизия фазы 5, С-27)", () => {
+  // Широкая иконка 48×24: выбранный размер — ширина, как у SVG и тега; поворот на 90° меняет пропорцию.
+  const wide = iconData(
+    {
+      prefix: "t",
+      icons: {
+        wide: { body: '<path d="M0 0h48v24H0z"/>', width: 48, height: 24 },
+      },
+    },
+    "wide",
+  );
+  if (wide === null) throw new Error("нет t:wide");
+  const box = (css: string) =>
+    /width: ([\d.]+)px;\n {2}height: ([\d.]+)px;/.exec(css)?.slice(1);
+  const svgBox = (svg: string) =>
+    /<svg[^>]* width="([\d.]+)" height="([\d.]+)"/.exec(svg)?.slice(1);
+
+  it("без поворота — 24 на 12, как SVG", () => {
+    const s = { ...DEFAULT_SETTINGS, size: 24 };
+    expect(box(cssClassCode("t:wide", wide, s, FILL))).toEqual(["24", "12"]);
+    expect(svgBox(svgCode(wide, s, FILL))).toEqual(["24", "12"]);
+    expect(pixelBox(wide, 24)).toEqual({ width: 24, height: 12 });
+  });
+
+  it("поворот на 90° — 24 на 48, как SVG", () => {
+    const s = { ...DEFAULT_SETTINGS, size: 24, rotate: 1 as const };
+    expect(box(cssClassCode("t:wide", wide, s, FILL))).toEqual(["24", "48"]);
+    expect(svgBox(svgCode(wide, s, FILL))).toEqual(["24", "48"]);
   });
 });
 

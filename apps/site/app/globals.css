@@ -3982,6 +3982,10 @@
   .bag-panel-list {
     display: grid;
     flex: 1;
+    /* Колонка — по ширине панели, а не по самому длинному имени: иначе строка с длинным именем растягивала
+       список вбок, Clear уезжал за край и появлялась прокрутка вбок; имя обрезается многоточием
+       (.bag-item-name; правка владельца 25 ноября 2026). */
+    grid-template-columns: minmax(0, 1fr);
     align-content: start;
     gap: 1rem;
     min-height: 0;
@@ -4027,6 +4031,7 @@
   }
   .bag-list {
     display: grid;
+    grid-template-columns: minmax(0, 1fr);
     gap: 1rem;
     margin: 0;
     padding: 0;

@@ -204,3 +204,34 @@ export function useCloseOnOutsideClick(
       document.removeEventListener("pointerdown", onPointerDown, true);
   }, [open, dialog, store, id]);
 }
+
+/** Цель события — внутри открытого меню (role="menu" у меню Radix). */
+export function inMenu(target: EventTarget | null): boolean {
+  for (
+    let node = target instanceof Element ? target : null;
+    node !== null;
+    node = node.parentElement
+  ) {
+    if (node.getAttribute("role") === "menu") return true;
+  }
+  return false;
+}
+
+/**
+ * Esc закрывает панель первой — раньше панели иконки (та слушает всплытие и пропускает обработанное). Но
+ * открытое меню (фокус в нём — например, «Icons per page ▾» рядом с немодальной панелью) — ещё раньше:
+ * Esc закрывает его, а панель остаётся; раньше панель перехватывала Esc в фазе захвата, и меню оставалось
+ * открытым (ревизия фазы 5, С-25).
+ */
+export function useCloseOnEscape(open: boolean, store: PanelStore): void {
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== "Escape" || e.defaultPrevented || inMenu(e.target)) return;
+      e.preventDefault();
+      store.set(false);
+    };
+    document.addEventListener("keydown", onKey, true);
+    return () => document.removeEventListener("keydown", onKey, true);
+  }, [open, store]);
+}

@@ -4,12 +4,22 @@ import { Icon } from "@iconavo-ui/react";
 import { useEffect, useId, useRef, useState } from "react";
 import { flushSync } from "react-dom";
 import { track } from "../../lib/analytics";
-import { bagPanelStore, bagStore, useBag, useBagPanel } from "../../lib/bag";
+import {
+  bagPanelStore,
+  bagStore,
+  missingMessage,
+  useBag,
+  useBagPanel,
+} from "../../lib/bag";
 import { type BagLook, SPRITE_NAME, ZIP_NAME } from "../../lib/bag-files";
 import { saveFile } from "../../lib/download";
 import { countOf, ICON_FORMS } from "../../lib/format";
 import { DICTIONARIES, type Lang } from "../../lib/i18n";
-import { useCloseOnOutsideClick, useSidePanel } from "../../lib/panel-store";
+import {
+  useCloseOnEscape,
+  useCloseOnOutsideClick,
+  useSidePanel,
+} from "../../lib/panel-store";
 // Хосты иконок — для ядра браузера: иконки рюкзака рисует оно (lib/iconavo.ts).
 import "../../lib/iconavo";
 import { ColorField, StrokeField } from "../panel/controls";
@@ -39,12 +49,18 @@ export function BagPanel({ lang }: { lang: Lang }) {
   const dialog = useRef<HTMLDialogElement>(null);
   const heading = useRef<HTMLHeadingElement>(null);
   const drag = useRef<number | undefined>(undefined);
+  const dragged = useRef(false);
   const [color, setColor] = useState<string>();
   const [stroke, setStroke] = useState<number>();
   const [withoutFill, setWithoutFill] = useState(false);
   const [applies, setApplies] = useState({ color: false, stroke: false });
   const [busy, setBusy] = useState(false);
   const [failed, setFailed] = useState(false);
+  // Не вошли в последний скачанный файл (ревизия фазы 5, С-11); nothing — файла нет совсем.
+  const [missing, setMissing] = useState<{
+    names: string[];
+    nothing: boolean;
+  }>();
   // Очищенный рюкзак — для «Undo»: предложение живёт, пока панель открыта и рюкзак пуст.
   const [cleared, setCleared] = useState<readonly string[]>();
   const clearedId = useId();
@@ -59,17 +75,8 @@ export function BagPanel({ lang }: { lang: Lang }) {
   // карточки при открытой панели кладёт иконку и закрывает панель.
   useCloseOnOutsideClick(open, dialog, bagPanelStore, BAG_PANEL_ID);
 
-  // Esc закрывает панель первой — раньше панели иконки (та слушает всплытие и пропускает обработанное).
-  useEffect(() => {
-    if (!open) return;
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key !== "Escape" || e.defaultPrevented) return;
-      e.preventDefault();
-      bagPanelStore.set(false);
-    };
-    document.addEventListener("keydown", onKey, true);
-    return () => document.removeEventListener("keydown", onKey, true);
-  }, [open]);
+  // Esc закрывает панель первой — раньше панели иконки; открытое меню — ещё раньше (lib/panel-store.ts).
+  useCloseOnEscape(open, bagPanelStore);
 
   useEffect(() => {
     if (!open || bag.length > 0) setCleared(undefined);
@@ -98,7 +105,7 @@ export function BagPanel({ lang }: { lang: Lang }) {
     if (!open || bag.length === 0) return;
     let live = true;
     import("../../lib/bag-export")
-      .then((m) => m.bagIcons(bag).then((icons) => m.bagApplies(icons)))
+      .then((m) => m.bagIcons(bag).then(({ icons }) => m.bagApplies(icons)))
       .then(
         (a) => {
           if (live) setApplies(a);
@@ -110,6 +117,11 @@ export function BagPanel({ lang }: { lang: Lang }) {
     };
   }, [open, bag]);
 
+  const note =
+    missing === undefined
+      ? undefined
+      : missingMessage(t, missing.names, missing.nothing);
+
   const look: BagLook = {
     ...(applies.color && color !== undefined && !withoutFill ? { color } : {}),
     ...(applies.stroke && stroke !== undefined ? { stroke } : {}),
@@ -117,18 +129,33 @@ export function BagPanel({ lang }: { lang: Lang }) {
 
   // Пока файл готовится, строки не отключаются — иначе браузер снял бы с нажатой фокус; повторный щелчок
   // просто не срабатывает (aria-disabled).
+  // Не загрузившиеся иконки в файл не входят, и сайт их называет; не загрузилось ничего — файла нет (С-11).
+  // В аналитике — сколько иконок в файле, а не в рюкзаке (С-29).
   async function download(kind: "zip" | "sprite") {
     if (busy) return;
     setBusy(true);
     setFailed(false);
+    setMissing(undefined);
     try {
       const m = await import("../../lib/bag-export");
+      let made: { count: number; missing: string[] };
       if (kind === "zip") {
-        saveFile(ZIP_NAME, await m.bagZip(bag, look), "application/zip");
+        const zip = await m.bagZip(bag, look);
+        if (zip.file !== undefined) {
+          saveFile(ZIP_NAME, zip.file, "application/zip");
+        }
+        made = zip;
       } else {
-        saveFile(SPRITE_NAME, await m.bagSprite(bag, look), "image/svg+xml");
+        const sprite = await m.bagSprite(bag, look);
+        if (sprite.file !== undefined) {
+          saveFile(SPRITE_NAME, sprite.file, "image/svg+xml");
+        }
+        made = sprite;
       }
-      track({ name: "download", format: kind, count: bag.length });
+      setMissing({ names: made.missing, nothing: made.count === 0 });
+      if (made.count > 0) {
+        track({ name: "download", format: kind, count: made.count });
+      }
     } catch {
       setFailed(true);
     } finally {
@@ -161,18 +188,25 @@ export function BagPanel({ lang }: { lang: Lang }) {
           onPointerDown={(e) => {
             e.currentTarget.setPointerCapture(e.pointerId);
             drag.current = e.clientY;
+            dragged.current = false;
           }}
           onPointerUp={(e) => {
             const from = drag.current;
             drag.current = undefined;
-            if (from !== undefined && e.clientY - from > DRAG) {
-              bagPanelStore.set(false);
-            }
+            if (from === undefined) return;
+            const dy = e.clientY - from;
+            // Протяжка, а не нажатие: щелчок, который браузер пришлёт следом, не закрывает шторку —
+            // закрывает только протяжка вниз (ревизия фазы 5, С-30).
+            if (Math.abs(dy) > DRAG) dragged.current = true;
+            if (dy > DRAG) bagPanelStore.set(false);
           }}
           onPointerCancel={() => {
             drag.current = undefined;
           }}
-          onClick={() => bagPanelStore.set(false)}
+          onClick={() => {
+            if (dragged.current) dragged.current = false;
+            else bagPanelStore.set(false);
+          }}
         >
           <span className="bag-grabber-bar" />
         </button>
@@ -242,8 +276,17 @@ export function BagPanel({ lang }: { lang: Lang }) {
               <ul className="bag-list">
                 {bag.map((name) => (
                   <li key={name} className="bag-item" data-icon={name}>
-                    <Icon icon={name} className="bag-item-icon" />
-                    <span className="bag-item-name">{name}</span>
+                    {/* Как в файлах: общий цвет (если он вшивается) и толщина линии рюкзака — цветные и
+                        иконки без линий их не берут (правка владельца 25 ноября 2026). */}
+                    <Icon
+                      icon={name}
+                      className="bag-item-icon"
+                      color={look.color}
+                      strokeWidth={look.stroke}
+                    />
+                    <span className="bag-item-name" title={name}>
+                      {name}
+                    </span>
                     <button
                       type="button"
                       className="bag-item-remove"
@@ -314,6 +357,10 @@ export function BagPanel({ lang }: { lang: Lang }) {
               {failed ? (
                 <p className="bag-failed" role="alert">
                   {t.iconDownloadFailed}
+                </p>
+              ) : note !== undefined ? (
+                <p className="bag-failed bag-missing" role="alert">
+                  {note}
                 </p>
               ) : null}
             </div>

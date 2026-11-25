@@ -7,6 +7,7 @@
 import { useSyncExternalStore } from "react";
 import { isIconName } from "./icon";
 import { createPanelStore, usePanelOpen } from "./panel-store";
+import { touchesKey } from "./storage-event";
 
 export const BAG_KEY = "iconavo-bag";
 export const BAG_LIMIT = 500;
@@ -47,6 +48,30 @@ export function restored(
   previous: readonly string[],
 ): readonly string[] {
   return [...new Set([...previous, ...bag])].slice(0, BAG_LIMIT);
+}
+
+/** Сколько имён назвать в сообщении о не вошедших в файл; остальные — числом. */
+export const MISSING_SHOWN = 5;
+
+/**
+ * Сообщение после скачивания ZIP или спрайта (ревизия фазы 5, С-11): всё вошло — сообщения нет; не
+ * загрузилось ничего — файла нет, просьба повторить; часть — какие иконки не вошли.
+ */
+export function missingMessage(
+  t: { bagMissing: string; bagMissingMore: string; bagMissingAll: string },
+  missing: readonly string[],
+  nothing: boolean,
+): string | undefined {
+  if (missing.length === 0) return undefined;
+  if (nothing) return t.bagMissingAll;
+  const shown = missing.slice(0, MISSING_SHOWN).join(", ");
+  const names =
+    missing.length > MISSING_SHOWN
+      ? t.bagMissingMore
+          .replace("{names}", () => shown)
+          .replace("{count}", String(missing.length - MISSING_SHOWN))
+      : shown;
+  return t.bagMissing.replace("{names}", () => names);
 }
 
 let current: readonly string[] | undefined;
@@ -92,7 +117,7 @@ export const bagStore = {
   subscribe(listener: () => void): () => void {
     listeners.add(listener);
     const onStorage = (event: StorageEvent) => {
-      if (event.key !== BAG_KEY) return;
+      if (!touchesKey(event.key, BAG_KEY)) return;
       current = read();
       listener();
     };

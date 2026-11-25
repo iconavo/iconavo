@@ -1,13 +1,10 @@
 // Сборка файлов сумки в браузере (шаг 5 фазы 4, ADR-0042): рисунки — loadIcons ядра пачками edge API,
 // полные тексты лицензий — /collection?info=true (getSet, память вкладки), указание авторства — /icon
-// одной иконки набора: в нём части от других авторов (Feather у Lucide). Модуль грузится только по
-// щелчку «Скачать» (import()), чтобы не утяжелять каждую страницу.
+// одной иконки набора: в нём части от других авторов (Feather у Lucide); /icon не ответил, ответил
+// криво или молчит дольше DETAILS_TIMEOUT_MS — указание авторства из каталога наборов (ревизия фазы 5,
+// С-12, С-24). Модуль грузится только по щелчку «Скачать» (import()), чтобы не утяжелять каждую страницу.
 
-import {
-  hasStrokeWidth,
-  type IconData,
-  iconData,
-} from "@iconavo-ui/core/internal";
+import { hasStrokeWidth } from "@iconavo-ui/core/internal";
 import { loadIcons } from "@iconavo-ui/react";
 import { API } from "./api";
 import {
@@ -15,31 +12,52 @@ import {
   type BagLook,
   type BagSet,
   bagArchive,
+  pickIcons,
   spriteSvg,
 } from "./bag-files";
 import { getSet } from "./catalog";
 import { splitName } from "./code";
-import { attributionText, iconDetailsUrl, parseIconDetails } from "./icon";
+import {
+  attributionText,
+  type IconDetails,
+  iconDetailsUrl,
+  parseIconDetails,
+} from "./icon";
 import { zip } from "./zip";
 // Хосты иконок — для ядра браузера (lib/iconavo.ts).
 import "./iconavo";
 
-/** Рисунки иконок сумки в её порядке; нет иконки или рисунок не читается — без неё. */
-export async function bagIcons(names: readonly string[]): Promise<BagIcon[]> {
-  const sets = await loadIcons([...names]);
-  const icons: BagIcon[] = [];
-  for (const name of names) {
-    const [prefix, bare] = splitName(name);
-    const set = sets.find((s) => s.prefix === prefix);
-    let icon: IconData | null = null;
-    try {
-      icon = set === undefined ? null : iconData(set, bare);
-    } catch {
-      icon = null;
-    }
-    if (icon !== null) icons.push({ name, icon });
+/** Сколько ждать /icon, прежде чем собрать указание авторства из каталога: столько же, сколько попытка ядра. */
+export const DETAILS_TIMEOUT_MS = 5_000;
+
+/** Рисунки иконок сумки в её порядке и имена, которые не загрузились (pickIcons). */
+export async function bagIcons(
+  names: readonly string[],
+): Promise<{ icons: BagIcon[]; missing: string[] }> {
+  return pickIcons(names, await loadIcons([...names]));
+}
+
+/**
+ * Сведения /icon об иконке; сбой сети, ответ не 200, не JSON или не по форме, тишина дольше
+ * DETAILS_TIMEOUT_MS — undefined: скачивание не ломается и не висит (ревизия фазы 5, С-12).
+ */
+export async function detailsOf(
+  name: string,
+  timeout = DETAILS_TIMEOUT_MS,
+): Promise<IconDetails | undefined> {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeout);
+  try {
+    const response = await fetch(iconDetailsUrl(API, name), {
+      signal: controller.signal,
+    });
+    if (!response.ok) return undefined;
+    return parseIconDetails(await response.json());
+  } catch {
+    return undefined;
+  } finally {
+    clearTimeout(timer);
   }
-  return icons;
 }
 
 /** Что применимо к сумке: свой цвет — есть монохромные, толщина — есть линии. */
@@ -67,10 +85,7 @@ async function bagSets(icons: readonly BagIcon[]): Promise<BagSet[]> {
         icons.find((i) => splitName(i.name)[0] === prefix)?.name ?? "";
       const [set, details] = await Promise.all([
         getSet(prefix),
-        fetch(iconDetailsUrl(API, sample)).then(
-          async (r) => (r.ok ? parseIconDetails(await r.json()) : undefined),
-          () => undefined,
-        ),
+        detailsOf(sample),
       ]);
       if (set === undefined) {
         throw new Error(`нет сведений о наборе ${prefix}`);
@@ -101,24 +116,38 @@ async function bagSets(icons: readonly BagIcon[]): Promise<BagSet[]> {
   );
 }
 
+/**
+ * Итог сборки: файл — нет, если не загрузилась ни одна иконка; сколько иконок в нём (для аналитики,
+ * ревизия фазы 5, С-29) и какие не вошли — их сайт называет человеку (С-11).
+ */
+export interface BagExport<T> {
+  file: T | undefined;
+  count: number;
+  missing: string[];
+}
+
 /** ZIP сумки. */
 export async function bagZip(
   names: readonly string[],
   look: BagLook,
   when = new Date(),
-): Promise<Blob> {
-  const icons = await bagIcons(names);
+): Promise<BagExport<Blob>> {
+  const { icons, missing } = await bagIcons(names);
+  if (icons.length === 0) return { file: undefined, count: 0, missing };
   const sets = await bagSets(icons);
-  return new Blob([zip(bagArchive(icons, sets, look, when), when)], {
+  const file = new Blob([zip(bagArchive(icons, sets, look, when), when)], {
     type: "application/zip",
   });
+  return { file, count: icons.length, missing };
 }
 
 /** SVG-спрайт сумки. */
 export async function bagSprite(
   names: readonly string[],
   look: BagLook,
-): Promise<string> {
-  const icons = await bagIcons(names);
-  return spriteSvg(icons, await bagSets(icons), look);
+): Promise<BagExport<string>> {
+  const { icons, missing } = await bagIcons(names);
+  if (icons.length === 0) return { file: undefined, count: 0, missing };
+  const file = spriteSvg(icons, await bagSets(icons), look);
+  return { file, count: icons.length, missing };
 }

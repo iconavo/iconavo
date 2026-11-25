@@ -1,7 +1,7 @@
 "use client";
 
 import { Icon } from "@iconavo-ui/react";
-import { useId } from "react";
+import { useId, useState } from "react";
 import { track } from "../../lib/analytics";
 import { DICTIONARIES, type Lang } from "../../lib/i18n";
 import {
@@ -97,6 +97,9 @@ export function ColorField({
 }) {
   const t = DICTIONARIES[lang];
   const labelId = `${useId()}-color`;
+  // Набранное в поле HEX, пока человек в нём: неполный код не применяется, но и не стирается — иначе
+  // управляемое поле откатывало каждую букву, и цвет можно было только вставить (ревизия фазы 5, С-4).
+  const [draft, setDraft] = useState<string>();
   return (
     <div className="panel-field">
       <span className="panel-label" id={labelId}>
@@ -109,18 +112,26 @@ export function ColorField({
           value={value ?? COLOR_START}
           aria-label={t.iconColorCustom}
           data-auto={value === undefined ? "" : undefined}
+          // Из «Auto» стартовый цвет иначе не выбрать: выбор того же цвета, что в квадратике, события
+          // change не даёт — щелчок сразу ставит его (ревизия фазы 5, С-22).
+          onClick={() => {
+            if (value === undefined) onChange(COLOR_START);
+          }}
           onChange={(e) => onChange(parseColor(e.target.value))}
         />
         <input
           type="text"
           className="color-hex"
-          value={value === undefined ? "" : value.slice(1).toUpperCase()}
+          value={
+            draft ?? (value === undefined ? "" : value.slice(1).toUpperCase())
+          }
           placeholder={t.pColorAuto}
           maxLength={7}
           spellCheck={false}
           autoComplete="off"
           aria-labelledby={labelId}
           onChange={(e) => {
+            setDraft(e.target.value);
             const text = e.target.value.trim();
             if (text === "") onChange(undefined);
             else {
@@ -128,6 +139,7 @@ export function ColorField({
               if (color !== undefined) onChange(color);
             }
           }}
+          onBlur={() => setDraft(undefined)}
         />
         {/* Имя для скринридера — с видимым «100%» (WCAG 2.5.3, axe label-content-name-mismatch). */}
         <Soon lang={lang} className="color-alpha" label={`${t.pOpacity} 100%`}>

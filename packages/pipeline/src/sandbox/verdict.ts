@@ -47,7 +47,17 @@ export function layoutVerdict(before: Spot[], after: Spot[]): Verdict {
 export const isRequestFailure = (text: string) =>
   text.startsWith("Failed to load resource") ||
   text.includes("(Reason: CORS request did not succeed)") ||
-  isAbortedPrefetch(text);
+  isAbortedPrefetch(text) ||
+  isAbortedStatic(text);
+
+/**
+ * WebKit: запрос ядра к статике превью (`/_static/`), который отменило само ядро — пачка API успела, и
+ * запасные запросы отменяются (ADR-0030), — или уход со страницы. WebKit пишет его «due to access control
+ * checks», хотя CORS у превью есть; настоящий отказ CORS он сообщает ещё и строкой «… is not allowed by
+ * Access-Control-Allow-Origin» — её проверки видят (ревизия фазы 5, PR 4: рюкзак из 500 иконок).
+ */
+export const isAbortedStatic = (text: string) =>
+  /\/_static\/\S* due to access control checks\.$/.test(text);
 
 /**
  * WebKit: запрос Next.js к самому сайту (`?_rsc=`), оборванный уходом со страницы. Приходит и записью
@@ -80,8 +90,11 @@ export function watch(page: Page) {
       errors.push(text);
     }
   });
+  // Отменённые запросы WebKit сообщает и ошибкой страницы с тем же текстом (isAbortedPrefetch, isAbortedStatic).
   page.on("pageerror", (error) => {
-    if (!isAbortedPrefetch(error.message)) errors.push(error.message);
+    if (!isAbortedPrefetch(error.message) && !isAbortedStatic(error.message)) {
+      errors.push(error.message);
+    }
   });
   return { warnings, errors };
 }

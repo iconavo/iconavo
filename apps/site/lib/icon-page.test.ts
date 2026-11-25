@@ -2,13 +2,16 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { parseCollection, type Release, setCards } from "./catalog";
+import type { IconDetails, IconSetSummary } from "./icon";
 import {
+  downloadComment,
   gridPath,
   iconDates,
   resolveAlias,
   styleTiles,
   svgBase64,
   svgToJsx,
+  withBrowserDetails,
 } from "./icon-page";
 
 const root = join(import.meta.dirname, "..", "..", "..");
@@ -177,5 +180,44 @@ describe("страница иконки по макету (редизайн, ш�
   it("сетка превью — линия на каждую единицу холста", () => {
     expect(gridPath(2, 1)).toBe("M0 0V1M1 0V1M2 0V1M0 0H2M0 1H2");
     expect(gridPath(24, 24).match(/M/g)?.length).toBe(50);
+  });
+});
+
+describe("скачанный SVG страницы иконки — со сведениями из браузера (ревизия фазы 5, С-6)", () => {
+  const set: IconSetSummary = {
+    prefix: "lucide",
+    name: "Lucide",
+    author: { name: "Lucide Contributors" },
+    license: { title: "ISC License", spdx: "ISC" },
+    palette: false,
+  };
+  const feather = {
+    name: "Feather",
+    author: "Cole Bemis",
+    license: "MIT",
+    url: "https://github.com/feathericons/feather",
+  };
+  // Сведения /icon пришли только в браузере: при сборке страницы поиск не ответил.
+  const page = { icon: "lucide:circle-alert", set };
+  const details = {
+    icon: "lucide:circle-alert",
+    set: { ...set, credits: [feather] },
+    credits: [feather],
+  } as unknown as IconDetails;
+
+  it("без сведений — без строк про Feather", () => {
+    expect(downloadComment(page)).not.toContain("Feather");
+  });
+
+  it("сведения из браузера — строки про Feather набора и самой иконки", () => {
+    const comment = downloadComment(withBrowserDetails(page, details));
+    expect(comment).toContain("Includes icons from Feather by Cole Bemis");
+    expect(comment).toContain("Based on Feather by Cole Bemis, MIT license.");
+  });
+
+  it("те же сведения, что при сборке, — та же страница", () => {
+    const built = { ...page, details };
+    expect(withBrowserDetails(built, details)).toBe(built);
+    expect(withBrowserDetails(page, undefined)).toBe(page);
   });
 });

@@ -321,6 +321,50 @@ export async function settingsProblems(
     }
   }
 
+  // Esc в открытом меню рядом с открытой панелью закрывает меню, а панель остаётся (ревизия фазы 5,
+  // С-25: раньше панель перехватывала Esc в фазе захвата — закрывалась она, а меню оставалось).
+  if (!(await openSettings(page))) {
+    problems.push("Settings третий раз не открыла панель");
+  } else {
+    await page.locator(".grid-bar-top .per-page").focus();
+    await page.keyboard.press("Enter");
+    const menu = page.locator('[role="menu"]').first();
+    const opened = await menu.waitFor({ timeout: 5_000 }).then(
+      () => true,
+      () => false,
+    );
+    await page.keyboard.press("Escape");
+    const menuClosed = await menu
+      .waitFor({ state: "detached", timeout: 5_000 })
+      .then(
+        () => true,
+        () => false,
+      );
+    // Панель закрывается с анимацией: признак «закрывается» (data-closing) или закрыта — уже ошибка.
+    const panelGone = await page
+      .waitForFunction(
+        () => {
+          const d = document.getElementById(
+            "settings-panel",
+          ) as HTMLDialogElement | null;
+          return d?.open !== true || d.hasAttribute("data-closing");
+        },
+        null,
+        { timeout: 1_000 },
+      )
+      .then(
+        () => true,
+        () => false,
+      );
+    if (!opened || !menuClosed || panelGone) {
+      problems.push(
+        `Esc в меню «Icons per page» при открытых настройках: меню ${opened ? (menuClosed ? "закрылось" : "осталось открытым") : "не открылось"}, панель ${panelGone ? "закрылась" : "осталась"}`,
+      );
+    }
+    await page.keyboard.press("Escape");
+    await panelIs(page, false);
+  }
+
   // Рюкзак и настройки — по одной: открытие настроек закрывает рюкзак.
   await page.locator(".topbar .bag-button").click();
   await page

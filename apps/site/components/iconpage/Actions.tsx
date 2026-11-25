@@ -3,11 +3,10 @@
 import { Icon } from "@iconavo-ui/react";
 import { useRef, useState } from "react";
 import { type CopyWhat, track } from "../../lib/analytics";
-import { bagStore, useBag } from "../../lib/bag";
+import { BAG_LIMIT, bagStore, useBag } from "../../lib/bag";
 import { copyPng, copyText } from "../../lib/clipboard";
 import {
   type Applies,
-  fileComment,
   fileName,
   fileSvg,
   pngSvg,
@@ -18,6 +17,7 @@ import { DICTIONARIES, type Lang } from "../../lib/i18n";
 import {
   COPY_FORMATS,
   type CopyFormat,
+  downloadComment,
   type IconPageData,
   PNG_SCALES,
   svgBase64,
@@ -178,17 +178,7 @@ export function CopyAction({
 function svgDownload(page: IconPageData, s: IconSettings, applies: Applies) {
   saveFile(
     fileName(page.icon, "svg"),
-    svgFile(
-      page.data,
-      s,
-      applies,
-      fileComment(page.icon, {
-        set: page.set,
-        ...(page.details?.credits === undefined
-          ? {}
-          : { credits: page.details.credits }),
-      }),
-    ),
+    svgFile(page.data, s, applies, downloadComment(page)),
     "image/svg+xml",
   );
   track({ name: "download", format: "svg", icon: page.icon });
@@ -276,20 +266,28 @@ export function DownloadAction({
  */
 export function BagAction({ lang, icon }: { lang: Lang; icon: string }) {
   const t = DICTIONARIES[lang];
-  const inBag = useBag().includes(icon);
+  const bag = useBag();
+  const inBag = bag.includes(icon);
+  // Сумка полна — кнопка так и пишет, а не молчит (ревизия фазы 5, С-14).
+  const bagFull = !inBag && bag.length >= BAG_LIMIT;
+  const fullText = t.bagFull.replace("{max}", String(BAG_LIMIT));
   return (
     <button
       type="button"
       className="panel-btn panel-btn-outline ip-bag"
       aria-pressed={inBag}
-      aria-label={inBag ? t.ipBagIn : t.ipBagAdd}
+      aria-disabled={bagFull || undefined}
+      title={bagFull ? fullText : undefined}
+      aria-label={bagFull ? fullText : inBag ? t.ipBagIn : t.ipBagAdd}
       onClick={() => bagStore.toggle(icon)}
     >
       <Icon
         icon={inBag ? "material-symbols:check" : "site:backpack-add"}
         className="panel-icon ip-bag-wide"
       />
-      <span className="ip-bag-wide">{inBag ? t.ipBagIn : t.ipBagAdd}</span>
+      <span className="ip-bag-wide">
+        {bagFull ? t.ipBagFull : inBag ? t.ipBagIn : t.ipBagAdd}
+      </span>
       <span className="ip-bag-narrow">{inBag ? "✓" : "+"}</span>
       <Icon
         icon="material-symbols:backpack"

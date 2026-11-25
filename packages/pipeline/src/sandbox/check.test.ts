@@ -125,6 +125,23 @@ describe("разбор проверки в браузерах", () => {
       ),
     ).toBe(false);
     expect(isRequestFailure("TypeError: boom")).toBe(false);
+    // WebKit: запрос ядра к статике превью, отменённый ядром или переходом, — не ошибка; настоящий отказ
+    // CORS WebKit сообщает своей строкой — она ошибка, как и отмена запроса не к /_static/.
+    expect(
+      isRequestFailure(
+        "Fetch API cannot load http://127.0.0.1:34427/_static/manifest.json due to access control checks.",
+      ),
+    ).toBe(true);
+    expect(
+      isRequestFailure(
+        "Origin http://127.0.0.1:5000 is not allowed by Access-Control-Allow-Origin. Status code: 200",
+      ),
+    ).toBe(false);
+    expect(
+      isRequestFailure(
+        "Fetch API cannot load http://127.0.0.1:34427/lucide.json?icons=house due to access control checks.",
+      ),
+    ).toBe(false);
     // Firefox: скрипт Next.js, оборванный перезагрузкой, — не ошибка; скрипт тега или примера — ошибка.
     expect(
       isAbortedScript(
