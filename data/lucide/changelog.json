@@ -3,6 +3,34 @@
   "releases": [
     {
       "added": [
+        "app-window-mac-minus",
+        "app-window-mac-plus",
+        "app-window-minus",
+        "columns-2-plus-left",
+        "columns-2-plus-right",
+        "file-text-sparkles",
+        "image-sparkles",
+        "list-x-corner",
+        "plane-off",
+        "rectangle-horizontal-plus",
+        "rows-2-plus-bottom",
+        "rows-2-plus-top",
+        "screwdriver",
+        "train-high-speed",
+        "trash-leaf"
+      ],
+      "changed": [
+        "message-circle-reply",
+        "message-square-reply"
+      ],
+      "date": "2026-11-25T12:54:48Z",
+      "previous": "6a34a062",
+      "revision": "164efbaf879fb29f55d88047efd49fc7725f53ab",
+      "total": 2119,
+      "version": "c4b220b8"
+    },
+    {
+      "added": [
         "app-window-plus",
         "square-plus-corner"
       ],
