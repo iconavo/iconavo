@@ -4,6 +4,15 @@
 Имена не пропадают: иконка, которую удалил автор, скрыта, но работает по имени, а старое имя переименованной ведёт на новое (ADR-0005).
 Скрытия и переименования вы одобряете лично в pull request (ADR-0019). Полные списки — в `changelog.json`.
 
+## 25 ноября 2026 · версия c4b220b8
+
+Прошлая версия: 6a34a062 · источник: 164efba · иконок: 2 119.
+
+**Изменения**
+
+- Добавлены (15): `app-window-mac-minus`, `app-window-mac-plus`, `app-window-minus`, `columns-2-plus-left`, `columns-2-plus-right`, `file-text-sparkles`, `image-sparkles`, `list-x-corner`, `plane-off`, `rectangle-horizontal-plus`, `rows-2-plus-bottom`, `rows-2-plus-top`, `screwdriver`, `train-high-speed`, `trash-leaf`
+- Изменены (2): `message-circle-reply`, `message-square-reply`
+
 ## 24 ноября 2026 · версия 6a34a062
 
 Прошлая версия: 8cdc8ae2 · источник: c26ce55 · иконок: 2 104.
