@@ -3,7 +3,12 @@ import { STYLES } from "@iconavo-ui/search";
 import { describe, expect, it } from "vitest";
 import { buildCatalog, setDocs } from "../search/catalog.js";
 import { demoConfig, loadedSet } from "../search/fixture.testing.js";
-import { type SetFacts, searchDocuments } from "./docs.js";
+import {
+  documentHash,
+  type SetFacts,
+  searchDocuments,
+  VECTOR_SOURCE,
+} from "./docs.js";
 
 const lucide = demoConfig("lucide");
 const fluent = demoConfig("fluent");
@@ -143,6 +148,19 @@ describe("searchDocuments", () => {
     expect(other.find((d) => d.id === "fluent_waving-hand")?.hash).toBe(
       byId.get("fluent_waving-hand")?.hash,
     );
+  });
+
+  it("отпечаток зависит от модели, длины вектора и версии текста — смена модели отправит документы заново (ревизия фазы 5, Д-4)", () => {
+    const doc = byId.get("lucide_house");
+    if (doc === undefined) throw new Error("нет lucide_house");
+    const { hash, ...body } = doc;
+    expect(documentHash(body)).toBe(hash);
+    expect(
+      documentHash(body, { ...VECTOR_SOURCE, model: "other/model" }),
+    ).not.toBe(hash);
+    expect(
+      documentHash(body, { ...VECTOR_SOURCE, text: VECTOR_SOURCE.text + 1 }),
+    ).not.toBe(hash);
   });
 
   it("нет сведений о наборе — ошибка", () => {

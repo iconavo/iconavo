@@ -153,12 +153,14 @@ function sameDistribution(current: unknown, want: unknown): boolean {
 /**
  * Какие настройки индекса отличаются от INDEX_SETTINGS. Сравнивается только то, что ставит робот:
  * остальное Meilisearch хранит по умолчанию. embedderChanged — эмбеддер уже есть, но другой;
- * distributionChanged — эмбеддер тот же, другая только калибровка шкалы смысла (ADR-0053).
+ * distributionChanged — эмбеддер тот же, другая только калибровка шкалы смысла (ADR-0053);
+ * staleEmbedders — лишние эмбеддеры индекса: настройки их удаляют (settingsBody).
  */
 export function settingsDiff(current: Record<string, unknown>): {
   keys: string[];
   embedderChanged: boolean;
   distributionChanged: boolean;
+  staleEmbedders: string[];
 } {
   const keys: string[] = [];
   const want = INDEX_SETTINGS;
@@ -203,6 +205,22 @@ export function settingsDiff(current: Record<string, unknown>): {
     keys,
     embedderChanged: Object.keys(embedders).length > 0 && !sameEmbedder,
     distributionChanged,
+    staleEmbedders: others,
+  };
+}
+
+/**
+ * Тело PATCH настроек: INDEX_SETTINGS и лишние эмбеддеры со значением null — так Meilisearch их удаляет;
+ * без этого лишний оставался, и каждый запуск снова «обновлял» настройки (ревизия фазы 5, Д-5).
+ */
+export function settingsBody(staleEmbedders: readonly string[]): object {
+  if (staleEmbedders.length === 0) return INDEX_SETTINGS;
+  return {
+    ...INDEX_SETTINGS,
+    embedders: {
+      ...INDEX_SETTINGS.embedders,
+      ...Object.fromEntries(staleEmbedders.map((name) => [name, null])),
+    },
   };
 }
 
@@ -436,6 +454,8 @@ export async function searchIndex(
     const index = await meili.index(INDEX_UID);
     const current = new Map<string, string>();
     let all = false;
+    /** Лишние эмбеддеры индекса — их удаляют настройки (Д-5). */
+    let staleEmbedders: string[] = [];
     if (index === undefined) {
       report.settings = "create";
       report.settingsChanged = Object.keys(INDEX_SETTINGS);
@@ -447,6 +467,7 @@ export async function searchIndex(
         return finish();
       }
       const diff = settingsDiff(await meili.settings(INDEX_UID));
+      staleEmbedders = diff.staleEmbedders;
       report.settingsChanged = diff.keys;
       report.settings = diff.keys.length > 0 ? "update" : "same";
       if (diff.embedderChanged) {
@@ -535,7 +556,7 @@ export async function searchIndex(
     if (report.settings !== "same") {
       log("Настройки индекса…");
       await meili.waitTask(
-        await meili.updateSettings(INDEX_UID, INDEX_SETTINGS),
+        await meili.updateSettings(INDEX_UID, settingsBody(staleEmbedders)),
       );
     }
     for (const batch of chunks(diff.upsert, DOCUMENTS_BATCH)) {

@@ -308,6 +308,17 @@ export function normalizePaint(root: SvgElement): PaintStats {
     if (paint.kind === "url") {
       const fallback = paint.fallback && classify(paint.fallback);
       if (!fallback || fallback.kind === "keep") return;
+      // Полупрозрачный запасной цвет: прозрачность элемента задела бы и сам url(), а currentColor её
+      // потерял бы — значение остаётся как есть (ревизия фазы 5, Д-8).
+      if (
+        fallback.kind === "color" &&
+        (parseColor(fallback.value)?.alpha ?? 1) < 1
+      ) {
+        warnings.add(
+          `полупрозрачный запасной цвет у url() в ${prop} — оставлен как есть`,
+        );
+        return;
+      }
       set(
         el,
         prop,
@@ -334,7 +345,14 @@ export function normalizePaint(root: SvgElement): PaintStats {
     if (alpha < 1) {
       // Прозрачность наследуется: на группе её нельзя перенести, не задев детей со своими цветами.
       const container = el.children.length > 0 || el.tag === "use";
-      if (opacity === undefined || container) {
+      // У lighting-color своего свойства прозрачности нет — это не про группу (ревизия фазы 5, Д-9).
+      if (opacity === undefined) {
+        warnings.add(
+          `полупрозрачный ${prop} — прозрачность перенести некуда, цвет оставлен как есть`,
+        );
+        return;
+      }
+      if (container) {
         warnings.add("полупрозрачный цвет на группе — цвет оставлен как есть");
         return;
       }

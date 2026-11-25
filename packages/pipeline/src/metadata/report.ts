@@ -286,7 +286,7 @@ function tagCards(r: SetBuildReport): string {
         meta && meta.categories.length > 0
           ? meta.categories.map(esc).join(", ")
           : "—";
-      return `<article class="meta-card">${tile(b.icon, 48)}<div><h4><a href="${cardLink(id, index, name)}">${esc(id)}:${esc(name)}</a></h4><p><b>Теги</b> <span class="muted">${from}</span>: ${tags}</p><p><b>Категории:</b> ${categories}</p></div></article>`;
+      return `<article class="meta-card">${tile(b.icon, 48)}<div><h4><a href="${esc(cardLink(id, index, name))}">${esc(id)}:${esc(name)}</a></h4><p><b>Теги</b> <span class="muted">${from}</span>: ${tags}</p><p><b>Категории:</b> ${categories}</p></div></article>`;
     })
     .join("\n");
 }

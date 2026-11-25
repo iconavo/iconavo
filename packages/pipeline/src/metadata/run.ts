@@ -256,11 +256,14 @@ export async function setMetadata(
     samples = [...config.samples];
   }
 
+  // Запасной перевод имён — только в иконки: алиас ушёл бы в части набора старым именем, а нужно
+  // нынешнее (ревизия фазы 5, Д-18). Сборка передаёт свой перевод по журналу (options.resolve).
+  const iconSet = new Set(iconNames);
   const credits = license
     ? readCredits(
         config,
         license.text,
-        options.resolve ?? ((n) => (names.has(n) ? n : undefined)),
+        options.resolve ?? ((n) => (iconSet.has(n) ? n : undefined)),
       )
     : { credits: [], stop: [] };
   stop.push(...credits.stop);

@@ -85,6 +85,14 @@ describe("прошлая версия", () => {
     const noLock = await loadBaseline(history(files()), config, entry("1.0.0"));
     expect(noLock.baseline?.sourceChanged).toBe(true);
     expect(noLock.baseline?.label).toBe("коммит ccccccc");
+    // Битый lock того коммита — тоже «источник обновился», а не «СТОП» (ревизия фазы 5, Д-13).
+    const broken = await loadBaseline(
+      history(files("{ не JSON")),
+      config,
+      entry("1.0.0"),
+    );
+    expect(broken.baselineError).toBeUndefined();
+    expect(broken.baseline?.sourceChanged).toBe(true);
   });
 
   it("сравнивать не с чем: набора нет в истории, git недоступен, файл не читается", async () => {

@@ -25,6 +25,7 @@ import {
   isJunkProperty,
   parseDeclarations,
   parseStyleSheet,
+  showsOverflow,
 } from "./css.js";
 import {
   checkValue,
@@ -403,7 +404,11 @@ class Sanitizer {
     }
     if (!this.allowed(rule, name)) {
       this.remove("unknown", `${name} у <${tag}>`);
-      if (PRESENTATION.has(name)) this.lost.push(`<${tag}> ${name}`);
+      if (
+        PRESENTATION.has(name) ||
+        (name === "overflow" && showsOverflow(value))
+      )
+        this.lost.push(`<${tag}> ${name}`);
       return;
     }
     const check = checkValue(name, value);
@@ -448,7 +453,10 @@ class Sanitizer {
       }
       if (!STYLE_PROPERTIES.has(property)) {
         this.remove("unknown", `CSS ${property}`);
-        if (RENDERING_ATTRS.has(property))
+        if (
+          RENDERING_ATTRS.has(property) ||
+          (property === "overflow" && showsOverflow(value))
+        )
           this.lost.push(`<${tag}> ${property}`);
         continue;
       }
@@ -484,7 +492,12 @@ class Sanitizer {
         if (byId.has(id)) this.warnings.add(`id «${id}» повторяется`);
         else byId.set(id, el);
       }
-      stack.push(...el.children);
+      // Дети — в обратном порядке: со стека они снимаются в порядке документа, и при повторе id
+      // запоминается первый элемент, как у браузера. Иначе цикл или «бомба» <use> прятались за
+      // повтором (ревизия фазы 5, Д-1).
+      for (let i = el.children.length - 1; i >= 0; i--) {
+        stack.push(el.children[i] as SvgElement);
+      }
     }
 
     const refs = new Map<SvgElement, SvgElement[]>();

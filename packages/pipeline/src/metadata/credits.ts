@@ -14,15 +14,23 @@ export interface CreditsRead {
   stop: string[];
 }
 
-/** Первая непустая строка после фразы-якоря; нет фразы или списка после неё — undefined. */
+/**
+ * Абзац после фразы-якоря — непустые строки подряд, через перевод строки: автор может перенести длинный
+ * список, и раньше читалась только его первая строка (ревизия фазы 5, Д-15). Нет фразы или списка после
+ * неё — undefined.
+ */
 export function listAfter(text: string, anchor: string): string | undefined {
   const lines = text.split("\n");
   const at = lines.findIndex((line) => line.trim() === anchor.trim());
   if (at < 0) return undefined;
-  return lines
-    .slice(at + 1)
-    .find((line) => line.trim() !== "")
-    ?.trim();
+  const rest = lines.slice(at + 1);
+  const start = rest.findIndex((line) => line.trim() !== "");
+  if (start < 0) return undefined;
+  const end = rest.findIndex((line, i) => i > start && line.trim() === "");
+  return rest
+    .slice(start, end < 0 ? undefined : end)
+    .map((line) => line.trim())
+    .join("\n");
 }
 
 /**
@@ -45,8 +53,9 @@ export function readCredits(
       );
       continue;
     }
+    // Имена — через запятую; перевод строки списка — тоже разделитель.
     const names = line
-      .split(",")
+      .split(/[,\n]/)
       .map((n) => n.trim())
       .filter((n) => n !== "");
     const odd = names.filter((n) => !NAME_PATTERN.test(n));

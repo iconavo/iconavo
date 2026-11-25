@@ -329,6 +329,34 @@ describe("ID", () => {
     expect(r.warnings).toEqual(["id повторяется — оставлен первый"]);
   });
 
+  it("preserveAspectRatio на корне: обычное — молча, none — с предупреждением (ревизия фазы 5, Д-11)", () => {
+    const of = (value: string) =>
+      normalized(
+        svg(
+          `<path d="M0 0h24v24H0z"/>`,
+          `viewBox="0 0 24 24" preserveAspectRatio="${value}"`,
+        ),
+        COLOR,
+      ).warnings;
+    expect(of("xMidYMid meet")).toEqual([]);
+    expect(of("none")).toEqual([
+      'preserveAspectRatio="none" на корне отброшен — рисунок без растяжения и сдвига',
+    ]);
+  });
+
+  it("ссылка на несуществующий ID — тоже с основой иконки: чужой градиент на странице не подхватит (ревизия фазы 5, Д-6)", () => {
+    const r = normalized(
+      svg(`<path d="M0 0h24v24H0z" fill="url(#nope) #f00"/>`),
+      COLOR,
+    );
+    expect(r.icon.body).toBe(
+      `<path d="M0 0h24v24H0z" fill="url(#demo--icon-missing) #f00"/>`,
+    );
+    expect(r.warnings).toContain(
+      "ссылка на несуществующий id — имя с основой иконки",
+    );
+  });
+
   it("ID с точкой и двоеточием тоже переименовываются", () => {
     const r = normalized(
       svg(

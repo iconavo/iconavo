@@ -173,6 +173,14 @@ describe("search.json", () => {
     expect(paths("search", file({ ru: lang(5) }))).toContain("icons.a.en");
   });
 
+  it("ключ иконки — по правилу имён (ревизия фазы 5, Д-20)", () => {
+    const bad = {
+      prefix: "demo",
+      icons: { "Bad Name": { fingerprint: "0123456789ab", tags: [] } },
+    };
+    expect(validate("search", bad)).not.toEqual([]);
+  });
+
   it.each(["", "0123456789a", "0123456789abc", "0123456789AB", "xyz"])(
     "отклоняет отпечаток %j",
     (fingerprint) => {

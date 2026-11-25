@@ -318,6 +318,12 @@ export function wantedPath(config: SourceConfig): (path: string) => boolean {
  */
 export function downloadRules(config: SourceConfig): string {
   return JSON.stringify({
+    // Сам источник — пакет npm или репозиторий: сменили его без перезакрепления версии — набор
+    // скачивается заново, а не берётся старым из кэша (ревизия фазы 5, Д-3).
+    source:
+      config.source.type === "npm"
+        ? `npm:${config.source.package}`
+        : `git:${config.source.repo}`,
     folders: config.svgFolders.map((f) => f.path),
     files: [...extraFiles(config), ...NOTICE_FILES],
     metadata: metadataFiles(config),

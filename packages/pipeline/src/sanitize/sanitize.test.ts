@@ -595,6 +595,32 @@ describe("ссылки между элементами", () => {
     expect(kept(svg(body)).warnings).toEqual([]);
   });
 
+  it("CSS marker — три атрибута, стрелки на концах линий на месте (ревизия фазы 5, Д-2)", () => {
+    const body = `<defs><marker id="m"><path d="M0 0L2 1L0 2z"/></marker></defs><path d="M4 12h16" stroke="currentColor" style="marker: url(#m)"/>`;
+    const r = kept(svg(body));
+    expect(r.out).toContain('marker-start="url(#m)"');
+    expect(r.out).toContain('marker-mid="url(#m)"');
+    expect(r.out).toContain('marker-end="url(#m)"');
+    expect(r.lost).toEqual([]);
+  });
+
+  it("overflow, при котором рисунок выходит за край, — потеря, а не мусор; hidden — без потери (ревизия фазы 5, Д-2)", () => {
+    expect(
+      kept(svg(`<g style="overflow: visible">${SQUARE}</g>`)).lost,
+    ).toEqual(["<g> overflow"]);
+    expect(kept(svg(`<g overflow="auto">${SQUARE}</g>`)).lost).toEqual([
+      "<g> overflow",
+    ]);
+    expect(kept(svg(`<g style="overflow: hidden">${SQUARE}</g>`)).lost).toEqual(
+      [],
+    );
+  });
+
+  it("повтор id: ссылка ведёт на первый элемент, как в браузере, — цикл за повтором не прячется (ревизия фазы 5, Д-1)", () => {
+    const body = `<g id="x"><use href="#x"/></g><g id="x">${SQUARE}</g>`;
+    expect(excluded(svg(body)).reason).toMatch(/по кругу/);
+  });
+
   it("ссылка в никуда и повтор id — предупреждения", () => {
     const r = kept(
       svg(

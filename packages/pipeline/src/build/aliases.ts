@@ -10,8 +10,22 @@ import type { NormalizedIcon } from "../normalize/normalize.js";
  */
 export { baseName };
 
-const same = (a: NormalizedIcon, b: NormalizedIcon) =>
-  a.body === b.body && a.width === b.width && a.height === b.height;
+/**
+ * Тело без своего имени в ID: ID иконки — `{набор}--{имя}-{n}` (ADR-0014), и варианты с ID иначе никогда
+ * не совпадали бы (ревизия фазы 5, Д-10). Двойного дефиса нет ни в именах, ни в путях рисунка.
+ */
+const ownIdsOut = (name: string, body: string) =>
+  body.split(`--${name}-`).join("--#-");
+
+const same = (
+  aName: string,
+  a: NormalizedIcon,
+  bName: string,
+  b: NormalizedIcon,
+) =>
+  ownIdsOut(aName, a.body) === ownIdsOut(bName, b.body) &&
+  a.width === b.width &&
+  a.height === b.height;
 
 /**
  * Имя варианта → имя родителя. order — суффиксы вариантов от старшего к младшему, первый — "".
@@ -39,7 +53,7 @@ export function variantAliases(
     for (const { name } of group) {
       const icon = icons.get(name) as NormalizedIcon;
       const parent = kept.find((k) =>
-        same(icons.get(k) as NormalizedIcon, icon),
+        same(k, icons.get(k) as NormalizedIcon, name, icon),
       );
       if (parent === undefined) kept.push(name);
       else aliases.set(name, parent);

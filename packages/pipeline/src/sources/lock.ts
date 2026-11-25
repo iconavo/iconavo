@@ -1,11 +1,12 @@
 import { readFile, writeFile } from "node:fs/promises";
 import { nameSchema } from "@iconavo-ui/schema";
 import { z } from "zod";
+import { SEMVER } from "./version.js";
 
 export const lockEntrySchema = z.discriminatedUnion("type", [
   z.strictObject({
     type: z.literal("npm"),
-    version: z.string().min(1),
+    version: z.string().regex(SEMVER, "версия пакета npm — не semver"),
     integrity: z.string().regex(/^sha512-[A-Za-z0-9+/]+=*$/),
   }),
   z.strictObject({
@@ -45,7 +46,8 @@ export async function readLock(path: string): Promise<LockFile> {
 /** Записывает lock с отсортированными ключами, чтобы diff в pull request был чистым. */
 export async function writeLock(path: string, lock: LockFile): Promise<void> {
   const sorted = Object.fromEntries(
-    Object.entries(lock).sort(([a], [b]) => a.localeCompare(b)),
+    // По кодам символов, а не localeCompare: порядок не зависит от языка системы (ревизия фазы 5, Д-21).
+    Object.entries(lock).sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0)),
   );
   await writeFile(path, `${JSON.stringify(sorted, null, 2)}\n`, "utf8");
 }

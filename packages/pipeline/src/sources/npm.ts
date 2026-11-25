@@ -4,13 +4,14 @@ import { pipeline } from "node:stream/promises";
 import { createGunzip } from "node:zlib";
 import { z } from "zod";
 import { type Extracted, type ExtractOptions, extractTar } from "./tar.js";
+import { SEMVER } from "./version.js";
 
 export type FetchFn = typeof fetch;
 
 const REGISTRY = "https://registry.npmjs.org";
 
 const metadataSchema = z.object({
-  version: z.string().min(1),
+  version: z.string().regex(SEMVER, "версия из реестра — не semver"),
   dist: z.object({
     tarball: z.url(),
     integrity: z

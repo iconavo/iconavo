@@ -193,7 +193,15 @@ export async function normalizeSet(
         if (paint.colors.length > 1) counts.multiColor++;
         if (paint.complex.length > 0) counts.complex++;
       }
-      for (const w of result.warnings) {
+      // Предупреждения очистки — в отчёт вместе с предупреждениями нормализации: и в сводку, и к иконке, и
+      // в «Сначала посмотрите» (ревизия фазы 5, Д-7; раньше они терялись).
+      const iconWarnings = [
+        ...new Set([
+          ...clean.warnings.map((w) => `очистка: ${w}`),
+          ...result.warnings,
+        ]),
+      ];
+      for (const w of iconWarnings) {
         warnings.set(w, (warnings.get(w) ?? 0) + 1);
       }
       const problems = checkSafeSvg(iconToSvg(result.icon));
@@ -205,8 +213,8 @@ export async function normalizeSet(
         source: bytes.toString("utf8"),
         icon: result.icon,
         stats,
-        warnings: result.warnings,
-        attention: attentionOf(stats, result.warnings, sourceGrid),
+        warnings: iconWarnings,
+        attention: attentionOf(stats, iconWarnings, sourceGrid),
       });
     });
   }
