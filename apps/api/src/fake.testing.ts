@@ -211,6 +211,8 @@ export interface FakeSearchOptions {
   meiliStatus?: number;
   /** Похожие отвечают этим кодом. */
   similarStatus?: number;
+  /** Гибрид (запрос с вектором) отвечает этим кодом; запросы только по словам — как обычно. */
+  hybridStatus?: number;
 }
 
 export const MEILI_URL = "https://ms-test.fra.meilisearch.io";
@@ -254,6 +256,14 @@ export function fakeSearchFetch(options: FakeSearchOptions) {
       meili.push(body);
       if (options.meiliStatus !== undefined) {
         return new Response("{}", { status: options.meiliStatus });
+      }
+      if (
+        options.hybridStatus !== undefined &&
+        (body.queries as Record<string, unknown>[]).some(
+          (q) => q.vector !== undefined,
+        )
+      ) {
+        return new Response("{}", { status: options.hybridStatus });
       }
       const results = (body.queries as Record<string, unknown>[]).map((q) => {
         const filter = (q.filter as string[] | undefined) ?? [];

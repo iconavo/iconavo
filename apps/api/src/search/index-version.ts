@@ -7,10 +7,20 @@
 
 import { STORE_KEYS } from "@iconavo-ui/search";
 import { sharedText } from "../cache.js";
-import { SEARCH_INDEX_TTL_MS, VERSION_PATTERN } from "../config.js";
+import {
+  REFRESH_RETRY_MS,
+  SEARCH_INDEX_TTL_MS,
+  VERSION_PATTERN,
+} from "../config.js";
 import type { Bucket, EdgeCache } from "../env.js";
 
+/** Индекса нет: поиск не настроен или index.json ещё не записан — устойчивое состояние, кэшу можно. */
 export const NO_INDEX = "none";
+/**
+ * Версия не прочиталась, а прежней нет: ответы идут мимо кэша дата-центра. Под общей меткой «none» после
+ * сбоев лежали бы старые ответы и отдавались бы при следующем сбое (ревизия фазы 5, А-14).
+ */
+export const UNKNOWN_INDEX = "unknown";
 
 async function readVersion(
   bucket: Bucket | undefined,
@@ -38,17 +48,23 @@ export function indexVersionLoader(
   cache?: EdgeCache,
 ): () => Promise<string> {
   let cached: { version: string; at: number } | undefined;
+  /** Когда чтение не удалось: до паузы REFRESH_RETRY_MS бакет не читается (ревизия фазы 5, А-15). */
+  let failedAt = Number.NEGATIVE_INFINITY;
   return async () => {
-    if (cached && now() - cached.at < SEARCH_INDEX_TTL_MS) {
+    const t = now();
+    if (cached && t - cached.at < SEARCH_INDEX_TTL_MS) {
       return cached.version;
     }
+    if (t - failedAt < REFRESH_RETRY_MS)
+      return cached?.version ?? UNKNOWN_INDEX;
     try {
       const version = await readVersion(bucket, cache);
       cached = { version, at: now() };
       return version;
     } catch (e) {
+      failedAt = now();
       log(`версия индекса не прочитана: ${(e as Error).message}`);
-      return cached?.version ?? NO_INDEX;
+      return cached?.version ?? UNKNOWN_INDEX;
     }
   };
 }

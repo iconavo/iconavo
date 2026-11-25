@@ -106,9 +106,24 @@ export function groupCards(input: CardsInput): CardSet {
       variants.set(card, list);
     }
   }
-  for (const [alias, parent] of input.aliases ?? []) {
-    const card = cardOf.get(parent);
-    if (card !== undefined && !visible.has(alias)) cardOf.set(alias, card);
+  // Алиас алиаса: цепочка проходится до иконки, поэтому порядок записей не важен; петля и цепочка к
+  // скрытой иконке карточки не дают (ревизия фазы 5, А-16).
+  const parentOf = new Map(input.aliases ?? []);
+  for (const alias of parentOf.keys()) {
+    if (visible.has(alias)) continue;
+    const seen = new Set([alias]);
+    let parent = parentOf.get(alias);
+    while (
+      parent !== undefined &&
+      !cardOf.has(parent) &&
+      parentOf.has(parent) &&
+      !seen.has(parent)
+    ) {
+      seen.add(parent);
+      parent = parentOf.get(parent);
+    }
+    const card = parent === undefined ? undefined : cardOf.get(parent);
+    if (card !== undefined) cardOf.set(alias, card);
   }
 
   const cards: Card[] = [];

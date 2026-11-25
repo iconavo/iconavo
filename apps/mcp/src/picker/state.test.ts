@@ -1,12 +1,15 @@
 import { type PickerPayload, pickerPayload } from "@iconavo-ui/snippets/picker";
 import { describe, expect, it } from "vitest";
 import {
+  DECLARED_TIMEOUT_MS,
+  hostTimeout,
   initialState,
   moveTo,
   selectCard,
   setColor,
   setFormat,
   setStroke,
+  UNDECLARED_TIMEOUT_MS,
   withPayload,
 } from "./state.js";
 
@@ -114,5 +117,13 @@ describe("состояние сетки", () => {
     expect(moveTo(cells, 4, "Home", 3)).toBe(1);
     expect(moveTo(cells, 1, "End", 3)).toBe(6);
     expect(moveTo(cells, 1, "Enter", 3)).toBeUndefined();
+  });
+});
+
+describe("срок ответа клиента (ревизия фазы 5, А-12)", () => {
+  it("и у объявленной возможности есть срок — Select не висит", () => {
+    expect(hostTimeout(undefined)).toEqual({ timeout: UNDECLARED_TIMEOUT_MS });
+    expect(hostTimeout({})).toEqual({ timeout: DECLARED_TIMEOUT_MS });
+    expect(DECLARED_TIMEOUT_MS).toBeGreaterThan(UNDECLARED_TIMEOUT_MS);
   });
 });

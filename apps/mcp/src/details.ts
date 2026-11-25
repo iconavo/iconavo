@@ -12,6 +12,7 @@ import { ApiError, StorageError } from "../../api/src/http.js";
 import { setSummary } from "../../api/src/icon.js";
 import { SearchError } from "../../api/src/search/meili.js";
 import type { Call, McpDeps } from "./context.js";
+import { creditsOf } from "./sets.js";
 
 export interface Found {
   details: IconDetails;
@@ -66,14 +67,7 @@ async function basicDetails(
   if (entry === undefined) {
     throw new StorageError(`набора «${set}» нет в оглавлении ${catalog}`);
   }
-  const credits = (entry.credits ?? [])
-    .filter((c) => c.icons.includes(canonical))
-    .map((c) => ({
-      name: c.name,
-      author: c.author,
-      license: c.license,
-      url: c.url,
-    }));
+  const credits = creditsOf(entry, canonical);
   return {
     icon: `${set}:${canonical}`,
     ...(canonical === bare ? {} : { alias: name }),

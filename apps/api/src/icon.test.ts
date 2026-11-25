@@ -330,12 +330,13 @@ describe("/icon: сведения об иконке", () => {
     });
   });
 
-  it("у документа нет вектора — похожих нет, в журнале заметка", async () => {
+  it("у документа нет вектора — похожих нет, в журнале заметка без имени иконки (ADR-0028; ревизия фазы 5, А-17)", async () => {
     const s = setup();
     const data = await json(await s.get("/icon?icon=demo:heart"));
     expect(data).toMatchObject({ card: "demo:heart", similar: [] });
     expect(data.description).toBeNull();
-    expect(s.logs).toContain("похожих нет: demo:heart");
+    expect(s.logs).toContain("похожих нет: у документа нет вектора");
+    expect(s.logs.join("\n")).not.toContain("heart");
   });
 
   it("ошибки: нет параметра, имя без набора, неизвестный набор и иконка", async () => {

@@ -15,6 +15,7 @@ import {
   SEARCH_LIMIT_MAX,
   SEARCH_OFFSET_MAX,
   SITE_URL,
+  windowLimit,
 } from "../config.js";
 import type { Call, McpDeps } from "../context.js";
 import { toolError } from "../errors.js";
@@ -147,10 +148,31 @@ function styleOf(
   return null;
 }
 
+/**
+ * Страница этой выдачи на сайте — с теми же фильтрами, что у поиска: наборы, стиль, лицензия; запятые
+ * списков — как в адресе сайта (lib/search.ts). Раньше ссылка их теряла (ревизия фазы 5, А-10).
+ */
+export function sitePage(args: {
+  query: string;
+  sets?: readonly string[] | undefined;
+  style?: string | undefined;
+  license?: string | undefined;
+}): string {
+  const params = [`q=${encodeURIComponent(args.query)}`];
+  if (args.style !== undefined) params.push(`style=${args.style}`);
+  if (args.sets !== undefined && args.sets.length > 0) {
+    params.push(`set=${args.sets.join(",")}`);
+  }
+  if (args.license !== undefined) {
+    params.push(`license=${encodeURIComponent(args.license)}`);
+  }
+  return `${SITE_URL}/search?${params.join("&")}`;
+}
+
 export function searchParams(args: SearchArgs): URLSearchParams {
   const q = new URLSearchParams({
     query: args.query,
-    limit: String(args.limit),
+    limit: String(windowLimit(args.offset, args.limit)),
     start: String(args.offset),
   });
   if (args.sets !== undefined) q.set("prefixes", args.sets.join(","));
@@ -363,14 +385,14 @@ export async function searchIcons(
       matched,
       offset: args.offset,
       count: results.length,
-      ...(results.length === args.limit &&
-      args.offset + args.limit <= SEARCH_OFFSET_MAX
-        ? { nextOffset: args.offset + args.limit }
+      ...(results.length === windowLimit(args.offset, args.limit) &&
+      args.offset + results.length <= SEARCH_OFFSET_MAX
+        ? { nextOffset: args.offset + results.length }
         : {}),
       results,
       sets,
       preview: png !== undefined,
-      page: `${SITE_URL}/search?q=${encodeURIComponent(args.query)}`,
+      page: sitePage(args),
     };
     return {
       content: [

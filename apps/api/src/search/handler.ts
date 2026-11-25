@@ -39,7 +39,7 @@ import type { Bucket, EdgeCache, RateLimiter } from "../env.js";
 import { ApiError, respond } from "../http.js";
 import { compactJson, type Json } from "../json.js";
 import type { Manifest } from "../manifest.js";
-import { indexVersionLoader } from "./index-version.js";
+import { indexVersionLoader, UNKNOWN_INDEX } from "./index-version.js";
 import { type MeiliConfig, multiSearch, SearchError } from "./meili.js";
 import { parseSearchParams, searchCacheParams } from "./params.js";
 import {
@@ -155,6 +155,8 @@ export function createSearch(
    */
   let modelFailures = 0;
   let modelFailedAt = 0;
+  /** Строка «нет ключа Polza» — одна на копию функции, а не на каждый запрос (ревизия фазы 5, А-19). */
+  let noKeyLogged = false;
 
   return async (request, url, waitUntil, head) => {
     const started = ctx.now();
@@ -173,11 +175,16 @@ export function createSearch(
     mark("index", indexStarted);
     const meta = { "x-iconavo-build": ctx.build, "x-iconavo-index": version };
     const key = cacheKey(ctx.build, version, "/search", searchCacheParams(p));
+    // Версия индекса не прочиталась — ответы мимо кэша дата-центра: под общей меткой после сбоев лежали
+    // бы старые (ревизия фазы 5, А-14).
+    const cacheable = version !== UNKNOWN_INDEX;
     // Сбой кэша — как промах, а не ошибка: поиск досчитает ответ сам, как пачки, SVG и CSS (ADR-0024).
-    const hit = await ctx.cache.match(key).catch((e: Error) => {
-      ctx.log(`кэш поиска не прочитан: ${e.message}`);
-      return undefined;
-    });
+    const hit = cacheable
+      ? await ctx.cache.match(key).catch((e: Error) => {
+          ctx.log(`кэш поиска не прочитан: ${e.message}`);
+          return undefined;
+        })
+      : undefined;
     if (hit !== undefined) {
       const response = new Response(head ? null : hit.body, hit);
       response.headers.set("cache-control", SEARCH_CACHE_BROWSER);
@@ -258,10 +265,12 @@ export function createSearch(
       "timing-allow-origin": "*",
       ...meta,
     });
-    const storeFull = (body: string) =>
-      ctx.cache
+    const storeFull = async (body: string) => {
+      if (!cacheable) return;
+      await ctx.cache
         .put(key, respond(body, 200, headersOf(SEARCH_CACHE_EDGE), false))
         .catch((e: Error) => ctx.log(`кэш поиска не записан: ${e.message}`));
+    };
     const remember = (vector: Float32Array, hash: string) =>
       rememberVector(ctx.cache, hash, vector).catch((e: Error) =>
         ctx.log(`вектор запроса не запомнен: ${e.message}`),
@@ -292,9 +301,16 @@ export function createSearch(
     if (cached !== undefined) {
       mark("vector", cacheStarted, "cache");
       const meiliStarted = ctx.now();
-      const lists = await run(cached);
+      const lists = await run(cached).catch(() => undefined);
+      if (lists !== undefined) {
+        mark("meili", meiliStarted);
+        return finish(lists, "full");
+      }
+      // Гибрид не ответил — выдача по словам, как на остальных путях, а не 503 (ревизия фазы 5, А-13).
+      ctx.log("гибрид не ответил — выдача по словам");
+      const words = await run();
       mark("meili", meiliStarted);
-      return finish(lists, "full");
+      return finish(words, "text");
     }
 
     // Слова — сразу; вектор — фраза каталога из бакета. Фразы нет — вектор считает модель, а это
@@ -364,7 +380,11 @@ export function createSearch(
       return finish(lists, semantic);
     };
 
-    const stored = await within(storedP, remaining());
+    // Ассистент ждёт смысл (MCP): медленное чтение фразы — не повод отдать неполную выдачу; срок —
+    // только у сайта (ревизия фазы 5, А-18).
+    const stored = options.waitForModel
+      ? await storedP
+      : await within(storedP, remaining());
     if (stored === TIMEOUT) {
       mark("vector", vectorStarted, "pending");
       background();
@@ -374,7 +394,10 @@ export function createSearch(
       // Без ключа, без текста или пока модель не отвечает — только слова; иначе — модель в фоне.
       if (p.text === "" || !options.polzaKey || modelDown()) {
         mark("vector", vectorStarted, "error");
-        if (!options.polzaKey) ctx.log("вектор запроса: нет ключа Polza");
+        if (!options.polzaKey && !noKeyLogged) {
+          noKeyLogged = true;
+          ctx.log("вектор запроса: нет ключа Polza");
+        }
         return textOnly("text");
       }
       if (options.waitForModel) {
@@ -403,7 +426,10 @@ export function createSearch(
     const fullStarted = ctx.now();
     const fullP = run(stored);
     fullP.catch(() => {});
-    const full = await within(fullP, remaining()).catch(() => undefined);
+    const full = await (options.waitForModel
+      ? fullP
+      : within(fullP, remaining())
+    ).catch(() => undefined);
     if (full === undefined) {
       ctx.log("гибрид не ответил — выдача по словам");
       return textOnly("text");

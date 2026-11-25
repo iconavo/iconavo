@@ -183,6 +183,28 @@ describe("groupCards", () => {
     expect(set.cardOf.has("old")).toBe(false);
   });
 
+  it("алиас алиаса — в карточке иконки при любом порядке записей (ревизия фазы 5, А-16)", () => {
+    const set = groupCards({
+      names: ["a"],
+      aliases: [
+        ["c", "b"],
+        ["b", "a"],
+      ],
+      suffixes: [],
+    });
+    expect(set.cardOf.get("b")).toBe("a");
+    expect(set.cardOf.get("c")).toBe("a");
+    const loop = groupCards({
+      names: ["a"],
+      aliases: [
+        ["x", "y"],
+        ["y", "x"],
+      ],
+      suffixes: [],
+    });
+    expect(loop.cardOf.has("x")).toBe(false);
+  });
+
   it("без таблицы стилей у карточек нет стилей", () => {
     expect(cardsOf({ names: ["a"], suffixes: [] }).a?.styles).toEqual({});
   });

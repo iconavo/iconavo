@@ -16,6 +16,7 @@ import {
   CATALOG_PATTERN,
   MANIFEST_KEY,
   MANIFEST_TTL_MS,
+  REFRESH_RETRY_MS,
   VERSION_PATTERN,
 } from "./config.js";
 import type { Bucket, EdgeCache } from "./env.js";
@@ -96,14 +97,23 @@ export function manifestLoader(
   cache?: EdgeCache,
 ): () => Promise<Manifest> {
   let cached: { manifest: Manifest; at: number } | undefined;
+  /** Когда обновление не удалось: до паузы REFRESH_RETRY_MS служит прежняя копия (А-15). */
+  let failedAt = Number.NEGATIVE_INFINITY;
   return async () => {
-    if (cached && now() - cached.at < MANIFEST_TTL_MS) return cached.manifest;
+    const t = now();
+    if (
+      cached &&
+      (t - cached.at < MANIFEST_TTL_MS || t - failedAt < REFRESH_RETRY_MS)
+    ) {
+      return cached.manifest;
+    }
     try {
       const manifest = await readManifest(bucket, cache);
       cached = { manifest, at: now() };
       return manifest;
     } catch (e) {
       if (cached === undefined) throw e;
+      failedAt = now();
       log(`${(e as Error).message} — служит прежняя копия`);
       return cached.manifest;
     }

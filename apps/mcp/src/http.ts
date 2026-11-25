@@ -64,6 +64,15 @@ function jsonRpcError(
   );
 }
 
+/**
+ * Строка журнала об ошибке SDK: вид ошибки и код JSON-RPC, без текста — он может цитировать тело запроса,
+ * а в журнале Workers не место запросам людей (ADR-0028; ревизия фазы 5, А-5).
+ */
+export function mcpErrorLine(e: Error): string {
+  const code = (e as { code?: unknown }).code;
+  return typeof code === "number" ? `MCP: ${e.name} ${code}` : `MCP: ${e.name}`;
+}
+
 /** Ответ SDK с нашими заголовками: CORS, метка сборки, без кэша. */
 function withHeaders(response: Response, build: string): Response {
   const out = new Response(response.body, response);
@@ -148,7 +157,7 @@ export async function serve(
     {
       legacy: "stateless",
       maxRequestBodySize: MAX_BODY_BYTES,
-      onerror: (e) => deps.log(`MCP: ${e.message.slice(0, 300)}`),
+      onerror: (e) => deps.log(mcpErrorLine(e)),
     },
   );
   const response = await handler.fetch(
