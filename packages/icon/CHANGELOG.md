@@ -1,6 +1,16 @@
 # Changelog
 
-`@iconavo-ui/icon`, `@iconavo-ui/react` and `@iconavo-ui/core` are released together, with one version. Versions 0.x are betas under the `next` tag: the API may still change before 1.0. The documentation is at [iconavo.dev/docs](https://iconavo.dev/docs).
+`@iconavo-ui/icon`, `@iconavo-ui/react` and `@iconavo-ui/core` are released together, with one version. Versions 0.x are betas: the API may still change before 1.0. The documentation is at [iconavo.dev/docs](https://iconavo.dev/docs).
+
+## 0.1.2 — 2026-11-25
+
+Fixes from a code review. No API changes.
+
+- Your own icon data (`addIcons`, `setLoader`): when a name is both an icon and an alias, the icon is used, as on Iconify. Before, the alias won.
+- `<iconavo-icon>` no longer misses a redraw when attribute values contain commas.
+- Very large sizes keep their exponent in the SVG: `1e30` no longer turns into `1e+3`. Tiny negative numbers are written as `0`, not `-0`.
+- React: `dangerouslySetInnerHTML` passed to `Icon` from JavaScript is ignored, like `children`. Before, it could show up inside the placeholder while the icon loaded.
+- The READMEs install the packages without `@next`: the `latest` tag follows each beta.
 
 ## 0.1.1 — 2026-10-30
 
