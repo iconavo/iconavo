@@ -6,6 +6,7 @@
 // побайтно равен ответу адреса из «Ссылки» — это сверяет code.test.ts. Чистые функции, без браузера.
 
 import {
+  calculateSize,
   formatNumber,
   type IconData,
   iconToSvg,
@@ -181,16 +182,19 @@ export function svgDataUrl(svg: string): string {
   return `data:image/svg+xml,${text}`;
 }
 
-/** Размер в пикселях по пропорции рисунка: высота — выбранный размер. */
+/**
+ * Размер в пикселях, как у SVG и тега: ширина — выбранный размер, высота — по пропорции рисунка, тем же
+ * округлением, что у ядра; поворот на 90° и 270° (rotate — четверти оборота) меняет пропорцию местами.
+ * Раньше выбранным размером была высота и поворот не учитывался (ревизия фазы 5, С-27).
+ */
 export function pixelBox(
   icon: IconData,
   size: number,
+  rotate = 0,
 ): { width: number; height: number } {
-  const ratio = icon.width / icon.height;
-  return {
-    width: Math.round(size * ratio * 100) / 100,
-    height: size,
-  };
+  const ratio =
+    rotate % 2 === 1 ? icon.width / icon.height : icon.height / icon.width;
+  return { width: size, height: Number(calculateSize(String(size), ratio)) };
 }
 
 /**
@@ -204,7 +208,7 @@ export function cssClassCode(
   s: IconSettings,
   o: Applies,
 ): string {
-  const { width, height } = pixelBox(icon, s.size);
+  const { width, height } = pixelBox(icon, s.size, s.rotate);
   const head = [
     `.${cssClassName(name)} {`,
     "  display: inline-block;",

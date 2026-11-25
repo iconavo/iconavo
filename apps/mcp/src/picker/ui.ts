@@ -399,6 +399,12 @@ export function mountPicker(
     update(setColor(state, parseColor(swatch.value)));
   });
 
+  // Из «Auto» стартовый цвет иначе не выбрать: выбор того же цвета, что в квадратике, события input не
+  // даёт — щелчок сразу ставит его, как в панели сайта (ревизия фазы 5, С-22).
+  swatch.addEventListener("click", () => {
+    if (state.color === undefined) update(setColor(state, COLOR_START));
+  });
+
   hex.addEventListener("input", () => {
     const value = hex.value.trim();
     if (value === "") update(setColor(state, undefined));

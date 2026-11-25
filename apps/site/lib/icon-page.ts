@@ -6,6 +6,7 @@
 import type { IconData } from "@iconavo-ui/core/internal";
 import { type Card, STYLES } from "@iconavo-ui/search";
 import type { Collection, Release } from "./catalog";
+import { fileComment } from "./code";
 import type { IconDetails, IconSetSummary } from "./icon";
 import type { MockupNeighbour } from "./mockups";
 
@@ -219,6 +220,38 @@ export interface IconPageData {
   /** Названия наборов — для карточек похожих иконок. */
   setNames: Record<string, string>;
 }
+
+/** Что кнопкам копирования и скачивания нужно от страницы иконки. */
+type ActionPage = Pick<IconPageData, "icon" | "set" | "details">;
+
+/**
+ * Страница для кнопок копирования и скачивания — со сведениями /icon, пришедшими уже в браузере: в
+ * комментарии скачанного SVG строки про Feather — набора и самой иконки, даже если при сборке страницы
+ * /icon не ответил (ревизия фазы 5, С-6).
+ */
+export function withBrowserDetails<P extends ActionPage>(
+  page: P,
+  details: IconDetails | undefined,
+): P {
+  if (details === undefined || details === page.details) return page;
+  return {
+    ...page,
+    details,
+    set:
+      details.set.credits === undefined
+        ? page.set
+        : { ...page.set, credits: details.set.credits },
+  };
+}
+
+/** Комментарий скачанного SVG страницы иконки: набор, автор, лицензия и части от других авторов. */
+export const downloadComment = (page: ActionPage): string =>
+  fileComment(page.icon, {
+    set: page.set,
+    ...(page.details?.credits === undefined
+      ? {}
+      : { credits: page.details.credits }),
+  });
 
 /** Фон превью: как тема сайта, тёмный, светлый или прозрачный (шахматка). */
 export const PREVIEW_BGS = ["auto", "dark", "light", "transparent"] as const;

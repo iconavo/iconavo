@@ -236,6 +236,7 @@ export function IconPanel({
                 s={s}
                 applies={applies}
                 set={set}
+                credits={state === "ready" ? details?.credits : undefined}
               />
             </>
           )}

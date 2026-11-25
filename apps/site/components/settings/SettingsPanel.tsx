@@ -1,7 +1,7 @@
 "use client";
 
 import { Icon } from "@iconavo-ui/react";
-import { type ReactNode, useEffect, useId, useRef } from "react";
+import { type ReactNode, useId, useRef } from "react";
 import { pageSizeFor } from "../../lib/catalog";
 import { useGridColumns } from "../../lib/grid-columns";
 import {
@@ -21,7 +21,11 @@ import {
   useSettingsPanel,
 } from "../../lib/grid-settings";
 import { DICTIONARIES, type Lang } from "../../lib/i18n";
-import { useCloseOnOutsideClick, useSidePanel } from "../../lib/panel-store";
+import {
+  useCloseOnEscape,
+  useCloseOnOutsideClick,
+  useSidePanel,
+} from "../../lib/panel-store";
 import "../../lib/iconavo";
 
 /** id панели — для aria-controls кнопок Settings. */
@@ -105,6 +109,7 @@ export function SettingsPanel({ lang }: { lang: Lang }) {
   const dialog = useRef<HTMLDialogElement>(null);
   const heading = useRef<HTMLHeadingElement>(null);
   const drag = useRef<number | undefined>(undefined);
+  const dragged = useRef(false);
   const labels = viewLabels(lang);
   const size = iconSizeOf(settings);
   const close = () => settingsPanelStore.set(false);
@@ -114,17 +119,8 @@ export function SettingsPanel({ lang }: { lang: Lang }) {
   // с затемнением; закрытие — с анимацией.
   useSidePanel(open, dialog, heading, settingsPanelStore, SETTINGS_PANEL_ID);
 
-  // Esc закрывает панель первой — раньше панели иконки (та слушает всплытие и пропускает обработанное).
-  useEffect(() => {
-    if (!open) return;
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key !== "Escape" || e.defaultPrevented) return;
-      e.preventDefault();
-      settingsPanelStore.set(false);
-    };
-    document.addEventListener("keydown", onKey, true);
-    return () => document.removeEventListener("keydown", onKey, true);
-  }, [open]);
+  // Esc закрывает панель первой — раньше панели иконки; открытое меню — ещё раньше (lib/panel-store.ts).
+  useCloseOnEscape(open, settingsPanelStore);
 
   // Щелчок мимо панели закрывает её (lib/panel-store.ts).
   useCloseOnOutsideClick(open, dialog, settingsPanelStore, SETTINGS_PANEL_ID);
@@ -153,16 +149,25 @@ export function SettingsPanel({ lang }: { lang: Lang }) {
           onPointerDown={(e) => {
             e.currentTarget.setPointerCapture(e.pointerId);
             drag.current = e.clientY;
+            dragged.current = false;
           }}
           onPointerUp={(e) => {
             const from = drag.current;
             drag.current = undefined;
-            if (from !== undefined && e.clientY - from > DRAG) close();
+            if (from === undefined) return;
+            const dy = e.clientY - from;
+            // Протяжка, а не нажатие: щелчок, который браузер пришлёт следом, не закрывает шторку —
+            // закрывает только протяжка вниз (ревизия фазы 5, С-30).
+            if (Math.abs(dy) > DRAG) dragged.current = true;
+            if (dy > DRAG) close();
           }}
           onPointerCancel={() => {
             drag.current = undefined;
           }}
-          onClick={close}
+          onClick={() => {
+            if (dragged.current) dragged.current = false;
+            else close();
+          }}
         >
           <span className="bag-grabber-bar" />
         </button>

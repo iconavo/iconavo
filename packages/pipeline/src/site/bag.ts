@@ -354,8 +354,11 @@ export async function bagProblems(
   await badgeIs(page, 2);
   const left = [fourth.name, "ph:house-bold"];
 
-  // Общий цвет (поле Color рюкзака).
-  await panel.locator("input.color-hex").fill(BAG_COLOR.slice(1).toUpperCase());
+  // Общий цвет (поле Color рюкзака) — по одной букве, как набирает человек: неполный код поле не стирает
+  // (ревизия фазы 5, С-4; раньше работала только вставка целиком, а fill её и делал).
+  const hex = panel.locator("input.color-hex");
+  await hex.click();
+  await hex.pressSequentially(BAG_COLOR.slice(1).toUpperCase());
 
   // ZIP: файлы, суммы, тексты лицензий и README; общий цвет — в SVG.
   const zip = await downloaded(page, () =>
@@ -479,6 +482,130 @@ export async function bagProblems(
   return problems;
 }
 
+/** Имена набора из /collection превью API — для полного рюкзака из настоящих иконок. */
+async function setNames(api: string, prefix: string): Promise<string[]> {
+  const c = (await (
+    await fetch(`${api}/collection?prefix=${prefix}`)
+  ).json()) as {
+    categories?: Record<string, string[]>;
+    uncategorized?: string[];
+  };
+  const names = [
+    ...Object.values(c.categories ?? {}).flat(),
+    ...(c.uncategorized ?? []),
+  ];
+  return [...new Set(names)].map((name) => `${prefix}:${name}`);
+}
+
+/**
+ * Края рюкзака (ревизия фазы 5): иконка, которой нет, не попадает в ZIP, и рюкзак её называет (С-11);
+ * полный рюкзак — «в рюкзак» на карточке, в панели и на странице иконки так и говорит (С-14).
+ */
+export async function bagEdgeProblems(
+  page: Page,
+  o: BagCheckOptions,
+): Promise<string[]> {
+  const problems: string[] = [];
+  const no = (ok: boolean, message: string) => {
+    if (!ok) problems.push(message);
+  };
+  const setBag = (names: string[]) =>
+    page.evaluate(
+      ([key, list]) => localStorage.setItem(key, JSON.stringify(list)),
+      [BAG_KEY, names] as const,
+    );
+
+  // Иконка, которой нет: ZIP — только с загруженной, сообщение называет пропавшую.
+  await page.goto(`${o.base}/${CATALOG_SET}`);
+  await hydrated(page);
+  const lost = `${CATALOG_SET}:no-such-icon`;
+  await setBag([`${CATALOG_SET}:house`, lost]);
+  await page.reload();
+  await hydrated(page);
+  await badgeIs(page, 2);
+  await page.locator(".topbar .bag-button").click();
+  const panel = page.locator("dialog#bag-panel[open]");
+  await panel.waitFor({ timeout: PANEL_WAIT_MS }).catch(() => {});
+  const zip = await downloaded(page, () =>
+    panel.locator("button.bag-download", { hasText: "Download ZIP" }).click(),
+  );
+  if (zip === undefined) {
+    problems.push("ZIP рюкзака с иконкой, которой нет, не скачался");
+  } else {
+    try {
+      const svgs = readZip(zip.body)
+        .map((f) => f.path)
+        .filter((path) => path.endsWith(".svg"));
+      no(
+        svgs.join(" ") === `${CATALOG_SET}/house.svg`,
+        `в ZIP с иконкой, которой нет, — ${svgs.join(", ") || "ни одной иконки"}`,
+      );
+    } catch (e) {
+      problems.push(
+        `ZIP с иконкой, которой нет, не читается: ${(e as Error).message}`,
+      );
+    }
+  }
+  const note = panel.locator(".bag-missing");
+  await note.waitFor({ timeout: PANEL_WAIT_MS }).catch(() => {});
+  no(
+    ((await note.textContent().catch(() => "")) ?? "").includes(lost),
+    "рюкзак не назвал иконку, которая не вошла в ZIP",
+  );
+  await page.keyboard.press("Escape");
+
+  // Полный рюкзак (500 иконок Phosphor): на карточке Lucide, в её панели и на странице иконки кнопка
+  // говорит, что рюкзак полон, и ничего не кладёт.
+  const full = (await setNames(o.api, "ph")).slice(0, 500);
+  if (full.length < 500) {
+    problems.push(`для полного рюкзака мало имён ph: ${full.length}`);
+    return problems;
+  }
+  await setBag(full);
+  await page.reload();
+  await hydrated(page);
+  await badgeIs(page, 500);
+  const fullText = "Backpack is full: 500 icons";
+  const cells = ".icon-grid > li.icon-cell";
+  await page
+    .locator(cells)
+    .first()
+    .waitFor({ timeout: PANEL_WAIT_MS })
+    .catch(() => {});
+  const first = await card(page, cells, 0);
+  const cardBag = first.cell.locator("button.card-bag");
+  no(
+    (await cardBag.getAttribute("aria-label")) === fullText &&
+      (await cardBag.getAttribute("aria-disabled")) === "true",
+    `полный рюкзак: кнопка карточки — «${await cardBag.getAttribute("aria-label")}»`,
+  );
+  // У кнопки aria-disabled — Playwright ждал бы, пока она «включится»; щелчок — без этой проверки.
+  await cardBag.click({ force: true });
+  no(
+    (await badge(page)) === "500",
+    "полный рюкзак: щелчок по кнопке карточки что-то изменил",
+  );
+  await first.cell.locator("a.icon-card-link").click();
+  const add = page.locator("aside.icon-panel button.panel-bag");
+  await add.waitFor({ timeout: PANEL_WAIT_MS }).catch(() => {});
+  no(
+    (await add.getAttribute("aria-label").catch(() => null)) === fullText,
+    `полный рюкзак: кнопка панели — «${await add.getAttribute("aria-label").catch(() => "нет")}»`,
+  );
+  await page.goto(`${o.base}/${CATALOG_SET}/house`);
+  await hydrated(page);
+  const pageBag = page.locator("button.ip-bag");
+  await pageBag.waitFor({ timeout: PANEL_WAIT_MS }).catch(() => {});
+  no(
+    ((await pageBag.textContent().catch(() => "")) ?? "").includes(
+      "Backpack is full",
+    ),
+    `полный рюкзак: кнопка страницы иконки — «${await pageBag.textContent().catch(() => "нет")}»`,
+  );
+  await setBag([]);
+  return problems;
+}
+
 /** Строка «Рюкзак»: сценарий, CSP и консоль, axe с открытым рюкзаком в обеих темах, телефон. */
 export async function checkBag(
   browser: Browser,
@@ -494,6 +621,13 @@ export async function checkBag(
   const seen = watch(page);
   await recordViolations(page);
   const problems = await bagProblems(page, browser, o);
+  // Сбой краёв — своей строкой, а не остановкой шага: иначе контекст с полным рюкзаком остался бы
+  // открытым до конца прогона.
+  problems.push(
+    ...(await bagEdgeProblems(page, o).catch((e: Error) => [
+      `края рюкзака остановились: ${e.message.split("\n")[0]}`,
+    ])),
+  );
   problems.push(
     ...(await allViolations(page)).map((x) => `CSP: ${x}`),
     ...[...new Set(seen.errors)].map((x) => `ошибка: ${x}`),

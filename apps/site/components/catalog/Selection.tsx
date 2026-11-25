@@ -9,7 +9,7 @@ import {
   useState,
 } from "react";
 import { track } from "../../lib/analytics";
-import { bagStore, useBag } from "../../lib/bag";
+import { BAG_LIMIT, bagStore, missingMessage, useBag } from "../../lib/bag";
 import { ZIP_NAME } from "../../lib/bag-files";
 import { cn } from "../../lib/cn";
 import { saveFile } from "../../lib/download";
@@ -84,6 +84,8 @@ export function SelectionBar({
   const t = DICTIONARIES[lang];
   const [busy, setBusy] = useState(false);
   const [failed, setFailed] = useState(false);
+  // Не вошли в последний ZIP (ревизия фазы 5, С-11); в аналитике — иконки в файле (С-29).
+  const [note, setNote] = useState<string>();
   const { picked } = selection;
   if (picked.length === 0) return null;
 
@@ -91,10 +93,14 @@ export function SelectionBar({
     if (busy) return;
     setBusy(true);
     setFailed(false);
+    setNote(undefined);
     try {
       const m = await import("../../lib/bag-export");
-      saveFile(ZIP_NAME, await m.bagZip(picked, {}), "application/zip");
-      track({ name: "download", format: "zip", count: picked.length });
+      const zip = await m.bagZip(picked, {});
+      setNote(missingMessage(t, zip.missing, zip.file === undefined));
+      if (zip.file === undefined) return;
+      saveFile(ZIP_NAME, zip.file, "application/zip");
+      track({ name: "download", format: "zip", count: zip.count });
     } catch {
       setFailed(true);
     } finally {
@@ -131,11 +137,13 @@ export function SelectionBar({
       <p className="select-count" role="status">
         {failed
           ? t.iconDownloadFailed
-          : selection.full
-            ? t.selFull
-            : t.selCount
-                .replace("{n}", String(picked.length))
-                .replace("{max}", String(SELECT_LIMIT))}
+          : note !== undefined
+            ? note
+            : selection.full
+              ? t.selFull
+              : t.selCount
+                  .replace("{n}", String(picked.length))
+                  .replace("{max}", String(SELECT_LIMIT))}
       </p>
     </div>
   );
@@ -168,14 +176,24 @@ export function CardTools({
   onToggle: (name: string) => void;
 }) {
   const t = DICTIONARIES[lang];
-  const inBag = useBag().includes(name);
+  const bag = useBag();
+  const inBag = bag.includes(name);
+  // Сумка полна — кнопка так и говорит, а не молчит (ревизия фазы 5, С-14).
+  const bagFull = !inBag && bag.length >= BAG_LIMIT;
+  const fullText = t.bagFull.replace("{max}", String(BAG_LIMIT));
   return (
     <>
       <button
         type="button"
         className={cn("card-tool card-bag", inBag && "card-tool-on")}
         aria-pressed={inBag}
-        aria-label={(inBag ? t.selBagIn : t.selBag).replace("{name}", label)}
+        aria-disabled={bagFull || undefined}
+        title={bagFull ? fullText : undefined}
+        aria-label={
+          bagFull
+            ? fullText
+            : (inBag ? t.selBagIn : t.selBag).replace("{name}", label)
+        }
         onClick={() => bagStore.toggle(name)}
       >
         <Icon

@@ -8,6 +8,7 @@ import {
   type BagSet,
   bagArchive,
   bagFile,
+  pickIcons,
   spriteSvg,
   symbolId,
 } from "./bag-files";
@@ -84,6 +85,36 @@ describe("файлы сумки (шаг 5 фазы 4)", () => {
     expect(
       ids.some((id) => id?.startsWith("fluent-emoji-flat-phoenix-bird-")),
     ).toBe(true);
+  });
+
+  it("иконки, которых нет в загруженных наборах, — списком, а не молча (ревизия фазы 5, С-11)", () => {
+    const { icons, missing } = pickIcons(
+      ["lucide:house", "lucide:no-such-icon", "ph:house", "lucide:heart"],
+      [setOf("lucide")],
+    );
+    expect(icons.map((i) => i.name)).toEqual(["lucide:house", "lucide:heart"]);
+    expect(missing).toEqual(["lucide:no-such-icon", "ph:house"]);
+  });
+
+  it("ID внутри рисунков не совпадают с ID символа соседней иконки «имя-N» (ревизия фазы 5, С-26)", () => {
+    const set: IconavoIconSet = {
+      prefix: "test",
+      width: 24,
+      height: 24,
+      icons: {
+        a: { body: '<path id="p" d="M0 0h1v1z"/><use href="#p"/>' },
+        "a-0": { body: '<path d="M0 0h2v2z"/>' },
+      },
+    };
+    const icons = ["a", "a-0"].map((bare): BagIcon => {
+      const icon = iconData(set, bare);
+      if (icon === null) throw new Error(`нет test:${bare}`);
+      return { name: `test:${bare}`, icon };
+    });
+    const sprite = spriteSvg(icons, [], {});
+    const ids = [...sprite.matchAll(/\sid="([^"]+)"/g)].map((m) => m[1]);
+    expect(ids).toContain("test-a-0");
+    expect(new Set(ids).size).toBe(ids.length);
   });
 
   it("ID символов не совпадают ни у одной пары имён data/", () => {

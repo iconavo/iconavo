@@ -210,12 +210,18 @@ export function PanelCode({
               }}
               onCopied={copied("css")}
             />
-            <DataUrl lang={lang} icon={icon} s={settings} applies={applies} />
+            <DataUrl
+              lang={lang}
+              name={name}
+              icon={icon}
+              s={settings}
+              applies={applies}
+            />
             <CodeBlock
               lang={lang}
               label="HTML"
               code={cssSpanCode(name)}
-              onCopied={copied("css")}
+              onCopied={copied("css-span")}
             />
           </>
         ) : null
@@ -302,7 +308,13 @@ function SvgView({
             download={{ name: fileName(name, "svg"), type: "image/svg+xml" }}
             onCopied={() => track({ name: "copy", what: "svg", icon: name })}
           />
-          <DataUrl lang={lang} icon={icon} s={s} applies={applies} />
+          <DataUrl
+            lang={lang}
+            name={name}
+            icon={icon}
+            s={s}
+            applies={applies}
+          />
         </>
       ) : null}
     </>
@@ -312,11 +324,14 @@ function SvgView({
 /** «Copy as data URL» — SVG одной строкой в адресе data:, как у Iconify. */
 function DataUrl({
   lang,
+  name,
   icon,
   s,
   applies,
 }: {
   lang: Lang;
+  /** Имя иконки — в метке аналитики (ревизия фазы 5, С-23). */
+  name: string;
   icon: IconData;
   s: IconSettings;
   applies: Applies;
@@ -330,7 +345,7 @@ function DataUrl({
         icon="material-symbols:link"
         label={t.pDataUrl}
         className="panel-btn panel-btn-outline panel-btn-sm"
-        onCopied={() => track({ name: "copy", what: "data-url" })}
+        onCopied={() => track({ name: "copy", what: "data-url", icon: name })}
       />
     </div>
   );
