@@ -51,9 +51,9 @@
 - **Решения владельца 26 ноября 2026, по рекомендации:**
   - запрос считается, если с выдачей что-то сделали или она простояла на экране 2 секунды: промежуточные буквы при наборе — не запросы;
   - запрос закрывается и тогда, когда вкладка уходит в фон: телефоны о закрытии вкладки часто не сообщают;
-  - база — с Jurisdiction EU: Cloudflare хранит и обрабатывает её только в ЕС; «Western Europe» — только пожелание, и после создания его не поменять.
+  - база — в Западной Европе (подсказка расположения Western Europe, Cloudflare отвечает `WEUR`). Строгую привязку к ЕС (Jurisdiction EU) можно задать только при создании базы, а в окне создания панели её не оказалось. Для обезличенной статистики достаточно подсказки — база осталась такой.
 - **Что сделал владелец:**
-  1. Cloudflare → Storage & databases → D1 → Create Database: имя `iconavo-analytics`, Data location → Specify jurisdiction → European Union (EU) → Create. Номер базы — `ANALYTICS_DATABASE_ID` в `packages/pipeline/src/api/config.ts`.
+  1. Cloudflare → Storage & databases → D1 → Create Database: имя `iconavo-analytics`, Location — Western Europe → Create. Номер базы — `ANALYTICS_DATABASE_ID` в `packages/pipeline/src/api/config.ts`.
   2. Manage Account → Account API Tokens → Create Token → Custom token: имя `iconavo-analytics-read`, Permissions — Account · D1 · Read, TTL — год → Create Token; токен — в локальный `.env` как `ANALYTICS_READ_TOKEN`.
 
 Почему: главная метрика продукта — успех поиска, и её нужно видеть с первого дня.
