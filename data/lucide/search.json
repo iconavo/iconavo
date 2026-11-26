@@ -2269,7 +2269,36 @@
       ]
     },
     "app-window-mac-minus": {
+      "en": {
+        "description": "A macOS-style application window with two dots at top left and a minus bar at bottom right, usually meaning minimize, remove, or close a window.",
+        "synonyms": [
+          "window",
+          "app",
+          "minus",
+          "macos",
+          "minimize",
+          "remove",
+          "delete",
+          "close window",
+          "application"
+        ]
+      },
       "fingerprint": "f2d4339742f3",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Рисунок окна приложения с тремя кнопками macOS в левом верхнем углу и знаком минус; обычно означает свернуть, удалить или убрать окно.",
+        "synonyms": [
+          "окно",
+          "приложение",
+          "минус",
+          "macos",
+          "свернуть",
+          "удалить",
+          "убрать",
+          "закрыть окно",
+          "интерфейс"
+        ]
+      },
       "tags": [
         "application",
         "app",
@@ -2310,7 +2339,37 @@
       ]
     },
     "app-window-mac-plus": {
+      "en": {
+        "description": "A window outline with two dots at the top and a plus sign at the corner, usually meaning add or create a new window.",
+        "synonyms": [
+          "new window",
+          "add window",
+          "app window",
+          "create window",
+          "plus",
+          "add",
+          "application",
+          "interface",
+          "open window",
+          "popup"
+        ]
+      },
       "fingerprint": "1878a52c1899",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Изображено окно приложения с двумя точками вверху и знаком плюс в углу; обычно означает создание или добавление нового окна.",
+        "synonyms": [
+          "новое окно",
+          "добавить окно",
+          "окно приложения",
+          "создать окно",
+          "плюс",
+          "добавить",
+          "программа",
+          "интерфейс",
+          "открыть окно"
+        ]
+      },
       "tags": [
         "application",
         "app",
@@ -2353,7 +2412,36 @@
       ]
     },
     "app-window-minus": {
+      "en": {
+        "description": "An application window with a title bar and a minus sign at the bottom right, usually meaning remove, minimize or collapse a window.",
+        "synonyms": [
+          "window",
+          "application",
+          "app",
+          "minus",
+          "remove",
+          "delete",
+          "minimize",
+          "collapse",
+          "close"
+        ]
+      },
       "fingerprint": "a9b48885464a",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Рисунок окна приложения с полосой заголовка и знаком минус справа внизу; обозначает удаление, свертывание или уменьшение окна.",
+        "synonyms": [
+          "окно",
+          "приложение",
+          "минус",
+          "удалить",
+          "убрать",
+          "свернуть",
+          "закрыть",
+          "интерфейс",
+          "панель"
+        ]
+      },
       "tags": [
         "application",
         "app",
@@ -2384,7 +2472,38 @@
       ]
     },
     "app-window-plus": {
+      "en": {
+        "description": "Aline drawing of an application window with a title bar and a plus sign, meaning create a new window or add an app.",
+        "synonyms": [
+          "new window",
+          "app window",
+          "add window",
+          "create window",
+          "application",
+          "plus",
+          "add",
+          "create",
+          "open window",
+          "new tab"
+        ]
+      },
       "fingerprint": "0f3b90c1726a",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Рисунок окна приложения с полосой заголовка и знаком плюс в углу; обозначает создание нового окна или добавление приложения.",
+        "synonyms": [
+          "новое окно",
+          "окно приложения",
+          "добавить окно",
+          "создать окно",
+          "приложение",
+          "плюс",
+          "добавить",
+          "создать",
+          "открыть окно",
+          "вкладка"
+        ]
+      },
       "tags": [
         "application",
         "app",
@@ -26579,7 +26698,38 @@
       ]
     },
     "circle-speed-lines": {
+      "en": {
+        "description": "Draws a circle with three horizontal speed lines on its left, indicating fast motion, velocity, or acceleration.",
+        "synonyms": [
+          "speed",
+          "fast",
+          "motion",
+          "velocity",
+          "acceleration",
+          "quick",
+          "rapid",
+          "movement",
+          "momentum",
+          "dash"
+        ]
+      },
       "fingerprint": "6b20906546f9",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Рисует круг с тремя горизонтальными линиями слева, что означает быстрое движение, скорость или ускорение.",
+        "synonyms": [
+          "скорость",
+          "быстро",
+          "движение",
+          "разгон",
+          "ускорение",
+          "динамика",
+          "полёт",
+          "быстрый",
+          "рывок",
+          "гонка"
+        ]
+      },
       "tags": [
         "fast",
         "quick",
@@ -30210,7 +30360,38 @@
       ]
     },
     "columns-2-plus-left": {
+      "en": {
+        "description": "Draws a rectangle split into two columns with a plus sign on the left, meaning add a column or panel on the left.",
+        "synonyms": [
+          "add column",
+          "columns",
+          "plus",
+          "add panel",
+          "split view",
+          "two columns",
+          "layout",
+          "grid",
+          "new column",
+          "sidebar left"
+        ]
+      },
       "fingerprint": "826facc5cb0e",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Рисует прямоугольник, разделённый вертикальной линией на две колонки, с плюсом слева; обозначает добавление новой колонки или панели слева.",
+        "synonyms": [
+          "добавить колонку",
+          "колонка",
+          "плюс",
+          "добавить панель",
+          "разделить",
+          "два столбца",
+          "макет",
+          "сетка",
+          "новая колонка",
+          "слева"
+        ]
+      },
       "tags": [
         "lines",
         "list",
@@ -30264,7 +30445,38 @@
       ]
     },
     "columns-2-plus-right": {
+      "en": {
+        "description": "Drawing shows a rectangle split by a vertical line with a plus sign on the right, meaning add a new column or panel.",
+        "synonyms": [
+          "add column",
+          "plus",
+          "new panel",
+          "add panel",
+          "create",
+          "sidebar",
+          "split",
+          "layout",
+          "grid",
+          "insert"
+        ]
+      },
       "fingerprint": "6a5bd2119bc6",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Рисунок показывает прямоугольник, разделённый вертикальной линией, с плюсом справа; иконка означает добавление новой колонки или панели.",
+        "synonyms": [
+          "добавить колонку",
+          "плюс",
+          "новая панель",
+          "добавить панель",
+          "создать",
+          "боковая панель",
+          "разделить",
+          "макет",
+          "сетка",
+          "вставить"
+        ]
+      },
       "tags": [
         "lines",
         "list",
@@ -40831,7 +41043,38 @@
       ]
     },
     "file-text-sparkles": {
+      "en": {
+        "description": "A document with text lines and sparkle stars at the right, usually meaning AI-generated or enhanced text.",
+        "synonyms": [
+          "document",
+          "file",
+          "text",
+          "ai",
+          "artificial intelligence",
+          "magic",
+          "sparkle",
+          "generate text",
+          "summarize",
+          "writing"
+        ]
+      },
       "fingerprint": "1919e184bbaa",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Изображён документ с текстовыми строками и четырьмя звёздочками-искрами справа; обычно означает создание или улучшение текста с помощью ИИ.",
+        "synonyms": [
+          "документ",
+          "текст",
+          "файл",
+          "ии",
+          "искусственный интеллект",
+          "генерация текста",
+          "магия",
+          "искры",
+          "улучшить",
+          "суммаризация"
+        ]
+      },
       "tags": [
         "document",
         "data",
@@ -47090,7 +47333,38 @@
       ]
     },
     "graph-path": {
+      "en": {
+        "description": "Four connected circular nodes form a zigzag path, usually representing a route, network graph, or sequence of connected points.",
+        "synonyms": [
+          "route",
+          "path",
+          "graph",
+          "nodes",
+          "connections",
+          "network",
+          "trend",
+          "waypoints",
+          "trail",
+          "topology"
+        ]
+      },
       "fingerprint": "401f23c23b65",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Изображены четыре соединённых кружка в ломаной линии, что обозначает путь, маршрут или связи между узлами.",
+        "synonyms": [
+          "маршрут",
+          "путь",
+          "граф",
+          "узлы",
+          "связи",
+          "сеть",
+          "тренд",
+          "график",
+          "последовательность",
+          "трек"
+        ]
+      },
       "tags": [
         "network",
         "nodes",
@@ -50265,7 +50539,38 @@
       ]
     },
     "hole": {
+      "en": {
+        "description": "An elliptical opening drawn with an inner curved edge, suggesting a hole or cavity; it represents a hole, pit, or aperture.",
+        "synonyms": [
+          "opening",
+          "cavity",
+          "pit",
+          "void",
+          "tunnel",
+          "portal",
+          "bore",
+          "aperture",
+          "cutout",
+          "pothole"
+        ]
+      },
       "fingerprint": "5f3f5403d8fa",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Изображён эллипс с дугой внутри, похожий на отверстие или проём; обозначает дыру, впадину или проём в интерфейсе.",
+        "synonyms": [
+          "дыра",
+          "отверстие",
+          "яма",
+          "провал",
+          "проём",
+          "впадина",
+          "полость",
+          "туннель",
+          "портал",
+          "выемка"
+        ]
+      },
       "tags": [
         "opening",
         "cavity",
@@ -51568,7 +51873,38 @@
       ]
     },
     "image-sparkles": {
+      "en": {
+        "description": "Draws a picture frame with mountains, a sun and sparkles, meaning AI image generation or photo enhancement.",
+        "synonyms": [
+          "picture",
+          "photo",
+          "image",
+          "ai",
+          "magic",
+          "sparkle",
+          "enhance photo",
+          "generate image",
+          "stars",
+          "artificial intelligence"
+        ]
+      },
       "fingerprint": "23c6fd4b48ab",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Рисунок изображает рамку с картинкой, горами, солнцем и двумя звёздочками; обозначает создание или улучшение изображения с помощью ИИ.",
+        "synonyms": [
+          "картинка",
+          "фото",
+          "изображение",
+          "искусственный интеллект",
+          "магия",
+          "блеск",
+          "улучшить фото",
+          "сгенерировать картинку",
+          "звёздочки",
+          "нейросеть"
+        ]
+      },
       "tags": [
         "picture",
         "photo",
@@ -58104,7 +58440,38 @@
       ]
     },
     "list-x-corner": {
+      "en": {
+        "description": "Three horizontal lines with an X at the bottom right; usually means removing or clearing an item from a list.",
+        "synonyms": [
+          "remove from list",
+          "clear list",
+          "delete item",
+          "cancel item",
+          "dismiss",
+          "unqueue",
+          "playlist remove",
+          "checklist cross",
+          "discard",
+          "reject"
+        ]
+      },
       "fingerprint": "b391daa8eeb6",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Три горизонтальные линии, в нижней правой части которых нарисован крестик; обычно означает удаление или отмену элемента списка.",
+        "synonyms": [
+          "удалить из списка",
+          "убрать",
+          "очистить",
+          "отменить",
+          "закрыть",
+          "отмена",
+          "очередь",
+          "список задач",
+          "убрать пункт",
+          "крестик"
+        ]
+      },
       "tags": [
         "x",
         "remove",
@@ -62145,7 +62512,36 @@
       ]
     },
     "message-circle-reply": {
+      "en": {
+        "description": "An outlined speech bubble containing a curved left-pointing arrow, meaning reply to a message or comment.",
+        "synonyms": [
+          "respond",
+          "answer",
+          "reply arrow",
+          "chat",
+          "conversation",
+          "message",
+          "comment",
+          "dialog",
+          "response"
+        ]
+      },
       "fingerprint": "84119156045b",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Контур круглого облачка переписки с изогнутой стрелкой влево внутри; означает ответ на сообщение.",
+        "synonyms": [
+          "ответить",
+          "ответ",
+          "реплика",
+          "переписка",
+          "чат",
+          "сообщение",
+          "комментарий",
+          "диалог",
+          "отклик"
+        ]
+      },
       "tags": [
         "comment",
         "chat",
@@ -62995,7 +63391,36 @@
       ]
     },
     "message-square-reply": {
+      "en": {
+        "description": "Outlined speech bubble containing a curved left-pointing arrow, meaning reply to a message.",
+        "synonyms": [
+          "answer",
+          "respond",
+          "response",
+          "chat",
+          "comment",
+          "conversation",
+          "feedback",
+          "dialog",
+          "message"
+        ]
+      },
       "fingerprint": "81c93c429d1b",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Контур речевого пузыря с изогнутой стрелкой влево внутри, означает ответ на сообщение.",
+        "synonyms": [
+          "ответить",
+          "ответ",
+          "реплика",
+          "сообщение",
+          "чат",
+          "диалог",
+          "комментарий",
+          "отклик",
+          "переписка"
+        ]
+      },
       "tags": [
         "comment",
         "chat",
@@ -68414,7 +68839,38 @@
       ]
     },
     "package-arrow-bend-up-left": {
+      "en": {
+        "description": "Draws a closed box with a tape strip and a bent arrow pointing left, meaning a package return or shipping back.",
+        "synonyms": [
+          "return",
+          "return package",
+          "send back",
+          "parcel",
+          "box",
+          "refund",
+          "exchange",
+          "shipping",
+          "reverse logistics",
+          "undo"
+        ]
+      },
       "fingerprint": "62bc7a885e82",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Рисует закрытую коробку с лентой и стрелку, загибающуюся влево, что означает возврат или отправку посылки обратно.",
+        "synonyms": [
+          "возврат",
+          "вернуть посылку",
+          "возврат товара",
+          "посылка",
+          "коробка",
+          "обмен",
+          "отправить обратно",
+          "доставка",
+          "логистика",
+          "стрелка влево"
+        ]
+      },
       "tags": [
         "box",
         "container",
@@ -72938,7 +73394,38 @@
       ]
     },
     "plane-off": {
+      "en": {
+        "description": "A airplane silhouette crossed out by a diagonal line, usually meaning airplane mode, no flights, or flights unavailable.",
+        "synonyms": [
+          "airplane",
+          "flight",
+          "aeroplane mode",
+          "travel",
+          "trip",
+          "no flights",
+          "cancelled flight",
+          "aviation",
+          "jet",
+          "airport"
+        ]
+      },
       "fingerprint": "f0cd03b4c2f2",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Изображён силуэт самолёта, перечёркнутый диагональной линией; значок обозначает режим полёта или отключение авиасообщения.",
+        "synonyms": [
+          "самолет",
+          "авиа",
+          "полет",
+          "авиарежим",
+          "режим полета",
+          "авиабилет",
+          "путешествие",
+          "запрет полетов",
+          "отмена рейса",
+          "аэропорт"
+        ]
+      },
       "tags": [
         "plane",
         "trip",
@@ -75808,7 +76295,38 @@
       ]
     },
     "rectangle-horizontal-plus": {
+      "en": {
+        "description": "A horizontal rectangle containing a plus sign, usually meaning add a new card, block, or panel.",
+        "synonyms": [
+          "add",
+          "plus",
+          "new",
+          "create",
+          "rectangle",
+          "card",
+          "block",
+          "insert",
+          "add button",
+          "landscape frame"
+        ]
+      },
       "fingerprint": "4d421561969f",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Горизонтальный прямоугольник с крестиком внутри, обозначающий добавление нового блока, карточки или элемента.",
+        "synonyms": [
+          "добавить",
+          "плюс",
+          "новый",
+          "создать",
+          "прямоугольник",
+          "карточка",
+          "блок",
+          "вставить",
+          "кнопка добавления",
+          "прямоугольная рамка"
+        ]
+      },
       "tags": [
         "rectangle",
         "aspect ratio",
@@ -77924,7 +78442,38 @@
       ]
     },
     "rows-2-plus-bottom": {
+      "en": {
+        "description": "A rounded square split by a horizontal line with a plus sign below, meaning add a new row at the bottom.",
+        "synonyms": [
+          "add row",
+          "insert below",
+          "plus",
+          "new block",
+          "split panel",
+          "add bottom",
+          "create",
+          "list",
+          "rows",
+          "queue"
+        ]
+      },
       "fingerprint": "0114ba25f4d9",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Квадрат с горизонтальной линией посередине и плюсом внизу, обозначает добавление нового ряда или блока снизу.",
+        "synonyms": [
+          "добавить строку",
+          "добавить ряд",
+          "плюс",
+          "новый блок",
+          "вставить снизу",
+          "создать",
+          "добавить",
+          "панель",
+          "разделить",
+          "список"
+        ]
+      },
       "tags": [
         "lines",
         "list",
@@ -77967,7 +78516,38 @@
       ]
     },
     "rows-2-plus-top": {
+      "en": {
+        "description": "A rectangle split by a horizontal line with a plus sign in its upper section, meaning add a new block or row at the top.",
+        "synonyms": [
+          "add top",
+          "insert above",
+          "plus",
+          "new row",
+          "add block",
+          "create",
+          "add row",
+          "panel",
+          "list",
+          "upper add"
+        ]
+      },
       "fingerprint": "6fe2c58e2267",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Прямоугольник, разделённый горизонтальной линией, с плюсом в верхней части; обозначает добавление нового блока или строки сверху.",
+        "synonyms": [
+          "добавить сверху",
+          "плюс",
+          "новая строка",
+          "вставить",
+          "создать",
+          "добавить блок",
+          "добавить вверх",
+          "панель",
+          "список",
+          "плюсик"
+        ]
+      },
       "tags": [
         "lines",
         "list",
@@ -80139,7 +80719,37 @@
       ]
     },
     "screwdriver": {
+      "en": {
+        "description": "A screwdriver with a handle and tip drawn diagonally; it represents a tool for repair, assembly, and turning screws.",
+        "synonyms": [
+          "tool",
+          "repair",
+          "hardware",
+          "fix",
+          "maintenance",
+          "fastener",
+          "assembly",
+          "workshop",
+          "diy"
+        ]
+      },
       "fingerprint": "00465a5f3556",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Изображена отвертка с ручкой и жалом под углом; значок обозначает инструмент для ремонта, сборки и закручивания винтов.",
+        "synonyms": [
+          "отвертка",
+          "инструмент",
+          "ремонт",
+          "винт",
+          "шуруповерт",
+          "починка",
+          "сборка",
+          "мастерская",
+          "крепеж",
+          "монтаж"
+        ]
+      },
       "tags": [
         "tool",
         "hardware",
@@ -92245,7 +92855,34 @@
       ]
     },
     "square-plus-corner": {
+      "en": {
+        "description": "Drawn as a rounded square with a plus sign at its lower right corner, it usually means adding or creating something new.",
+        "synonyms": [
+          "add",
+          "plus",
+          "new",
+          "create",
+          "insert",
+          "addition",
+          "extra",
+          "increase"
+        ]
+      },
       "fingerprint": "69bc5935e41c",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Рисунок изображает квадрат с незамкнутым углом и знак плюс в правом нижнем углу, обозначая добавление нового элемента.",
+        "synonyms": [
+          "добавить",
+          "плюс",
+          "создать",
+          "новый",
+          "добавление",
+          "вставить",
+          "создать новый",
+          "increase"
+        ]
+      },
       "tags": [
         "plus",
         "add",
@@ -99757,7 +100394,38 @@
       ]
     },
     "train-high-speed": {
+      "en": {
+        "description": "Shows the streamlined nose of a bullet train with speed lines and rails below, meaning high-speed rail travel.",
+        "synonyms": [
+          "bullet train",
+          "high speed",
+          "railway",
+          "rail",
+          "locomotive",
+          "metro",
+          "subway",
+          "fast travel",
+          "transit",
+          "commute"
+        ]
+      },
       "fingerprint": "6efbc7393e42",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Изображена передняя часть скоростного поезда с обтекаемым носом и линии скорости; обозначает высокоскоростной железнодорожный транспорт.",
+        "synonyms": [
+          "скоростной поезд",
+          "электричка",
+          "поезд",
+          "ж/д",
+          "железная дорога",
+          "рельсы",
+          "скорость",
+          "вокзал",
+          "путешествие",
+          "пассажирский транспорт"
+        ]
+      },
       "tags": [
         "railway",
         "metro",
@@ -99947,7 +100615,38 @@
       ]
     },
     "trash-leaf": {
+      "en": {
+        "description": "A trash bin with a leaf on its side, indicating organic, compostable, or eco-friendly waste disposal.",
+        "synonyms": [
+          "garbage can",
+          "trash bin",
+          "compost",
+          "organic waste",
+          "eco",
+          "recycle",
+          "biodegradable",
+          "green waste",
+          "rubbish",
+          "waste bin"
+        ]
+      },
       "fingerprint": "5828a67a443d",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Рисунок мусорного бака с листом на переднем плане означает органические или экологичные отходы, компостирование.",
+        "synonyms": [
+          "мусорка",
+          "урна",
+          "корзина",
+          "бак",
+          "компост",
+          "органические отходы",
+          "экология",
+          "эко мусор",
+          "переработка",
+          "зелёные отходы"
+        ]
+      },
       "tags": [
         "minus",
         "remove",
