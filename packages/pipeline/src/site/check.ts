@@ -9,6 +9,7 @@
 
 import { readdir, readFile } from "node:fs/promises";
 import { join } from "node:path";
+import type { D1Like } from "@iconavo-ui/analytics/db";
 import { groupCards, isStyle, type Style } from "@iconavo-ui/search";
 import type { Browser, BrowserContext, Page } from "playwright";
 import { canaryVerdict } from "../example/check.js";
@@ -28,6 +29,7 @@ import {
   violations,
   watch,
 } from "../sandbox/verdict.js";
+import { analyticsProblems, checkAnalytics, spoilEvents } from "./analytics.js";
 import { BAG_KEY, bagProblems, checkBag, zipProblems } from "./bag.js";
 import {
   checkCode,
@@ -168,6 +170,10 @@ export const CHECKS = [
     "results",
     "Поиск: набор с главной, Ctrl K и «Поиск» в верхней полосе, фильтры и «назад», страницы, ссылка с фильтрами; по словам → полная без сдвигов; пустые ответы и 429",
   ],
+  [
+    "analytics",
+    "Аналитика: поиск, открытие и скачивание доходят до приёма /event превью API — запрос с местом и «скачано», успех поиска; буквы набора — не запрос; с Global Privacy Control — ни одного события",
+  ],
   ["canary", "Контрольный запуск: каждая подложенная поломка замечена"],
 ] as const;
 
@@ -205,6 +211,8 @@ export interface SiteCheckOptions {
   browsers: readonly BrowserName[];
   /** Только эти шаги браузерной части (--only=): строки других — «не проверялось». */
   only?: readonly SiteStep[];
+  /** База событий превью API (шаг 2 фазы 5): из неё — строка «Аналитика». */
+  analytics?: () => D1Like | undefined;
   log?: (line: string) => void;
 }
 
@@ -1542,6 +1550,20 @@ async function checkCanary(
     }
     await ctx.close();
   }
+  // События не по списку (шаг 2 фазы 5): приём превью их отбрасывает — строка «Аналитика» обязана заметить.
+  {
+    const ctx = await browser.newContext({
+      viewport: DESKTOP,
+      acceptDownloads: true,
+    });
+    await spoilEvents(ctx);
+    const p = await ctx.newPage();
+    const caught = await analyticsProblems(p, o).catch(
+      stoppedBy("событие не по списку"),
+    );
+    if (caught.length === 0) missed.push("событие не по списку");
+    await ctx.close();
+  }
   if (
     zipProblems(
       [
@@ -1587,7 +1609,7 @@ async function checkCanary(
   result.verdicts.canary =
     missed.length === 0
       ? pass(
-          `замечены все тридцать: кнопка без подписи, style, нарушение CSP до перехода, ширина, иконка-блок, robots, битая ссылка, гидратация, чужой lang, нет ссылки на другой язык, переход не туда, нет скрипта темы, сетка без списка имён, поиск без полной выдачи, Esc не закрывает панель, фокус не возвращается, другая страница сетки закрывает панель, сетка прыгает при открытии и закрытии панели, колесо над панелью крутит страницу, страница шире окна при открытии панели, карточки перескакивают, панель без своей колонки, старое имя без перехода, метка catalog у страницы иконки, менеджер пакетов не запоминается, SVG-код не как у адреса, пустой PNG, сумка не переживает перезагрузку, ZIP без лицензий, настройки не сохраняются${stoppedNote}`,
+          `замечены все тридцать одна: кнопка без подписи, style, нарушение CSP до перехода, ширина, иконка-блок, robots, битая ссылка, гидратация, чужой lang, нет ссылки на другой язык, переход не туда, нет скрипта темы, сетка без списка имён, поиск без полной выдачи, Esc не закрывает панель, фокус не возвращается, другая страница сетки закрывает панель, сетка прыгает при открытии и закрытии панели, колесо над панелью крутит страницу, страница шире окна при открытии панели, карточки перескакивают, панель без своей колонки, старое имя без перехода, метка catalog у страницы иконки, менеджер пакетов не запоминается, SVG-код не как у адреса, пустой PNG, сумка не переживает перезагрузку, ZIP без лицензий, настройки не сохраняются, событие не по списку${stoppedNote}`,
         )
       : fail(
           `проверка слепая: не замечено — ${missed.join(", ")}${stoppedNote}`,
@@ -1609,6 +1631,7 @@ export const SITE_STEPS = [
   "bag",
   "settings",
   "results",
+  "analytics",
   "canary",
 ] as const;
 export type SiteStep = (typeof SITE_STEPS)[number];
@@ -1628,6 +1651,7 @@ const STEP_ROWS: Record<SiteStep, readonly CheckId[]> = {
   bag: ["bag"],
   settings: ["settings"],
   results: ["results"],
+  analytics: ["analytics"],
   canary: ["canary"],
 };
 
@@ -1699,6 +1723,11 @@ export async function checkSite(o: SiteCheckOptions): Promise<SiteResult[]> {
           "results",
           "поиск",
           async () => (v.results = await checkSearchPage(b, o, result.shots)),
+        ],
+        [
+          "analytics",
+          "аналитика",
+          async () => (v.analytics = await checkAnalytics(b, o)),
         ],
         [
           "canary",

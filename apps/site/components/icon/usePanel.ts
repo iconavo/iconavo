@@ -15,6 +15,7 @@ import {
   useRef,
   useState,
 } from "react";
+import { iconOpened } from "../../lib/analytics";
 import { PANEL_PARAM, panelIcon } from "../../lib/icon";
 import {
   type NavigateOptions,
@@ -53,6 +54,15 @@ export function usePanel(
   const [focus, setFocus] = useState(0);
   const opener = useRef<HTMLElement | null>(null);
   const last = useRef<string | undefined>(undefined);
+  // Аналитика (шаг 2 фазы 5): первая панель на странице, открытая не щелчком, а адресом с ?icon=, —
+  // «прямая ссылка». Щелчок по карточке событие отправил сам (сетки набора и поиска).
+  const clicked = useRef(false);
+  const announced = useRef(false);
+  useEffect(() => {
+    if (icon === undefined || announced.current) return;
+    announced.current = true;
+    if (!clicked.current) iconOpened(icon, "link");
+  }, [icon]);
 
   useEffect(() => {
     if (icon !== undefined) {
@@ -71,6 +81,7 @@ export function usePanel(
   const open = useCallback(
     (name: string, from?: HTMLElement) => {
       const next = withParams(query, { [PANEL_PARAM]: name });
+      clicked.current = true;
       if (icon === undefined) {
         opener.current = from ?? null;
         navigate(next, { panel: name });

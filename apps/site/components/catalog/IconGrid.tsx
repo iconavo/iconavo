@@ -3,6 +3,7 @@
 import { Icon } from "@iconavo-ui/react";
 import { type MouseEvent, memo, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
+import { iconOpened, styleChanged } from "../../lib/analytics";
 import {
   type Category,
   cardsInStyle,
@@ -33,7 +34,7 @@ import { useUrlQuery, withParams } from "../../lib/url-query";
 import { IconPanel } from "../icon/IconPanel";
 import { CARD_LINK, usePanel } from "../icon/usePanel";
 import { PanelLayout } from "../panel/PanelLayout";
-import { Chips } from "./Chips";
+import { Chips, plainClick } from "./Chips";
 import { GridBar } from "./GridBar";
 import { GridToolbar } from "./GridToolbar";
 import { Pagination } from "./Pagination";
@@ -153,8 +154,14 @@ export function IconGrid({
   const t = DICTIONARIES[lang];
   const { query, hrefOf, navigate } = useUrlQuery();
   const panel = usePanel(query, navigate);
-  // Карточкам — та же ссылка на обработчик при любой отрисовке (GridCard с памятью).
-  const openCard = useStableCallback(panel.onCardClick);
+  // Карточкам — та же ссылка на обработчик при любой отрисовке (GridCard с памятью). Обычный щелчок
+  // открывает панель — событие аналитики «открыта из набора» (шаг 2 фазы 5).
+  const openCard = useStableCallback(
+    (e: MouseEvent<HTMLAnchorElement>, name: string) => {
+      if (plainClick(e)) iconOpened(name, "set");
+      panel.onCardClick(e, name);
+    },
+  );
   const selection = useSelection();
   const slug = query.get("category");
   const category = categories.find((c) => c.slug === slug);
@@ -315,7 +322,10 @@ export function IconGrid({
                   withParams(query, { style: s.style, page: undefined }),
                 ),
                 current: s.style === style,
-                onSelect: () => go({ style: s.style, page: undefined }),
+                onSelect: () => {
+                  styleChanged(s.style, "set");
+                  go({ style: s.style, page: undefined });
+                },
               })),
             ]}
           />

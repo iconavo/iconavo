@@ -3,6 +3,7 @@
 import { Icon } from "@iconavo-ui/react";
 import Link from "next/link";
 import type { MouseEvent } from "react";
+import { markOpenSource } from "../../lib/analytics";
 import { DICTIONARIES, href, type Lang } from "../../lib/i18n";
 import { bareName, type IconDetails, iconPagePath } from "../../lib/icon";
 import type { IconPageData } from "../../lib/icon-page";
@@ -99,7 +100,11 @@ export function Similar({
                 prefetch={false}
                 className="ip-similar-card"
                 data-icon={name}
-                onClick={onFollow}
+                onClick={(e) => {
+                  // Аналитика: следующая страница иконки открыта из похожих.
+                  markOpenSource("similar");
+                  onFollow?.(e);
+                }}
               >
                 <Icon icon={name} className="ip-similar-icon" />
                 <span className="ip-similar-text">

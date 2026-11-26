@@ -230,6 +230,9 @@ importers:
 
   apps/site:
     dependencies:
+      '@iconavo-ui/analytics':
+        specifier: workspace:*
+        version: link:../../packages/analytics
       '@iconavo-ui/core':
         specifier: workspace:*
         version: link:../../packages/core

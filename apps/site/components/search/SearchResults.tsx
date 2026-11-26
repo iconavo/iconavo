@@ -1,7 +1,22 @@
 "use client";
 
-import { type ReactNode, useEffect, useMemo, useRef, useState } from "react";
+import {
+  type MouseEvent,
+  type ReactNode,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { createPortal } from "react-dom";
+import {
+  iconOpened,
+  resultOpened,
+  type SearchView,
+  searchLeft,
+  searchShown,
+  styleChanged,
+} from "../../lib/analytics";
 import { API } from "../../lib/api";
 import { type PanelSet, pageSizeFor } from "../../lib/catalog";
 import type { SidebarGroup } from "../../lib/catalog-view";
@@ -22,9 +37,11 @@ import {
   retryAfterSeconds,
   SEARCH_PAGE_SIZE,
   type SearchAnswer,
+  type SearchCard,
   searchApiUrl,
   withFilters,
 } from "../../lib/search";
+import { useStableCallback } from "../../lib/stable-callback";
 import { queryText, useUrlQuery, withParams } from "../../lib/url-query";
 import { plainClick } from "../catalog/Chips";
 import { GridBar } from "../catalog/GridBar";
@@ -243,6 +260,29 @@ export function SearchResults({
         ? view.phase
         : { kind: "loading" };
 
+  // Аналитика (шаг 2 фазы 5): показанная выдача — запрос, пустое поле — запрос закончен
+  // (lib/analytics.ts). Отпечаток выдачи — строкой: эффект идёт, только когда она поменялась.
+  const shownKey =
+    phase.kind === "answer"
+      ? JSON.stringify({
+          q: state.q,
+          style: state.style,
+          sets: state.sets,
+          licenses: state.licenses,
+          page: state.page,
+          results: phase.answer.cards.length,
+          semantic: phase.answer.semantic === "full",
+        } satisfies SearchView)
+      : phase.kind;
+  useEffect(() => {
+    if (shownKey === "idle") searchLeft();
+    else if (shownKey.startsWith("{")) {
+      searchShown(JSON.parse(shownKey) as SearchView);
+    }
+  }, [shownKey]);
+  // Ушли со страницы поиска — запрос закончен.
+  useEffect(() => () => searchLeft(), []);
+
   // Отсчёт после 429 — раз в секунду, пока ждём.
   useEffect(() => {
     if (phase.kind !== "limited") return;
@@ -294,6 +334,24 @@ export function SearchResults({
 
   const slot = pageWindow(state.page, size ?? SEARCH_PAGE_SIZE);
   const setTitles = Object.fromEntries(sets.map((s) => [s.id, s.title]));
+  const shownCards = phase.kind === "answer" ? phase.answer.cards : undefined;
+  const unfilteredCards =
+    unfiltered?.key === unfilteredKey ? unfiltered.answer.cards : undefined;
+  // Обычный щелчок по карточке открывает панель: событие «открыта из поиска» с местом в выдаче.
+  const openResult = useStableCallback(
+    (e: MouseEvent<HTMLAnchorElement>, icon: string) => {
+      if (plainClick(e)) {
+        const at = (cards: readonly SearchCard[] | undefined) =>
+          cards?.findIndex((c) => c.icon === icon) ?? -1;
+        const shown = at(shownCards);
+        const other = shown < 0 ? at(unfilteredCards) : -1;
+        if (shown >= 0) resultOpened(icon, slot.start + shown + 1);
+        else if (other >= 0) resultOpened(icon, other + 1);
+        else iconOpened(icon, "search");
+      }
+      panel.onCardClick(e, icon);
+    },
+  );
   const goPage = (page: number) => {
     navigate(
       withParams(query, { page: page === 1 ? undefined : String(page) }),
@@ -356,7 +414,7 @@ export function SearchResults({
             skeletons={slot.limit}
             setTitles={setTitles}
             current={panel.icon}
-            onOpen={panel.onCardClick}
+            onOpen={openResult}
             selection={selection}
           />
         ) : (
@@ -365,7 +423,7 @@ export function SearchResults({
             cards={stale.cards}
             setTitles={setTitles}
             current={panel.icon}
-            onOpen={panel.onCardClick}
+            onOpen={openResult}
             selection={selection}
             busy
           />
@@ -388,7 +446,7 @@ export function SearchResults({
             cards={stale.cards}
             setTitles={setTitles}
             current={panel.icon}
-            onOpen={panel.onCardClick}
+            onOpen={openResult}
             selection={selection}
           />
         );
@@ -407,7 +465,7 @@ export function SearchResults({
             cards={stale.cards}
             setTitles={setTitles}
             current={panel.icon}
-            onOpen={panel.onCardClick}
+            onOpen={openResult}
             selection={selection}
           />
         );
@@ -437,7 +495,7 @@ export function SearchResults({
             }
             setTitles={setTitles}
             current={panel.icon}
-            onOpen={panel.onCardClick}
+            onOpen={openResult}
             selection={selection}
           />
         );
@@ -490,7 +548,7 @@ export function SearchResults({
                   cards={other.answer.cards}
                   setTitles={setTitles}
                   current={panel.icon}
-                  onOpen={panel.onCardClick}
+                  onOpen={openResult}
                   selection={selection}
                 />
               </section>
@@ -597,7 +655,12 @@ export function SearchResults({
         groups={groups}
         licenses={licenses}
         value={filtersOf(state)}
-        onApply={(filters) => navigate(withFilters(query, filters))}
+        onApply={(filters) => {
+          if (filters.style !== undefined && filters.style !== state.style) {
+            styleChanged(filters.style, "filter");
+          }
+          navigate(withFilters(query, filters));
+        }}
       />
     </>
   );
