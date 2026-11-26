@@ -24493,7 +24493,38 @@
       ]
     },
     "bed-pin": {
+      "en": {
+        "description": "Shows a bed with a pillow and a map pin at its foot, meaning a accommodation or sleeping location on a map.",
+        "synonyms": [
+          "bed",
+          "hotel",
+          "accommodation",
+          "sleeping place",
+          "bedroom",
+          "lodging",
+          "stay location",
+          "map marker",
+          "location pin",
+          "night rest"
+        ]
+      },
       "fingerprint": "7550688c0ed7",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Изображена кровать с круглой подушкой и map-пин над правым краем, что обозначает место размещения или точку проживания.",
+        "synonyms": [
+          "кровать",
+          "место для сна",
+          "отель",
+          "гостиница",
+          "спальня",
+          "жильё",
+          "адрес проживания",
+          "метка",
+          "геолокация",
+          "булавка на карте"
+        ]
+      },
       "tags": [
         "sleep",
         "bedroom",
@@ -26193,7 +26224,36 @@
       ]
     },
     "bike-pin": {
+      "en": {
+        "description": "A cyclist riding beside a map pin marker, indicating bike locations, bike rental, or cycling routes.",
+        "synonyms": [
+          "bicycle",
+          "bike",
+          "cycling",
+          "bike rental",
+          "bike lane",
+          "location pin",
+          "map marker",
+          "gps",
+          "route"
+        ]
+      },
       "fingerprint": "2eecc620f24b",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Изображен велосипедист рядом с отметкой геолокации на карте; обозначает велопрокат, велодорожку или маршрут на велосипеде.",
+        "synonyms": [
+          "велосипед",
+          "велик",
+          "катание на велосипеде",
+          "велопрокат",
+          "велодорожка",
+          "место на карте",
+          "метка",
+          "геолокация",
+          "маршрут"
+        ]
+      },
       "tags": [
         "bicycle",
         "cycling",
@@ -50031,7 +50091,38 @@
       ]
     },
     "briefcase-pin": {
+      "en": {
+        "description": "Shows a briefcase with a map pin in the lower right corner, indicating a work location or business place.",
+        "synonyms": [
+          "portfolio",
+          "business",
+          "office",
+          "career",
+          "job location",
+          "work place",
+          "map marker",
+          "gps",
+          "location pin",
+          "workplace"
+        ]
+      },
       "fingerprint": "c10f6ed21e3f",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Изображен портфель с ручкой и маркер геолокации в правом нижнем углу; обозначает рабочее место или деловую поездку с привязкой к месту.",
+        "synonyms": [
+          "портфель",
+          "работа",
+          "бизнес",
+          "офис",
+          "карьера",
+          "место работы",
+          "метка на карте",
+          "геолокация",
+          "булавка",
+          "вакансия"
+        ]
+      },
       "tags": [
         "briefcase",
         "business",
@@ -52962,7 +53053,38 @@
       ]
     },
     "building-hospital-pin": {
+      "en": {
+        "description": "Shows a building with a medical cross and a location pin beside it, meaning a hospital or clinic on a map.",
+        "synonyms": [
+          "hospital",
+          "clinic",
+          "medical center",
+          "healthcare",
+          "emergency room",
+          "doctor",
+          "map marker",
+          "location",
+          "address",
+          "gps pin"
+        ]
+      },
       "fingerprint": "14f8ff0233c8",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Изображена стена здания с крестом медицинской помощи и маркером местоположения рядом; означает больницу или клинику на карте.",
+        "synonyms": [
+          "больница",
+          "клиника",
+          "поликлиника",
+          "медицина",
+          "аптека",
+          "врач",
+          "скорая помощь",
+          "адрес",
+          "геолокация",
+          "метка на карте"
+        ]
+      },
       "tags": [
         "hospital",
         "clinic",
@@ -53737,7 +53859,38 @@
       ]
     },
     "building-store-pin": {
+      "en": {
+        "description": "Shows a storefront with an awning beside a location pin, meaning a shop or store location on a map.",
+        "synonyms": [
+          "store location",
+          "shop",
+          "storefront",
+          "retail",
+          "market",
+          "map pin",
+          "place",
+          "gps",
+          "find store",
+          "shopping"
+        ]
+      },
       "fingerprint": "7169dbe74c47",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Изображена лавка с навесом и полосатой маркизой, рядом с ней метка местоположения; обозначает магазин на карте.",
+        "synonyms": [
+          "магазин",
+          "лавка",
+          "ларек",
+          "точка на карте",
+          "адрес магазина",
+          "место продажи",
+          "торговая точка",
+          "геолокация",
+          "метка",
+          "шоппинг"
+        ]
+      },
       "tags": [
         "store",
         "shop",
@@ -54326,7 +54479,36 @@
       ]
     },
     "bus-pin": {
+      "en": {
+        "description": "Shows a bus beside a map pin marker, indicating a bus stop or public transit location.",
+        "synonyms": [
+          "bus stop",
+          "bus location",
+          "transit stop",
+          "public transport",
+          "pin location",
+          "map marker",
+          "gps",
+          "coach",
+          "route"
+        ]
+      },
       "fingerprint": "fda1c94d680b",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Изображён автобус рядом с маркером местоположения на карте; означает остановку или место посадки общественного транспорта.",
+        "synonyms": [
+          "автобус",
+          "остановка",
+          "маршрут",
+          "транспорт",
+          "геолокация",
+          "метка",
+          "место на карте",
+          "пункт посадки",
+          "маршрутка"
+        ]
+      },
       "tags": [
         "bus",
         "public-transport",
@@ -59443,7 +59625,38 @@
       ]
     },
     "car-pin": {
+      "en": {
+        "description": "Shows a car beside a location pin, indicating a vehicle's position, parking spot, or a place to drive to.",
+        "synonyms": [
+          "car location",
+          "parking",
+          "vehicle",
+          "automobile",
+          "gps",
+          "map marker",
+          "drive to",
+          "pinned car",
+          "navigation",
+          "travel"
+        ]
+      },
       "fingerprint": "ee6fb96c29c2",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Изображён автомобиль рядом с маркером местоположения на карте; обозначает точку стоянки или место нахождения автомобиля.",
+        "synonyms": [
+          "машина",
+          "автомобиль",
+          "авто",
+          "место парковки",
+          "геолокация",
+          "метка на карте",
+          "где машина",
+          "пин",
+          "точка на карте",
+          "поездка"
+        ]
+      },
       "tags": [
         "car",
         "vehicle",
@@ -82958,7 +83171,38 @@
       ]
     },
     "coffee-pin": {
+      "en": {
+        "description": "Shows a steaming coffee cup beside a map pin, indicating a cafe or coffee shop location.",
+        "synonyms": [
+          "coffee",
+          "cafe",
+          "cup",
+          "mug",
+          "espresso",
+          "latte",
+          "map pin",
+          "location",
+          "marker",
+          "place"
+        ]
+      },
       "fingerprint": "7807e2b68e38",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Изображена чашка с горячим напитком и паром над ней, рядом с ней метка местоположения; обозначает кафе или кофейню на карте.",
+        "synonyms": [
+          "кофе",
+          "кофейня",
+          "кафе",
+          "чашка",
+          "кружка",
+          "капучино",
+          "место на карте",
+          "метка",
+          "булавка",
+          "геолокация"
+        ]
+      },
       "tags": [
         "coffee",
         "cup",
@@ -130419,7 +130663,38 @@
       ]
     },
     "gas-station-pin": {
+      "en": {
+        "description": "Draws a fuel pump with a hose nozzle and a map pin, indicating a gas station location on a map.",
+        "synonyms": [
+          "gas pump",
+          "petrol station",
+          "fuel station",
+          "refuel",
+          "filling station",
+          "diesel",
+          "map marker",
+          "location pin",
+          "gps",
+          "nearby gas"
+        ]
+      },
       "fingerprint": "a2a3eb39f891",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Рисует топливную колонку с наконечником шланга и маркером геолокации, обозначая заправочную станцию на карте.",
+        "synonyms": [
+          "заправка",
+          "азс",
+          "бензоколонка",
+          "топливо",
+          "бензин",
+          "заправить",
+          "дизель",
+          "метка на карте",
+          "геолокация",
+          "место заправки"
+        ]
+      },
       "tags": [
         "gas-station",
         "petrol-station",
@@ -143120,7 +143395,38 @@
       ]
     },
     "home-pin": {
+      "en": {
+        "description": "Outline of a house with a location pin at the bottom right, meaning a home address or a saved place.",
+        "synonyms": [
+          "house",
+          "home",
+          "homepage",
+          "address",
+          "location",
+          "map pin",
+          "marker",
+          "real estate",
+          "residence",
+          "gps"
+        ]
+      },
       "fingerprint": "49f55db1fedc",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Изображен контур дома с отметкой местоположения-булавкой справа внизу; означает домашний адрес или место на карте.",
+        "synonyms": [
+          "дом",
+          "домик",
+          "главная",
+          "адрес",
+          "метка",
+          "местоположение",
+          "булавка",
+          "геолокация",
+          "недвижимость",
+          "домашняя страница"
+        ]
+      },
       "tags": [
         "home",
         "house",
@@ -190245,7 +190551,36 @@
       ]
     },
     "package-pin": {
+      "en": {
+        "description": "Shows a box with a location pin in the corner, meaning a package at a specific place or delivery location.",
+        "synonyms": [
+          "parcel",
+          "package location",
+          "delivery tracking",
+          "shipping",
+          "pickup point",
+          "box",
+          "map marker",
+          "gps package",
+          "courier"
+        ]
+      },
       "fingerprint": "12232eea1da8",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Изображена коробка с булавкой геолокации в углу; обозначает доставку посылки в конкретное место.",
+        "synonyms": [
+          "посылка",
+          "коробка",
+          "доставка",
+          "место доставки",
+          "пункт выдачи",
+          "отслеживание посылки",
+          "геолокация",
+          "курьер",
+          "маркер на карте"
+        ]
+      },
       "tags": [
         "box",
         "parcel",
@@ -191304,7 +191639,38 @@
       ]
     },
     "parking-pin": {
+      "en": {
+        "description": "Shows a letter P inside a rounded frame with a map pin at the bottom right, indicating a parking location.",
+        "synonyms": [
+          "parking spot",
+          "car park",
+          "parking lot",
+          "garage",
+          "parking sign",
+          "location pin",
+          "map marker",
+          "gps",
+          "park here",
+          "vehicle stop"
+        ]
+      },
       "fingerprint": "9ad1c120531a",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Изображена буква «P» в рамке с маркером геолокации справа внизу; обозначает парковку, место для стоянки автомобилей.",
+        "synonyms": [
+          "парковка",
+          "парковочное место",
+          "стоянка",
+          "место для машины",
+          "паркинг",
+          "геолокация парковки",
+          "метка места",
+          "гараж",
+          "указатель парковки",
+          "карта"
+        ]
+      },
       "tags": [
         "parking-lot",
         "car",
@@ -195434,7 +195800,38 @@
       ]
     },
     "phone-pin": {
+      "en": {
+        "description": "Shows a telephone handset beside a location pin, indicating a phone contact tied to a place or position.",
+        "synonyms": [
+          "phone",
+          "call",
+          "telephone",
+          "handset",
+          "contact",
+          "location",
+          "map marker",
+          "gps",
+          "address",
+          "dial"
+        ]
+      },
       "fingerprint": "3f7d0af1dbdf",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Изображена трубка телефона рядом с маркером местоположения; обозначает телефон с указанием места или геолокации.",
+        "synonyms": [
+          "телефон",
+          "звонок",
+          "позвонить",
+          "трубка",
+          "контакт",
+          "местоположение",
+          "адрес",
+          "карта",
+          "геолокация",
+          "точка на карте"
+        ]
+      },
       "tags": [
         "call",
         "telephone",
@@ -199170,7 +199567,38 @@
       ]
     },
     "plane-pin": {
+      "en": {
+        "description": "A airplane drawn beside a map pin marker, indicating an airport, flight location, or travel destination.",
+        "synonyms": [
+          "airplane",
+          "flight",
+          "airport",
+          "travel",
+          "trip",
+          "aircraft",
+          "location pin",
+          "destination",
+          "map marker",
+          "jet"
+        ]
+      },
       "fingerprint": "d2c2bbd2b146",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Изображён самолёт рядом с маркером геопозиции на карте; обозначает место вылета, аэропорт или маршрут полёта.",
+        "synonyms": [
+          "самолет",
+          "авиабилет",
+          "аэропорт",
+          "полет",
+          "путешествие",
+          "перелет",
+          "метка",
+          "геолокация",
+          "место на карте",
+          "аэровокзал"
+        ]
+      },
       "tags": [
         "airplane",
         "aeroplane",
@@ -214779,7 +215207,38 @@
       ]
     },
     "school-pin": {
+      "en": {
+        "description": "Shows a mortarboard graduation cap with a map pin below it, marking an educational institution's location on a map.",
+        "synonyms": [
+          "school",
+          "university",
+          "college",
+          "campus",
+          "education",
+          "student",
+          "graduation",
+          "school location",
+          "map marker",
+          "academic"
+        ]
+      },
       "fingerprint": "dfd17541a80a",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Изображена академическая шапочка с кисточкой и маркер местоположения с точкой; обозначает учебное заведение на карте.",
+        "synonyms": [
+          "школа",
+          "университет",
+          "колледж",
+          "учебное заведение",
+          "образование",
+          "студент",
+          "выпускник",
+          "местоположение на карте",
+          "метка",
+          "геолокация"
+        ]
+      },
       "tags": [
         "graduation",
         "education",
@@ -242929,7 +243388,36 @@
       ]
     },
     "tent-pin": {
+      "en": {
+        "description": "Draws a tent beside a map pin marker, indicating a campsite or camping location on a map.",
+        "synonyms": [
+          "tent",
+          "camping",
+          "campsite",
+          "camp location",
+          "hiking spot",
+          "outdoor place",
+          "map marker",
+          "gps pin",
+          "vacation spot"
+        ]
+      },
       "fingerprint": "1dc54480bb6c",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Изображает палатку рядом с маркером местоположения на карте; означает кемпинг или место стоянки.",
+        "synonyms": [
+          "палатка",
+          "кемпинг",
+          "место стоянки",
+          "турбаза",
+          "поход",
+          "метка на карте",
+          "геолокация",
+          "отдых на природе",
+          "локация"
+        ]
+      },
       "tags": [
         "camping",
         "camp",
@@ -246467,7 +246955,36 @@
       ]
     },
     "tools-kitchen-2-pin": {
+      "en": {
+        "description": "Shows a fork and knife beside a location pin, indicating a restaurant or dining place on a map.",
+        "synonyms": [
+          "restaurant",
+          "dining",
+          "cutlery",
+          "food nearby",
+          "eatery",
+          "dinner place",
+          "map marker",
+          "location",
+          "kitchen"
+        ]
+      },
       "fingerprint": "11e76077fe2e",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Изображена вилка и нож рядом с маркером геолокации, что означает ресторан или место для еды на карте.",
+        "synonyms": [
+          "ресторан",
+          "кафе",
+          "вилка и нож",
+          "столовая",
+          "еда на карте",
+          "место для еды",
+          "метка",
+          "геолокация",
+          "гастроном"
+        ]
+      },
       "tags": [
         "cutlery",
         "utensils",
@@ -250264,7 +250781,36 @@
       ]
     },
     "truck-delivery-pin": {
+      "en": {
+        "description": "Shows a delivery truck with motion lines beside a location pin, indicating shipping to a destination or tracking a delivery.",
+        "synonyms": [
+          "delivery",
+          "shipping",
+          "truck",
+          "courier",
+          "shipment",
+          "dispatch",
+          "track order",
+          "location pin",
+          "map marker"
+        ]
+      },
       "fingerprint": "cad7f7aa3340",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Изображена грузовая машина с движением и маркер местоположения у её заднего колеса; обозначает доставку с отслеживанием адреса.",
+        "synonyms": [
+          "доставка",
+          "грузовик",
+          "курьер",
+          "отправка",
+          "адрес доставки",
+          "геолокация",
+          "местоположение",
+          "трекинг заказа",
+          "фургон"
+        ]
+      },
       "tags": [
         "delivery",
         "shipping",
