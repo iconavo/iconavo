@@ -2033,12 +2033,15 @@ try {
           printError(...args);
         }
       };
+      // Порт сайта — заранее: превью API берёт события /event только со страниц сайта (шаг 2 фазы 5).
+      const sitePort = await freePort();
       const preview = await startApiPreview({
         root,
         outDir: distApiDir,
         cdnDir: distCdnDir,
         port: 0,
         search: { url: meili.url, key: meili.key, dir: searchDir },
+        eventOrigins: [`http://127.0.0.1:${sitePort}`],
       });
       const api = `http://127.0.0.1:${preview.port}`;
       const env = {
@@ -2057,7 +2060,7 @@ try {
         routes?: Record<string, unknown>;
         dynamicRoutes?: Record<string, { fallback?: unknown }>;
       };
-      const next = await startNext("prod", await freePort(), { dir, env });
+      const next = await startNext("prod", sitePort, { dir, env });
       const browsers = browserName ? [browserName] : BROWSERS;
       let results: Awaited<ReturnType<typeof checkSite>>;
       try {
@@ -2095,6 +2098,7 @@ try {
           root,
           browsers,
           ...(siteOnly === undefined ? {} : { only: siteOnly as SiteStep[] }),
+          analytics: () => preview.analytics(),
           log: (line) => console.log(`  ${line}`),
         });
       } finally {

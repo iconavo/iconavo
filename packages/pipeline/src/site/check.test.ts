@@ -24,9 +24,14 @@ describe("ожидания сценария «Каталог»", () => {
     });
   });
 
-  it("строки «Каталог» и «Поиск» — перед контрольным запуском", () => {
+  it("строки «Каталог», «Поиск» и «Аналитика» — перед контрольным запуском", () => {
     const ids = CHECKS.map(([id]) => id);
-    expect(ids.slice(-3)).toEqual(["catalog", "results", "canary"]);
+    expect(ids.slice(-4)).toEqual([
+      "catalog",
+      "results",
+      "analytics",
+      "canary",
+    ]);
   });
 });
 

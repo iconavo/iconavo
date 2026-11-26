@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useId, useState } from "react";
+import { styleChanged } from "../../lib/analytics";
 import { groupLicenses, type SidebarGroup } from "../../lib/catalog-view";
 import { DICTIONARIES, href, type Lang } from "../../lib/i18n";
 import { usePagePath } from "../../lib/page-path";
@@ -129,6 +130,7 @@ export function SidebarTabs({
               name={styleName}
               value={filters.style}
               onChange={(style) => {
+                if (style !== undefined) styleChanged(style, "filter");
                 const { style: _, ...rest } = filters;
                 apply(style === undefined ? rest : { ...rest, style });
               }}

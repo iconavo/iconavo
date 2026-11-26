@@ -12,7 +12,7 @@ import {
   useState,
   useTransition,
 } from "react";
-import { track } from "../../lib/analytics";
+import { iconPageOpened, track } from "../../lib/analytics";
 import { copyText } from "../../lib/clipboard";
 import type { Applies } from "../../lib/code";
 import { DICTIONARIES, href, type Lang } from "../../lib/i18n";
@@ -161,6 +161,11 @@ export function IconView({ lang, page }: { lang: Lang; page: IconPageData }) {
   const [tab, setTab] = useState<Tab>("similar");
   const router = useRouter();
   const [navigating, startNavigation] = useTransition();
+
+  // Аналитика (шаг 2 фазы 5): открыта страница иконки — откуда, знает lib/analytics.ts.
+  useEffect(() => {
+    iconPageOpened(page.icon);
+  }, [page.icon]);
 
   const paramsText = queryText(settingsParams(s));
   const { query, ready, navigate } = useUrlQuery();

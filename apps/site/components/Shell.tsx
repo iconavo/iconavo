@@ -7,6 +7,7 @@ import { Footer } from "./Footer";
 import { SettingsPanel } from "./settings/SettingsPanel";
 import { HotKey } from "./shell/HotKey";
 import { MenuController } from "./shell/Menu";
+import { PageView } from "./shell/PageView";
 import { ScrollbarActivity } from "./shell/ScrollbarActivity";
 import { Sidebar } from "./shell/Sidebar";
 import { SmoothWheel } from "./shell/SmoothWheel";
@@ -39,6 +40,7 @@ export function Shell({
       <ThemeSync />
       <ScrollbarActivity />
       <SmoothWheel />
+      <PageView />
       <a className="skip-link" href="#content">
         {DICTIONARIES[lang].skip}
       </a>
