@@ -13982,7 +13982,38 @@
       ]
     },
     "bowl-chopsticks": {
+      "en": {
+        "description": "Shows a bowl with chopsticks and a round item beside it, representing noodles, soup, or Asian dining.",
+        "synonyms": [
+          "bowl",
+          "soup",
+          "noodles",
+          "chopsticks",
+          "food",
+          "restaurant",
+          "ramen",
+          "meal",
+          "asian food",
+          "dining"
+        ]
+      },
       "fingerprint": "4fbb033498d6",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Изображена миска с палочками для еды и круглым предметом сбоку, обозначает азиатскую еду, лапшу или общепит.",
+        "synonyms": [
+          "миска",
+          "суп",
+          "лапша",
+          "палочки",
+          "еда",
+          "ресторан",
+          "рамен",
+          "пиала",
+          "азиатская кухня",
+          "обед"
+        ]
+      },
       "tags": [
         "food",
         "dish",
@@ -37048,7 +37079,38 @@
       ]
     },
     "elevator": {
+      "en": {
+        "description": "Draws an elevator with closed doors and up and down arrows, meaning vertical movement between floors.",
+        "synonyms": [
+          "lift",
+          "elevator doors",
+          "floor",
+          "ascend",
+          "descend",
+          "up and down",
+          "vertical transport",
+          "shaft",
+          "lobby",
+          "building"
+        ]
+      },
       "fingerprint": "3ff1630b6020",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Рисунок изображает лифт с дверями и стрелками вверх и вниз, что означает вызов или перемещение между этажами.",
+        "synonyms": [
+          "лифт",
+          "подъемник",
+          "подъем",
+          "спуск",
+          "этаж",
+          "двери лифта",
+          "вверх вниз",
+          "стрелки",
+          "перемещение",
+          "шахта лифта"
+        ]
+      },
       "tags": [
         "direction",
         "movement",
@@ -46784,7 +46846,38 @@
       ]
     },
     "globe-clock": {
+      "en": {
+        "description": "A globe with a clock in the upper right corner, indicating world time, time zones, or scheduling across regions.",
+        "synonyms": [
+          "time zone",
+          "world clock",
+          "globe",
+          "earth",
+          "clock",
+          "time",
+          "schedule",
+          "timezone",
+          "time difference",
+          "international time"
+        ]
+      },
       "fingerprint": "2d0e25319d6c",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Изображен глобус с часами в правом верхнем углу; обозначает мировое время, часовой пояс или расписание в разных странах.",
+        "synonyms": [
+          "часовой пояс",
+          "мировое время",
+          "глобус",
+          "земля",
+          "часы",
+          "время",
+          "расписание",
+          "таймзона",
+          "разница во времени",
+          "интернет"
+        ]
+      },
       "tags": [
         "world",
         "browser",
@@ -65329,7 +65422,38 @@
       ]
     },
     "monitor-smartphone": {
+      "en": {
+        "description": "Shows a desktop monitor beside a vertical smartphone, representing responsive design or multi-device display.",
+        "synonyms": [
+          "monitor",
+          "smartphone",
+          "phone",
+          "devices",
+          "screen",
+          "responsive",
+          "sync",
+          "cast",
+          "display",
+          "mobile"
+        ]
+      },
       "fingerprint": "1a5fa2c0d201",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Изображена рамка монитора с подставкой слева и вертикальный смартфон справа; обозначает адаптивность или работу на разных устройствах.",
+        "synonyms": [
+          "монитор",
+          "смартфон",
+          "телефон",
+          "устройства",
+          "экран",
+          "адаптивный дизайн",
+          "синхронизация",
+          "трансляция",
+          "дисплей",
+          "мобильный"
+        ]
+      },
       "tags": [
         "tv",
         "computer",
@@ -76313,7 +76437,38 @@
       ]
     },
     "rectangle-horizontal": {
+      "en": {
+        "description": "A horizontal rounded rectangle outline, usually representing a card, panel, frame, or landscape shape.",
+        "synonyms": [
+          "rectangle",
+          "frame",
+          "card",
+          "panel",
+          "banner",
+          "aspect ratio",
+          "landscape",
+          "shape",
+          "slide",
+          "widget"
+        ]
+      },
       "fingerprint": "c6434b9870c6",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Горизонтальный прямоугольник со скруглёнными углами, обозначающий форму, карточку или горизонтальную область.",
+        "synonyms": [
+          "прямоугольник",
+          "квадрат",
+          "рамка",
+          "карточка",
+          "панель",
+          "блок",
+          "пропорции",
+          "экран",
+          "горизонтальный",
+          "слайд"
+        ]
+      },
       "tags": [
         "rectangle",
         "aspect ratio",
@@ -76435,7 +76590,34 @@
       ]
     },
     "rectangle-vertical": {
+      "en": {
+        "description": "A vertical rounded rectangle outline, usually representing a portrait shape, phone screen, or 9:16 aspect ratio.",
+        "synonyms": [
+          "rectangle",
+          "vertical",
+          "aspect ratio",
+          "portrait",
+          "phone screen",
+          "shape",
+          "frame",
+          "outline"
+        ]
+      },
       "fingerprint": "1f76f5a2d26a",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Изображена вертикальная прямоугольная рамка со скруглёнными углами; обозначает вертикальную фигуру или пропорцию экрана.",
+        "synonyms": [
+          "прямоугольник",
+          "вертикальный",
+          "соотношение сторон",
+          "пропорции",
+          "портрет",
+          "фигура",
+          "экран телефона",
+          "рамка"
+        ]
+      },
       "tags": [
         "rectangle",
         "aspect ratio",
@@ -85767,7 +85949,36 @@
       ]
     },
     "smartphone": {
+      "en": {
+        "description": "Outlined smartphone with rounded corners and a dot below the screen, representing a mobile device or mobile view.",
+        "synonyms": [
+          "phone",
+          "cellphone",
+          "mobile",
+          "device",
+          "screen",
+          "handset",
+          "touchscreen",
+          "portable",
+          "responsive"
+        ]
+      },
       "fingerprint": "47dbcaf25e28",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Контур смартфона с округлыми углами и точкой внизу экрана; обозначает мобильное устройство или мобильную версию.",
+        "synonyms": [
+          "телефон",
+          "смартфон",
+          "мобильный",
+          "мобильник",
+          "сотовый",
+          "гаджет",
+          "экран",
+          "девайс",
+          "мобилка"
+        ]
+      },
       "tags": [
         "phone",
         "cellphone",
@@ -85781,7 +85992,38 @@
       ]
     },
     "smartphone-charging": {
+      "en": {
+        "description": "A smartphone outline with a lightning bolt inside, indicating the phone is charging or receiving power.",
+        "synonyms": [
+          "charging",
+          "charge",
+          "battery",
+          "phone",
+          "mobile",
+          "power",
+          "lightning",
+          "energy",
+          "plug in",
+          "electricity"
+        ]
+      },
       "fingerprint": "1fce3802ad54",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Изображен контур смартфона с молнией внутри, что обозначает зарядку устройства или подключение питания.",
+        "synonyms": [
+          "зарядка",
+          "телефон",
+          "смартфон",
+          "мобильный",
+          "батарея",
+          "заряд",
+          "электричество",
+          "молния",
+          "зарядить",
+          "питание"
+        ]
+      },
       "tags": [
         "phone",
         "cellphone",
@@ -85796,7 +86038,38 @@
       ]
     },
     "smartphone-nfc": {
+      "en": {
+        "description": "Draws a vertical smartphone with three curved waves on its right, meaning NFC contactless connection or payment.",
+        "synonyms": [
+          "nfc",
+          "contactless",
+          "contactless payment",
+          "phone",
+          "mobile",
+          "near field",
+          "wireless payment",
+          "tap to pay",
+          "signal",
+          "cellphone"
+        ]
+      },
       "fingerprint": "d69504e8def4",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Рисунок изображает вертикальный смартфон с тремя дугами справа, что означает бесконтактную связь NFC или оплату.",
+        "synonyms": [
+          "nfc",
+          "бесконтактная оплата",
+          "телефон",
+          "смартфон",
+          "мобильный",
+          "бесконтактный",
+          "оплата телефоном",
+          "модуль связи",
+          "сигнал",
+          "значок оплаты"
+        ]
+      },
       "tags": [
         "phone",
         "cellphone",
@@ -85813,7 +86086,36 @@
       ]
     },
     "smartphone-user-round": {
+      "en": {
+        "description": "Draws a smartphone with a person silhouette at its lower right, usually meaning a mobile user profile or contact.",
+        "synonyms": [
+          "phone",
+          "smartphone",
+          "mobile",
+          "profile",
+          "user",
+          "account",
+          "contact",
+          "avatar",
+          "mobile user"
+        ]
+      },
       "fingerprint": "6028efc03b36",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Рисует смартфон с силуэтом человека справа внизу, обозначая профиль пользователя или контакт в мобильном приложении.",
+        "synonyms": [
+          "телефон",
+          "смартфон",
+          "мобильный",
+          "профиль",
+          "пользователь",
+          "аккаунт",
+          "контакт",
+          "абонент",
+          "мобильный аккаунт"
+        ]
+      },
       "tags": [
         "phone",
         "cellphone",
@@ -92978,7 +93280,38 @@
       ]
     },
     "square-sigma": {
+      "en": {
+        "description": "A Greek sigma symbol inside a rounded square, usually representing summation or math formulas.",
+        "synonyms": [
+          "sum",
+          "sigma",
+          "math",
+          "formula",
+          "calculate",
+          "summation",
+          "symbol",
+          "letter",
+          "calculator",
+          "enumeration"
+        ]
+      },
       "fingerprint": "d4c7632ec2d7",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Сигма внутри квадратной рамки; обозначает математическую сумму, суммирование или формулы.",
+        "synonyms": [
+          "сумма",
+          "сигма",
+          "математика",
+          "формула",
+          "вычисление",
+          "суммирование",
+          "символ",
+          "буква",
+          "калькулятор",
+          "знак суммы"
+        ]
+      },
       "tags": [
         "alphabet",
         "character",
@@ -94425,7 +94758,38 @@
       ]
     },
     "steering-wheel": {
+      "en": {
+        "description": "Shows a steering wheel with three spokes and a central hub, representing driving, vehicle control, or steering direction.",
+        "synonyms": [
+          "steering",
+          "driving",
+          "car wheel",
+          "driver",
+          "racing",
+          "vehicle",
+          "helm",
+          "direction",
+          "cockpit",
+          "automotive"
+        ]
+      },
       "fingerprint": "a1ea42294812",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Изображено рулевое колесо с тремя спицами и центральной втулкой; обозначает управление автомобилем, вождение или руление.",
+        "synonyms": [
+          "руль",
+          "рулевое колесо",
+          "автомобиль",
+          "вождение",
+          "водитель",
+          "гонки",
+          "управление",
+          "машина",
+          "направление",
+          "кабина"
+        ]
+      },
       "tags": [
         "driving",
         "driver",
@@ -96705,7 +97069,35 @@
       ]
     },
     "tablet-smartphone": {
+      "en": {
+        "description": "Shows a smartphone overlapping a tablet with a home dot; it represents responsive design or multiple device screens.",
+        "synonyms": [
+          "phone",
+          "tablet",
+          "devices",
+          "responsive",
+          "screen",
+          "mobile",
+          "cellphone",
+          "gadgets",
+          "display"
+        ]
+      },
       "fingerprint": "2b09b568d97c",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Рисунок показывает смартфон поверх планшета с кнопкой внизу; обозначает адаптивный дизайн или устройства с разными экранами.",
+        "synonyms": [
+          "телефон",
+          "планшет",
+          "гаджеты",
+          "адаптивность",
+          "экран",
+          "мобильный",
+          "устройства",
+          "смартфон"
+        ]
+      },
       "tags": [
         "device",
         "mobile",
@@ -105090,7 +105482,37 @@
       ]
     },
     "vibrate": {
+      "en": {
+        "description": "A rounded vertical phone outline with zigzag waves on both sides, indicating vibration or haptic feedback mode.",
+        "synonyms": [
+          "vibration",
+          "silent mode",
+          "haptic",
+          "rumble",
+          "notification",
+          "phone",
+          "buzz",
+          "shake",
+          "mute"
+        ]
+      },
       "fingerprint": "fca2d3d35b8b",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Рисунок изображает вертикальный прямоугольник телефона с зигзагообразными волнами по бокам, что означает вибрацию или тактильный отклик.",
+        "synonyms": [
+          "вибрация",
+          "вибро",
+          "вибрировать",
+          "беззвучный режим",
+          "уведомление",
+          "тактильный отклик",
+          "телефон",
+          "дрожание",
+          "сигнал",
+          "звонок без звука"
+        ]
+      },
       "tags": [
         "smartphone",
         "notification",
@@ -105100,7 +105522,34 @@
       ]
     },
     "vibrate-off": {
+      "en": {
+        "description": "A phone outline with vibration waves crossed out by a diagonal line, meaning vibration is turned off.",
+        "synonyms": [
+          "vibration off",
+          "mute vibration",
+          "disable haptic",
+          "silent mode",
+          "no vibrate",
+          "turn off vibrate",
+          "haptics disabled",
+          "vibrate blocked"
+        ]
+      },
       "fingerprint": "45fbde1bcccb",
+      "promptVersion": 1,
+      "ru": {
+        "description": "Изображена вибрирующая фигура телефона, перечёркнутая диагональной линией; значит отключение вибрации.",
+        "synonyms": [
+          "без вибрации",
+          "вибрация выкл",
+          "отключить вибрацию",
+          "беззвучный режим",
+          "тихий режим",
+          "выключить вибро",
+          "вибро запрет",
+          "перечёркнутая вибрация"
+        ]
+      },
       "tags": [
         "smartphone",
         "notification",
