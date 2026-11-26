@@ -10,6 +10,7 @@ import { createServer, type IncomingMessage } from "node:http";
 import { registerHooks } from "node:module";
 import type { AddressInfo } from "node:net";
 import { Readable } from "node:stream";
+import { pipeline } from "node:stream/promises";
 import { pathToFileURL } from "node:url";
 import { allowedHost, diskBucket, memoryCache } from "../api/local.js";
 import { WASM_IMPORT } from "./config.js";
@@ -58,6 +59,18 @@ async function start(config: RunnerConfig): Promise<number> {
       source instanceof WebAssembly.Module
         ? instantiate(source, imports)
         : forbidden(),
+    // И конструктор: new WebAssembly.Module(байты) Workers тоже не пускают (ревизия фазы 5, И-22). Но
+    // только чужому коду: встроенный fetch Node (undici) сам собирает свой разборщик HTTP из байтов —
+    // его вызов приходит из node:internal, и без него превью не дошло бы до Meilisearch и Polza.
+    // instanceof работает как прежде — прототип у обёртки тот же.
+    Module: new Proxy(WebAssembly.Module, {
+      construct(target, args, newTarget) {
+        // Строка стека сразу после самой ловушки — тот, кто вызвал конструктор.
+        const caller = new Error().stack?.split("\n")[2] ?? "";
+        if (!/\(node:|at node:/.test(caller)) forbidden();
+        return Reflect.construct(target, args, newTarget) as WebAssembly.Module;
+      },
+    }),
   });
   registerHooks({
     resolve(specifier, context, next) {
@@ -125,12 +138,17 @@ async function start(config: RunnerConfig): Promise<number> {
       );
       res.writeHead(response.status, Object.fromEntries(response.headers));
       if (response.body === null || method === "HEAD") {
+        response.body?.cancel().catch(() => {});
         res.end();
         return;
       }
-      Readable.fromWeb(
-        response.body as import("node:stream/web").ReadableStream,
-      ).pipe(res);
+      // Сбой потока ответа обрывает только этот ответ: процесс превью живёт (ревизия фазы 5, И-22).
+      await pipeline(
+        Readable.fromWeb(
+          response.body as import("node:stream/web").ReadableStream,
+        ),
+        res,
+      ).catch(() => {});
     })().catch((e: Error) => {
       if (!res.headersSent) {
         res.writeHead(500, { "content-type": "text/plain; charset=utf-8" });
@@ -154,11 +172,10 @@ process.once("message", (message) => {
   start(message as RunnerConfig).then(
     (port) => process.send?.({ type: "ready", port } satisfies RunnerMessage),
     (e: Error) => {
-      process.send?.({
-        type: "error",
-        message: e.message,
-      } satisfies RunnerMessage);
-      process.exit(1);
+      const error: RunnerMessage = { type: "error", message: e.message };
+      // Выход — после отправки: иначе причина могла не дойти до родителя (ревизия фазы 5, И-11).
+      if (process.send) process.send(error, () => process.exit(1));
+      else process.exit(1);
     },
   );
 });

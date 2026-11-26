@@ -392,7 +392,14 @@ export function runClaude(o: ClaudeRun): Promise<Transcript> {
     }, o.timeoutMs ?? SCENARIO_TIMEOUT_MS);
     child.once("error", (e) => {
       t.problems.push(`claude не запустился: ${e.message}`);
+      // Процесс не запустился — exit не придёт: разговор закончен, а не завис (ревизия фазы 5, И-22).
+      if (child.pid === undefined) {
+        clearTimeout(timer);
+        resolve(t);
+      }
     });
+    // Запись в процесс, который не запустился или уже вышел, — не обрыв всего прогона.
+    child.stdin?.on("error", () => {});
     child.once("exit", (code) => {
       clearTimeout(timer);
       if (code !== 0 && code !== null && t.ends.length === 0) {
@@ -817,6 +824,22 @@ export interface ScenarioResult {
   problems: string[];
 }
 
+/** Сбои прогона среди problems разговора: их пишут runClaude и разбор событий. */
+const RUN_FAILURE =
+  /^(время вышло|лимит подписки Claude Code|claude не запустился|claude вышел с кодом)/;
+
+/**
+ * Сбои прогона — не ошибка ассистента: время вышло, claude не запустился или вышел с ошибкой, лимит
+ * подписки, разговор без ответа. Сценарий тогда не засчитывается ни так, ни так (ревизия фазы 5, И-22).
+ */
+export function runFailures(t: Transcript): string[] {
+  const out = t.problems.filter((p) => RUN_FAILURE.test(p));
+  if (out.length === 0 && t.ends.length === 0) {
+    out.push("разговор не закончился ответом");
+  }
+  return out;
+}
+
 /** Иконки, которые ассистент взял: вход get_icon и имена в коде; нет — имена из текста ответа. */
 export function usedIcons(t: Transcript, code: string): string[] {
   const fromCalls = t.calls
@@ -887,7 +910,7 @@ export function judge(
     ]);
   }
   if (render !== undefined) verdicts.render = render;
-  const setup = setupProblems(t.init);
+  const setup = [...setupProblems(t.init), ...runFailures(t)];
   const end = t.ends.at(-1);
   return {
     id: s.id,
@@ -968,6 +991,66 @@ export async function liveBuild(): Promise<string> {
 const stamp = (d: Date) =>
   d.toISOString().slice(0, 19).replace(/[-:]/g, "").replace("T", "-");
 
+/**
+ * Папка сценария: копия заготовки проекта и npm ci у React. Сбой — строка «подготовка проекта» для
+ * отчёта, а не обрыв всего прогона с потерей пройденных сценариев (ревизия фазы 5, И-12).
+ */
+export async function prepareScenario(
+  s: ClientScenario,
+  dir: string,
+  fixture: string | undefined,
+  exec: (
+    command: string,
+    args: string[],
+    cwd: string,
+  ) => Promise<unknown> = run,
+): Promise<string[]> {
+  try {
+    if (fixture === undefined) await mkdir(dir, { recursive: true });
+    else await cp(fixture, dir, { recursive: true });
+    if (s.project === "react") {
+      await exec(
+        "npm",
+        [
+          "ci",
+          "--prefer-offline",
+          "--no-audit",
+          "--no-fund",
+          "--ignore-scripts",
+        ],
+        dir,
+      );
+    }
+    return [];
+  } catch (e) {
+    return [`подготовка проекта: ${(e as Error).message.split("\n")[0]}`];
+  }
+}
+
+/** Сценарий, который не дошёл до оценки: сбой подготовки или прогона, не ошибка ассистента. */
+export function setupResult(
+  s: ClientScenario,
+  setup: string[],
+): ScenarioResult {
+  return {
+    id: s.id,
+    lang: s.lang,
+    group: s.group,
+    prompt: s.prompt,
+    verdicts: {},
+    passed: false,
+    setup,
+    tools: [],
+    icons: [],
+    answer: "",
+    files: [],
+    turns: 0,
+    durationMs: 0,
+    costUsd: 0,
+    problems: [],
+  };
+}
+
 export async function runClients(o: ClientsOptions): Promise<ClientsReport> {
   const started = new Date();
   const runDir = join(tmpdir(), "iconavo-mcp-clients", stamp(started));
@@ -1009,82 +1092,81 @@ export async function runClients(o: ClientsOptions): Promise<ClientsReport> {
       const dir = join(runDir, `s${String(s.id).padStart(2, "0")}`);
       const fixture =
         s.project === undefined ? undefined : join(fixtures, s.project);
-      if (fixture === undefined) await mkdir(dir, { recursive: true });
-      else await cp(fixture, dir, { recursive: true });
-      if (s.project === "react") {
-        await run(
-          "npm",
-          [
-            "ci",
-            "--prefer-offline",
-            "--no-audit",
-            "--no-fund",
-            "--ignore-scripts",
-          ],
-          dir,
-        );
-      }
       o.log?.(`${s.id}. ${s.prompt}`);
-      let followUp: string | undefined;
-      const raw: string[] = [];
-      const t = await runClaude({
-        cwd: dir,
-        prompt: s.prompt,
-        model: o.model,
-        mcpConfig,
-        exe,
-        followUp: (sofar) => {
-          followUp = findFollowUp(s, tables, sofar);
-          return followUp;
-        },
-        onLine: (line) => raw.push(line),
-      });
-      // Журнал разговора — для разбора ошибок: что модель увидела от инструментов и что ответила.
-      await writeFile(
-        join(shotsDir, `s${String(s.id).padStart(2, "0")}.jsonl`),
-        `${raw.join("\n")}\n`,
-        "utf8",
-      );
-      report.version ||= t.init?.version ?? "";
-      if (t.subscriptionLimited) report.stoppedBySubscription = true;
-      const files = await changedFiles(dir, fixture);
-      let render: Verdict | undefined;
-      if (s.project !== undefined && fixture !== undefined) {
-        browser ??= await launchBrowser("chrome", true);
-        render = await renderVerdict(
-          browser,
-          s.project,
-          dir,
-          fixture,
-          join(shotsDir, `s${String(s.id).padStart(2, "0")}.png`),
-        ).catch((e: Error) =>
-          fail(`страница не открылась: ${e.message.split("\n")[0]}`),
+      // Сбой одного сценария — его строка в отчёте, остальные идут, отчёт пишется (ревизия фазы 5, И-12).
+      try {
+        const prepared = await prepareScenario(s, dir, fixture);
+        if (prepared.length > 0) {
+          report.results.push(setupResult(s, prepared));
+          o.log?.(`   сбой подготовки — ${prepared.join("; ")}`);
+          continue;
+        }
+        let followUp: string | undefined;
+        const raw: string[] = [];
+        const t = await runClaude({
+          cwd: dir,
+          prompt: s.prompt,
+          model: o.model,
+          mcpConfig,
+          exe,
+          followUp: (sofar) => {
+            followUp = findFollowUp(s, tables, sofar);
+            return followUp;
+          },
+          onLine: (line) => raw.push(line),
+        });
+        // Журнал разговора — для разбора ошибок: что модель увидела от инструментов и что ответила.
+        await writeFile(
+          join(shotsDir, `s${String(s.id).padStart(2, "0")}.jsonl`),
+          `${raw.join("\n")}\n`,
+          "utf8",
         );
-      }
-      const result: ScenarioResult = {
-        ...judge(s, tables, t, files, render),
-        ...(followUp === undefined ? {} : { followUp }),
-        files: files.map((f) => f.path),
-        problems: t.problems,
-      };
-      report.results.push(result);
-      o.log?.(
-        `   ${result.setup.length > 0 ? "сбой настройки" : result.passed ? "да" : "нет"} — ${CRITERIA.filter(
-          (c) => result.verdicts[c] !== undefined,
-        )
-          .map(
-            (c) =>
-              `${CRITERION_TITLES[c]}: ${result.verdicts[c]?.ok === true ? "да" : "нет"}`,
+        report.version ||= t.init?.version ?? "";
+        if (t.subscriptionLimited) report.stoppedBySubscription = true;
+        const files = await changedFiles(dir, fixture);
+        let render: Verdict | undefined;
+        const project = s.project;
+        if (project !== undefined && fixture !== undefined) {
+          const shot = join(shotsDir, `s${String(s.id).padStart(2, "0")}.png`);
+          render = await (async () => {
+            browser ??= await launchBrowser("chrome", true);
+            return renderVerdict(browser, project, dir, fixture, shot);
+          })().catch((e: Error) =>
+            fail(`страница не открылась: ${e.message.split("\n")[0]}`),
+          );
+        }
+        const judged = judge(s, tables, t, files, render);
+        const result: ScenarioResult = {
+          ...judged,
+          ...(followUp === undefined ? {} : { followUp }),
+          files: files.map((f) => f.path),
+          // Сбои прогона уже в setup — второй раз не повторяются.
+          problems: t.problems.filter((p) => !judged.setup.includes(p)),
+        };
+        report.results.push(result);
+        o.log?.(
+          `   ${result.setup.length > 0 ? "сбой настройки или прогона" : result.passed ? "да" : "нет"} — ${CRITERIA.filter(
+            (c) => result.verdicts[c] !== undefined,
           )
-          .join(", ")}`,
-      );
-      if (o.keep !== true) {
-        await rm(dir, {
-          recursive: true,
-          force: true,
-          maxRetries: 5,
-          retryDelay: 500,
-        }).catch(() => {});
+            .map(
+              (c) =>
+                `${CRITERION_TITLES[c]}: ${result.verdicts[c]?.ok === true ? "да" : "нет"}`,
+            )
+            .join(", ")}`,
+        );
+      } catch (e) {
+        const message = (e as Error).message.split("\n")[0] ?? "";
+        report.results.push(setupResult(s, [`сбой прогона: ${message}`]));
+        o.log?.(`   сбой прогона — ${message}`);
+      } finally {
+        if (o.keep !== true) {
+          await rm(dir, {
+            recursive: true,
+            force: true,
+            maxRetries: 5,
+            retryDelay: 500,
+          }).catch(() => {});
+        }
       }
     }
   } finally {

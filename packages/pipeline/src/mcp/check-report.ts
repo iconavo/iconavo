@@ -46,14 +46,21 @@ export function formatMcpCheck(r: McpCheckReport): string[] {
   return lines;
 }
 
+/**
+ * Текст в ячейке таблицы Markdown: «|» экранируется, переводы строк — пробелом, иначе многострочная
+ * ошибка SDK рвёт таблицу в сводке CI (ревизия фазы 5, И-22).
+ */
+const cell = (text: string) =>
+  text.replace(/\|/g, "\\|").replace(/\s*\r?\n\s*/g, " ");
+
 export function renderMcpCheckMarkdown(r: McpCheckReport): string {
   const rows = r.rows.map(
     (x: McpCheckRow) =>
-      `| ${x.name} | ${ok(x.problems) ? "да" : `нет: ${x.problems.join("; ")}`} |`,
+      `| ${cell(x.name)} | ${ok(x.problems) ? "да" : `нет: ${cell(x.problems.join("; "))}`} |`,
   );
   const calls = r.calls.map(
     (c) =>
-      `| ${callTitle(c).replace(/\|/g, "\\|")} | ${c.ms} мс | ${ok(c.problems) ? "да" : `нет: ${c.problems.join("; ").replace(/\|/g, "\\|")}`} |`,
+      `| ${cell(callTitle(c))} | ${c.ms} мс | ${ok(c.problems) ? "да" : `нет: ${cell(c.problems.join("; "))}`} |`,
   );
   return [
     `### MCP-сервер ${r.base}${r.build ? ` — сборка ${r.build}` : ""}`,

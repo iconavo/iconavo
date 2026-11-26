@@ -22,7 +22,25 @@ export interface EmbedResult {
   rub?: number;
   /** Время удачной попытки до получения ответа целиком, мс. */
   ms: number;
+  /**
+   * Попытки до удачной, которые, скорее всего, оплачены, а ответа не дали: заголовки 200 пришли, а
+   * тело оборвалось или пришло не по формату. Нет — таких не было. Их рубли считает оценка.
+   */
+  lost?: number;
 }
+
+/**
+ * Число оплаченных попыток без ответа — и у ошибки, с которой пачка не получилась: расход прогона
+ * учитывает и их (ревизия фазы 5, И-16).
+ */
+export const withLost = (e: Error, lost: number): Error =>
+  lost > 0 ? Object.assign(e, { lost }) : e;
+
+/** Оплаченные попытки без ответа из ошибки клиента; нет — 0. */
+export const lostOf = (e: unknown): number => {
+  const lost = (e as { lost?: unknown }).lost;
+  return typeof lost === "number" && lost > 0 ? lost : 0;
+};
 
 /** Та часть API, которая нужна эмбеддингам; в тестах его подменяют (client.testing.ts). */
 export interface EmbeddingClient {
@@ -95,9 +113,13 @@ export function polzaEmbeddingClient(options: PolzaOptions): EmbeddingClient {
   return {
     async embed(model, inputs) {
       let last = "";
+      // Попытки, которые Polza, скорее всего, взяла в оплату, а ответа не дала: заголовки 200 пришли,
+      // а тело оборвалось по времени, пришло не JSON или не по формату (ревизия фазы 5, И-16).
+      let lost = 0;
       for (let attempt = 1; ; attempt++) {
         let wait: number | undefined;
         const started = now();
+        let paid = false;
         try {
           const res = await fetchFn(url, {
             method: "POST",
@@ -108,6 +130,7 @@ export function polzaEmbeddingClient(options: PolzaOptions): EmbeddingClient {
             body: JSON.stringify({ model: model.id, input: inputs }),
             signal: AbortSignal.timeout(timeoutMs),
           });
+          paid = res.ok;
           const text = await res.text();
           const ms = now() - started;
           if (res.ok) {
@@ -119,7 +142,7 @@ export function polzaEmbeddingClient(options: PolzaOptions): EmbeddingClient {
             }
             if (json !== undefined) {
               const parsed = parseEmbeddings(json, inputs.length, model.dims);
-              return { ...parsed, ms };
+              return lost > 0 ? { ...parsed, ms, lost } : { ...parsed, ms };
             }
             last = `ответ не JSON: ${snippet(text)}`;
           } else {
@@ -150,15 +173,22 @@ export function polzaEmbeddingClient(options: PolzaOptions): EmbeddingClient {
             last = `сбой сети${cause ? ` (${cause})` : ""}: ${e.message}`;
           } else {
             // Ответ не по формату, отказ API — без повторов.
-            throw (e as { scope?: StopScope }).scope
-              ? e
-              : apiError(`${model.id}: ${(e as Error).message}`, "model");
+            throw withLost(
+              (e as { scope?: StopScope }).scope
+                ? (e as Error)
+                : apiError(`${model.id}: ${(e as Error).message}`, "model"),
+              lost + (paid ? 1 : 0),
+            );
           }
         }
+        if (paid) lost++;
         if (attempt >= maxAttempts) {
-          throw apiError(
-            `${model.id}: ${last} — не получилось за ${maxAttempts} попыток`,
-            "model",
+          throw withLost(
+            apiError(
+              `${model.id}: ${last} — не получилось за ${maxAttempts} попыток`,
+              "model",
+            ),
+            lost,
           );
         }
         await sleep(wait ?? retryDelay(null, attempt));

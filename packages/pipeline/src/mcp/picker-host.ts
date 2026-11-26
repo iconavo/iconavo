@@ -4,6 +4,7 @@
 // Слушает только 127.0.0.1 и сверяет Host.
 
 import { createServer, type Server } from "node:http";
+import { gzipSync } from "node:zlib";
 import { allowedHost } from "../api/local.js";
 import { esc } from "../report/html.js";
 import {
@@ -77,13 +78,15 @@ export interface PickerHost {
 /**
  * Поломки контрольного запуска проверки (?canary=…): каждую обязана заметить своя строка проверки.
  * nometa — клиент не передал сетке данные; notokens — в странице нет токенов сайта; external — картинка с
- * чужого адреса (рамка обязана её не пустить); unlabeled — кнопка без подписи.
+ * чужого адреса (рамка обязана её не пустить); unlabeled — кнопка без подписи; nolines — линейные
+ * карточки не нарисованы (их ловит сверка толщины линии по ожидаемым карточкам).
  */
 export const CANARIES = [
   "nometa",
   "notokens",
   "external",
   "unlabeled",
+  "nolines",
 ] as const;
 export type Canary = (typeof CANARIES)[number];
 
@@ -105,9 +108,34 @@ export function canaryHtml(html: string, canary: Canary | undefined): string {
         "</body>",
         '<button type="button" class="canary"></button>\n</body>',
       );
+    case "nolines":
+      // Карточка с линиями (у рисунка есть stroke-width) убирается, как только появилась.
+      return html.replace(
+        "</body>",
+        `<script>new MutationObserver(() => { for (const card of document.querySelectorAll(".card[data-n]")) { if (card.querySelector("[stroke-width]")) card.remove(); } }).observe(document.documentElement, { childList: true, subtree: true });</script>\n</body>`,
+      );
     default:
       return html;
   }
+}
+
+/**
+ * Сборка, которую показывает хост: своя или живая с сервера (--base). Размеры — той страницы, что
+ * показана, и в gzip тоже, а не локальной сборки (ревизия фазы 5, И-22).
+ */
+export function servedBuild(
+  built: PickerBuild,
+  page: { html: string; version: string } | undefined,
+): PickerBuild {
+  return page === undefined
+    ? built
+    : {
+        html: page.html,
+        version: page.version,
+        bytes: Buffer.byteLength(page.html, "utf8"),
+        gzipBytes: gzipSync(page.html).length,
+        scriptBytes: 0,
+      };
 }
 
 export async function startPickerHost(options: {
@@ -121,16 +149,7 @@ export async function startPickerHost(options: {
     buildPicker(options.root),
     bundleBrowser(options.root, HOST_ENTRY),
   ]);
-  const build: PickerBuild =
-    options.page === undefined
-      ? built
-      : {
-          html: options.page.html,
-          version: options.page.version,
-          bytes: Buffer.byteLength(options.page.html, "utf8"),
-          gzipBytes: built.gzipBytes,
-          scriptBytes: 0,
-        };
+  const build = servedBuild(built, options.page);
   const page = hostPage(build, options.scenarios.length);
   const scenarios = JSON.stringify(options.scenarios);
   // Без данных сетки в _meta — как у клиента, который их не передал.

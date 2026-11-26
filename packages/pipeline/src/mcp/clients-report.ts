@@ -54,7 +54,7 @@ export function formatClients(report: ClientsReport): string[] {
     row.map((x, i) => x.padEnd(widths[i] ?? 0)).join("  ");
   const { passed, counted, setup } = countPassed(report.results);
   const problems = report.results.flatMap((r) => [
-    ...r.setup.map((p) => `${r.id}: сбой настройки — ${p}`),
+    ...r.setup.map((p) => `${r.id}: сбой настройки или прогона — ${p}`),
     ...CRITERIA.filter((c) => r.verdicts[c]?.ok === false).map(
       (c) => `${r.id}: ${CRITERION_TITLES[c]} — ${r.verdicts[c]?.note}`,
     ),
@@ -103,7 +103,7 @@ export function markdownClients(
       ),
       ...(r.setup.length === 0
         ? []
-        : [`- Сбой настройки: ${r.setup.join("; ")}`]),
+        : [`- Сбой настройки или прогона: ${r.setup.join("; ")}`]),
       ...(r.problems.length === 0 ? [] : [`- Сбои: ${r.problems.join("; ")}`]),
       ...(r.files.length === 0 ? [] : [`- Файлы: ${r.files.join(", ")}`]),
       `- Ходов: ${r.turns}, ${Math.round(r.durationMs / 1000)} с, оценка стоимости $${r.costUsd.toFixed(3)}`,

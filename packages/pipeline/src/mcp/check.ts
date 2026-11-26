@@ -244,13 +244,11 @@ export const CASES: readonly Case[] = [
     eras: ["2025"],
     expect: async (r) => {
       const [comment, svg] = String(r.code).split("\n");
-      const res = await get(String(r.svgUrl));
-      const api = res instanceof Response ? await res.text() : res.message;
       return [
         ...(comment?.startsWith("<!-- lucide:heart. Icons: Lucide")
           ? []
           : ["нет комментария об авторстве"]),
-        ...(svg === api ? [] : ["SVG не совпадает с адресом SVG edge API"]),
+        ...(await svgVsApi(svg, await get(String(r.svgUrl)))),
       ];
     },
   },
@@ -429,9 +427,30 @@ export function pngSize(
   return { width: view.getUint32(16), height: view.getUint32(20) };
 }
 
-/** Лицензия и автор у каждой иконки и у каждого набора выдачи (ADR-0011). */
+/**
+ * SVG из get_icon против ответа адреса SVG edge API: ответ не 200 или сбой сети — так и сказано, а не
+ * «не совпадает» (ревизия фазы 5, И-22).
+ */
+export async function svgVsApi(
+  svg: string | undefined,
+  res: Response | Error,
+): Promise<string[]> {
+  if (res instanceof Error) {
+    return [`адрес SVG edge API не ответил: ${res.message}`];
+  }
+  if (!res.ok) return [`адрес SVG edge API ответил HTTP ${res.status}`];
+  return svg === (await res.text())
+    ? []
+    : ["SVG не совпадает с адресом SVG edge API"];
+}
+
+/**
+ * Лицензия и автор у каждой иконки и у каждого набора выдачи (ADR-0011). Набор без сведений — одной
+ * строкой, а не на каждую его иконку (ревизия фазы 5, И-22).
+ */
 export function licenseProblems(r: Json): string[] {
   const problems: string[] = [];
+  const missing = new Set<string>();
   const sets = new Map<string, Json>(
     (r.sets ?? []).map((s: Json) => [s.prefix, s]),
   );
@@ -441,10 +460,13 @@ export function licenseProblems(r: Json): string[] {
     }
     const set = sets.get(x.set);
     if (!set || set.license.spdx === "" || set.author.name === "") {
-      problems.push(`нет сведений о наборе ${x.set}`);
+      missing.add(String(x.set));
     }
   }
-  return problems;
+  return [
+    ...problems,
+    ...[...missing].map((s) => `нет сведений о наборе ${s}`),
+  ];
 }
 
 async function get(

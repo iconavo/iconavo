@@ -24,7 +24,7 @@ import {
   writeState,
 } from "./batch.js";
 import { fakeBatchClient, goodAnswer } from "./batch.testing.js";
-import { MODEL, PROMPT_VERSION } from "./config.js";
+import { MODEL, POLL_RETRIES, PROMPT_VERSION } from "./config.js";
 import { estimateCost } from "./cost.js";
 import {
   formatEnrichReport,
@@ -41,7 +41,7 @@ const BODIES: Record<string, string> = {
 };
 const BASES = ["heart", "house", "star"];
 
-const config = sourceConfigSchema.parse({
+const input = {
   id: "demo",
   name: "Demo",
   author: { name: "Demo" },
@@ -55,7 +55,15 @@ const config = sourceConfigSchema.parse({
     confirmed: licenseHash("MIT", "MIT License"),
   },
   suffixes: { "": "Outline", "-filled": "Filled" },
-} satisfies SourceConfigInput);
+} satisfies SourceConfigInput;
+const config = sourceConfigSchema.parse(input);
+/** Второй набор — для случаев, где наборы не должны мешать друг другу. */
+const config2 = sourceConfigSchema.parse({
+  ...input,
+  id: "demo2",
+  name: "Demo 2",
+  source: { type: "npm", package: "demo2-icons" },
+});
 
 let root: string;
 let dataDir: string;
@@ -70,29 +78,29 @@ afterEach(async () => {
   await rm(root, { recursive: true, force: true });
 });
 
-const fp = (name: string) =>
-  fingerprint("demo", name, {
-    body: BODIES[name] as string,
+const fp = (name: string, id = "demo", bodies = BODIES) =>
+  fingerprint(id, name, {
+    body: bodies[name] as string,
     width: 24,
     height: 24,
   });
 
-async function writeSet(search?: SearchFile) {
-  const dir = join(dataDir, "demo");
+async function writeSet(search?: SearchFile, id = "demo", bodies = BODIES) {
+  const dir = join(dataDir, id);
   await mkdir(dir, { recursive: true });
   const icons = Object.fromEntries(
-    Object.entries(BODIES).map(([name, body]) => [name, { body }]),
+    Object.entries(bodies).map(([name, body]) => [name, { body }]),
   );
   await writeFile(
     join(dir, "icons.json"),
-    canonicalJson({ prefix: "demo", icons, width: 24, height: 24 }),
+    canonicalJson({ prefix: id, icons, width: 24, height: 24 }),
   );
   const file: SearchFile = search ?? {
-    prefix: "demo",
+    prefix: id,
     icons: Object.fromEntries(
-      Object.keys(BODIES).map((name) => [
+      Object.keys(bodies).map((name) => [
         name,
-        { fingerprint: fp(name), tags: [name] },
+        { fingerprint: fp(name, id, bodies), tags: [name] },
       ]),
     ),
   };
@@ -116,13 +124,39 @@ const exists = (path: string) =>
     () => false,
   );
 
-const run = (options: Partial<EnrichOptions> = {}) =>
-  enrichSets([config], dataDir, {
+const runSets = (
+  configs: readonly (typeof config)[],
+  options: Partial<EnrichOptions> = {},
+) =>
+  enrichSets(configs, dataDir, {
     stateDir,
     maxCost: 5,
     sleep: async () => {},
     ...options,
   });
+const run = (options: Partial<EnrichOptions> = {}) =>
+  runSets([config], options);
+
+/** Пакет «прошлого запуска» в файле состояния набора demo. */
+async function seedState(
+  fake: ReturnType<typeof fakeBatchClient>,
+  batchId: string,
+  names: readonly string[],
+) {
+  fake.seed(batchId, names);
+  await writeState(statePath(), {
+    batchId,
+    model: MODEL,
+    promptVersion: PROMPT_VERSION,
+    requests: Object.fromEntries(
+      names.map((name) => [name, { name, fingerprint: fp(name) }]),
+    ),
+  });
+}
+
+/** Ошибка SDK с кодом ответа; без кода — как сбой сети. */
+const apiError = (message: string, status?: number) =>
+  Object.assign(new Error(message), status === undefined ? {} : { status });
 
 describe("pnpm enrich", () => {
   it("только показ: считает выборку и оценку, ничего не отправляет и не пишет", async () => {
@@ -380,17 +414,242 @@ describe("pnpm enrich", () => {
     expect(await exists(statePath())).toBe(false);
   });
 
-  it("пакет из состояния не найден — понятная ошибка", async () => {
-    const fake = fakeBatchClient({ answer: () => undefined });
+  it("пакет одного набора не найден — «СТОП» только этого набора, остальные собираются (И-4)", async () => {
+    await writeSet(undefined, "demo2");
+    const fake = fakeBatchClient({
+      answer: (req) => goodAnswer(req.custom_id),
+    });
     await writeState(statePath(), {
       batchId: "msgbatch_missing",
       model: MODEL,
       promptVersion: 1,
       requests: { heart: { name: "heart", fingerprint: fp("heart") } },
     });
-    await expect(run({ client: fake.client })).rejects.toThrow(
-      /пакет msgbatch_missing набора demo не найден — удалите/,
-    );
+    const [a, b] = await runSets([config, config2], { client: fake.client });
+    expect(a?.stop).toEqual([
+      expect.stringMatching(
+        /^пакет msgbatch_missing набора demo не найден — удалите .+batch\.json, если он уже не нужен$/,
+      ),
+    ]);
+    expect(a?.written).toBe(false);
+    expect(await exists(statePath())).toBe(true);
+    expect(b).toMatchObject({ sent: 3, succeeded: 3, written: true, stop: [] });
+  });
+
+  it("ключ не принят при опросе — «СТОП» без повторов, состояние на месте (И-1)", async () => {
+    const fake = fakeBatchClient({
+      answer: (req) => goodAnswer(req.custom_id),
+    });
+    await seedState(fake, "msgbatch_old", ["heart"]);
+    let sleeps = 0;
+    const client = {
+      ...fake.client,
+      retrieve: async () => {
+        throw apiError("invalid x-api-key", 401);
+      },
+    };
+    const [r] = await run({
+      client,
+      sleep: async () => {
+        if (++sleeps > 2) throw new Error("опрос повторяется без конца");
+      },
+    });
+    expect(r?.stop).toEqual([
+      expect.stringMatching(/^ключ ANTHROPIC_API_KEY не принят \(HTTP 401\)/),
+    ]);
+    expect(sleeps).toBe(0);
+    expect(await exists(statePath())).toBe(true);
+  });
+
+  it("запрос опроса отклонён — «СТОП» набора с причиной (И-1)", async () => {
+    const fake = fakeBatchClient({
+      answer: (req) => goodAnswer(req.custom_id),
+    });
+    await seedState(fake, "msgbatch_old", ["heart"]);
+    const client = {
+      ...fake.client,
+      retrieve: async () => {
+        throw apiError("bad request", 400);
+      },
+    };
+    const [r] = await run({
+      client,
+      sleep: async () => {
+        throw new Error("опрос повторяется");
+      },
+    });
+    expect(r?.stop).toEqual([
+      expect.stringMatching(
+        /^опрос пакета msgbatch_old отклонён \(HTTP 400: bad request\)/,
+      ),
+    ]);
+    expect(await exists(statePath())).toBe(true);
+  });
+
+  it("сбой опроса повторяется, но не больше POLL_RETRIES раз подряд (И-1)", async () => {
+    const fake = fakeBatchClient({
+      answer: (req) => goodAnswer(req.custom_id),
+    });
+    await seedState(fake, "msgbatch_old", ["heart"]);
+    // Два сбоя сети подряд, затем ответ — пакет забран.
+    let failures = 2;
+    const flaky = {
+      ...fake.client,
+      retrieve: async (id: string) => {
+        if (failures-- > 0) throw apiError("Connection error.");
+        return fake.client.retrieve(id);
+      },
+    };
+    const [ok] = await run({ client: flaky });
+    expect(ok).toMatchObject({ written: true, stop: [] });
+
+    await seedState(fake, "msgbatch_down", ["star"]);
+    const sleeps: number[] = [];
+    const down = {
+      ...fake.client,
+      retrieve: async () => {
+        throw apiError("Internal server error", 500);
+      },
+    };
+    const [r] = await run({
+      client: down,
+      sleep: async (ms) => {
+        sleeps.push(ms);
+        if (sleeps.length > POLL_RETRIES) {
+          throw new Error("опрос повторяется без конца");
+        }
+      },
+    });
+    expect(r?.stop).toEqual([
+      expect.stringMatching(
+        new RegExp(
+          `^опрос пакета msgbatch_down не удаётся ${POLL_RETRIES} раз подряд \\(Internal server error\\)`,
+        ),
+      ),
+    ]);
+    expect(sleeps).toHaveLength(POLL_RETRIES - 1);
+    expect(await exists(statePath())).toBe(true);
+  });
+
+  it("оценка выше лимита не мешает забрать пакет, оплаченный в прошлый раз (И-13)", async () => {
+    await writeSet(undefined, "demo2");
+    const fake = fakeBatchClient({
+      answer: (req) => goodAnswer(req.custom_id),
+    });
+    await seedState(fake, "msgbatch_old", BASES);
+    const [a, b] = await runSets([config, config2], {
+      client: fake.client,
+      maxCost: 0.000001,
+    });
+    expect(a).toMatchObject({
+      resumed: true,
+      succeeded: 3,
+      written: true,
+      stop: [],
+    });
+    expect(b?.stop[0]).toMatch(/больше лимита \$0,0000 — поднимите --max-cost/);
+    expect(fake.calls.create).toBe(0);
+  });
+
+  it("--no-wait забирает готовый пакет прошлого запуска (И-2)", async () => {
+    const fake = fakeBatchClient({
+      answer: (req) => goodAnswer(req.custom_id),
+      inProgress: 1,
+    });
+    const [sent] = await run({ client: fake.client, wait: false });
+    expect(sent).toMatchObject({
+      sent: 3,
+      waiting: "msgbatch_1",
+      written: false,
+    });
+    expect(fake.calls.retrieve).toBe(0);
+    // Пакет ещё в работе — один опрос, без пауз.
+    const [busy] = await run({
+      client: fake.client,
+      wait: false,
+      sleep: async () => {
+        throw new Error("пауза в --no-wait");
+      },
+    });
+    expect(busy).toMatchObject({
+      resumed: true,
+      waiting: "msgbatch_1",
+      written: false,
+    });
+    expect(fake.calls.retrieve).toBe(1);
+    // Готов — записывается сразу.
+    const [ready] = await run({ client: fake.client, wait: false });
+    expect(fake.calls).toEqual({ create: 1, retrieve: 2, results: 1 });
+    expect(ready).toMatchObject({ resumed: true, succeeded: 3, written: true });
+    expect(ready?.waiting).toBeUndefined();
+    expect(await exists(statePath())).toBe(false);
+  });
+
+  it("search.json, обновлённый, пока пакет в работе, не затирается (И-3)", async () => {
+    const fake = fakeBatchClient({
+      answer: (req) => goodAnswer(req.custom_id),
+      inProgress: 1,
+    });
+    const [r] = await run({
+      client: fake.client,
+      sleep: async () => {
+        // Пока ждём пакет, набор обновили (git pull, pnpm data): у heart новый тег.
+        const search = await readSearch();
+        (search.icons.heart as { tags: string[] }).tags.push("love");
+        await writeSet(search);
+      },
+    });
+    expect(r?.written).toBe(true);
+    const search = await readSearch();
+    expect(search.icons.heart?.tags).toEqual(["heart", "love"]);
+    expect(search.icons.heart?.ru?.description).toBe("ru: heart.");
+  });
+
+  it("иконка, которую не нарисовать, — в отказах, остальные уходят (И-15)", async () => {
+    const bodies = { ...BODIES, star: `<path d="M0 0"` };
+    await writeSet(undefined, "demo", bodies);
+    const fake = fakeBatchClient({
+      answer: (req) => goodAnswer(req.custom_id),
+    });
+    const [r] = await run({ client: fake.client });
+    expect(
+      fake.batches.get("msgbatch_1")?.requests.map((q) => q.custom_id),
+    ).toEqual(["heart", "house"]);
+    expect(r?.failed).toEqual([
+      {
+        name: "star",
+        reason: expect.stringMatching(/^не нарисовалась для модели/),
+      },
+    ]);
+    expect(r).toMatchObject({ sent: 2, succeeded: 2, written: true, stop: [] });
+  });
+
+  it("испорченный файл состояния — понятная ошибка с подсказкой (И-14)", async () => {
+    const fake = fakeBatchClient({
+      answer: (req) => goodAnswer(req.custom_id),
+    });
+    await mkdir(join(stateDir, "demo"), { recursive: true });
+    await writeFile(statePath(), `{"batchId":`);
+    const [r] = await run({ client: fake.client });
+    expect(r?.stop).toEqual([
+      expect.stringMatching(
+        /^файл состояния пакета .+batch\.json повреждён — удалите его, если пакет уже не нужен$/,
+      ),
+    ]);
+    expect(fake.calls.create).toBe(0);
+  });
+
+  it("номер отправленного пакета — в журнале ещё до записи состояния (И-14)", async () => {
+    const fake = fakeBatchClient({
+      answer: (req) => goodAnswer(req.custom_id),
+    });
+    // На месте файла состояния — папка: записать его нельзя.
+    await mkdir(statePath(), { recursive: true });
+    const lines: string[] = [];
+    await expect(
+      run({ client: fake.client, log: (line) => lines.push(line) }),
+    ).rejects.toThrow();
+    expect(lines).toContain("demo: отправлено 3 — пакет msgbatch_1");
   });
 
   it("search.json не от этой сборки или его нет — «СТОП» с подсказкой, ничего не отправляется", async () => {

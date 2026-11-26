@@ -66,7 +66,8 @@ export interface ReplicaMismatch {
 
 /** Опыт этапа 2: калибровка шкалы смысла и проверка копии слияния. */
 export interface ExploreLists {
-  distribution: Distribution;
+  /** Калибровка по рабочей части; нет — индекс уже с калибровкой или оценок рабочей части нет. */
+  distribution?: Distribution;
   /**
    * Живой индекс уже с калибровкой: «как сейчас» — с ней, оценки смысла в списках уже сдвинуты, и
    * семейство M (калибровка поверх калибровки) не считается.
@@ -325,16 +326,21 @@ function explore(
   const tie = tieOf(options.catalog);
   const { words, meaning, exact } = out.scored;
   const work = queries.flatMap((q, i) => (q.split === "work" ? [i] : []));
-  const distribution = distributionOf(
-    work.flatMap((i) =>
-      (meaning[i] ?? []).slice(0, VECTOR_NORM_RANK).map((h) => h.score),
-    ),
-  );
-  const families: Family[] = calibrated
-    ? FAMILIES.filter((f) => f !== "m")
-    : [...FAMILIES];
+  // Индекс уже с калибровкой — оценки смысла в списках сдвинуты, своя калибровка поверх неё
+  // бессмысленна; нет оценок рабочей части — считать не из чего. Тогда ни калибровки, ни семейства M
+  // (ревизия фазы 5, И-21).
+  const scores = calibrated
+    ? []
+    : work.flatMap((i) =>
+        (meaning[i] ?? []).slice(0, VECTOR_NORM_RANK).map((h) => h.score),
+      );
+  const distribution = scores.length > 0 ? distributionOf(scores) : undefined;
+  const families: Family[] =
+    distribution === undefined
+      ? FAMILIES.filter((f) => f !== "m")
+      : [...FAMILIES];
   const result: ExploreLists = {
-    distribution,
+    ...(distribution === undefined ? {} : { distribution }),
     calibrated,
     families,
     checked: 0,
@@ -380,17 +386,19 @@ function explore(
       const w = words[i] ?? [];
       const m = meaning[i] ?? [];
       const ex = exact[i] ?? [];
-      lists.m.push(
-        page(
-          ex,
-          meiliMerge(w, sameDepth[i] ?? [], tie, {
-            ratio: x,
-            limit: depth,
-            distribution,
-          }),
-          depth,
-        ),
-      );
+      if (distribution !== undefined) {
+        lists.m.push(
+          page(
+            ex,
+            meiliMerge(w, sameDepth[i] ?? [], tie, {
+              ratio: x,
+              limit: depth,
+              distribution,
+            }),
+            depth,
+          ),
+        );
+      }
       for (const text of ["abs", "rel"] as const) {
         lists[`c-${text}`].push(
           page(

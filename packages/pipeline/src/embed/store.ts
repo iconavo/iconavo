@@ -52,15 +52,34 @@ export interface StoredVectors {
   vectors: Float32Array;
 }
 
+/**
+ * Векторы не годятся, но накопленный расход из оглавления, если он читается, — сохраняется: векторы
+ * посчитаются заново, а история расходов не обнулится (ревизия фазы 5, И-17).
+ */
+type Broken = { kind: "broken"; reason: string; spent?: Spent };
+
 export type IndexRead =
   | { kind: "missing" }
-  | { kind: "broken"; reason: string }
+  | Broken
   | { kind: "ok"; index: StoreIndex };
 
 export type StoreRead =
   | { kind: "missing" }
-  | { kind: "broken"; reason: string }
+  | Broken
   | { kind: "ok"; store: StoredVectors };
+
+/** Накопленный расход из прочитанного оглавления — и у негодных векторов; нет файла — undefined. */
+export function spentOf(read: IndexRead | StoreRead): Spent | undefined {
+  if (read.kind === "ok") {
+    return "index" in read ? read.index.spent : read.store.index.spent;
+  }
+  return read.kind === "broken" ? read.spent : undefined;
+}
+
+const broken = (reason: string, spent?: Spent): Broken =>
+  spent === undefined
+    ? { kind: "broken", reason }
+    : { kind: "broken", reason, spent };
 
 export const storePaths = (
   dir: string,
@@ -99,30 +118,36 @@ export async function readIndex(
   try {
     json = JSON.parse(text);
   } catch {
-    return { kind: "broken", reason: "оглавление векторов не читается" };
+    return broken("оглавление векторов не читается");
   }
   const parsed = storeIndexSchema.safeParse(json);
   if (!parsed.success) {
-    return { kind: "broken", reason: "оглавление векторов не по формату" };
+    const spent = spentSchema.safeParse(
+      (json as { spent?: unknown } | null)?.spent,
+    );
+    return broken(
+      "оглавление векторов не по формату",
+      spent.success ? spent.data : undefined,
+    );
   }
   const index = parsed.data;
   if (index.model !== model.id || index.dims !== model.dims) {
-    return {
-      kind: "broken",
-      reason: `векторы другой модели или длины (${index.model}, ${index.dims})`,
-    };
+    return broken(
+      `векторы другой модели или длины (${index.model}, ${index.dims})`,
+      index.spent,
+    );
   }
   if (index.textVersion !== TEXT_VERSION) {
-    return {
-      kind: "broken",
-      reason: `векторы для текста версии ${index.textVersion}, а сейчас версия ${TEXT_VERSION}`,
-    };
+    return broken(
+      `векторы для текста версии ${index.textVersion}, а сейчас версия ${TEXT_VERSION}`,
+      index.spent,
+    );
   }
   if (
     index.rows.length !== index.count ||
     index.bytes !== index.count * index.dims * 4
   ) {
-    return { kind: "broken", reason: "оглавление векторов не сходится" };
+    return broken("оглавление векторов не сходится", index.spent);
   }
   return { kind: "ok", index };
 }
@@ -140,16 +165,13 @@ export async function readStore(
   try {
     buf = await readFile(storePaths(dir, model, setId).vectors);
   } catch {
-    return { kind: "broken", reason: "нет файла векторов" };
+    return broken("нет файла векторов", head.index.spent);
   }
   if (
     buf.byteLength !== head.index.bytes ||
     sha256(buf) !== head.index.sha256
   ) {
-    return {
-      kind: "broken",
-      reason: "файл векторов не сходится с оглавлением",
-    };
+    return broken("файл векторов не сходится с оглавлением", head.index.spent);
   }
   return {
     kind: "ok",

@@ -2,12 +2,14 @@ import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { TEST_MODELS } from "../embed/client.testing.js";
 import { searchDocuments } from "../meili/docs.js";
 import { fakeMeili } from "../meili/fake.testing.js";
 import { buildCatalog, setDocs } from "./catalog.js";
 import { demoConfig, loadedSet } from "./fixture.testing.js";
 import { allowedHost, reply, type SearchContext } from "./server.js";
 import { buildTextIndex } from "./text.js";
+import { loadModelVectors } from "./vectors.js";
 
 const config = demoConfig("demo");
 const catalog = buildCatalog([
@@ -86,6 +88,21 @@ describe("страница поиска", () => {
     expect(html).toContain("Нет ключа POLZA_API_KEY");
     const first = html.indexOf("<code>demo:trash</code>");
     expect(first).toBeGreaterThan(-1);
+  });
+
+  it("«только смысл» без вектора запроса — так и сказано, а не «показан только текст» (И-21)", async () => {
+    ctx.models = [
+      await loadModelVectors(
+        catalog,
+        TEST_MODELS[0] as (typeof TEST_MODELS)[number],
+        join(root, "embeddings"),
+      ),
+    ];
+    const html = body(await reply(ctx, "GET", "/?q=house&mode=vector", HOST));
+    expect(html).toContain("выдачи по смыслу нет");
+    expect(html).not.toContain("показан только текст");
+    expect(html).toContain("вектора нет");
+    expect(html).not.toMatch(/вектор за \d/);
   });
 
   it("русский запрос находит иконку по синониму", async () => {

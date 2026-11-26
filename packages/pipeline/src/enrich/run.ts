@@ -40,6 +40,7 @@ import {
   BATCH_LIMIT,
   MODEL,
   POLL_INTERVAL_MS,
+  POLL_RETRIES,
   PREVIEW_SIZE,
   PROMPT_VERSION,
   REPORT_CARDS,
@@ -341,14 +342,31 @@ async function finish(plans: readonly Plan[]): Promise<SetEnrichReport[]> {
   });
 }
 
-/** Результаты пакета → search.json на диске; состояние удаляется после записи. */
+/** Набор, чей пакет опрашивается: файлы прочитаны, номер пакета есть. */
+type Active = Plan & { set: LoadedSet; batchId: string };
+
+/**
+ * Результаты пакета → search.json на диске; состояние удаляется после записи. Файлы набора читаются
+ * заново: пакет обрабатывается до суток, и за это время search.json могли обновить (git pull,
+ * pnpm data) — запись по снимку начала запуска затёрла бы новое (ревизия фазы 5, И-3).
+ */
 async function collect(
-  plan: Plan & { set: LoadedSet; batchId: string },
+  plan: Active,
   client: BatchClient,
   dataDir: string,
   log: (line: string) => void,
 ): Promise<void> {
-  const { set, config, report } = plan;
+  const { config, report } = plan;
+  let set: LoadedSet;
+  try {
+    set = await loadSet(config, dataDir);
+  } catch (e) {
+    report.stop.push(
+      `${(e as Error).message} — результаты пакета ${plan.batchId} не записаны, состояние сохранено`,
+    );
+    return;
+  }
+  plan.set = set;
   const results = new Map<string, Enrichment>();
   const usages: TokenUsage[] = [];
   const seen = new Set<string>();
@@ -364,10 +382,13 @@ async function collect(
       usages.push(response.result.message.usage);
       plan.usages.set(req.name, response.result.message.usage);
     }
-    if (set.search.icons[req.name]?.fingerprint !== req.fingerprint) {
+    const now = set.search.icons[req.name];
+    if (now?.fingerprint !== req.fingerprint) {
       report.failed.push({
         name: req.name,
-        reason: "рисунок изменился после отправки — отправится снова",
+        reason: now
+          ? "рисунок изменился после отправки — отправится снова"
+          : "иконки больше нет в наборе",
       });
       continue;
     }
@@ -422,6 +443,103 @@ const loaded = (
   p.set !== undefined &&
   p.selection !== undefined &&
   p.report.stop.length === 0;
+
+/** Отказы API при опросе, общие для всего прогона: ключ и доступ одни на все наборы. */
+const RUN_STOPS: Readonly<Record<number, string>> = {
+  401: "ключ ANTHROPIC_API_KEY не принят",
+  403: "нет доступа к API пакетов",
+};
+
+/** Временный сбой опроса: сеть (кода ответа нет), 408, 409, 429 и 5xx. */
+const transient = (status: number | undefined) =>
+  status === undefined ||
+  status === 408 ||
+  status === 409 ||
+  status === 429 ||
+  status >= 500;
+
+/**
+ * Опрос пакетов — до завершения, а с once — один проход (--no-wait). Ошибки опроса (ревизия фазы 5,
+ * И-1, И-4): ключ или доступ (401, 403) — «СТОП» всех наборов, пакет не найден (404) или запрос
+ * отклонён — «СТОП» только этого набора, сеть, 408, 409, 429 и 5xx — повтор через паузу, но не
+ * больше POLL_RETRIES раз подряд. Файлы состояния остаются: следующий запуск продолжит опрос.
+ * Возвращает наборы, чьи пакеты завершились; ещё не готовые после одного прохода — «ждут».
+ */
+async function poll(
+  plans: readonly Active[],
+  client: BatchClient,
+  o: {
+    once: boolean;
+    interval: number;
+    sleep: (ms: number) => Promise<void>;
+    log: (line: string) => void;
+  },
+): Promise<Active[]> {
+  const ended: Active[] = [];
+  const failures = new Map<Active, number>();
+  let pending = [...plans];
+  while (pending.length > 0) {
+    const still: Active[] = [];
+    for (const [i, p] of pending.entries()) {
+      try {
+        const status = await client.retrieve(p.batchId);
+        failures.delete(p);
+        const c = status.request_counts;
+        if (status.processing_status === "ended") {
+          o.log(
+            `${p.config.id}: пакет завершён — готово ${c.succeeded}, ошибок ${c.errored}, истекло ${c.expired}, отменено ${c.canceled}`,
+          );
+          ended.push(p);
+          continue;
+        }
+        o.log(
+          `${p.config.id}: ${status.processing_status} — в работе ${c.processing}, готово ${c.succeeded}, ошибок ${c.errored}`,
+        );
+        still.push(p);
+      } catch (e) {
+        const code = (e as { status?: number }).status;
+        const message = (e as Error).message;
+        const run = code === undefined ? undefined : RUN_STOPS[code];
+        if (run !== undefined) {
+          const reason = `${run} (HTTP ${code}) — пакеты не опрошены, состояние сохранено: следующий запуск продолжит`;
+          for (const q of [...ended, ...still, ...pending.slice(i)]) {
+            q.report.stop.push(reason);
+          }
+          return [];
+        }
+        if (code === 404) {
+          p.report.stop.push(
+            `пакет ${p.batchId} набора ${p.config.id} не найден — удалите ${p.statePath}, если он уже не нужен`,
+          );
+          continue;
+        }
+        if (!transient(code)) {
+          p.report.stop.push(
+            `опрос пакета ${p.batchId} отклонён (HTTP ${code}: ${message}) — состояние сохранено`,
+          );
+          continue;
+        }
+        const n = (failures.get(p) ?? 0) + 1;
+        failures.set(p, n);
+        if (n >= POLL_RETRIES) {
+          p.report.stop.push(
+            `опрос пакета ${p.batchId} не удаётся ${n} раз подряд (${message}) — состояние сохранено, запустите pnpm enrich ${p.config.id} позже`,
+          );
+          continue;
+        }
+        o.log(
+          `${p.config.id}: опрос не удался (${message}) — ${o.once ? "пакет заберёт следующий запуск" : `повтор через ${Math.round(o.interval / 1000)} с`}`,
+        );
+        still.push(p);
+      }
+    }
+    pending = still;
+    if (o.once) break;
+    if (pending.length > 0) await o.sleep(o.interval);
+  }
+  for (const p of pending) p.report.waiting = p.batchId;
+  return ended;
+}
 
 /**
  * Обогащает наборы: оценка стоимости по всем сразу, затем отправка пакетов, опрос и запись
@@ -483,7 +601,8 @@ export async function enrichSets(
     }
   }
 
-  // Лимит стоимости — по сумме всех наборов до первой отправки.
+  // Лимит стоимости — по сумме всех наборов до первой отправки. Выше лимита новое не отправляется,
+  // а пакеты, оплаченные в прошлые запуски, по-прежнему забираются (ревизия фазы 5, И-13).
   const sending = plans.filter(
     (p): p is Plan & { set: LoadedSet; selection: Selection } =>
       loaded(p) && p.state === undefined && p.selection.selected.length > 0,
@@ -495,29 +614,38 @@ export async function enrichSets(
         `оценка стоимости ${formatUsd(total)}${sending.length > 1 ? " за все наборы" : ""} больше лимита ${formatUsd(options.maxCost)} — поднимите --max-cost`,
       );
     }
-    return finish(plans);
   }
   if (options.dryRun) return finish(plans);
+  const toSend = sending.filter((p) => p.report.stop.length === 0);
 
   const resuming = plans.filter(
-    (p): p is Plan & { set: LoadedSet; batchId: string } =>
-      loaded(p) && p.batchId !== undefined,
+    (p): p is Active => loaded(p) && p.batchId !== undefined,
   );
   const client = options.client;
-  if ((sending.length > 0 || resuming.length > 0) && !client) {
+  if ((toSend.length > 0 || resuming.length > 0) && !client) {
     throw new Error("клиент Claude API не задан");
   }
   if (!client) return finish(plans);
 
-  if (sending.length > 0) await initRenderer();
-  for (const p of sending) {
+  if (toSend.length > 0) await initRenderer();
+  for (const p of toSend) {
     const { set, selection, config } = p;
     const requests: BatchRequest[] = [];
     for (const name of selection.selected.slice(0, BATCH_LIMIT)) {
       const icon = set.icons.get(name);
       const entry = set.search.icons[name];
       if (!icon || !entry) continue;
-      const png = renderPreview(icon, PREVIEW_SIZE);
+      // Иконка, которую resvg не нарисовал, — в отказах, остальные уходят (ревизия фазы 5, И-15).
+      let png: Buffer;
+      try {
+        png = renderPreview(icon, PREVIEW_SIZE);
+      } catch (e) {
+        p.report.failed.push({
+          name,
+          reason: `не нарисовалась для модели: ${(e as Error).message}`,
+        });
+        continue;
+      }
       const id = customId(name);
       p.pngs.set(name, png);
       p.requests.set(id, { name, fingerprint: entry.fingerprint });
@@ -531,60 +659,39 @@ export async function enrichSets(
         }),
       });
     }
+    if (requests.length === 0) continue;
     const { id } = await client.create(requests);
     p.batchId = id;
+    p.report.sent = requests.length;
+    // Номер оплаченного пакета — в журнале до записи состояния: сорвётся запись — номер останется (И-14).
+    log(`${config.id}: отправлено ${requests.length} — пакет ${id}`);
     await writeState(p.statePath, {
       batchId: id,
       model: MODEL,
       promptVersion: PROMPT_VERSION,
       requests: Object.fromEntries(p.requests),
     });
-    p.report.sent = requests.length;
-    log(`${config.id}: отправлено ${requests.length} — пакет ${id}`);
   }
 
   const active = plans.filter(
-    (p): p is Plan & { set: LoadedSet; batchId: string } =>
-      loaded(p) && p.batchId !== undefined,
+    (p): p is Active => loaded(p) && p.batchId !== undefined,
   );
-  if (options.wait === false) {
-    for (const p of active) p.report.waiting = p.batchId;
-    return finish(plans);
+  // --no-wait: пакеты этого запуска ещё в работе, а прошлые опрашиваются один раз — готовые
+  // записываются сразу (ревизия фазы 5, И-2).
+  const once = options.wait === false;
+  const polled = once ? active.filter((p) => p.report.resumed) : active;
+  for (const p of active) {
+    if (!polled.includes(p)) p.report.waiting = p.batchId;
   }
-
-  let pending = active;
-  while (pending.length > 0) {
-    const still: typeof pending = [];
-    for (const p of pending) {
-      try {
-        const status = await client.retrieve(p.batchId);
-        const c = status.request_counts;
-        if (status.processing_status === "ended") {
-          log(
-            `${p.config.id}: пакет завершён — готово ${c.succeeded}, ошибок ${c.errored}, истекло ${c.expired}, отменено ${c.canceled}`,
-          );
-          continue;
-        }
-        log(
-          `${p.config.id}: ${status.processing_status} — в работе ${c.processing}, готово ${c.succeeded}, ошибок ${c.errored}`,
-        );
-        still.push(p);
-      } catch (e) {
-        if ((e as { status?: number }).status === 404) {
-          throw new Error(
-            `пакет ${p.batchId} набора ${p.config.id} не найден — удалите ${p.statePath}, если он уже не нужен`,
-          );
-        }
-        log(
-          `${p.config.id}: опрос не удался (${(e as Error).message}) — повтор через ${Math.round(interval / 1000)} с`,
-        );
-        still.push(p);
-      }
+  const ended = await poll(polled, client, { once, interval, sleep, log });
+  for (const p of ended) {
+    try {
+      await collect(p, client, dataDir, log);
+    } catch (e) {
+      p.report.stop.push(
+        `результаты пакета ${p.batchId} не получены: ${(e as Error).message} — состояние сохранено, следующий запуск продолжит`,
+      );
     }
-    pending = still;
-    if (pending.length > 0) await sleep(interval);
   }
-
-  for (const p of active) await collect(p, client, dataDir, log);
   return finish(plans);
 }

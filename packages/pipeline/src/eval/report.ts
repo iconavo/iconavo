@@ -89,9 +89,12 @@ export function formatJudgeReport(r: JudgeReport): string {
     const done = r.queries.filter(
       (q) => (r.labels.byQuery.get(q.id)?.size ?? 0) > 0,
     ).length;
+    // Прогноз — по расходу всех запусков: размеченные запросы тоже считаются за все запуски, а не
+    // только этот (ревизия фазы 5, И-21).
+    const all = r.spentTotal.rub;
     if (r.queries.length < r.total && done > 0) {
       lines.push(
-        `Прогноз на весь эталон: ≈ ${rub((s.rub / done) * r.total)} (по ${rub(s.rub / done)} на запрос)`,
+        `Прогноз на весь эталон: ≈ ${rub((all / done) * r.total)} (по ${rub(all / done)} на запрос)`,
       );
     }
   }
@@ -131,7 +134,11 @@ export function formatJudgeReport(r: JudgeReport): string {
 
 const verdictOrder: Record<Verdict, number> = { fits: 0, partial: 1, no: 2 };
 
-function queryCard(
+/**
+ * Карточка запроса на странице разметки: подходящие и частичные, а с full — и «нет». «Не размечено» —
+ * только у запроса без единого вердикта (ревизия фазы 5, И-21).
+ */
+export function queryCard(
   catalog: Catalog,
   q: GoldenQuery,
   labels: ReadonlyMap<string, Verdict> | undefined,
@@ -150,7 +157,7 @@ function queryCard(
     .join("");
   return `<div class="q"><h4>${esc(q.id)} · «${esc(q.query)}» <span class="muted">${q.lang}, ${TYPE_NAMES[q.type] ?? q.type}, ${q.split === "work" ? "рабочая" : "контрольная"}</span></h4>
 <p>Ожидание: ${esc(q.description)}</p>
-<div class="tiles">${tiles || `<span class="muted">не размечено</span>`}</div>${hidden > 0 ? `<p class="muted">и ещё ${hidden} — «нет»</p>` : ""}</div>`;
+<div class="tiles">${tiles || (items.length === 0 ? `<span class="muted">не размечено</span>` : "")}</div>${hidden > 0 ? `<p class="muted">и ещё ${hidden} — «нет»</p>` : ""}</div>`;
 }
 
 /** Страница judge.html: итог, 20 запросов для проверки, остальные — только подходящие. */
@@ -335,12 +342,23 @@ ${exploreSection(r)}`;
 const deviceTitle = (r: EvalReport, device: string) =>
   r.explore?.curves.find((c) => c.device === device)?.title ?? device;
 
+/** Калибровка смысла опыта этапа 2 — или почему её нет (ревизия фазы 5, И-21). */
+const calibrationText = (e: {
+  distribution?: { mean: number; sigma: number };
+  calibrated: boolean;
+}) =>
+  e.distribution !== undefined
+    ? `среднее ${fixed(e.distribution.mean, 3)}, разброс ${fixed(e.distribution.sigma, 3)}`
+    : e.calibrated
+      ? "не считается: индекс уже с калибровкой, семейства M нет"
+      : "не из чего считать: у рабочей части нет оценок смысла";
+
 /** Опыт этапа 2 (ADR-0053) для терминала. */
 function exploreLines(r: EvalReport): string[] {
   const e = r.explore;
   if (!e) return [];
   const lines = [
-    `Опыт этапа 2 (ADR-0053): калибровка смысла — среднее ${fixed(e.distribution.mean, 3)}, разброс ${fixed(e.distribution.sigma, 3)}; копия слияния Meilisearch совпала с живой выдачей в ${e.checked - e.mismatches.length} из ${e.checked}.`,
+    `Опыт этапа 2 (ADR-0053): калибровка смысла — ${calibrationText(e)}; копия слияния Meilisearch совпала с живой выдачей в ${e.checked - e.mismatches.length} из ${e.checked}.`,
   ];
   for (const c of e.curves) {
     lines.push(
@@ -394,7 +412,7 @@ function exploreSection(r: EvalReport): string {
     )
     .join("");
   return `<h2>Опыт этапа 2: слияние слов и смысла</h2>
-<p class="muted">Шаг 8 фазы 4, ADR-0053. Выдача собрана локально из двух списков Meilisearch с оценками — «только слова» и «только смысл». «Как сейчас» — слияние самого Meilisearch при доле смысла из сетки; M — оно же с калибровкой шкалы смысла (среднее ${fixed(e.distribution.mean, 3)}, разброс ${fixed(e.distribution.sigma, 3)} — по первым 100 местам рабочей части); суммы — как у прототипа: α · смысл + (1 − α) · слова, смысл нормирован между 1-м и 100-м местом. Рабочая часть, Hit@5 и MRR@10; жирным — выбор правила внутри устройства. Между устройствами — от простого к сложному: более сложное побеждает, только если даёт хотя бы на ${COMPLEXITY_MARGIN} попадания больше.</p>
+<p class="muted">Шаг 8 фазы 4, ADR-0053. Выдача собрана локально из двух списков Meilisearch с оценками — «только слова» и «только смысл». «Как сейчас» — слияние самого Meilisearch при доле смысла из сетки; M — оно же с калибровкой шкалы смысла (${e.distribution === undefined ? calibrationText(e) : `${calibrationText(e)} — по первым 100 местам рабочей части`}); суммы — как у прототипа: α · смысл + (1 − α) · слова, смысл нормирован между 1-м и 100-м местом. Рабочая часть, Hit@5 и MRR@10; жирным — выбор правила внутри устройства. Между устройствами — от простого к сложному: более сложное побеждает, только если даёт хотя бы на ${COMPLEXITY_MARGIN} попадания больше.</p>
 <p>Копия слияния Meilisearch совпала с живой выдачей в ${e.checked - e.mismatches.length} из ${e.checked} пар «запрос × доля»${e.mismatches.length > 0 ? ` — расхождения:</p><ul>${mismatches}</ul>` : ".</p>"}
 <table><thead><tr><th>Доля / α</th>${head}</tr></thead><tbody>${rows}</tbody></table>
 ${choice}`;

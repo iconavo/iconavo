@@ -11,6 +11,7 @@ import {
   retryable,
   retryDelay,
   type StopScope,
+  withLost,
 } from "../embed/client.js";
 import { API_URL, MAX_ATTEMPTS } from "../embed/config.js";
 import type { FetchFn } from "../sources/npm.js";
@@ -25,6 +26,11 @@ export interface ChatResult {
   rub?: number;
   /** Время удачной попытки, мс. */
   ms: number;
+  /**
+   * Попытки до удачной, которые, скорее всего, оплачены, а ответа не дали (заголовки 200 пришли, а
+   * текста нет); нет — таких не было. Их рубли считает оценка судьи (И-16).
+   */
+  lost?: number;
 }
 
 /** Та часть API, которая нужна судье; в тестах его подменяют (client.testing.ts). */
@@ -87,14 +93,20 @@ export function polzaChatClient(options: ChatOptions): ChatClient {
       .trim()
       .slice(0, 300);
 
-  /** Одна попытка тела с повторами при сбоях; 400 и 422 возвращаются как «не принято». */
+  /**
+   * Одна попытка тела с повторами при сбоях; 400 и 422 возвращаются как «не принято». В acc.lost —
+   * попытки, которые Polza, скорее всего, взяла в оплату, а ответа не дала: заголовки 200 пришли, а
+   * тело оборвалось, пришло не JSON или без текста (ревизия фазы 5, И-16).
+   */
   async function send(
     body: Record<string, unknown>,
+    acc: { lost: number },
   ): Promise<ChatResult | { rejected: string }> {
     let last = "";
     for (let attempt = 1; ; attempt++) {
       let wait: number | undefined;
       const started = now();
+      let paid = false;
       try {
         const res = await fetchFn(url, {
           method: "POST",
@@ -105,6 +117,7 @@ export function polzaChatClient(options: ChatOptions): ChatClient {
           body: JSON.stringify(body),
           signal: AbortSignal.timeout(timeoutMs),
         });
+        paid = res.ok;
         const text = await res.text();
         const ms = now() - started;
         if (res.ok) {
@@ -167,18 +180,26 @@ export function polzaChatClient(options: ChatOptions): ChatClient {
           last = `сбой сети${cause ? ` (${cause})` : ""}: ${e.message}`;
           wait = longPause(attempt);
         } else {
-          throw (e as { scope?: StopScope }).scope
-            ? e
-            : apiError(
-                `${String(body.model)}: ${(e as Error).message}`,
-                "model",
-              );
+          if (paid) acc.lost++;
+          throw withLost(
+            (e as { scope?: StopScope }).scope
+              ? (e as Error)
+              : apiError(
+                  `${String(body.model)}: ${(e as Error).message}`,
+                  "model",
+                ),
+            acc.lost,
+          );
         }
       }
+      if (paid) acc.lost++;
       if (attempt >= maxAttempts) {
-        throw apiError(
-          `${String(body.model)}: ${last} — не получилось за ${maxAttempts} попыток`,
-          "model",
+        throw withLost(
+          apiError(
+            `${String(body.model)}: ${last} — не получилось за ${maxAttempts} попыток`,
+            "model",
+          ),
+          acc.lost,
         );
       }
       await sleep(wait ?? retryDelay(null, attempt));
@@ -187,11 +208,14 @@ export function polzaChatClient(options: ChatOptions): ChatClient {
 
   return {
     async complete(body) {
+      const acc = { lost: 0 };
       let current = { ...body };
       let rejected = "";
       for (let i = 0; i <= OPTIONAL.length; i++) {
-        const result = await send(current);
-        if (!("rejected" in result)) return result;
+        const result = await send(current, acc);
+        if (!("rejected" in result)) {
+          return acc.lost > 0 ? { ...result, lost: acc.lost } : result;
+        }
         rejected = result.rejected;
         const field = OPTIONAL[i];
         if (field === undefined) break;
@@ -199,9 +223,12 @@ export function polzaChatClient(options: ChatOptions): ChatClient {
           Object.entries(current).filter(([k]) => k !== field),
         );
       }
-      throw apiError(
-        `${String(body.model)}: запрос не принят (${rejected})`,
-        "model",
+      throw withLost(
+        apiError(
+          `${String(body.model)}: запрос не принят (${rejected})`,
+          "model",
+        ),
+        acc.lost,
       );
     },
   };

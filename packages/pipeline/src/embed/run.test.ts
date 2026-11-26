@@ -390,6 +390,68 @@ describe("pnpm embed", () => {
     expect(hasStop(r)).toBe(true);
   });
 
+  it("оплаченные попытки без ответа — в расходе и лимите прогона (И-16)", async () => {
+    const fake = fakeEmbeddingClient({ rub: 0.01 });
+    const lostTwice: EmbeddingClient = {
+      async embed(model, inputs) {
+        const res = await fake.client.embed(model, inputs);
+        return { ...res, lost: 2 };
+      },
+    };
+    const r = await run({ client: lostTwice, models: [MODEL_A] });
+    const chars = sentTexts(fake.calls).reduce((n, t) => n + t.length, 0);
+    const lostRub = 2 * estimateRub(MODEL_A, chars);
+    // Две пачки: по 0,01 ₽ из ответа и по две оплаченные попытки без ответа — по оценке.
+    expect(r.spent.requests).toBe(6);
+    expect(r.spent.rubCalculated).toBeCloseTo(lostRub, 12);
+    expect(r.spent.rub).toBeCloseTo(0.02 + lostRub, 12);
+
+    // Пачка не получилась вовсе — её оплаченные попытки тоже в расходе.
+    const failing: EmbeddingClient = {
+      async embed() {
+        throw Object.assign(
+          apiError(
+            "test/a: нет ответа за 60 с — не получилось за 5 попыток",
+            "model",
+          ),
+          { lost: 3 },
+        );
+      },
+    };
+    await rm(join(storeDir, MODEL_A.key), { recursive: true, force: true });
+    const stopped = await run({
+      client: failing,
+      models: [MODEL_A],
+      concurrency: 1,
+    });
+    expect(stopped.models[0]?.stop[0]).toMatch(/не получилось за 5 попыток/);
+    expect(stopped.spent.requests).toBe(3);
+    expect(stopped.spent.rubCalculated).toBeGreaterThan(0);
+  });
+
+  it("испорченный файл векторов — пересчёт без потери накопленного расхода (И-17)", async () => {
+    await run({
+      client: fakeEmbeddingClient({ rub: 0.25 }).client,
+      models: [MODEL_A],
+    });
+    const path = storePaths(storeDir, MODEL_A, "demo").vectors;
+    const bytes = await readFile(path);
+    bytes[0] = (bytes[0] ?? 0) ^ 0xff;
+    await writeFile(path, bytes);
+    const r = await run({
+      client: fakeEmbeddingClient({ rub: 0.25 }).client,
+      models: [MODEL_A],
+    });
+    expect(r.models[0]?.sets[0]?.notes[0]).toMatch(
+      /файл векторов не сходится с оглавлением — векторы посчитаются заново/,
+    );
+    const head = await readIndex(storeDir, MODEL_A, "demo");
+    expect(head.kind).toBe("ok");
+    // Две пачки по 0,25 ₽ в каждом прогоне — накоплено за оба.
+    expect(head.kind === "ok" && head.index.spent.rub).toBeCloseTo(1, 9);
+    expect(r.models[0]?.sets[0]?.total.rub).toBeCloseTo(1, 9);
+  });
+
   it("сломанное оглавление — пересчёт с заметкой", async () => {
     await run({ client: fakeEmbeddingClient().client });
     await writeFile(storePaths(storeDir, MODEL_A, "demo").index, "мусор");

@@ -207,7 +207,7 @@ describe("опыт этапа 2 — слияние слов и смысла (ADR
     });
     expect(s.explore?.checked).toBe(queries.length * ALPHA_GRID.length);
     expect(s.explore?.mismatches).toEqual([]);
-    expect(s.explore?.distribution.sigma).toBeGreaterThan(0);
+    expect(s.explore?.distribution?.sigma).toBeGreaterThan(0);
     for (const family of FAMILIES) {
       for (const x of ALPHA_GRID) {
         expect(s.lists.get(familyKey(family, x))).toHaveLength(queries.length);
@@ -217,6 +217,47 @@ describe("опыт этапа 2 — слияние слов и смысла (ADR
     expect(s.lists.get(familyKey("c-abs", 0.5))?.[house]?.[0]).toBe(
       "demo:house",
     );
+  });
+
+  it("индекс уже с калибровкой — своей калибровки и семейства M нет (И-21)", async () => {
+    const { meili, catalog } = await seededMeili();
+    meili.settings = {
+      ...meili.settings,
+      embedders: {
+        gemini: {
+          source: "userProvided",
+          dimensions: 4,
+          distribution: { mean: 0.8, sigma: 0.03 },
+        },
+      },
+    };
+    const queries = await readQueries(env.options.queriesPath);
+    const s = await serviceLists({
+      client: meili.client,
+      catalog,
+      queries,
+      queryDir: env.options.queryDir,
+      embedClient: fakeEmbeddingClient().client,
+      explore: true,
+    });
+    expect(s.error).toBeUndefined();
+    expect(s.explore).toMatchObject({ calibrated: true });
+    expect(s.explore).not.toHaveProperty("distribution");
+    expect(s.explore?.families).not.toContain("m");
+    expect(s.lists.has(familyKey("m", 0.5))).toBe(false);
+    // Пустая рабочая часть — не обрыв прогона, а замер без калибровки.
+    const holdout = queries.map((q) => ({ ...q, split: "holdout" as const }));
+    meili.settings = {};
+    const empty = await serviceLists({
+      client: meili.client,
+      catalog,
+      queries: holdout,
+      queryDir: env.options.queryDir,
+      embedClient: fakeEmbeddingClient().client,
+      explore: true,
+    });
+    expect(empty.explore).toMatchObject({ calibrated: false });
+    expect(empty.explore).not.toHaveProperty("distribution");
   });
 
   it("судья и замер с explore: кривые устройств, выбор и что он чинит и ломает", async () => {

@@ -1,6 +1,7 @@
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { gzipSync } from "node:zlib";
 import { describe, expect, it } from "vitest";
 import {
   buildPicker,
@@ -13,6 +14,7 @@ import {
   SITE_TOKENS,
   themeTokens,
 } from "./picker-build.js";
+import { servedBuild } from "./picker-host.js";
 
 const ROOT = fileURLToPath(new URL("../../../../", import.meta.url));
 
@@ -85,5 +87,24 @@ describe("страница сетки", () => {
     expect(build.html).not.toContain("createMcpHandler");
     const again = await bundleBrowser(ROOT, PICKER_ENTRY);
     expect(build.html).toContain(again);
+  });
+
+  it("с живой страницей (--base) размеры — её, и в gzip тоже, а не локальной сборки (И-22)", () => {
+    const built = {
+      html: "<!doctype html>",
+      version: "aaaaaaaa",
+      bytes: 15,
+      gzipBytes: 999_999,
+      scriptBytes: 5,
+    };
+    const page = { html: "<!doctype html>ё".repeat(50), version: "bbbbbbbb" };
+    expect(servedBuild(built, page)).toEqual({
+      html: page.html,
+      version: "bbbbbbbb",
+      bytes: Buffer.byteLength(page.html, "utf8"),
+      gzipBytes: gzipSync(page.html).length,
+      scriptBytes: 0,
+    });
+    expect(servedBuild(built, undefined)).toBe(built);
   });
 });

@@ -82,9 +82,11 @@ describe("хранилище векторов", () => {
     const paths = storePaths(dir, model, "demo");
     const bytes = await readFile(paths.vectors);
     await writeFile(paths.vectors, bytes.subarray(0, 28));
+    // Векторы не годятся, а накопленный расход из оглавления — сохраняется (ревизия фазы 5, И-17).
     expect(await readStore(dir, model, "demo")).toEqual({
       kind: "broken",
       reason: "файл векторов не сходится с оглавлением",
+      spent,
     });
     const flipped = Buffer.from(bytes);
     flipped[0] = 1;

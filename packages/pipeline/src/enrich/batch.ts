@@ -5,6 +5,7 @@ import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import { dirname } from "node:path";
 import type Anthropic from "@anthropic-ai/sdk";
 import { z } from "zod";
+import { writeFileAtomic } from "../build/write.js";
 import type { TokenUsage } from "./cost.js";
 
 export interface BatchRequest {
@@ -76,7 +77,10 @@ export type BatchState = z.infer<typeof batchStateSchema>;
 
 export const STATE_FILE = "batch.json";
 
-/** Состояние или undefined, если файла нет; повреждённый файл — ошибка с подсказкой. */
+/**
+ * Состояние или undefined, если файла нет; повреждённый файл — не JSON или не по схеме — ошибка с
+ * подсказкой (ревизия фазы 5, И-14).
+ */
 export async function readState(path: string): Promise<BatchState | undefined> {
   let text: string;
   try {
@@ -84,7 +88,13 @@ export async function readState(path: string): Promise<BatchState | undefined> {
   } catch {
     return undefined;
   }
-  const parsed = batchStateSchema.safeParse(JSON.parse(text));
+  let data: unknown;
+  try {
+    data = JSON.parse(text);
+  } catch {
+    data = undefined;
+  }
+  const parsed = batchStateSchema.safeParse(data);
   if (!parsed.success) {
     throw new Error(
       `файл состояния пакета ${path} повреждён — удалите его, если пакет уже не нужен`,
@@ -93,12 +103,12 @@ export async function readState(path: string): Promise<BatchState | undefined> {
   return parsed.data;
 }
 
+/** Через временный файл: в состоянии — номер оплаченного пакета, оборванная запись его не потеряет (И-14). */
 export async function writeState(
   path: string,
   state: BatchState,
 ): Promise<void> {
-  await mkdir(dirname(path), { recursive: true });
-  await writeFile(path, `${JSON.stringify(state, null, 2)}\n`, "utf8");
+  await writeFileAtomic(path, `${JSON.stringify(state, null, 2)}\n`);
 }
 
 export async function removeState(path: string): Promise<void> {

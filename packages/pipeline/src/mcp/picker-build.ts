@@ -10,6 +10,7 @@ import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 import { gzipSync } from "node:zlib";
 import { IMPORT } from "../api/build.js";
+import { BUILD_PLACEHOLDER } from "../api/config.js";
 
 /** Вход вида и его стили — от корня репозитория. */
 export const PICKER_ENTRY = "apps/mcp/src/picker/view.ts";
@@ -18,8 +19,6 @@ export const PICKER_CSS = "apps/mcp/src/picker/view.css";
 export const SITE_TOKENS = "apps/site/app/globals.css";
 /** Сборки пакетов для браузера: у SDK MCP — свои заглушки модулей Node для браузера. */
 export const BROWSER_CONDITIONS = ["browser", "import", "default"] as const;
-/** Заглушка метки сборки функции: в странице её быть не может — метку ставит stampBuild ровно в одно место. */
-const BUILD_PLACEHOLDER = "__ICONAVO_BUILD__";
 /**
  * Бюджет страницы в gzip: замер 20 ноября 2026 — 72 КБ (SDK MCP Apps с клиентом протокола и zod внутри),
  * плюс 10%. Клиент читает страницу при каждом показе сетки, если не держит её в кэше.

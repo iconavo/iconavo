@@ -67,6 +67,7 @@ export async function liveScenarios(base: string): Promise<{
       scenarios,
     };
   } finally {
-    await client.close();
+    // Сбой закрытия соединения не заслоняет настоящую ошибку (ревизия фазы 5, И-22).
+    await client.close().catch(() => {});
   }
 }
