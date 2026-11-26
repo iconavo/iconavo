@@ -20,6 +20,7 @@ const uploaded: SetUploadReport = {
   bytes: 1536,
   present: 2,
   missing: 7,
+  missingBytes: 1200,
   uploaded: 7,
   uploadedBytes: 1200,
   ms: 2500,
@@ -110,6 +111,12 @@ describe("отчёт выгрузки", () => {
       "Время: 3,0 с",
     ]);
     expect(formatUploadTable(planned.hosts[0]?.sets ?? [])).toContain("(7)");
+    // Показ — размер недостающего, а не всей версии (ревизия фазы 5, А-21).
+    const partial = formatUploadTable([
+      { ...uploaded, status: "planned", missingBytes: 3 * 1024 * 1024 },
+    ]);
+    expect(partial).toContain("3.0 МБ");
+    expect(partial).not.toContain("1.5 КБ");
     const written: UploadReport = {
       ...report,
       hosts: [

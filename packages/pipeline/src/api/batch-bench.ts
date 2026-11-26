@@ -277,9 +277,14 @@ export function http2Transport(
         const chunks: Buffer[] = [];
         let status = 0;
         let headers: Record<string, string> = {};
+        let ended = false;
         const timer = setTimeout(() => {
+          // Отменяется только этот поток. Соединение больше не берёт новых запросов и закрывается
+          // мягко: соседние в нём доживают свой ответ, следующие пойдут по новому. destroy обрывал их
+          // все, и один таймаут давал до четырёх (ревизия фазы 5, А-33).
           request.close(constants.NGHTTP2_CANCEL);
-          s.destroy();
+          if (session === s) session = undefined;
+          s.close();
           reject(new Error(`нет ответа за ${timeoutMs / 1000} с`));
         }, timeoutMs);
         request.on("response", (h) => {
@@ -287,8 +292,19 @@ export function http2Transport(
           headers = headerRecord(h);
         });
         request.on("data", (chunk: Buffer) => chunks.push(chunk));
-        request.on("end", () => {
+        // Поток закрылся без конца ответа — ошибка, а не ответ со статусом 0 и обрезанным телом.
+        request.on("close", () => {
+          if (ended) return;
           clearTimeout(timer);
+          reject(new Error("поток закрылся без ответа"));
+        });
+        request.on("end", () => {
+          ended = true;
+          clearTimeout(timer);
+          if (status === 0) {
+            reject(new Error("поток закрылся без ответа"));
+            return;
+          }
           try {
             resolve({
               status,

@@ -17,6 +17,7 @@ import {
   type Packument,
   type Provenance,
   type RegistryClient,
+  tarballNotServed,
 } from "../npm/registry.js";
 import { makeTgz } from "../sources/tar-builder.testing.js";
 import type { Pack } from "../starters/pack.js";
@@ -234,6 +235,8 @@ export interface FakeVersion {
   time?: string;
   /** Снята: номер в time есть, версии нет. */
   unpublished?: boolean;
+  /** Архив ещё не раздаётся: npm выкладывает его с задержкой (ревизия фазы 5, А-27). */
+  notServed?: boolean;
 }
 
 export interface FakePackage {
@@ -307,6 +310,7 @@ export function fakeRegistry(
       calls.push(`files ${name}@${doc.version}`);
       const v = packages[name]?.versions.find((x) => x.version === doc.version);
       if (!v) throw new Error(`нет ${name}@${doc.version}`);
+      if (v.notServed) throw tarballNotServed(doc.version);
       const out = new Map<string, Uint8Array>();
       for (const [path, data] of Object.entries(archive(name, v).files)) {
         out.set(path, new Uint8Array(data));

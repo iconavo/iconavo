@@ -12,6 +12,7 @@ import { z } from "zod";
 import type { SourceConfig } from "../sources/config.js";
 import {
   NPM_POLL_MS,
+  NPM_PROVENANCE_GRACE_MS,
   NPM_PUBLISH_REF,
   NPM_REPOSITORY,
   NPM_TAG,
@@ -166,6 +167,14 @@ export async function verifyPackages(
         }
         // Пакета нет и этот запуск его не выпускал — ждать нечего.
         if (p === undefined && expected === undefined) break;
+        // Версия пришла давно, а подписи у неё нет — её уже не будет: строка provenance скажет «нет
+        // подписи» сразу, а не после всего срока ожидания (ревизия фазы 5, А-29).
+        if (arrived && doc !== undefined && doc.attestationsUrl === undefined) {
+          const at = Date.parse(p?.times.get(doc.version) ?? "");
+          if (Number.isFinite(at) && now() - at > NPM_PROVENANCE_GRACE_MS) {
+            break;
+          }
+        }
         const left = deadline - now();
         if (left <= 0) break;
         log(

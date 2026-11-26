@@ -19,6 +19,7 @@ import {
   writeCdnDemoSet,
 } from "./fixture.testing.js";
 import { buildCdn, cdnStop } from "./run.js";
+import { cleanupCatalog, cleanupStale } from "./write.js";
 
 const HOUSE = '<path d="M1 1h2"/>';
 const DEMO: CdnDemoSet = {
@@ -145,6 +146,32 @@ describe("buildCdn", () => {
     expect([...after.keys()]).toEqual([...before.keys()]);
     for (const [path, mtime] of before) expect(after.get(path)).toBe(mtime);
     expect([...after.keys()].some((p) => p.includes(".tmp-"))).toBe(false);
+  });
+
+  it("испорченный файл с прежним именем: выгрузка и сверка пересобирают набор (ревизия фазы 5, А-2)", async () => {
+    const demo = await writeCdnDemoSet(dataDir, DEMO);
+    await writeCdnDemoSet(dataDir, OTHER);
+    await build();
+    const file = join(outDir, "v", demo.version, "demo", "house.svg");
+    const good = await readFile(file);
+    await writeFile(
+      file,
+      Buffer.from(good.toString("utf8").replace("M1", "M9")),
+    );
+    // Обычная сборка смотрит только на файл сумм и число файлов — для неё папка «та же».
+    expect((await build()).sets.map((s) => s.status)).toEqual([
+      "unchanged",
+      "unchanged",
+    ]);
+    // Сборка для выгрузки сверяет байты: испорченный набор пишется заново, файл — как был.
+    const report = await buildCdn(configs, {
+      dataDir,
+      outDir,
+      concurrency: 2,
+      verifyFiles: true,
+    });
+    expect(report.sets.map((s) => s.status)).toEqual(["written", "unchanged"]);
+    expect(Buffer.compare(await readFile(file), good)).toBe(0);
   });
 
   it("новая версия набора заменяет старую, старая убирается", async () => {
@@ -298,5 +325,23 @@ describe("buildCdn", () => {
     expect((await stat(join(outDir, "manifest.json"))).mtimeMs).toBe(mtimeMs);
     // Старая версия demo осталась: уборки не было.
     expect((await readdir(join(outDir, "v"))).length).toBe(3);
+  });
+});
+
+describe("уборка dist-cdn (ревизия фазы 5, А-20)", () => {
+  it("папка не читается — предупреждение, а не обрыв сборки", async () => {
+    await mkdir(join(outDir, "v"), { recursive: true });
+    // На месте папки версии — файл: readdir отвечает ENOTDIR.
+    await writeFile(join(outDir, "v", "abcd1234"), "не папка");
+    const stale = await cleanupStale(
+      outDir,
+      new Map([["abcd1234", new Set(["demo"])]]),
+    );
+    expect(stale.removed).toEqual([]);
+    expect(stale.warnings.join("\n")).toMatch(/^не прочитано v\/abcd1234: /);
+    await mkdir(join(outDir, "catalog"), { recursive: true });
+    await writeFile(join(outDir, "catalog", "demo"), "не папка");
+    const catalog = await cleanupCatalog(outDir, new Set(["catalog/demo"]));
+    expect(catalog.warnings).toEqual([]);
   });
 });

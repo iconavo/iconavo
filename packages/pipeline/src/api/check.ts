@@ -546,7 +546,11 @@ export async function checkApi(
       if (typeof field(field(info, "license"), "text") !== "string") {
         addIssue(one.target, "body", "в info.license нет полного текста");
       }
-      for (const key of ["name", "total", "version"]) {
+      // /collections не прочитан — сверять не с чем: его сбой уже в своей строке, а не три лишних
+      // «не как в /collections» (ревизия фазы 5, А-35).
+      for (const key of listedInfo === undefined
+        ? []
+        : ["name", "total", "version"]) {
         if (field(info, key) !== field(listedInfo, key)) {
           addIssue(one.target, "body", `info.${key} не как в /collections`);
         }
@@ -692,7 +696,13 @@ export async function checkApi(
       await fromStatic(`${base}/${API_CHECK_ICON}.json`),
       await fromStatic(`${base}/${API_CHECK_ALIAS}.json`),
     ];
-    if ("error" in iconRes || "error" in aliasRes) {
+    // 404 статики — «не прочитаны», как у SVG, а не «не как на статике» (ревизия фазы 5, А-35).
+    if (
+      "error" in iconRes ||
+      "error" in aliasRes ||
+      iconRes.status !== 200 ||
+      aliasRes.status !== 200
+    ) {
       addIssue(batch.target, "body", "файлы статики не прочитаны");
     } else {
       const data = parse(batch.body);

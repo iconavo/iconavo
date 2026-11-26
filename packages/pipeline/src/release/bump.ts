@@ -8,6 +8,7 @@
 
 import { readFile, rm, writeFile } from "node:fs/promises";
 import { join } from "node:path";
+import { everPublished } from "../npm/decide.js";
 import { type RegistryClient, registryClient } from "../npm/registry.js";
 import { compareVersions, parseVersion } from "../sources/version.js";
 import {
@@ -70,11 +71,8 @@ export async function currentVersion(root: string): Promise<string> {
   return [...versions][0] as string;
 }
 
-/** Новая версия годится: X.Y.Z, до запуска — 0.x, выше нынешней. */
-export function versionProblem(
-  from: string,
-  version: string,
-): string | undefined {
+/** Вид номера: X.Y.Z, до запуска — 0.x. Сеть не нужна — проверяется до запроса к npm. */
+function formatProblem(version: string): string | undefined {
   if (!VERSION_FORMAT.test(version)) {
     return `версия «${version}» — нужен вид X.Y.Z`;
   }
@@ -82,21 +80,34 @@ export function versionProblem(
   if (major !== RELEASE_MAJOR) {
     return `до запуска версии — только ${RELEASE_MAJOR}.x: 1.0 выходит в день запуска (ADR-0005)`;
   }
+  return undefined;
+}
+
+/**
+ * Новая версия годится: вид X.Y.Z, до запуска — 0.x, выше нынешней. published — старшая вышедшая в npm
+ * (null — не выходило ничего), если нынешняя не вышла: её номер ещё свободен, и передумать можно и на
+ * меньшую — не ниже вышедших (ревизия фазы 5, А-25; так обещает CLAUDE.md).
+ */
+export function versionProblem(
+  from: string,
+  version: string,
+  published?: string | null,
+): string | undefined {
+  const format = formatProblem(version);
+  if (format) return format;
+  const floor = published === undefined ? from : (published ?? UNRELEASED);
   if (
-    compareVersions(parseVersion(version) ?? [], parseVersion(from) ?? []) <= 0
+    compareVersions(parseVersion(version) ?? [], parseVersion(floor) ?? []) <= 0
   ) {
-    return `версия ${version} не выше нынешней ${from}`;
+    return `версия ${version} не выше ${published === undefined ? "нынешней" : "вышедшей"} ${floor}`;
   }
   return undefined;
 }
 
-/** Вышла ли версия тега в npm, в том числе снятая: номер занят навсегда. */
-async function released(
-  registry: RegistryClient,
-  version: string,
-): Promise<boolean> {
+/** Номера тега в npm — и снятые: они заняты навсегда. */
+async function publishedVersions(registry: RegistryClient): Promise<string[]> {
   const p = await registry.packument(packageName("icon"));
-  return p !== undefined && (p.versions.has(version) || p.times.has(version));
+  return p === undefined ? [] : everPublished(p);
 }
 
 export async function bumpRelease(o: BumpOptions): Promise<BumpReport> {
@@ -104,8 +115,8 @@ export async function bumpRelease(o: BumpOptions): Promise<BumpReport> {
   const version = o.version ?? from;
   const registry = o.registry ?? registryClient();
   if (o.version !== undefined) {
-    const problem = versionProblem(from, o.version);
-    if (problem) throw new Error(problem);
+    const format = formatProblem(o.version);
+    if (format) throw new Error(format);
   } else if (from === UNRELEASED) {
     throw new Error(
       "пакеты ещё не выпускались — нужна версия: pnpm release bump 0.1.0",
@@ -113,7 +124,16 @@ export async function bumpRelease(o: BumpOptions): Promise<BumpReport> {
   }
   // Нынешняя версия уже в npm — её хэш и раздел журнала не меняются; не вышла — её раздел переходит
   // к новой версии, если выпуск передумали на другую.
-  const fromReleased = from !== UNRELEASED && (await released(registry, from));
+  const published = await publishedVersions(registry);
+  const fromReleased = from !== UNRELEASED && published.includes(from);
+  if (o.version !== undefined) {
+    const problem = versionProblem(
+      from,
+      o.version,
+      fromReleased ? undefined : (published.at(-1) ?? null),
+    );
+    if (problem) throw new Error(problem);
+  }
   if (o.version === undefined && fromReleased) {
     throw new Error(
       `${from} уже в npm: хэш её скрипта и раздел журнала не меняются — для правок нужна новая версия, pnpm release bump X.Y.Z`,

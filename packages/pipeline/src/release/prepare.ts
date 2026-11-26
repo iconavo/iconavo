@@ -11,7 +11,11 @@ import { isDeepStrictEqual } from "node:util";
 import { buildIconScript, SCRIPT_FILE } from "../icon/build.js";
 import { NPM_TAG } from "../npm/config.js";
 import { everPublished } from "../npm/decide.js";
-import type { Packument, RegistryClient } from "../npm/registry.js";
+import {
+  isTarballNotServed,
+  type Packument,
+  type RegistryClient,
+} from "../npm/registry.js";
 import { listFiles } from "../sources/fetch.js";
 import { compareVersions, parseVersion } from "../sources/version.js";
 import {
@@ -438,7 +442,18 @@ export async function prepareRelease(
       const doc = docs.get(entry.id)?.versions.get(version);
       const ours = contents.get(entry.id);
       if (doc === undefined || ours === undefined) continue;
-      const theirs = await o.registry.files(doc);
+      // Архив только что вышедшей версии npm раздаёт с задержкой: сравнить пока нечем — проблема с
+      // подсказкой, а не обрыв подготовки без отчёта (ревизия фазы 5, А-27).
+      let theirs: Map<string, Uint8Array>;
+      try {
+        theirs = await o.registry.files(doc);
+      } catch (e) {
+        if (!isTarballNotServed(e)) throw e;
+        entry.problems.push(
+          `архив ${entry.name}@${version} реестр ещё не раздаёт — сверить с этой сборкой нечем: повторите позже`,
+        );
+        continue;
+      }
       const same =
         theirs.size === ours.size &&
         [...ours].every(([path, data]) => {
@@ -462,23 +477,39 @@ export async function prepareRelease(
   const iconEntry = report.packages.find(
     (e) => e.id === "icon",
   ) as ReleaseEntry;
-  if (iconEntry.action === "published") {
+  // В README нет хэша — сравнивать нечем; это уже «нет» строки подключения (ревизия фазы 5, А-28).
+  if (readme === undefined) {
+    hash.notes.push("в README нет хэша скрипта — сравнивать нечем");
+  } else if (iconEntry.action === "published") {
     const doc = docs.get("icon")?.versions.get(version);
-    const files = doc === undefined ? undefined : await o.registry.files(doc);
+    // Архив вышедшей версии ещё не раздаётся — пометка: обязательная проверка PR в первые минуты после
+    // выпуска не краснеет, хэш сверит следующий запуск (ревизия фазы 5, А-27).
+    let files: Map<string, Uint8Array> | undefined;
+    let notServed = false;
+    try {
+      files = doc === undefined ? undefined : await o.registry.files(doc);
+    } catch (e) {
+      if (!isTarballNotServed(e)) throw e;
+      notServed = true;
+    }
     const script = files?.get(SCRIPT_PATH);
-    if (script === undefined) {
+    if (notServed) {
+      hash.notes.push(
+        `архив ${iconEntry.name}@${version} реестр ещё не раздаёт — хэш сверит следующий запуск`,
+      );
+    } else if (script === undefined) {
       hash.problems.push(
         `в опубликованном ${iconEntry.name}@${version} нет ${SCRIPT_PATH}`,
       );
     } else {
       report.script.published = sri(script);
-      if (readme !== undefined && readme !== report.script.published) {
+      if (readme !== report.script.published) {
         hash.problems.push(
           `хэш в README (${readme}) — не хэш скрипта ${version} в npm (${report.script.published})`,
         );
       } else hash.notes.push(`совпадает со скриптом ${version} в npm`);
     }
-  } else if (readme !== undefined) {
+  } else {
     if (readme !== local) {
       hash.problems.push(
         `хэш в README (${readme}) не совпадает со свежей сборкой (${local}) — pnpm release bump без версии обновит его`,

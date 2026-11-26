@@ -217,10 +217,12 @@ export function benchSummary(samples: readonly BenchSample[]): BenchSummary {
     p95: percentile(times, 0.95),
     p99: percentile(times, 0.99),
     max: times.length === 0 ? Number.NaN : Math.max(...times),
+    // Доля — среди ответивших, как P50 и P95: ошибки видны отдельно и сами проваливают цель (ревизия
+    // фазы 5, А-36).
     within:
       times.length === 0
         ? 0
-        : times.filter((t) => t <= BENCH_TARGET_MS).length / samples.length,
+        : times.filter((t) => t <= BENCH_TARGET_MS).length / times.length,
     semantic: count((s) => s.semantic),
     vector: count(
       (s) => s.vector ?? (s.cache === "HIT" ? "кэш ответа" : undefined),

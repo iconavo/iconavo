@@ -28,6 +28,30 @@ export const R2_RUN_STOPS: Record<number, string> = {
   403: "у ключа R2 нет доступа к бакету — нужен токен «Object Read & Write» на этот бакет; проверьте и R2_ACCOUNT_ID",
 };
 
+/**
+ * Подсказка по коду ошибки S3 в теле ответа: при сбитых часах ключи ни при чём, при неверной подписи —
+ * дело в секретном ключе (ревизия фазы 5, А-24). Другой код или кода нет — подсказка по коду ответа.
+ */
+export function r2Explain(
+  text: string,
+  hint: string,
+  stops: Readonly<Record<number, string>> = R2_RUN_STOPS,
+): string {
+  const code = /<Code>([^<]+)<\/Code>/.exec(text)?.[1];
+  if (code === "RequestTimeTooSkewed") {
+    return "часы этого компьютера расходятся со временем R2 больше чем на 15 минут — сверьте системное время";
+  }
+  // Подпись и ключ доступа — подсказка «ключ не подошёл» этого бакета: у бакета поиска свои имена.
+  const keys = stops[401] ?? hint;
+  if (code === "SignatureDoesNotMatch") {
+    return `подпись запроса не сошлась: ${keys}`;
+  }
+  if (code === "InvalidAccessKeyId") {
+    return `такого ключа доступа у R2 нет: ${keys}`;
+  }
+  return hint;
+}
+
 export const md5Hex = (data: Uint8Array): string =>
   createHash("md5").update(data).digest("hex");
 
@@ -108,6 +132,7 @@ export function r2Client(options: R2Options): StorageClient {
   const endpoint = new URL(r2Endpoint(options.accountId));
   const rules = {
     runStops: options.runStops ?? R2_RUN_STOPS,
+    explain: r2Explain,
     retryable,
     secrets: [options.secretAccessKey, options.accessKeyId],
     sleep,
@@ -141,10 +166,13 @@ export function r2Client(options: R2Options): StorageClient {
           service: "s3",
           date: new Date(now()),
         });
+        // Перенаправлений не выполняем: подписанный запрос уходит только в R2 — ответ 3xx становится
+        // ошибкой набора (ревизия фазы 5, Б-4).
         return fetchFn(`${endpoint.origin}${signed.target}`, {
           method: req.method,
           headers: signed.headers,
           body: req.body as BodyInit | undefined,
+          redirect: "manual",
           signal,
         });
       },

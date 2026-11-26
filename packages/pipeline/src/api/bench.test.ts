@@ -89,6 +89,22 @@ describe("pnpm api bench", () => {
     expect(renderBenchPage(r)).toContain("Холодный проход");
   });
 
+  it("доля «≤ 0,3 с» — среди ответивших, ошибки — отдельно (ревизия фазы 5, А-36)", () => {
+    const sample = (ms?: number, error?: string) => ({
+      id: "q",
+      query: "дом",
+      lang: "ru",
+      ...(ms === undefined ? {} : { ms, status: 200 }),
+      ...(error === undefined ? {} : { error }),
+    });
+    const s = benchSummary([
+      sample(100),
+      sample(120),
+      sample(undefined, "сбой"),
+    ]);
+    expect(s).toMatchObject({ n: 3, errors: 1, within: 1 });
+  });
+
   it("медленные ответы — цель не выполнена", async () => {
     const net = fakeNet(450);
     const r = await benchSearch({

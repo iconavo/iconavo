@@ -56,10 +56,31 @@ export function nextVersion(
     : { version: `${major}.${minor}.${patch + 1}`, action: "patch" };
 }
 
-/** Первый взгляд — без скачивания архива: пакета нет, отпечаток тот же или нужно сравнить имена. */
+/**
+ * Первый взгляд — без скачивания архива: пакета нет, отпечаток тот же или нужно сравнить имена. tagged —
+ * тег в npm, каким его видел план (нет тега — undefined): публикация сверяет реестр с ним, а не с основой.
+ * Пропал тег — основа — старшая живая версия, и сверка с основой твердила бы «план устарел» вечно
+ * (ревизия фазы 5, А-3).
+ */
 export type FirstLook =
-  | { kind: "decided"; action: NpmAction; version: string; base?: string }
-  | { kind: "compare"; base: NpmVersionDoc; highest: string }
+  | {
+      kind: "decided";
+      action: NpmAction;
+      version: string;
+      base?: string;
+      tagged?: string;
+    }
+  | {
+      kind: "compare";
+      base: NpmVersionDoc;
+      highest: string;
+      tagged?: string;
+      /**
+       * Старшая живая версия, если она выше основы (тег откатили): её имена тоже не должны пропасть
+       * (ревизия фазы 5, А-30).
+       */
+      newest?: NpmVersionDoc;
+    }
   | { kind: "stop"; message: string };
 
 export interface FirstLookInput {
@@ -83,6 +104,14 @@ export function firstLook(input: FirstLookInput): FirstLook {
       kind: "decided",
       action: input.allowNew ? "new" : "awaiting",
       version: input.firstVersion,
+    };
+  }
+  // Снят целиком — понятный «СТОП», а не план 1.0.0 на занятый номер (ревизия фазы 5, А-4).
+  if (p.unpublished) {
+    const taken = everPublished(p);
+    return {
+      kind: "stop",
+      message: `пакет ${p.name} снят с npm целиком${taken.length > 0 ? ` — номера ${taken.join(", ")} заняты навсегда` : ""}: разберитесь на npmjs.com вручную`,
     };
   }
   const published = everPublished(p);
@@ -131,15 +160,26 @@ export function firstLook(input: FirstLookInput): FirstLook {
           kind: "decided",
           ...nextVersion(highest, "patch", input.formatMajor),
           base: base.version,
+          tagged,
         }
       : {
           kind: "decided",
           action: "unchanged",
           version: base.version,
           base: base.version,
+          tagged,
         };
   }
-  return { kind: "compare", base, highest };
+  const top = live.at(-1);
+  const newest =
+    top !== undefined && top !== base.version ? p.versions.get(top) : undefined;
+  return {
+    kind: "compare",
+    base,
+    highest,
+    tagged,
+    ...(newest ? { newest } : {}),
+  };
 }
 
 export type Decision =
@@ -154,6 +194,8 @@ export type Decision =
 /** Решение после сравнения имён: пропавшее имя — «СТОП» (ADR-0005), новые — средняя цифра. */
 export function compareNames(input: {
   base: NpmVersionDoc;
+  /** Старшая живая версия выше основы: её имена — в publishedNames, в сообщении — её номер. */
+  newest?: NpmVersionDoc;
   highest: string;
   publishedNames: ReadonlySet<string>;
   names: ReadonlySet<string>;
@@ -167,7 +209,7 @@ export function compareNames(input: {
     const shown = missing.slice(0, NPM_NAMES_LIMIT).join(", ");
     return {
       kind: "stop",
-      message: `из опубликованной версии ${input.base.version} пропали имена (${missing.length}): ${shown}${missing.length > NPM_NAMES_LIMIT ? "…" : ""} — имена не удаляются (ADR-0005)`,
+      message: `из опубликованной версии ${input.base.version}${input.newest ? ` или ${input.newest.version}` : ""} пропали имена (${missing.length}): ${shown}${missing.length > NPM_NAMES_LIMIT ? "…" : ""} — имена не удаляются (ADR-0005)`,
     };
   }
   const added = [...input.names]

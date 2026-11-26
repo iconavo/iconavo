@@ -22,6 +22,7 @@ import {
   contentTypeOf,
   type HostUploadReport,
   type LocalFile,
+  ownStopNote,
   type UploadReport,
   uploadCdn,
   uploadStop,
@@ -628,5 +629,23 @@ describe("compareWithRemote и contentTypeOf", () => {
       "application/json; charset=utf-8",
     );
     expect(() => contentTypeOf("a/b.png")).toThrow("неизвестный тип файла");
+  });
+});
+
+describe("почему манифест хоста не пишется (ревизия фазы 5, А-22)", () => {
+  const host = (extra: Partial<HostUploadReport>): HostUploadReport => ({
+    host: "https://cdn.iconavo.dev",
+    storage: "R2 iconavo-cdn",
+    sets: [],
+    manifestStatus: "skipped",
+    stop: [],
+    ...extra,
+  });
+  it("остановлен только каталог — так и сказано", () => {
+    const catalog = { stop: ["другой файл под тем же именем"] } as never;
+    expect(ownStopNote(host({ catalog }))).toBe("остановлен каталог наборов");
+    expect(ownStopNote(host({ stop: ["ключ не подошёл"], catalog }))).toBe(
+      "работа с хостом остановлена",
+    );
   });
 });

@@ -180,6 +180,27 @@ describe("pnpm release prepare", () => {
     expect(problems(changed.report)).toEqual([]);
   });
 
+  it("архив вышедшей версии ещё не раздаётся — подготовка не падает, хэш сверит следующий запуск (ревизия фазы 5, А-27)", async () => {
+    const root = await writeReleaseRepo({ version: "0.1.0" });
+    const registry = fakeRegistry(
+      publishedAll([{ version: "0.1.0", notServed: true }]),
+    );
+    const { report } = await prepare(root, registry);
+    expect(problems(report)).toEqual([]);
+    const hash = report.checks.find((c) => c.title === "Хэш скрипта в README");
+    expect(hash?.notes.join("\n")).toContain("реестр ещё не раздаёт");
+  });
+
+  it("в README нет хэша — строка хэша говорит «сравнивать нечем», а не «совпадает» (ревизия фазы 5, А-28)", async () => {
+    const root = await writeReleaseRepo({ version: "0.1.0", integrity: null });
+    const registry = fakeRegistry(publishedAll([{ version: "0.1.0" }]));
+    const { report } = await prepare(root, registry);
+    const hash = report.checks.find((c) => c.title === "Хэш скрипта в README");
+    expect(hash?.notes).toEqual([
+      "в README нет хэша скрипта — сравнивать нечем",
+    ]);
+  });
+
   it("хэш README — не от вышедшего скрипта — СТОП", async () => {
     const root = await writeReleaseRepo({
       version: "0.1.0",

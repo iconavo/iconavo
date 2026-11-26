@@ -51,7 +51,8 @@ export interface IconCheckTarget {
 }
 
 export interface IconCheckReport {
-  host: string;
+  /** Корень API со схемой: у превью — http (ревизия фазы 5, А-37). */
+  base: string;
   targets: IconCheckTarget[];
   requests: number;
   ms: number;
@@ -127,7 +128,7 @@ export async function checkIcon(
   const get = (path: string) =>
     liveGet(`${base}/${path}`, { origin: CHECK_ORIGIN }, live);
   const report: IconCheckReport = {
-    host: base.replace(/^https?:\/\//, ""),
+    base,
     targets: [],
     requests: 0,
     ms: 0,
@@ -400,9 +401,7 @@ export async function checkIcon(
 
 /** Строки проверки для терминала. */
 export function formatIconCheck(r: IconCheckReport): string[] {
-  const lines = [
-    `Сведения об иконке https://${r.host}/icon — запросов ${r.requests}`,
-  ];
+  const lines = [`Сведения об иконке ${r.base}/icon — запросов ${r.requests}`];
   for (const t of r.targets) {
     lines.push(
       `  ${t.issues.length === 0 ? "ок" : "не так"}  ${t.name}: ${t.status ?? "—"}${t.ms === undefined ? "" : `, ${Math.round(t.ms)} мс`}${t.notes.length > 0 ? ` (${t.notes.join("; ")})` : ""}`,

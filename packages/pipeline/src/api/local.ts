@@ -33,7 +33,9 @@ export function diskBucket(dir: string) {
       const text = Buffer.from(data).toString("utf8");
       return {
         text: async () => text,
-        arrayBuffer: async () => data.slice().buffer as ArrayBuffer,
+        // Копия ровно этих байт: Buffer.slice память не копирует, а у пустого файла и у Buffer из общего
+        // пула .buffer больше самих данных (ревизия фазы 5, А-34).
+        arrayBuffer: async () => new Uint8Array(data).buffer as ArrayBuffer,
       };
     },
   };

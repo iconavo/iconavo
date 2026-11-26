@@ -331,3 +331,32 @@ describe("план подготовки", () => {
     );
   });
 });
+
+describe("ожидание подписи (ревизия фазы 5, А-29)", () => {
+  it("версия вышла давно, подписи нет — не ждёт весь срок", async () => {
+    const old = await version("1.0.0", {
+      provenance: null,
+      time: "2026-10-10T00:00:00.000Z",
+    });
+    // Часы — через час после выхода версии: подписи уже не будет.
+    let t = Date.parse("2026-10-10T01:00:00.000Z");
+    const sleeps: number[] = [];
+    const report = await verifyPackages(configs, {
+      dataDir,
+      registry: fakeRegistry({
+        [NAME]: { versions: [old], tags: { next: "1.0.0" } },
+      }).client,
+      waitMs: 900_000,
+      pollMs: 20_000,
+      now: () => t,
+      sleep: async (ms: number) => {
+        sleeps.push(ms);
+        t += ms;
+      },
+    });
+    expect(sleeps).toEqual([]);
+    expect(report.packages[0]?.problems).toEqual([
+      "у версии 1.0.0 нет подписи provenance",
+    ]);
+  });
+});

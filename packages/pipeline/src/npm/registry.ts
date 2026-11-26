@@ -45,6 +45,8 @@ export interface Packument {
   versions: Map<string, NpmVersionDoc>;
   /** Каждый номер, который когда-либо выходил, и время выхода — и у снятых версий тоже. */
   times: Map<string, string>;
+  /** Пакет снят с npm целиком: вместо описания — надгробие (ревизия фазы 5, А-4). */
+  unpublished?: boolean;
 }
 
 /** Подпись provenance (SLSA v1): откуда и из какого архива собрана версия. */
@@ -91,7 +93,14 @@ const packumentSchema = z.object({
   name: z.string().min(1),
   "dist-tags": z.record(z.string(), z.string()).optional(),
   versions: z.record(z.string(), versionDocSchema).optional(),
-  time: z.record(z.string(), z.string()).optional(),
+  // Значения time — строки, кроме надгробия time.unpublished: объект с номерами снятых версий.
+  time: z.record(z.string(), z.unknown()).optional(),
+});
+
+/** Надгробие пакета, снятого целиком: когда и какие номера были. */
+const tombstoneSchema = z.object({
+  time: z.string().optional(),
+  versions: z.array(z.string()).optional(),
 });
 
 /** Служебные записи в time: не номера версий. */
@@ -115,9 +124,43 @@ export function parsePackument(json: unknown): Packument {
   }
   const times = new Map<string, string>();
   for (const [key, time] of Object.entries(p.time ?? {})) {
-    if (!TIME_SERVICE_KEYS.has(key)) times.set(key, time);
+    if (!TIME_SERVICE_KEYS.has(key) && typeof time === "string") {
+      times.set(key, time);
+    }
   }
-  return { name: p.name, distTags: p["dist-tags"] ?? {}, versions, times };
+  // Надгробие: пакет снят целиком — живых версий нет, а снятые номера заняты навсегда. Раньше объект в
+  // time.unpublished ронял разбор непонятной ошибкой схемы (ревизия фазы 5, А-4).
+  const unpublished = p.time?.unpublished !== undefined;
+  if (unpublished) {
+    const tomb = tombstoneSchema.safeParse(p.time?.unpublished);
+    for (const v of tomb.success ? (tomb.data.versions ?? []) : []) {
+      if (!times.has(v)) times.set(v, tomb.data?.time ?? "");
+    }
+  }
+  return {
+    name: p.name,
+    distTags: p["dist-tags"] ?? {},
+    versions,
+    times,
+    ...(unpublished ? { unpublished: true } : {}),
+  };
+}
+
+/** Надгробие в ответе 404 — пакет был и снят целиком; другое тело — пакета не было. */
+function tombstoneOf(text: string): Packument | undefined {
+  let json: unknown;
+  try {
+    json = JSON.parse(text);
+  } catch {
+    return undefined;
+  }
+  const time = (json as { time?: { unpublished?: unknown } } | null)?.time;
+  if (time?.unpublished === undefined) return undefined;
+  try {
+    return parsePackument(json);
+  } catch {
+    return undefined;
+  }
 }
 
 const statementSchema = z.object({
@@ -309,7 +352,9 @@ export function registryClient(options: RegistryOptions = {}): RegistryClient {
             signal,
           }),
         async (res) =>
-          res.status === 404 ? undefined : parsePackument(await res.json()),
+          res.status === 404
+            ? tombstoneOf(await res.text())
+            : parsePackument(await res.json()),
         { ...rules, allow404: true },
       );
     },

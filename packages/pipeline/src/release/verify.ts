@@ -28,6 +28,7 @@ import {
   CLEAN_REACT,
   CLEAN_RETRY_MS,
   JSDELIVR_POLL_MS,
+  JSDELIVR_TIMEOUT_MS,
   RELEASE_WORKFLOW,
   scriptUrl,
 } from "./config.js";
@@ -393,8 +394,11 @@ export async function verifyRelease(
   let last = "";
   for (;;) {
     try {
+      // Срок у попытки: зависший ответ не растягивает --wait на минуты (ревизия фазы 5, А-26); истёк —
+      // как сбой сети, следующая попытка.
       const res = await fetchFn(js.url, {
         headers: { "cache-control": "no-cache" },
+        signal: AbortSignal.timeout(JSDELIVR_TIMEOUT_MS),
       });
       if (res.status === 200) {
         const body = new Uint8Array(await res.arrayBuffer());

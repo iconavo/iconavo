@@ -201,16 +201,18 @@ jobs:
           fi
           tag=$(jq -r .tag dist-npm/plan.json)
           failed=0
-          # У нового пакета базовой версии нет — в строке «-»: табуляция для read — пробел, и пустое
-          # поле склеилось бы с соседним.
-          while IFS=$'\t' read -r id name version base action; do
-            if [ "$base" = - ]; then base=""; fi
+          # tagged — тег, каким его видел план (ревизия фазы 5, А-3): у нового пакета и у пакета, у
+          # которого тег пропал, его нет — в строке «-»: табуляция для read — пробел, и пустое поле
+          # склеилось бы с соседним.
+          while IFS=$'\t' read -r id name version tagged action; do
+            if [ "$tagged" = - ]; then tagged=""; fi
             if ! [[ $id =~ ^[a-z0-9]+(-[a-z0-9]+)*$ && $name == "@iconavo-ui/icons-$id" && $version =~ ^[0-9]+\.[0-9]+\.[0-9]+$ && $tag =~ ^[a-z]+$ ]]; then
               echo "::error::Странная строка плана: $id $name $version $tag"
               exit 1
             fi
-            # Перед публикацией — реестр ещё раз: версия уже вышла (повтор запуска) — пропуск; под тегом
-            # не та версия, от которой считал план, — план устарел, пакет не публикуется.
+            # Перед публикацией — реестр ещё раз: версия уже вышла (повтор запуска) — пропуск; тег не тот,
+            # что видел план, — план устарел, пакет не публикуется. Тега не было и нет — публикация
+            # с --tag вернёт его.
             code=$(curl -sS --retry 3 --max-time 60 -H "accept: application/json" -o "$RUNNER_TEMP/doc.json" -w "%{http_code}" "https://registry.npmjs.org/${name/\//%2F}" || echo 000)
             case $code in
               200) doc=$(cat "$RUNNER_TEMP/doc.json") ;;
@@ -226,8 +228,8 @@ jobs:
               continue
             fi
             current=$(jq -r --arg t "$tag" '."dist-tags"[$t] // ""' <<< "$doc")
-            if [ "$current" != "$base" ]; then
-              echo "::error::$name: в npm под тегом $tag уже ${current:-ничего}, а план считал от ${base:-нового пакета} — план устарел, повторите запуск"
+            if [ "$current" != "$tagged" ]; then
+              echo "::error::$name: в npm под тегом $tag уже ${current:-ничего}, а план видел ${tagged:-без тега} — план устарел, повторите запуск"
               failed=1
               continue
             fi
@@ -242,7 +244,7 @@ jobs:
             else
               failed=1
             fi
-          done < <(jq -r '.packages[] | select(.publish) | [.id, .name, .version, (.base // "-"), .action] | @tsv' dist-npm/plan.json)
+          done < <(jq -r '.packages[] | select(.publish) | [.id, .name, .version, (.tagged // "-"), .action] | @tsv' dist-npm/plan.json)
           exit $failed
 
   verify:

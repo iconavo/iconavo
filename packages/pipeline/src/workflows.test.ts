@@ -118,3 +118,12 @@ describe("фильтры запуска workflow", () => {
     },
   );
 });
+
+describe("публикация пакетов данных (ревизия фазы 5, А-3)", () => {
+  it("реестр сверяется с тегом, каким его видел план, а не с основой плана", () => {
+    const text = workflow("publish.yml");
+    expect(text).toContain('(.tagged // "-")');
+    expect(text).toContain('if [ "$current" != "$tagged" ]; then');
+    expect(text).not.toContain("(.base //");
+  });
+});

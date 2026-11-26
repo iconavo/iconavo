@@ -110,13 +110,16 @@ export function bunnyClient(options: BunnyOptions): StorageClient {
   };
   const url = (path: string) =>
     `${endpoint}/${[options.zone, ...path.split("/")].map(encodeURIComponent).join("/")}`;
+  // Пароль хранилища уходит только к хранилищу: перенаправлений клиент не выполняет, ответ 3xx —
+  // ошибка набора (redirect: "manual" у каждого запроса; ревизия фазы 5, Б-4).
   const auth = { AccessKey: options.password };
 
   /** Файлы и папки одной папки; нет папки — пусто. */
   async function listDir(dir: string) {
     return requestWithRetries(
       `GET ${options.zone}/${dir}`,
-      (signal) => fetchFn(url(dir), { headers: auth, signal }),
+      (signal) =>
+        fetchFn(url(dir), { headers: auth, redirect: "manual", signal }),
       async (res) => {
         const text = await res.text();
         if (res.status === 404) return { files: [], dirs: [] };
@@ -165,6 +168,7 @@ export function bunnyClient(options: BunnyOptions): StorageClient {
               "Content-Type": o.contentType,
             },
             body: body as BodyInit,
+            redirect: "manual",
             signal,
           }),
         async (res) => {
@@ -176,7 +180,8 @@ export function bunnyClient(options: BunnyOptions): StorageClient {
     async get(key) {
       return requestWithRetries(
         `GET ${key}`,
-        (signal) => fetchFn(url(key), { headers: auth, signal }),
+        (signal) =>
+          fetchFn(url(key), { headers: auth, redirect: "manual", signal }),
         async (res) => {
           const body = new Uint8Array(await res.arrayBuffer());
           return res.status === 404 ? undefined : body;

@@ -196,6 +196,37 @@ describe("повторы и остановки", () => {
     expect(requests).toHaveLength(1);
   });
 
+  it("403: подсказка по коду ошибки — часы и подпись, а не всегда ключ (ревизия фазы 5, А-24)", async () => {
+    const stop = async (code: string) => {
+      const { c } = client([
+        () =>
+          new Response(`<Error><Code>${code}</Code></Error>`, { status: 403 }),
+      ]);
+      return ((await c.list("v/").catch((e: Error) => e)) as Error).message;
+    };
+    const skew = await stop("RequestTimeTooSkewed");
+    expect(skew).toContain("часы");
+    expect(skew).not.toContain("Object Read & Write");
+    const signature = await stop("SignatureDoesNotMatch");
+    expect(signature).toContain("подпись");
+    expect(signature).toContain("R2_SECRET_ACCESS_KEY");
+  });
+
+  it("перенаправление не выполняется: ошибка набора с первого раза (ревизия фазы 5, Б-4)", async () => {
+    const { c, requests } = client([
+      () =>
+        new Response(null, {
+          status: 307,
+          headers: { location: "https://elsewhere.example/b" },
+        }),
+    ]);
+    const error = await c.list("v/").catch((e: Error) => e);
+    expect(storageErrorScope(error)).toBe("set");
+    expect((error as Error).message).toContain("HTTP 307");
+    expect(requests).toHaveLength(1);
+    expect(requests[0]?.init.redirect).toBe("manual");
+  });
+
   it("400 — ошибка набора без повторов", async () => {
     const body = new Uint8Array([1, 2, 3]);
     const { c, requests } = client([
