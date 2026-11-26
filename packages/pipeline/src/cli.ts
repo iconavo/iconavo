@@ -19,6 +19,7 @@
 // | pnpm site [--port=N] [--prod] | pnpm site --check [--browser=…] [--only=…] | pnpm site --live [--expect-build=…] [--base=…]
 // | pnpm site --refresh [--all] [--base=…] | pnpm site --refresh --wait=N --since=… --sets=… [--base=…]
 // | pnpm release bump [версия] | pnpm release prepare [--first] | pnpm release verify --plan=… [--wait=N]
+// | pnpm analytics [--weeks=N]
 import { randomInt } from "node:crypto";
 import {
   mkdir,
@@ -32,6 +33,9 @@ import type { AddressInfo } from "node:net";
 import { tmpdir } from "node:os";
 import { basename, join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
+import { formatAnalytics, renderAnalyticsPage } from "./analytics/page.js";
+import { httpReader } from "./analytics/reader.js";
+import { buildReport, DEFAULT_WEEKS } from "./analytics/report.js";
 import {
   BATCH_SIZE,
   batchBenchFailed,
@@ -49,6 +53,7 @@ import {
   formatApiCheckTable,
 } from "./api/check-report.js";
 import {
+  ANALYTICS_DATABASE_ID,
   API_HOST,
   API_OUT_DIR,
   PREVIEW_PORT,
@@ -592,7 +597,13 @@ const USAGE = `Использование:
   pnpm release verify --plan=…        после публикации: версия под тегом next, архив из плана,
                                       provenance из release.yml, доверенная публикация, jsDelivr,
                                       чистый проект с иконкой; отчёт .cache/reports/release/verify.html
-      --wait=N                        ждать до N секунд, пока npm и jsDelivr покажут новую версию`;
+      --wait=N                        ждать до N секунд, пока npm и jsDelivr покажут новую версию
+  pnpm analytics                      отчёт аналитики сайта (ADR-0043): успех поиска по неделям ru и en,
+                                      неудачные запросы за неделю, места, форматы, страны, отклонённое;
+                                      база D1 — через API Cloudflare ключом ANALYTICS_READ_TOKEN из .env;
+                                      отчёт .cache/reports/analytics/index.html; только локально
+      --weeks=N                       недель в таблице успеха (по умолчанию ${DEFAULT_WEEKS}); старше 30 дней —
+                                      из итогов дня`;
 
 /** Флаги pnpm pr со ссылками: флаг → поле PrLinks. */
 const LINK_FLAGS: Record<string, keyof PrLinks> = {
@@ -744,6 +755,7 @@ let refreshWait: number | undefined;
 let refreshSince: number | undefined;
 let refreshSets: string[] | undefined;
 let siteOnly: string[] | undefined;
+let analyticsWeeks = DEFAULT_WEEKS;
 // pnpm mcp clients (шаг 12 фазы 4): сценарии, модель Claude Code, проверка лимитов, папки для разбора.
 let clientsOnly: number[] | undefined;
 let clientsModel: string | undefined;
@@ -756,6 +768,14 @@ for (const flag of flags) {
   const value = eq === -1 ? undefined : flag.slice(eq + 1);
   const link = LINK_FLAGS[name];
   if (command === "data" && flag === "--accept-changes") continue;
+  if (
+    command === "analytics" &&
+    name === "--weeks" &&
+    /^[1-9][0-9]?$/.test(value ?? "")
+  ) {
+    analyticsWeeks = Number(value);
+    continue;
+  }
   if (command === "pr" && flag === "--no-auto-merge") continue;
   if (command === "pr" && flag === "--state") continue;
   if (command === "pr" && link && value?.startsWith("https://")) {
@@ -2991,6 +3011,37 @@ try {
     console.log(
       report.written ? "Записан." : "Без изменений: файл на диске тот же.",
     );
+    process.exit(0);
+  } else if (command === "analytics") {
+    if (args.length > 0)
+      usageError("pnpm analytics принимает только флаг --weeks=N.");
+    // Ключ — только из окружения (команда подхватывает .env); в вывод он не попадает. В CI отчёта нет:
+    // логи открыты, а в отчёте — тексты запросов людей (ADR-0043).
+    const env = (name: string) => process.env[name]?.trim() ?? "";
+    const missing = [R2_ENV.accountId, "ANALYTICS_READ_TOKEN"].filter(
+      (name) => env(name) === "",
+    );
+    if (missing.length > 0) {
+      console.error(
+        `Нет ключей: ${missing.join(", ")}. Впишите их в .env (имена — в .env.example): API-токен Cloudflare с правом Account · D1 · Read (ADR-0043).`,
+      );
+      process.exit(1);
+    }
+    const report = await buildReport(
+      httpReader({
+        accountId: env(R2_ENV.accountId),
+        databaseId: ANALYTICS_DATABASE_ID,
+        token: env("ANALYTICS_READ_TOKEN"),
+      }),
+      Date.now(),
+      analyticsWeeks,
+    );
+    for (const line of formatAnalytics(report)) console.log(line);
+    const reportDir = join(reportsDir, "analytics");
+    await mkdir(reportDir, { recursive: true });
+    const htmlPath = join(reportDir, "index.html");
+    await writeFile(htmlPath, renderAnalyticsPage(report), "utf8");
+    console.log(`Отчёт: ${htmlPath}`);
     process.exit(0);
   } else {
     usageError(
