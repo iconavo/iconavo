@@ -3,8 +3,8 @@
 // при первой выкладке её на адресе может ещё не быть. Затем пачка в двух порядках (второй ответ — из
 // кэша и побайтно тот же), SVG без параметров (равен файлу статики), с цветом и размером, с поворотом
 // и отражением, с толщиной линии, CSS и CSS с толщиной (шаг 5 фазы 4), каталог наборов (шаг 2 фазы 4:
-// /collections, /collection, /last-modified, /changelog — сверка с манифестом), ответы 400 и 404 и
-// переход с http. К каждому ответу 200 — два запроса, как у статики: с Origin и «br, gzip» и без
+// /collections, /collection, /last-modified, /changelog — сверка с манифестом), ответы 400 и 404,
+// приём событий /event (шаг 2 фазы 5: 204, 400, 403 — event-check.ts) и переход с http. К каждому ответу 200 — два запроса, как у статики: с Origin и «br, gzip» и без
 // Origin только с gzip. Ключи не нужны.
 
 import { isDeepStrictEqual } from "node:util";
@@ -50,6 +50,7 @@ import {
   HIT_PAUSE_MS,
   STATIC_HOST,
 } from "./config.js";
+import { checkEvents } from "./event-check.js";
 
 /** Вид адреса edge API — от него зависят ожидания. */
 export type ApiCheckKind =
@@ -70,6 +71,9 @@ export type ApiCheckKind =
   | "invalid-stroke"
   | "missing-collection"
   | "collection-prefix"
+  | "event"
+  | "event-invalid"
+  | "event-origin"
   | "redirect";
 
 export interface ApiTarget {
@@ -904,6 +908,7 @@ export async function checkApi(
       400,
     ),
   );
+  for (const target of await checkEvents(live)) done(target);
   done(await checkRedirect());
   return report();
 }

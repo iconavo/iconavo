@@ -8,6 +8,7 @@
   "include": ["src"],
   "exclude": ["src/**/*.test.ts", "src/**/*.testing.ts"],
   "references": [
+    { "path": "../analytics" },
     { "path": "../core" },
     { "path": "../icon" },
     { "path": "../schema" },

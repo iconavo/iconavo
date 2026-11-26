@@ -1,7 +1,12 @@
 // Проверка живого API на настоящем обработчике функции (apps/api) с поддельными R2 и сетью: статика
 // отдаёт те же файлы, что лежат в «бакете», а «Cloudflare» добавляет Server и сжатие.
 
+import { DatabaseSync } from "node:sqlite";
+import { EVENT_PATH } from "@iconavo-ui/analytics";
+import type { D1Like } from "@iconavo-ui/analytics/db";
+import { sqliteD1 } from "@iconavo-ui/analytics/sqlite";
 import { describe, expect, it } from "vitest";
+import { handleEvent } from "../../../../apps/api/src/event.js";
 import {
   fakeBucket,
   fakeCache,
@@ -79,8 +84,11 @@ function world(
     staticMissing?: string[];
     /** /collections функции отвечает 503. */
     breakCollections?: boolean;
+    /** База аналитики не привязана к функции: /event отвечает 503. */
+    noAnalytics?: boolean;
   } = {},
 ) {
+  const analytics: D1Like = sqliteD1(new DatabaseSync(":memory:"));
   const files: Record<string, string> = {
     "manifest.json": manifestText(
       { lucide: V },
@@ -136,6 +144,14 @@ function world(
     if (o.breakCollections && url.pathname === "/collections") {
       return new Response("busy", { status: 503 });
     }
+    // Приём событий — у точки входа функции, как в apps/api/src/index.ts.
+    if (url.pathname === EVENT_PATH) {
+      return handleEvent(
+        new Request(url, init),
+        o.noAnalytics ? {} : { ANALYTICS: analytics },
+        { now: () => Date.UTC(2026, 10, 26, 12) + time },
+      );
+    }
     const res = await handler(new Request(url), w.waitUntil);
     await w.flush();
     const headers = new Headers(res.headers);
@@ -148,6 +164,7 @@ function world(
   };
   return {
     bucket,
+    analytics,
     fetchFn,
     clock: {
       now: () => time,
@@ -159,6 +176,41 @@ function world(
 }
 
 describe("checkApi", () => {
+  it("приём /event: проверочная пачка записана с пометкой, отказы — тоже помечены", async () => {
+    const w = world();
+    const report = await checkApi({ fetch: w.fetchFn, ...w.clock });
+    const events = report.targets.filter((t) => t.kind.startsWith("event"));
+    expect(events.map((t) => [t.path, t.status, t.issues])).toEqual([
+      ["event — проверочная пачка", 204, []],
+      ["event — пачка не по списку", 400, []],
+      ["event — чужая страница", 403, []],
+    ]);
+    expect(
+      (await w.analytics.prepare("SELECT name, test FROM events").all())
+        .results,
+    ).toEqual([{ name: "page", test: 1 }]);
+    expect(
+      (
+        await w.analytics
+          .prepare("SELECT reason, test FROM rejects ORDER BY reason")
+          .all()
+      ).results,
+    ).toEqual([
+      { reason: "event:page:section", test: 1 },
+      { reason: "origin", test: 1 },
+    ]);
+  });
+
+  it("база не привязана — проверка красная с подсказкой", async () => {
+    const w = world({ noAnalytics: true });
+    const report = await checkApi({ fetch: w.fetchFn, ...w.clock });
+    const event = report.targets.find((t) => t.kind === "event");
+    expect(event?.issues.map((i) => i.message)).toEqual([
+      "ответ 503 вместо 204 (analytics_unavailable) — база D1 не привязана к функции или не ответила (ADR-0043)",
+    ]);
+    expect(apiCheckFailed(report)).toBe(true);
+  });
+
   it("всё сходится со статикой — ок, повтор из кэша", async () => {
     const w = world();
     const report = await checkApi({ fetch: w.fetchFn, ...w.clock });
@@ -182,6 +234,9 @@ describe("checkApi", () => {
       "missing-set",
       "missing-icon",
       "invalid-stroke",
+      "event",
+      "event-invalid",
+      "event-origin",
       "redirect",
     ]);
     // Манифест без catalog — каталог не проверялся, это не проблема.
@@ -231,6 +286,9 @@ describe("checkApi", () => {
       "missing-set",
       "missing-icon",
       "invalid-stroke",
+      "event",
+      "event-invalid",
+      "event-origin",
       "redirect",
     ]);
     expect(

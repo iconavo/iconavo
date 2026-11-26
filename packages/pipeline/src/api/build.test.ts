@@ -53,9 +53,14 @@ describe("buildApi", () => {
     await rm(outDir, { recursive: true, force: true });
   });
 
-  it("функция, metadata и build.json; повтор — без записи и с той же меткой", async () => {
+  it("функция, metadata, расписание и build.json; повтор — без записи и с той же меткой", async () => {
     const first = await buildApi({ root: ROOT, outDir });
-    expect(first.written).toEqual(["worker.js", "metadata.json", "build.json"]);
+    expect(first.written).toEqual([
+      "worker.js",
+      "metadata.json",
+      "schedules.json",
+      "build.json",
+    ]);
     expect(first.gzipBytes).toBeLessThan(first.bytes);
     const second = await buildApi({ root: ROOT, outDir });
     expect(second.written).toEqual([]);
@@ -66,11 +71,20 @@ describe("buildApi", () => {
       JSON.parse(await readFile(join(outDir, "metadata.json"), "utf8")),
     ).toEqual(workerMetadata());
     expect(
+      JSON.parse(await readFile(join(outDir, "schedules.json"), "utf8")),
+    ).toEqual([{ cron: "17 0 * * *" }]);
+    expect(
       JSON.parse(await readFile(join(outDir, "build.json"), "utf8")),
     ).toMatchObject({ build: first.build, bytes: first.bytes });
   });
 
-  it("metadata: модуль, дата совместимости, бакеты раздачи и поиска, лимит частоты, журнал без запросов", () => {
+  it("метка зависит и от metadata с расписанием: новая привязка без правки кода — новая сборка", async () => {
+    const code = await bundleWorker(ROOT);
+    const built = await buildApi({ root: ROOT, outDir });
+    expect(built.build).not.toBe(stampBuild(code).build);
+  });
+
+  it("metadata: модуль, дата совместимости, бакеты раздачи и поиска, лимиты частоты, база аналитики, журнал без запросов", () => {
     expect(workerMetadata()).toEqual({
       main_module: "worker.js",
       compatibility_date: "2026-10-01",
@@ -88,6 +102,19 @@ describe("buildApi", () => {
           name: "ICON_LIMIT",
           namespace_id: "1002",
           simple: { limit: 300, period: 60 },
+        },
+        {
+          type: "d1",
+          name: "ANALYTICS",
+          id: expect.stringMatching(
+            /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/,
+          ),
+        },
+        {
+          type: "ratelimit",
+          name: "EVENT_LIMIT",
+          namespace_id: "1005",
+          simple: { limit: 60, period: 60 },
         },
       ],
       observability: {

@@ -1,6 +1,8 @@
 // Что функция берёт у Cloudflare Workers — свои минимальные типы вместо @cloudflare/workers-types:
-// новая зависимость ради нескольких строк не нужна. Функция только читает: у привязок R2 есть и
-// запись, но код её не вызывает (ADR-0028).
+// новая зависимость ради нескольких строк не нужна. Хранилища раздачи и поиска функция только читает:
+// у привязок R2 есть и запись, но код её не вызывает (ADR-0028). Пишет она только в базу аналитики.
+
+import type { D1Like } from "@iconavo-ui/analytics/db";
 
 /** Объект R2 с телом — часть R2ObjectBody. */
 export interface StoredObject {
@@ -38,6 +40,15 @@ export interface Env {
   MEILISEARCH_URL?: string;
   MEILISEARCH_SEARCH_KEY?: string;
   POLZA_API_KEY?: string;
+  /**
+   * База аналитики iconavo-analytics (шаг 2 фазы 5, ADR-0043): приём событий /event и итоги дня по
+   * расписанию. Нет — /event отвечает 503, остальное работает как прежде.
+   */
+  ANALYTICS?: D1Like;
+  /** Лимит частоты /event: 60 пачек в минуту с адреса. */
+  EVENT_LIMIT?: RateLimiter;
+  /** Страницы, с которых /event берёт события, через запятую. Только у превью: в Cloudflare его нет. */
+  EVENT_ORIGINS?: string;
 }
 
 /** Контекст запроса — часть ExecutionContext. */

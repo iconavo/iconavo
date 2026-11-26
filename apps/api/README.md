@@ -274,6 +274,14 @@ GET https://api.iconavo.dev/changelog?prefix=lucide
 - **`version`** is the data version of the set, `previous` the one before it, and `revision` the author's npm version or git commit.
 - The same `prefix` and `prefixes` parameters as `/collections`.
 
+## Site analytics: `POST /event`
+
+Anonymous usage events of the iconavo.dev site itself: searches, copies, downloads and page sections. They show how often a search ends with a copied or downloaded icon. This address is not for other sites: it accepts only requests with `Origin: https://iconavo.dev`, at most 60 batches a minute from one address.
+
+Nothing identifies a person: no cookies, IP addresses or identifiers are stored, only the event fields, the hour and a two-letter country code. Raw events are kept for 30 days; daily totals are numbers only.
+
+Errors: `403 forbidden_origin`, `400 invalid_events`, `413 too_large`, `429 rate_limited`, `503 analytics_unavailable`; other methods than `POST` get `405 method_not_allowed`.
+
 ## Errors
 
 Errors are short JSON with an HTTP status:

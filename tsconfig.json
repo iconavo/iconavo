@@ -5,6 +5,7 @@
     { "path": "packages/icon" },
     { "path": "packages/react" },
     { "path": "packages/search" },
+    { "path": "packages/analytics" },
     { "path": "packages/snippets" },
     { "path": "packages/schema" },
     { "path": "packages/pipeline" },

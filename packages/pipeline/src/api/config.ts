@@ -34,6 +34,25 @@ export const LIMIT_NAMESPACE = "1001";
 /** Лимит частоты /icon (шаг 4 фазы 4) — своя привязка и своё пространство счёта. */
 export const ICON_LIMIT_BINDING = "ICON_LIMIT";
 export const ICON_LIMIT_NAMESPACE = "1002";
+/**
+ * Аналитика (шаг 2 фазы 5, ADR-0043): env.ANALYTICS — база D1 iconavo-analytics, её создаёт владелец в
+ * панели Cloudflare; env.EVENT_LIMIT — лимит частоты приёма /event. Номер базы — не ключ: без ключа
+ * аккаунта он ничего не открывает, как имя бакета.
+ */
+export const ANALYTICS_BINDING = "ANALYTICS";
+export const ANALYTICS_DATABASE = "iconavo-analytics";
+export const ANALYTICS_DATABASE_ID = "57b4a761-665e-4fe1-9623-94f9f9936239";
+export const EVENT_LIMIT_BINDING = "EVENT_LIMIT";
+export const EVENT_LIMIT_NAMESPACE = "1005";
+/**
+ * Расписание функции (Cron Triggers): итоги прошедших дней аналитики и уборка — раз в сутки в 00:17
+ * UTC. Ставит его выкладка «Edge API» отдельным запросом (PUT …/workers/scripts/{имя}/schedules).
+ */
+export const API_SCHEDULES: readonly { cron: string }[] = [
+  { cron: "17 0 * * *" },
+];
+/** Тело запроса расписания — рядом с metadata.json. */
+export const SCHEDULES_FILE = "schedules.json";
 export const SEARCH_SECRETS = [
   "MEILISEARCH_URL",
   "MEILISEARCH_SEARCH_KEY",
