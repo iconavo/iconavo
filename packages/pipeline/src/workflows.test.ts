@@ -3,7 +3,7 @@
 // ушёл вперёд» смотрит ровно на то, что запускает workflow: иначе живой запуск становится показом, а
 // нового запуска нет.
 
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { join, posix } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
@@ -117,6 +117,62 @@ describe("фильтры запуска workflow", () => {
       );
     },
   );
+});
+
+/** Задачи workflow: имя и текст — от строки «  имя:» под `jobs:` до следующей задачи. */
+function jobsOf(text: string): { id: string; text: string }[] {
+  const body = text.slice(text.indexOf("\njobs:\n") + "\njobs:\n".length);
+  const out: { id: string; text: string }[] = [];
+  for (const part of body.split(/\n(?= {2}[a-z0-9_-]+:\n)/)) {
+    const m = part.match(/^ {2}([a-z0-9_-]+):\n/);
+    if (m?.[1] !== undefined) out.push({ id: m[1], text: part });
+  }
+  return out;
+}
+
+const WORKFLOWS = readdirSync(join(ROOT, ".github", "workflows")).filter((f) =>
+  f.endsWith(".yml"),
+);
+
+describe("укрепление CI (ревизия фазы 5, Б-2, Б-3)", () => {
+  it("сторонние действия — по хэшу коммита с тегом выпуска в комментарии; действия GitHub — по тегу", () => {
+    const loose: string[] = [];
+    let third = 0;
+    for (const name of WORKFLOWS) {
+      for (const m of workflow(name).matchAll(
+        /^\s*-?\s*uses:\s*(\S+)(.*)$/gm,
+      )) {
+        const ref = m[1] ?? "";
+        const rest = m[2] ?? "";
+        if (ref.startsWith("actions/") || ref.startsWith("./")) continue;
+        third++;
+        if (!/@[0-9a-f]{40}$/.test(ref) || !/^ # v\d+\.\d+\.\d+$/.test(rest)) {
+          loose.push(`${name}: ${ref}${rest}`);
+        }
+      }
+    }
+    // Разбор не слепой: pnpm/action-setup есть почти в каждом workflow.
+    expect(third).toBeGreaterThan(10);
+    expect(loose).toEqual([]);
+  });
+
+  it("ключи записи раздачи — только у задач в окружении cdn (только main)", () => {
+    const WRITE =
+      /secrets\.(R2_ACCESS_KEY_ID|R2_SECRET_ACCESS_KEY|BUNNY_STORAGE_PASSWORD)\b/;
+    const jobs: string[] = [];
+    const bare: string[] = [];
+    for (const name of WORKFLOWS) {
+      for (const job of jobsOf(workflow(name))) {
+        if (!WRITE.test(job.text)) continue;
+        jobs.push(`${name}: ${job.id}`);
+        if (!/^ {4}environment: cdn$/m.test(job.text)) {
+          bare.push(`${name}: ${job.id}`);
+        }
+      }
+    }
+    expect(jobs.sort()).toEqual(["deploy.yml: upload", "verify.yml: verify"]);
+    expect(bare).toEqual([]);
+  });
 });
 
 describe("публикация пакетов данных (ревизия фазы 5, А-3)", () => {
