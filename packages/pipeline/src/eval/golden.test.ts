@@ -31,6 +31,18 @@ describe("queries.csv", () => {
     expect(() => parseCsv('"open')).toThrow(/незакрытая/);
   });
 
+  it("номер строки в ошибке — строка файла: пустые строки и переносы в полях его не сдвигают (И-21)", () => {
+    const row = "ru-001,дом,ru,object,Дом.,work";
+    expect(() => parseQueries(`${HEAD}\n\n${row}\nbad\n`)).toThrow(
+      /queries\.csv, строка 4: полей 1/,
+    );
+    expect(() =>
+      parseQueries(
+        `${HEAD}\r\nru-001,дом,ru,object,"Дом,\r\nс крышей.",work\r\nbad\r\n`,
+      ),
+    ).toThrow(/queries\.csv, строка 4: полей 1/);
+  });
+
   it("запросы сверяются: колонки, язык, тип, часть, повтор id", () => {
     const good = `${HEAD}\nru-001,корзина,ru,object,"Ведро, с крышкой.",work\n`;
     expect(parseQueries(good)).toEqual([

@@ -7,7 +7,7 @@ import { enrichmentBases } from "../enrich/apply.js";
 import { type LoadedSet, loadSet } from "../enrich/run.js";
 import type { SourceConfig } from "../sources/config.js";
 import { pool } from "../util/pool.js";
-import { type EmbeddingClient, errorScope } from "./client.js";
+import { type EmbeddingClient, errorScope, lostOf } from "./client.js";
 import {
   CONCURRENCY,
   type EmbeddingModel,
@@ -28,6 +28,7 @@ import {
   type StoredVectors,
   type StoreIndex,
   type StoreRow,
+  spentOf,
   writeStore,
 } from "./store.js";
 import { iconText, textHash } from "./text.js";
@@ -178,6 +179,8 @@ async function writeRows(
   model: EmbeddingModel,
   w: Work,
   store: StoredVectors | undefined,
+  /** Накопленный расход до прогона — и когда векторы на диске не годятся (И-17). */
+  before: Spent,
   fresh: ReadonlyMap<string, Float32Array>,
 ): Promise<{ index: StoreIndex; total: Spent }> {
   const dims = model.dims;
@@ -194,7 +197,7 @@ async function writeRows(
     } else continue;
     rows.push({ name: it.name, textHash: it.hash });
   }
-  const total = addSpent(store?.index.spent ?? noSpent(), w.report.spent);
+  const total = addSpent(before, w.report.spent);
   const index = await writeStore(
     storeDir,
     model,
@@ -276,7 +279,7 @@ export async function embedSets(
         chars: 0,
         estimate: 0,
         spent: noSpent(),
-        total: index?.spent ?? noSpent(),
+        total: spentOf(read) ?? noSpent(),
         stored: index?.count ?? 0,
         bytes: index?.bytes ?? 0,
         written: false,
@@ -335,6 +338,7 @@ export async function embedSets(
       const read = await readStore(options.storeDir, model, id);
       const store: StoredVectors | undefined =
         read.kind === "ok" ? read.store : undefined;
+      const before = spentOf(read) ?? noSpent();
       const fresh = new Map<string, Float32Array>();
       const batches = chunks(w.todo, model.batchSize);
       let done = 0;
@@ -344,13 +348,29 @@ export async function embedSets(
       let saving: Promise<unknown> = Promise.resolve();
       const save = () => {
         const next = saving.then(() =>
-          writeRows(options.storeDir, model, w, store, fresh),
+          writeRows(options.storeDir, model, w, store, before, fresh),
         );
         saving = next.catch(() => {});
         return next;
       };
+      // Оплаченные попытки без ответа (И-16): рубли — по оценке, в расход и лимит прогона.
+      const charge = (lost: number, chars: number) => {
+        if (lost === 0) return;
+        const rub = lost * estimateRub(model, chars);
+        const spent: Spent = {
+          requests: lost,
+          texts: 0,
+          tokens: 0,
+          chars: 0,
+          rub,
+          rubCalculated: rub,
+        };
+        w.report.spent = addSpent(w.report.spent, spent);
+        report.spent = addSpent(report.spent, spent);
+      };
       await pool(batches, limit, async (batch) => {
         if (runStopped || modelStopped || !client) return;
+        const chars = batch.reduce((n, it) => n + it.text.length, 0);
         try {
           const res = await client.embed(
             model,
@@ -360,7 +380,6 @@ export async function embedSets(
             const vector = res.vectors[i];
             if (vector) fresh.set(it.hash, vector);
           });
-          const chars = batch.reduce((n, it) => n + it.text.length, 0);
           const rub =
             res.rub ??
             (res.tokens === undefined
@@ -376,6 +395,7 @@ export async function embedSets(
           };
           w.report.spent = addSpent(w.report.spent, spent);
           report.spent = addSpent(report.spent, spent);
+          charge(res.lost ?? 0, chars);
           mr.batchMs.push(res.ms);
           done += batch.length;
           answered++;
@@ -390,6 +410,13 @@ export async function embedSets(
             );
           }
         } catch (e) {
+          charge(lostOf(e), chars);
+          if (report.spent.rub > options.maxRub && !runStopped) {
+            runStopped = true;
+            report.stop.push(
+              `потрачено ${formatRub(report.spent.rub)} — больше лимита ${formatRub(options.maxRub)}: новые пачки не отправляются`,
+            );
+          }
           const message = (e as Error).message;
           if (errorScope(e) === "run") {
             if (!runStopped) report.stop.push(message);
@@ -465,6 +492,7 @@ export async function embedStatus(
         cell.spent = head.index.spent;
       } else if (head.kind === "broken") {
         cell.note = head.reason;
+        cell.spent = head.spent ?? noSpent();
       }
       sets.push(cell);
     }

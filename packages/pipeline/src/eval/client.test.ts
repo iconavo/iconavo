@@ -128,6 +128,33 @@ describe("чат Polza", () => {
     expect((error as Error).message).not.toContain(KEY);
   });
 
+  it("ответ 200 без текста или оборванный — оплаченная попытка в lost (И-16)", async () => {
+    const cut = new Response(
+      new ReadableStream({
+        start(controller) {
+          controller.error(new DOMException("timeout", "TimeoutError"));
+        },
+      }),
+      { status: 200 },
+    );
+    const { client } = setup([
+      answer(null, { cost_rub: 0.03 }),
+      cut,
+      answer("ok", { cost_rub: 0.07 }),
+    ]);
+    const res = await client.complete(BODY);
+    expect(res).toMatchObject({ text: "ok", rub: 0.07, lost: 2 });
+    // Без потерь поля нет.
+    const { client: clean } = setup([answer("ok")]);
+    expect(await clean.complete(BODY)).not.toHaveProperty("lost");
+    // Не получилось вовсе — число оплаченных попыток приходит с ошибкой.
+    const { client: failing } = setup(
+      Array.from({ length: 5 }, () => answer(null)),
+    );
+    const error = await failing.complete(BODY).catch((e: unknown) => e);
+    expect(error).toMatchObject({ scope: "model", lost: 5 });
+  });
+
   it("другой отказ — ошибка запроса без повторов", async () => {
     const { client, bodies } = setup([
       new Response("no model", { status: 404 }),

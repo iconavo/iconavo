@@ -3,7 +3,7 @@
 // заголовком. Ожидания считает конвейер из тех же данных сетки теми же функциями общего модуля
 // (pickerChoice, pickerContextText, pickerMessage), поэтому «что ушло ассистенту» сверяется побайтно.
 // Каждый сценарий открывается отдельно (?only=…): рамки за краем экрана Chrome не рисует и не меряет.
-// Контрольный запуск подкладывает четыре поломки (picker-host.ts, CANARIES) — каждую обязана заметить
+// Контрольный запуск подкладывает пять поломок (picker-host.ts, CANARIES) — каждую обязана заметить
 // своя строка.
 
 import type { Format } from "@iconavo-ui/snippets/look";
@@ -281,34 +281,51 @@ async function colorVerdict(ctx: Ctx): Promise<Verdict> {
   return pass(`#E11D48 у ${mono.length} монохромных; у эмодзи поля цвета нет`);
 }
 
-/** Толщина: ползунок меняет превью линейных иконок и только их; у эмодзи ползунка нет. */
-async function strokeVerdict(ctx: Ctx): Promise<Verdict> {
+/**
+ * Толщина: ползунок меняет превью линейных иконок и только их; у эмодзи ползунка нет. Сверка — по
+ * ожидаемым линейным карточкам, а не по тем, что нашлись на странице: ненарисованная — «нет»; у
+ * остальных рисунок не меняется (ревизия фазы 5, И-22).
+ */
+async function strokeVerdict(ctx: Ctx, canary?: Canary): Promise<Verdict> {
   const id = "share-en-light";
   const p = payloadOf(ctx, id);
-  const frame = await openScenario(ctx, id);
+  const frame = await openScenario(ctx, id, canary);
+  const read = () =>
+    frame.$$eval(".card[data-n]", (list) =>
+      list.map((b) => ({
+        n: Number((b as HTMLElement).dataset.n),
+        widths: [...b.querySelectorAll("[stroke-width]")].map((x) =>
+          x.getAttribute("stroke-width"),
+        ),
+      })),
+    );
+  const before = new Map((await read()).map((c) => [c.n, c.widths.join()]));
   await frame.$eval(".stroke-range", (input) => {
     (input as HTMLInputElement).value = "1.5";
     input.dispatchEvent(new Event("input", { bubbles: true }));
   });
   await ctx.page.waitForTimeout(100);
-  const cards = await frame.$$eval(".card[data-n]", (list) =>
-    list.map((b) => ({
-      n: Number((b as HTMLElement).dataset.n),
-      widths: [...b.querySelectorAll("[stroke-width]")].map((x) =>
-        x.getAttribute("stroke-width"),
-      ),
-    })),
-  );
+  const cards = new Map((await read()).map((c) => [c.n, c.widths]));
   await problemsOf(ctx, frame, id);
   const lines = p.cards.filter((c) => cardHasStroke(p, c)).map((c) => c.n);
   if (lines.length === 0) return fail("нет линейных иконок");
-  const off = cards.filter(
-    (c) =>
-      lines.includes(c.n) &&
-      (c.widths.length === 0 || c.widths.some((w) => w !== "1.5")),
+  const off = lines.filter((n) => {
+    const widths = cards.get(n);
+    return (
+      widths === undefined ||
+      widths.length === 0 ||
+      widths.some((w) => w !== "1.5")
+    );
+  });
+  if (off.length > 0) return fail(`толщина не у ${off.join(", ")}`);
+  const others = [...cards].filter(
+    ([n, widths]) => !lines.includes(n) && widths.join() !== before.get(n),
   );
-  if (off.length > 0)
-    return fail(`толщина не у ${off.map((c) => c.n).join(", ")}`);
+  if (others.length > 0) {
+    return fail(
+      `толщина изменилась и у нелинейных: ${others.map(([n]) => n).join(", ")}`,
+    );
+  }
   const emoji = await openScenario(ctx, "heart-emoji");
   const hidden = await emoji.evaluate(() => {
     const field = document
@@ -520,9 +537,10 @@ async function canaryVerdict(ctx: Ctx, source: string): Promise<Verdict> {
   const pages: { path: string; violations: AxeViolation[] }[] = [];
   await runAxe(unlabeled, source, "canary", pages);
   if (axeVerdict(pages).ok) missed.push("unlabeled");
+  if ((await strokeVerdict(ctx, "nolines")).ok) missed.push("nolines");
   return missed.length === 0
     ? pass(
-        "замечены все 4 поломки: нет данных, нет токенов, чужая картинка, кнопка без подписи",
+        "замечены все 5 поломок: нет данных, нет токенов, чужая картинка, кнопка без подписи, линейные карточки не нарисованы",
       )
     : fail(`проверка слепая: не замечено — ${missed.join(", ")}`);
 }

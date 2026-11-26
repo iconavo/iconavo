@@ -1,3 +1,5 @@
+import { mkdtemp, rm, writeFile } from "node:fs/promises";
+import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { beforeAll, describe, expect, it } from "vitest";
@@ -17,7 +19,10 @@ import {
   type NameTables,
   namesIn,
   numberedIcons,
+  prepareScenario,
+  runClaude,
   setupProblems,
+  setupResult,
   setVerdict,
   type Transcript,
   userMessage,
@@ -173,6 +178,55 @@ describe("окружение и запуск", () => {
       ),
     ).toHaveLength(4);
     expect(setupProblems(undefined)).toEqual(["нет события запуска"]);
+  });
+});
+
+describe("запуск и подготовка сценария", () => {
+  it("claude не запустился — разговор заканчивается с причиной, а не зависает (И-22)", async () => {
+    const t = await runClaude({
+      cwd: tmpdir(),
+      prompt: "x",
+      model: "sonnet",
+      mcpConfig: "mcp.json",
+      exe: join(tmpdir(), "missing-claude-cli.exe"),
+      timeoutMs: 60_000,
+    });
+    expect(t.problems).toEqual([
+      expect.stringMatching(/^claude не запустился: /),
+    ]);
+    expect(t.ends).toEqual([]);
+  });
+
+  it("сбой npm ci одного сценария — строка «подготовка проекта», а не обрыв прогона (И-12)", async () => {
+    const dir = await mkdtemp(join(tmpdir(), "iconavo-mcp-clients-"));
+    try {
+      const react = CLIENT_SCENARIOS.find((s) => s.project === "react");
+      if (react === undefined) throw new Error("нет сценария с React");
+      const failing = async () => {
+        throw new Error("npm ci завершился с кодом 1\nnpm ERR! network");
+      };
+      const fixture = await mkdtemp(join(tmpdir(), "iconavo-mcp-fixture-"));
+      await writeFile(join(fixture, "package.json"), "{}");
+      expect(
+        await prepareScenario(react, join(dir, "s"), fixture, failing),
+      ).toEqual(["подготовка проекта: npm ci завершился с кодом 1"]);
+      await rm(fixture, { recursive: true, force: true });
+      const result = setupResult(react, ["подготовка проекта: сбой"]);
+      expect(result).toMatchObject({
+        id: react.id,
+        passed: false,
+        setup: ["подготовка проекта: сбой"],
+        verdicts: {},
+      });
+      // Без проекта — только папка, без npm.
+      const plain = CLIENT_SCENARIOS.find((s) => s.project === undefined);
+      if (plain === undefined) throw new Error("нет сценария без проекта");
+      expect(
+        await prepareScenario(plain, join(dir, "p"), undefined, failing),
+      ).toEqual([]);
+    } finally {
+      await rm(dir, { recursive: true, force: true });
+    }
   });
 });
 
@@ -387,6 +441,24 @@ describe("признаки", () => {
     );
     expect(blue.verdicts.code?.note).toBe("цвет не красный");
     expect(blue.passed).toBe(false);
+  });
+
+  it("сбой прогона — не ошибка ассистента: сценарий не засчитывается ни так, ни так (И-22)", () => {
+    const timedOut = transcript([INIT, say("Ищу иконку…")]);
+    timedOut.problems.push("время вышло");
+    const r = judge(scenario(10), tables, timedOut, []);
+    expect(r.setup).toEqual(["время вышло"]);
+    expect(r.passed).toBe(false);
+    const limited = transcript([
+      INIT,
+      { type: "rate_limit_event", rate_limit_info: { status: "rejected" } },
+    ]);
+    expect(judge(scenario(10), tables, limited, []).setup).toEqual([
+      "лимит подписки Claude Code",
+    ]);
+    expect(judge(scenario(10), tables, transcript([INIT]), []).setup).toEqual([
+      "разговор не закончился ответом",
+    ]);
   });
 
   it("«найти» без сетки: человек отвечает номером первой подходящей иконки из выдачи; код уже есть — не отвечает", () => {

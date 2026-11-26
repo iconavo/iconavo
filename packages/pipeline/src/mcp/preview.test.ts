@@ -2,8 +2,9 @@
 // байтов) отвечает клиенту SDK на обоих протоколах — 2025 года и 2026-07-28. Поиска в тесте нет
 // (Meilisearch не настроен): search_icons отвечает ошибкой инструмента, а не падением функции.
 
-import { mkdtemp, rm } from "node:fs/promises";
-import { request } from "node:http";
+import { mkdtemp, rm, writeFile } from "node:fs/promises";
+import { createServer, request } from "node:http";
+import type { AddressInfo } from "node:net";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -15,7 +16,8 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { writeCdnDemoSet } from "../cdn/fixture.testing.js";
 import { buildCdn } from "../cdn/run.js";
 import { demoConfig } from "../search/fixture.testing.js";
-import { type McpPreview, startMcpPreview } from "./preview.js";
+import { type McpPreview, spawnRunner, startMcpPreview } from "./preview.js";
+import type { RunnerConfig } from "./runner.js";
 
 const ROOT = fileURLToPath(new URL("../../../../", import.meta.url));
 
@@ -126,4 +128,94 @@ describe("превью MCP-сервера", () => {
       }
     },
   );
+});
+
+// Процесс превью сам по себе — на крошечных функциях вместо бандла (ревизия фазы 5, И-11, И-22).
+describe("процесс превью: запреты Workers, «готово», поток ответа", () => {
+  const runnerConfig = async (
+    name: string,
+    source: string,
+  ): Promise<RunnerConfig> => {
+    const wasmPath = join(tmp, "tiny.wasm");
+    await writeFile(wasmPath, Uint8Array.from([0, 97, 115, 109, 1, 0, 0, 0]));
+    const workerPath = join(tmp, name);
+    await writeFile(workerPath, source);
+    return { workerPath, wasmPath, cdnDir: join(tmp, "dist-cdn"), port: 0 };
+  };
+
+  it("new WebAssembly.Module из байтов запрещён, как в Workers; причина доходит до родителя", async () => {
+    const config = await runnerConfig(
+      "compile.mjs",
+      `new WebAssembly.Module(new Uint8Array([0, 97, 115, 109, 1, 0, 0, 0]));
+export default { fetch: () => new Response("ok") };`,
+    );
+    await expect(spawnRunner(ROOT, config)).rejects.toThrow(
+      /^превью MCP: WebAssembly: компиляция из байтов запрещена/,
+    );
+  });
+
+  it("встроенный fetch Node в превью работает: запрет конструктора — только коду функции", async () => {
+    // Сам Node (undici) собирает свой разборщик HTTP через new WebAssembly.Module: общий запрет ломал
+    // все запросы превью к Meilisearch и Polza.
+    const server = createServer((_, res) => res.end("from-server"));
+    await new Promise<void>((resolve) =>
+      server.listen(0, "127.0.0.1", () => resolve()),
+    );
+    const port = (server.address() as AddressInfo).port;
+    const config = await runnerConfig(
+      "fetch.mjs",
+      `export default {
+  async fetch() {
+    const res = await fetch("http://127.0.0.1:${port}/");
+    return new Response(await res.text());
+  },
+};`,
+    );
+    const runner = await spawnRunner(ROOT, config);
+    try {
+      const res = await fetch(`http://127.0.0.1:${runner.port}/`);
+      expect(await res.text()).toBe("from-server");
+    } finally {
+      await runner.close();
+      server.close();
+    }
+  });
+
+  it("превью не ответило «готово» в срок — ошибка с причиной, процесс остановлен", async () => {
+    const config = await runnerConfig(
+      "hang.mjs",
+      `await new Promise(() => {});
+export default {};`,
+    );
+    await expect(spawnRunner(ROOT, config, 500)).rejects.toThrow(
+      /^превью MCP не ответило «готово» за 0,5 с$/,
+    );
+  });
+
+  it("сбой потока ответа обрывает один ответ, превью живёт", async () => {
+    const config = await runnerConfig(
+      "stream.mjs",
+      `export default {
+  fetch(request) {
+    if (new URL(request.url).pathname !== "/broken") return new Response("ok");
+    return new Response(new ReadableStream({
+      start(controller) {
+        controller.enqueue(new Uint8Array([111]));
+        controller.error(new Error("boom"));
+      },
+    }));
+  },
+};`,
+    );
+    const runner = await spawnRunner(ROOT, config);
+    try {
+      const url = `http://127.0.0.1:${runner.port}`;
+      await fetch(`${url}/broken`)
+        .then((res) => res.text())
+        .catch(() => "");
+      expect(await (await fetch(`${url}/`)).text()).toBe("ok");
+    } finally {
+      await runner.close();
+    }
+  });
 });

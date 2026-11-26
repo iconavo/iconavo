@@ -111,6 +111,35 @@ describe("клиент Polza", () => {
     expect(sleeps).toEqual([1000, 2000, 4000]);
   });
 
+  it("ответ 200, оборванный по времени или не JSON, — оплаченная попытка в lost (И-16)", async () => {
+    // Заголовки 200 пришли, а тело не дочиталось за срок: запрос, скорее всего, уже оплачен.
+    const cut = () =>
+      new Response(
+        new ReadableStream({
+          start(controller) {
+            controller.error(new DOMException("timeout", "TimeoutError"));
+          },
+        }),
+        { status: 200 },
+      );
+    const before = new DOMException("timeout", "TimeoutError");
+    const { client } = setup([
+      cut,
+      before,
+      new Response("<html>прокси</html>", { status: 200 }),
+      ok([[0, 0, 0, 1]]),
+    ]);
+    const res = await client.embed(model, ["a"]);
+    expect(res.lost).toBe(2);
+    // Не получилось вовсе — число оплаченных попыток приходит с ошибкой.
+    const { client: failing } = setup([cut, cut, before, cut, cut]);
+    const e = await failing.embed(model, ["a"]).catch((x: unknown) => x);
+    expect(e).toMatchObject({ scope: "model", lost: 4 });
+    // Без оплаченных попыток поля нет.
+    const { client: clean } = setup([ok([[1, 0, 0, 0]])]);
+    expect(await clean.embed(model, ["a"])).not.toHaveProperty("lost");
+  });
+
   it("401 и 402 останавливают весь прогон сразу, ключа в тексте нет", async () => {
     for (const status of [401, 402, 403]) {
       const { client, sleeps } = setup([

@@ -39,12 +39,19 @@ export const COLUMNS = [
   "split",
 ] as const;
 
-/** Строки CSV: поля в кавычках могут содержать запятые, кавычки ("") и переводы строк. */
-export function parseCsv(text: string): string[][] {
-  const rows: string[][] = [];
+/**
+ * Записи CSV с номером строки файла, где запись начинается: поля в кавычках могут содержать запятые,
+ * кавычки ("") и переводы строк — номер ошибки указывает на строку файла (ревизия фазы 5, И-21).
+ */
+export function parseCsvRecords(
+  text: string,
+): { cells: string[]; line: number }[] {
+  const rows: { cells: string[]; line: number }[] = [];
   let row: string[] = [];
   let cell = "";
   let quoted = false;
+  let line = 1;
+  let start = 1;
   for (let i = 0; i < text.length; i++) {
     const c = text[i] as string;
     if (quoted) {
@@ -53,7 +60,10 @@ export function parseCsv(text: string): string[][] {
           cell += '"';
           i++;
         } else quoted = false;
-      } else cell += c;
+      } else {
+        cell += c;
+        if (c === "\n" || (c === "\r" && text[i + 1] !== "\n")) line++;
+      }
     } else if (c === '"') quoted = true;
     else if (c === ",") {
       row.push(cell);
@@ -61,17 +71,24 @@ export function parseCsv(text: string): string[][] {
     } else if (c === "\n" || c === "\r") {
       if (c === "\r" && text[i + 1] === "\n") i++;
       row.push(cell);
-      rows.push(row);
+      rows.push({ cells: row, line: start });
       row = [];
       cell = "";
+      line++;
+      start = line;
     } else cell += c;
   }
   if (quoted) throw new Error("CSV: незакрытая кавычка");
   if (cell !== "" || row.length > 0) {
     row.push(cell);
-    rows.push(row);
+    rows.push({ cells: row, line: start });
   }
   return rows;
+}
+
+/** Строки CSV: поля в кавычках могут содержать запятые, кавычки ("") и переводы строк. */
+export function parseCsv(text: string): string[][] {
+  return parseCsvRecords(text).map((r) => r.cells);
 }
 
 /** Поле CSV: в кавычках, только если в нём запятая, кавычка или перевод строки. */
@@ -83,18 +100,17 @@ const oneOf = <T extends string>(list: readonly T[], value: string) =>
 
 /** Запросы эталона; колонки, языки, типы, части и id сверяются. */
 export function parseQueries(text: string): GoldenQuery[] {
-  const [head, ...rows] = parseCsv(text);
-  if (!head || head.join(",") !== COLUMNS.join(",")) {
+  const [head, ...rows] = parseCsvRecords(text);
+  if (!head || head.cells.join(",") !== COLUMNS.join(",")) {
     throw new Error(
-      `queries.csv: колонки «${head?.join(",") ?? ""}», а нужны «${COLUMNS.join(",")}»`,
+      `queries.csv: колонки «${head?.cells.join(",") ?? ""}», а нужны «${COLUMNS.join(",")}»`,
     );
   }
   const seen = new Set<string>();
   return rows
-    .filter((r) => r.some((c) => c !== ""))
-    .map((r, i) => {
+    .filter((r) => r.cells.some((c) => c !== ""))
+    .map(({ cells: r, line }) => {
       const [id, query, lang, type, description, split] = r as string[];
-      const line = i + 2;
       if (r.length !== COLUMNS.length) {
         throw new Error(`queries.csv, строка ${line}: полей ${r.length}`);
       }

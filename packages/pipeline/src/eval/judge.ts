@@ -8,7 +8,7 @@
 
 import { createHash } from "node:crypto";
 import { SEMANTIC_RATIO } from "@iconavo-ui/search";
-import type { EmbeddingClient } from "../embed/client.js";
+import { type EmbeddingClient, lostOf } from "../embed/client.js";
 import { type EmbeddingModel, MODELS } from "../embed/config.js";
 import type { MeiliClient } from "../meili/client.js";
 import { initRenderer, renderPreview } from "../qc/render.js";
@@ -446,13 +446,33 @@ export async function judgeEval(
     await initRenderer();
 
     let done = 0;
-    const run = async (job: Job) => {
-      if (stopped) return;
+    const judgeJob = async (job: Job) => {
       const candidates: Candidate[] = job.docs.map((id, k) => ({
         n: k + 1,
         name: catalog.docs[catalog.byId.get(id) as number]?.name ?? id,
         png: pngOf(id),
       }));
+      const charge = (
+        requests: number,
+        rub: number,
+        promptTokens = 0,
+        completionTokens = 0,
+      ) => {
+        report.spent.requests += requests;
+        report.spent.images += requests * candidates.length;
+        report.spent.promptTokens += promptTokens;
+        report.spent.completionTokens += completionTokens;
+        report.spent.rub += rub;
+        report.spentTotal = {
+          requests: report.spentTotal.requests + requests,
+          images: report.spentTotal.images + requests * candidates.length,
+          rub: report.spentTotal.rub + rub,
+        };
+      };
+      // Оплаченные попытки без ответа (И-16): рубли — по той же оценке, что у лимита.
+      const chargeLost = (lost: number) => {
+        if (lost > 0) charge(lost, lost * estimateRub([job], measured));
+      };
       let verdicts: Map<number, Verdict> | undefined;
       let reason = "";
       for (let attempt = 1; attempt <= 2 && !verdicts && !stopped; attempt++) {
@@ -460,21 +480,14 @@ export async function judgeEval(
           const res = await client.complete(judgeBody(job.query, candidates));
           const rub =
             res.rub ?? rubOf(res.promptTokens ?? 0, res.completionTokens ?? 0);
-          report.spent.requests++;
-          report.spent.images += candidates.length;
-          report.spent.promptTokens += res.promptTokens ?? 0;
-          report.spent.completionTokens += res.completionTokens ?? 0;
-          report.spent.rub += rub;
-          report.spentTotal = {
-            requests: report.spentTotal.requests + 1,
-            images: report.spentTotal.images + candidates.length,
-            rub: report.spentTotal.rub + rub,
-          };
+          charge(1, rub, res.promptTokens ?? 0, res.completionTokens ?? 0);
+          chargeLost(res.lost ?? 0);
           verdicts = parseVerdicts(
             res.text,
             candidates.map((c) => c.n),
           );
         } catch (e) {
+          chargeLost(lostOf(e));
           reason = (e as Error).message;
           // Отказ API (ключ, баланс, недоступная модель) — остановка; неразборчивый ответ — повтор.
           if ((e as { scope?: string }).scope !== undefined) {
@@ -527,6 +540,19 @@ export async function judgeEval(
         log(
           `  ответов ${done} из ${r.requests} · ${report.spent.rub.toFixed(2)} ₽ · сохранено`,
         );
+      }
+    };
+    // Сбой картинки или сохранения — остановка с причиной, а не обрыв запуска: новые платные запросы
+    // не уходят, а размеченное и расход сохраняются в конце круга (ревизия фазы 5, И-5).
+    const run = async (job: Job) => {
+      if (stopped) return;
+      try {
+        await judgeJob(job);
+      } catch (e) {
+        if (!stopped) {
+          report.stop.push(`разметка остановлена: ${(e as Error).message}`);
+        }
+        stopped = true;
       }
     };
     recount = true;

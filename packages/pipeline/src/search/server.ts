@@ -222,15 +222,21 @@ export async function searchReply(
       const k = Math.max(0, mv.lengths.indexOf(settings.length));
       const cos = vector ? cosines(mv, vector)[k] : undefined;
       const columnNotes = [...mv.notes];
+      // Без вектора «только смысл» пуст, а гибрид — по словам: заметка и подпись — по режиму (И-21).
       if (!vector) {
         columnNotes.push(
-          `нет вектора запроса: ${qv.error ?? "?"} — показан только текст`,
+          `нет вектора запроса: ${qv.error ?? "?"} — ${mode === "vector" ? "выдачи по смыслу нет" : "показан только текст"}`,
         );
       }
       const length = mv.lengths[k] ?? mv.model.dims;
+      const source = !vector
+        ? "вектора нет"
+        : qv.cached > 0
+          ? "вектор из кэша"
+          : `вектор за ${formatMs(ms)}`;
       columns.push({
         title: mv.model.key,
-        subtitle: `${MODE_NAMES[mode].toLowerCase()} · доля смысла ${settings.alpha.toFixed(1).replace(".", ",")} · длина ${length} · ${qv.cached > 0 ? "вектор из кэша" : `вектор за ${formatMs(ms)}`}`,
+        subtitle: `${MODE_NAMES[mode].toLowerCase()} · доля смысла ${settings.alpha.toFixed(1).replace(".", ",")} · длина ${length} · ${source}`,
         notes: columnNotes,
         results: rankPrepared(
           prepare(ctx.catalog, query, found, cos, set),
