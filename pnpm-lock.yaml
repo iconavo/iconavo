@@ -187,6 +187,9 @@ importers:
 
   apps/api:
     dependencies:
+      '@iconavo-ui/analytics':
+        specifier: workspace:*
+        version: link:../../packages/analytics
       '@iconavo-ui/core':
         specifier: workspace:*
         version: link:../../packages/core
@@ -317,6 +320,15 @@ importers:
         specifier: ^7.0.2
         version: 7.0.2
 
+  packages/analytics:
+    dependencies:
+      '@iconavo-ui/core':
+        specifier: workspace:*
+        version: link:../core
+      '@iconavo-ui/search':
+        specifier: workspace:*
+        version: link:../search
+
   packages/core: {}
 
   packages/icon:
@@ -330,6 +342,9 @@ importers:
       '@anthropic-ai/sdk':
         specifier: 0.135.0
         version: 0.135.0(zod@4.6.7)
+      '@iconavo-ui/analytics':
+        specifier: workspace:*
+        version: link:../analytics
       '@iconavo-ui/schema':
         specifier: workspace:*
         version: link:../schema

@@ -8,6 +8,7 @@
   "include": ["src"],
   "exclude": ["src/**/*.test.ts", "src/**/*.testing.ts"],
   "references": [
+    { "path": "../../packages/analytics" },
     { "path": "../../packages/core" },
     { "path": "../../packages/search" }
   ]

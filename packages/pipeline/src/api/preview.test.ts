@@ -3,6 +3,7 @@ import { request } from "node:http";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { batchBody } from "@iconavo-ui/analytics";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { writeCdnDemoSet } from "../cdn/fixture.testing.js";
 import { buildCdn } from "../cdn/run.js";
@@ -11,6 +12,8 @@ import { type ApiPreview, startApiPreview } from "./preview.js";
 
 const ROOT = fileURLToPath(new URL("../../../../", import.meta.url));
 const HOUSE = '<path fill="currentColor" d="M1 1h2"/>';
+/** Страница, с которой превью берёт события: так его запускает проверка сайта. */
+const SITE = "http://127.0.0.1:4284";
 
 let tmp: string;
 let cdnDir: string;
@@ -38,6 +41,7 @@ beforeAll(async () => {
     outDir: join(tmp, "dist-api"),
     cdnDir,
     port: 0,
+    eventOrigins: [SITE],
   });
 });
 
@@ -115,5 +119,32 @@ describe("превью edge API", () => {
     expect(await page.text()).toContain("<h1>Edge API — превью</h1>");
     expect(await statusWithHost("evil.example")).toBe(403);
     expect(await statusWithHost(`127.0.0.1:${preview.port}`)).toBe(200);
+  });
+
+  it("приём /event — функцией из бандла в базу node:sqlite в памяти, со страниц из настроек", async () => {
+    // База создаётся при первой пачке: команды без событий модуль node:sqlite не грузят.
+    expect(preview.analytics()).toBeUndefined();
+    const post = (origin: string) =>
+      fetch(url("/event"), {
+        method: "POST",
+        headers: { origin, "content-type": "text/plain;charset=UTF-8" },
+        body: batchBody("en", [{ name: "page", section: "home" }]),
+      });
+    expect((await post(SITE)).status).toBe(204);
+    expect((await post("https://example.com")).status).toBe(403);
+    const db = preview.analytics();
+    if (db === undefined) throw new Error("нет базы");
+    expect(
+      (await db.prepare("SELECT name, lang, data FROM events").all()).results,
+    ).toEqual([{ name: "page", lang: "en", data: '{"section":"home"}' }]);
+    expect(
+      (await db.prepare("SELECT reason, count FROM rejects").all()).results,
+    ).toEqual([{ reason: "origin", count: 1 }]);
+    const tooLong = await fetch(url("/event"), {
+      method: "POST",
+      headers: { origin: SITE },
+      body: "x".repeat(20_000),
+    });
+    expect(tooLong.status).toBe(413);
   });
 });

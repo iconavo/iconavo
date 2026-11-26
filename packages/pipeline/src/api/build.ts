@@ -9,21 +9,28 @@ import { createHash } from "node:crypto";
 import { mkdir } from "node:fs/promises";
 import { join } from "node:path";
 import { gzipSync } from "node:zlib";
+import { EVENT_RATE } from "@iconavo-ui/analytics";
 import { ICON_RATE, SEARCH_RATE } from "@iconavo-ui/search";
 import { canonicalJson, type Json } from "../build/json.js";
 import { writeIfChanged } from "../cdn/write.js";
 import { SEARCH_BUCKET } from "../meili/config.js";
 import {
+  ANALYTICS_BINDING,
+  ANALYTICS_DATABASE_ID,
+  API_SCHEDULES,
   BUILD_FILE,
   BUILD_ID_LENGTH,
   BUILD_PLACEHOLDER,
   COMPATIBILITY_DATE,
+  EVENT_LIMIT_BINDING,
+  EVENT_LIMIT_NAMESPACE,
   ICON_LIMIT_BINDING,
   ICON_LIMIT_NAMESPACE,
   LIMIT_BINDING,
   LIMIT_NAMESPACE,
   METADATA_FILE,
   R2_BINDING,
+  SCHEDULES_FILE,
   SEARCH_BINDING,
   WORKER_BUCKET,
   WORKER_ENTRY,
@@ -46,9 +53,9 @@ export interface ApiBuildOptions {
 
 /**
  * metadata загрузки функции: модуль, дата совместимости, привязки бакета раздачи, закрытого бакета
- * поиска и лимитов частоты поиска (ADR-0049) и /icon (шаг 4 фазы 4). Секреты поиска сюда не пишутся:
- * их вписывает выкладка. Журналы — только наши сообщения об ошибках, без журнала запросов с IP
- * (ADR-0028).
+ * поиска и лимитов частоты поиска (ADR-0049) и /icon (шаг 4 фазы 4), базы аналитики и лимита приёма
+ * /event (шаг 2 фазы 5, ADR-0043). Секреты поиска сюда не пишутся: их вписывает выкладка. Журналы —
+ * только наши сообщения об ошибках, без журнала запросов с IP (ADR-0028).
  */
 export function workerMetadata(): Json {
   return {
@@ -68,6 +75,13 @@ export function workerMetadata(): Json {
         name: ICON_LIMIT_BINDING,
         namespace_id: ICON_LIMIT_NAMESPACE,
         simple: { limit: ICON_RATE.limit, period: ICON_RATE.period },
+      },
+      { type: "d1", name: ANALYTICS_BINDING, id: ANALYTICS_DATABASE_ID },
+      {
+        type: "ratelimit",
+        name: EVENT_LIMIT_BINDING,
+        namespace_id: EVENT_LIMIT_NAMESPACE,
+        simple: { limit: EVENT_RATE.limit, period: EVENT_RATE.period },
       },
     ],
     observability: {
@@ -178,8 +192,9 @@ export async function bundleWorker(
 }
 
 /**
- * Метка сборки вместо заглушки — ровно одно вхождение. salt — то, что меняет выкладку помимо кода
- * (у MCP — модуль wasm и metadata), у API пусто: метка прежняя.
+ * Метка сборки вместо заглушки — ровно одно вхождение. salt — то, что меняет выкладку помимо кода:
+ * у MCP — модуль wasm и metadata, у API — metadata и расписание (шаг 2 фазы 5): новая привязка без
+ * правки кода — тоже новая сборка, и «Edge API» её выложит.
  */
 export function stampBuild(
   code: string,
@@ -198,13 +213,19 @@ export function stampBuild(
 export async function buildApi(
   options: ApiBuildOptions,
 ): Promise<ApiBuildReport> {
-  const stamped = stampBuild(await bundleWorker(options.root));
+  const metadata = canonicalJson(workerMetadata());
+  const schedules = canonicalJson(API_SCHEDULES as unknown as Json);
+  const stamped = stampBuild(
+    await bundleWorker(options.root),
+    metadata + schedules,
+  );
   const bytes = Buffer.byteLength(stamped.code, "utf8");
   const gzipBytes = gzipSync(stamped.code).length;
   await mkdir(options.outDir, { recursive: true });
   const files: [string, string][] = [
     [WORKER_FILE, stamped.code],
-    [METADATA_FILE, canonicalJson(workerMetadata())],
+    [METADATA_FILE, metadata],
+    [SCHEDULES_FILE, schedules],
     [
       BUILD_FILE,
       canonicalJson({

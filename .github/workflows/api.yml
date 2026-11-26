@@ -25,6 +25,7 @@ on:
     branches: [main]
     paths:
       - "apps/api/**"
+      - "packages/analytics/**"
       - "packages/core/**"
       - "packages/search/**"
       - "packages/pipeline/src/api/**"
@@ -104,7 +105,7 @@ jobs:
           live=false
           if [ "$GITHUB_REF" = refs/heads/main ] && [ "$EVENT" != pull_request ] && [ "$DRY_RUN" != true ]; then
             git fetch --quiet --no-tags --depth=1 origin "+refs/heads/main:refs/remotes/origin/main"
-            if git diff --quiet origin/main HEAD -- apps/api/ packages/core/ packages/search/ packages/pipeline/src/api/ packages/pipeline/src/build/json.ts packages/pipeline/src/build/write.ts packages/pipeline/src/cdn/config.ts packages/pipeline/src/cdn/write.ts packages/pipeline/src/meili/config.ts packages/pipeline/src/util/pool.ts pnpm-lock.yaml .github/workflows/api.yml; then
+            if git diff --quiet origin/main HEAD -- apps/api/ packages/analytics/ packages/core/ packages/search/ packages/pipeline/src/api/ packages/pipeline/src/build/json.ts packages/pipeline/src/build/write.ts packages/pipeline/src/cdn/config.ts packages/pipeline/src/cdn/write.ts packages/pipeline/src/meili/config.ts packages/pipeline/src/util/pool.ts pnpm-lock.yaml .github/workflows/api.yml; then
               live=true
             else
               echo "::warning::main ушёл вперёд — этот запуск только показывает; выкладывает запуск от свежего main."
@@ -199,6 +200,18 @@ jobs:
             exit 1
           fi
           echo "- выложена сборка $BUILD" >> "$GITHUB_STEP_SUMMARY"
+          # Расписание функции — итоги дня аналитики и уборка (ADR-0043) — отдельным запросом: в metadata
+          # загрузки его нет. Запрос заменяет весь список; тело — dist-api/schedules.json сборки.
+          code=$(curl -sS --max-time 60 --retry 3 -o "$RUNNER_TEMP/schedules.json" -w "%{http_code}" \
+            -X PUT "https://api.cloudflare.com/client/v4/accounts/$ACCOUNT_ID/workers/scripts/iconavo-api/schedules" \
+            -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
+            -H "Content-Type: application/json" \
+            --data-binary "@dist-api/schedules.json" || echo 000)
+          if [ "$code" != 200 ] || ! jq -e '.success == true' "$RUNNER_TEMP/schedules.json" > /dev/null 2>&1; then
+            echo "::error::Cloudflare не принял расписание ($code): $(jq -c '.errors // .' "$RUNNER_TEMP/schedules.json" 2> /dev/null | head -c 1000). Функция уже выложена — повторите эту задачу (Re-run failed jobs)"
+            exit 1
+          fi
+          echo "- расписание: $(jq -r '[.[].cron] | join(", ")' dist-api/schedules.json)" >> "$GITHUB_STEP_SUMMARY"
 
   check:
     name: Проверка

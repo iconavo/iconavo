@@ -1,14 +1,19 @@
 // Превью edge API (ADR-0024): ровно бандл dist-api/worker.js в Node на 127.0.0.1 — с R2 из папки
 // раздачи dist-cdn/ и кэшем в памяти. Host сверяется, как у страницы поиска: чужой сайт через
 // браузер сюда не достучится. На / — страница для глаз, на /_static/… — файлы раздачи для
-// сравнения; остальное отвечает функция. Подделки привязок — в local.ts.
+// сравнения; остальное отвечает функция. Подделки привязок — в local.ts. Приём событий /event (шаг 2
+// фазы 5) пишет в базу node:sqlite в памяти: она создаётся при первой пачке, и модуль Node грузится
+// только тогда — у остальных команд нет его предупреждения «experimental».
 
 export { diskBucket, memoryCache } from "./local.js";
 
-import { createServer, type Server } from "node:http";
+import { createServer, type IncomingMessage, type Server } from "node:http";
 import type { AddressInfo } from "node:net";
 import { extname, join } from "node:path";
 import { pathToFileURL } from "node:url";
+import { EVENT_PATH, MAX_BODY_BYTES } from "@iconavo-ui/analytics";
+import type { D1Like } from "@iconavo-ui/analytics/db";
+import { sqliteD1 } from "@iconavo-ui/analytics/sqlite";
 import { MANIFEST_FILE } from "../cdn/config.js";
 import { manifestSchema } from "../cdn/files.js";
 import { esc, htmlPage } from "../report/html.js";
@@ -36,6 +41,11 @@ export interface ApiPreviewOptions {
    * диске (нет — версии индекса и векторов фраз нет, вектор каждого запроса считает Polza).
    */
   search?: { url: string; key: string; polzaKey?: string; dir: string };
+  /**
+   * Страницы, с которых /event берёт события (шаг 2 фазы 5): проверка сайта даёт свой адрес. Нет —
+   * как у живой функции: только https://iconavo.dev.
+   */
+  eventOrigins?: readonly string[];
   log?: (line: string) => void;
 }
 
@@ -43,7 +53,30 @@ export interface ApiPreview {
   server: Server;
   port: number;
   build: string;
+  /** База событий /event; undefined — ни одной пачки ещё не пришло. */
+  analytics(): D1Like | undefined;
   close(): Promise<void>;
+}
+
+/** Заголовки, которые приём читает: остальные превью функции не передаёт. */
+const EVENT_HEADERS = ["origin", "content-type", "x-iconavo-test"] as const;
+
+/**
+ * Тело запроса — до max байт и ещё один: «слишком длинное» функция видит сама. Дочитывается до конца
+ * (выход из цикла закрыл бы соединение раньше ответа), лишнее не копится.
+ */
+async function readBody(
+  req: IncomingMessage,
+  max: number,
+): Promise<Uint8Array<ArrayBuffer>> {
+  const chunks: Buffer[] = [];
+  let size = 0;
+  for await (const chunk of req) {
+    const part = chunk as Buffer;
+    if (size <= max) chunks.push(part);
+    size += part.byteLength;
+  }
+  return new Uint8Array(Buffer.concat(chunks).subarray(0, max + 1));
 }
 
 const STATIC_TYPES: Record<string, string> = {
@@ -94,6 +127,20 @@ export async function startApiPreview(
       promise.catch(() => {});
     },
   };
+  let analytics: D1Like | undefined;
+  const eventEnv = async () => {
+    if (analytics === undefined) {
+      const { DatabaseSync } = await import("node:sqlite");
+      analytics = sqliteD1(new DatabaseSync(":memory:"));
+    }
+    return {
+      ...env,
+      ANALYTICS: analytics,
+      ...(o.eventOrigins === undefined
+        ? {}
+        : { EVENT_ORIGINS: o.eventOrigins.join(",") }),
+    };
+  };
   let port = o.port;
   const local = (path: string, method = "GET") =>
     worker.fetch(
@@ -117,15 +164,36 @@ export async function startApiPreview(
     );
   };
 
-  async function reply(
-    method: string,
-    url: string,
-    host: string | undefined,
-  ): Promise<Reply> {
-    if (!allowedHost(host, port)) {
+  async function reply(req: IncomingMessage): Promise<Reply> {
+    const method = req.method ?? "GET";
+    const url = req.url ?? "/";
+    if (!allowedHost(req.headers.host, port)) {
       return text(403, "Превью открывается только по адресу 127.0.0.1");
     }
     const parsed = new URL(url, `http://127.0.0.1:${port}`);
+    if (parsed.pathname === EVENT_PATH) {
+      const headers = new Headers();
+      for (const name of EVENT_HEADERS) {
+        const value = req.headers[name];
+        if (typeof value === "string") headers.set(name, value);
+      }
+      const res = await worker.fetch(
+        new Request(`http://127.0.0.1:${port}${EVENT_PATH}`, {
+          method,
+          headers,
+          ...(method === "POST"
+            ? { body: await readBody(req, MAX_BODY_BYTES) }
+            : {}),
+        }),
+        await eventEnv(),
+        ctx,
+      );
+      return {
+        status: res.status,
+        headers: Object.fromEntries(res.headers),
+        body: new Uint8Array(await res.arrayBuffer()),
+      };
+    }
     if (parsed.pathname === "/") {
       if (method !== "GET" && method !== "HEAD") return text(405, "Только GET");
       // Живой API — только наш адрес: страница не станет ходить куда попало.
@@ -166,7 +234,7 @@ export async function startApiPreview(
   }
 
   const server = createServer((req, res) => {
-    reply(req.method ?? "GET", req.url ?? "/", req.headers.host)
+    reply(req)
       .catch((e: Error): Reply => text(500, `Ошибка: ${e.message}`))
       .then((r) => {
         // Браузер не хранит ответы превью: после пересборки видно новое.
@@ -188,6 +256,7 @@ export async function startApiPreview(
     server,
     port,
     build: built.build,
+    analytics: () => analytics,
     close: () =>
       new Promise<void>((resolve) => {
         server.close(() => resolve());
