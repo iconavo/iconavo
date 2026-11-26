@@ -4,6 +4,19 @@
 Имена не пропадают: иконка, которую удалил автор, скрыта, но работает по имени, а старое имя переименованной ведёт на новое (ADR-0005).
 Скрытия и переименования вы одобряете лично в pull request (ADR-0019). Полные списки — в `changelog.json`.
 
+## 26 ноября 2026 · версия 7359f858
+
+Прошлая версия: c4b220b8 · источник: 9fcde88 · иконок: 2 123.
+
+**Требуют вашего одобрения**
+
+- Переименованы — старое имя ведёт на новое (1): `rectangle-landscape-play` → `rectangle-horizontal-play`
+
+**Изменения**
+
+- Добавлены (4): `bowl-chopsticks`, `elevator`, `globe-clock`, `steering-wheel`
+- Изменены (11): `monitor-smartphone`, `rectangle-horizontal`, `rectangle-vertical`, `smartphone`, `smartphone-charging`, `smartphone-nfc`, `smartphone-user-round`, `square-sigma`, `tablet-smartphone`, `vibrate`, `vibrate-off`
+
 ## 25 ноября 2026 · версия c4b220b8
 
 Прошлая версия: 6a34a062 · источник: 164efba · иконок: 2 119.

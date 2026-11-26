@@ -3,6 +3,35 @@
   "releases": [
     {
       "added": [
+        "bowl-chopsticks",
+        "elevator",
+        "globe-clock",
+        "steering-wheel"
+      ],
+      "changed": [
+        "monitor-smartphone",
+        "rectangle-horizontal",
+        "rectangle-vertical",
+        "smartphone",
+        "smartphone-charging",
+        "smartphone-nfc",
+        "smartphone-user-round",
+        "square-sigma",
+        "tablet-smartphone",
+        "vibrate",
+        "vibrate-off"
+      ],
+      "date": "2026-11-26T12:33:23Z",
+      "previous": "c4b220b8",
+      "renamed": {
+        "rectangle-landscape-play": "rectangle-horizontal-play"
+      },
+      "revision": "9fcde889d8ed0c6f739cff76e086c27e072e83ec",
+      "total": 2123,
+      "version": "7359f858"
+    },
+    {
+      "added": [
         "app-window-mac-minus",
         "app-window-mac-plus",
         "app-window-minus",
