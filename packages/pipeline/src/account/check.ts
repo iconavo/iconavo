@@ -1,7 +1,7 @@
 // Проверка живого сервиса аккаунтов (шаг 3 фазы 5, ADR-0055) — pnpm account check: только открытые адреса,
 // без ключей и без писем. Страница и её метка сборки (ждёт до 3 минут новую сборку), robots.txt, CORS
 // только для iconavo.dev, сеанс без cookie, отказы без Turnstile и с чужой страницы, закрытые адреса Better
-// Auth, кабинет и фото без входа — 401, вход через Google (ключи на месте и база пишет), переход с http.
+// Auth, кабинет, фото и обратная связь без входа — 401, вход через Google (ключи на месте и база пишет), переход с http.
 // Каждое «да» — ответ живого
 // адреса, а не наш вывод.
 
@@ -237,6 +237,18 @@ export async function checkAccount(
     "фото без входа",
     `/api/account/photo/${"0".repeat(32)}.png`,
     { headers: { origin: site } },
+    async (res, p) => {
+      await expect(p, res, 401);
+    },
+  );
+  // Обратная связь (PR 6а): форма доходит до сервиса, а без входа — 401, и письма нет.
+  const feedback = new FormData();
+  feedback.set("kind", "feedback");
+  feedback.set("rating", "5");
+  await probe(
+    "обратная связь без входа",
+    "/api/account/feedback",
+    { method: "POST", headers: { origin: site }, body: feedback },
     async (res, p) => {
       await expect(p, res, 401);
     },

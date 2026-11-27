@@ -35,14 +35,26 @@ export const MIGRATIONS: readonly Migration[] = [
   {
     id: 2,
     name: "My account: письма (сводка, новости), фото и прежнее фото для «Undo»",
-    // Столбцы — только наши: Better Auth их не знает и в ответы сеанса не отдаёт, пишет и читает их сервис
-    // (profile.ts). Сводка подписок — по умолчанию да, новости — только по согласию (ADR-0055).
+    // Столбцы — наши, пишет и читает их сервис (profile.ts). Better Auth знает только photo (поле с
+    // input: false — ключ фото приходит сайту с сеансом, PR 4б), остальные в ответы сеанса не попадают.
+    // Сводка подписок — по умолчанию да, новости — только по согласию (ADR-0055).
     statements: [
       `alter table "user" add column "digest" integer not null default 1`,
       `alter table "user" add column "news" integer not null default 0`,
       `alter table "user" add column "photo" text`,
       `alter table "user" add column "photoPrev" text`,
       `alter table "user" add column "photoPrevUntil" integer`,
+    ],
+  },
+  {
+    id: 3,
+    name: "Обратная связь: ошибки, запросы иконок и функций, отзывы",
+    // Поля вида — JSON в body; скриншот — ключ в бакете фото. Удалён человек — его строки уходят вместе с
+    // ним (каскад, как у сеансов), а скриншоты удаляет сервис (feedback.ts). Хранится год (cleanup.ts).
+    statements: [
+      `create table "feedback" ("id" text not null primary key, "userId" text not null references "user" ("id") on delete cascade, "kind" text not null, "body" text not null, "rating" integer, "page" text, "browser" text, "screenshot" text, "createdAt" integer not null)`,
+      `create index "feedback_userId_idx" on "feedback" ("userId", "createdAt")`,
+      `create index "feedback_createdAt_idx" on "feedback" ("createdAt")`,
     ],
   },
 ];

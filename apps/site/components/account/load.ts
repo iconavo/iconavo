@@ -3,6 +3,9 @@
 
 export const loadAuthDialog = () => import("./AuthDialog");
 
+/** Окна обратной связи (PR 6а) — тоже отдельным куском: открывают их из меню аккаунта. */
+export const loadFeedbackDialog = () => import("./FeedbackDialog");
+
 export function preloadAuthDialog(): void {
   void loadAuthDialog().catch(() => {});
 }

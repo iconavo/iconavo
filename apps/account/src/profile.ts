@@ -30,6 +30,7 @@ import {
 } from "./config.js";
 import type { Env } from "./env.js";
 import { clearFailures, failures, recordFailure } from "./failures.js";
+import { feedbackShots } from "./feedback.js";
 import { failure, json, SECURITY_HEADERS } from "./http.js";
 import { imageInfo } from "./image.js";
 import { noticeMail, sendMail } from "./mail.js";
@@ -42,6 +43,7 @@ import {
   photoRow,
   photoUrl,
 } from "./photos.js";
+import { type SessionUser, sessionUser, unauthorized } from "./session.js";
 
 export { PHOTO_FILE_PREFIX } from "./photos.js";
 
@@ -61,24 +63,6 @@ export interface ProfileDeps {
   waitUntil(promise: Promise<unknown>): void;
   log(line: string): void;
 }
-
-interface SessionUser {
-  id: string;
-  email: string;
-  name: string;
-  emailVerified: boolean;
-  locale?: unknown;
-}
-
-async function sessionUser(
-  request: Request,
-  auth: Auth,
-): Promise<SessionUser | undefined> {
-  const session = await auth.api.getSession({ headers: request.headers });
-  return (session?.user as SessionUser | undefined) ?? undefined;
-}
-
-const unauthorized = () => failure(401, "UNAUTHORIZED", "Sign in first");
 
 /** Способы входа человека: пароль (когда задан) и Google. */
 async function accountsOf(
@@ -527,12 +511,17 @@ async function deleteAccount(
   );
   if (refused !== undefined) return refused;
   const row = await photoRow(env.DB, user.id);
+  // Скриншоты обратной связи — до удаления: строки уходят каскадом вместе с человеком (PR 6а).
+  const shots = await feedbackShots(env.DB, user.id);
   const res = await auth.handler(
     inner(request, "/delete-user", { password: body.password }),
   );
   if (res.ok) {
-    // Сразу всё (решение владельца 27 ноября 2026): фото — вместе с аккаунтом.
-    await deleteObjects(env.FILES, [row?.photo, row?.photoPrev]);
+    // Сразу всё (решение владельца 27 ноября 2026): фото и отзывы со скриншотами — вместе с аккаунтом.
+    await deleteObjects(env.FILES, [row?.photo, row?.photoPrev, ...shots]);
+    await env.DB.prepare(`delete from "feedback" where "userId" = ?`)
+      .bind(user.id)
+      .run();
     await clearFailures(env.DB, `pw:${user.id}`);
   }
   return res;

@@ -33,7 +33,7 @@ describe("миграции", () => {
   it("повтор ничего не делает; другая копия успела раньше — не ошибка", async () => {
     const e = env();
     const [a, b] = await Promise.all([migrate(e.DB), migrate(e.DB)]);
-    expect([...(a ?? []), ...(b ?? [])].sort()).toEqual([1, 2]);
+    expect([...(a ?? []), ...(b ?? [])].sort()).toEqual([1, 2, 3]);
     expect(await migrate(e.DB)).toEqual([]);
     const tables = (
       await e.DB.prepare(
@@ -42,6 +42,7 @@ describe("миграции", () => {
     ).results.map((r) => r.name);
     expect(tables).toEqual([
       "account",
+      "feedback",
       "iconavo_migrations",
       "login_failures",
       "session",
@@ -88,6 +89,7 @@ describe("уборка по расписанию", () => {
       users: 1,
       failures: 1,
       photos: 0,
+      feedback: 0,
     });
     const ids = async (table: string) =>
       (
@@ -195,7 +197,7 @@ describe("точка входа функции", () => {
     const tables = await w.env.DB.prepare(
       `select count(*) as "n" from "sqlite_master" where "type" = 'table'`,
     ).first<{ n: number }>();
-    expect(tables?.n).toBe(6);
+    expect(tables?.n).toBe(7);
     const res = await worker.fetch(
       new Request("http://127.0.0.1:4287/api/auth/get-session", {
         headers: { origin: "http://127.0.0.1:4284" },

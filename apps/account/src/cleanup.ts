@@ -1,11 +1,11 @@
 // Уборка по расписанию (шаг 3 фазы 5, сроки хранения — решение владельца 27 ноября 2026): просроченные
-// коды и сеансы, аккаунты без подтверждённой почты старше суток (с их сеансами и способами входа) и
-// старые счётчики неудачных входов. Одна пачка D1 — одна транзакция: не прошёл один запрос — не
+// коды и сеансы, аккаунты без подтверждённой почты старше суток (с их сеансами и способами входа),
+// старые счётчики неудачных входов, прежние фото после «Undo» и обратная связь старше года. Одна пачка D1 — одна транзакция: не прошёл один запрос — не
 // изменилось ничего, и следующий запуск уберёт всё сам. Даты Better Auth — строки ISO одного вида,
 // поэтому сравниваются как строки.
 
 import type { D1Like } from "@iconavo-ui/d1";
-import { UNVERIFIED_TTL_MS } from "./config.js";
+import { FEEDBACK, UNVERIFIED_TTL_MS } from "./config.js";
 import type { R2Like } from "./env.js";
 import { deleteObjects } from "./photos.js";
 
@@ -16,6 +16,8 @@ export interface CleanupResult {
   failures: number;
   /** Прежние фото, у которых кончилось время «Undo» (PR 4а). */
   photos: number;
+  /** Обратная связь старше года (PR 6а). */
+  feedback: number;
 }
 
 const changes = (r: unknown): number => {
@@ -66,11 +68,28 @@ export async function cleanup(
     )
     .bind(now)
     .run();
+  // Обратная связь старше года: тоже сначала скриншоты, потом строки.
+  const year = now - FEEDBACK.keepMs;
+  const { results: oldShots } = await db
+    .prepare(
+      `select "screenshot" from "feedback" where "createdAt" < ? and "screenshot" is not null`,
+    )
+    .bind(year)
+    .all<{ screenshot: string }>();
+  await deleteObjects(
+    files,
+    oldShots.map((r) => r.screenshot),
+  );
+  const feedback = await db
+    .prepare(`delete from "feedback" where "createdAt" < ?`)
+    .bind(year)
+    .run();
   return {
     codes: changes(codes),
     sessions: changes(sessions),
     users: changes(users),
     failures: changes(failures),
     photos: changes(photos),
+    feedback: changes(feedback),
   };
 }

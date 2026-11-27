@@ -224,6 +224,8 @@ export interface RequestOptions {
   body?: Record<string, unknown>;
   /** Тело картинкой (фото профиля, PR 4) вместо JSON. */
   image?: Blob;
+  /** Тело формой multipart (обратная связь, PR 6а): тип с границей ставит сам браузер. */
+  form?: FormData;
   /** Ответ виджета Turnstile. */
   captcha?: string;
   /** Язык писем: язык страницы. */
@@ -236,9 +238,10 @@ export async function request<T = unknown>(
   path: string,
   o: RequestOptions = {},
 ): Promise<Reply<T>> {
-  const post = o.body !== undefined || o.image !== undefined;
+  const post =
+    o.body !== undefined || o.image !== undefined || o.form !== undefined;
   const headers: Record<string, string> = {};
-  if (post) {
+  if (post && o.form === undefined) {
     headers["content-type"] = o.image?.type || "application/json";
   }
   if (o.captcha !== undefined) headers[CAPTCHA_HEADER] = o.captcha;
@@ -250,7 +253,9 @@ export async function request<T = unknown>(
       credentials: "include",
       cache: "no-store",
       headers,
-      ...(post ? { body: o.image ?? JSON.stringify(o.body ?? {}) } : {}),
+      ...(post
+        ? { body: o.form ?? o.image ?? JSON.stringify(o.body ?? {}) }
+        : {}),
     });
   } catch {
     return {
@@ -398,8 +403,9 @@ export const cabinetApi = {
 export const photoUrl = (path: string | null): string | undefined =>
   path === null ? undefined : `${ACCOUNT}${path}`;
 
-/** Первое поле окна кабинета — туда фокус при открытии (не выбор файла и не скрытая почта). */
-export const FIRST_FIELD = "input:not([type=file]):not([tabindex='-1'])";
+/** Первое поле окна кабинета — туда фокус при открытии: поле или текст, не выбор файла и не скрытая почта. */
+export const FIRST_FIELD =
+  "input:not([type=file]):not([tabindex='-1']), textarea";
 
 /** Открытое окно на странице: закрылось одно окно кабинета, а другое уже открыто, — фокус не трогаем. */
 export const OPEN_DIALOG = "dialog[open]";

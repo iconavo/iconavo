@@ -43,7 +43,28 @@ export interface PreviewMail {
   subject: string;
   text: string;
   html: string;
+  replyTo?: string;
+  /** Вложения — имя, тип и размер (скриншот обратной связи, PR 6а). */
+  attachments?: { filename: string; type: string; size: number }[];
 }
+
+/** Письмо, как его отдаёт функция привязке send_email. */
+interface SentMail {
+  to: string;
+  subject: string;
+  text: string;
+  html: string;
+  replyTo?: string;
+  attachments?: {
+    filename: string;
+    type: string;
+    content: Uint8Array | ArrayBuffer | string;
+  }[];
+}
+
+/** Размер вложения: байты или base64. */
+const sizeOf = (c: Uint8Array | ArrayBuffer | string): number =>
+  typeof c === "string" ? Math.floor((c.length * 3) / 4) : c.byteLength;
 
 interface WorkerModule {
   default: {
@@ -128,7 +149,7 @@ function mailPage(mail: readonly PreviewMail[]): string {
     .map(
       (m, i) => `<section>
 <h2>${i + 1}. ${esc(m.subject)}</h2>
-<p class="muted">Кому: ${esc(m.to)}</p>
+<p class="muted">Кому: ${esc(m.to)}${m.replyTo === undefined ? "" : `, ответ — ${esc(m.replyTo)}`}${m.attachments === undefined ? "" : `; вложения: ${m.attachments.map((a) => `${esc(a.filename)} (${esc(a.type)}, ${a.size} байт)`).join(", ")}`}</p>
 <iframe sandbox title="${esc(m.subject)}" src="/__preview/mail/${i + 1}.html"></iframe>
 <pre>${esc(m.text)}</pre>
 </section>`,
@@ -212,8 +233,23 @@ export async function startAccountPreview(
     DB: db,
     FILES: files,
     EMAIL: {
-      send: async (m: PreviewMail) => {
-        mail.push({ to: m.to, subject: m.subject, text: m.text, html: m.html });
+      send: async (m: SentMail) => {
+        mail.push({
+          to: m.to,
+          subject: m.subject,
+          text: m.text,
+          html: m.html,
+          ...(m.replyTo === undefined ? {} : { replyTo: m.replyTo }),
+          ...(m.attachments === undefined
+            ? {}
+            : {
+                attachments: m.attachments.map((a) => ({
+                  filename: a.filename,
+                  type: a.type,
+                  size: sizeOf(a.content),
+                })),
+              }),
+        });
         return { messageId: String(mail.length) };
       },
     },
