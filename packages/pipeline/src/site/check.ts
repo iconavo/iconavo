@@ -29,6 +29,12 @@ import {
   violations,
   watch,
 } from "../sandbox/verdict.js";
+import {
+  checkAccount,
+  signUpProblems,
+  spoilCaptcha,
+  spoilSignedMemory,
+} from "./account.js";
 import { analyticsProblems, checkAnalytics, spoilEvents } from "./analytics.js";
 import { BAG_KEY, bagProblems, checkBag, zipProblems } from "./bag.js";
 import {
@@ -95,7 +101,7 @@ export const CHECKS = [
   ],
   [
     "headers",
-    "Заголовки: noindex, защита, метка сборки; CSP — стили только файлами, соединения — только с хостами иконок",
+    "Заголовки: noindex, защита, метка сборки; CSP — стили только файлами, соединения — только с хостами иконок и сервисом аккаунтов, сторонний скрипт и рамка — только Turnstile",
   ],
   [
     "robots",
@@ -174,6 +180,10 @@ export const CHECKS = [
     "analytics",
     "Аналитика: поиск, открытие и скачивание доходят до приёма /event превью API — запрос с местом и «скачано», успех поиска; буквы набора — не запрос; с Global Privacy Control — ни одного события",
   ],
+  [
+    "account",
+    "Вход: закрытый режим — «Soon» без запросов; «Log In» и окно; регистрация с Turnstile и кодом, неверный код, пароль; аватар, перезагрузка, меню и выход; почта занята; три неверных пароля → Turnstile; восстановление; Google; телефон, axe, CSP",
+  ],
   ["canary", "Контрольный запуск: каждая подложенная поломка замечена"],
 ] as const;
 
@@ -213,6 +223,11 @@ export interface SiteCheckOptions {
   only?: readonly SiteStep[];
   /** База событий превью API (шаг 2 фазы 5): из неё — строка «Аналитика». */
   analytics?: () => D1Like | undefined;
+  /** Превью сервиса аккаунтов (шаг 3 фазы 5): адрес и письма — для строки «Вход». */
+  account?: {
+    origin: string;
+    mail: () => readonly { to: string; subject: string }[];
+  };
   log?: (line: string) => void;
 }
 
@@ -316,9 +331,18 @@ export function httpVerdicts(
     (p) => p.path !== "/robots.txt" && (p.status < 300 || p.status >= 400),
   );
   const headerProblems = answers.flatMap((p) =>
-    headersVerdict(p, { production: true, hosts: o.hosts }).map(
-      (x) => `${p.path}: ${x}`,
-    ),
+    headersVerdict(p, {
+      production: true,
+      hosts: o.hosts,
+      ...(o.account === undefined
+        ? {}
+        : {
+            account: {
+              service: o.account.origin,
+              turnstile: o.account.origin,
+            },
+          }),
+    }).map((x) => `${p.path}: ${x}`),
   );
   const robots = html
     .map((p) => [p.path, robotsMetaVerdict(p.html)] as const)
@@ -1564,6 +1588,30 @@ async function checkCanary(
     if (caught.length === 0) missed.push("событие не по списку");
     await ctx.close();
   }
+  // Вход (шаг 3 фазы 5): ответ Turnstile не уходит в сервис — регистрация обязана упасть; браузер не помнит
+  // вход — перезагрузка обязана его потерять. Почты — свои у каждой поломки: база превью общая.
+  if (o.account !== undefined) {
+    const accountBreaks: [
+      string,
+      string,
+      (c: BrowserContext) => Promise<void>,
+    ][] = [
+      ["Turnstile не уходит в сервис", "captcha", spoilCaptcha],
+      ["вход не переживает перезагрузку", "memory", spoilSignedMemory],
+    ];
+    for (const [title, tag, spoil] of accountBreaks) {
+      const ctx = await browser.newContext({ viewport: DESKTOP });
+      await spoil(ctx);
+      const p = await ctx.newPage();
+      const caught = await signUpProblems(
+        p,
+        o,
+        `canary-${tag}-${result.browser}@example.com`,
+      ).catch(stoppedBy(title));
+      if (caught.length === 0) missed.push(title);
+      await ctx.close();
+    }
+  }
   if (
     zipProblems(
       [
@@ -1609,7 +1657,7 @@ async function checkCanary(
   result.verdicts.canary =
     missed.length === 0
       ? pass(
-          `замечены все тридцать одна: кнопка без подписи, style, нарушение CSP до перехода, ширина, иконка-блок, robots, битая ссылка, гидратация, чужой lang, нет ссылки на другой язык, переход не туда, нет скрипта темы, сетка без списка имён, поиск без полной выдачи, Esc не закрывает панель, фокус не возвращается, другая страница сетки закрывает панель, сетка прыгает при открытии и закрытии панели, колесо над панелью крутит страницу, страница шире окна при открытии панели, карточки перескакивают, панель без своей колонки, старое имя без перехода, метка catalog у страницы иконки, менеджер пакетов не запоминается, SVG-код не как у адреса, пустой PNG, сумка не переживает перезагрузку, ZIP без лицензий, настройки не сохраняются, событие не по списку${stoppedNote}`,
+          `замечены все ${o.account === undefined ? "тридцать одна" : "тридцать три"}: кнопка без подписи, style, нарушение CSP до перехода, ширина, иконка-блок, robots, битая ссылка, гидратация, чужой lang, нет ссылки на другой язык, переход не туда, нет скрипта темы, сетка без списка имён, поиск без полной выдачи, Esc не закрывает панель, фокус не возвращается, другая страница сетки закрывает панель, сетка прыгает при открытии и закрытии панели, колесо над панелью крутит страницу, страница шире окна при открытии панели, карточки перескакивают, панель без своей колонки, старое имя без перехода, метка catalog у страницы иконки, менеджер пакетов не запоминается, SVG-код не как у адреса, пустой PNG, сумка не переживает перезагрузку, ZIP без лицензий, настройки не сохраняются, событие не по списку${o.account === undefined ? "" : ", Turnstile не уходит в сервис, вход не переживает перезагрузку"}${stoppedNote}`,
         )
       : fail(
           `проверка слепая: не замечено — ${missed.join(", ")}${stoppedNote}`,
@@ -1632,6 +1680,7 @@ export const SITE_STEPS = [
   "settings",
   "results",
   "analytics",
+  "account",
   "canary",
 ] as const;
 export type SiteStep = (typeof SITE_STEPS)[number];
@@ -1652,6 +1701,7 @@ const STEP_ROWS: Record<SiteStep, readonly CheckId[]> = {
   settings: ["settings"],
   results: ["results"],
   analytics: ["analytics"],
+  account: ["account"],
   canary: ["canary"],
 };
 
@@ -1728,6 +1778,12 @@ export async function checkSite(o: SiteCheckOptions): Promise<SiteResult[]> {
           "analytics",
           "аналитика",
           async () => (v.analytics = await checkAnalytics(b, o)),
+        ],
+        [
+          "account",
+          "вход",
+          async () =>
+            (v.account = await checkAccount(b, name, o, result.shots)),
         ],
         [
           "canary",

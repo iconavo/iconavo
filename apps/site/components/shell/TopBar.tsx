@@ -1,5 +1,6 @@
 import { Icon } from "@iconavo-ui/react";
 import { DICTIONARIES, type Lang } from "../../lib/i18n";
+import { AccountEntry } from "../account/AccountEntry";
 import { BagButton } from "../bag/BagButton";
 import { LanguageSwitch } from "../LanguageSwitch";
 import { PageLink } from "../PageLink";
@@ -12,7 +13,8 @@ import { ThemeToggle } from "./ThemeToggle";
 
 /**
  * Верхняя полоса по макету (Figma «Iconavo — Макеты», кадр Header): слева расширения, «For AI agents» и
- * тема, справа поиск, сумка, язык и аккаунт. Расширений, агентов и аккаунта в продукте пока нет — «Soon».
+ * тема, справа поиск, сумка, язык и аккаунт. Расширений и агентов в продукте пока нет — «Soon»; аккаунт —
+ * components/account/AccountEntry.tsx (в закрытом режиме — тоже «Soon»).
  * На телефоне — кнопка меню, логотип, тема, сумка и аккаунт (класс topbar-wide прячет остальное).
  */
 export function TopBar({
@@ -55,15 +57,7 @@ export function TopBar({
         {languageSwitch ? (
           <LanguageSwitch variant="flag" className="top-circle topbar-wide" />
         ) : null}
-        <Soon lang={lang} className="topbar-account" label={t.account}>
-          <span className="top-circle">
-            <Icon icon="material-symbols:account-circle" />
-          </span>
-          <Icon
-            icon="material-symbols:keyboard-arrow-down"
-            className="topbar-wide topbar-account-chevron"
-          />
-        </Soon>
+        <AccountEntry lang={lang} />
       </div>
     </header>
   );

@@ -1,7 +1,12 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import type { NextConfig } from "next";
-import { iconHosts, searchRobotsHeaders, siteHeaders } from "./lib/headers";
+import {
+  accountHosts,
+  iconHosts,
+  searchRobotsHeaders,
+  siteHeaders,
+} from "./lib/headers";
 import { installFromReadme } from "./lib/install-readme";
 
 // Метка сборки — 8 знаков коммита от CI (site.yml); её видно в заголовке X-Iconavo-Build, по ней
@@ -52,6 +57,7 @@ const config: NextConfig = {
           production: process.env.NODE_ENV === "production",
           build,
           hosts: iconHosts(process.env),
+          account: accountHosts(process.env),
         }),
       },
       ...searchRobotsHeaders(),

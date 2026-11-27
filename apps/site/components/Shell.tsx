@@ -2,6 +2,7 @@ import { type IconavoIconSet, IconavoProvider } from "@iconavo-ui/react";
 import { type ReactNode, Suspense } from "react";
 import type { SidebarGroup } from "../lib/catalog-view";
 import { DICTIONARIES, type Lang } from "../lib/i18n";
+import { AccountHost } from "./account/AccountHost";
 import { BagPanel } from "./bag/BagPanel";
 import { Footer } from "./Footer";
 import { SettingsPanel } from "./settings/SettingsPanel";
@@ -55,6 +56,7 @@ export function Shell({
         <BagPanel lang={lang} />
         <SettingsPanel lang={lang} />
       </div>
+      <AccountHost lang={lang} />
       <HotKey lang={lang} />
       {/* Переход по ссылке на эту же страницу с другими параметрами (С-1): useSearchParams — под своим
           Suspense, в серверном HTML пусто, остальная страница статическая. */}

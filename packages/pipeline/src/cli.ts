@@ -16,7 +16,7 @@
 // | pnpm visual [id…] [--browser=…]
 // | pnpm starters <пример> [--browser=…] | pnpm starters [пример…] --check [--browser=…] [--npm]
 // | pnpm starters [пример…] --lock
-// | pnpm site [--port=N] [--prod] | pnpm site --check [--browser=…] [--only=…] | pnpm site --live [--expect-build=…] [--base=…]
+// | pnpm site [--port=N] [--prod] [--account] | pnpm site --check [--browser=…] [--only=…] | pnpm site --live [--expect-build=…] [--base=…]
 // | pnpm site --refresh [--all] [--base=…] | pnpm site --refresh --wait=N --since=… --sets=… [--base=…]
 // | pnpm release bump [версия] | pnpm release prepare [--first] | pnpm release verify --plan=… [--wait=N]
 // | pnpm analytics [--weeks=N] [--base=…] | pnpm account build | pnpm account preview [--port=N] | pnpm account check [--expect-build=…] [--base=…]
@@ -572,6 +572,9 @@ const USAGE = `Использование:
                                       с живыми хостами иконок; документация /docs — из README
       --port=N                        порт (по умолчанию ${SITE_PORT})
       --prod                          продакшен-сборка: next build, затем next start
+      --account                       ещё и превью сервиса аккаунтов на 127.0.0.1:${ACCOUNT_PREVIEW_PORT}: окно
+                                      входа, подставной Turnstile, письма — /__preview/mail; интерфейс
+                                      аккаунтов включает адрес /?accounts=on (шаг 3 фазы 5)
       --check                         проверить сайт: продакшен-сборка, хосты иконок — превью API;
                                       обход страниц, заголовки, ссылки, разделы README; Chrome,
                                       Firefox и WebKit; отчёт .cache/reports/site/check.html
@@ -770,6 +773,7 @@ let startersLock = false;
 let siteLive = false;
 let siteBase: string | undefined;
 let siteRefresh = false;
+let siteAccount = false;
 let refreshAll = false;
 let refreshWait: number | undefined;
 let refreshSince: number | undefined;
@@ -877,6 +881,10 @@ for (const flag of flags) {
   if (command === "site") {
     if (flag === "--prod") {
       exampleProd = true;
+      continue;
+    }
+    if (flag === "--account") {
+      siteAccount = true;
       continue;
     }
     if (flag === "--check") {
@@ -1884,6 +1892,11 @@ try {
     if (browserName && !checkBrowsers) {
       usageError("--browser — только вместе с --check.");
     }
+    if (siteAccount && (checkBrowsers || siteLive || siteRefresh)) {
+      usageError(
+        "--account — только для ручного запуска (с --prod или без него).",
+      );
+    }
     if (siteOnly !== undefined) {
       if (!checkBrowsers) usageError("--only — только вместе с --check.");
       const unknown = siteOnly.filter(
@@ -2096,9 +2109,20 @@ try {
         eventOrigins: [`http://127.0.0.1:${sitePort}`],
       });
       const api = `http://127.0.0.1:${preview.port}`;
+      // Сервис аккаунтов (шаг 3 фазы 5): превью этой ветки со страницей сайта, подставным Turnstile и
+      // подставным Google — для строки «Вход».
+      const accountPreview = await startAccountPreview({
+        root,
+        outDir: distAccountDir,
+        port: 0,
+        siteOrigin: `http://127.0.0.1:${sitePort}`,
+        google: true,
+      });
       const env = {
         NEXT_PUBLIC_ICONAVO_API: api,
         NEXT_PUBLIC_ICONAVO_CDN: `${api}/_static`,
+        NEXT_PUBLIC_ICONAVO_ACCOUNT: accountPreview.origin,
+        NEXT_PUBLIC_ICONAVO_TURNSTILE: `${accountPreview.origin}/__preview/turnstile.js`,
         SITE_BUILD: "check",
       };
       // Сборка — с чистого листа: кэш Turbopack от сборки с другим окружением (pnpm site --prod, vercel
@@ -2151,10 +2175,15 @@ try {
           browsers,
           ...(siteOnly === undefined ? {} : { only: siteOnly as SiteStep[] }),
           analytics: () => preview.analytics(),
+          account: {
+            origin: accountPreview.origin,
+            mail: () => accountPreview.mail(),
+          },
           log: (line) => console.log(`  ${line}`),
         });
       } finally {
         await next.stop();
+        await accountPreview.close();
         await preview.close();
         await meili.close();
         await rm(searchDir, { recursive: true, force: true });
@@ -2175,20 +2204,44 @@ try {
       console.log(`Отчёт: ${htmlPath}`);
       process.exit(siteCheckFailed(results) ? 1 : 0);
     }
-    // Ручной запуск: вывод Next.js — в этот терминал, хосты иконок — живые.
-    if (exampleProd) await buildNext({ dir, inherit: true });
+    // Ручной запуск: вывод Next.js — в этот терминал, хосты иконок — живые. С --account — ещё и превью
+    // сервиса аккаунтов: окно входа против него, письма — на его странице /__preview/mail.
+    const account = siteAccount
+      ? await startAccountPreview({
+          root,
+          outDir: distAccountDir,
+          port: ACCOUNT_PREVIEW_PORT,
+          siteOrigin: `http://127.0.0.1:${port}`,
+        })
+      : undefined;
+    const accountEnv: Record<string, string> =
+      account === undefined
+        ? {}
+        : {
+            NEXT_PUBLIC_ICONAVO_ACCOUNT: account.origin,
+            NEXT_PUBLIC_ICONAVO_TURNSTILE: `${account.origin}/__preview/turnstile.js`,
+          };
+    if (exampleProd) await buildNext({ dir, env: accountEnv, inherit: true });
     const next = await startNext(exampleProd ? "prod" : "dev", port, {
       dir,
+      env: accountEnv,
       inherit: true,
     });
     const stop = () => {
-      void next.stop().finally(() => process.exit(0));
+      void Promise.all([next.stop(), account?.close()]).finally(() =>
+        process.exit(0),
+      );
     };
     process.on("SIGINT", stop);
     process.on("SIGTERM", stop);
     console.log(
       `Сайт: ${next.url}/docs — ${exampleProd ? "продакшен-сборка" : "режим разработки"}, иконки с живых хостов. Остановить — Ctrl+C.`,
     );
+    if (account !== undefined) {
+      console.log(
+        `Аккаунты: ${next.url}/?accounts=on — окно входа против превью сервиса ${account.origin}; письма с кодами — ${account.origin}/__preview/mail.`,
+      );
+    }
   } else if (command === "starters") {
     for (const id of args) {
       if (!isStarterId(id)) {

@@ -322,11 +322,17 @@ export function parseCsp(value: string): Map<string, string[]> {
 
 /**
  * Заголовки страницы: noindex, метка сборки, защита; в продакшене — CSP: стили только файлами,
- * соединения — только с хостами иконок, без встраивания в чужие страницы.
+ * соединения — только с хостами иконок (и сервисом аккаунтов), без встраивания в чужие страницы. Аккаунты
+ * (шаг 3 фазы 5, ADR-0055): сторонний скрипт и рамка — только Turnstile, картинки — сервис аккаунтов.
  */
 export function headersVerdict(
   page: CrawledPage,
-  o: { production: boolean; hosts: string[]; build?: string },
+  o: {
+    production: boolean;
+    hosts: string[];
+    build?: string;
+    account?: { service: string; turnstile: string };
+  },
 ): string[] {
   const h = page.headers;
   const problems: string[] = [];
@@ -352,11 +358,26 @@ export function headersVerdict(
   if (style.join(" ") !== "'self'")
     problems.push(`style-src: ${style.join(" ")}`);
   const connect = (d.get("connect-src") ?? []).filter((s) => s !== "'self'");
-  const expected = [...o.hosts].sort();
+  const expected = [
+    ...o.hosts,
+    ...(o.account === undefined ? [] : [o.account.service]),
+  ].sort();
   if ([...connect].sort().join(" ") !== expected.join(" ")) {
     problems.push(
       `connect-src: ${connect.join(" ")}, а нужно ${expected.join(" ")}`,
     );
+  }
+  if (o.account !== undefined) {
+    const script = (d.get("script-src") ?? []).join(" ");
+    if (script !== `'self' 'unsafe-inline' ${o.account.turnstile}`) {
+      problems.push(`script-src: ${script}`);
+    }
+    const frame = (d.get("frame-src") ?? []).join(" ");
+    if (frame !== o.account.turnstile) problems.push(`frame-src: ${frame}`);
+    const img = d.get("img-src") ?? [];
+    if (!img.includes(o.account.service)) {
+      problems.push(`img-src без сервиса аккаунтов: ${img.join(" ")}`);
+    }
   }
   if ((d.get("frame-ancestors") ?? []).join(" ") !== "'none'") {
     problems.push("frame-ancestors не 'none'");

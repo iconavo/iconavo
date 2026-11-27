@@ -10,6 +10,7 @@ import { fail, pass, type Verdict } from "../sandbox/verdict.js";
 import {
   AI_CRAWLERS_OPEN,
   CRAWL_EXTRAS,
+  DEFAULT_ACCOUNT_HOSTS,
   DEFAULT_ICON_HOSTS,
   followLink,
   isIconPath,
@@ -151,6 +152,7 @@ export async function checkLiveSite(o: {
       headersVerdict(p, {
         production: true,
         hosts: DEFAULT_ICON_HOSTS,
+        account: DEFAULT_ACCOUNT_HOSTS,
         build: o.expectBuild,
       }).map((x) => `${p.path}: ${x}`),
     );

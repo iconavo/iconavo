@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   AI_CRAWLER_AGENTS,
   AI_CRAWLERS,
+  accountHosts,
   contentSecurityPolicy,
   INDEXING,
   iconHosts,
@@ -43,9 +44,38 @@ describe("заголовки сайта", () => {
     // Стили — только файлами сайта; 'unsafe-inline' — лишь у скриптов Next.js.
     expect(csp).toContain("; style-src 'self'; ");
     expect(csp).toContain(
-      "connect-src 'self' https://api.iconavo.dev https://cdn.iconavo.dev https://cdn2.iconavo.dev https://iconavo.b-cdn.net",
+      "connect-src 'self' https://api.iconavo.dev https://cdn.iconavo.dev https://cdn2.iconavo.dev https://iconavo.b-cdn.net https://account.iconavo.dev;",
     );
     expect(csp).toContain("frame-ancestors 'none'");
+  });
+
+  it("аккаунты (ADR-0055): сервис — в connect-src и img-src, Turnstile — в script-src и frame-src, и только он", () => {
+    const csp = contentSecurityPolicy(iconHosts({}));
+    expect(csp).toContain(
+      "; script-src 'self' 'unsafe-inline' https://challenges.cloudflare.com; ",
+    );
+    expect(csp).toContain(
+      "; img-src 'self' data: https://account.iconavo.dev; ",
+    );
+    expect(csp).toContain("; frame-src https://challenges.cloudflare.com; ");
+    // У проверки сайта — превью сервиса и подставной Turnstile из него.
+    expect(
+      accountHosts({
+        NEXT_PUBLIC_ICONAVO_ACCOUNT: "http://127.0.0.1:5001",
+        NEXT_PUBLIC_ICONAVO_TURNSTILE:
+          "http://127.0.0.1:5001/__preview/turnstile.js",
+      }),
+    ).toEqual({
+      service: "http://127.0.0.1:5001",
+      turnstile: "http://127.0.0.1:5001",
+    });
+    // Не адрес или не http(s) — хосты по умолчанию.
+    expect(
+      accountHosts({ NEXT_PUBLIC_ICONAVO_ACCOUNT: "javascript:1" }),
+    ).toEqual({
+      service: "https://account.iconavo.dev",
+      turnstile: "https://challenges.cloudflare.com",
+    });
   });
 
   it("свои хосты из окружения проверки заменяют хосты по умолчанию", () => {

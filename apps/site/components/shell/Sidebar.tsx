@@ -1,19 +1,19 @@
 import type { SidebarGroup } from "../../lib/catalog-view";
 import { DICTIONARIES, type Lang } from "../../lib/i18n";
+import { PlanBlock } from "../account/PlanBlock";
 import { PageLink } from "../PageLink";
 import { Logo, LogoMark } from "./Logo";
-import { PlanLogo } from "./Logos";
 import { MenuClose } from "./Menu";
 import { SidebarNav } from "./SidebarNav";
 import { SidebarTabs } from "./SidebarTabs";
 import { SidebarToggle } from "./SidebarToggle";
-import { Soon } from "./Soon";
 
 /**
  * Боковая панель по макету (Figma «Iconavo — Макеты», компонент Sidebar): логотип и «свернуть», разделы,
  * вкладки, фильтр и наборы по группам, внизу — тариф. На телефоне это шторка меню (Menu.tsx). Вкладки
  * (SidebarTabs): на странице поиска Sets, Style и License — фильтры выдачи, на остальных — только Sets;
- * прочие вкладки, тариф и Manage — «Soon»: в продукте их пока нет.
+ * прочие вкладки — «Soon»: в продукте их пока нет. Тариф внизу — components/account/PlanBlock.tsx: гостю —
+ * вход, вошедшему — кто вошёл, в закрытом режиме — «Soon».
  */
 export function Sidebar({
   lang,
@@ -39,16 +39,7 @@ export function Sidebar({
         <SidebarTabs lang={lang} groups={groups} />
       </div>
       <div className="sidebar-plan">
-        <Soon lang={lang} className="sidebar-plan-button" above>
-          <span className="sidebar-plan-info">
-            <span className="sidebar-plan-label">{t.planLabel}</span>
-            <span className="sidebar-plan-tier">
-              <PlanLogo />
-              <span className="sidebar-label">{t.planName}</span>
-            </span>
-          </span>
-          <span className="sidebar-plan-manage">{t.planManage}</span>
-        </Soon>
+        <PlanBlock lang={lang} />
       </div>
     </aside>
   );
