@@ -26,6 +26,14 @@ export interface D1Like {
   batch(statements: D1Statement[]): Promise<unknown[]>;
 }
 
+/**
+ * Пределы D1 строже, чем у SQLite по умолчанию (замер на живой базе 27 ноября 2026, ADR-0043): в
+ * составной выборке — не больше 5 частей UNION, INTERSECT или EXCEPT, в запросе — не больше 100
+ * параметров. node:sqlite их не задаёт, поэтому база тестов и превью (`sqlite.ts`) повторяет их сама.
+ */
+export const D1_MAX_COMPOUND_TERMS = 5;
+export const D1_MAX_PARAMS = 100;
+
 /** Сырые события старше стольких дней удаляются (ADR-0028). */
 export const RETENTION_DAYS = 30;
 
@@ -123,39 +131,59 @@ export function rejectStatements(
 }
 
 /**
- * Итоги одного дня из сырых событий, без проверочных: просмотры по разделам; запросы, поисковые
- * сессии (запрос с пометкой «первый»), успехи, запросы без результатов и без открытой иконки, с
- * выдачей по смыслу; место первой открытой иконки; что скопировано и скачано; откуда открыта
- * иконка; переключения стиля; иконки копирований и скачиваний; время до первой иконки.
- * Параметры: начало дня (час), конец (час), день.
+ * Части итогов дня — выборки из сырых событий `e`, без проверочных: просмотры по разделам; запросы,
+ * поисковые сессии (запрос с пометкой «первый»), успехи, запросы без результатов и без открытой
+ * иконки, с выдачей по смыслу; место первой открытой иконки; что скопировано и скачано; откуда
+ * открыта иконка; переключения стиля; иконки копирований и скачиваний; время до первой иконки.
+ * Имена колонок — у каждой части: части делятся между запросами где угодно.
  */
-export const ROLLUP_DAY = `WITH e AS (
-  SELECT name, lang, coalesce(country, '') AS country, data FROM events
-  WHERE test = 0 AND hour >= ? AND hour < ?
+const ROLLUP_TERMS: readonly string[] = [
+  "SELECT day, lang, country, 'page' AS metric, json_extract(data, '$.section') AS key FROM e WHERE name = 'page'",
+  "SELECT day, lang, country, 'query' AS metric, '' AS key FROM e WHERE name = 'query'",
+  "SELECT day, lang, country, 'session' AS metric, '' AS key FROM e WHERE name = 'query' AND json_extract(data, '$.first') = 1",
+  "SELECT day, lang, country, 'success' AS metric, '' AS key FROM e WHERE name = 'success'",
+  "SELECT day, lang, country, 'noresults' AS metric, '' AS key FROM e WHERE name = 'query' AND json_extract(data, '$.results') = 0",
+  "SELECT day, lang, country, 'noclick' AS metric, '' AS key FROM e WHERE name = 'query' AND json_extract(data, '$.position') IS NULL",
+  "SELECT day, lang, country, 'semantic' AS metric, '' AS key FROM e WHERE name = 'query' AND json_extract(data, '$.semantic') = 1",
+  `SELECT day, lang, country, 'position' AS metric,
+    CASE WHEN p = 1 THEN '1' WHEN p <= 5 THEN '2-5' WHEN p <= 10 THEN '6-10' WHEN p <= 20 THEN '11-20' ELSE '21+' END AS key
+    FROM (SELECT day, lang, country, json_extract(data, '$.position') AS p FROM e WHERE name = 'query') WHERE p IS NOT NULL`,
+  "SELECT day, lang, country, 'copy' AS metric, json_extract(data, '$.what') AS key FROM e WHERE name = 'copy'",
+  "SELECT day, lang, country, 'download' AS metric, json_extract(data, '$.format') AS key FROM e WHERE name = 'download'",
+  "SELECT day, lang, country, 'open' AS metric, json_extract(data, '$.from') AS key FROM e WHERE name = 'open'",
+  "SELECT day, lang, country, 'style' AS metric, json_extract(data, '$.where') || ':' || json_extract(data, '$.style') AS key FROM e WHERE name = 'style'",
+  `SELECT day, lang, country, 'icon' AS metric, json_extract(data, '$.icon') AS key FROM e
+    WHERE name IN ('copy', 'download') AND json_extract(data, '$.icon') IS NOT NULL`,
+  `SELECT day, lang, country, 'entry' AS metric,
+    CASE WHEN s < 30 THEN '0-30' WHEN s < 60 THEN '30-60' WHEN s < 180 THEN '60-180' WHEN s < 600 THEN '180-600' ELSE '600+' END AS key
+    FROM (SELECT day, lang, country, json_extract(data, '$.entry') AS s FROM e WHERE name IN ('copy', 'download')) WHERE s IS NOT NULL`,
+];
+
+const rollupStatement = (terms: readonly string[]): string => `WITH e AS (
+  SELECT date(hour * 3600, 'unixepoch') AS day, name, lang, coalesce(country, '') AS country, data
+  FROM events WHERE test = 0 AND hour >= ? AND hour < ?
 )
 INSERT INTO days (day, lang, country, metric, key, value)
-SELECT ?, lang, country, metric, coalesce(key, ''), count(*) FROM (
-  SELECT lang, country, 'page' AS metric, json_extract(data, '$.section') AS key FROM e WHERE name = 'page'
-  UNION ALL SELECT lang, country, 'query', '' FROM e WHERE name = 'query'
-  UNION ALL SELECT lang, country, 'session', '' FROM e WHERE name = 'query' AND json_extract(data, '$.first') = 1
-  UNION ALL SELECT lang, country, 'success', '' FROM e WHERE name = 'success'
-  UNION ALL SELECT lang, country, 'noresults', '' FROM e WHERE name = 'query' AND json_extract(data, '$.results') = 0
-  UNION ALL SELECT lang, country, 'noclick', '' FROM e WHERE name = 'query' AND json_extract(data, '$.position') IS NULL
-  UNION ALL SELECT lang, country, 'semantic', '' FROM e WHERE name = 'query' AND json_extract(data, '$.semantic') = 1
-  UNION ALL SELECT lang, country, 'position',
-    CASE WHEN p = 1 THEN '1' WHEN p <= 5 THEN '2-5' WHEN p <= 10 THEN '6-10' WHEN p <= 20 THEN '11-20' ELSE '21+' END
-    FROM (SELECT lang, country, json_extract(data, '$.position') AS p FROM e WHERE name = 'query') WHERE p IS NOT NULL
-  UNION ALL SELECT lang, country, 'copy', json_extract(data, '$.what') FROM e WHERE name = 'copy'
-  UNION ALL SELECT lang, country, 'download', json_extract(data, '$.format') FROM e WHERE name = 'download'
-  UNION ALL SELECT lang, country, 'open', json_extract(data, '$.from') FROM e WHERE name = 'open'
-  UNION ALL SELECT lang, country, 'style', json_extract(data, '$.where') || ':' || json_extract(data, '$.style') FROM e WHERE name = 'style'
-  UNION ALL SELECT lang, country, 'icon', json_extract(data, '$.icon') FROM e
-    WHERE name IN ('copy', 'download') AND json_extract(data, '$.icon') IS NOT NULL
-  UNION ALL SELECT lang, country, 'entry',
-    CASE WHEN s < 30 THEN '0-30' WHEN s < 60 THEN '30-60' WHEN s < 180 THEN '60-180' WHEN s < 600 THEN '180-600' ELSE '600+' END
-    FROM (SELECT lang, country, json_extract(data, '$.entry') AS s FROM e WHERE name IN ('copy', 'download')) WHERE s IS NOT NULL
+SELECT day, lang, country, metric, coalesce(key, ''), count(*) FROM (
+  ${terms.join("\n  UNION ALL ")}
 )
-GROUP BY lang, country, metric, key`;
+GROUP BY day, lang, country, metric, key`;
+
+/**
+ * Итоги дней — несколькими запросами: у D1 в одном не больше D1_MAX_COMPOUND_TERMS частей, а одним
+ * запросом из всех частей D1 отказывал (27 ноября 2026). День — по часу события, UTC. Параметры каждого
+ * запроса: начало (час) и конец (час, не включительно) — целые дни.
+ */
+export const ROLLUP_DAYS: readonly string[] = Array.from(
+  { length: Math.ceil(ROLLUP_TERMS.length / D1_MAX_COMPOUND_TERMS) },
+  (_, i) =>
+    rollupStatement(
+      ROLLUP_TERMS.slice(
+        i * D1_MAX_COMPOUND_TERMS,
+        (i + 1) * D1_MAX_COMPOUND_TERMS,
+      ),
+    ),
+);
 
 export interface RollupResult {
   /** Дни, чьи итоги посчитаны заново. */
@@ -174,24 +202,23 @@ const changesOf = (result: unknown): number => {
  * Раз в сутки (расписание функции): итоги каждого прошедшего дня, чьи сырые события ещё хранятся, —
  * заново, затем удаление событий старше RETENTION_DAYS целыми днями. День либо есть целиком, либо
  * удалён целиком: итоги удалённого дня больше не пересчитываются и остаются. Час события ставит приём,
- * поэтому прошедший день новых событий не получит. Одна пачка — одна транзакция.
+ * поэтому прошедший день новых событий не получит. Одна пачка — одна транзакция: не прошёл один
+ * запрос — не изменилось ничего, и следующий запуск посчитает все хранящиеся дни сам.
  */
 export async function rollup(db: D1Like, now: number): Promise<RollupResult> {
   const today = Math.floor(hourOf(now) / DAY_HOURS);
-  const first = today - RETENTION_DAYS;
-  const statements = schemaStatements(db);
-  const days: string[] = [];
-  const clear = db.prepare("DELETE FROM days WHERE day = ?");
-  const count = db.prepare(ROLLUP_DAY);
-  for (let d = first; d < today; d++) {
-    const from = d * DAY_HOURS;
-    const day = dayOfHour(from);
-    days.push(day);
-    statements.push(clear.bind(day), count.bind(from, from + DAY_HOURS, day));
-  }
-  statements.push(
-    db.prepare("DELETE FROM events WHERE hour < ?").bind(first * DAY_HOURS),
+  const from = (today - RETENTION_DAYS) * DAY_HOURS;
+  const to = today * DAY_HOURS;
+  const days = Array.from({ length: RETENTION_DAYS }, (_, d) =>
+    dayOfHour(from + d * DAY_HOURS),
   );
-  const results = await db.batch(statements);
+  const results = await db.batch([
+    ...schemaStatements(db),
+    db
+      .prepare("DELETE FROM days WHERE day >= ? AND day < ?")
+      .bind(dayOfHour(from), dayOfHour(to)),
+    ...ROLLUP_DAYS.map((sql) => db.prepare(sql).bind(from, to)),
+    db.prepare("DELETE FROM events WHERE hour < ?").bind(from),
+  ]);
   return { days, deleted: changesOf(results.at(-1)) };
 }
