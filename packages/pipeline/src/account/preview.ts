@@ -1,0 +1,282 @@
+// Превью сервиса аккаунтов (шаг 3 фазы 5, ADR-0055): ровно бандл dist-account/worker.js в Node на 127.0.0.1.
+// База — подделка D1 с её пределами поверх node:sqlite в памяти, письма — в памяти превью, Turnstile —
+// свой адрес превью: он принимает только ответ тестового виджета Cloudflare (XXXX.DUMMY.TOKEN.XXXX).
+// Google — без ключей, вход через него в превью выключен. Host сверяется, как у других превью.
+//
+// - /__preview/mail — письма по порядку: тема, кому, текст и само письмо в рамке;
+// - /__preview/mail.json — те же письма для проверок (коды);
+// - остальное отвечает функция; несколько Set-Cookie доходят до браузера по отдельности.
+
+import { randomBytes } from "node:crypto";
+import { createServer, type IncomingMessage, type Server } from "node:http";
+import type { AddressInfo } from "node:net";
+import { join } from "node:path";
+import { pathToFileURL } from "node:url";
+import type { D1Like } from "@iconavo-ui/d1";
+import { sqliteD1 } from "@iconavo-ui/d1/sqlite";
+import { WORKER_FILE } from "../api/config.js";
+import { allowedHost } from "../api/local.js";
+import { esc } from "../report/html.js";
+import { buildAccount } from "./build.js";
+
+/** Ответ тестового виджета Turnstile (ключ сайта 1x00000000000000000000AA). */
+export const PREVIEW_CAPTCHA = "XXXX.DUMMY.TOKEN.XXXX";
+
+/** Страница сайта по умолчанию — превью сайта (pnpm site). */
+export const PREVIEW_SITE = "http://127.0.0.1:4284";
+
+export interface PreviewMail {
+  to: string;
+  subject: string;
+  text: string;
+  html: string;
+}
+
+interface WorkerModule {
+  default: {
+    fetch(request: Request, env: unknown, ctx: unknown): Promise<Response>;
+    scheduled(controller: unknown, env: unknown): Promise<void>;
+  };
+}
+
+export interface AccountPreviewOptions {
+  root: string;
+  /** dist-account/ — сюда пересобирается функция. */
+  outDir: string;
+  /** 0 — любой свободный. */
+  port: number;
+  /** Страница, которой сервис отвечает с cookie; проверка сайта даёт свою. */
+  siteOrigin?: string;
+  /** Пройти регистрацию и восстановление на двух языках — четыре письма для глаз. */
+  samples?: boolean;
+  log?: (line: string) => void;
+}
+
+export interface AccountPreview {
+  server: Server;
+  port: number;
+  origin: string;
+  build: string;
+  mail(): readonly PreviewMail[];
+  db(): D1Like;
+  close(): Promise<void>;
+}
+
+async function body(
+  req: IncomingMessage,
+): Promise<Uint8Array<ArrayBuffer> | undefined> {
+  if (req.method === "GET" || req.method === "HEAD") return undefined;
+  const chunks: Buffer[] = [];
+  for await (const chunk of req) chunks.push(chunk as Buffer);
+  return new Uint8Array(Buffer.concat(chunks));
+}
+
+function mailPage(mail: readonly PreviewMail[]): string {
+  const items = mail
+    .map(
+      (m, i) => `<section>
+<h2>${i + 1}. ${esc(m.subject)}</h2>
+<p class="muted">Кому: ${esc(m.to)}</p>
+<iframe sandbox title="${esc(m.subject)}" src="/__preview/mail/${i + 1}.html"></iframe>
+<pre>${esc(m.text)}</pre>
+</section>`,
+    )
+    .join("\n");
+  return `<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; frame-src 'self'">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Письма сервиса аккаунтов</title>
+<style>
+:root { color-scheme: light dark; }
+body { margin: 0 auto; max-width: 760px; padding: 24px 16px 64px; font: 15px/1.5 system-ui, sans-serif; }
+iframe { width: 100%; height: 360px; border: 1px solid #ccc; border-radius: 8px; background: #fff; }
+pre { white-space: pre-wrap; font-size: 13px; } .muted { opacity: 0.7; }
+</style>
+</head>
+<body>
+<h1>Письма сервиса аккаунтов</h1>
+<p>Превью: письма не уходят, они собираются здесь по порядку. ${mail.length === 0 ? "Писем пока нет." : `Писем: ${mail.length}.`}</p>
+${items}
+</body>
+</html>
+`;
+}
+
+/** Каждый запуск пересобирает функцию: превью показывает ровно то, что уйдёт в Cloudflare. */
+export async function startAccountPreview(
+  o: AccountPreviewOptions,
+): Promise<AccountPreview> {
+  const built = await buildAccount({ root: o.root, outDir: o.outDir });
+  const worker = (
+    (await import(
+      pathToFileURL(join(o.outDir, WORKER_FILE)).href
+    )) as WorkerModule
+  ).default;
+  const { DatabaseSync } = await import("node:sqlite");
+  const db = sqliteD1(new DatabaseSync(":memory:"));
+  const mail: PreviewMail[] = [];
+  const site = o.siteOrigin ?? PREVIEW_SITE;
+  let port = o.port;
+  const origin = () => `http://127.0.0.1:${port}`;
+  const env = () => ({
+    DB: db,
+    EMAIL: {
+      send: async (m: PreviewMail) => {
+        mail.push({ to: m.to, subject: m.subject, text: m.text, html: m.html });
+        return { messageId: String(mail.length) };
+      },
+    },
+    // Ключ подписи — свой у каждого запуска: cookie прошлых запусков недействительны.
+    BETTER_AUTH_SECRET: randomBytes(32).toString("base64url"),
+    TURNSTILE_SECRET_KEY: "preview",
+    TURNSTILE_VERIFY_URL: `${origin()}/__preview/turnstile`,
+    SITE_ORIGIN: site,
+    SERVICE_ORIGIN: origin(),
+    COOKIE_MODE: "plain",
+    ACCOUNT_ACCESS: "open",
+  });
+  let fixedEnv: ReturnType<typeof env> | undefined;
+  const ctx = {
+    waitUntil: (promise: Promise<unknown>) => {
+      promise.catch(() => {});
+    },
+  };
+
+  async function reply(req: IncomingMessage): Promise<Response> {
+    if (!allowedHost(req.headers.host, port)) {
+      return new Response("Превью открывается только по адресу 127.0.0.1", {
+        status: 403,
+      });
+    }
+    const url = new URL(req.url ?? "/", origin());
+    if (url.pathname === "/__preview/turnstile") {
+      // Функция шлёт FormData — разбирает его сам Request, как в Workers.
+      const form = await new Request(url, {
+        method: "POST",
+        headers: { "content-type": req.headers["content-type"] ?? "" },
+        body: (await body(req)) ?? new Uint8Array(new ArrayBuffer(0)),
+      }).formData();
+      const raw = form.get("response");
+      return Response.json({
+        success: raw === PREVIEW_CAPTCHA,
+        hostname: new URL(site).hostname,
+      });
+    }
+    if (url.pathname === "/__preview/mail.json") return Response.json(mail);
+    if (url.pathname === "/__preview/mail") {
+      return new Response(mailPage(mail), {
+        headers: { "content-type": "text/html; charset=utf-8" },
+      });
+    }
+    const one = /^\/__preview\/mail\/(\d+)\.html$/.exec(url.pathname);
+    if (one !== null) {
+      const m = mail[Number(one[1]) - 1];
+      return m === undefined
+        ? new Response("Нет такого письма", { status: 404 })
+        : new Response(m.html, {
+            headers: {
+              "content-type": "text/html; charset=utf-8",
+              "content-security-policy":
+                "default-src 'none'; style-src 'unsafe-inline'",
+            },
+          });
+    }
+    const headers = new Headers();
+    for (const [name, value] of Object.entries(req.headers)) {
+      if (typeof value === "string") headers.set(name, value);
+    }
+    const data = await body(req);
+    return worker.fetch(
+      new Request(url, {
+        method: req.method ?? "GET",
+        headers,
+        ...(data === undefined ? {} : { body: data }),
+      }),
+      fixedEnv,
+      ctx,
+    );
+  }
+
+  const server = createServer((req, res) => {
+    reply(req)
+      .catch(
+        (e: Error) => new Response(`Ошибка: ${e.message}`, { status: 500 }),
+      )
+      .then(async (r) => {
+        const headers: [string, string][] = [];
+        r.headers.forEach((value, name) => {
+          if (name !== "set-cookie") headers.push([name, value]);
+        });
+        for (const cookie of r.headers.getSetCookie()) {
+          headers.push(["set-cookie", cookie]);
+        }
+        res.writeHead(r.status, headers.flat());
+        res.end(
+          req.method === "HEAD"
+            ? undefined
+            : Buffer.from(await r.arrayBuffer()),
+        );
+        o.log?.(`${req.method} ${req.url} → ${r.status}`);
+      });
+  });
+  await new Promise<void>((resolve, reject) => {
+    server.once("error", reject);
+    server.listen(o.port, "127.0.0.1", () => resolve());
+  });
+  port = (server.address() as AddressInfo).port;
+  fixedEnv = env();
+  await worker.scheduled({}, fixedEnv);
+  if (o.samples) await sendSamples(origin(), site);
+  return {
+    server,
+    port,
+    origin: origin(),
+    build: built.build,
+    mail: () => mail,
+    db: () => db,
+    close: () =>
+      new Promise<void>((resolve) => {
+        server.closeAllConnections();
+        server.close(() => resolve());
+      }),
+  };
+}
+
+/** Регистрация и восстановление на английском и русском — четыре письма для страницы /__preview/mail. */
+async function sendSamples(service: string, site: string): Promise<void> {
+  const post = async (path: string, payload: unknown, locale: string) => {
+    const res = await fetch(`${service}${path}`, {
+      method: "POST",
+      headers: {
+        origin: site,
+        "content-type": "application/json",
+        "x-captcha-response": PREVIEW_CAPTCHA,
+        "x-iconavo-locale": locale,
+      },
+      body: JSON.stringify(payload),
+    });
+    if (!res.ok) {
+      throw new Error(
+        `превью: ${path} ответил ${res.status} ${await res.text()}`,
+      );
+    }
+    return res;
+  };
+  for (const locale of ["en", "ru"]) {
+    const email = `${locale}@example.com`;
+    await post("/api/account/sign-up", { email, locale }, locale);
+    const codes = (await (
+      await fetch(`${service}/__preview/mail.json`)
+    ).json()) as PreviewMail[];
+    const code = /\b\d{6}\b/.exec(codes.at(-1)?.subject ?? "")?.[0] ?? "";
+    await post(
+      "/api/auth/sign-in/email-otp",
+      { email, otp: code, locale },
+      locale,
+    );
+    await post("/api/auth/email-otp/request-password-reset", { email }, locale);
+  }
+}

@@ -113,7 +113,16 @@ export interface WorkerTarget {
   wasm?: string;
   /** Модули без файла: имя импорта → код (у MCP — разделы README тега, вшитые при сборке). */
   virtual?: Readonly<Record<string, string>>;
+  /**
+   * Встроенные модули Node (`node:crypto`, `node:async_hooks`) — внешние: их даёт Workers с флагом
+   * nodejs_compat (у сервиса аккаунтов — Better Auth, шаг 3 фазы 5). Других внешних импортов нет, а
+   * динамические импорты пакетов встраиваются в тот же файл.
+   */
+  nodeBuiltins?: boolean;
 }
+
+/** Внешние импорты бандла с модулями Node — только они. */
+export const NODE_BUILTIN = /^node:[a-z_/]+$/;
 
 /** Функция edge API: один файл, без внешних импортов. */
 export const API_TARGET: WorkerTarget = {
@@ -138,6 +147,7 @@ export async function bundleWorker(
       extensionAlias: { ".js": [".ts", ".js"] },
       ...(target.conditions ? { conditionNames: [...target.conditions] } : {}),
     },
+    ...(target.nodeBuiltins ? { external: [/^node:/] } : {}),
     ...(wasm === undefined && target.virtual === undefined
       ? {}
       : {
@@ -162,7 +172,10 @@ export async function bundleWorker(
     onLog: (level, log) => {
       if (level === "warn") warnings.push(log.message);
     },
-    output: { format: "esm" },
+    output: {
+      format: "esm",
+      ...(target.nodeBuiltins ? { codeSplitting: false } : {}),
+    },
   });
   if (warnings.length > 0) {
     throw new Error(
@@ -173,7 +186,18 @@ export async function bundleWorker(
   if (rest.length > 0 || chunk.type !== "chunk") {
     throw new Error("сборка функции дала не один файл");
   }
-  if (wasm === undefined) {
+  if (target.nodeBuiltins) {
+    // Внешние — только модули Node; остальное внутри одного файла. Встроенный динамический импорт
+    // rolldown записывает ссылкой на сам бандл — это не внешний файл.
+    const foreign = [...chunk.imports, ...chunk.dynamicImports].filter(
+      (spec) => !NODE_BUILTIN.test(spec) && spec !== chunk.fileName,
+    );
+    if (foreign.length > 0) {
+      throw new Error(
+        `в бандле функции импорты ${JSON.stringify(foreign)}: внешними могут быть только модули node:`,
+      );
+    }
+  } else if (wasm === undefined) {
     if (IMPORT.test(chunk.code)) {
       throw new Error(
         "в бандле функции остался импорт: всё должно быть внутри",

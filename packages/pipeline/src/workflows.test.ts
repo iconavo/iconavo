@@ -87,6 +87,7 @@ describe("фильтры запуска workflow", () => {
   it.each([
     ["api.yml", `${SRC}/api/build.ts`],
     ["mcp.yml", `${SRC}/mcp/build.ts`],
+    ["account.yml", `${SRC}/account/build.ts`],
   ])(
     "%s запускается от каждого файла конвейера, который берёт сборка",
     (name, entry) => {
@@ -106,7 +107,7 @@ describe("фильтры запуска workflow", () => {
     },
   );
 
-  it.each(["api.yml", "mcp.yml", "publish.yml", "site.yml"])(
+  it.each(["api.yml", "mcp.yml", "account.yml", "publish.yml", "site.yml"])(
     "%s: «main ушёл вперёд» смотрит ровно на то, что запускает workflow",
     (name) => {
       const text = workflow(name);
@@ -172,6 +173,24 @@ describe("укрепление CI (ревизия фазы 5, Б-2, Б-3)", () =
     }
     expect(jobs.sort()).toEqual(["deploy.yml: upload", "verify.yml: verify"]);
     expect(bare).toEqual([]);
+  });
+
+  it("ключи сервиса аккаунтов — только у его выкладки в окружении account (шаг 3 фазы 5)", () => {
+    const AUTH =
+      /secrets\.(BETTER_AUTH_SECRET|GOOGLE_CLIENT_SECRET|TURNSTILE_SECRET_KEY|ACCOUNT_ALLOWLIST)\b/;
+    const jobs: string[] = [];
+    for (const name of WORKFLOWS) {
+      for (const job of jobsOf(workflow(name))) {
+        if (!AUTH.test(job.text)) continue;
+        jobs.push(`${name}: ${job.id}`);
+        expect(job.text, `${name}: ${job.id}`).toMatch(
+          /^ {4}environment: account$/m,
+        );
+        // Ключи видит только curl: ни checkout, ни установки в задаче нет.
+        expect(job.text).not.toMatch(/actions\/checkout|pnpm install/);
+      }
+    }
+    expect(jobs).toEqual(["account.yml: deploy"]);
   });
 });
 

@@ -138,6 +138,27 @@
 
 Дословные шаги владельца — после PR сервиса.
 
+Уточнение от 27 ноября 2026 — сервис без интерфейса (шаг 3 фазы 5, PR 2б):
+
+- **Что сделано.** Функция `iconavo-account`: вход паролем и через Google, регистрация «почта → код → пароль», восстановление пароля кодом, сеансы и выход, письма на двух языках, Turnstile, лимиты, закрытый режим, уборка по расписанию. Подробно — CLAUDE.md, раздел «Сервис аккаунтов».
+- **Регистрация кодом входа Better Auth.** Своего «код до пароля» у Better Auth нет: вход кодом создаёт аккаунт с подтверждённой почтой, а пароль задаётся следом своим адресом — только новому аккаунту без пароля и не позже 30 минут. «Пароль сразу» Better Auth выключен.
+- **Охрана перед Better Auth.** Снаружи открыто только то, что нужно окнам PR 3; остальное — 404. Две находки при проверке Better Auth, обе закрыты охраной:
+  - вход паролем он пускал и с чужой страницы — изменения теперь только со страниц `iconavo.dev`;
+  - возврат после Google пускал на чужой адрес — теперь только на страницы сайта.
+- **Смена почты и пароля, удаление и Google в аккаунте — в PR 4,** вместе с экранами My account: там решается, как человек подтверждает опасное (решение 5 — пароль или код на почту). У Better Auth для этого разные пути: удаление — ссылкой из письма, смена почты — кодами на старую и новую почту. Ссылку на удаление сервис не открывает по GET: программы проверки ссылок в почте нажали бы её сами.
+- **База:** привязка D1 — полем `database_id` (поле `id` в загрузке Cloudflare помечено устаревшим; у edge API оно пока работает — бэклог).
+- **Размер:** бандл с Better Auth — 1,7 МБ, в gzip 359 КБ.
+
+Что сделал владелец 27 ноября 2026: база D1 `iconavo-account` (номер — `ACCOUNT_DATABASE_ID` в `packages/pipeline/src/account/config.ts`), виджет Turnstile `iconavo-account` (hostname `iconavo.dev`, Managed; ключ сайта — `0x4AAAAAAGViq37MBjv_XEIP`, секрет — `TURNSTILE_SECRET_KEY` окружения GitHub `account`), окружение `account` (только `main`).
+
+Что сделать до слияния PR 2б (без этого «Выкладка» и «Проверка» красные):
+1. Cloudflare → Workers & Pages → Create → Hello World, имя `iconavo-account` → Deploy. Settings → Domains & Routes → Add → Custom Domain → `account.iconavo.dev`. Там же: workers.dev — Disable, Preview URLs — Disable.
+2. Cloudflare → Compute → Email Service → Email Sending → Onboard Domain → `iconavo.dev` (SPF, DKIM и DMARC Cloudflare ставит сам). В настройках домена выключить Email preview.
+3. Cloudflare → Email Service → Email Routing: адрес `support@iconavo.dev` → пересылка на почту владельца (подтвердить письмом).
+4. Cloudflare → Manage Account → Account API Tokens → Create Token → Custom token: имя `iconavo-account-deploy`, Account · Workers Scripts · Edit, TTL — год.
+5. Google Cloud → Google Auth Platform: Branding (название Iconavo, почта поддержки, домен `iconavo.dev`), Audience (External, Testing, владелец — тестировщик), Clients → Create client → Web application, Authorized redirect URI `https://account.iconavo.dev/api/auth/callback/google`.
+6. GitHub → Settings → Environments → `account` → секреты: `CLOUDFLARE_API_TOKEN` (ключ из шага 4), `BETTER_AUTH_SECRET` (строка от 32 знаков: `node -e "console.log(require('node:crypto').randomBytes(32).toString('base64url'))"` в своём окне), `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `ACCOUNT_ALLOWLIST` (свои почты через запятую).
+
 Почему: интерфейс аккаунтов полностью свой, по макетам, поэтому готовые экраны сервисов вроде Clerk не нужны. А их цена — данные людей у сторонней компании в США, плата за каждого пользователя и чужие скрипты в строгой CSP.
 
 Свой сервис на Workers хранит данные в ЕС, живёт рядом с API и MCP и выкладывается тем же путём. Better Auth избавляет от самописных паролей и кодов — самой рискованной части. Отдельный адрес, у которого одного есть cookie, оставляет сайт статическим, а раздачу — без cookie.

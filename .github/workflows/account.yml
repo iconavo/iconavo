@@ -1,0 +1,237 @@
+name: Сервис аккаунтов
+
+# Функция iconavo-account на account.iconavo.dev (шаг 3 фазы 5, ADR-0055): вход, регистрация кодом,
+# восстановление пароля и сеансы на Better Auth, база D1 iconavo-account в ЕС. Три задачи, как у «Edge
+# API» (ADR-0024). «Сборка» — pnpm account build: один ES-модуль dist-account/worker.js и тело metadata
+# загрузки; если на account.iconavo.dev уже эта сборка (заголовок X-Iconavo-Build), выкладывать нечего.
+# «Выкладка» — из окружения account (выкладывать из него можно только из main): один запрос curl
+# загружает функцию со своими секретами, второй ставит расписание (уборка просроченного); в задаче нет
+# ни checkout, ни pnpm install — ключи видит только curl. «Проверка» — pnpm account check: живой адрес
+# отвечает этой сборкой, CORS только для iconavo.dev, отказы без Turnstile и с чужой страницы, Google.
+# Выкладывает только «живой» запуск — из main, не «только показ», и когда main не ушёл вперёд.
+# Секреты окружения account (у API и MCP их нет): CLOUDFLARE_API_TOKEN (Account · Workers Scripts ·
+# Edit), BETTER_AUTH_SECRET, GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, TURNSTILE_SECRET_KEY и
+# ACCOUNT_ALLOWLIST — почты закрытого режима; R2_ACCOUNT_ID — секрет репозитория. Нет секрета — выкладка
+# красная. Сменили ключ — ручной запуск с «выложить заново». Функцию, домен account.iconavo.dev и
+# выключенный workers.dev владелец настроил в панели один раз (ADR-0055). Откат — откат PR.
+# Что функция собирается, на каждом PR проверяет CI; PR с правкой этого файла — только показ.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "apps/account/**"
+      - "packages/d1/**"
+      - "packages/pipeline/src/account/**"
+      # Код конвейера, который берёт сборка функции; список сверяет workflows.test.ts.
+      - "packages/pipeline/src/api/build.ts"
+      - "packages/pipeline/src/api/config.ts"
+      - "packages/pipeline/src/build/json.ts"
+      - "packages/pipeline/src/build/write.ts"
+      - "packages/pipeline/src/cdn/config.ts"
+      - "packages/pipeline/src/cdn/write.ts"
+      - "packages/pipeline/src/meili/config.ts"
+      - "packages/pipeline/src/util/pool.ts"
+      - "pnpm-lock.yaml"
+      - ".github/workflows/account.yml"
+  # Проверка самого workflow на PR — только показ: секретов и права выкладывать там нет.
+  pull_request:
+    paths:
+      - ".github/workflows/account.yml"
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: Только собрать и показать, ничего не выкладывать
+        type: boolean
+        default: false
+      force:
+        description: Выложить заново, даже если эта сборка уже отвечает (после смены ключей)
+        type: boolean
+        default: false
+
+permissions: {}
+
+# Выкладки из main не пересекаются и не прерываются: следующая ждёт текущую. Показы — с веток, PR и
+# «только показ» из main — в своих группах: в общей они отменяли бы ждущую выкладку.
+concurrency:
+  group: ${{ github.ref == 'refs/heads/main' && github.event_name != 'pull_request' && inputs.dry_run != true && 'account' || format('account-{0}', github.ref) }}
+  cancel-in-progress: false
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  build:
+    name: Сборка
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    outputs:
+      live: ${{ steps.live.outputs.live }}
+      build: ${{ steps.build.outputs.build }}
+      deploy: ${{ steps.deployed.outputs.deploy }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      # «Живой» запуск: main и не «только показ», а main за это время не ушёл вперёд по коду функции —
+      # иначе запоздавший запуск выложил бы старую сборку поверх новой.
+      - name: Живой запуск?
+        id: live
+        env:
+          EVENT: ${{ github.event_name }}
+          DRY_RUN: ${{ inputs.dry_run == true }}
+        run: |
+          live=false
+          if [ "$GITHUB_REF" = refs/heads/main ] && [ "$EVENT" != pull_request ] && [ "$DRY_RUN" != true ]; then
+            git fetch --quiet --no-tags --depth=1 origin "+refs/heads/main:refs/remotes/origin/main"
+            if git diff --quiet origin/main HEAD -- apps/account/ packages/d1/ packages/pipeline/src/account/ packages/pipeline/src/api/build.ts packages/pipeline/src/api/config.ts packages/pipeline/src/build/json.ts packages/pipeline/src/build/write.ts packages/pipeline/src/cdn/config.ts packages/pipeline/src/cdn/write.ts packages/pipeline/src/meili/config.ts packages/pipeline/src/util/pool.ts pnpm-lock.yaml .github/workflows/account.yml; then
+              live=true
+            else
+              echo "::warning::main ушёл вперёд — этот запуск только показывает; выкладывает запуск от свежего main."
+            fi
+          fi
+          echo "live=$live" >> "$GITHUB_OUTPUT"
+      - name: Собрать функцию
+        id: build
+        run: |
+          pnpm account build
+          echo "build=$(jq -r .build dist-account/build.json)" >> "$GITHUB_OUTPUT"
+      # Та же сборка уже отвечает — выкладывать нечего. Нет ответа или другая сборка — выкладываем.
+      - name: Уже выложена?
+        id: deployed
+        env:
+          BUILD: ${{ steps.build.outputs.build }}
+          FORCE: ${{ inputs.force == true }}
+        run: |
+          current=$(curl -sS --max-time 30 -o /dev/null -D - "https://account.iconavo.dev/" | tr -d '\r' | awk -F': ' 'tolower($1) == "x-iconavo-build" { print $2 }' || true)
+          if [ "$current" = "$BUILD" ] && [ "$FORCE" != true ]; then
+            echo "Сборка $BUILD уже на account.iconavo.dev — выкладывать нечего."
+            echo "deploy=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "На account.iconavo.dev сборка «${current:-нет ответа}» — нужна выкладка $BUILD (её делает только живой запуск из main)."
+            echo "deploy=true" >> "$GITHUB_OUTPUT"
+          fi
+          {
+            echo "### Сборка"
+            echo "- функция $BUILD: $(jq -r '"\(.bytes) байт, в gzip \(.gzipBytes)"' dist-account/build.json)"
+            echo "- на account.iconavo.dev: ${current:-нет ответа}"
+          } >> "$GITHUB_STEP_SUMMARY"
+      # Бандл и metadata — для задачи «Выкладка»: она ничего не собирает сама.
+      - uses: actions/upload-artifact@v7
+        with:
+          name: dist-account
+          path: dist-account/
+          if-no-files-found: error
+
+  deploy:
+    name: Выкладка
+    needs: build
+    if: needs.build.outputs.live == 'true' && needs.build.outputs.deploy == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    # Окружение account: выкладывать из него можно только из main; ключи сервиса — его секреты.
+    environment: account
+    permissions: {}
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          name: dist-account
+          path: dist-account
+      - name: Загрузить функцию в Cloudflare
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          ACCOUNT_ID: ${{ secrets.R2_ACCOUNT_ID }}
+          BUILD: ${{ needs.build.outputs.build }}
+          BETTER_AUTH_SECRET: ${{ secrets.BETTER_AUTH_SECRET }}
+          GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
+          GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
+          TURNSTILE_SECRET_KEY: ${{ secrets.TURNSTILE_SECRET_KEY }}
+          ACCOUNT_ALLOWLIST: ${{ secrets.ACCOUNT_ALLOWLIST }}
+        run: |
+          if [ -z "$CLOUDFLARE_API_TOKEN" ] || [ -z "$ACCOUNT_ID" ]; then
+            echo "::error::Нет секрета CLOUDFLARE_API_TOKEN окружения account или R2_ACCOUNT_ID (ADR-0055)"
+            exit 1
+          fi
+          for name in BETTER_AUTH_SECRET GOOGLE_CLIENT_ID GOOGLE_CLIENT_SECRET TURNSTILE_SECRET_KEY ACCOUNT_ALLOWLIST; do
+            if [ -z "${!name}" ]; then
+              echo "::error::Нет секрета $name окружения account (ADR-0055)"
+              exit 1
+            fi
+          done
+          if [ ${#BETTER_AUTH_SECRET} -lt 32 ]; then
+            echo "::error::BETTER_AUTH_SECRET короче 32 знаков — нужна случайная строка (ADR-0055)"
+            exit 1
+          fi
+          # Секреты — в metadata при загрузке: jq читает их из окружения ($ENV), файл — во временной папке
+          # задачи, в артефакты он не попадает.
+          jq '.bindings += [
+            {type: "secret_text", name: "BETTER_AUTH_SECRET", text: $ENV.BETTER_AUTH_SECRET},
+            {type: "secret_text", name: "GOOGLE_CLIENT_ID", text: $ENV.GOOGLE_CLIENT_ID},
+            {type: "secret_text", name: "GOOGLE_CLIENT_SECRET", text: $ENV.GOOGLE_CLIENT_SECRET},
+            {type: "secret_text", name: "TURNSTILE_SECRET_KEY", text: $ENV.TURNSTILE_SECRET_KEY},
+            {type: "secret_text", name: "ACCOUNT_ALLOWLIST", text: $ENV.ACCOUNT_ALLOWLIST}
+          ]' dist-account/metadata.json > "$RUNNER_TEMP/metadata.json"
+          if ! [[ $ACCOUNT_ID =~ ^[0-9a-f]{32}$ ]]; then
+            echo "::error::R2_ACCOUNT_ID — не 32 шестнадцатеричных знака"
+            exit 1
+          fi
+          # Загрузка сразу выкладывает новую версию функции; модуль, дата совместимости, привязки и лимиты —
+          # из metadata.json. Домен и выключенный workers.dev остаются как в панели.
+          code=$(curl -sS --max-time 120 --retry 3 -o "$RUNNER_TEMP/deploy.json" -w "%{http_code}" \
+            -X PUT "https://api.cloudflare.com/client/v4/accounts/$ACCOUNT_ID/workers/scripts/iconavo-account" \
+            -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
+            -F "metadata=@$RUNNER_TEMP/metadata.json;type=application/json" \
+            -F "worker.js=@dist-account/worker.js;type=application/javascript+module" || echo 000)
+          if [ "$code" != 200 ] || ! jq -e '.success == true' "$RUNNER_TEMP/deploy.json" > /dev/null 2>&1; then
+            echo "::error::Cloudflare ответил $code: $(jq -c '.errors // .' "$RUNNER_TEMP/deploy.json" 2> /dev/null | head -c 1000)"
+            exit 1
+          fi
+          echo "- выложена сборка $BUILD" >> "$GITHUB_STEP_SUMMARY"
+          # Расписание — уборка просроченного раз в сутки — отдельным запросом: в metadata загрузки его нет.
+          code=$(curl -sS --max-time 60 --retry 3 -o "$RUNNER_TEMP/schedules.json" -w "%{http_code}" \
+            -X PUT "https://api.cloudflare.com/client/v4/accounts/$ACCOUNT_ID/workers/scripts/iconavo-account/schedules" \
+            -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
+            -H "Content-Type: application/json" \
+            --data-binary "@dist-account/schedules.json" || echo 000)
+          if [ "$code" != 200 ] || ! jq -e '.success == true' "$RUNNER_TEMP/schedules.json" > /dev/null 2>&1; then
+            echo "::error::Cloudflare не принял расписание ($code): $(jq -c '.errors // .' "$RUNNER_TEMP/schedules.json" 2> /dev/null | head -c 1000). Функция уже выложена — повторите эту задачу (Re-run failed jobs)"
+            exit 1
+          fi
+          echo "- расписание: $(jq -r '[.[].cron] | join(", ")' dist-account/schedules.json)" >> "$GITHUB_STEP_SUMMARY"
+
+  check:
+    name: Проверка
+    needs: [build, deploy]
+    # И без выкладки (сборка уже на месте): живой адрес должен отвечать этой сборкой.
+    if: ${{ !cancelled() && needs.build.result == 'success' && needs.build.outputs.live == 'true' && needs.deploy.result != 'failure' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      # Только чтение открытых адресов, ключи не нужны. Ждёт до 3 минут, пока ответит новая сборка.
+      - name: Проверить account.iconavo.dev
+        env:
+          BUILD: ${{ needs.build.outputs.build }}
+        run: pnpm account check --expect-build="$BUILD"
+      - name: Сводка
+        if: success() || failure()
+        run: cat .cache/reports/account/check.md >> "$GITHUB_STEP_SUMMARY" 2> /dev/null || true
