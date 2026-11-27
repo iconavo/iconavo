@@ -43,7 +43,7 @@ afterAll(async () => {
 });
 
 describe("сборка сервиса аккаунтов", () => {
-  it("metadata: D1 по database_id, письма только от support@, три лимита, закрытый режим, nodejs_compat", () => {
+  it("metadata: D1 по database_id, бакет фото в ЕС, письма только от support@, три лимита, закрытый режим, nodejs_compat", () => {
     const m = accountMetadata() as {
       compatibility_flags: string[];
       bindings: { type: string; name: string }[];
@@ -55,6 +55,13 @@ describe("сборка сервиса аккаунтов", () => {
       type: "d1",
       name: "DB",
       database_id: "e8e0aa82-9874-4bd2-b2f0-b67672c4a95e",
+    });
+    // Фото — закрытый бакет со строгой привязкой к ЕС (PR 4а).
+    expect(m.bindings).toContainEqual({
+      type: "r2_bucket",
+      name: "FILES",
+      bucket_name: "iconavo-account-files",
+      jurisdiction: "eu",
     });
     expect(m.bindings).toContainEqual({
       type: "send_email",
@@ -179,6 +186,8 @@ describe("проверка живого адреса — против превь
       "CORS — сайту",
       "CORS — чужой странице нет",
       "сеанс без cookie",
+      "кабинет без входа",
+      "фото без входа",
       "регистрация без Turnstile",
       "восстановление без Turnstile",
       "вход с чужой страницы",

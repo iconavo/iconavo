@@ -6,8 +6,8 @@
 import { CODE, type Locale, MAIL_FROM } from "./config.js";
 import type { MailBinding, MailMessage } from "./env.js";
 
-/** Зачем код: регистрация или новый пароль. */
-export type CodeKind = "sign-up" | "reset";
+/** Зачем код: регистрация, новый пароль или новая почта (PR 4а). */
+export type CodeKind = "sign-up" | "reset" | "email";
 
 interface Texts {
   subject: (code: string) => string;
@@ -29,6 +29,15 @@ const TEXTS: Record<Locale, Record<CodeKind, Texts>> = {
       ignore:
         "If you didn’t try to create an account, ignore this email: nothing will happen.",
     },
+    email: {
+      subject: (code) =>
+        `${code} is your code to confirm your new Iconavo email`,
+      title: "Confirm your new email",
+      lead: "Enter this code to make this address the email of your Iconavo account:",
+      expires: `The code works for ${MINUTES} minutes.`,
+      ignore:
+        "If you didn’t ask to change your email, ignore this email: nothing will change.",
+    },
     reset: {
       subject: (code) => `${code} is your Iconavo password reset code`,
       title: "Your password reset code",
@@ -46,6 +55,14 @@ const TEXTS: Record<Locale, Record<CodeKind, Texts>> = {
       expires: `Код действует ${MINUTES} минут.`,
       ignore:
         "Если вы не создавали аккаунт, просто не отвечайте на письмо: ничего не произойдёт.",
+    },
+    email: {
+      subject: (code) => `${code} — код для новой почты Iconavo`,
+      title: "Подтвердите новую почту",
+      lead: "Введите этот код, чтобы этот адрес стал почтой аккаунта Iconavo:",
+      expires: `Код действует ${MINUTES} минут.`,
+      ignore:
+        "Если вы не меняли почту, просто не отвечайте на письмо: ничего не изменится.",
     },
     reset: {
       subject: (code) => `${code} — код для нового пароля Iconavo`,
@@ -93,6 +110,87 @@ export function codeMail(
     subject: t.subject(code),
     html,
     text,
+  };
+}
+
+/** Уведомление о перемене в аккаунте (решение 3 PR 4): почта — на прежний адрес, пароль — на почту аккаунта. */
+export type NoticeKind = "email-changed" | "password-changed";
+
+interface Notice {
+  subject: string;
+  title: string;
+  lead: (to: string) => string;
+  act: string;
+}
+
+const NOTICES: Record<Locale, Record<NoticeKind, Notice>> = {
+  en: {
+    "email-changed": {
+      subject: "The email of your Iconavo account was changed",
+      title: "Your email was changed",
+      lead: (to) =>
+        `The email of your Iconavo account is now ${to}. This address no longer logs in.`,
+      act: "If it wasn’t you, reply to this email right away and we’ll help you get your account back.",
+    },
+    "password-changed": {
+      subject: "The password of your Iconavo account was changed",
+      title: "Your password was changed",
+      lead: () => "The password of your Iconavo account was just changed.",
+      act: "If it wasn’t you, reset your password at iconavo.dev with “Forgot your password?” and reply to this email.",
+    },
+  },
+  ru: {
+    "email-changed": {
+      subject: "Почта аккаунта Iconavo изменена",
+      title: "Почта изменена",
+      lead: (to) =>
+        `Почта вашего аккаунта Iconavo теперь — ${to}. Этим адресом войти больше нельзя.`,
+      act: "Если это были не вы, сразу ответьте на это письмо — поможем вернуть аккаунт.",
+    },
+    "password-changed": {
+      subject: "Пароль аккаунта Iconavo изменён",
+      title: "Пароль изменён",
+      lead: () => "Пароль вашего аккаунта Iconavo только что изменили.",
+      act: "Если это были не вы, задайте новый пароль на iconavo.dev через «Забыли пароль?» и ответьте на это письмо.",
+    },
+  },
+};
+
+/** Почта наполовину скрыта: a***@example.com — в письме на прежний адрес. */
+export function maskEmail(email: string): string {
+  const at = email.lastIndexOf("@");
+  if (at < 1) return "***";
+  return `${email.slice(0, 1)}***${email.slice(at)}`;
+}
+
+/** Уведомление: что случилось и что делать, если это были не вы. Ответ приходит на support@. */
+export function noticeMail(
+  to: string,
+  kind: NoticeKind,
+  locale: Locale,
+  newEmail = "",
+): MailMessage {
+  const t = NOTICES[locale][kind];
+  const lead = t.lead(maskEmail(newEmail));
+  const text = [t.title, "", lead, "", t.act].join("\n");
+  const html = `<!doctype html>
+<html lang="${locale}">
+<body style="margin:0;padding:24px;background:#ffffff;color:#111111;font-family:-apple-system,'Segoe UI',Roboto,Arial,sans-serif">
+<div style="max-width:480px;margin:0 auto">
+<p style="margin:0 0 24px;font-size:16px;font-weight:600">Iconavo</p>
+<h1 style="margin:0 0 12px;font-size:20px;line-height:28px;font-weight:600">${esc(t.title)}</h1>
+<p style="margin:0 0 16px;font-size:15px;line-height:24px">${esc(lead)}</p>
+<p style="margin:0;font-size:14px;line-height:20px;color:#555555">${esc(t.act)}</p>
+</div>
+</body>
+</html>`;
+  return {
+    from: { ...MAIL_FROM },
+    to,
+    subject: t.subject,
+    html,
+    text,
+    replyTo: MAIL_FROM.email,
   };
 }
 

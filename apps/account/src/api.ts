@@ -18,10 +18,12 @@ import {
   CAPTCHA_HEADER,
   LOGIN_FAILURES,
   MAX_BODY_BYTES,
+  PHOTO,
   SITE_ORIGIN,
   TURNSTILE_VERIFY_URL,
 } from "./config.js";
 import type { Env, RateLimiter } from "./env.js";
+import { clearFailures, failures, recordFailure } from "./failures.js";
 import {
   CAPTCHA_STATE_HEADER,
   corsHeaders,
@@ -29,8 +31,24 @@ import {
   failure,
   preflight,
   readCapped,
+  readCappedBytes,
 } from "./http.js";
 import { ensureSchema } from "./migrations.js";
+import {
+  DELETE_PATH,
+  EMAIL_CONFIRM_PATH,
+  EMAIL_REQUEST_PATH,
+  GOOGLE_DISCONNECT_PATH,
+  handleProfile,
+  ME_PATH,
+  PASSWORD_CHANGE_PATH,
+  PHOTO_FILE_PREFIX,
+  PHOTO_PATH,
+  PHOTO_REMOVE_PATH,
+  PHOTO_UNDO_PATH,
+  PROFILE_PATH,
+  servePhoto,
+} from "./profile.js";
 import { verifyTurnstile } from "./turnstile.js";
 
 export interface Route {
@@ -41,6 +59,10 @@ export interface Route {
   captcha?: "always" | "after-failures";
   /** Адрес отправляет письмо с кодом: лимит на почту и на адрес человека. */
   code?: boolean;
+  /** Поле почты, на которую уходит код (по умолчанию email). */
+  codeField?: string;
+  /** Тело — картинка PNG или JPEG (фото профиля), а не JSON. */
+  image?: boolean;
 }
 
 export const ROUTES: Readonly<Record<string, Route>> = {
@@ -86,7 +108,47 @@ export const ROUTES: Readonly<Record<string, Route>> = {
     code: true,
   },
   [PASSWORD_PATH]: { methods: ["POST"], fields: ["newPassword"] },
+  // My account (PR 4а): данные кабинета, фото, почта, пароль, Google, удаление.
+  [ME_PATH]: { methods: ["GET"] },
+  [PROFILE_PATH]: { methods: ["POST"], fields: ["name", "digest", "news"] },
+  [PHOTO_PATH]: { methods: ["POST"], image: true },
+  [PHOTO_REMOVE_PATH]: { methods: ["POST"], fields: [] },
+  [PHOTO_UNDO_PATH]: { methods: ["POST"], fields: [] },
+  [EMAIL_REQUEST_PATH]: {
+    methods: ["POST"],
+    fields: ["newEmail", "password"],
+    code: true,
+    codeField: "newEmail",
+  },
+  [EMAIL_CONFIRM_PATH]: { methods: ["POST"], fields: ["newEmail", "otp"] },
+  [PASSWORD_CHANGE_PATH]: {
+    methods: ["POST"],
+    fields: ["currentPassword", "newPassword"],
+  },
+  [GOOGLE_DISCONNECT_PATH]: { methods: ["POST"], fields: [] },
+  [`${AUTH_PATH}/link-social`]: {
+    methods: ["POST"],
+    fields: ["provider", "callbackURL", "errorCallbackURL"],
+  },
+  [DELETE_PATH]: { methods: ["POST"], fields: ["email", "password"] },
 };
+
+/** Свои адреса кабинета — profile.ts. */
+const PROFILE_ROUTES = new Set([
+  ME_PATH,
+  PROFILE_PATH,
+  PHOTO_PATH,
+  PHOTO_REMOVE_PATH,
+  PHOTO_UNDO_PATH,
+  EMAIL_REQUEST_PATH,
+  EMAIL_CONFIRM_PATH,
+  PASSWORD_CHANGE_PATH,
+  GOOGLE_DISCONNECT_PATH,
+  DELETE_PATH,
+]);
+
+/** Типы картинки фото профиля. */
+const IMAGE_TYPES = new Set(["image/png", "image/jpeg"]);
 
 /** Проверить код можно только у регистрации и нового пароля. */
 const CHECKABLE = new Set(["sign-in", "forget-password"]);
@@ -140,32 +202,6 @@ async function allowed(
   }
 }
 
-/** Неудачных входов по отпечатку почты за окно; нет — 0. */
-async function failures(env: Env, key: string, now: number): Promise<number> {
-  const row = await env.DB.prepare(
-    `select "count", "expires" from "login_failures" where "key" = ?`,
-  )
-    .bind(key)
-    .first<{ count: number; expires: number }>();
-  return row !== null && row.expires > now ? row.count : 0;
-}
-
-/** Ещё один неудачный вход; окно — 15 минут от последнего. Счёт после записи. */
-async function recordFailure(
-  env: Env,
-  key: string,
-  now: number,
-): Promise<number> {
-  const row = await env.DB.prepare(
-    `insert into "login_failures" ("key", "count", "expires") values (?, 1, ?)
-on conflict ("key") do update set "count" = case when "expires" > ? then "count" + 1 else 1 end, "expires" = excluded."expires"
-returning "count"`,
-  )
-    .bind(key, now + LOGIN_FAILURES.windowMs, now)
-    .first<{ count: number }>();
-  return row?.count ?? 1;
-}
-
 const pick = (
   body: Record<string, unknown>,
   fields: readonly string[],
@@ -190,6 +226,20 @@ export async function handleApi(
           `Only ${site} pages may call this service`,
         );
   }
+  // Файл фото профиля — GET по своему имени, отдаёт его только хозяину (profile.ts).
+  if (
+    request.method === "GET" &&
+    url.pathname.startsWith(PHOTO_FILE_PREFIX) &&
+    ROUTES[url.pathname] === undefined
+  ) {
+    await ensureSchema(env.DB);
+    const auth = createAuth(env, {
+      waitUntil: deps.waitUntil,
+      log: deps.log,
+      fetch: deps.fetch,
+    });
+    return servePhoto(url.pathname, request, env, auth, deps.now());
+  }
   const route = ROUTES[url.pathname];
   if (route === undefined) return failure(404, "NOT_FOUND", "Not found", cors);
   const method = request.method as "GET" | "POST";
@@ -206,6 +256,7 @@ export async function handleApi(
   }
   const ip = request.headers.get("cf-connecting-ip");
   let body: Record<string, unknown> = {};
+  let bytes: Uint8Array | undefined;
   if (method === "POST") {
     // Изменения — только со страниц сайта: Better Auth проверяет Origin не у всех адресов.
     if (origin !== site) {
@@ -216,32 +267,54 @@ export async function handleApi(
       );
     }
     const type = (request.headers.get("content-type") ?? "").toLowerCase();
-    if (!type.startsWith("application/json")) {
-      return failure(415, "UNSUPPORTED_MEDIA_TYPE", "Send JSON", cors);
+    if (route.image) {
+      // Фото профиля — сами байты картинки, до PHOTO.maxBytes.
+      if (!IMAGE_TYPES.has(type.split(";")[0]?.trim() ?? "")) {
+        return failure(
+          415,
+          "UNSUPPORTED_MEDIA_TYPE",
+          "Send a PNG or JPEG image",
+          cors,
+        );
+      }
+      const read = await readCappedBytes(request, PHOTO.maxBytes);
+      if (read === null) {
+        return failure(
+          413,
+          "TOO_LARGE",
+          `Image is larger than ${PHOTO.maxBytes} bytes`,
+          cors,
+        );
+      }
+      bytes = read;
+    } else {
+      if (!type.startsWith("application/json")) {
+        return failure(415, "UNSUPPORTED_MEDIA_TYPE", "Send JSON", cors);
+      }
+      const text = await readCapped(request, MAX_BODY_BYTES);
+      if (text === null) {
+        return failure(
+          413,
+          "TOO_LARGE",
+          `Body is larger than ${MAX_BODY_BYTES} bytes`,
+          cors,
+        );
+      }
+      let parsed: unknown;
+      try {
+        parsed = JSON.parse(text === "" ? "{}" : text);
+      } catch {
+        parsed = undefined;
+      }
+      if (
+        typeof parsed !== "object" ||
+        parsed === null ||
+        Array.isArray(parsed)
+      ) {
+        return failure(400, "INVALID_JSON", "Body must be a JSON object", cors);
+      }
+      body = pick(parsed as Record<string, unknown>, route.fields ?? []);
     }
-    const text = await readCapped(request, MAX_BODY_BYTES);
-    if (text === null) {
-      return failure(
-        413,
-        "TOO_LARGE",
-        `Body is larger than ${MAX_BODY_BYTES} bytes`,
-        cors,
-      );
-    }
-    let parsed: unknown;
-    try {
-      parsed = JSON.parse(text === "" ? "{}" : text);
-    } catch {
-      parsed = undefined;
-    }
-    if (
-      typeof parsed !== "object" ||
-      parsed === null ||
-      Array.isArray(parsed)
-    ) {
-      return failure(400, "INVALID_JSON", "Body must be a JSON object", cors);
-    }
-    body = pick(parsed as Record<string, unknown>, route.fields ?? []);
     if (!(await allowed(env.AUTH_LIMIT, `ip:${ipKey(ip)}`, deps.log))) {
       return failure(
         429,
@@ -254,7 +327,7 @@ export async function handleApi(
       );
     }
     if (route.code) {
-      const email = emailOf(body.email);
+      const email = emailOf(body[route.codeField ?? "email"]);
       const ipOk = await allowed(
         env.CODE_IP_LIMIT,
         `code-ip:${ipKey(ip)}`,
@@ -280,7 +353,11 @@ export async function handleApi(
       }
     }
   }
-  if (url.pathname === `${AUTH_PATH}/sign-in/social`) {
+  // Вход и подключение Google (PR 4а): только Google и возврат только на страницы сайта.
+  if (
+    url.pathname === `${AUTH_PATH}/sign-in/social` ||
+    url.pathname === `${AUTH_PATH}/link-social`
+  ) {
     if (body.provider !== "google") {
       return failure(
         400,
@@ -322,7 +399,7 @@ export async function handleApi(
   const needCaptcha =
     route.captcha === "always" ||
     (failureKey !== undefined &&
-      (await failures(env, failureKey, now)) >= LOGIN_FAILURES.free);
+      (await failures(env.DB, failureKey, now)) >= LOGIN_FAILURES.free);
   if (needCaptcha) {
     const passed = await verifyTurnstile({
       token: request.headers.get(CAPTCHA_HEADER) ?? "",
@@ -339,7 +416,11 @@ export async function handleApi(
       });
     }
   }
-  const auth = createAuth(env, { waitUntil: deps.waitUntil, log: deps.log });
+  const auth = createAuth(env, {
+    waitUntil: deps.waitUntil,
+    log: deps.log,
+    fetch: deps.fetch,
+  });
   const forwarded = new Request(url, {
     method,
     headers: request.headers,
@@ -347,17 +428,21 @@ export async function handleApi(
   });
   const res = url.pathname.startsWith(`${AUTH_PATH}/`)
     ? await auth.handler(forwarded)
-    : await handleAccount(url.pathname, forwarded, body, env, auth, now);
+    : PROFILE_ROUTES.has(url.pathname)
+      ? await handleProfile(url.pathname, request, body, bytes, env, auth, {
+          now,
+          waitUntil: deps.waitUntil,
+          log: deps.log,
+        })
+      : await handleAccount(url.pathname, forwarded, body, env, auth, now);
   const extra: Record<string, string> = { ...cors };
   if (failureKey !== undefined) {
     if (res.status === 401) {
-      const count = await recordFailure(env, failureKey, now);
+      const count = await recordFailure(env.DB, failureKey, now);
       if (count >= LOGIN_FAILURES.free)
         extra[CAPTCHA_STATE_HEADER] = "required";
     } else if (res.ok) {
-      await env.DB.prepare(`delete from "login_failures" where "key" = ?`)
-        .bind(failureKey)
-        .run();
+      await clearFailures(env.DB, failureKey);
     }
   }
   return decorate(res, extra);

@@ -1,6 +1,6 @@
 // Сборка сервиса аккаунтов (шаг 3 фазы 5, ADR-0055): тот же сборщик функций, что у edge API и MCP
 // (bundleWorker), — один ES-модуль для Workers, внешние — только встроенные модули Node. Рядом — тело
-// metadata загрузки (привязки D1, send_email, лимитов, закрытый режим), расписание и build.json. Метка
+// metadata загрузки (привязки D1, бакета фото в ЕС, send_email, лимитов, закрытый режим), расписание и build.json. Метка
 // сборки — SHA-256 бандла вместе с metadata и расписанием: новая привязка — тоже новая сборка. Повтор без
 // изменений не пишет ни байта. Секреты сюда не пишутся: их вписывает выкладка из окружения GitHub account.
 
@@ -25,6 +25,8 @@ import {
   ACCOUNT_CPU_MS,
   ACCOUNT_DATABASE_ID,
   ACCOUNT_ENTRY,
+  ACCOUNT_FILES_BUCKET,
+  ACCOUNT_FILES_JURISDICTION,
   ACCOUNT_LIMIT_NAMESPACES,
   ACCOUNT_RATES,
   ACCOUNT_SCHEDULES,
@@ -61,6 +63,12 @@ export function accountMetadata(): Json {
     compatibility_flags: [...ACCOUNT_COMPATIBILITY_FLAGS],
     bindings: [
       { type: "d1", name: "DB", database_id: ACCOUNT_DATABASE_ID },
+      {
+        type: "r2_bucket",
+        name: "FILES",
+        bucket_name: ACCOUNT_FILES_BUCKET,
+        jurisdiction: ACCOUNT_FILES_JURISDICTION,
+      },
       {
         type: "send_email",
         name: "EMAIL",

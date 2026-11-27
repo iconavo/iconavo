@@ -70,7 +70,7 @@ export default {
   async scheduled(_controller: unknown, env: Env): Promise<void> {
     try {
       await ensureSchema(env.DB);
-      await cleanup(env.DB, Date.now());
+      await cleanup(env.DB, Date.now(), env.FILES);
     } catch (e) {
       log(`аккаунты: уборка не прошла: ${(e as Error).message.slice(0, 200)}`);
       throw e;

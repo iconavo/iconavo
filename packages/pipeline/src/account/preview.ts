@@ -1,5 +1,5 @@
 // Превью сервиса аккаунтов (шаг 3 фазы 5, ADR-0055): ровно бандл dist-account/worker.js в Node на 127.0.0.1.
-// База — подделка D1 с её пределами поверх node:sqlite в памяти, письма — в памяти превью, Turnstile —
+// База — подделка D1 с её пределами поверх node:sqlite в памяти, бакет фото и письма — в памяти превью, Turnstile —
 // свой адрес превью: он принимает только ответ тестового виджета Cloudflare (XXXX.DUMMY.TOKEN.XXXX).
 // Google — без ключей, вход через него в превью выключен; проверка сайта включает подставной (google).
 // Host сверяется, как у других превью.
@@ -99,6 +99,8 @@ export interface AccountPreview {
   build: string;
   mail(): readonly PreviewMail[];
   db(): D1Like;
+  /** Файлы бакета фото превью: ключи. */
+  files(): string[];
   close(): Promise<void>;
 }
 
@@ -145,6 +147,40 @@ ${items}
 `;
 }
 
+/** Бакет фото превью — в памяти, как R2 для функции: put, get, delete. */
+function memoryFiles() {
+  const objects = new Map<string, { bytes: Uint8Array; type?: string }>();
+  return {
+    objects,
+    async put(
+      key: string,
+      value: ArrayBuffer | Uint8Array,
+      options?: { httpMetadata?: { contentType?: string } },
+    ) {
+      const bytes =
+        value instanceof Uint8Array ? value.slice() : new Uint8Array(value);
+      const type = options?.httpMetadata?.contentType;
+      objects.set(key, { bytes, ...(type === undefined ? {} : { type }) });
+      return {};
+    },
+    async get(key: string) {
+      const o = objects.get(key);
+      if (o === undefined) return null;
+      return {
+        body: new Blob([new Uint8Array(o.bytes)]).stream(),
+        size: o.bytes.byteLength,
+        ...(o.type === undefined
+          ? {}
+          : { httpMetadata: { contentType: o.type } }),
+      };
+    },
+    async delete(keys: string | string[]) {
+      for (const key of Array.isArray(keys) ? keys : [keys])
+        objects.delete(key);
+    },
+  };
+}
+
 /** Каждый запуск пересобирает функцию: превью показывает ровно то, что уйдёт в Cloudflare. */
 export async function startAccountPreview(
   o: AccountPreviewOptions,
@@ -158,11 +194,13 @@ export async function startAccountPreview(
   const { DatabaseSync } = await import("node:sqlite");
   const db = sqliteD1(new DatabaseSync(":memory:"));
   const mail: PreviewMail[] = [];
+  const files = memoryFiles();
   const site = o.siteOrigin ?? PREVIEW_SITE;
   let port = o.port;
   const origin = () => `http://127.0.0.1:${port}`;
   const env = () => ({
     DB: db,
+    FILES: files,
     EMAIL: {
       send: async (m: PreviewMail) => {
         mail.push({ to: m.to, subject: m.subject, text: m.text, html: m.html });
@@ -291,6 +329,7 @@ export async function startAccountPreview(
     build: built.build,
     mail: () => mail,
     db: () => db,
+    files: () => [...files.objects.keys()],
     close: () =>
       new Promise<void>((resolve) => {
         server.closeAllConnections();

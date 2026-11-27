@@ -26,10 +26,13 @@ import {
 } from "./config.js";
 import type { Env } from "./env.js";
 import { codeMail, sendMail } from "./mail.js";
+import { copyGooglePhoto } from "./photos.js";
 
 export interface AuthOptions {
   waitUntil: (promise: Promise<unknown>) => void;
   log: (line: string) => void;
+  /** Запросы наружу — фото из Google при первом входе (PR 4а); по умолчанию — fetch платформы. */
+  fetch?: (input: string, init?: RequestInit) => Promise<Response>;
 }
 
 /** Язык из заголовка страницы; другой или нет — английский. */
@@ -107,6 +110,8 @@ export function createAuth(env: Env, o: AuthOptions) {
       cookieCache: { enabled: false },
     },
     user: {
+      // Удаление — только своим адресом кабинета (profile.ts): почта и текущий пароль (решение 1 PR 4).
+      deleteUser: { enabled: true },
       additionalFields: {
         locale: {
           type: "string",
@@ -143,6 +148,20 @@ export function createAuth(env: Env, o: AuthOptions) {
               data: { ...user, locale: localeOf(String(user.locale ?? "")) },
             };
           },
+          // Фото из Google — копия у себя, один раз, при первом входе (ADR-0055): страницы сайта не
+          // грузят картинок с серверов Google. Ссылка на Google в базе не остаётся.
+          after: async (user) => {
+            const image = (user as { image?: unknown }).image;
+            if (typeof image === "string" && image !== "") {
+              o.waitUntil(
+                copyGooglePhoto(env, user.id, image, {
+                  fetch: o.fetch ?? ((input, init) => fetch(input, init)),
+                  log: o.log,
+                  now: Date.now(),
+                }),
+              );
+            }
+          },
         },
       },
     },
@@ -153,14 +172,27 @@ export function createAuth(env: Env, o: AuthOptions) {
         allowedAttempts: CODE.attempts,
         storeOTP: "hashed",
         disableSignUp: false,
+        // Смена почты — кодом на новый адрес (кадры C макета); пароль спрашивает кабинет (profile.ts).
+        changeEmail: { enabled: true },
         sendVerificationOTP: async ({ email, otp, type }, ctx) => {
           // Вход кодом снаружи закрыт (guard.ts): код «sign-in» — это регистрация, «forget-password» —
-          // новый пароль. Язык — сохранённый у человека, иначе — страницы.
-          const kind = type === "forget-password" ? "reset" : "sign-up";
+          // новый пароль, «change-email» — новая почта (письмо — на неё). Язык — сохранённый у человека,
+          // иначе — страницы.
+          const kind =
+            type === "forget-password"
+              ? "reset"
+              : type === "change-email"
+                ? "email"
+                : "sign-up";
+          // Новой почты у человека ещё нет — язык того, кто меняет почту (его сеанс).
           const found =
             await ctx?.context.internalAdapter.findUserByEmail(email);
-          const stored = (found?.user as { locale?: unknown } | undefined)
-            ?.locale;
+          const own = (
+            ctx?.context as { session?: { user?: unknown } } | undefined
+          )?.session?.user;
+          const stored = (
+            (found?.user ?? own) as { locale?: unknown } | undefined
+          )?.locale;
           const locale = localeOf(
             typeof stored === "string"
               ? stored

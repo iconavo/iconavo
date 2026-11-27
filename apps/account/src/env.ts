@@ -25,9 +25,29 @@ export interface MailBinding {
   send(message: MailMessage): Promise<{ messageId?: string }>;
 }
 
+/** Объект R2 — то, что сервис из него читает. */
+export interface R2ObjectLike {
+  body: ReadableStream<Uint8Array>;
+  size: number;
+  httpMetadata?: { contentType?: string };
+}
+
+/** Привязка бакета R2 — часть R2Bucket Workers. */
+export interface R2Like {
+  put(
+    key: string,
+    value: ArrayBuffer | Uint8Array,
+    options?: { httpMetadata?: { contentType?: string } },
+  ): Promise<unknown>;
+  get(key: string): Promise<R2ObjectLike | null>;
+  delete(keys: string | string[]): Promise<void>;
+}
+
 export interface Env {
   /** База iconavo-account (D1, ЕС). */
   DB: D1Like;
+  /** Закрытый бакет iconavo-account-files (R2, ЕС): фото профиля, со временем — скриншоты отзывов. */
+  FILES?: R2Like;
   EMAIL?: MailBinding;
   AUTH_LIMIT?: RateLimiter;
   CODE_LIMIT?: RateLimiter;

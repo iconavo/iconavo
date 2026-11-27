@@ -6,11 +6,47 @@ import { DatabaseSync } from "node:sqlite";
 import { sqliteD1 } from "@iconavo-ui/d1/sqlite";
 import { type ApiDeps, handleApi } from "./api.js";
 import { CAPTCHA_HEADER, LOCALE_HEADER } from "./config.js";
-import type { Env, MailMessage, RateLimiter } from "./env.js";
+import type { Env, MailMessage, R2Like, RateLimiter } from "./env.js";
 
 export const SITE = "http://127.0.0.1:4284";
 export const SERVICE = "http://127.0.0.1:4287";
 export const GOOD_CAPTCHA = "turnstile-ok";
+
+/** Бакет R2 в памяти: ключ → байты и тип. */
+export function memoryBucket(): R2Like & {
+  objects: Map<string, { bytes: Uint8Array; type?: string }>;
+} {
+  const objects = new Map<string, { bytes: Uint8Array; type?: string }>();
+  return {
+    objects,
+    async put(key, value, options) {
+      const bytes =
+        value instanceof Uint8Array ? value.slice() : new Uint8Array(value);
+      objects.set(key, {
+        bytes,
+        ...(options?.httpMetadata?.contentType === undefined
+          ? {}
+          : { type: options.httpMetadata.contentType }),
+      });
+      return {};
+    },
+    async get(key) {
+      const o = objects.get(key);
+      if (o === undefined) return null;
+      return {
+        body: new Blob([o.bytes]).stream(),
+        size: o.bytes.byteLength,
+        ...(o.type === undefined
+          ? {}
+          : { httpMetadata: { contentType: o.type } }),
+      };
+    },
+    async delete(keys) {
+      for (const key of Array.isArray(keys) ? keys : [keys])
+        objects.delete(key);
+    },
+  };
+}
 
 /** Лимит, который пропускает limit вызовов на ключ. */
 export function counter(limit: number): RateLimiter & { calls: string[] } {
@@ -29,6 +65,7 @@ export function counter(limit: number): RateLimiter & { calls: string[] } {
 
 export interface World {
   env: Env;
+  files: ReturnType<typeof memoryBucket>;
   mail: MailMessage[];
   logs: string[];
   /** Ответы Turnstile, которые проверял сервис. */
@@ -45,6 +82,8 @@ export interface World {
       captcha?: string;
       locale?: string;
       type?: string;
+      /** Тело байтами (фото профиля). */
+      bytes?: Uint8Array;
     },
   ): Promise<{
     status: number;
@@ -61,7 +100,9 @@ export function world(over: Partial<Env> = {}): World {
   const captchas: string[] = [];
   const clock = { now: Date.now() };
   const background: Promise<unknown>[] = [];
+  const files = memoryBucket();
   const env: Env = {
+    FILES: files,
     DB: sqliteD1(new DatabaseSync(":memory:")),
     BETTER_AUTH_SECRET: "test-secret-".repeat(4),
     TURNSTILE_SECRET_KEY: "turnstile-secret",
@@ -97,6 +138,7 @@ export function world(over: Partial<Env> = {}): World {
   };
   return {
     env,
+    files,
     mail,
     logs,
     captchas,
@@ -104,7 +146,9 @@ export function world(over: Partial<Env> = {}): World {
     async send(path, o = {}) {
       const method =
         o.method ??
-        (o.body === undefined && o.raw === undefined ? "GET" : "POST");
+        (o.body === undefined && o.raw === undefined && o.bytes === undefined
+          ? "GET"
+          : "POST");
       const headers = new Headers();
       if (o.origin !== null) headers.set("origin", o.origin ?? SITE);
       if (method === "POST")
@@ -118,7 +162,12 @@ export function world(over: Partial<Env> = {}): World {
           method,
           headers,
           ...(method === "POST"
-            ? { body: o.raw ?? JSON.stringify(o.body ?? {}) }
+            ? {
+                body:
+                  o.bytes === undefined
+                    ? (o.raw ?? JSON.stringify(o.body ?? {}))
+                    : new Blob([o.bytes]),
+              }
             : {}),
         }),
         env,

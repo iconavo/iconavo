@@ -63,3 +63,28 @@ export const MAIL_FROM = {
 /** Проверка ответа Turnstile. */
 export const TURNSTILE_VERIFY_URL =
   "https://challenges.cloudflare.com/turnstile/v0/siteverify";
+
+/**
+ * Фото профиля (шаг 3 фазы 5, PR 4а): сайт обрезает его по кругу сам и присылает квадрат PNG или JPEG.
+ * Сервис хранит его в закрытом бакете R2 в ЕС и отдаёт только самому человеку. Прежнее фото живёт ещё
+ * 10 минут — для «Undo» (решение владельца 27 ноября 2026), потом его удаляет уборка.
+ */
+export const PHOTO = {
+  maxBytes: 1_048_576,
+  minSide: 128,
+  maxSide: 1_024,
+  undoMs: 10 * 60_000,
+} as const;
+
+/** Фото из Google при первом входе: только с серверов Google, не больше 1 МБ, ждать — до 5 секунд. */
+export const GOOGLE_PHOTO = {
+  hostSuffix: ".googleusercontent.com",
+  side: 512,
+  timeoutMs: 5_000,
+} as const;
+
+/** Имя в профиле — до стольких знаков. */
+export const NAME_MAX = 64;
+
+/** Неверный текущий пароль в кабинете (почта, пароль, удаление): после стольких за 15 минут — пауза. */
+export const ACCOUNT_PASSWORD_FAILURES = 5;
