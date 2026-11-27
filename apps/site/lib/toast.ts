@@ -14,6 +14,8 @@ export interface Toast {
   text: string;
   /** «Undo» — где отмена честная. */
   action?: ToastAction;
+  /** Успех — галочка вместо значка «i» (кадр K3 «Thanks! We got your report»). */
+  tone?: "success";
   /** Новое сообщение — новое число: таймер начинается заново. */
   serial: number;
 }
@@ -31,9 +33,14 @@ const notify = () => {
 
 export const toastStore = {
   get: (): Toast | null => current,
-  show(text: string, action?: ToastAction) {
+  show(text: string, action?: ToastAction, tone?: "success") {
     serial += 1;
-    current = { text, serial, ...(action === undefined ? {} : { action }) };
+    current = {
+      text,
+      serial,
+      ...(action === undefined ? {} : { action }),
+      ...(tone === undefined ? {} : { tone }),
+    };
     notify();
   },
   hide(which?: number) {

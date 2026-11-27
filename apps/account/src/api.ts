@@ -16,6 +16,7 @@ import { createAuth } from "./auth.js";
 import {
   AUTH_PATH,
   CAPTCHA_HEADER,
+  FEEDBACK,
   LOGIN_FAILURES,
   MAX_BODY_BYTES,
   PHOTO,
@@ -24,6 +25,12 @@ import {
 } from "./config.js";
 import type { Env, RateLimiter } from "./env.js";
 import { clearFailures, failures, recordFailure } from "./failures.js";
+import {
+  FEEDBACK_FIELDS,
+  FEEDBACK_PATH,
+  handleFeedback,
+  SCREENSHOT_FIELD,
+} from "./feedback.js";
 import {
   CAPTCHA_STATE_HEADER,
   corsHeaders,
@@ -63,6 +70,8 @@ export interface Route {
   codeField?: string;
   /** Тело — картинка PNG или JPEG (фото профиля), а не JSON. */
   image?: boolean;
+  /** Тело — форма multipart: поля fields строками и файл скриншота (обратная связь, PR 6а). */
+  form?: boolean;
 }
 
 export const ROUTES: Readonly<Record<string, Route>> = {
@@ -131,6 +140,8 @@ export const ROUTES: Readonly<Record<string, Route>> = {
     fields: ["provider", "callbackURL", "errorCallbackURL"],
   },
   [DELETE_PATH]: { methods: ["POST"], fields: ["email", "password"] },
+  // Обратная связь (PR 6а): форма со скриншотом, только вошедшим.
+  [FEEDBACK_PATH]: { methods: ["POST"], form: true, fields: FEEDBACK_FIELDS },
 };
 
 /** Свои адреса кабинета — profile.ts. */
@@ -287,6 +298,49 @@ export async function handleApi(
         );
       }
       bytes = read;
+    } else if (route.form) {
+      // Обратная связь — форма multipart: поля строками и скриншот до FEEDBACK.maxBytes.
+      if (!type.startsWith("multipart/form-data")) {
+        return failure(415, "UNSUPPORTED_MEDIA_TYPE", "Send a form", cors);
+      }
+      const read = await readCappedBytes(request, FEEDBACK.maxFormBytes);
+      if (read === null) {
+        return failure(
+          413,
+          "TOO_LARGE",
+          `Form is larger than ${FEEDBACK.maxFormBytes} bytes`,
+          cors,
+        );
+      }
+      let form: FormData;
+      try {
+        // Тип — как прислали: граница формы различает регистр букв.
+        form = await new Request(url, {
+          method: "POST",
+          headers: {
+            "content-type": request.headers.get("content-type") ?? "",
+          },
+          body: new Uint8Array(read),
+        }).formData();
+      } catch {
+        return failure(400, "INVALID_FORM", "Body must be a form", cors);
+      }
+      for (const name of route.fields ?? []) {
+        const value = form.get(name);
+        if (typeof value === "string") body[name] = value;
+      }
+      const file = form.get(SCREENSHOT_FIELD);
+      if (file !== null && typeof file !== "string") {
+        if (file.size > FEEDBACK.maxBytes) {
+          return failure(
+            413,
+            "TOO_LARGE",
+            `Screenshot is larger than ${FEEDBACK.maxBytes} bytes`,
+            cors,
+          );
+        }
+        bytes = new Uint8Array(await file.arrayBuffer());
+      }
     } else {
       if (!type.startsWith("application/json")) {
         return failure(415, "UNSUPPORTED_MEDIA_TYPE", "Send JSON", cors);
@@ -434,7 +488,12 @@ export async function handleApi(
           waitUntil: deps.waitUntil,
           log: deps.log,
         })
-      : await handleAccount(url.pathname, forwarded, body, env, auth, now);
+      : url.pathname === FEEDBACK_PATH
+        ? await handleFeedback(request, body, bytes, env, auth, {
+            now,
+            log: deps.log,
+          })
+        : await handleAccount(url.pathname, forwarded, body, env, auth, now);
   const extra: Record<string, string> = { ...cors };
   if (failureKey !== undefined) {
     if (res.status === 401) {

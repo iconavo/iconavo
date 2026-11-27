@@ -12,6 +12,7 @@
 
 import type { Browser, BrowserContext, Page } from "playwright";
 import { PREVIEW_GOOGLE_CLIENT } from "../account/config.js";
+import type { PreviewMail } from "../account/preview.js";
 import { type AxeViolation, axe, axeVerdict, runAxe } from "../sandbox/axe.js";
 import {
   allViolations,
@@ -30,7 +31,7 @@ export interface AccountCheckOptions {
   /** Превью сервиса аккаунтов: адрес и письма по порядку. */
   account?: {
     origin: string;
-    mail: () => readonly { to: string; subject: string }[];
+    mail: () => readonly PreviewMail[];
   };
 }
 

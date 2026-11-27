@@ -3,12 +3,14 @@
 import { Icon } from "@iconavo-ui/react";
 import { lazy, Suspense, useEffect, useState } from "react";
 import { authPanelStore, startAccount } from "../../lib/account";
+import { feedbackPanelStore } from "../../lib/feedback";
 import { DICTIONARIES, type Lang } from "../../lib/i18n";
 import { usePanelOpen } from "../../lib/panel-store";
 import { TOAST_MS, toastStore, useToast } from "../../lib/toast";
-import { loadAuthDialog } from "./load";
+import { loadAuthDialog, loadFeedbackDialog } from "./load";
 
 const AuthDialog = lazy(loadAuthDialog);
+const FeedbackDialog = lazy(loadFeedbackDialog);
 
 /**
  * Аккаунт на странице (шаг 3 фазы 5, PR 3): начало (lib/account.ts — ?accounts=, кто вошёл, возврат после
@@ -38,12 +40,24 @@ export function AccountHost({ lang }: { lang: Lang }) {
     if (open) setLoaded(true);
   }, [open]);
 
+  // Обратная связь (PR 6а): окно грузится при первом открытии из меню аккаунта.
+  const feedbackOpen = usePanelOpen(feedbackPanelStore);
+  const [feedbackLoaded, setFeedbackLoaded] = useState(false);
+  useEffect(() => {
+    if (feedbackOpen) setFeedbackLoaded(true);
+  }, [feedbackOpen]);
+
   return (
     <>
       <ToastView lang={lang} />
       {loaded ? (
         <Suspense fallback={null}>
           <AuthDialog lang={lang} />
+        </Suspense>
+      ) : null}
+      {feedbackLoaded ? (
+        <Suspense fallback={null}>
+          <FeedbackDialog lang={lang} />
         </Suspense>
       ) : null}
     </>
@@ -68,7 +82,18 @@ function ToastView({ lang }: { lang: Lang }) {
     <div className="toast-region" role="status">
       {toast === null ? null : (
         <div className="toast" key={toast.serial}>
-          <Icon icon="material-symbols:info" className="toast-icon" />
+          <Icon
+            icon={
+              toast.tone === "success"
+                ? "material-symbols:check-circle"
+                : "material-symbols:info"
+            }
+            className={
+              toast.tone === "success"
+                ? "toast-icon toast-success"
+                : "toast-icon"
+            }
+          />
           <span className="toast-text">{toast.text}</span>
           {toast.action === undefined ? null : (
             <button

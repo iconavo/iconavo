@@ -88,6 +88,57 @@ export function Field({
   );
 }
 
+/**
+ * Многострочное поле (обратная связь, кадры K2–K6): рамка 112 px, подпись внутри. Пустое — подпись вместо
+ * подсказки сверху; в фокусе и заполненное — подпись маленькая сверху, текст ниже.
+ */
+export function TextArea({
+  t,
+  id,
+  label,
+  value,
+  onChange,
+  error,
+  maxLength,
+}: {
+  t: Dictionary;
+  id: string;
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  error?: MessageKey;
+  maxLength?: number;
+}) {
+  const note = `${id}-note`;
+  return (
+    <div
+      className="auth-input"
+      data-invalid={error === undefined ? undefined : ""}
+    >
+      <div className="auth-field auth-field-area">
+        <textarea
+          id={id}
+          className="auth-field-textarea"
+          value={value}
+          placeholder=" "
+          aria-invalid={error === undefined ? undefined : true}
+          aria-describedby={error === undefined ? undefined : note}
+          onChange={(e) => onChange(e.currentTarget.value)}
+          {...(maxLength === undefined ? {} : { maxLength })}
+        />
+        <label className="auth-area-label" htmlFor={id}>
+          {label}
+        </label>
+      </div>
+      {error === undefined ? null : (
+        <p id={note} className="auth-note auth-note-error">
+          {t[error]}
+        </p>
+      )}
+    </div>
+  );
+}
+
 /** Пароль с кнопкой «показать» (значок глаза макета). */
 export function PasswordField(
   props: Omit<Parameters<typeof Field>[0], "type" | "trailing">,

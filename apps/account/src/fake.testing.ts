@@ -84,6 +84,8 @@ export interface World {
       type?: string;
       /** Тело байтами (фото профиля). */
       bytes?: Uint8Array;
+      /** Тело — форма multipart (обратная связь): тип с границей ставит сам Request. */
+      form?: FormData;
     },
   ): Promise<{
     status: number;
@@ -146,12 +148,15 @@ export function world(over: Partial<Env> = {}): World {
     async send(path, o = {}) {
       const method =
         o.method ??
-        (o.body === undefined && o.raw === undefined && o.bytes === undefined
+        (o.body === undefined &&
+        o.raw === undefined &&
+        o.bytes === undefined &&
+        o.form === undefined
           ? "GET"
           : "POST");
       const headers = new Headers();
       if (o.origin !== null) headers.set("origin", o.origin ?? SITE);
-      if (method === "POST")
+      if (method === "POST" && (o.form === undefined || o.type !== undefined))
         headers.set("content-type", o.type ?? "application/json");
       if (o.cookie) headers.set("cookie", o.cookie);
       if (o.captcha) headers.set(CAPTCHA_HEADER, o.captcha);
@@ -164,9 +169,10 @@ export function world(over: Partial<Env> = {}): World {
           ...(method === "POST"
             ? {
                 body:
-                  o.bytes === undefined
+                  o.form ??
+                  (o.bytes === undefined
                     ? (o.raw ?? JSON.stringify(o.body ?? {}))
-                    : new Blob([o.bytes]),
+                    : new Blob([o.bytes])),
               }
             : {}),
         }),

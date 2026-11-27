@@ -18,6 +18,16 @@ export interface MailMessage {
   text: string;
   replyTo?: string;
   headers?: Record<string, string>;
+  /** Вложения — скриншот обратной связи (PR 6а): байты, имя, тип; всё письмо — до 25 МБ. */
+  attachments?: MailAttachment[];
+}
+
+/** Вложение письма Cloudflare Email Service. */
+export interface MailAttachment {
+  content: Uint8Array | ArrayBuffer | string;
+  filename: string;
+  type: string;
+  disposition: "attachment" | "inline";
 }
 
 /** Привязка send_email (Cloudflare Email Service). */

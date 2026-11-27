@@ -10,6 +10,7 @@ import {
   type MessageKey,
   signOut,
 } from "../../lib/account";
+import { type FeedbackKind, openFeedback } from "../../lib/feedback";
 import { DICTIONARIES, href, type Lang } from "../../lib/i18n";
 import { PHONE } from "../../lib/panel-store";
 import { toastStore } from "../../lib/toast";
@@ -26,12 +27,14 @@ interface Item {
   same?: boolean;
   /** Черта перед пунктом. */
   separated?: boolean;
+  /** Окно обратной связи (PR 6а). */
+  feedback?: FeedbackKind;
 }
 
 /**
  * Пункты меню аккаунта (кадр «A1 · Account / Account Menu»). Работают «My account» (страница /account,
- * PR 4), «Help center» (документация в новой вкладке) и «Log Out»; остальное — «Soon»: обратная связь —
- * PR 6, тарифы — фаза 8.
+ * PR 4), «Help center» (документация в новой вкладке), обратная связь (окна K2–K6, PR 6а) и «Log Out»;
+ * «Plan & licenses» — «Soon»: тарифы — фаза 8.
  */
 const ITEMS: Item[] = [
   {
@@ -48,20 +51,36 @@ const ITEMS: Item[] = [
     label: "menuHelp",
     href: "/docs",
   },
-  { id: "bug", icon: "material-symbols:bug-report", label: "menuBug" },
+  {
+    id: "bug",
+    icon: "material-symbols:bug-report",
+    label: "menuBug",
+    feedback: "bug",
+  },
   {
     id: "icons",
     icon: "material-symbols:waving-hand",
     label: "menuRequestIcons",
     separated: true,
+    feedback: "icons",
   },
   {
     id: "features",
     icon: "material-symbols:lightbulb",
     label: "menuRequestFeatures",
+    feedback: "feature",
   },
-  { id: "feedback", icon: "material-symbols:send", label: "menuFeedback" },
+  {
+    id: "feedback",
+    icon: "material-symbols:send",
+    label: "menuFeedback",
+    feedback: "feedback",
+  },
 ];
+
+/** Кнопка аккаунта — сюда вернётся фокус после окна обратной связи. */
+const accountButton = (): HTMLElement | undefined =>
+  document.getElementById(ACCOUNT_BUTTON_ID) ?? undefined;
 
 /**
  * Аватар: фото из кабинета (PR 4), без фото — первая буква имени или почты в круге (решение владельца
@@ -158,7 +177,19 @@ export function AccountMenu({ lang, user }: { lang: Lang; user: AccountUser }) {
                 {item.separated ? (
                   <Primitive.Separator className="account-menu-separator" />
                 ) : null}
-                {item.href === undefined ? (
+                {item.feedback !== undefined ? (
+                  <Primitive.Item
+                    className="account-menu-item"
+                    onSelect={() => {
+                      const kind = item.feedback;
+                      if (kind !== undefined)
+                        openFeedback(kind, accountButton());
+                    }}
+                  >
+                    <Icon icon={item.icon} className="account-menu-icon" />
+                    <span className="account-menu-label">{t[item.label]}</span>
+                  </Primitive.Item>
+                ) : item.href === undefined ? (
                   <Primitive.Item disabled className="account-menu-item">
                     <Icon icon={item.icon} className="account-menu-icon" />
                     <span className="account-menu-label">{t[item.label]}</span>
@@ -232,7 +263,21 @@ export function AccountMenu({ lang, user }: { lang: Lang; user: AccountUser }) {
                   item.separated ? "account-sheet-separated" : undefined
                 }
               >
-                {item.href === undefined ? (
+                {item.feedback !== undefined ? (
+                  <button
+                    type="button"
+                    className="account-menu-item"
+                    onClick={() => {
+                      sheet.current?.close();
+                      const kind = item.feedback;
+                      if (kind !== undefined)
+                        openFeedback(kind, accountButton());
+                    }}
+                  >
+                    <Icon icon={item.icon} className="account-menu-icon" />
+                    <span className="account-menu-label">{t[item.label]}</span>
+                  </button>
+                ) : item.href === undefined ? (
                   <button
                     type="button"
                     className="account-menu-item"
