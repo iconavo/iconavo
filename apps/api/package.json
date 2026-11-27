@@ -6,6 +6,7 @@
   "dependencies": {
     "@iconavo-ui/analytics": "workspace:*",
     "@iconavo-ui/core": "workspace:*",
+    "@iconavo-ui/d1": "workspace:*",
     "@iconavo-ui/search": "workspace:*"
   }
 }

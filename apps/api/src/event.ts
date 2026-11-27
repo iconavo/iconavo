@@ -12,14 +12,13 @@ import {
   TEST_HEADER,
 } from "@iconavo-ui/analytics";
 import {
-  type D1Like,
-  type D1Statement,
   dayOfHour,
   eventStatements,
   hourOf,
   rejectStatements,
   schemaStatements,
 } from "@iconavo-ui/analytics/db";
+import type { D1Like, D1Statement } from "@iconavo-ui/d1";
 import type { RateLimiter } from "./env.js";
 import { ApiError, errorResponse, respond } from "./http.js";
 import { limitKey } from "./search/handler.js";
@@ -59,8 +58,8 @@ export function countryOf(request: Request): string | null {
     : null;
 }
 
-/** Тело не длиннее max байт; длиннее — null, дочитывать не нужно. */
-async function readCapped(
+/** Тело не длиннее max байт; длиннее — null, дочитывать не нужно. Его берёт и чтение отчёта (report.ts). */
+export async function readCapped(
   request: Request,
   max: number,
 ): Promise<string | null> {

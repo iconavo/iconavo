@@ -1,8 +1,9 @@
 import { DatabaseSync } from "node:sqlite";
+import type { D1Like } from "@iconavo-ui/d1";
+import { sqliteD1 } from "@iconavo-ui/d1/sqlite";
 import { describe, expect, it } from "vitest";
 import {
   type Arrival,
-  type D1Like,
   dayOfHour,
   eventStatements,
   hourOf,
@@ -12,7 +13,6 @@ import {
   schemaStatements,
 } from "./db.js";
 import type { SiteEvent } from "./events.js";
-import { sqliteD1 } from "./sqlite.js";
 
 const DAY_MS = 86_400_000;
 /** 26 ноября 2026, 12:34:56 UTC. */

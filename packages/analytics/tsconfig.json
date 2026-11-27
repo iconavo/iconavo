@@ -7,5 +7,9 @@
   },
   "include": ["src"],
   "exclude": ["src/**/*.test.ts", "src/**/*.testing.ts"],
-  "references": [{ "path": "../core" }, { "path": "../search" }]
+  "references": [
+    { "path": "../core" },
+    { "path": "../d1" },
+    { "path": "../search" }
+  ]
 }

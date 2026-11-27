@@ -51,6 +51,7 @@ import {
   STATIC_HOST,
 } from "./config.js";
 import { checkEvents } from "./event-check.js";
+import { checkReport } from "./report-check.js";
 
 /** Вид адреса edge API — от него зависят ожидания. */
 export type ApiCheckKind =
@@ -74,6 +75,7 @@ export type ApiCheckKind =
   | "event"
   | "event-invalid"
   | "event-origin"
+  | "report"
   | "redirect";
 
 export interface ApiTarget {
@@ -909,6 +911,7 @@ export async function checkApi(
     ),
   );
   for (const target of await checkEvents(live)) done(target);
+  done(await checkReport(live));
   done(await checkRedirect());
   return report();
 }

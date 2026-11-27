@@ -19,7 +19,7 @@
 // | pnpm site [--port=N] [--prod] | pnpm site --check [--browser=…] [--only=…] | pnpm site --live [--expect-build=…] [--base=…]
 // | pnpm site --refresh [--all] [--base=…] | pnpm site --refresh --wait=N --since=… --sets=… [--base=…]
 // | pnpm release bump [версия] | pnpm release prepare [--first] | pnpm release verify --plan=… [--wait=N]
-// | pnpm analytics [--weeks=N]
+// | pnpm analytics [--weeks=N] [--base=…]
 import { randomInt } from "node:crypto";
 import {
   mkdir,
@@ -34,7 +34,7 @@ import { tmpdir } from "node:os";
 import { basename, join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
 import { formatAnalytics, renderAnalyticsPage } from "./analytics/page.js";
-import { httpReader } from "./analytics/reader.js";
+import { apiReader } from "./analytics/reader.js";
 import { buildReport, DEFAULT_WEEKS } from "./analytics/report.js";
 import {
   BATCH_SIZE,
@@ -53,7 +53,6 @@ import {
   formatApiCheckTable,
 } from "./api/check-report.js";
 import {
-  ANALYTICS_DATABASE_ID,
   API_HOST,
   API_OUT_DIR,
   PREVIEW_PORT,
@@ -600,10 +599,11 @@ const USAGE = `Использование:
       --wait=N                        ждать до N секунд, пока npm и jsDelivr покажут новую версию
   pnpm analytics                      отчёт аналитики сайта (ADR-0043): успех поиска по неделям ru и en,
                                       неудачные запросы за неделю, места, форматы, страны, отклонённое;
-                                      база D1 — через API Cloudflare ключом ANALYTICS_READ_TOKEN из .env;
+                                      база — через edge API ключом ANALYTICS_REPORT_KEY из .env (ADR-0055);
                                       отчёт .cache/reports/analytics/index.html; только локально
       --weeks=N                       недель в таблице успеха (по умолчанию ${DEFAULT_WEEKS}); старше 30 дней —
-                                      из итогов дня`;
+                                      из итогов дня
+      --base=…                        другой адрес edge API: https://… или http://127.0.0.1:порт (превью)`;
 
 /** Флаги pnpm pr со ссылками: флаг → поле PrLinks. */
 const LINK_FLAGS: Record<string, keyof PrLinks> = {
@@ -756,6 +756,7 @@ let refreshSince: number | undefined;
 let refreshSets: string[] | undefined;
 let siteOnly: string[] | undefined;
 let analyticsWeeks = DEFAULT_WEEKS;
+let analyticsBase: string | undefined;
 // pnpm mcp clients (шаг 12 фазы 4): сценарии, модель Claude Code, проверка лимитов, папки для разбора.
 let clientsOnly: number[] | undefined;
 let clientsModel: string | undefined;
@@ -774,6 +775,16 @@ for (const flag of flags) {
     /^[1-9][0-9]?$/.test(value ?? "")
   ) {
     analyticsWeeks = Number(value);
+    continue;
+  }
+  if (
+    command === "analytics" &&
+    name === "--base" &&
+    /^(https:\/\/[a-z0-9.-]+|http:\/\/127\.0\.0\.1:[0-9]{2,5})$/.test(
+      value ?? "",
+    )
+  ) {
+    analyticsBase = value;
     continue;
   }
   if (command === "pr" && flag === "--no-auto-merge") continue;
@@ -3014,25 +3025,19 @@ try {
     process.exit(0);
   } else if (command === "analytics") {
     if (args.length > 0)
-      usageError("pnpm analytics принимает только флаг --weeks=N.");
+      usageError("pnpm analytics принимает только флаги --weeks=N и --base=….");
     // Ключ — только из окружения (команда подхватывает .env); в вывод он не попадает. В CI отчёта нет:
-    // логи открыты, а в отчёте — тексты запросов людей (ADR-0043).
-    const env = (name: string) => process.env[name]?.trim() ?? "";
-    const missing = [R2_ENV.accountId, "ANALYTICS_READ_TOKEN"].filter(
-      (name) => env(name) === "",
-    );
-    if (missing.length > 0) {
+    // логи открыты, а в отчёте — тексты запросов людей (ADR-0043). Базу читает функция edge API: ключ D1
+    // Cloudflare видел бы и базу аккаунтов (ADR-0055).
+    const key = process.env.ANALYTICS_REPORT_KEY?.trim() ?? "";
+    if (key === "") {
       console.error(
-        `Нет ключей: ${missing.join(", ")}. Впишите их в .env (имена — в .env.example): API-токен Cloudflare с правом Account · D1 · Read (ADR-0043).`,
+        "Нет ключа ANALYTICS_REPORT_KEY. Впишите в .env тот же ключ, что в секрете окружения GitHub api (ADR-0055).",
       );
       process.exit(1);
     }
     const report = await buildReport(
-      httpReader({
-        accountId: env(R2_ENV.accountId),
-        databaseId: ANALYTICS_DATABASE_ID,
-        token: env("ANALYTICS_READ_TOKEN"),
-      }),
+      apiReader({ key, ...(analyticsBase ? { base: analyticsBase } : {}) }),
       Date.now(),
       analyticsWeeks,
     );

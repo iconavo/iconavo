@@ -9,7 +9,7 @@
 
 import { readdir, readFile } from "node:fs/promises";
 import { join } from "node:path";
-import type { D1Like } from "@iconavo-ui/analytics/db";
+import type { D1Like } from "@iconavo-ui/d1";
 import { groupCards, isStyle, type Style } from "@iconavo-ui/search";
 import type { Browser, BrowserContext, Page } from "playwright";
 import { canaryVerdict } from "../example/check.js";

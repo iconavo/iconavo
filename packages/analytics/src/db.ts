@@ -1,6 +1,6 @@
 // База аналитики D1 `iconavo-analytics` (шаг 2 фазы 5, ADR-0043): таблицы, запись событий и отказов,
-// итоги дня и уборка старше 30 дней (ADR-0028). SQL один на D1 (приём и расписание функции edge API,
-// отчёт через HTTP API Cloudflare) и на node:sqlite (тесты и превью): оба — SQLite.
+// итоги дня и уборка старше 30 дней (ADR-0028). SQL один на D1 (приём, расписание и отчёт — функцией
+// edge API) и на базу тестов и превью поверх node:sqlite (`@iconavo-ui/d1/sqlite`): оба — SQLite.
 //
 // - events — сырые события: час (не точнее, решение владельца 26 ноября 2026), имя, язык сайта, код
 //   страны или NULL, пометка проверочной пачки и поля события JSON. Хранятся 30 дней.
@@ -8,31 +8,8 @@
 //   запросов нет. Хранятся без срока.
 // - rejects — отклонённые события и пачки по дням и причинам.
 
+import { D1_LIMITS, type D1Like, type D1Statement } from "@iconavo-ui/d1";
 import type { Lang, SiteEvent } from "./events.js";
-
-/** Значение параметра запроса: так же у D1 и node:sqlite. */
-export type SqlValue = string | number | null;
-
-/** Подготовленный запрос — часть D1PreparedStatement. */
-export interface D1Statement {
-  bind(...values: SqlValue[]): D1Statement;
-  run(): Promise<unknown>;
-  all<T = Record<string, unknown>>(): Promise<{ results: T[] }>;
-}
-
-/** Привязка базы — часть D1Database: пачка запросов идёт одной транзакцией. */
-export interface D1Like {
-  prepare(sql: string): D1Statement;
-  batch(statements: D1Statement[]): Promise<unknown[]>;
-}
-
-/**
- * Пределы D1 строже, чем у SQLite по умолчанию (замер на живой базе 27 ноября 2026, ADR-0043): в
- * составной выборке — не больше 5 частей UNION, INTERSECT или EXCEPT, в запросе — не больше 100
- * параметров. node:sqlite их не задаёт, поэтому база тестов и превью (`sqlite.ts`) повторяет их сама.
- */
-export const D1_MAX_COMPOUND_TERMS = 5;
-export const D1_MAX_PARAMS = 100;
 
 /** Сырые события старше стольких дней удаляются (ADR-0028). */
 export const RETENTION_DAYS = 30;
@@ -170,17 +147,17 @@ SELECT day, lang, country, metric, coalesce(key, ''), count(*) FROM (
 GROUP BY day, lang, country, metric, key`;
 
 /**
- * Итоги дней — несколькими запросами: у D1 в одном не больше D1_MAX_COMPOUND_TERMS частей, а одним
+ * Итоги дней — несколькими запросами: у D1 в одном не больше D1_LIMITS.compoundTerms частей, а одним
  * запросом из всех частей D1 отказывал (27 ноября 2026). День — по часу события, UTC. Параметры каждого
  * запроса: начало (час) и конец (час, не включительно) — целые дни.
  */
 export const ROLLUP_DAYS: readonly string[] = Array.from(
-  { length: Math.ceil(ROLLUP_TERMS.length / D1_MAX_COMPOUND_TERMS) },
+  { length: Math.ceil(ROLLUP_TERMS.length / D1_LIMITS.compoundTerms) },
   (_, i) =>
     rollupStatement(
       ROLLUP_TERMS.slice(
-        i * D1_MAX_COMPOUND_TERMS,
-        (i + 1) * D1_MAX_COMPOUND_TERMS,
+        i * D1_LIMITS.compoundTerms,
+        (i + 1) * D1_LIMITS.compoundTerms,
       ),
     ),
 );

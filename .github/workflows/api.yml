@@ -15,6 +15,8 @@ name: Edge API
 # Поиск /search (ADR-0049): секреты MEILISEARCH_URL, MEILISEARCH_SEARCH_KEY и POLZA_API_KEY окружения api
 # «Выкладка» вписывает в metadata при загрузке (jq читает их из окружения, в аргументы и артефакты они
 # не попадают); нет секрета — выкладка красная. Сменили ключ — ручной запуск с «выложить заново».
+# Так же — ANALYTICS_REPORT_KEY: ключ чтения базы аналитики для отчёта pnpm analytics (/analytics/query,
+# шаг 3 фазы 5, ADR-0055).
 # «Проверка» — и поиск; ручной запуск с «замер скорости» — ещё pnpm api bench.
 # Замер пачек (шаг 6 фазы 3, ADR-0030) — ручной запуск с «замер пачек»: pnpm api bench --batches. Он
 # только читает открытые адреса, поэтому идёт и с ветки или в режиме «только показ» — против того, что
@@ -27,6 +29,7 @@ on:
       - "apps/api/**"
       - "packages/analytics/**"
       - "packages/core/**"
+      - "packages/d1/**"
       - "packages/search/**"
       - "packages/pipeline/src/api/**"
       # Остальной код конвейера, который берёт сборка функции; список сверяет workflows.test.ts.
@@ -105,7 +108,7 @@ jobs:
           live=false
           if [ "$GITHUB_REF" = refs/heads/main ] && [ "$EVENT" != pull_request ] && [ "$DRY_RUN" != true ]; then
             git fetch --quiet --no-tags --depth=1 origin "+refs/heads/main:refs/remotes/origin/main"
-            if git diff --quiet origin/main HEAD -- apps/api/ packages/analytics/ packages/core/ packages/search/ packages/pipeline/src/api/ packages/pipeline/src/build/json.ts packages/pipeline/src/build/write.ts packages/pipeline/src/cdn/config.ts packages/pipeline/src/cdn/write.ts packages/pipeline/src/meili/config.ts packages/pipeline/src/util/pool.ts pnpm-lock.yaml .github/workflows/api.yml; then
+            if git diff --quiet origin/main HEAD -- apps/api/ packages/analytics/ packages/core/ packages/d1/ packages/search/ packages/pipeline/src/api/ packages/pipeline/src/build/json.ts packages/pipeline/src/build/write.ts packages/pipeline/src/cdn/config.ts packages/pipeline/src/cdn/write.ts packages/pipeline/src/meili/config.ts packages/pipeline/src/util/pool.ts pnpm-lock.yaml .github/workflows/api.yml; then
               live=true
             else
               echo "::warning::main ушёл вперёд — этот запуск только показывает; выкладывает запуск от свежего main."
@@ -166,6 +169,7 @@ jobs:
           MEILISEARCH_URL: ${{ secrets.MEILISEARCH_URL }}
           MEILISEARCH_SEARCH_KEY: ${{ secrets.MEILISEARCH_SEARCH_KEY }}
           POLZA_API_KEY: ${{ secrets.POLZA_API_KEY }}
+          ANALYTICS_REPORT_KEY: ${{ secrets.ANALYTICS_REPORT_KEY }}
         run: |
           if [ -z "$CLOUDFLARE_API_TOKEN" ] || [ -z "$ACCOUNT_ID" ]; then
             echo "::error::Нет секрета CLOUDFLARE_API_TOKEN окружения api или R2_ACCOUNT_ID (ADR-0024)"
@@ -177,12 +181,17 @@ jobs:
               exit 1
             fi
           done
-          # Секреты поиска — в metadata при загрузке: jq читает их из окружения ($ENV), файл — во временной
-          # папке задачи, в артефакты он не попадает.
+          if [ -z "$ANALYTICS_REPORT_KEY" ]; then
+            echo "::error::Нет секрета ANALYTICS_REPORT_KEY окружения api — отчёт pnpm analytics без него не прочитает базу (ADR-0055)"
+            exit 1
+          fi
+          # Секреты поиска и ключ отчёта аналитики — в metadata при загрузке: jq читает их из окружения
+          # ($ENV), файл — во временной папке задачи, в артефакты он не попадает.
           jq '.bindings += [
             {type: "secret_text", name: "MEILISEARCH_URL", text: $ENV.MEILISEARCH_URL},
             {type: "secret_text", name: "MEILISEARCH_SEARCH_KEY", text: $ENV.MEILISEARCH_SEARCH_KEY},
-            {type: "secret_text", name: "POLZA_API_KEY", text: $ENV.POLZA_API_KEY}
+            {type: "secret_text", name: "POLZA_API_KEY", text: $ENV.POLZA_API_KEY},
+            {type: "secret_text", name: "ANALYTICS_REPORT_KEY", text: $ENV.ANALYTICS_REPORT_KEY}
           ]' dist-api/metadata.json > "$RUNNER_TEMP/metadata.json"
           if ! [[ $ACCOUNT_ID =~ ^[0-9a-f]{32}$ ]]; then
             echo "::error::R2_ACCOUNT_ID — не 32 шестнадцатеричных знака"

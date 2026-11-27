@@ -1,23 +1,26 @@
-// Чтение базы аналитики для отчёта pnpm analytics (шаг 2 фазы 5, ADR-0043): живая база D1 — через HTTP
-// API Cloudflare ключом только для чтения (ANALYTICS_READ_TOKEN, Account · D1 · Read; запись таким ключом
-// Cloudflare отклоняет), тесты — та же база поверх node:sqlite. SQL один: оба — SQLite.
+// Чтение базы аналитики для отчёта pnpm analytics: живая база — через функцию edge API
+// (`POST /analytics/query` с ключом ANALYTICS_REPORT_KEY; шаг 3 фазы 5, решение владельца 27 ноября 2026,
+// ADR-0055, ADR-0028), тесты — та же база поверх node:sqlite. SQL один: оба — SQLite. Прежний путь —
+// HTTP API Cloudflare с ключом D1 — убран: право D1 у ключа нельзя сузить до одной базы, и он читал бы
+// базу аккаунтов с почтами людей.
 
-import type { D1Like, SqlValue } from "@iconavo-ui/analytics/db";
+import { REPORT_PATH, type ReportValue } from "@iconavo-ui/analytics";
+import type { D1Like } from "@iconavo-ui/d1";
 import { retryable, retryDelay } from "../embed/client.js";
 import type { FetchFn } from "../sources/npm.js";
 
 /** Строки запроса. */
 export interface Reader {
-  all<T>(sql: string, params?: readonly SqlValue[]): Promise<T[]>;
+  all<T>(sql: string, params?: readonly ReportValue[]): Promise<T[]>;
 }
 
-/** Сбой чтения с причиной для человека: ключ, база, сеть. */
+/** Сбой чтения с причиной для человека: ключ, функция, сеть. */
 export class ReaderError extends Error {}
 
 /** База node:sqlite (sqliteD1) — для тестов. */
 export function dbReader(db: D1Like): Reader {
   return {
-    all: async <T>(sql: string, params: readonly SqlValue[] = []) =>
+    all: async <T>(sql: string, params: readonly ReportValue[] = []) =>
       (
         await db
           .prepare(sql)
@@ -27,10 +30,13 @@ export function dbReader(db: D1Like): Reader {
   };
 }
 
-export interface HttpReaderOptions {
-  accountId: string;
-  databaseId: string;
-  token: string;
+/** Адрес edge API по умолчанию. */
+export const REPORT_BASE = "https://api.iconavo.dev";
+
+export interface ApiReaderOptions {
+  /** https://api.iconavo.dev или превью http://127.0.0.1:порт. */
+  base?: string;
+  key: string;
   fetch?: FetchFn;
   sleep?: (ms: number) => Promise<void>;
   timeoutMs?: number;
@@ -38,23 +44,37 @@ export interface HttpReaderOptions {
 }
 
 interface QueryAnswer {
-  success?: boolean;
-  errors?: { code?: number; message?: string }[];
-  result?: { results?: unknown[]; success?: boolean }[];
+  results?: unknown;
+  error?: unknown;
+  message?: unknown;
 }
 
 const TIMEOUT_MS = 30_000;
 const ATTEMPTS = 3;
 
-/** Живая база D1: POST …/d1/database/{id}/query — по запросу на вызов, повторы на 429 и 5xx. */
-export function httpReader(o: HttpReaderOptions): Reader {
+/** Почему функция не отдала строки — по коду ответа; ключа в тексте нет. */
+function failure(status: number, body: QueryAnswer | undefined): string {
+  const message =
+    typeof body?.message === "string" ? `: ${body.message.slice(0, 300)}` : "";
+  if (status === 401) {
+    return "ключ ANALYTICS_REPORT_KEY не принят (401): в .env и в секрете окружения GitHub api он должен быть один и тот же (ADR-0055)";
+  }
+  if (status === 404) {
+    return "у функции edge API нет ключа отчёта (404): секрет ANALYTICS_REPORT_KEY окружения GitHub api — и «Edge API» с «выложить заново» (ADR-0055)";
+  }
+  if (status === 400) return `запрос отчёта отклонён (400)${message}`;
+  return `edge API ответил ${status}${message}`;
+}
+
+/** Живая база: POST {base}/analytics/query — по запросу на вызов, повторы на сбой сети, 429 и 5xx. */
+export function apiReader(o: ApiReaderOptions): Reader {
   const fetchFn = o.fetch ?? fetch;
   const sleep =
     o.sleep ??
     ((ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms)));
-  const url = `https://api.cloudflare.com/client/v4/accounts/${o.accountId}/d1/database/${o.databaseId}/query`;
+  const url = new URL(REPORT_PATH, o.base ?? REPORT_BASE).href;
   return {
-    async all<T>(sql: string, params: readonly SqlValue[] = []) {
+    async all<T>(sql: string, params: readonly ReportValue[] = []) {
       const attempts = o.attempts ?? ATTEMPTS;
       for (let attempt = 1; ; attempt++) {
         let res: Response;
@@ -62,7 +82,7 @@ export function httpReader(o: HttpReaderOptions): Reader {
           res = await fetchFn(url, {
             method: "POST",
             headers: {
-              authorization: `Bearer ${o.token}`,
+              authorization: `Bearer ${o.key}`,
               "content-type": "application/json",
             },
             body: JSON.stringify({ sql, params }),
@@ -71,7 +91,7 @@ export function httpReader(o: HttpReaderOptions): Reader {
         } catch (e) {
           if (attempt >= attempts) {
             throw new ReaderError(
-              `Cloudflare не ответил: ${(e as Error).message}`,
+              `edge API не ответил: ${(e as Error).message}`,
             );
           }
           await sleep(retryDelay(null, attempt));
@@ -81,27 +101,17 @@ export function httpReader(o: HttpReaderOptions): Reader {
           await sleep(retryDelay(res.headers.get("retry-after"), attempt));
           continue;
         }
-        let body: QueryAnswer;
+        let body: QueryAnswer | undefined;
         try {
           body = (await res.json()) as QueryAnswer;
         } catch {
-          throw new ReaderError(`Cloudflare ответил ${res.status} не JSON`);
+          body = undefined;
         }
-        if (res.status === 401 || res.status === 403) {
-          throw new ReaderError(
-            `ключ ANALYTICS_READ_TOKEN не принят (${res.status}): нужен API-токен Cloudflare с правом Account · D1 · Read (ADR-0043)`,
-          );
+        if (!res.ok) throw new ReaderError(failure(res.status, body));
+        if (!Array.isArray(body?.results)) {
+          throw new ReaderError(`edge API ответил ${res.status} без строк`);
         }
-        const rows = body.result?.[0]?.results;
-        if (!res.ok || body.success !== true || !Array.isArray(rows)) {
-          const message = (body.errors ?? [])
-            .map((e) => e.message ?? String(e.code))
-            .join("; ");
-          throw new ReaderError(
-            `Cloudflare ответил ${res.status}${message === "" ? "" : `: ${message.slice(0, 300)}`}`,
-          );
-        }
-        return rows as T[];
+        return body.results as T[];
       }
     },
   };

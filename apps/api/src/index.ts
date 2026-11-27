@@ -1,14 +1,16 @@
 // Точка входа функции на Cloudflare Workers (ADR-0024): edge API на api.iconavo.dev. Глобальный
 // caches и метка сборки — только здесь и только внутри fetch: превью конвейера запускает этот же
-// бандл в Node, где caches подставляет само превью. Приём событий /event и расписание (итоги дня
-// аналитики) — тоже только здесь: у MCP-сервера, который берёт маршруты createRoutes, их нет.
+// бандл в Node, где caches подставляет само превью. Приём событий /event, чтение базы для отчёта
+// /analytics/query и расписание (итоги дня аналитики) — тоже только здесь: у MCP-сервера, который
+// берёт маршруты createRoutes, их нет.
 
-import { EVENT_PATH } from "@iconavo-ui/analytics";
+import { EVENT_PATH, REPORT_PATH } from "@iconavo-ui/analytics";
 import { rollup } from "@iconavo-ui/analytics/db";
 import { BUILD } from "./config.js";
 import type { Context, EdgeCache, Env } from "./env.js";
 import { handleEvent } from "./event.js";
 import { createHandler, type Handler } from "./handler.js";
+import { handleReport } from "./report.js";
 
 let handler: Handler | undefined;
 
@@ -16,9 +18,9 @@ const log = (message: string) => console.error(message);
 
 export default {
   fetch(request: Request, env: Env, ctx: Context): Promise<Response> {
-    if (new URL(request.url).pathname === EVENT_PATH) {
-      return handleEvent(request, env, { log });
-    }
+    const { pathname } = new URL(request.url);
+    if (pathname === EVENT_PATH) return handleEvent(request, env, { log });
+    if (pathname === REPORT_PATH) return handleReport(request, env);
     handler ??= createHandler({
       bucket: env.CDN,
       cache: (caches as unknown as { default: EdgeCache }).default,

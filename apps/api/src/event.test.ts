@@ -1,7 +1,7 @@
 import { DatabaseSync } from "node:sqlite";
 import { batchBody, EVENT_ORIGIN, MAX_BODY_BYTES } from "@iconavo-ui/analytics";
-import type { D1Like } from "@iconavo-ui/analytics/db";
-import { sqliteD1 } from "@iconavo-ui/analytics/sqlite";
+import type { D1Like } from "@iconavo-ui/d1";
+import { sqliteD1 } from "@iconavo-ui/d1/sqlite";
 import { describe, expect, it, vi } from "vitest";
 import type { RateLimiter } from "./env.js";
 import { countryOf, handleEvent } from "./event.js";
@@ -284,7 +284,7 @@ describe("приём событий /event", () => {
     expect((await send({}, {})).status).toBe(503);
     const log: string[] = [];
     const broken: D1Like = {
-      prepare: fresh().prepare,
+      ...fresh(),
       batch: async () => {
         throw new Error("D1_ERROR: database is locked");
       },
@@ -359,7 +359,7 @@ describe("точка входа функции", () => {
   it("сбой расписания — строка журнала и ошибка запуска", async () => {
     const errors = vi.spyOn(console, "error").mockImplementation(() => {});
     const broken: D1Like = {
-      prepare: fresh().prepare,
+      ...fresh(),
       batch: async () => {
         throw new Error("D1_ERROR: overloaded");
       },

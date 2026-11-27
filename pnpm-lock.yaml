@@ -193,6 +193,9 @@ importers:
       '@iconavo-ui/core':
         specifier: workspace:*
         version: link:../../packages/core
+      '@iconavo-ui/d1':
+        specifier: workspace:*
+        version: link:../../packages/d1
       '@iconavo-ui/search':
         specifier: workspace:*
         version: link:../../packages/search
@@ -328,11 +331,16 @@ importers:
       '@iconavo-ui/core':
         specifier: workspace:*
         version: link:../core
+      '@iconavo-ui/d1':
+        specifier: workspace:*
+        version: link:../d1
       '@iconavo-ui/search':
         specifier: workspace:*
         version: link:../search
 
   packages/core: {}
+
+  packages/d1: {}
 
   packages/icon:
     dependencies:
@@ -348,6 +356,9 @@ importers:
       '@iconavo-ui/analytics':
         specifier: workspace:*
         version: link:../analytics
+      '@iconavo-ui/d1':
+        specifier: workspace:*
+        version: link:../d1
       '@iconavo-ui/schema':
         specifier: workspace:*
         version: link:../schema

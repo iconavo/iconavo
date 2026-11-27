@@ -10,6 +10,7 @@
   "references": [
     { "path": "../../packages/analytics" },
     { "path": "../../packages/core" },
+    { "path": "../../packages/d1" },
     { "path": "../../packages/search" }
   ]
 }
