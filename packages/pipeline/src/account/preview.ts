@@ -7,7 +7,10 @@
 // - /__preview/mail — письма по порядку: тема, кому, текст и само письмо в рамке;
 // - /__preview/mail.json — те же письма для проверок (коды);
 // - /__preview/turnstile.js — подставной скрипт Turnstile для сайта (проверка сайта, pnpm site --account);
-// - остальное отвечает функция; несколько Set-Cookie доходят до браузера по отдельности.
+// - остальное отвечает функция; несколько Set-Cookie доходят до браузера по отдельности;
+// - файл фото (/api/account/photo/…) — с `Cross-Origin-Resource-Policy: cross-origin` вместо `same-site`:
+//   Chrome считает 127.0.0.1 с разными портами разными сайтами и не показывает фото на странице превью
+//   сайта, а iconavo.dev и account.iconavo.dev — один сайт (шаг 3 фазы 5, PR 4).
 
 import { randomBytes } from "node:crypto";
 import { createServer, type IncomingMessage, type Server } from "node:http";
@@ -24,6 +27,13 @@ import { PREVIEW_GOOGLE_CLIENT } from "./config.js";
 
 /** Ответ тестового виджета Turnstile (ключ сайта 1x00000000000000000000AA). */
 export const PREVIEW_CAPTCHA = "XXXX.DUMMY.TOKEN.XXXX";
+
+/** CORP файла фото в превью (порты 127.0.0.1 для Chrome — разные сайты). */
+export const PREVIEW_PHOTO_CORP = "cross-origin";
+
+/** Адрес — файл фото, который сервис отдаёт хозяину. */
+const photoFile = (url: string | undefined): boolean =>
+  (url ?? "").startsWith("/api/account/photo/");
 
 /** Страница сайта по умолчанию — превью сайта (pnpm site). */
 export const PREVIEW_SITE = "http://127.0.0.1:4284";
@@ -300,7 +310,13 @@ export async function startAccountPreview(
       .then(async (r) => {
         const headers: [string, string][] = [];
         r.headers.forEach((value, name) => {
-          if (name !== "set-cookie") headers.push([name, value]);
+          if (name === "set-cookie") return;
+          headers.push([
+            name,
+            photoFile(req.url) && name === "cross-origin-resource-policy"
+              ? PREVIEW_PHOTO_CORP
+              : value,
+          ]);
         });
         for (const cookie of r.headers.getSetCookie()) {
           headers.push(["set-cookie", cookie]);

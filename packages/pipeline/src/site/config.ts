@@ -129,11 +129,15 @@ export const followLink = (path: string): boolean =>
 /** Страницы, на которые ведёт только форма поиска: обход по ссылкам их не найдёт. */
 export const FORM_PAGES = ["/search", "/ru/search"];
 
+/** Кабинет (шаг 3 фазы 5, PR 4): на него ведёт только меню аккаунта, его в серверном HTML нет. */
+export const ACCOUNT_PAGES = ["/account", "/ru/account"];
+
 /** Дополнительные адреса обхода — общие для pnpm site --check и --live. */
 export const CRAWL_EXTRAS = [
   ...MISSING_PATHS,
   ...Object.keys(REDIRECTS),
   ...FORM_PAGES,
+  ...ACCOUNT_PAGES,
   ...CRAWL_ICONS,
   "/robots.txt",
 ];

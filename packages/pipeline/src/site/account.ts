@@ -38,20 +38,20 @@ export interface AccountCheckOptions {
 export const SIGNED_KEY = "iconavo-signed-in";
 
 const WAIT = PANEL_WAIT_MS;
-const PASSWORD = "correct horse 1";
-const NEW_PASSWORD = "brand new pass 2";
+export const PASSWORD = "correct horse 1";
+export const NEW_PASSWORD = "brand new pass 2";
 const WRONG = "wrong password 0";
 
-type Shots = { title: string; png: string }[];
+export type Shots = { title: string; png: string }[];
 
-interface Sent {
+export interface Sent {
   path: string;
   method: string;
   captcha: boolean;
 }
 
 /** Запросы страницы к сервису: адрес, метод, был ли ответ Turnstile. */
-function accountRequests(page: Page, origin: string): Sent[] {
+export function accountRequests(page: Page, origin: string): Sent[] {
   const list: Sent[] = [];
   page.on("request", (r) => {
     if (!r.url().startsWith(origin) || r.method() === "OPTIONS") return;
@@ -65,7 +65,7 @@ function accountRequests(page: Page, origin: string): Sent[] {
 }
 
 /** Код из письма на почту — среди писем после n-го. */
-async function codeFor(
+export async function codeFor(
   o: AccountCheckOptions,
   email: string,
   after: number,
@@ -134,7 +134,7 @@ const errorText = (page: Page) =>
   page.locator(`${open} .auth-note-error`).first();
 
 /** id элемента в фокусе (и в окне ли он). */
-const focused = (page: Page) =>
+export const focused = (page: Page) =>
   page.evaluate(() => {
     const a = document.activeElement;
     return {
@@ -146,7 +146,7 @@ const focused = (page: Page) =>
   });
 
 /** Анимации появления закончились (бесконечные — каретка — не в счёт): снимок — уже готового окна. */
-const settle = (page: Page) =>
+export const settle = (page: Page) =>
   page
     .waitForFunction(
       () =>
@@ -164,7 +164,7 @@ const settle = (page: Page) =>
     .catch(() => {});
 
 /** Снимок после анимаций. */
-async function photo(
+export async function photo(
   page: Page,
   seen: { errors: string[] },
   shots: Shots,
@@ -183,7 +183,7 @@ const turnstileRenders = (page: Page) =>
   );
 
 /** Интерфейс аккаунтов включён (?accounts=on), страница готова. */
-async function enable(page: Page, base: string): Promise<void> {
+export async function enable(page: Page, base: string): Promise<void> {
   await page.goto(`${base}/?accounts=on`);
   await hydrated(page);
   await page
@@ -197,13 +197,72 @@ async function openLogIn(page: Page): Promise<void> {
   await screenIs(page, "login");
 }
 
-/** Выйти через меню аккаунта; true — вышли. */
-async function logOut(page: Page): Promise<void> {
+/** Выйти через меню аккаунта. */
+export async function logOut(page: Page): Promise<void> {
   await page.locator("#account-button").click();
   await page
     .locator(".account-menu .account-menu-item", { hasText: "Log Out" })
     .click();
   await page.locator("#account-log-in").waitFor({ timeout: WAIT });
+}
+
+/** Регистрация коротким путём (кабинет, PR 4): «Log In» → «Sign up» → почта → код → пароль → готово. */
+export async function register(
+  page: Page,
+  o: AccountCheckOptions,
+  email: string,
+  password = PASSWORD,
+): Promise<void> {
+  const account = o.account;
+  if (account === undefined) throw new Error("нет превью сервиса аккаунтов");
+  await enable(page, o.base);
+  await openLogIn(page);
+  await footerLink(page).click();
+  await screenIs(page, "signup");
+  await emailInput(page).fill(email);
+  const before = account.mail().length;
+  await primary(page).click();
+  const refused = await reached(page, "signup-code");
+  if (refused !== undefined) throw new Error(`регистрация: «${refused}»`);
+  await page
+    .locator(`${open} input.auth-code-input`)
+    .fill(await codeFor(o, email, before));
+  await primary(page).click();
+  await screenIs(page, "signup-password");
+  await passwordInput(page).fill(password);
+  await primary(page).click();
+  await screenIs(page, "signup-done");
+  await primary(page).click();
+  await closedDialog(page);
+}
+
+/** Войти почтой и паролем; true — вошли. */
+export async function logIn(
+  page: Page,
+  email: string,
+  password: string,
+): Promise<boolean> {
+  await openLogIn(page);
+  await emailInput(page).fill(email);
+  await passwordInput(page).fill(password);
+  await primary(page).click();
+  // Вошли — кнопка аккаунта; нет — ошибка в окне (ждать весь срок не нужно).
+  const outcome = await Promise.race([
+    page
+      .locator("#account-button")
+      .waitFor({ timeout: WAIT })
+      .then(
+        () => "in",
+        () => "timeout",
+      ),
+    errorText(page)
+      .waitFor({ timeout: WAIT })
+      .then(
+        () => "error",
+        () => "timeout",
+      ),
+  ]);
+  return outcome === "in";
 }
 
 /**
@@ -391,11 +450,17 @@ async function afterSignUpProblems(
   ]) {
     no(items.includes(item), `в меню нет «${item}»: ${items}`);
   }
-  const help = menu.locator("a.account-menu-item");
+  const help = menu.locator("a.account-menu-item", { hasText: "Help center" });
   no(
     (await help.getAttribute("href")) === "/docs" &&
       (await help.getAttribute("target")) === "_blank",
     "«Help center» — не документация в новой вкладке",
+  );
+  const mine = menu.locator("a.account-menu-item", { hasText: "My account" });
+  no(
+    (await mine.getAttribute("href")) === "/account" &&
+      (await mine.getAttribute("target")) === null,
+    "«My account» — не страница /account в этой вкладке",
   );
   no(
     ((await menu.textContent()) ?? "").includes(email),

@@ -90,7 +90,7 @@ export default function AuthDialog({ lang }: { lang: Lang }) {
   const [errors, setErrors] = useState<Errors>(
     request.notice === undefined ? {} : { form: request.notice },
   );
-  const [email, setEmail] = useState("");
+  const [email, setEmail] = useState(request.email ?? "");
   const [password, setPassword] = useState("");
   const [code, setCode] = useState("");
   const [sentAt, setSentAt] = useState(0);
@@ -103,6 +103,7 @@ export default function AuthDialog({ lang }: { lang: Lang }) {
   if (request.serial !== serial) {
     setSerial(request.serial);
     setScreen(request.screen);
+    if (request.email !== undefined) setEmail(request.email);
     setErrors(request.notice === undefined ? {} : { form: request.notice });
     setPassword("");
     setCode("");

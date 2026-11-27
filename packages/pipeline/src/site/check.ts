@@ -38,6 +38,12 @@ import {
 import { analyticsProblems, checkAnalytics, spoilEvents } from "./analytics.js";
 import { BAG_KEY, bagProblems, checkBag, zipProblems } from "./bag.js";
 import {
+  cabinetCanaryProblems,
+  checkCabinet,
+  spoilPasswordCookie,
+  spoilPhoto,
+} from "./cabinet.js";
+import {
   checkCode,
   checkFiles,
   codeProblems,
@@ -184,6 +190,10 @@ export const CHECKS = [
     "account",
     "Вход: закрытый режим — «Soon» без запросов; «Log In» и окно; регистрация с Turnstile и кодом, неверный код, пароль; аватар, перезагрузка, меню и выход; почта занята; три неверных пароля → Turnstile; восстановление; Google; телефон, axe, CSP",
   ],
+  [
+    "cabinet",
+    "Кабинет: /account — «скоро» и гость без запросов; данные; имя и «Undo»; фото — обрезка, видно в кабинете и в кнопке, «Undo», маленькое — ошибка; письма после перезагрузки; почта — пароль, код вторым шагом, письмо на прежнюю; пароль — вход на месте; Google — отказ; удаление; телефон, axe, CSP",
+  ],
   ["canary", "Контрольный запуск: каждая подложенная поломка замечена"],
 ] as const;
 
@@ -223,7 +233,7 @@ export interface SiteCheckOptions {
   only?: readonly SiteStep[];
   /** База событий превью API (шаг 2 фазы 5): из неё — строка «Аналитика». */
   analytics?: () => D1Like | undefined;
-  /** Превью сервиса аккаунтов (шаг 3 фазы 5): адрес и письма — для строки «Вход». */
+  /** Превью сервиса аккаунтов (шаг 3 фазы 5): адрес и письма — для строк «Вход» и «Кабинет». */
   account?: {
     origin: string;
     mail: () => readonly { to: string; subject: string }[];
@@ -1611,6 +1621,28 @@ async function checkCanary(
       if (caught.length === 0) missed.push(title);
       await ctx.close();
     }
+    // Кабинет (PR 4): сервис не отдаёт файл фото; новая cookie после смены пароля не доходит до браузера.
+    const cabinetBreaks: [
+      string,
+      "photo" | "password",
+      (c: BrowserContext, origin: string) => Promise<void>,
+    ][] = [
+      ["фото не показывается", "photo", spoilPhoto],
+      ["после смены пароля вход потерян", "password", spoilPasswordCookie],
+    ];
+    for (const [title, part, spoil] of cabinetBreaks) {
+      const ctx = await browser.newContext({ viewport: DESKTOP });
+      await spoil(ctx, o.account.origin);
+      const p = await ctx.newPage();
+      const caught = await cabinetCanaryProblems(
+        p,
+        o,
+        `canary-cab-${part}-${result.browser}@example.com`,
+        part,
+      ).catch(stoppedBy(title));
+      if (caught.length === 0) missed.push(title);
+      await ctx.close();
+    }
   }
   if (
     zipProblems(
@@ -1657,7 +1689,7 @@ async function checkCanary(
   result.verdicts.canary =
     missed.length === 0
       ? pass(
-          `замечены все ${o.account === undefined ? "тридцать одна" : "тридцать три"}: кнопка без подписи, style, нарушение CSP до перехода, ширина, иконка-блок, robots, битая ссылка, гидратация, чужой lang, нет ссылки на другой язык, переход не туда, нет скрипта темы, сетка без списка имён, поиск без полной выдачи, Esc не закрывает панель, фокус не возвращается, другая страница сетки закрывает панель, сетка прыгает при открытии и закрытии панели, колесо над панелью крутит страницу, страница шире окна при открытии панели, карточки перескакивают, панель без своей колонки, старое имя без перехода, метка catalog у страницы иконки, менеджер пакетов не запоминается, SVG-код не как у адреса, пустой PNG, сумка не переживает перезагрузку, ZIP без лицензий, настройки не сохраняются, событие не по списку${o.account === undefined ? "" : ", Turnstile не уходит в сервис, вход не переживает перезагрузку"}${stoppedNote}`,
+          `замечены все ${o.account === undefined ? "тридцать одна" : "тридцать пять"}: кнопка без подписи, style, нарушение CSP до перехода, ширина, иконка-блок, robots, битая ссылка, гидратация, чужой lang, нет ссылки на другой язык, переход не туда, нет скрипта темы, сетка без списка имён, поиск без полной выдачи, Esc не закрывает панель, фокус не возвращается, другая страница сетки закрывает панель, сетка прыгает при открытии и закрытии панели, колесо над панелью крутит страницу, страница шире окна при открытии панели, карточки перескакивают, панель без своей колонки, старое имя без перехода, метка catalog у страницы иконки, менеджер пакетов не запоминается, SVG-код не как у адреса, пустой PNG, сумка не переживает перезагрузку, ZIP без лицензий, настройки не сохраняются, событие не по списку${o.account === undefined ? "" : ", Turnstile не уходит в сервис, вход не переживает перезагрузку, фото не показывается, после смены пароля вход потерян"}${stoppedNote}`,
         )
       : fail(
           `проверка слепая: не замечено — ${missed.join(", ")}${stoppedNote}`,
@@ -1681,6 +1713,7 @@ export const SITE_STEPS = [
   "results",
   "analytics",
   "account",
+  "cabinet",
   "canary",
 ] as const;
 export type SiteStep = (typeof SITE_STEPS)[number];
@@ -1702,6 +1735,7 @@ const STEP_ROWS: Record<SiteStep, readonly CheckId[]> = {
   results: ["results"],
   analytics: ["analytics"],
   account: ["account"],
+  cabinet: ["cabinet"],
   canary: ["canary"],
 };
 
@@ -1784,6 +1818,12 @@ export async function checkSite(o: SiteCheckOptions): Promise<SiteResult[]> {
           "вход",
           async () =>
             (v.account = await checkAccount(b, name, o, result.shots)),
+        ],
+        [
+          "cabinet",
+          "кабинет",
+          async () =>
+            (v.cabinet = await checkCabinet(b, name, o, result.shots)),
         ],
         [
           "canary",

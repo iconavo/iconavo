@@ -4,7 +4,7 @@ import type { NextConfig } from "next";
 import {
   accountHosts,
   iconHosts,
-  searchRobotsHeaders,
+  noindexHeaders,
   siteHeaders,
 } from "./lib/headers";
 import { installFromReadme } from "./lib/install-readme";
@@ -60,7 +60,7 @@ const config: NextConfig = {
           account: accountHosts(process.env),
         }),
       },
-      ...searchRobotsHeaders(),
+      ...noindexHeaders(),
     ];
   },
 };

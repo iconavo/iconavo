@@ -66,18 +66,26 @@ export function robotsRules(aiCrawlers = AI_CRAWLERS): RobotsRule[] {
 
 export const ROBOTS = "noindex, nofollow";
 
-/** Страницы поиска: не индексируются никогда — у выдачи нет постоянного содержания (ADR-0039). */
-export const SEARCH_PATHS = ["/search", "/ru/search"];
+/**
+ * Страницы, которые не индексируются никогда: поиск — у выдачи нет постоянного содержания (ADR-0039), кабинет —
+ * личная страница (шаг 3 фазы 5, PR 4).
+ */
+export const NOINDEX_PATHS = [
+  "/search",
+  "/ru/search",
+  "/account",
+  "/ru/account",
+];
 
 /**
- * Заголовок noindex у страниц поиска для next.config. Пока весь сайт скрыт, он уже на всех страницах;
- * когда сайт откроют поисковикам (INDEXING), у поиска он останется.
+ * Заголовок noindex у поиска и кабинета для next.config. Пока весь сайт скрыт, он уже на всех страницах;
+ * когда сайт откроют поисковикам (INDEXING), у них он останется.
  */
-export function searchRobotsHeaders(
+export function noindexHeaders(
   indexing = INDEXING,
 ): { source: string; headers: { key: string; value: string }[] }[] {
   return indexing
-    ? SEARCH_PATHS.map((source) => ({
+    ? NOINDEX_PATHS.map((source) => ({
         source,
         headers: [{ key: "X-Robots-Tag", value: ROBOTS }],
       }))

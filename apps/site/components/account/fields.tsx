@@ -23,6 +23,8 @@ export function Field({
   hint,
   inputRef,
   trailing,
+  onBlur,
+  maxLength,
 }: {
   t: Dictionary;
   id: string;
@@ -36,6 +38,9 @@ export function Field({
   inputRef?: Ref<HTMLInputElement>;
   /** Кнопка справа в рамке — «показать пароль». */
   trailing?: ReactNode;
+  /** Поле потеряло фокус — имя в кабинете сохраняется так. */
+  onBlur?: () => void;
+  maxLength?: number;
 }) {
   const note = `${id}-note`;
   return (
@@ -62,6 +67,8 @@ export function Field({
             error !== undefined || hint !== undefined ? note : undefined
           }
           onChange={(e) => onChange(e.currentTarget.value)}
+          {...(onBlur === undefined ? {} : { onBlur })}
+          {...(maxLength === undefined ? {} : { maxLength })}
         />
         <label className="auth-field-label" htmlFor={id}>
           {label}

@@ -1,6 +1,7 @@
 "use client";
 
 import { Icon } from "@iconavo-ui/react";
+import Link from "next/link";
 import { DropdownMenu as Primitive } from "radix-ui";
 import { Fragment, useRef, useState } from "react";
 import {
@@ -21,19 +22,24 @@ interface Item {
   label: MessageKey;
   /** Ссылка; без неё — «Soon»: экрана ещё нет. */
   href?: string;
+  /** Ссылка открывается в этой же вкладке (страница сайта), а не в новой. */
+  same?: boolean;
   /** Черта перед пунктом. */
   separated?: boolean;
 }
 
 /**
- * Пункты меню аккаунта (кадр «A1 · Account / Account Menu»). Работают «Help center» (документация в
- * новой вкладке) и «Log Out»; остальное — «Soon»: My account — PR 4, обратная связь — PR 6, тарифы — фаза 8.
+ * Пункты меню аккаунта (кадр «A1 · Account / Account Menu»). Работают «My account» (страница /account,
+ * PR 4), «Help center» (документация в новой вкладке) и «Log Out»; остальное — «Soon»: обратная связь —
+ * PR 6, тарифы — фаза 8.
  */
 const ITEMS: Item[] = [
   {
     id: "account",
     icon: "material-symbols:account-circle",
     label: "menuMyAccount",
+    href: "/account",
+    same: true,
   },
   { id: "plan", icon: "material-symbols:request-quote", label: "menuPlan" },
   {
@@ -57,7 +63,10 @@ const ITEMS: Item[] = [
   { id: "feedback", icon: "material-symbols:send", label: "menuFeedback" },
 ];
 
-/** Аватар без фото — первая буква имени или почты в круге (решение владельца 27 ноября 2026). */
+/**
+ * Аватар: фото из кабинета (PR 4), без фото — первая буква имени или почты в круге (решение владельца
+ * 27 ноября 2026). Фото отдаёт сервис аккаунтов — только самому человеку.
+ */
 export function Avatar({
   user,
   className = "top-circle account-avatar",
@@ -65,6 +74,18 @@ export function Avatar({
   user: AccountUser;
   className?: string;
 }) {
+  if (user.photo !== undefined) {
+    return (
+      // biome-ignore lint/performance/noImgElement: фото отдаёт сервис аккаунтов, next/image ему не нужен
+      <img
+        src={user.photo}
+        alt=""
+        width={28}
+        height={28}
+        className={`${className} account-photo`}
+      />
+    );
+  }
   return (
     <span className={className} aria-hidden="true">
       {initialOf(user)}
@@ -145,17 +166,26 @@ export function AccountMenu({ lang, user }: { lang: Lang; user: AccountUser }) {
                   </Primitive.Item>
                 ) : (
                   <Primitive.Item asChild className="account-menu-item">
-                    <a
-                      href={href(lang, item.href)}
-                      target="_blank"
-                      rel="noopener"
-                    >
-                      <Icon icon={item.icon} className="account-menu-icon" />
-                      <span className="account-menu-label">
-                        {t[item.label]}
-                        <span className="sr-only">{t.menuNewTab}</span>
-                      </span>
-                    </a>
+                    {item.same ? (
+                      <Link href={href(lang, item.href)}>
+                        <Icon icon={item.icon} className="account-menu-icon" />
+                        <span className="account-menu-label">
+                          {t[item.label]}
+                        </span>
+                      </Link>
+                    ) : (
+                      <a
+                        href={href(lang, item.href)}
+                        target="_blank"
+                        rel="noopener"
+                      >
+                        <Icon icon={item.icon} className="account-menu-icon" />
+                        <span className="account-menu-label">
+                          {t[item.label]}
+                          <span className="sr-only">{t.menuNewTab}</span>
+                        </span>
+                      </a>
+                    )}
                   </Primitive.Item>
                 )}
               </Fragment>
@@ -213,19 +243,22 @@ export function AccountMenu({ lang, user }: { lang: Lang; user: AccountUser }) {
                     <span className="account-menu-soon">{t.soon}</span>
                   </button>
                 ) : (
-                  <a
+                  <Link
                     className="account-menu-item"
                     href={href(lang, item.href)}
-                    target="_blank"
-                    rel="noopener"
+                    {...(item.same
+                      ? {}
+                      : { target: "_blank", rel: "noopener" })}
                     onClick={() => sheet.current?.close()}
                   >
                     <Icon icon={item.icon} className="account-menu-icon" />
                     <span className="account-menu-label">
                       {t[item.label]}
-                      <span className="sr-only">{t.menuNewTab}</span>
+                      {item.same ? null : (
+                        <span className="sr-only">{t.menuNewTab}</span>
+                      )}
                     </span>
-                  </a>
+                  </Link>
                 )}
               </li>
             ))}

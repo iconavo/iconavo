@@ -86,10 +86,21 @@ export const clock = (seconds: number): string =>
 export interface AccountUser {
   email: string;
   name: string;
+  /** Адрес фото у сервиса (PR 4); нет фото — буква. */
+  photo?: string;
+}
+
+/** Ключ фото из сеанса (photos/{человек}/{имя}) → адрес файла у сервиса; другое — нет фото. */
+export function photoOf(key: unknown): string | undefined {
+  if (typeof key !== "string") return undefined;
+  const name = key.slice(key.lastIndexOf("/") + 1);
+  return /^[0-9a-f]{32}\.(png|jpg)$/.test(name)
+    ? `${ACCOUNT}/api/account/photo/${name}`
+    : undefined;
 }
 
 /** Буква аватара без фото (решение владельца 27 ноября 2026): первая буква имени, иначе почты. */
-export function initialOf(user: AccountUser): string {
+export function initialOf(user: Pick<AccountUser, "email" | "name">): string {
   for (const source of [user.name, user.email]) {
     const first = Array.from(source.trim())[0];
     if (first !== undefined && /[\p{L}\p{N}]/u.test(first)) {
@@ -99,16 +110,20 @@ export function initialOf(user: AccountUser): string {
   return "?";
 }
 
-/** Из ответа сервиса — только почта и имя. */
+/** Из ответа сервиса — только почта, имя и фото. */
 export function userOf(data: unknown): AccountUser | undefined {
-  const user = (data as { user?: { email?: unknown; name?: unknown } } | null)
-    ?.user;
-  return typeof user?.email === "string" && user.email !== ""
-    ? {
-        email: user.email,
-        name: typeof user.name === "string" ? user.name : "",
-      }
-    : undefined;
+  const user = (
+    data as {
+      user?: { email?: unknown; name?: unknown; photo?: unknown };
+    } | null
+  )?.user;
+  if (typeof user?.email !== "string" || user.email === "") return undefined;
+  const photo = photoOf(user.photo);
+  return {
+    email: user.email,
+    name: typeof user.name === "string" ? user.name : "",
+    ...(photo === undefined ? {} : { photo }),
+  };
 }
 
 /** ?accounts=on|off в адресе. */
@@ -117,19 +132,43 @@ export function accountsSwitch(search: string): "on" | "off" | undefined {
   return value === "on" || value === "off" ? value : undefined;
 }
 
-/** Возврат после Google: новый аккаунт или ошибка с кодом Better Auth. */
+/**
+ * Возврат после Google: вход — новый аккаунт или ошибка с кодом Better Auth; подключение в кабинете
+ * (PR 4) — подключён или ошибка.
+ */
 export type GoogleReturn =
   | { kind: "welcome" }
-  | { kind: "error"; code: string };
+  | { kind: "error"; code: string }
+  | { kind: "linked" }
+  | { kind: "link-error"; code: string };
 
 export function googleReturn(search: string): GoogleReturn | undefined {
   const params = new URLSearchParams(search);
   const value = params.get(RETURN_PARAM);
   if (value === "welcome") return { kind: "welcome" };
-  if (value === "google-error") {
-    return { kind: "error", code: params.get("error") ?? "" };
+  if (value === "linked") return { kind: "linked" };
+  if (value === "google-error" || value === "link-error") {
+    return {
+      kind: value === "google-error" ? "error" : "link-error",
+      code: params.get("error") ?? "",
+    };
   }
   return undefined;
+}
+
+/** Куда вернуться после подключения Google в кабинете: на эту же страницу, с отметкой исхода. */
+export function linkUrls(href: string): {
+  callbackURL: string;
+  errorCallbackURL: string;
+} {
+  const base = new URL(withoutAccountParams(href));
+  base.hash = "";
+  const make = (value: string) => {
+    const url = new URL(base);
+    url.searchParams.set(RETURN_PARAM, value);
+    return url.toString();
+  };
+  return { callbackURL: make("linked"), errorCallbackURL: make("link-error") };
 }
 
 /**
@@ -183,6 +222,8 @@ export interface Reply<T = unknown> {
 
 export interface RequestOptions {
   body?: Record<string, unknown>;
+  /** Тело картинкой (фото профиля, PR 4) вместо JSON. */
+  image?: Blob;
   /** Ответ виджета Turnstile. */
   captcha?: string;
   /** Язык писем: язык страницы. */
@@ -195,9 +236,11 @@ export async function request<T = unknown>(
   path: string,
   o: RequestOptions = {},
 ): Promise<Reply<T>> {
-  const post = o.body !== undefined;
+  const post = o.body !== undefined || o.image !== undefined;
   const headers: Record<string, string> = {};
-  if (post) headers["content-type"] = "application/json";
+  if (post) {
+    headers["content-type"] = o.image?.type || "application/json";
+  }
   if (o.captcha !== undefined) headers[CAPTCHA_HEADER] = o.captcha;
   if (o.locale !== undefined) headers[LOCALE_HEADER] = o.locale;
   let res: Response;
@@ -207,7 +250,7 @@ export async function request<T = unknown>(
       credentials: "include",
       cache: "no-store",
       headers,
-      ...(post ? { body: JSON.stringify(o.body) } : {}),
+      ...(post ? { body: o.image ?? JSON.stringify(o.body ?? {}) } : {}),
     });
   } catch {
     return {
@@ -299,6 +342,67 @@ export const accountApi = {
     }),
   signOut: () => request("/api/auth/sign-out", { body: {} }),
 };
+
+/** Что показывает страница «My account» (GET /api/account/me сервиса, PR 4). */
+export interface Me {
+  email: string;
+  name: string;
+  emailVerified: boolean;
+  /** Путь фото у сервиса или null. */
+  photo: string | null;
+  /** Сводка по подпискам раз в неделю. */
+  digest: boolean;
+  /** Новости продукта — только по согласию. */
+  news: boolean;
+  password: { set: boolean; changedAt: string | null };
+  google: boolean;
+}
+
+/** Адреса кабинета (apps/account/src/profile.ts). */
+export const cabinetApi = {
+  me: () => request<Me>("/api/account/me"),
+  profile: (body: { name?: string; digest?: boolean; news?: boolean }) =>
+    request<Me>("/api/account/profile", { body }),
+  photo: (image: Blob) =>
+    request<{ photo: string | null }>("/api/account/photo", { image }),
+  removePhoto: () =>
+    request<{ photo: string | null }>("/api/account/photo/remove", {
+      body: {},
+    }),
+  undoPhoto: () =>
+    request<{ photo: string | null }>("/api/account/photo/undo", {
+      body: {},
+    }),
+  requestEmail: (newEmail: string, password: string, locale: Lang) =>
+    request("/api/account/email/request", {
+      body: { newEmail, password },
+      locale,
+    }),
+  confirmEmail: (newEmail: string, otp: string) =>
+    request("/api/account/email/confirm", { body: { newEmail, otp } }),
+  changePassword: (currentPassword: string, newPassword: string) =>
+    request("/api/account/password/change", {
+      body: { currentPassword, newPassword },
+    }),
+  linkGoogle: (urls: ReturnType<typeof linkUrls>) =>
+    request<{ url?: unknown }>("/api/auth/link-social", {
+      body: { provider: "google", ...urls },
+    }),
+  disconnectGoogle: () =>
+    request("/api/account/google/disconnect", { body: {} }),
+  deleteAccount: (email: string, password: string) =>
+    request("/api/account/delete", { body: { email, password } }),
+};
+
+/** Адрес файла фото из пути, который отдаёт /me. */
+export const photoUrl = (path: string | null): string | undefined =>
+  path === null ? undefined : `${ACCOUNT}${path}`;
+
+/** Первое поле окна кабинета — туда фокус при открытии (не выбор файла и не скрытая почта). */
+export const FIRST_FIELD = "input:not([type=file]):not([tabindex='-1'])";
+
+/** Открытое окно на странице: закрылось одно окно кабинета, а другое уже открыто, — фокус не трогаем. */
+export const OPEN_DIALOG = "dialog[open]";
 
 /** Поле с ошибкой в окне входа — туда фокус после неудачи. */
 export const INVALID_FIELD = "input[aria-invalid=true]";
@@ -458,6 +562,20 @@ export function signedIn(user: AccountUser): void {
   sessionStore.set({ status: "signed-in", user });
 }
 
+/** Кабинет поменял имя, фото или почту — меню и «Your Plan» показывают новое сразу (PR 4). */
+export function patchUser(patch: Partial<AccountUser>): void {
+  if (session.status !== "signed-in") return;
+  const user: AccountUser = { ...session.user, ...patch };
+  if (patch.photo === undefined && "photo" in patch) delete user.photo;
+  sessionStore.set({ status: "signed-in", user });
+}
+
+/** Аккаунт удалён: сеанса у сервиса больше нет, браузер забывает пометку (PR 4). */
+export function forgetSession(): void {
+  storageSet(SIGNED_KEY, null);
+  sessionStore.set(GUEST);
+}
+
 /**
  * Выйти: сервис закрывает сеанс, браузер забывает пометку. Не ответил — остаёмся (false), иначе — гость,
  * даже если сеанса у сервиса уже не было.
@@ -489,6 +607,8 @@ export interface AuthRequest {
   screen: AuthScreen;
   /** Сообщение сразу при открытии — например, «не вышло войти через Google». */
   notice?: MessageKey;
+  /** Почта в поле сразу — «Set password» из кабинета ведёт в восстановление с почтой человека (PR 4). */
+  email?: string;
   /** Новое открытие — новое число: окно начинает с экрана заново. */
   serial: number;
 }
@@ -510,11 +630,12 @@ export const authRequestStore = {
 /** Открыть окно входа на экране (по умолчанию — «Log In»); шторку меню на телефоне — закрыть. */
 export function openAuth(
   screen: AuthScreen = "login",
-  o: { opener?: HTMLElement; notice?: MessageKey } = {},
+  o: { opener?: HTMLElement; notice?: MessageKey; email?: string } = {},
 ): void {
   authRequest = {
     screen,
     ...(o.notice === undefined ? {} : { notice: o.notice }),
+    ...(o.email === undefined ? {} : { email: o.email }),
     serial: authRequest.serial + 1,
   };
   requestListeners.notify();
@@ -524,10 +645,13 @@ export function openAuth(
 
 /**
  * Начало на странице: ?accounts= и возврат после Google убираются из адреса; интерфейс включён и здесь
- * входили — узнать, кто вошёл; после Google — окно «You’re all set» или ошибка. Изменения в другой
- * вкладке (вход, выход, ?accounts=) приходят событием storage. Возвращает отписку.
+ * входили — узнать, кто вошёл; после Google — окно «You’re all set» или ошибка, после подключения Google
+ * в кабинете — сообщение (notify). Изменения в другой вкладке (вход, выход, ?accounts=) приходят событием
+ * storage. Возвращает отписку.
  */
-export function startAccount(): () => void {
+export function startAccount(
+  notify: (kind: "linked" | "link-error", code: string) => void = () => {},
+): () => void {
   const switched = accountsSwitch(location.search);
   if (switched !== undefined) accountsStore.set(switched === "on");
   const back = googleReturn(location.search);
@@ -545,6 +669,8 @@ export function startAccount(): () => void {
               ? "authErrorSignUpClosed"
               : "authErrorGoogle",
         });
+      } else if (back.kind === "linked" || back.kind === "link-error") {
+        notify(back.kind, back.kind === "link-error" ? back.code : "");
       }
     });
   }
