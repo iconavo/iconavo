@@ -4,6 +4,15 @@
 Имена не пропадают: иконка, которую удалил автор, скрыта, но работает по имени, а старое имя переименованной ведёт на новое (ADR-0005).
 Скрытия и переименования вы одобряете лично в pull request (ADR-0019). Полные списки — в `changelog.json`.
 
+## 27 ноября 2026 · версия 3041cddf
+
+Прошлая версия: 7359f858 · источник: 9cb3934 · иконок: 2 124.
+
+**Изменения**
+
+- Добавлены (1): `braces-sigma`
+- Изменены (24): `archive-arrow-down`, `archive-arrow-up`, `calendar-arrow-down`, `calendar-arrow-up`, `clipboard-copy`, `clipboard-paste`, `clock-arrow-down`, `clock-arrow-left`, `clock-arrow-right`, `clock-arrow-up`, `cloud-download`, `cloud-upload`, `file-input`, `file-output`, `folder-input`, `folder-output`, `hard-drive-download`, `hard-drive-upload`, `sunrise`, `sunset`, `waves-arrow-down`, `waves-arrow-up`, `wind-arrow-down`, `wind-arrow-up`
+
 ## 26 ноября 2026 · версия 7359f858
 
 Прошлая версия: c4b220b8 · источник: 9fcde88 · иконок: 2 123.

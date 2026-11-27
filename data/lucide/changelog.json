@@ -3,6 +3,42 @@
   "releases": [
     {
       "added": [
+        "braces-sigma"
+      ],
+      "changed": [
+        "archive-arrow-down",
+        "archive-arrow-up",
+        "calendar-arrow-down",
+        "calendar-arrow-up",
+        "clipboard-copy",
+        "clipboard-paste",
+        "clock-arrow-down",
+        "clock-arrow-left",
+        "clock-arrow-right",
+        "clock-arrow-up",
+        "cloud-download",
+        "cloud-upload",
+        "file-input",
+        "file-output",
+        "folder-input",
+        "folder-output",
+        "hard-drive-download",
+        "hard-drive-upload",
+        "sunrise",
+        "sunset",
+        "waves-arrow-down",
+        "waves-arrow-up",
+        "wind-arrow-down",
+        "wind-arrow-up"
+      ],
+      "date": "2026-11-27T12:19:25Z",
+      "previous": "7359f858",
+      "revision": "9cb3934c3628dfe3fbb34bc4c12209b2cee3a49f",
+      "total": 2124,
+      "version": "3041cddf"
+    },
+    {
+      "added": [
         "bowl-chopsticks",
         "elevator",
         "globe-clock",
