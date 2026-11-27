@@ -2634,34 +2634,7 @@
       ]
     },
     "archive-arrow-down": {
-      "en": {
-        "description": "Shows a box-like archive container with a downward arrow inside, meaning archive or save content.",
-        "synonyms": [
-          "archive",
-          "box",
-          "download",
-          "save",
-          "storage",
-          "backup",
-          "store",
-          "arrow down"
-        ]
-      },
-      "fingerprint": "2900c8e19b58",
-      "promptVersion": 1,
-      "ru": {
-        "description": "Изображена коробка-архив с открытым низом и стрелкой вниз; означает архивирование или сохранение файлов.",
-        "synonyms": [
-          "архив",
-          "архивировать",
-          "коробка",
-          "скачать",
-          "загрузить",
-          "сохранить",
-          "хранилище",
-          "стрелка вниз"
-        ]
-      },
+      "fingerprint": "833943a0b694",
       "tags": [
         "index",
         "backup",
@@ -2675,38 +2648,7 @@
       ]
     },
     "archive-arrow-up": {
-      "en": {
-        "description": "A box-shaped archive with a top lid and an upward arrow, usually meaning restore an item from archive.",
-        "synonyms": [
-          "unarchive",
-          "restore",
-          "archive box",
-          "storage",
-          "backup",
-          "upload",
-          "arrow up",
-          "records",
-          "retrieve",
-          "box"
-        ]
-      },
-      "fingerprint": "ff0d09b2c044",
-      "promptVersion": 1,
-      "ru": {
-        "description": "Изображена коробка-архив с верхней крышкой и стрелкой вверх; обычно означает восстановление элемента из архива.",
-        "synonyms": [
-          "восстановить",
-          "разархивировать",
-          "вернуть из архива",
-          "архив",
-          "коробка",
-          "хранилище",
-          "стрелка вверх",
-          "резервная копия",
-          "выгрузить",
-          "документы"
-        ]
-      },
+      "fingerprint": "ffc2aca0c83b",
       "tags": [
         "index",
         "backup",
@@ -14035,7 +13977,16 @@
         "miso",
         "noodle soup",
         "noodle bowl",
-        "dining"
+        "dining",
+        "poke",
+        "culinary",
+        "asian",
+        "chinese",
+        "oriental",
+        "eastern",
+        "brunch",
+        "lunch",
+        "dinner"
       ]
     },
     "box": {
@@ -14284,6 +14235,27 @@
         "data",
         "{",
         "}"
+      ]
+    },
+    "braces-sigma": {
+      "fingerprint": "8fc18f3d79a4",
+      "tags": [
+        "alphabet",
+        "character",
+        "text",
+        "font",
+        "typography",
+        "latex",
+        "math",
+        "formula",
+        "sum",
+        "expression",
+        "structure",
+        "curly braces",
+        "parse tree",
+        "syntax tree",
+        "summation notation",
+        "equation editor"
       ]
     },
     "brackets": {
@@ -16182,38 +16154,7 @@
       ]
     },
     "calendar-arrow-down": {
-      "en": {
-        "description": "Shows a calendar page with binding rings and a downward arrow in the corner, meaning descending order or downloading a date.",
-        "synonyms": [
-          "calendar",
-          "date",
-          "month",
-          "year",
-          "event",
-          "sort",
-          "descending",
-          "arrow down",
-          "download calendar",
-          "decrease"
-        ]
-      },
-      "fingerprint": "67c3d9fe8e0e",
-      "promptVersion": 1,
-      "ru": {
-        "description": "Изображена календарная страница с кольцами и стрелкой вниз в углу; обозначает сортировку по убыванию или экспорт даты.",
-        "synonyms": [
-          "календарь",
-          "дата",
-          "месяц",
-          "год",
-          "событие",
-          "сортировка",
-          "по убыванию",
-          "стрелка вниз",
-          "скачать календарь",
-          "уменьшение"
-        ]
-      },
+      "fingerprint": "2b06320c88d1",
       "tags": [
         "day",
         "date",
@@ -16382,38 +16323,7 @@
       ]
     },
     "calendar-arrow-up": {
-      "en": {
-        "description": "A calendar with binding rings and an upward arrow, usually meaning upload, moving a date forward, or ascending sort.",
-        "synonyms": [
-          "calendar",
-          "date",
-          "month",
-          "event",
-          "sort",
-          "ascending",
-          "upload",
-          "up arrow",
-          "schedule",
-          "reschedule"
-        ]
-      },
-      "fingerprint": "2c6480b4a72e",
-      "promptVersion": 1,
-      "ru": {
-        "description": "Рисунок изображает календарь с кольцами и стрелку вверх, что обозначает загрузку, перенос даты или сортировку по возрастанию.",
-        "synonyms": [
-          "календарь",
-          "дата",
-          "месяц",
-          "событие",
-          "сортировка",
-          "по возрастанию",
-          "загрузка",
-          "вверх",
-          "перенос даты",
-          "расписание"
-        ]
-      },
+      "fingerprint": "11a566ffe74d",
       "tags": [
         "day",
         "date",
@@ -27507,35 +27417,7 @@
       ]
     },
     "clipboard-copy": {
-      "en": {
-        "description": "A clipboard outline with a left-pointing arrow entering it, usually meaning paste or importing data.",
-        "synonyms": [
-          "paste",
-          "copy",
-          "import",
-          "insert",
-          "paste data",
-          "buffer",
-          "notes",
-          "document",
-          "pasting"
-        ]
-      },
-      "fingerprint": "63f47bfc5bc2",
-      "promptVersion": 1,
-      "ru": {
-        "description": "Рисунок буфера обмена с стрелкой, направленной внутрь; обычно означает вставку или импорт данных.",
-        "synonyms": [
-          "буфер обмена",
-          "вставить",
-          "вставка",
-          "копировать",
-          "импорт",
-          "документ",
-          "заметки",
-          "входящие данные"
-        ]
-      },
+      "fingerprint": "e7e13ef04946",
       "tags": [
         "copy",
         "paste"
@@ -27632,34 +27514,7 @@
       ]
     },
     "clipboard-paste": {
-      "en": {
-        "description": "A clipboard outline with a top clip and a right-pointing arrow inside, usually meaning paste or moving clipboard content.",
-        "synonyms": [
-          "paste",
-          "clipboard",
-          "insert",
-          "import",
-          "board",
-          "copy paste",
-          "transfer",
-          "arrow right"
-        ]
-      },
-      "fingerprint": "1dd6a0412243",
-      "promptVersion": 1,
-      "ru": {
-        "description": "Изображена прямоугольная папка-планшет с зажимом сверху и стрелкой вправо внутри; обозначает вставку или перенос содержимого буфера обмена.",
-        "synonyms": [
-          "буфер обмена",
-          "вставить",
-          "вставка",
-          "планшет",
-          "зажим",
-          "скопировать и вставить",
-          "импорт",
-          "перенос"
-        ]
-      },
+      "fingerprint": "3b2339a50bb1",
       "tags": [
         "copy",
         "paste"
@@ -28606,38 +28461,7 @@
       ]
     },
     "clock-arrow-down": {
-      "en": {
-        "description": "A downward arrow beside a clock face, usually meaning descending order, time sorting, or decreasing time.",
-        "synonyms": [
-          "clock",
-          "time",
-          "timer",
-          "sort",
-          "descending",
-          "decrease",
-          "arrow down",
-          "watch",
-          "alarm",
-          "order"
-        ]
-      },
-      "fingerprint": "a764492a1284",
-      "promptVersion": 1,
-      "ru": {
-        "description": "Изображена стрелка вниз рядом с циферблатом часов; обычно означает убывание, сортировку по времени или таймер, идущий назад.",
-        "synonyms": [
-          "часы",
-          "время",
-          "таймер",
-          "сортировка",
-          "по убыванию",
-          "убывание",
-          "стрелка вниз",
-          "будильник",
-          "порядок",
-          "уменьшение"
-        ]
-      },
+      "fingerprint": "bf1ac0abf687",
       "tags": [
         "clock",
         "time",
@@ -28682,38 +28506,7 @@
       ]
     },
     "clock-arrow-left": {
-      "en": {
-        "description": "A clock face with a left-pointing arrow, usually meaning going back in time, history, or reverting a time.",
-        "synonyms": [
-          "clock",
-          "time",
-          "back",
-          "return",
-          "watch",
-          "alarm",
-          "history",
-          "previous",
-          "undo time",
-          "timer"
-        ]
-      },
-      "fingerprint": "85d8584ea617",
-      "promptVersion": 1,
-      "ru": {
-        "description": "Круглые часы со стрелкой, направленной влево, означают возврат назад во времени или откат к прошлому.",
-        "synonyms": [
-          "часы",
-          "время",
-          "назад",
-          "возврат",
-          "таймер",
-          "будильник",
-          "прошлое",
-          "откат",
-          "история",
-          "стрелка влево"
-        ]
-      },
+      "fingerprint": "5d93e6754561",
       "tags": [
         "clock",
         "time",
@@ -28743,36 +28536,7 @@
       ]
     },
     "clock-arrow-right": {
-      "en": {
-        "description": "A clock face with a right-pointing arrow leaving it, usually meaning time passing, scheduling, or moving to a later time.",
-        "synonyms": [
-          "clock",
-          "time",
-          "watch",
-          "alarm",
-          "arrow right",
-          "next",
-          "schedule",
-          "postpone",
-          "timer"
-        ]
-      },
-      "fingerprint": "c9883103ab02",
-      "promptVersion": 1,
-      "ru": {
-        "description": "Изображена стрелка часов, выходящая из циферблата вправо; обычно означает передачу времени, отложенный или следующий шаг.",
-        "synonyms": [
-          "часы",
-          "время",
-          "таймер",
-          "будильник",
-          "стрелка вправо",
-          "далее",
-          "перенос времени",
-          "отложить",
-          "следующий"
-        ]
-      },
+      "fingerprint": "19888c5c516d",
       "tags": [
         "clock",
         "time",
@@ -28802,38 +28566,7 @@
       ]
     },
     "clock-arrow-up": {
-      "en": {
-        "description": "Draws a clock with hands and an upward arrow at the lower right, meaning time with ascending order or increasing time.",
-        "synonyms": [
-          "clock",
-          "time",
-          "watch",
-          "alarm",
-          "sort",
-          "ascending",
-          "increase",
-          "order",
-          "up arrow",
-          "rising"
-        ]
-      },
-      "fingerprint": "6a32661884f8",
-      "promptVersion": 1,
-      "ru": {
-        "description": "Изображает часы с горизонтальными стрелками и стрелку вверх в правом нижнем углу; обозначает время с возрастанием или отправку на более позднее время.",
-        "synonyms": [
-          "часы",
-          "время",
-          "таймер",
-          "будильник",
-          "сортировка",
-          "по возрастанию",
-          "повышение",
-          "порядок",
-          "стрелка вверх",
-          "увеличение"
-        ]
-      },
+      "fingerprint": "4fa5f0f7d5e1",
       "tags": [
         "clock",
         "time",
@@ -29375,35 +29108,7 @@
       ]
     },
     "cloud-download": {
-      "en": {
-        "description": "Outlined cloud with a downward arrow beneath; usually means downloading or importing files from the cloud.",
-        "synonyms": [
-          "download",
-          "import",
-          "save",
-          "get file",
-          "arrow down",
-          "offline",
-          "cloud storage",
-          "retrieve"
-        ]
-      },
-      "fingerprint": "008e30209a92",
-      "promptVersion": 1,
-      "ru": {
-        "description": "Контур облака со стрелкой вниз внутри; обычно означает загрузку или скачивание файлов из облака.",
-        "synonyms": [
-          "скачать",
-          "загрузка",
-          "облако",
-          "загрузить из облака",
-          "импорт",
-          "стрелка вниз",
-          "сохранить",
-          "получить файл",
-          "облачное хранилище"
-        ]
-      },
+      "fingerprint": "9fadee832591",
       "tags": [
         "import",
         "install",
@@ -29985,33 +29690,7 @@
       ]
     },
     "cloud-upload": {
-      "en": {
-        "description": "An outlined cloud with an upward arrow beneath it; usually means uploading a file to cloud storage.",
-        "synonyms": [
-          "upload",
-          "send to cloud",
-          "upload file",
-          "publish",
-          "cloud storage",
-          "arrow up",
-          "backup"
-        ]
-      },
-      "fingerprint": "de6ceb94cb8a",
-      "promptVersion": 1,
-      "ru": {
-        "description": "Контур облака со стрелкой вверх внутри; обычно означает загрузку файла в облачное хранилище.",
-        "synonyms": [
-          "загрузить",
-          "загрузка в облако",
-          "выгрузить",
-          "облако",
-          "отправить в облако",
-          "закачать файл",
-          "загрузка файла",
-          "стрелка вверх"
-        ]
-      },
+      "fingerprint": "805388f75e9f",
       "tags": [
         "file",
         "deploy",
@@ -40025,36 +39704,7 @@
       ]
     },
     "file-input": {
-      "en": {
-        "description": "An outlined document with a folded corner and an arrow pointing into it, meaning import or file input.",
-        "synonyms": [
-          "import file",
-          "upload document",
-          "incoming file",
-          "insert file",
-          "document",
-          "file",
-          "arrow into file",
-          "open file",
-          "import"
-        ]
-      },
-      "fingerprint": "ff2ae4b1f5f5",
-      "promptVersion": 1,
-      "ru": {
-        "description": "Контур документа с загнутым уголком и стрелкой, входящей внутрь; обозначает импорт или загрузку файла.",
-        "synonyms": [
-          "импорт файла",
-          "загрузить документ",
-          "входящий файл",
-          "вставить файл",
-          "документ",
-          "файл",
-          "стрелка внутрь",
-          "открыть файл",
-          "импорт"
-        ]
-      },
+      "fingerprint": "1dd3d9c8bb9e",
       "tags": [
         "document"
       ]
@@ -40316,36 +39966,7 @@
       ]
     },
     "file-output": {
-      "en": {
-        "description": "Outlined document page with a left-pointing arrow, usually meaning exporting or outputting a file.",
-        "synonyms": [
-          "export file",
-          "output",
-          "export document",
-          "file export",
-          "download file",
-          "send file",
-          "extract",
-          "document arrow",
-          "file out"
-        ]
-      },
-      "fingerprint": "5ecf04eefd6e",
-      "promptVersion": 1,
-      "ru": {
-        "description": "Контур листа документа с folded уголком и стрелкой влево, означающей вывод или экспорт файла из системы.",
-        "synonyms": [
-          "экспорт файла",
-          "выгрузка",
-          "вывод файла",
-          "документ стрелка",
-          "выход",
-          "скачать документ",
-          "отправить файл",
-          "файл назад",
-          "экспорт документа"
-        ]
-      },
+      "fingerprint": "97bbecfe2c8c",
       "tags": [
         "document"
       ]
@@ -43310,36 +42931,7 @@
       ]
     },
     "folder-input": {
-      "en": {
-        "description": "Outline of a folder with a right-pointing arrow entering it, meaning import or moving files into a folder.",
-        "synonyms": [
-          "folder",
-          "import",
-          "directory",
-          "incoming files",
-          "upload to folder",
-          "move into folder",
-          "transfer",
-          "open folder",
-          "inbox"
-        ]
-      },
-      "fingerprint": "51152cb78ede",
-      "promptVersion": 1,
-      "ru": {
-        "description": "Контур папки со стрелкой, направленной внутрь папки; обозначает импорт или перенос файлов в папку.",
-        "synonyms": [
-          "папка",
-          "импорт",
-          "входящие файлы",
-          "загрузить в папку",
-          "директория",
-          "перенос",
-          "каталог",
-          "вход в папку",
-          "стрелка внутрь"
-        ]
-      },
+      "fingerprint": "9083cf8c6add",
       "tags": [
         "directory",
         "import",
@@ -43696,36 +43288,7 @@
       ]
     },
     "folder-output": {
-      "en": {
-        "description": "Outline of a folder with a left-pointing arrow leaving it, meaning export or output of files from a directory.",
-        "synonyms": [
-          "folder",
-          "export",
-          "output",
-          "exit",
-          "move out",
-          "directory",
-          "arrow left",
-          "save out",
-          "download"
-        ]
-      },
-      "fingerprint": "e22d94d25d0a",
-      "promptVersion": 1,
-      "ru": {
-        "description": "Контур папки со стрелкой, указывающей влево, из неё; обозначает экспорт или вывод файлов из папки.",
-        "synonyms": [
-          "папка",
-          "экспорт",
-          "выход",
-          "вынести файл",
-          "директория",
-          "назад",
-          "выгрузка",
-          "стрелка влево",
-          "каталог"
-        ]
-      },
+      "fingerprint": "53bd8ee5b94e",
       "tags": [
         "directory",
         "import",
@@ -49225,36 +48788,7 @@
       ]
     },
     "hard-drive-download": {
-      "en": {
-        "description": "Shows a hard drive with a downward arrow above it, meaning download or save data to storage.",
-        "synonyms": [
-          "download to disk",
-          "hard disk",
-          "storage drive",
-          "save to drive",
-          "disk download",
-          "ssd",
-          "hdd",
-          "memory",
-          "data storage"
-        ]
-      },
-      "fingerprint": "9e11c7acc30a",
-      "promptVersion": 1,
-      "ru": {
-        "description": "Изображен жёсткий диск с стрелкой вниз над ним; значит загрузку или сохранение данных на накопитель.",
-        "synonyms": [
-          "скачать на диск",
-          "жесткий диск",
-          "накопитель",
-          "загрузка",
-          "сохранить на диск",
-          "флешка",
-          "диск",
-          "память",
-          "хранилище"
-        ]
-      },
+      "fingerprint": "f3458c1991f9",
       "tags": [
         "computer",
         "server",
@@ -49276,36 +48810,7 @@
       ]
     },
     "hard-drive-upload": {
-      "en": {
-        "description": "A hard drive with an upward arrow above it, meaning uploading or saving data to storage.",
-        "synonyms": [
-          "hard drive",
-          "disk",
-          "upload to drive",
-          "storage",
-          "save data",
-          "server",
-          "memory",
-          "ssd",
-          "backup"
-        ]
-      },
-      "fingerprint": "bf1f3389fbc9",
-      "promptVersion": 1,
-      "ru": {
-        "description": "Изображен жесткий диск с стрелкой вверх, что обозначает загрузку или выгрузку данных на накопитель.",
-        "synonyms": [
-          "жесткий диск",
-          "диск",
-          "загрузка на диск",
-          "выгрузка",
-          "сохранить на диск",
-          "накопитель",
-          "сервер",
-          "память",
-          "ssd"
-        ]
-      },
+      "fingerprint": "7a3c4e7e44e9",
       "tags": [
         "computer",
         "server",
@@ -96259,36 +95764,7 @@
       ]
     },
     "sunrise": {
-      "en": {
-        "description": "Shows a half sun rising over a horizon line with rays and an upward arrow, meaning sunrise or the start of day.",
-        "synonyms": [
-          "dawn",
-          "morning",
-          "sun",
-          "daybreak",
-          "weather",
-          "early",
-          "rise",
-          "horizon",
-          "sunup"
-        ]
-      },
-      "fingerprint": "f8d2476d9571",
-      "promptVersion": 1,
-      "ru": {
-        "description": "Изображена восходящая из-за горизонта половинка солнца с лучами и стрелка вверх; обозначает восход солнца или начало дня.",
-        "synonyms": [
-          "восход",
-          "рассвет",
-          "утро",
-          "солнце",
-          "солнышко",
-          "погода",
-          "начало дня",
-          "подъём",
-          "утренний свет"
-        ]
-      },
+      "fingerprint": "c6a4fb6163ad",
       "tags": [
         "weather",
         "time",
@@ -96297,35 +95773,7 @@
       ]
     },
     "sunset": {
-      "en": {
-        "description": "A half sun above a horizon line with a downward arrow, meaning sunset or evening time.",
-        "synonyms": [
-          "sundown",
-          "evening",
-          "dusk",
-          "sun",
-          "weather",
-          "horizon",
-          "night",
-          "time of day"
-        ]
-      },
-      "fingerprint": "68bd4a6a8cdb",
-      "promptVersion": 1,
-      "ru": {
-        "description": "Полусолнце над горизонтом со стрелкой вниз, что означает закат или заход солнца.",
-        "synonyms": [
-          "закат",
-          "заход солнца",
-          "вечер",
-          "сумерки",
-          "солнце",
-          "погода",
-          "горизонт",
-          "ночь",
-          "время суток"
-        ]
-      },
+      "fingerprint": "91eb74a80dd4",
       "tags": [
         "weather",
         "time",
@@ -106742,34 +106190,7 @@
       ]
     },
     "waves-arrow-down": {
-      "en": {
-        "description": "A downward arrow above two wavy water lines, usually meaning falling water level or low tide.",
-        "synonyms": [
-          "low tide",
-          "water level",
-          "falling tide",
-          "waves",
-          "sea",
-          "ocean",
-          "arrow down",
-          "water drop"
-        ]
-      },
-      "fingerprint": "e65589e6ee8b",
-      "promptVersion": 1,
-      "ru": {
-        "description": "Стрелка вниз над двумя волнистыми линиями воды обозначает понижение уровня воды или отлив.",
-        "synonyms": [
-          "отлив",
-          "уровень воды",
-          "понижение уровня",
-          "волны",
-          "море",
-          "океан",
-          "стрелка вниз",
-          "спад воды"
-        ]
-      },
+      "fingerprint": "00e483ac61fe",
       "tags": [
         "direction",
         "movement",
@@ -106795,36 +106216,7 @@
       ]
     },
     "waves-arrow-up": {
-      "en": {
-        "description": "Two wavy lines beneath an upward arrow, usually meaning rising water level or high tide.",
-        "synonyms": [
-          "tide",
-          "rising water",
-          "water level",
-          "waves",
-          "sea",
-          "ocean",
-          "flood",
-          "high tide",
-          "upload"
-        ]
-      },
-      "fingerprint": "f36242325b9b",
-      "promptVersion": 1,
-      "ru": {
-        "description": "Изображены две волнистые линии и стрелка вверх над ними; обычно означает подъём уровня воды или прилив.",
-        "synonyms": [
-          "прилив",
-          "подъем воды",
-          "уровень воды",
-          "волны",
-          "море",
-          "океан",
-          "наводнение",
-          "высокая вода",
-          "вверх"
-        ]
-      },
+      "fingerprint": "83819f81762c",
       "tags": [
         "direction",
         "movement",
@@ -108003,38 +107395,7 @@
       ]
     },
     "wind-arrow-down": {
-      "en": {
-        "description": "Two wind lines with curls and a downward arrow above them, meaning wind decrease or falling air pressure.",
-        "synonyms": [
-          "wind",
-          "air",
-          "pressure",
-          "air pressure drop",
-          "blow",
-          "weather",
-          "down arrow",
-          "decrease",
-          "atmosphere",
-          "breeze"
-        ]
-      },
-      "fingerprint": "2a3cb8ad9c30",
-      "promptVersion": 1,
-      "ru": {
-        "description": "Изображены две линии ветра с завитками и стрелка вниз сверху; значит снижение ветра или воздушного давления, падение.",
-        "synonyms": [
-          "ветер",
-          "воздух",
-          "давление",
-          "падение давления",
-          "дуновение",
-          "погода",
-          "стрелка вниз",
-          "снижение",
-          "атмосфера",
-          "сквозняк"
-        ]
-      },
+      "fingerprint": "16291c2d2f7f",
       "tags": [
         "weather",
         "air",
@@ -108051,38 +107412,7 @@
       ]
     },
     "wind-arrow-up": {
-      "en": {
-        "description": "Shows an upward arrow above wind lines with curls, indicating increasing wind or rising wind speed.",
-        "synonyms": [
-          "wind",
-          "gust",
-          "windy",
-          "air pressure",
-          "weather",
-          "blow",
-          "increase",
-          "rise",
-          "air flow",
-          "breeze"
-        ]
-      },
-      "fingerprint": "1b36b401cd75",
-      "promptVersion": 1,
-      "ru": {
-        "description": "Изображена стрелка вверх над двумя линиями ветра с завитками; обозначает усиление ветра или рост скорости ветра.",
-        "synonyms": [
-          "ветер",
-          "порыв ветра",
-          "сильный ветер",
-          "давление",
-          "воздух",
-          "погода",
-          "повышение",
-          "увеличение",
-          "сортировка",
-          "дуновение"
-        ]
-      },
+      "fingerprint": "c88bdbc7a778",
       "tags": [
         "weather",
         "air",
