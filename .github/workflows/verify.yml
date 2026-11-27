@@ -57,6 +57,10 @@ jobs:
       - name: Проверить MCP-сервер
         if: success() || failure()
         run: pnpm mcp check
+      # Сервис аккаунтов (ADR-0055): только открытые адреса, без ключей и без писем.
+      - name: Проверить сервис аккаунтов
+        if: success() || failure()
+        run: pnpm account check
       # Страница без архива открывается в браузере. Копия — вне .cache: скрытые папки upload-artifact пропускает.
       - name: Отчёт — вне .cache
         id: pages

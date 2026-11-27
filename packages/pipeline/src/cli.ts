@@ -19,7 +19,7 @@
 // | pnpm site [--port=N] [--prod] | pnpm site --check [--browser=…] [--only=…] | pnpm site --live [--expect-build=…] [--base=…]
 // | pnpm site --refresh [--all] [--base=…] | pnpm site --refresh --wait=N --since=… --sets=… [--base=…]
 // | pnpm release bump [версия] | pnpm release prepare [--first] | pnpm release verify --plan=… [--wait=N]
-// | pnpm analytics [--weeks=N] [--base=…]
+// | pnpm analytics [--weeks=N] [--base=…] | pnpm account build | pnpm account preview [--port=N] | pnpm account check [--expect-build=…] [--base=…]
 import { randomInt } from "node:crypto";
 import {
   mkdir,
@@ -33,6 +33,14 @@ import type { AddressInfo } from "node:net";
 import { tmpdir } from "node:os";
 import { basename, join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
+import { buildAccount } from "./account/build.js";
+import {
+  accountCheckFailed,
+  checkAccount,
+  formatAccountCheck,
+} from "./account/check.js";
+import { ACCOUNT_OUT_DIR, ACCOUNT_PREVIEW_PORT } from "./account/config.js";
+import { startAccountPreview } from "./account/preview.js";
 import { formatAnalytics, renderAnalyticsPage } from "./analytics/page.js";
 import { apiReader } from "./analytics/reader.js";
 import { buildReport, DEFAULT_WEEKS } from "./analytics/report.js";
@@ -492,6 +500,15 @@ const USAGE = `Использование:
                                       .cache/reports/api/bench-batches.html и .json
       --base=…                        другой адрес API: https://… или http://127.0.0.1:порт (превью)
       --seed=N                        номер случая для --batches: те же пачки, что в прошлом замере
+  pnpm account build                  собрать сервис аккаунтов (ADR-0055) в ${ACCOUNT_OUT_DIR}/: ${WORKER_FILE},
+                                      metadata.json, schedules.json и build.json; без изменений ничего не пишет
+  pnpm account preview                превью сервиса аккаунтов на 127.0.0.1: база node:sqlite в памяти, письма —
+                                      на /__preview/mail (четыре для примера), Turnstile — тестовый ответ
+      --port=N                        другой порт (по умолчанию ${ACCOUNT_PREVIEW_PORT})
+  pnpm account check                  живой account.iconavo.dev: страница и сборка, CORS, отказы без Turnstile
+                                      и с чужой страницы, закрытые адреса, Google, переход с http; без ключей
+      --expect-build=…                ждать до 3 минут эту сборку
+      --base=…                        другой адрес: https://… или http://127.0.0.1:порт (превью)
   pnpm mcp build                      собрать MCP-сервер (ADR-0044) в ${MCP_OUT_DIR}/: ${WORKER_FILE}, модуль
                                       resvg.wasm, metadata.json и build.json; без изменений ничего не пишет
   pnpm mcp preview                    превью MCP-сервера на 127.0.0.1/mcp в отдельном процессе Node с
@@ -624,6 +641,7 @@ const distCdnDir = join(root, "dist-cdn");
 const distNpmDir = join(root, NPM_OUT_DIR);
 const distApiDir = join(root, API_OUT_DIR);
 const distMcpDir = join(root, MCP_OUT_DIR);
+const distAccountDir = join(root, ACCOUNT_OUT_DIR);
 const embeddingsDir = join(root, ".cache", "embeddings");
 const evalDir = join(root, "docs", "eval");
 const queriesPath = join(evalDir, "queries.csv");
@@ -726,15 +744,17 @@ let searchMaxRub = DEFAULT_SEARCH_MAX_RUB;
 let port =
   command === "api"
     ? PREVIEW_PORT
-    : command === "mcp"
-      ? MCP_PREVIEW_PORT
-      : command === "sandbox"
-        ? SANDBOX_PORT
-        : command === "example"
-          ? EXAMPLE_PORT
-          : command === "site"
-            ? SITE_PORT
-            : PAGE_PORT;
+    : command === "account"
+      ? ACCOUNT_PREVIEW_PORT
+      : command === "mcp"
+        ? MCP_PREVIEW_PORT
+        : command === "sandbox"
+          ? SANDBOX_PORT
+          : command === "example"
+            ? EXAMPLE_PORT
+            : command === "site"
+              ? SITE_PORT
+              : PAGE_PORT;
 let waitSeconds = 0;
 let planPath: string | undefined;
 let expectBuild: string | undefined;
@@ -914,6 +934,7 @@ for (const flag of flags) {
   if (
     (command === "search-page" ||
       command === "api" ||
+      command === "account" ||
       command === "mcp" ||
       command === "sandbox" ||
       command === "example" ||
@@ -962,7 +983,7 @@ for (const flag of flags) {
     }
   }
   if (
-    (command === "api" || command === "mcp") &&
+    (command === "api" || command === "mcp" || command === "account") &&
     name === "--base" &&
     /^(https:\/\/[a-z0-9.-]+|http:\/\/127\.0\.0\.1:[0-9]{2,5})$/.test(
       value ?? "",
@@ -984,7 +1005,7 @@ for (const flag of flags) {
     continue;
   }
   if (
-    (command === "api" || command === "mcp") &&
+    (command === "api" || command === "mcp" || command === "account") &&
     name === "--expect-build" &&
     /^[0-9a-f]{8}$/.test(value ?? "")
   ) {
@@ -2765,6 +2786,57 @@ try {
     });
     console.log(
       `Превью edge API: http://127.0.0.1:${preview.port}/ — сборка ${preview.build}, данные из dist-cdn/. Остановить — Ctrl+C.`,
+    );
+  } else if (command === "account") {
+    const [sub, ...rest] = args;
+    if (
+      (sub !== "build" && sub !== "preview" && sub !== "check") ||
+      rest.length > 0 ||
+      (sub !== "preview" && flags.some((f) => f.startsWith("--port="))) ||
+      (sub !== "check" &&
+        (expectBuild !== undefined || benchBase !== undefined))
+    ) {
+      usageError(
+        "pnpm account: нужна подкоманда build, preview [--port=N] или check [--expect-build=…] [--base=…].",
+      );
+    }
+    if (sub === "build") {
+      const report = await buildAccount({ root, outDir: distAccountDir });
+      console.log(
+        `Сервис аккаунтов: ${ACCOUNT_OUT_DIR}/${WORKER_FILE} — ${formatBytes(report.bytes)}, в gzip ${formatBytes(report.gzipBytes)}; сборка ${report.build}.`,
+      );
+      console.log(
+        report.written.length === 0
+          ? "Без изменений: файлы на диске те же."
+          : `Записано: ${report.written.join(", ")}.`,
+      );
+      process.exit(0);
+    }
+    if (sub === "check") {
+      const report = await checkAccount({
+        ...(expectBuild === undefined ? {} : { expectBuild }),
+        ...(benchBase === undefined ? {} : { base: benchBase }),
+        log: (line) => console.log(`  ${line}`),
+      });
+      const lines = formatAccountCheck(report);
+      for (const line of lines) console.log(line);
+      const reportDir = join(reportsDir, "account");
+      await mkdir(reportDir, { recursive: true });
+      await writeFile(
+        join(reportDir, "check.md"),
+        `${lines.join("\n")}\n`,
+        "utf8",
+      );
+      process.exit(accountCheckFailed(report) ? 1 : 0);
+    }
+    const preview = await startAccountPreview({
+      root,
+      outDir: distAccountDir,
+      port,
+      samples: true,
+    });
+    console.log(
+      `Превью сервиса аккаунтов: ${preview.origin}/ — сборка ${preview.build}; база в памяти, письма — ${preview.origin}/__preview/mail (${preview.mail().length} для примера). Остановить — Ctrl+C.`,
     );
   } else if (command === "mcp") {
     const [sub, ...rest] = args;

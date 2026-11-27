@@ -9,6 +9,7 @@ dist-cdn/
 dist-npm/
 dist-api/
 dist-mcp/
+dist-account/
 dist-release/
 .next/
 next-env.d.ts

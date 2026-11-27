@@ -1,0 +1,10 @@
+{
+  "name": "@iconavo-ui/account",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@iconavo-ui/d1": "workspace:*",
+    "better-auth": "1.7.26"
+  }
+}
