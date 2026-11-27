@@ -32,6 +32,19 @@ export const MIGRATIONS: readonly Migration[] = [
       `create table "login_failures" ("key" text not null primary key, "count" integer not null, "expires" integer not null)`,
     ],
   },
+  {
+    id: 2,
+    name: "My account: письма (сводка, новости), фото и прежнее фото для «Undo»",
+    // Столбцы — только наши: Better Auth их не знает и в ответы сеанса не отдаёт, пишет и читает их сервис
+    // (profile.ts). Сводка подписок — по умолчанию да, новости — только по согласию (ADR-0055).
+    statements: [
+      `alter table "user" add column "digest" integer not null default 1`,
+      `alter table "user" add column "news" integer not null default 0`,
+      `alter table "user" add column "photo" text`,
+      `alter table "user" add column "photoPrev" text`,
+      `alter table "user" add column "photoPrevUntil" integer`,
+    ],
+  },
 ];
 
 const JOURNAL = `create table if not exists "iconavo_migrations" ("id" integer not null primary key, "name" text not null, "appliedAt" text not null)`;

@@ -90,14 +90,14 @@ export function decorate(
   });
 }
 
-/** Тело не длиннее max байт; длиннее — null, дочитывать не нужно (как у приёма /event edge API). */
-export async function readCapped(
+/** Тело не длиннее max байт — байтами; длиннее — null, дочитывать не нужно (как у приёма /event edge API). */
+export async function readCappedBytes(
   request: Request,
   max: number,
-): Promise<string | null> {
+): Promise<Uint8Array | null> {
   const declared = Number(request.headers.get("content-length"));
   if (Number.isFinite(declared) && declared > max) return null;
-  if (request.body === null) return "";
+  if (request.body === null) return new Uint8Array(0);
   const reader = request.body.getReader();
   const chunks: Uint8Array[] = [];
   let size = 0;
@@ -117,5 +117,14 @@ export async function readCapped(
     bytes.set(chunk, offset);
     offset += chunk.byteLength;
   }
-  return new TextDecoder().decode(bytes);
+  return bytes;
+}
+
+/** Тело не длиннее max байт — текстом; длиннее — null. */
+export async function readCapped(
+  request: Request,
+  max: number,
+): Promise<string | null> {
+  const bytes = await readCappedBytes(request, max);
+  return bytes === null ? null : new TextDecoder().decode(bytes);
 }

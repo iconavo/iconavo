@@ -24,6 +24,13 @@ export const ACCOUNT_DATABASE_ID = "e8e0aa82-9874-4bd2-b2f0-b67672c4a95e";
 /** Закрытый режим до /security-review (решение владельца 27 ноября 2026): регистрация — по списку. */
 export const ACCOUNT_ACCESS = "closed";
 
+/**
+ * Закрытый бакет фото профиля (шаг 3 фазы 5, PR 4а): R2 со строгой привязкой к ЕС (Jurisdiction EU), создан
+ * владельцем; привязка FILES — с jurisdiction "eu", иначе Cloudflare ищет бакет вне ЕС.
+ */
+export const ACCOUNT_FILES_BUCKET = "iconavo-account-files";
+export const ACCOUNT_FILES_JURISDICTION = "eu";
+
 /** Отправитель писем — единственный, кого пускает привязка send_email. */
 export const ACCOUNT_SENDER = "support@iconavo.dev";
 

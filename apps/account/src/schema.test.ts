@@ -33,7 +33,7 @@ describe("миграции", () => {
   it("повтор ничего не делает; другая копия успела раньше — не ошибка", async () => {
     const e = env();
     const [a, b] = await Promise.all([migrate(e.DB), migrate(e.DB)]);
-    expect([...(a ?? []), ...(b ?? [])].sort()).toEqual([1]);
+    expect([...(a ?? []), ...(b ?? [])].sort()).toEqual([1, 2]);
     expect(await migrate(e.DB)).toEqual([]);
     const tables = (
       await e.DB.prepare(
@@ -87,6 +87,7 @@ describe("уборка по расписанию", () => {
       sessions: 1,
       users: 1,
       failures: 1,
+      photos: 0,
     });
     const ids = async (table: string) =>
       (

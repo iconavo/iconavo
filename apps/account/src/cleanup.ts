@@ -6,12 +6,16 @@
 
 import type { D1Like } from "@iconavo-ui/d1";
 import { UNVERIFIED_TTL_MS } from "./config.js";
+import type { R2Like } from "./env.js";
+import { deleteObjects } from "./photos.js";
 
 export interface CleanupResult {
   codes: number;
   sessions: number;
   users: number;
   failures: number;
+  /** Прежние фото, у которых кончилось время «Undo» (PR 4а). */
+  photos: number;
 }
 
 const changes = (r: unknown): number => {
@@ -21,7 +25,11 @@ const changes = (r: unknown): number => {
 
 const UNVERIFIED = `select "id" from "user" where "emailVerified" = 0 and "createdAt" < ?`;
 
-export async function cleanup(db: D1Like, now: number): Promise<CleanupResult> {
+export async function cleanup(
+  db: D1Like,
+  now: number,
+  files?: R2Like,
+): Promise<CleanupResult> {
   const iso = new Date(now).toISOString();
   const stale = new Date(now - UNVERIFIED_TTL_MS).toISOString();
   const [codes, sessions, , , users, failures] = await db.batch([
@@ -40,10 +48,29 @@ export async function cleanup(db: D1Like, now: number): Promise<CleanupResult> {
       .bind(stale),
     db.prepare(`delete from "login_failures" where "expires" < ?`).bind(now),
   ]);
+  // Прежние фото после «Undo»: сначала файлы, потом строки — не вышло с файлами, строки остаются до
+  // следующего запуска.
+  const { results: stalePhotos } = await db
+    .prepare(
+      `select "photoPrev" from "user" where "photoPrevUntil" is not null and "photoPrevUntil" < ?`,
+    )
+    .bind(now)
+    .all<{ photoPrev: string | null }>();
+  await deleteObjects(
+    files,
+    stalePhotos.map((r) => r.photoPrev),
+  );
+  const photos = await db
+    .prepare(
+      `update "user" set "photoPrev" = null, "photoPrevUntil" = null where "photoPrevUntil" is not null and "photoPrevUntil" < ?`,
+    )
+    .bind(now)
+    .run();
   return {
     codes: changes(codes),
     sessions: changes(sessions),
     users: changes(users),
     failures: changes(failures),
+    photos: changes(photos),
   };
 }
