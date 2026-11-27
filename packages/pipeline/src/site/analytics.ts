@@ -6,7 +6,7 @@
 // открытие из поиска; скачивание со временем от входа на сайт; успех поиска с одним запросом. С сигналом
 // Global Privacy Control — ни одного события. Контрольный запуск портит события — их отбрасывает приём.
 
-import type { D1Like } from "@iconavo-ui/analytics/db";
+import type { D1Like } from "@iconavo-ui/d1";
 import type { Browser, BrowserContext, Page } from "playwright";
 import {
   allViolations,

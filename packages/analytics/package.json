@@ -5,8 +5,7 @@
   "type": "module",
   "exports": {
     ".": "./dist/index.js",
-    "./db": "./dist/db.js",
-    "./sqlite": "./dist/sqlite.js"
+    "./db": "./dist/db.js"
   },
   "sideEffects": false,
   "scripts": {
@@ -14,6 +13,7 @@
   },
   "dependencies": {
     "@iconavo-ui/core": "workspace:*",
+    "@iconavo-ui/d1": "workspace:*",
     "@iconavo-ui/search": "workspace:*"
   }
 }

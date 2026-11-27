@@ -1,6 +1,6 @@
 // Общий модуль аналитики (шаг 2 фазы 5, ADR-0043): список событий для сайта, приёма `POST /event`
-// edge API и отчёта `pnpm analytics`. База — отдельный вход `@iconavo-ui/analytics/db`, база поверх
-// node:sqlite для тестов и превью — `@iconavo-ui/analytics/sqlite`: сайту они не нужны.
+// edge API и отчёта `pnpm analytics`. База — отдельный вход `@iconavo-ui/analytics/db`: сайту он не
+// нужен. База поверх node:sqlite для тестов и превью — общий модуль `@iconavo-ui/d1/sqlite`.
 
 export {
   BATCH_VERSION,
@@ -32,3 +32,12 @@ export {
   STYLE_WHERE,
   TEST_HEADER,
 } from "./events.js";
+export {
+  type ParsedReportQuery,
+  parseReportQuery,
+  REPORT_MAX_BODY_BYTES,
+  REPORT_MAX_PARAMS,
+  REPORT_PATH,
+  type ReportQuery,
+  type ReportValue,
+} from "./report.js";

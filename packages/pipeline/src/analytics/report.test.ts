@@ -2,17 +2,18 @@ import { DatabaseSync } from "node:sqlite";
 import type { SiteEvent } from "@iconavo-ui/analytics";
 import {
   type Arrival,
-  type D1Like,
   eventStatements,
   hourOf,
   rejectStatements,
   rollup,
   schemaStatements,
 } from "@iconavo-ui/analytics/db";
-import { sqliteD1 } from "@iconavo-ui/analytics/sqlite";
+import type { D1Like } from "@iconavo-ui/d1";
+import { sqliteD1 } from "@iconavo-ui/d1/sqlite";
 import { describe, expect, it } from "vitest";
+import worker from "../../../../apps/api/src/index.js";
 import { formatAnalytics, renderAnalyticsPage } from "./page.js";
-import { dbReader, httpReader, ReaderError } from "./reader.js";
+import { apiReader, dbReader, ReaderError } from "./reader.js";
 import { buildReport, median, successRate } from "./report.js";
 
 const DAY_MS = 86_400_000;
@@ -193,84 +194,102 @@ describe("отчёт аналитики", () => {
   });
 });
 
-describe("чтение живой базы через API Cloudflare", () => {
-  const options = {
-    accountId: "a".repeat(32),
-    databaseId: "57b4a761-665e-4fe1-9623-94f9f9936239",
-    token: "secret-token",
-    sleep: async () => {},
-  };
+describe("чтение живой базы через edge API", () => {
+  const options = { key: "secret-key", sleep: async () => {} };
 
-  it("запрос с параметрами и ключом; строки — из result[0].results", async () => {
+  it("запрос с параметрами и ключом на /analytics/query; строки — из results", async () => {
     const calls: { url: string; init?: RequestInit }[] = [];
-    const reader = httpReader({
+    const reader = apiReader({
       ...options,
       fetch: async (url, init) => {
         calls.push({ url: String(url), init });
-        return Response.json({
-          success: true,
-          errors: [],
-          result: [{ success: true, results: [{ n: 3 }] }],
-        });
+        return Response.json({ results: [{ n: 3 }] });
       },
     });
     expect(await reader.all("SELECT ? AS n", [3])).toEqual([{ n: 3 }]);
-    expect(calls[0]?.url).toBe(
-      `https://api.cloudflare.com/client/v4/accounts/${"a".repeat(32)}/d1/database/57b4a761-665e-4fe1-9623-94f9f9936239/query`,
-    );
+    expect(calls[0]?.url).toBe("https://api.iconavo.dev/analytics/query");
     expect(new Headers(calls[0]?.init?.headers).get("authorization")).toBe(
-      "Bearer secret-token",
+      "Bearer secret-key",
     );
     expect(JSON.parse(String(calls[0]?.init?.body))).toEqual({
       sql: "SELECT ? AS n",
       params: [3],
     });
-  });
-
-  it("ключ не принят — понятная причина, без ключа в тексте", async () => {
-    const reader = httpReader({
+    const preview = apiReader({
       ...options,
-      fetch: async () =>
-        Response.json(
-          {
-            success: false,
-            errors: [{ code: 10000, message: "Authentication error" }],
-          },
-          { status: 403 },
-        ),
+      base: "http://127.0.0.1:4281",
+      fetch: async (url) => {
+        calls.push({ url: String(url) });
+        return Response.json({ results: [] });
+      },
     });
-    const error = await reader.all("SELECT 1").catch((e: unknown) => e);
-    expect(error).toBeInstanceOf(ReaderError);
-    expect((error as Error).message).toMatch(
-      /ANALYTICS_READ_TOKEN не принят \(403\)/,
-    );
-    expect((error as Error).message).not.toContain("secret-token");
+    await preview.all("SELECT 1");
+    expect(calls[1]?.url).toBe("http://127.0.0.1:4281/analytics/query");
   });
 
-  it("временный сбой — повтор; ошибка запроса — текст Cloudflare", async () => {
+  it.each([
+    [401, /ANALYTICS_REPORT_KEY не принят \(401\)/],
+    [404, /нет ключа отчёта \(404\)/],
+  ])(
+    "ответ %i — понятная причина, без ключа в тексте",
+    async (status, text) => {
+      const reader = apiReader({
+        ...options,
+        fetch: async () =>
+          Response.json({ status, error: "unauthorized" }, { status }),
+      });
+      const error = await reader.all("SELECT 1").catch((e: unknown) => e);
+      expect(error).toBeInstanceOf(ReaderError);
+      expect((error as Error).message).toMatch(text);
+      expect((error as Error).message).not.toContain("secret-key");
+    },
+  );
+
+  it("временный сбой — повтор; ошибка запроса — текст функции", async () => {
     let n = 0;
-    const flaky = httpReader({
+    const flaky = apiReader({
       ...options,
       fetch: async () =>
         ++n === 1
           ? new Response("busy", { status: 503 })
-          : Response.json({ success: true, result: [{ results: [] }] }),
+          : Response.json({ results: [] }),
     });
     expect(await flaky.all("SELECT 1")).toEqual([]);
     expect(n).toBe(2);
-    const broken = httpReader({
+    const broken = apiReader({
       ...options,
       fetch: async () =>
         Response.json(
           {
-            success: false,
-            errors: [{ code: 7500, message: "no such table: events" }],
+            status: 400,
+            error: "query_failed",
+            message: "D1_ERROR: no such table: events: SQLITE_ERROR",
           },
           { status: 400 },
         ),
     });
     await expect(broken.all("SELECT * FROM events")).rejects.toThrow(
-      "Cloudflare ответил 400: no such table: events",
+      "запрос отчёта отклонён (400): D1_ERROR: no such table: events: SQLITE_ERROR",
+    );
+  });
+
+  it("отчёт на настоящей функции edge API: те же строки, что из базы напрямую", async () => {
+    const db = await seeded();
+    const key = "k".repeat(43);
+    const env = {
+      CDN: { get: async () => null },
+      ANALYTICS: db,
+      ANALYTICS_REPORT_KEY: key,
+    };
+    const reader = apiReader({
+      key,
+      fetch: async (url, init) =>
+        worker.fetch(new Request(String(url), init), env, {
+          waitUntil: () => {},
+        }),
+    });
+    expect(await buildReport(reader, NOW, 8)).toEqual(
+      await buildReport(dbReader(db), NOW, 8),
     );
   });
 });

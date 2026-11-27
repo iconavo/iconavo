@@ -11,6 +11,7 @@
   "dependencies": {
     "@anthropic-ai/sdk": "0.135.0",
     "@iconavo-ui/analytics": "workspace:*",
+    "@iconavo-ui/d1": "workspace:*",
     "@iconavo-ui/schema": "workspace:*",
     "@iconavo-ui/search": "workspace:*",
     "@iconavo-ui/snippets": "workspace:*",

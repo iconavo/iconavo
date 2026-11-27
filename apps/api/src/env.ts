@@ -2,7 +2,7 @@
 // новая зависимость ради нескольких строк не нужна. Хранилища раздачи и поиска функция только читает:
 // у привязок R2 есть и запись, но код её не вызывает (ADR-0028). Пишет она только в базу аналитики.
 
-import type { D1Like } from "@iconavo-ui/analytics/db";
+import type { D1Like } from "@iconavo-ui/d1";
 
 /** Объект R2 с телом — часть R2ObjectBody. */
 export interface StoredObject {
@@ -49,6 +49,11 @@ export interface Env {
   EVENT_LIMIT?: RateLimiter;
   /** Страницы, с которых /event берёт события, через запятую. Только у превью: в Cloudflare его нет. */
   EVENT_ORIGINS?: string;
+  /**
+   * Ключ чтения базы аналитики для отчёта pnpm analytics — `POST /analytics/query` (шаг 3 фазы 5,
+   * ADR-0055): секрет окружения GitHub api. Нет — адреса для отчёта нет.
+   */
+  ANALYTICS_REPORT_KEY?: string;
 }
 
 /** Контекст запроса — часть ExecutionContext. */

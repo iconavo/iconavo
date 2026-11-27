@@ -2,9 +2,9 @@
 // отдаёт те же файлы, что лежат в «бакете», а «Cloudflare» добавляет Server и сжатие.
 
 import { DatabaseSync } from "node:sqlite";
-import { EVENT_PATH } from "@iconavo-ui/analytics";
-import type { D1Like } from "@iconavo-ui/analytics/db";
-import { sqliteD1 } from "@iconavo-ui/analytics/sqlite";
+import { EVENT_PATH, REPORT_PATH } from "@iconavo-ui/analytics";
+import type { D1Like } from "@iconavo-ui/d1";
+import { sqliteD1 } from "@iconavo-ui/d1/sqlite";
 import { describe, expect, it } from "vitest";
 import { handleEvent } from "../../../../apps/api/src/event.js";
 import {
@@ -16,6 +16,7 @@ import {
 } from "../../../../apps/api/src/fake.testing.js";
 import { createHandler } from "../../../../apps/api/src/handler.js";
 import { compactJson } from "../../../../apps/api/src/json.js";
+import { handleReport } from "../../../../apps/api/src/report.js";
 import type { FetchFn } from "../sources/npm.js";
 import { apiCheckFailed, checkApi } from "./check.js";
 import { formatApiCheckSummary } from "./check-report.js";
@@ -86,6 +87,8 @@ function world(
     breakCollections?: boolean;
     /** База аналитики не привязана к функции: /event отвечает 503. */
     noAnalytics?: boolean;
+    /** Функция выложена без ключа отчёта: /analytics/query отвечает 404. */
+    noReportKey?: boolean;
   } = {},
 ) {
   const analytics: D1Like = sqliteD1(new DatabaseSync(":memory:"));
@@ -152,6 +155,12 @@ function world(
         { now: () => Date.UTC(2026, 10, 26, 12) + time },
       );
     }
+    if (url.pathname === REPORT_PATH) {
+      return handleReport(new Request(url, init), {
+        ANALYTICS: analytics,
+        ...(o.noReportKey ? {} : { ANALYTICS_REPORT_KEY: "k".repeat(43) }),
+      });
+    }
     const res = await handler(new Request(url), w.waitUntil);
     await w.flush();
     const headers = new Headers(res.headers);
@@ -176,6 +185,24 @@ function world(
 }
 
 describe("checkApi", () => {
+  it("чтение для отчёта: функция с ключом — 401 без ключа проверки; без ключа — 404 с подсказкой", async () => {
+    const w = world();
+    const report = await checkApi({ fetch: w.fetchFn, ...w.clock });
+    const target = report.targets.find((t) => t.kind === "report");
+    expect([target?.status, target?.issues]).toEqual([401, []]);
+    const bare = world({ noReportKey: true });
+    const missing = await checkApi({ fetch: bare.fetchFn, ...bare.clock });
+    expect(
+      missing.targets
+        .find((t) => t.kind === "report")
+        ?.issues.map((i) => i.message),
+    ).toEqual([
+      expect.stringMatching(
+        /^ответ 404: у функции нет ключа ANALYTICS_REPORT_KEY/,
+      ),
+    ]);
+  });
+
   it("приём /event: проверочная пачка записана с пометкой, отказы — тоже помечены", async () => {
     const w = world();
     const report = await checkApi({ fetch: w.fetchFn, ...w.clock });
@@ -237,6 +264,7 @@ describe("checkApi", () => {
       "event",
       "event-invalid",
       "event-origin",
+      "report",
       "redirect",
     ]);
     // Манифест без catalog — каталог не проверялся, это не проблема.
@@ -289,6 +317,7 @@ describe("checkApi", () => {
       "event",
       "event-invalid",
       "event-origin",
+      "report",
       "redirect",
     ]);
     expect(
