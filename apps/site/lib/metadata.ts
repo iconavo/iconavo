@@ -23,3 +23,11 @@ export function searchMetadata(lang: Lang): Metadata {
     robots: { index: false, follow: false },
   };
 }
+
+/** Кабинет «Account»: личная страница — не индексируется никогда (шаг 3 фазы 5, PR 4). */
+export function accountMetadata(lang: Lang): Metadata {
+  return {
+    title: DICTIONARIES[lang].accountTitle,
+    robots: { index: false, follow: false },
+  };
+}

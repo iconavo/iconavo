@@ -6,9 +6,9 @@ import {
   contentSecurityPolicy,
   INDEXING,
   iconHosts,
+  noindexHeaders,
   ROBOTS,
   robotsRules,
-  searchRobotsHeaders,
   siteHeaders,
 } from "./headers";
 
@@ -88,16 +88,24 @@ describe("заголовки сайта", () => {
   });
 });
 
-describe("страницы поиска не индексируются никогда (ADR-0039)", () => {
+describe("поиск и кабинет не индексируются никогда (ADR-0039)", () => {
   it("пока сайт скрыт — метка и так на всех страницах; после запуска — отдельно у поиска", () => {
-    expect(searchRobotsHeaders(false)).toEqual([]);
-    expect(searchRobotsHeaders(true)).toEqual([
+    expect(noindexHeaders(false)).toEqual([]);
+    expect(noindexHeaders(true)).toEqual([
       {
         source: "/search",
         headers: [{ key: "X-Robots-Tag", value: "noindex, nofollow" }],
       },
       {
         source: "/ru/search",
+        headers: [{ key: "X-Robots-Tag", value: "noindex, nofollow" }],
+      },
+      {
+        source: "/account",
+        headers: [{ key: "X-Robots-Tag", value: "noindex, nofollow" }],
+      },
+      {
+        source: "/ru/account",
         headers: [{ key: "X-Robots-Tag", value: "noindex, nofollow" }],
       },
     ]);

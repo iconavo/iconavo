@@ -1,11 +1,19 @@
 // Всплывающее сообщение (кадр «L2 · Log Out / Logged Out» макета): одно на страницу, справа сверху под
-// верхней полосой, само уходит через 5 секунд; ✕ — сразу. Отмены у выхода нет (решение владельца
-// 27 ноября 2026): выход происходит сразу — так безопаснее на чужом компьютере.
+// верхней полосой, само уходит через 5 секунд; ✕ — сразу. «Undo» — только там, где отмена честная
+// (решение владельца 27 ноября 2026): фото, имя и письма в кабинете; у выхода, почты, пароля, Google и
+// удаления его нет.
 
 import { useSyncExternalStore } from "react";
 
+export interface ToastAction {
+  label: string;
+  run: () => void;
+}
+
 export interface Toast {
   text: string;
+  /** «Undo» — где отмена честная. */
+  action?: ToastAction;
   /** Новое сообщение — новое число: таймер начинается заново. */
   serial: number;
 }
@@ -23,9 +31,9 @@ const notify = () => {
 
 export const toastStore = {
   get: (): Toast | null => current,
-  show(text: string) {
+  show(text: string, action?: ToastAction) {
     serial += 1;
-    current = { text, serial };
+    current = { text, serial, ...(action === undefined ? {} : { action }) };
     notify();
   },
   hide(which?: number) {

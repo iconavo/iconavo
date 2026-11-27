@@ -7,7 +7,10 @@ import {
   googleReturn,
   googleUrls,
   initialOf,
+  linkUrls,
   messageOf,
+  photoOf,
+  photoUrl,
   type Reply,
   request,
   secondsLeft,
@@ -78,6 +81,25 @@ describe("адрес страницы", () => {
       code: "",
     });
     expect(googleReturn("?account=other")).toBeUndefined();
+    // Подключение Google в кабинете (PR 4): исход и код ошибки Better Auth.
+    expect(googleReturn("?account=linked")).toEqual({ kind: "linked" });
+    expect(
+      googleReturn("?account=link-error&error=email_doesn't_match"),
+    ).toEqual({ kind: "link-error", code: "email_doesn't_match" });
+  });
+
+  it("подключение Google возвращает в кабинет — с отметкой исхода", () => {
+    expect(
+      linkUrls("https://iconavo.dev/ru/account?accounts=on&account=linked#x"),
+    ).toEqual({
+      callbackURL: "https://iconavo.dev/ru/account?account=linked",
+      errorCallbackURL: "https://iconavo.dev/ru/account?account=link-error",
+    });
+    expect(
+      withoutAccountParams(
+        "https://iconavo.dev/account?account=link-error&error=email_doesn%27t_match",
+      ),
+    ).toBe("https://iconavo.dev/account");
   });
 
   it("Google возвращает на эту же страницу, без якоря и служебных параметров", () => {
@@ -137,9 +159,53 @@ describe("поля окна", () => {
     expect(userOf(null)).toBeUndefined();
     expect(userOf({ session: {} })).toBeUndefined();
   });
+
+  it("фото из сеанса — адрес файла у сервиса; чужое — буква", () => {
+    const name = `${"0123456789abcdef".repeat(2)}.jpg`;
+    expect(photoOf(`photos/user-1/${name}`)).toBe(
+      `${ACCOUNT}/api/account/photo/${name}`,
+    );
+    expect(
+      userOf({
+        user: { email: "a@b.cd", name: "A", photo: `photos/u/${name}` },
+      }),
+    ).toEqual({
+      email: "a@b.cd",
+      name: "A",
+      photo: `${ACCOUNT}/api/account/photo/${name}`,
+    });
+    // Не наше имя файла, ссылка на чужой сервер, не строка — без фото.
+    expect(photoOf(`photos/u/${"0".repeat(32)}xjpg`)).toBeUndefined();
+    expect(
+      photoOf("https://lh3.googleusercontent.com/a/x=s96-c"),
+    ).toBeUndefined();
+    expect(photoOf(null)).toBeUndefined();
+    expect(photoUrl(`/api/account/photo/${name}`)).toBe(
+      `${ACCOUNT}/api/account/photo/${name}`,
+    );
+    expect(photoUrl(null)).toBeUndefined();
+  });
 });
 
 describe("запросы к сервису", () => {
+  it("фото — байтами картинки, тип — из файла", async () => {
+    const f = fakeFetch(json({ photo: "/api/account/photo/x.jpg" }));
+    const blob = new Blob([new Uint8Array([0xff, 0xd8, 0xff])], {
+      type: "image/jpeg",
+    });
+    const reply = await request("/api/account/photo", {
+      image: blob,
+      fetchFn: f.fn,
+    });
+    expect(reply.ok).toBe(true);
+    const init = f.calls[0]?.init ?? {};
+    expect(init.method).toBe("POST");
+    expect((init.headers as Record<string, string>)["content-type"]).toBe(
+      "image/jpeg",
+    );
+    expect(init.body).toBe(blob);
+  });
+
   it("POST с cookie, JSON, Turnstile и языком писем", async () => {
     const f = fakeFetch(json({ success: true }));
     const reply = await request("/api/account/sign-up", {

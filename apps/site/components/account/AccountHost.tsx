@@ -18,7 +18,21 @@ export function AccountHost({ lang }: { lang: Lang }) {
   const open = usePanelOpen(authPanelStore);
   const [loaded, setLoaded] = useState(false);
 
-  useEffect(() => startAccount(), []);
+  // Возврат после подключения Google в кабинете — сообщением (PR 4).
+  useEffect(
+    () =>
+      startAccount((kind, code) => {
+        const t = DICTIONARIES[lang];
+        toastStore.show(
+          kind === "linked"
+            ? t.toastGoogleConnected
+            : /email/i.test(code)
+              ? t.cabinetErrorGoogleEmail
+              : t.cabinetErrorGoogle,
+        );
+      }),
+    [lang],
+  );
 
   useEffect(() => {
     if (open) setLoaded(true);
@@ -56,6 +70,18 @@ function ToastView({ lang }: { lang: Lang }) {
         <div className="toast" key={toast.serial}>
           <Icon icon="material-symbols:info" className="toast-icon" />
           <span className="toast-text">{toast.text}</span>
+          {toast.action === undefined ? null : (
+            <button
+              type="button"
+              className="toast-action"
+              onClick={() => {
+                toast.action?.run();
+                toastStore.hide(toast.serial);
+              }}
+            >
+              {toast.action.label}
+            </button>
+          )}
           <button
             type="button"
             className="toast-close"

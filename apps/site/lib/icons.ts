@@ -19,6 +19,7 @@ export const SITE_ICONS = [
   // сплошные варианты. Свои рисунки макета — набор site: (lib/site-icons.ts), цветные картинки —
   // public/logos (components/shell/Logos.tsx).
   "material-symbols:account-circle",
+  "material-symbols:add",
   "material-symbols:arrow-back",
   "material-symbols:arrow-forward",
   "material-symbols:arrow-menu-close",
@@ -49,12 +50,15 @@ export const SITE_ICONS = [
   "material-symbols:link",
   "material-symbols:link-2",
   "material-symbols:list",
+  "material-symbols:lock-outline",
   "material-symbols:logout",
+  "material-symbols:mail-outline",
   "material-symbols:menu",
   "material-symbols:moon-stars",
   "material-symbols:open-in-new",
   "material-symbols:radio-button-checked",
   "material-symbols:radio-button-unchecked",
+  "material-symbols:remove",
   "material-symbols:report",
   "material-symbols:request-quote",
   "material-symbols:reset-settings",

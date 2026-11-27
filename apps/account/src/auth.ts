@@ -119,6 +119,9 @@ export function createAuth(env: Env, o: AuthOptions) {
           defaultValue: "en",
           input: true,
         },
+        // Ключ фото (PR 4): в ответе сеанса — чтобы меню и «Your Plan» показали фото без лишнего
+        // запроса. Пишет его только сервис (profile.ts, photos.ts), снаружи не задать.
+        photo: { type: "string", required: false, input: false },
       },
     },
     advanced: {
