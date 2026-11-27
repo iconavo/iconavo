@@ -3,6 +3,12 @@
 // фазы 7. robots.txt обход поисковикам не запрещает: иначе поисковик не прочитал бы и саму метку.
 // ИИ-обходчикам до запуска обход закрыт (AI_CRAWLERS, ADR-0039).
 
+import {
+  accountUrl,
+  DEFAULT_ACCOUNT,
+  DEFAULT_TURNSTILE,
+} from "./account-config";
+
 /** Показывать ли сайт поисковикам. До запуска 1 июня 2027 — нет. */
 export const INDEXING = false;
 
@@ -94,19 +100,45 @@ export function iconHosts(env: Record<string, string | undefined>): string[] {
   return own.length > 0 ? [...new Set(own)] : DEFAULT_HOSTS;
 }
 
+/** Хосты аккаунтов (шаг 3 фазы 5, PR 3; ADR-0055): сервис аккаунтов и Turnstile. */
+export interface AccountHosts {
+  service: string;
+  turnstile: string;
+}
+
+/** Свои — из окружения проверки и pnpm site --account (превью сервиса), иначе живые. */
+export function accountHosts(
+  env: Record<string, string | undefined>,
+): AccountHosts {
+  return {
+    service: new URL(
+      accountUrl(env.NEXT_PUBLIC_ICONAVO_ACCOUNT, DEFAULT_ACCOUNT),
+    ).origin,
+    turnstile: new URL(
+      accountUrl(env.NEXT_PUBLIC_ICONAVO_TURNSTILE, DEFAULT_TURNSTILE),
+    ).origin,
+  };
+}
+
 /**
  * Политика безопасности: стили только файлами сайта — пакет не ставит атрибутов style, его лист стилей
  * добавляет скрипт. Встроенным скриптам Next.js нужен 'unsafe-inline': nonce сделал бы все страницы
- * динамическими.
+ * динамическими (Б-7 закрыт без nonce и хэшей, решение владельца 27 ноября 2026: вставки HTML строкой в
+ * коде сайта нет — lib/no-html.test.ts). Сервис аккаунтов — в connect-src (вход, сеанс) и img-src (фото —
+ * PR 4); Turnstile — в script-src и frame-src: его скрипт и рамка виджета, больше сторонних скриптов нет.
  */
-export function contentSecurityPolicy(hosts: string[]): string {
+export function contentSecurityPolicy(
+  hosts: string[],
+  account: AccountHosts = accountHosts({}),
+): string {
   return [
     "default-src 'self'",
-    "script-src 'self' 'unsafe-inline'",
+    `script-src 'self' 'unsafe-inline' ${account.turnstile}`,
     "style-src 'self'",
-    `connect-src 'self' ${hosts.join(" ")}`,
-    "img-src 'self' data:",
+    `connect-src 'self' ${hosts.join(" ")} ${account.service}`,
+    `img-src 'self' data: ${account.service}`,
     "font-src 'self'",
+    `frame-src ${account.turnstile}`,
     "object-src 'none'",
     "base-uri 'self'",
     "form-action 'self'",
@@ -119,13 +151,14 @@ export function siteHeaders(o: {
   production: boolean;
   build: string;
   hosts: string[];
+  account?: AccountHosts;
 }): { key: string; value: string }[] {
   return [
     ...(o.production
       ? [
           {
             key: "Content-Security-Policy",
-            value: contentSecurityPolicy(o.hosts),
+            value: contentSecurityPolicy(o.hosts, o.account),
           },
         ]
       : []),

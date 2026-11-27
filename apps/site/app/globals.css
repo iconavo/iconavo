@@ -6004,4 +6004,663 @@
       padding: 1rem 1rem 1.5rem;
     }
   }
+  /*
+   * Аккаунт (шаг 3 фазы 5, PR 3; макеты «Авторизация / Регистрация / Забыли пароль» и «Личный кабинет»):
+   * «Log In» и аватар в верхней полосе, меню аккаунта, «Your Plan» в боковой панели, сообщение и окно
+   * входа. Размеры — по кадрам макета, цвета — токены.
+   */
+  .account-log-in {
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--color-text-primary);
+    font: inherit;
+    font-size: var(--text-body-sm);
+    line-height: var(--text-body-sm--line-height);
+    font-weight: 500;
+    white-space: nowrap;
+    cursor: pointer;
+  }
+  .account-log-in:hover {
+    color: var(--color-text-primary-hover);
+  }
+  /* Аватар без фото — первая буква в круге 28 px (решение владельца 27 ноября 2026). */
+  .account-avatar {
+    font-size: var(--text-body-sm);
+    line-height: 1;
+    user-select: none;
+  }
+  button.topbar-account {
+    cursor: pointer;
+  }
+
+  /* Меню аккаунта на компьютере (кадр «A1 · Account / Account Menu»): 224 px, пункты 30 px со значком. */
+  .account-menu {
+    z-index: 50;
+    width: 14rem;
+    padding: 0.25rem;
+    border-radius: var(--radius-lg);
+    background: var(--color-bg-surface-muted);
+    color: var(--color-text-primary);
+    box-shadow: var(--shadow-md);
+    font-size: var(--text-body-base);
+    line-height: var(--text-body-base--line-height);
+  }
+  .account-menu-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    width: 100%;
+    min-height: 1.875rem;
+    padding: 0.375rem 0.5rem;
+    border: 0;
+    border-radius: var(--radius-md);
+    background: none;
+    color: inherit;
+    font: inherit;
+    font-weight: 500;
+    text-align: start;
+    text-decoration: none;
+    outline: none;
+    cursor: pointer;
+    user-select: none;
+  }
+  .account-menu-item[data-highlighted],
+  .account-sheet .account-menu-item:not([aria-disabled="true"]):hover {
+    background: var(--color-bg-surface-strong);
+  }
+  .account-menu-item[data-disabled],
+  .account-menu-item[aria-disabled="true"] {
+    cursor: default;
+  }
+  .account-menu-icon {
+    flex: none;
+    font-size: 1rem;
+    opacity: 0.5;
+  }
+  .account-menu-item[data-highlighted] .account-menu-icon {
+    opacity: 1;
+  }
+  .account-menu-label {
+    flex: 1;
+    min-width: 0;
+  }
+  .account-menu-soon {
+    flex: none;
+    color: var(--color-text-secondary);
+    font-size: var(--text-body-xs);
+    line-height: var(--text-body-xs--line-height);
+    font-weight: 400;
+  }
+  .account-menu-separator {
+    height: 1px;
+    margin-block: 0.25rem;
+    background: var(--color-border-secondary);
+  }
+  .account-menu-caption {
+    display: grid;
+    padding: 0.125rem 0.5rem 0.5rem;
+    color: var(--color-text-secondary);
+    font-size: var(--text-body-sm);
+    line-height: var(--text-body-sm--line-height);
+    font-weight: 500;
+  }
+  .account-menu-email {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  /* Меню на телефоне (кадр «A1 · Account / Mobile — Account Menu»): шторка с ручкой и теми же пунктами. */
+  .account-sheet-grabber {
+    display: flex;
+    justify-content: center;
+    width: 100%;
+    padding: 0 0 0.25rem;
+    border: 0;
+    background: none;
+    cursor: pointer;
+  }
+  .account-sheet-grabber .ip-sheet-handle {
+    margin: 0;
+  }
+  .account-sheet-list {
+    display: grid;
+    margin: 0;
+    padding: 0.25rem 0.5rem 0.625rem;
+    list-style: none;
+  }
+  .account-sheet-separated {
+    margin-top: 0.25rem;
+    padding-top: 0.25rem;
+    border-top: 1px solid var(--color-border-secondary);
+  }
+
+  /* «Your Plan»: гостю — вход, вошедшему — аватар 24 px и имя или почта, длинное — многоточием. */
+  div.account-plan {
+    cursor: default;
+  }
+  button.account-plan {
+    cursor: pointer;
+  }
+  button.account-plan[aria-disabled="true"] {
+    cursor: default;
+  }
+  .account-plan .sidebar-plan-info,
+  .account-plan .sidebar-plan-tier {
+    min-width: 0;
+  }
+  .account-plan-avatar {
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    justify-content: center;
+    width: 1.5rem;
+    height: 1.5rem;
+    border-radius: 9999px;
+    background: var(--color-bg-surface-strong);
+    color: var(--color-text-primary);
+    font-size: var(--text-body-xs);
+    font-weight: 500;
+    line-height: 1;
+  }
+  .account-plan-avatar > svg {
+    font-size: 1rem;
+  }
+  .account-plan-name {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  /*
+   * Сообщение (кадр «L2 · Log Out / Logged Out»): 280 px справа под верхней полосой, значок, текст и ✕;
+   * на телефоне — во всю ширину под верхней полосой.
+   */
+  .toast-region {
+    position: fixed;
+    top: 4.125rem;
+    right: 2.5rem;
+    z-index: 80;
+    display: grid;
+    justify-items: end;
+    pointer-events: none;
+  }
+  .toast {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    width: 17.5rem;
+    max-width: calc(100vw - 2rem);
+    padding: 0.625rem 0.625rem 0.625rem 1rem;
+    border: 1px solid var(--color-border-secondary-20);
+    border-radius: var(--radius-lg);
+    background: var(--color-bg-surface-strong);
+    box-shadow: var(--shadow-md);
+    color: var(--color-text-primary);
+    font-size: var(--text-body-base);
+    line-height: var(--text-body-base--line-height);
+    font-weight: 500;
+    pointer-events: auto;
+  }
+  .toast-icon {
+    flex: none;
+    font-size: 1.25rem;
+    color: var(--color-text-secondary);
+  }
+  .toast-text {
+    flex: 1;
+    min-width: 0;
+  }
+  .toast-close {
+    display: inline-flex;
+    flex: none;
+    padding: 0;
+    border: 0;
+    background: none;
+    color: inherit;
+    font-size: 1rem;
+    cursor: pointer;
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .toast {
+      animation: toast-in var(--motion-fade) var(--motion-ease-out);
+    }
+  }
+  @keyframes toast-in {
+    from {
+      opacity: 0;
+      translate: 0 -0.5rem;
+    }
+  }
+
+  /*
+   * Окно входа (кадры «Log In / …», «Sign Up / …», «Reset Password / …»): 880 px, скругление 16 px; слева
+   * форма 400 px на bg/surfaceMuted, справа градиент. Модальное (<dialog> с showModal): затемнение —
+   * bg/overlay. Высота — не меньше 552 px, форма растягивается, низ с вопросом — у нижнего края.
+   */
+  .auth-dialog {
+    width: 55rem;
+    max-width: calc(100vw - 2rem);
+    max-height: calc(100dvh - 2rem);
+    margin: auto;
+    padding: 0;
+    overflow-x: hidden;
+    overflow-y: auto;
+    border: 0;
+    border-radius: 1rem;
+    background: var(--color-bg-surface-muted);
+    color: var(--color-text-primary);
+    font-size: var(--text-body-base);
+    line-height: var(--text-body-base--line-height);
+  }
+  .auth-dialog[open] {
+    display: flex;
+  }
+  .auth-dialog::backdrop {
+    background: var(--color-bg-overlay);
+  }
+  .auth-panel {
+    display: flex;
+    flex: none;
+    flex-direction: column;
+    width: 25rem;
+    min-height: 34.5rem;
+  }
+  /* Градиент макета — от accent/lemon к link/unicode тёмной темы: токены тёмной темы в любой. */
+  .auth-art {
+    flex: 1;
+    color-scheme: dark;
+    background: linear-gradient(
+      to bottom right,
+      var(--color-accent-lemon),
+      var(--color-link-unicode)
+    );
+  }
+  .auth-handle {
+    display: none;
+  }
+  .auth-head {
+    display: grid;
+    gap: 1.5rem;
+    padding: 1.5rem;
+  }
+  .auth-nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .auth-nav-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--color-text-primary);
+    font: inherit;
+    font-size: var(--text-body-sm);
+    line-height: var(--text-body-xs--line-height);
+    cursor: pointer;
+  }
+  .auth-nav-icon {
+    font-size: 1rem;
+  }
+  .auth-title-group {
+    display: grid;
+    gap: 0.5rem;
+  }
+  .auth-title {
+    margin: 0;
+    font-size: 1.5rem;
+    line-height: 1.75rem;
+    font-weight: 500;
+    outline: none;
+  }
+  .auth-description {
+    margin: 0;
+    color: var(--color-text-secondary);
+  }
+  .auth-email {
+    color: var(--color-text-primary);
+    font-weight: inherit;
+    overflow-wrap: anywhere;
+  }
+  .auth-google {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    width: 100%;
+    padding: 0.75rem 1rem;
+    border: 0;
+    border-radius: var(--radius-md);
+    background: var(--color-bg-surface-strong);
+    color: var(--color-text-primary);
+    font: inherit;
+    font-weight: 500;
+    cursor: pointer;
+  }
+  .auth-google:hover {
+    background: var(--color-bg-hover);
+  }
+  .auth-google-logo {
+    flex: none;
+  }
+  .auth-divider {
+    flex: none;
+    height: 1px;
+    background: var(--color-border-secondary);
+  }
+  .auth-form {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    gap: 1rem;
+    padding: 1.5rem;
+  }
+  .auth-lead {
+    margin: 0;
+  }
+  .auth-fields {
+    display: grid;
+    gap: 1rem;
+  }
+  .auth-input {
+    display: grid;
+    gap: 0.375rem;
+  }
+  /*
+   * Поле (компонент Input): рамка 44 px, подпись внутри. Пустое — подпись вместо подсказки 14/18; в фокусе —
+   * подпись сверху 10/10, значение ниже, рамка selection/bg; заполненное без фокуса — только значение.
+   */
+  .auth-field {
+    position: relative;
+    height: 2.75rem;
+    border: 1px solid var(--color-border-secondary);
+    border-radius: var(--radius-md);
+  }
+  .auth-field:focus-within {
+    border-color: var(--color-selection-bg);
+  }
+  .auth-input[data-invalid] .auth-field {
+    border-color: var(--color-status-danger);
+  }
+  .auth-field-input {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    padding: 0 1rem;
+    border: 0;
+    border-radius: inherit;
+    background: none;
+    color: var(--color-text-primary);
+    font: inherit;
+    font-weight: 500;
+    outline: none;
+  }
+  .auth-field[data-trailing] .auth-field-input {
+    padding-right: 2.625rem;
+  }
+  .auth-field:focus-within .auth-field-input {
+    padding-top: 0.875rem;
+  }
+  .auth-field-label {
+    position: absolute;
+    top: 50%;
+    right: 1rem;
+    left: 1rem;
+    overflow: hidden;
+    color: var(--color-text-secondary);
+    font-weight: 500;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    translate: 0 -50%;
+    pointer-events: none;
+  }
+  .auth-field:focus-within .auth-field-label {
+    top: 0.3125rem;
+    font-size: 0.625rem;
+    line-height: 0.625rem;
+    font-weight: 400;
+    translate: none;
+  }
+  .auth-field:not(:focus-within):has(.auth-field-input:not(:placeholder-shown))
+    .auth-field-label {
+    opacity: 0;
+  }
+  /* Глаз — 16 px, как в макете, а цель нажатия — 24 × 24 (WCAG 2.2, 2.5.8). */
+  .auth-eye {
+    position: absolute;
+    top: 50%;
+    right: 0.75rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.5rem;
+    height: 1.5rem;
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--color-text-secondary);
+    font-size: 1rem;
+    translate: 0 -50%;
+    cursor: pointer;
+  }
+  .auth-eye[aria-pressed="true"] {
+    color: var(--color-text-primary);
+  }
+  .auth-note {
+    margin: 0;
+    color: var(--color-text-secondary);
+    font-size: var(--text-body-sm);
+    line-height: var(--text-body-xs--line-height);
+  }
+  .auth-note-error {
+    color: var(--color-text-danger);
+  }
+  /* Код (компонент Code Input): шесть клеток 52 × 56, цифры 20/28; поле ввода — прозрачное поверх. */
+  .auth-code-box {
+    position: relative;
+  }
+  .auth-code-input {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    padding: 0;
+    border: 0;
+    opacity: 0;
+    font-size: 1rem;
+    cursor: text;
+  }
+  .auth-code-cells {
+    display: grid;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    gap: 0.5rem;
+    pointer-events: none;
+  }
+  .auth-code-cell {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 3.5rem;
+    border: 1px solid var(--color-border-secondary);
+    border-radius: var(--radius-md);
+    font-size: 1.25rem;
+    line-height: 1.75rem;
+    font-weight: 600;
+  }
+  .auth-code-cell[data-active] {
+    border-color: var(--color-selection-bg);
+  }
+  .auth-code-cell[data-active]::after {
+    content: "";
+    width: 1px;
+    height: 1.25rem;
+    background: var(--color-selection-bg);
+  }
+  .auth-input[data-invalid] .auth-code-cell {
+    border-color: var(--color-status-danger);
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .auth-code-cell[data-active]::after {
+      animation: auth-caret 1s step-end infinite;
+    }
+  }
+  @keyframes auth-caret {
+    50% {
+      opacity: 0;
+    }
+  }
+  .auth-primary {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    padding: 0.75rem 1rem;
+    border: 0;
+    border-radius: var(--radius-md);
+    background: var(--color-accent-lemon);
+    color: var(--color-text-on-accent);
+    font: inherit;
+    font-weight: 500;
+    cursor: pointer;
+  }
+  .auth-primary[aria-disabled="true"],
+  .auth-google[aria-disabled="true"] {
+    opacity: 0.7;
+    cursor: progress;
+  }
+  .auth-link {
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--color-text-secondary);
+    font: inherit;
+    text-align: start;
+    text-decoration: underline;
+    text-underline-offset: 0.1875rem;
+    cursor: pointer;
+  }
+  .auth-link:hover {
+    color: var(--color-text-primary);
+  }
+  .auth-forgot {
+    align-self: flex-end;
+    font-size: var(--text-body-sm);
+    line-height: var(--text-body-xs--line-height);
+  }
+  .auth-resend,
+  .auth-terms {
+    margin: 0;
+    color: var(--color-text-secondary);
+    font-size: var(--text-body-sm);
+    line-height: var(--text-body-xs--line-height);
+  }
+  /* «Terms of Use» и «Privacy Policy» — «Soon», пока страниц нет (PR 6): подчёркнуты, как в макете. */
+  .auth-terms-link {
+    display: inline;
+    padding: 0;
+    border: 0;
+    background: none;
+    color: inherit;
+    font: inherit;
+    text-decoration: underline;
+    text-underline-offset: 0.1875rem;
+  }
+  .auth-captcha:empty {
+    display: none;
+  }
+  .auth-footer {
+    display: grid;
+    justify-items: start;
+    gap: 0.5rem;
+    padding: 1.5rem;
+  }
+  .auth-footer p {
+    margin: 0;
+  }
+  /* «You’re all set» и «Password updated»: значок 48 px на accent/lemon, всё — посередине высоты. */
+  .auth-done {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    justify-content: center;
+    gap: 1.5rem;
+    padding: 1.5rem;
+  }
+  .auth-badge {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 3rem;
+    height: 3rem;
+    border-radius: 9999px;
+    background: var(--color-accent-lemon);
+    color: var(--color-text-on-accent);
+    font-size: 1.5rem;
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .auth-dialog[open] {
+      animation: auth-in var(--motion-fade) var(--motion-ease-out);
+    }
+    .auth-dialog[open]::backdrop {
+      animation: fade-in var(--motion-fade);
+    }
+  }
+  @keyframes auth-in {
+    from {
+      opacity: 0;
+      scale: 0.98;
+    }
+  }
+  /*
+   * Телефон (кадров окна в макете нет; решение владельца 27 ноября 2026): шторка снизу почти во весь экран,
+   * как рюкзак и настройки, — та же форма, без градиента.
+   */
+  @media (max-width: 63.98rem) {
+    .toast-region {
+      top: 3.75rem;
+      right: 1rem;
+      left: 1rem;
+      justify-items: center;
+    }
+    .toast {
+      width: 100%;
+    }
+    /* 100vw, а не 100%: место под полосу прокрутки страницы (scrollbar-gutter) иначе остаётся справа. */
+    .auth-dialog {
+      inset: auto 0 0;
+      width: 100vw;
+      max-width: none;
+      height: calc(100dvh - 2.75rem);
+      max-height: none;
+      margin: 0;
+      border-radius: 1rem 1rem 0 0;
+    }
+    .auth-art {
+      display: none;
+    }
+    .auth-panel {
+      width: 100%;
+      min-height: 100%;
+    }
+    .auth-handle {
+      display: block;
+      flex: none;
+      align-self: center;
+      width: 2.25rem;
+      height: 0.25rem;
+      margin-top: 0.5rem;
+      border-radius: 9999px;
+      background: var(--color-border-primary);
+    }
+  }
+  @media (max-width: 63.98rem) and (prefers-reduced-motion: no-preference) {
+    .auth-dialog[open] {
+      animation: ip-sheet-in var(--motion-sheet-in) var(--motion-ease-out);
+    }
+  }
 }

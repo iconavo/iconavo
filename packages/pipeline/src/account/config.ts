@@ -56,6 +56,9 @@ export const ACCOUNT_CPU_MS = 1_000;
 /** Расписание функции — уборка просроченного раз в сутки. */
 export const ACCOUNT_SCHEDULES = [{ cron: "47 3 * * *" }] as const;
 
+/** Ключ подставного Google превью: по нему проверка сайта видит, что адрес Google собрал сервис. */
+export const PREVIEW_GOOGLE_CLIENT = "preview-google-client";
+
 /** Превью на 127.0.0.1. */
 export const ACCOUNT_PREVIEW_PORT = 4287;
 

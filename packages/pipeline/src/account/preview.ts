@@ -1,10 +1,12 @@
 // Превью сервиса аккаунтов (шаг 3 фазы 5, ADR-0055): ровно бандл dist-account/worker.js в Node на 127.0.0.1.
 // База — подделка D1 с её пределами поверх node:sqlite в памяти, письма — в памяти превью, Turnstile —
 // свой адрес превью: он принимает только ответ тестового виджета Cloudflare (XXXX.DUMMY.TOKEN.XXXX).
-// Google — без ключей, вход через него в превью выключен. Host сверяется, как у других превью.
+// Google — без ключей, вход через него в превью выключен; проверка сайта включает подставной (google).
+// Host сверяется, как у других превью.
 //
 // - /__preview/mail — письма по порядку: тема, кому, текст и само письмо в рамке;
 // - /__preview/mail.json — те же письма для проверок (коды);
+// - /__preview/turnstile.js — подставной скрипт Turnstile для сайта (проверка сайта, pnpm site --account);
 // - остальное отвечает функция; несколько Set-Cookie доходят до браузера по отдельности.
 
 import { randomBytes } from "node:crypto";
@@ -18,6 +20,7 @@ import { WORKER_FILE } from "../api/config.js";
 import { allowedHost } from "../api/local.js";
 import { esc } from "../report/html.js";
 import { buildAccount } from "./build.js";
+import { PREVIEW_GOOGLE_CLIENT } from "./config.js";
 
 /** Ответ тестового виджета Turnstile (ключ сайта 1x00000000000000000000AA). */
 export const PREVIEW_CAPTCHA = "XXXX.DUMMY.TOKEN.XXXX";
@@ -49,8 +52,45 @@ export interface AccountPreviewOptions {
   siteOrigin?: string;
   /** Пройти регистрацию и восстановление на двух языках — четыре письма для глаз. */
   samples?: boolean;
+  /**
+   * Подставной Google — ключ PREVIEW_GOOGLE_CLIENT: сервис собирает адрес Google, а проверка сайта
+   * перехватывает переход к нему и возвращается с ответом Google. Без него вход через Google выключен.
+   */
+  google?: boolean;
   log?: (line: string) => void;
 }
+
+/**
+ * Подставной скрипт Turnstile для сайта (проверка сайта и pnpm site --account): тот же вызов render, что у
+ * Cloudflare, но без сети — сразу ответ тестового виджета, его и принимает превью. Каждый виджет оставляет
+ * в контейнере скрытую метку, число виджетов — window.__previewTurnstile.
+ */
+export const PREVIEW_TURNSTILE_SCRIPT = `(() => {
+  let next = 0;
+  const marks = new Map();
+  window.turnstile = {
+    render(container, params) {
+      const id = "preview-" + ++next;
+      const mark = document.createElement("span");
+      mark.hidden = true;
+      mark.dataset.previewTurnstile = id;
+      container.append(mark);
+      marks.set(id, mark);
+      window.__previewTurnstile = (window.__previewTurnstile || 0) + 1;
+      setTimeout(() => params.callback?.(${JSON.stringify("XXXX.DUMMY.TOKEN.XXXX")}), 50);
+      return id;
+    },
+    remove(id) {
+      marks.get(id)?.remove();
+      marks.delete(id);
+    },
+    reset() {},
+    getResponse() {
+      return ${JSON.stringify("XXXX.DUMMY.TOKEN.XXXX")};
+    },
+  };
+})();
+`;
 
 export interface AccountPreview {
   server: Server;
@@ -137,6 +177,12 @@ export async function startAccountPreview(
     SERVICE_ORIGIN: origin(),
     COOKIE_MODE: "plain",
     ACCOUNT_ACCESS: "open",
+    ...(o.google
+      ? {
+          GOOGLE_CLIENT_ID: PREVIEW_GOOGLE_CLIENT,
+          GOOGLE_CLIENT_SECRET: "preview",
+        }
+      : {}),
   });
   let fixedEnv: ReturnType<typeof env> | undefined;
   const ctx = {
@@ -163,6 +209,14 @@ export async function startAccountPreview(
       return Response.json({
         success: raw === PREVIEW_CAPTCHA,
         hostname: new URL(site).hostname,
+      });
+    }
+    if (url.pathname === "/__preview/turnstile.js") {
+      return new Response(PREVIEW_TURNSTILE_SCRIPT, {
+        headers: {
+          "content-type": "text/javascript; charset=utf-8",
+          "cache-control": "no-store",
+        },
       });
     }
     if (url.pathname === "/__preview/mail.json") return Response.json(mail);

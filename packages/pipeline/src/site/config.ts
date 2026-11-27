@@ -30,6 +30,12 @@ export const DEFAULT_ICON_HOSTS = [
   "https://iconavo.b-cdn.net",
 ];
 
+/** Аккаунты живого сайта (ADR-0055): сервис — в connect-src и img-src, Turnstile — в script-src и frame-src. */
+export const DEFAULT_ACCOUNT_HOSTS = {
+  service: "https://account.iconavo.dev",
+  turnstile: "https://challenges.cloudflare.com",
+};
+
 /** Источники документации: из их разделов «##» собраны страницы. */
 export const DOC_SOURCES = [
   "packages/icon/README.md",

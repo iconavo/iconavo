@@ -123,6 +123,50 @@ describe("заголовки ответа", () => {
       /X-Robots-Tag: all.*сборка abcd1234.*style-src.*connect-src/,
     );
   });
+
+  it("аккаунты (шаг 3 фазы 5): сервис — в connect-src и img-src, Turnstile — единственный сторонний скрипт и рамка", () => {
+    const account = {
+      service: "https://account.iconavo.dev",
+      turnstile: "https://challenges.cloudflare.com",
+    };
+    const csp = (script: string) => ({
+      ...ok,
+      "content-security-policy": `default-src 'self'; script-src ${script}; style-src 'self'; connect-src 'self' https://api.iconavo.dev https://account.iconavo.dev; img-src 'self' data: https://account.iconavo.dev; frame-src https://challenges.cloudflare.com; frame-ancestors 'none'; object-src 'none'`,
+    });
+    const o = {
+      production: true,
+      hosts: ["https://api.iconavo.dev"],
+      account,
+    };
+    expect(
+      headersVerdict(
+        page(
+          "/",
+          "",
+          200,
+          csp("'self' 'unsafe-inline' https://challenges.cloudflare.com"),
+        ),
+        o,
+      ),
+    ).toEqual([]);
+    expect(
+      headersVerdict(
+        page(
+          "/",
+          "",
+          200,
+          csp(
+            "'self' 'unsafe-inline' https://challenges.cloudflare.com https://evil.example",
+          ),
+        ),
+        o,
+      ).join("; "),
+    ).toMatch(/^script-src: .*evil/);
+    // Без сервиса аккаунтов в connect-src вход не работает — замечание.
+    expect(headersVerdict(page("/", "", 200, ok), o).join("; ")).toMatch(
+      /connect-src: https:\/\/api\.iconavo\.dev, а нужно/,
+    );
+  });
 });
 
 describe("метка robots и разделы README", () => {
