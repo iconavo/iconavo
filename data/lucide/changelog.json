@@ -3,6 +3,35 @@
   "releases": [
     {
       "added": [
+        "balcony",
+        "boxing-glove",
+        "chevrons-down-up-offset",
+        "chevrons-right-left-offset",
+        "mail-send",
+        "square-text-align-bottom-center",
+        "square-text-align-bottom-left",
+        "square-text-align-bottom-right",
+        "square-text-align-middle-center",
+        "square-text-align-middle-left",
+        "square-text-align-middle-right",
+        "square-text-align-top-center",
+        "square-text-align-top-left",
+        "square-text-align-top-right",
+        "stairs-arrow-down-left",
+        "stairs-arrow-up-right"
+      ],
+      "changed": [
+        "list-clock",
+        "party-popper"
+      ],
+      "date": "2026-11-28T11:44:32Z",
+      "previous": "3041cddf",
+      "revision": "4bf621064bed45d114ba31435b85760513830d1c",
+      "total": 2140,
+      "version": "f9e59026"
+    },
+    {
+      "added": [
         "braces-sigma"
       ],
       "changed": [

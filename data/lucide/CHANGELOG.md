@@ -4,6 +4,15 @@
 Имена не пропадают: иконка, которую удалил автор, скрыта, но работает по имени, а старое имя переименованной ведёт на новое (ADR-0005).
 Скрытия и переименования вы одобряете лично в pull request (ADR-0019). Полные списки — в `changelog.json`.
 
+## 28 ноября 2026 · версия f9e59026
+
+Прошлая версия: 3041cddf · источник: 4bf6210 · иконок: 2 140.
+
+**Изменения**
+
+- Добавлены (16): `balcony`, `boxing-glove`, `chevrons-down-up-offset`, `chevrons-right-left-offset`, `mail-send`, `square-text-align-bottom-center`, `square-text-align-bottom-left`, `square-text-align-bottom-right`, `square-text-align-middle-center`, `square-text-align-middle-left`, `square-text-align-middle-right`, `square-text-align-top-center`, `square-text-align-top-left`, `square-text-align-top-right`, `stairs-arrow-down-left`, `stairs-arrow-up-right`
+- Изменены (2): `list-clock`, `party-popper`
+
 ## 27 ноября 2026 · версия 3041cddf
 
 Прошлая версия: 7359f858 · источник: 9cb3934 · иконок: 2 124.
